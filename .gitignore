@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+web/data/*.geojson
+web/data/*.json
+!web/data/.gitkeep
+*.sqlite
+pipeline.log
+.DS_Store
+docs/DEPLOY.local.md

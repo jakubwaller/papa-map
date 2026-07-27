@@ -1,0 +1,813 @@
+{
+  "id": "papamap",
+  "title": {
+    "en": "PapaMap — changing tables dads can reach",
+    "de": "PapaMap — Wickeltische, die Väter erreichen"
+  },
+  "shortDescription": {
+    "en": "Find and map baby changing tables that fathers can actually reach",
+    "de": "Wickeltische finden und eintragen, die Väter tatsächlich erreichen können"
+  },
+  "description": {
+    "en": "A changing table in the women's room is invisible to a dad with a baby. This map shows toilets and other places with a baby changing table, colored by whether a father can reach it: <span style='color:#117733'><b>green</b></span> = reachable (men's room, unisex, dedicated room, wheelchair toilet or sales area), <span style='color:#cc3311'><b>red</b></span> = women's room only, <span style='color:#555555'><b>grey</b></span> = a table exists but nobody has recorded which room it is in. Grey pins are the call to action: open one and answer the location question.",
+    "de": "Ein Wickeltisch in der Damentoilette ist für einen Vater mit Baby unsichtbar. Diese Karte zeigt Toiletten und andere Orte mit Wickeltisch, eingefärbt danach, ob ein Vater ihn erreichen kann: <span style='color:#117733'><b>grün</b></span> = erreichbar (Herrentoilette, Unisex, eigener Raum, barrierefreie Toilette oder Verkaufsraum), <span style='color:#cc3311'><b>rot</b></span> = nur Damentoilette, <span style='color:#555555'><b>grau</b></span> = es gibt einen Wickeltisch, aber niemand hat eingetragen, in welchem Raum. Die grauen Pins sind der Handlungsaufruf: anklicken und die Standort-Frage beantworten."
+  },
+  "icon": "./assets/layers/toilet/baby.svg",
+  "startLat": 53.5503,
+  "startLon": 9.9937,
+  "startZoom": 12,
+  "layers": [
+    {
+      "id": "dad_toilet",
+      "name": {
+        "en": "Toilets",
+        "de": "Toiletten"
+      },
+      "description": {
+        "en": "All public toilets, colored by changing-table reachability for dads",
+        "de": "Alle öffentlichen Toiletten, eingefärbt nach Wickeltisch-Erreichbarkeit für Väter"
+      },
+      "source": {
+        "osmTags": "amenity=toilets"
+      },
+      "minzoom": 12,
+      "title": {
+        "render": {
+          "en": "Toilet",
+          "de": "Toilette"
+        },
+        "mappings": [
+          {
+            "if": "name~*",
+            "then": {
+              "en": "Toilet {name}",
+              "de": "Toilette {name}"
+            }
+          }
+        ]
+      },
+      "pointRendering": [
+        {
+          "location": [
+            "point",
+            "centroid"
+          ],
+          "marker": [
+            {
+              "icon": "circle",
+              "color": {
+                "render": "#ffffff",
+                "mappings": [
+                  {
+                    "if": {
+                      "and": [
+                        {
+                          "or": [
+                            "changing_table=yes",
+                            "changing_table=limited"
+                          ]
+                        },
+                        "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                      ]
+                    },
+                    "then": "#117733"
+                  },
+                  {
+                    "if": {
+                      "and": [
+                        {
+                          "or": [
+                            "changing_table=yes",
+                            "changing_table=limited"
+                          ]
+                        },
+                        "changing_table:location~i~(.*;)? *female_toilet *(;.*)?"
+                      ]
+                    },
+                    "then": "#cc3311"
+                  },
+                  {
+                    "if": {
+                      "or": [
+                        "changing_table=yes",
+                        "changing_table=limited"
+                      ]
+                    },
+                    "then": "#555555"
+                  }
+                ]
+              }
+            },
+            {
+              "icon": {
+                "render": "./assets/layers/toilet/toilets.svg",
+                "mappings": [
+                  {
+                    "if": {
+                      "or": [
+                        "changing_table=yes",
+                        "changing_table=limited"
+                      ]
+                    },
+                    "then": "./assets/layers/toilet/baby.svg"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "lineRendering": [],
+      "presets": [
+        {
+          "title": {
+            "en": "a public toilet",
+            "de": "eine öffentliche Toilette"
+          },
+          "tags": [
+            "amenity=toilets"
+          ]
+        }
+      ],
+      "tagRenderings": [
+        {
+          "id": "dad-status",
+          "mappings": [
+            {
+              "if": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                ]
+              },
+              "then": {
+                "en": "<b style='color:#117733'>A dad can reach this changing table.</b>",
+                "de": "<b style='color:#117733'>Ein Vater kann diesen Wickeltisch erreichen.</b>"
+              }
+            },
+            {
+              "if": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location~i~(.*;)? *female_toilet *(;.*)?"
+                ]
+              },
+              "then": {
+                "en": "<b style='color:#cc3311'>The changing table is in the women's room only — a dad cannot reach it.</b>",
+                "de": "<b style='color:#cc3311'>Der Wickeltisch ist nur in der Damentoilette — ein Vater kann ihn nicht erreichen.</b>"
+              }
+            },
+            {
+              "if": {
+                "or": [
+                  "changing_table=yes",
+                  "changing_table=limited"
+                ]
+              },
+              "then": {
+                "en": "<b style='color:#555555'>A changing table exists, but nobody has recorded which room it is in.</b> Answer the location question below to fix this.",
+                "de": "<b style='color:#555555'>Es gibt einen Wickeltisch, aber niemand hat eingetragen, in welchem Raum er ist.</b> Beantworte unten die Standort-Frage, um das zu ändern."
+              }
+            },
+            {
+              "if": "changing_table=no",
+              "then": {
+                "en": "No changing table here.",
+                "de": "Hier gibt es keinen Wickeltisch."
+              }
+            }
+          ]
+        },
+        {
+          "id": "changing-table",
+          "question": {
+            "en": "Does this toilet have a baby changing table?",
+            "de": "Gibt es in dieser Toilette einen Wickeltisch?"
+          },
+          "mappings": [
+            {
+              "if": "changing_table=yes",
+              "icon": "./assets/layers/toilet/baby.svg",
+              "then": {
+                "en": "A changing table is available",
+                "de": "Ein Wickeltisch ist vorhanden"
+              }
+            },
+            {
+              "if": "changing_table=no",
+              "then": {
+                "en": "No changing table is available",
+                "de": "Es ist kein Wickeltisch vorhanden"
+              }
+            },
+            {
+              "if": "changing_table=limited",
+              "hideInAnswer": true,
+              "then": {
+                "en": "A changing table is available with limitations (e.g. it must be asked for)",
+                "de": "Ein Wickeltisch ist mit Einschränkungen vorhanden (z. B. auf Nachfrage)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "changing-table-location",
+          "question": {
+            "en": "Where is the changing table located?",
+            "de": "Wo befindet sich der Wickeltisch?"
+          },
+          "questionHint": {
+            "en": "This is the question that decides the pin color. Multiple answers are possible if there is more than one table.",
+            "de": "Diese Frage entscheidet über die Farbe des Pins. Mehrere Antworten sind möglich, wenn es mehr als einen Wickeltisch gibt."
+          },
+          "condition": {
+            "or": [
+              "changing_table=yes",
+              "changing_table=limited"
+            ]
+          },
+          "multiAnswer": true,
+          "mappings": [
+            {
+              "if": "changing_table:location=female_toilet",
+              "then": {
+                "en": "A changing table is in the women's toilet",
+                "de": "Ein Wickeltisch ist in der Damentoilette"
+              }
+            },
+            {
+              "if": "changing_table:location=male_toilet",
+              "then": {
+                "en": "A changing table is in the men's toilet",
+                "de": "Ein Wickeltisch ist in der Herrentoilette"
+              }
+            },
+            {
+              "if": "changing_table:location=unisex_toilet",
+              "then": {
+                "en": "A changing table is in the unisex toilet",
+                "de": "Ein Wickeltisch ist in der Unisex-Toilette"
+              }
+            },
+            {
+              "if": "changing_table:location=wheelchair_toilet",
+              "then": {
+                "en": "A changing table is in the wheelchair-accessible toilet",
+                "de": "Ein Wickeltisch ist in der barrierefreien Toilette"
+              }
+            },
+            {
+              "if": "changing_table:location=dedicated_room",
+              "then": {
+                "en": "A changing table is in a dedicated room",
+                "de": "Ein Wickeltisch ist in einem eigenen Wickelraum"
+              }
+            },
+            {
+              "if": "changing_table:location=room",
+              "then": {
+                "en": "A changing table is in a general-purpose room (e.g. the hallway to the toilets)",
+                "de": "Ein Wickeltisch ist in einem Mehrzweckraum (z. B. im Flur zu den Toiletten)"
+              }
+            },
+            {
+              "if": "changing_table:location=sales_area",
+              "then": {
+                "en": "A changing table is in the sales area (e.g. on the shop floor)",
+                "de": "Ein Wickeltisch ist im Verkaufsraum"
+              }
+            }
+          ]
+        },
+        {
+          "id": "changing-table-fee",
+          "question": {
+            "en": "Does using the changing table cost a fee?",
+            "de": "Kostet die Nutzung des Wickeltischs eine Gebühr?"
+          },
+          "condition": {
+            "or": [
+              "changing_table=yes",
+              "changing_table=limited"
+            ]
+          },
+          "mappings": [
+            {
+              "if": "changing_table:fee=yes",
+              "then": {
+                "en": "Using the changing table costs a fee",
+                "de": "Die Nutzung des Wickeltischs ist gebührenpflichtig"
+              }
+            },
+            {
+              "if": "changing_table:fee=no",
+              "then": {
+                "en": "The changing table is free to use",
+                "de": "Die Nutzung des Wickeltischs ist kostenlos"
+              }
+            }
+          ]
+        },
+        {
+          "id": "leftover-questions",
+          "render": {
+            "*": "{questions(,draft_capacity)}"
+          }
+        },
+        {
+          "id": "draft-capacity-questions",
+          "render": {
+            "en": "<h3>Draft: toilet capacity</h3><p>The two questions below use the keys <code>toilets:num_chambers:female</code> / <code>toilets:num_chambers:male</code> — a <b>draft tagging schema that is still under discussion</b>, not an approved OSM key. Only answer if you are comfortable using experimental tags; they may be renamed by the community later.</p>{questions(draft_capacity)}",
+            "de": "<h3>Entwurf: Toilettenkapazität</h3><p>Die zwei Fragen unten verwenden die Schlüssel <code>toilets:num_chambers:female</code> / <code>toilets:num_chambers:male</code> — ein <b>Entwurfs-Tagging-Schema, das noch diskutiert wird</b>, kein etablierter OSM-Schlüssel. Nur beantworten, wenn du experimentelle Tags nutzen möchtest; die Community kann sie später umbenennen.</p>{questions(draft_capacity)}"
+          }
+        },
+        {
+          "id": "num-chambers-female",
+          "labels": [
+            "draft_capacity"
+          ],
+          "description": {
+            "en": "DRAFT SCHEMA under discussion: toilets:num_chambers:female is not an approved OSM key",
+            "de": "ENTWURFS-SCHEMA in Diskussion: toilets:num_chambers:female ist kein etablierter OSM-Schlüssel"
+          },
+          "question": {
+            "en": "How many toilet chambers (stalls) are there for women? (draft tag)",
+            "de": "Wie viele Toilettenkabinen gibt es für Frauen? (Entwurfs-Tag)"
+          },
+          "questionHint": {
+            "en": "Draft schema under discussion — do not answer unless you want to use an experimental tag.",
+            "de": "Entwurfsschema in Diskussion — nur beantworten, wenn du ein experimentelles Tag verwenden möchtest."
+          },
+          "render": {
+            "en": "There are {toilets:num_chambers:female} toilet chambers for women (draft tag)",
+            "de": "Es gibt {toilets:num_chambers:female} Toilettenkabinen für Frauen (Entwurfs-Tag)"
+          },
+          "freeform": {
+            "key": "toilets:num_chambers:female",
+            "type": "pnat",
+            "placeholder": {
+              "en": "e.g. 3",
+              "de": "z. B. 3"
+            }
+          }
+        },
+        {
+          "id": "num-chambers-male",
+          "labels": [
+            "draft_capacity"
+          ],
+          "description": {
+            "en": "DRAFT SCHEMA under discussion: toilets:num_chambers:male is not an approved OSM key",
+            "de": "ENTWURFS-SCHEMA in Diskussion: toilets:num_chambers:male ist kein etablierter OSM-Schlüssel"
+          },
+          "question": {
+            "en": "How many toilet chambers (stalls) are there for men? (draft tag)",
+            "de": "Wie viele Toilettenkabinen gibt es für Männer? (Entwurfs-Tag)"
+          },
+          "questionHint": {
+            "en": "Draft schema under discussion — do not answer unless you want to use an experimental tag.",
+            "de": "Entwurfsschema in Diskussion — nur beantworten, wenn du ein experimentelles Tag verwenden möchtest."
+          },
+          "render": {
+            "en": "There are {toilets:num_chambers:male} toilet chambers for men (draft tag)",
+            "de": "Es gibt {toilets:num_chambers:male} Toilettenkabinen für Männer (Entwurfs-Tag)"
+          },
+          "freeform": {
+            "key": "toilets:num_chambers:male",
+            "type": "pnat",
+            "placeholder": {
+              "en": "e.g. 3",
+              "de": "z. B. 3"
+            }
+          }
+        }
+      ],
+      "filter": [
+        {
+          "id": "changing_table_status",
+          "options": [
+            {
+              "question": {
+                "en": "All changing-table statuses",
+                "de": "Alle Wickeltisch-Status"
+              }
+            },
+            {
+              "question": {
+                "en": "Dad can reach the table (green)",
+                "de": "Vater erreicht den Wickeltisch (grün)"
+              },
+              "osmTags": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                ]
+              }
+            },
+            {
+              "question": {
+                "en": "Table in women's room only (red)",
+                "de": "Wickeltisch nur in der Damentoilette (rot)"
+              },
+              "osmTags": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location~i~(.*;)? *female_toilet *(;.*)?",
+                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                ]
+              }
+            },
+            {
+              "question": {
+                "en": "Table exists, room unknown (grey)",
+                "de": "Wickeltisch vorhanden, Raum unbekannt (grau)"
+              },
+              "osmTags": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?",
+                  "changing_table:location!~i~(.*;)? *female_toilet *(;.*)?"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dad_changing_table_amenity",
+      "name": {
+        "en": "Changing tables at other places",
+        "de": "Wickeltische in anderen Einrichtungen"
+      },
+      "description": {
+        "en": "Cafés, restaurants, shops and other amenities that have a changing_table tag",
+        "de": "Cafés, Restaurants, Geschäfte und andere Einrichtungen mit einem changing_table-Tag"
+      },
+      "source": {
+        "osmTags": {
+          "and": [
+            "changing_table~*",
+            "amenity!=toilets"
+          ]
+        }
+      },
+      "minzoom": 12,
+      "title": {
+        "render": {
+          "en": "Changing table at an amenity",
+          "de": "Wickeltisch in einer Einrichtung"
+        },
+        "mappings": [
+          {
+            "if": "name~*",
+            "then": {
+              "en": "Changing table at {name}",
+              "de": "Wickeltisch bei {name}"
+            }
+          }
+        ]
+      },
+      "pointRendering": [
+        {
+          "location": [
+            "point",
+            "centroid"
+          ],
+          "marker": [
+            {
+              "icon": "circle",
+              "color": {
+                "render": "#ffffff",
+                "mappings": [
+                  {
+                    "if": {
+                      "and": [
+                        {
+                          "or": [
+                            "changing_table=yes",
+                            "changing_table=limited"
+                          ]
+                        },
+                        "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                      ]
+                    },
+                    "then": "#117733"
+                  },
+                  {
+                    "if": {
+                      "and": [
+                        {
+                          "or": [
+                            "changing_table=yes",
+                            "changing_table=limited"
+                          ]
+                        },
+                        "changing_table:location~i~(.*;)? *female_toilet *(;.*)?"
+                      ]
+                    },
+                    "then": "#cc3311"
+                  },
+                  {
+                    "if": {
+                      "or": [
+                        "changing_table=yes",
+                        "changing_table=limited"
+                      ]
+                    },
+                    "then": "#555555"
+                  }
+                ]
+              }
+            },
+            {
+              "icon": "./assets/layers/toilet/baby.svg"
+            }
+          ]
+        }
+      ],
+      "lineRendering": [],
+      "tagRenderings": [
+        {
+          "id": "dad-status",
+          "mappings": [
+            {
+              "if": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                ]
+              },
+              "then": {
+                "en": "<b style='color:#117733'>A dad can reach this changing table.</b>",
+                "de": "<b style='color:#117733'>Ein Vater kann diesen Wickeltisch erreichen.</b>"
+              }
+            },
+            {
+              "if": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location~i~(.*;)? *female_toilet *(;.*)?"
+                ]
+              },
+              "then": {
+                "en": "<b style='color:#cc3311'>The changing table is in the women's room only — a dad cannot reach it.</b>",
+                "de": "<b style='color:#cc3311'>Der Wickeltisch ist nur in der Damentoilette — ein Vater kann ihn nicht erreichen.</b>"
+              }
+            },
+            {
+              "if": {
+                "or": [
+                  "changing_table=yes",
+                  "changing_table=limited"
+                ]
+              },
+              "then": {
+                "en": "<b style='color:#555555'>A changing table exists, but nobody has recorded which room it is in.</b> Answer the location question below to fix this.",
+                "de": "<b style='color:#555555'>Es gibt einen Wickeltisch, aber niemand hat eingetragen, in welchem Raum er ist.</b> Beantworte unten die Standort-Frage, um das zu ändern."
+              }
+            },
+            {
+              "if": "changing_table=no",
+              "then": {
+                "en": "No changing table here.",
+                "de": "Hier gibt es keinen Wickeltisch."
+              }
+            }
+          ]
+        },
+        {
+          "id": "changing-table",
+          "question": {
+            "en": "Does this place have a baby changing table?",
+            "de": "Gibt es an diesem Ort einen Wickeltisch?"
+          },
+          "mappings": [
+            {
+              "if": "changing_table=yes",
+              "icon": "./assets/layers/toilet/baby.svg",
+              "then": {
+                "en": "A changing table is available",
+                "de": "Ein Wickeltisch ist vorhanden"
+              }
+            },
+            {
+              "if": "changing_table=no",
+              "then": {
+                "en": "No changing table is available",
+                "de": "Es ist kein Wickeltisch vorhanden"
+              }
+            },
+            {
+              "if": "changing_table=limited",
+              "hideInAnswer": true,
+              "then": {
+                "en": "A changing table is available with limitations (e.g. it must be asked for)",
+                "de": "Ein Wickeltisch ist mit Einschränkungen vorhanden (z. B. auf Nachfrage)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "changing-table-location",
+          "question": {
+            "en": "Where is the changing table located?",
+            "de": "Wo befindet sich der Wickeltisch?"
+          },
+          "questionHint": {
+            "en": "This is the question that decides the pin color. Multiple answers are possible if there is more than one table.",
+            "de": "Diese Frage entscheidet über die Farbe des Pins. Mehrere Antworten sind möglich, wenn es mehr als einen Wickeltisch gibt."
+          },
+          "condition": {
+            "or": [
+              "changing_table=yes",
+              "changing_table=limited"
+            ]
+          },
+          "multiAnswer": true,
+          "mappings": [
+            {
+              "if": "changing_table:location=female_toilet",
+              "then": {
+                "en": "A changing table is in the women's toilet",
+                "de": "Ein Wickeltisch ist in der Damentoilette"
+              }
+            },
+            {
+              "if": "changing_table:location=male_toilet",
+              "then": {
+                "en": "A changing table is in the men's toilet",
+                "de": "Ein Wickeltisch ist in der Herrentoilette"
+              }
+            },
+            {
+              "if": "changing_table:location=unisex_toilet",
+              "then": {
+                "en": "A changing table is in the unisex toilet",
+                "de": "Ein Wickeltisch ist in der Unisex-Toilette"
+              }
+            },
+            {
+              "if": "changing_table:location=wheelchair_toilet",
+              "then": {
+                "en": "A changing table is in the wheelchair-accessible toilet",
+                "de": "Ein Wickeltisch ist in der barrierefreien Toilette"
+              }
+            },
+            {
+              "if": "changing_table:location=dedicated_room",
+              "then": {
+                "en": "A changing table is in a dedicated room",
+                "de": "Ein Wickeltisch ist in einem eigenen Wickelraum"
+              }
+            },
+            {
+              "if": "changing_table:location=room",
+              "then": {
+                "en": "A changing table is in a general-purpose room (e.g. the hallway to the toilets)",
+                "de": "Ein Wickeltisch ist in einem Mehrzweckraum (z. B. im Flur zu den Toiletten)"
+              }
+            },
+            {
+              "if": "changing_table:location=sales_area",
+              "then": {
+                "en": "A changing table is in the sales area (e.g. on the shop floor)",
+                "de": "Ein Wickeltisch ist im Verkaufsraum"
+              }
+            }
+          ]
+        },
+        {
+          "id": "changing-table-fee",
+          "question": {
+            "en": "Does using the changing table cost a fee?",
+            "de": "Kostet die Nutzung des Wickeltischs eine Gebühr?"
+          },
+          "condition": {
+            "or": [
+              "changing_table=yes",
+              "changing_table=limited"
+            ]
+          },
+          "mappings": [
+            {
+              "if": "changing_table:fee=yes",
+              "then": {
+                "en": "Using the changing table costs a fee",
+                "de": "Die Nutzung des Wickeltischs ist gebührenpflichtig"
+              }
+            },
+            {
+              "if": "changing_table:fee=no",
+              "then": {
+                "en": "The changing table is free to use",
+                "de": "Die Nutzung des Wickeltischs ist kostenlos"
+              }
+            }
+          ]
+        }
+      ],
+      "filter": [
+        {
+          "id": "changing_table_status",
+          "options": [
+            {
+              "question": {
+                "en": "All changing-table statuses",
+                "de": "Alle Wickeltisch-Status"
+              }
+            },
+            {
+              "question": {
+                "en": "Dad can reach the table (green)",
+                "de": "Vater erreicht den Wickeltisch (grün)"
+              },
+              "osmTags": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                ]
+              }
+            },
+            {
+              "question": {
+                "en": "Table in women's room only (red)",
+                "de": "Wickeltisch nur in der Damentoilette (rot)"
+              },
+              "osmTags": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location~i~(.*;)? *female_toilet *(;.*)?",
+                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                ]
+              }
+            },
+            {
+              "question": {
+                "en": "Table exists, room unknown (grey)",
+                "de": "Wickeltisch vorhanden, Raum unbekannt (grau)"
+              },
+              "osmTags": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?",
+                  "changing_table:location!~i~(.*;)? *female_toilet *(;.*)?"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

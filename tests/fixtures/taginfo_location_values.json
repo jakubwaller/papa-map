@@ -1,0 +1,13 @@
+{
+  "url": "https://taginfo.openstreetmap.org/api/4/key/values?key=changing_table:location&rp=999&page=1&sortname=count&sortorder=desc",
+  "data_until": "2026-07-25T00:00:00Z",
+  "total": 6,
+  "data": [
+    {"value": "unisex_toilet", "count": 2500, "fraction": 0.80},
+    {"value": "female_toilet", "count": 485, "fraction": 0.13},
+    {"value": "male_toilet", "count": 71, "fraction": 0.02},
+    {"value": "female_toilet;male_toilet", "count": 30, "fraction": 0.01},
+    {"value": "male_toilet;female_toilet", "count": 9, "fraction": 0.003},
+    {"value": "in the corner", "count": 5, "fraction": 0.002}
+  ]
+}
