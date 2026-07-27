@@ -1,0 +1,10 @@
+{
+  "url": "https://taginfo.openstreetmap.org/api/4/key/stats?key=changing_table",
+  "data_until": "2026-07-25T00:00:00Z",
+  "data": [
+    {"type": "all", "count": 77287, "values": 25},
+    {"type": "nodes", "count": 69000, "values": 22},
+    {"type": "ways", "count": 8000, "values": 12},
+    {"type": "relations", "count": 287, "values": 4}
+  ]
+}

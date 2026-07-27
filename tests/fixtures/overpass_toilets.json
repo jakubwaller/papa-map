@@ -1,0 +1,12 @@
+{
+  "elements": [
+    {"type": "node", "id": 101, "lat": 53.5528, "lon": 10.0065,
+     "tags": {"amenity": "toilets"}},
+    {"type": "node", "id": 102, "lat": 53.5566, "lon": 9.9897,
+     "tags": {"amenity": "toilets",
+              "toilets:num_chambers:female": "3",
+              "toilets:num_chambers:male": "1"}},
+    {"type": "way", "id": 103, "center": {"lat": 53.5637, "lon": 9.9633},
+     "tags": {"amenity": "toilets", "wheelchair": "yes"}}
+  ]
+}
