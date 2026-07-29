@@ -1,9 +1,9 @@
 # papa-map — build contract (v0)
 
 Binding spec for all build agents. Read fully before writing code. Reference implementation for
-patterns: `/Users/jakubwaller/gitlab/beer-map` (same author, same deploy target). Project context:
-`/Users/jakubwaller/gitlab/invisible-women/changing-table-finder-prior-art.md` (esp. "Design
-addendum" and "Build call") and `pottyparity-spike.md`.
+patterns: the author's `beer-map` repo (same deploy target). The prior-art sweep and the
+potty-parity spike this build rests on are private research notes and are not part of this repo —
+everything needed to build is specified below.
 
 ## What v0 is
 
@@ -120,8 +120,8 @@ Split location on `;`, trim, lowercase → tokens. EXACT token matching (never s
 
 ## Methods page (Agent C, `web/methods.html`)
 
-Self-contained HTML (minimal inline CSS, no JS deps). Content (source from the invisible-women
-docs): why a provision scorecard is impossible from OSM (the 8-city spike + capacity-tag numbers),
+Self-contained HTML (minimal inline CSS, no JS deps). Content (sourced from the private research
+notes): why a provision scorecard is impossible from OSM (the 8-city spike + capacity-tag numbers),
 the changing_table:location skew as the one computable potty-parity fact, what the colors mean,
 how to fix a grey pin (StreetComplete quest — note it's disabled by default; MapComplete), data
 licence (ODbL, © OpenStreetMap contributors), and that this site stores nothing itself. Honest,
