@@ -1,0 +1,8 @@
+# Site block for the host Caddy (elternschule-caddy-1, which owns :80/:443).
+# Append this to /home/ubuntu/elternschule/Caddyfile, then restart that
+# container -- a `caddy reload` is not enough when the Caddyfile is a bind
+# mount, because the reload reads the old inode.
+papamap.jakubwaller.eu {
+	encode gzip
+	reverse_proxy papamap:8012
+}

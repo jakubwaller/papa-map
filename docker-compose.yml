@@ -1,0 +1,30 @@
+services:
+  # Static server. The site is plain files, so they are bind-mounted rather
+  # than baked in: `git pull` is the deploy, no rebuild.
+  papamap:
+    image: caddy:2-alpine
+    container_name: papamap
+    restart: unless-stopped
+    # No host port: the only ingress is the host Caddy over web_proxy
+    # (reverse_proxy papamap:8012).
+    volumes:
+      - ./deploy/papamap.Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv:ro
+      - ./web-data:/srv/data:ro   # generated GeoJSON + stats, read-only here
+    networks:
+      - web_proxy
+
+  # One-shot data build: `docker compose run --rm pipeline`. Not started with
+  # the stack, hence the profile.
+  pipeline:
+    build: .
+    container_name: papamap-pipeline
+    profiles: ["tools"]
+    volumes:
+      - ./web-data:/out
+    networks:
+      - web_proxy
+
+networks:
+  web_proxy:
+    external: true
