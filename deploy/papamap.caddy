@@ -2,7 +2,19 @@
 # Append this to /home/ubuntu/elternschule/Caddyfile, then restart that
 # container -- a `caddy reload` is not enough when the Caddyfile is a bind
 # mount, because the reload reads the old inode.
-papamap.jakubwaller.eu {
+#
+# papamap.de is the canonical host. www and the old jakubwaller.eu name both
+# redirect to it, so the site answers on exactly one hostname.
+
+papamap.de {
 	encode gzip
 	reverse_proxy papamap:8012
+}
+
+www.papamap.de {
+	redir https://papamap.de{uri} permanent
+}
+
+papamap.jakubwaller.eu {
+	redir https://papamap.de{uri} permanent
 }
