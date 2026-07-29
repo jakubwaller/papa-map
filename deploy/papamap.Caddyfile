@@ -1,0 +1,12 @@
+# Caddy config *inside* the papamap container. The public hostname, TLS and
+# the reverse_proxy to here all live in the host Caddy (see papamap.caddy).
+:8012 {
+	encode gzip
+	root * /srv
+	file_server
+
+	# The data files are regenerated daily; the rest is versioned by URL.
+	@data path /data/*
+	header @data Cache-Control "public, max-age=900"
+	header Cache-Control "public, max-age=3600"
+}

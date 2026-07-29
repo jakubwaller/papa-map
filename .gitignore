@@ -5,6 +5,7 @@ __pycache__/
 web/data/*.geojson
 web/data/*.json
 !web/data/.gitkeep
+/web-data/
 *.sqlite
 pipeline.log
 .DS_Store
