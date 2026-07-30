@@ -4,7 +4,8 @@ import time
 
 import requests
 
-from .config import OVERPASS_BACKOFF_S, OVERPASS_RETRIES, OVERPASS_URLS, USER_AGENT
+from .config import (OVERPASS_BACKOFF_S, OVERPASS_HTTP_TIMEOUT, OVERPASS_RETRIES,
+                     OVERPASS_URLS, USER_AGENT)
 
 # Transient responses worth retrying: rate limiting (429), gateway/overload
 # (5xx), and the 406 the main balancer returns when its backends are saturated.
@@ -20,11 +21,33 @@ def element_coords(el) -> tuple[float | None, float | None]:
     return (c["lat"], c["lon"]) if c else (None, None)
 
 
+def dedup_elements(elements) -> list:
+    """Drop repeat (type, id) pairs, keeping first occurrence and order. The
+    per-Bundesland sweep can return one object twice when it sits on (or its
+    area assignment straddles) a Länder boundary."""
+    seen, out = set(), []
+    for el in elements:
+        key = (el.get("type"), el.get("id"))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(el)
+    return out
+
+
 def _fetch_once(url: str, ql: str) -> dict:
     resp = requests.get(url, params={"data": ql},
-                        headers={"User-Agent": USER_AGENT}, timeout=120)
+                        headers={"User-Agent": USER_AGENT}, timeout=OVERPASS_HTTP_TIMEOUT)
     resp.raise_for_status()
-    return resp.json()
+    data = resp.json()
+    # A query that blows its [timeout:...] budget still answers HTTP 200 —
+    # with the elements it got around to computing and a "runtime error"
+    # remark. Writing that through would silently drop data, so it's treated
+    # exactly like a 504: retryable, next mirror may be faster.
+    remark = data.get("remark") or ""
+    if "runtime error" in remark:
+        raise requests.RequestException(f"overpass remark: {remark}")
+    return data
 
 
 def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:

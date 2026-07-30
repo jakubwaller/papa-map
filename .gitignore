@@ -10,3 +10,4 @@ web/data/*.json
 pipeline.log
 .DS_Store
 docs/DEPLOY.local.md
+.playwright-mcp/

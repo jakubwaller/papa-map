@@ -22,6 +22,7 @@
   }
   h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
   h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
   a { color: var(--accent); }
   code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
          background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
@@ -43,7 +44,7 @@
 snapshot; the stats strip on the map is recomputed nightly and may differ.</p>
 
 <h2>What this map is — and is not</h2>
-<p>PapaMap shows places in Hamburg that OpenStreetMap records as having a baby changing table
+<p>PapaMap shows places across Germany that OpenStreetMap records as having a baby changing table
 (<code>changing_table=yes</code> or <code>limited</code>), colored by whether a dad can actually
 reach the table. It reads OSM, and only OSM. It writes nothing anywhere — fixing the data happens
 on OSM itself, through the links on each pin.</p>
@@ -86,6 +87,45 @@ OpenStreetMap account can supply it, on site, in under a minute:</p>
 </ul>
 <p class="muted">Edits are made under your own OSM account and belong to the commons — they outlive
 this site and benefit every other app reading OpenStreetMap.</p>
+
+<h2 id="contribute">How to add a missing place</h2>
+<p>PapaMap stores nothing itself, so &ldquo;adding a place&rdquo; always means editing
+OpenStreetMap. The <em>+ Add a place</em> button on the map opens the right editor at your
+current view; here is what to do in each case.</p>
+
+<h3>A public toilet is missing entirely</h3>
+<p>Use <a href="https://mapcomplete.org/toilets">MapComplete's toilets theme</a> (the button's
+first link). Log in with a free OSM account, tap the map where the toilet is, choose
+&ldquo;public toilet&rdquo; from the add menu, then answer its questions — including whether
+there is a changing table and which room it is in.</p>
+
+<h3>A café, shop or restaurant has a table nobody mapped</h3>
+<p>The venue almost certainly exists in OSM already — what is missing is the
+<code>changing_table</code> tag on it. In OSM's own editor (iD), that takes about two minutes:</p>
+<ol>
+  <li>Open <a href="https://www.openstreetmap.org">openstreetmap.org</a>, create a free account
+      (one email, no approval wait) and log in.</li>
+  <li>Find the place — search box or just navigate — and click <strong>Edit</strong>. The place is
+      either a point or a building outline; click it and its tags appear on the left.</li>
+  <li>Scroll the left panel to <strong>All tags</strong> (in German: <em>Alle Eigenschaften</em>)
+      and expand it. Click <strong>+</strong> to add:
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = where it is, from the
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">approved
+            value list</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> or <code>sales_area</code> —
+            semicolon-separated if it is in several (e.g.
+            <code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Press <strong>Save</strong> (top), write a one-line changeset comment like
+      <em>&ldquo;add changing table location&rdquo;</em>, and upload. Done — the edit is live on
+      OSM within a minute and on PapaMap after the next nightly rebuild.</li>
+</ol>
+<p class="muted">Only tag what you have seen yourself — OSM records verified reality, not hope.
+If the table exists but you don't know the room, <code>changing_table=yes</code> alone is still a
+useful edit: the place appears as a grey pin, and the next dad can answer the room question.</p>
 
 <h2>Why a provision scorecard is impossible from OSM</h2>
 <p>The obvious bigger project — an open male:female toilet-<em>provision</em> ratio per city, the
@@ -163,8 +203,8 @@ your own OSM account — nothing passes through us. Formal pages:
 <a href="datenschutz.html">Datenschutzerklärung</a> (German).</p>
 
 <p class="muted">Sources: live Overpass spike over 8 metro cores (9,674 toilets) and taginfo key
-statistics, both 26&nbsp;Jul&nbsp;2026; Hamburg counts from the same nightly Overpass query that
-builds this map. Domain note: <code>papamap.de</code> is a placeholder and may change.</p>
+statistics, both 26&nbsp;Jul&nbsp;2026; the local counts come from the same nightly Overpass query
+that builds this map. Domain note: <code>papamap.de</code> is a placeholder and may change.</p>
 
 </body>
 </html>

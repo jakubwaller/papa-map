@@ -1,21 +1,31 @@
 import json
+import re
 from datetime import datetime, timezone
 
 import pytest
 import requests
 
+from pipeline.config import BUNDESLAENDER
 from pipeline.run import run_pipeline
 
 NOW = datetime(2026, 7, 26, 3, 0, tzinfo=timezone.utc)
 
 
 def _fake_overpass(load_fixture):
+    """Answers every sweep area with the same fixtures — dedup_elements must
+    collapse the 16 identical copies back to one, which is exactly what the
+    totals in the tests assert. Records the areas queried."""
+    areas_seen = []
+
     def fetch(ql, **kwargs):
-        assert 'area["name"="Hamburg"]["admin_level"="4"]' in ql
+        m = re.search(r'area\["name"="([^"]+)"\]\["admin_level"="4"\]', ql)
+        assert m, f"no admin_level=4 area clause in {ql!r}"
+        areas_seen.append(m.group(1))
         if '"changing_table"' in ql:
             return load_fixture("overpass_changing_tables.json")
         assert '"amenity"="toilets"' in ql
         return load_fixture("overpass_toilets.json")
+    fetch.areas_seen = areas_seen
     return fetch
 
 
@@ -34,13 +44,17 @@ def _taginfo_down(url):
 def test_run_writes_both_files(tmp_path, load_fixture):
     geojson = tmp_path / "changing_tables.geojson"
     stats = tmp_path / "stats.json"
+    fake_overpass = _fake_overpass(load_fixture)
     summary = run_pipeline(
         geojson_path=str(geojson), stats_path=str(stats),
-        overpass_fetch=_fake_overpass(load_fixture),
+        overpass_fetch=fake_overpass,
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
     )
+    # Every element appears once in each of the 16 Länder sweeps; dedup by
+    # (type, id) must collapse the totals back to a single fixture's worth.
     assert summary == {"features": 7, "ct_objects": 9, "toilets_total": 3,
                        "global_source": "taginfo"}
+    assert fake_overpass.areas_seen == [a for a in BUNDESLAENDER for _ in (1, 2)]
 
     fc = json.loads(geojson.read_text(encoding="utf-8"))
     assert fc["type"] == "FeatureCollection"
@@ -48,11 +62,22 @@ def test_run_writes_both_files(tmp_path, load_fixture):
 
     payload = json.loads(stats.read_text(encoding="utf-8"))
     assert payload["generated_at"] == "2026-07-26T03:00:00+00:00"
-    assert payload["area_name"] == "Hamburg"
+    assert payload["area_name"] == "Deutschland"
     assert payload["local"]["ct_yes"] == 6
     assert payload["local"]["capacity_tagged_toilets"] == 1
     assert payload["global"]["ct_total"] == 77287
     assert payload["global"]["source"] == "taginfo"
+
+
+def test_single_area_build_keeps_its_own_name(tmp_path, load_fixture):
+    stats = tmp_path / "stats.json"
+    run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
+        areas=[("Hamburg", "4")], display_area="Hamburg",
+        overpass_fetch=_fake_overpass(load_fixture),
+        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
+    )
+    assert json.loads(stats.read_text(encoding="utf-8"))["area_name"] == "Hamburg"
 
 
 def test_run_is_idempotent(tmp_path, load_fixture):

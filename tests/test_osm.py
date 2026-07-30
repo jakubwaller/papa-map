@@ -11,6 +11,42 @@ def test_element_coords_node_way_and_missing():
     assert element_coords({"type": "way", "id": 1}) == (None, None)
 
 
+def test_dedup_elements_keeps_first_occurrence_and_order():
+    els = [{"type": "node", "id": 1, "v": "first"},
+           {"type": "way", "id": 1},
+           {"type": "node", "id": 2},
+           {"type": "node", "id": 1, "v": "dup from second Land"}]
+    out = osm.dedup_elements(els)
+    assert out == els[:3]  # way#1 is not node#1; node#1's repeat dropped
+
+
+def test_fetch_retries_on_runtime_error_remark(monkeypatch):
+    # Overpass answers a blown [timeout:...] budget with HTTP 200, partial
+    # elements and a "runtime error" remark — that must retry, not pass.
+    responses = [{"elements": [], "remark": 'runtime error: Query timed out in "query"'},
+                 {"elements": [{"type": "node", "id": 1}]}]
+    calls = []
+
+    def get(url, params=None, headers=None, timeout=None):
+        calls.append(url)
+        r = _resp(200, url)
+        r.json = lambda i=len(calls) - 1: responses[i]
+        return r
+
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    assert fetch_overpass("out;", urls=["http://m1"], retries=2, backoff=0) == responses[1]
+    assert calls == ["http://m1", "http://m1"]
+
+
+def test_http_timeout_outlives_ql_timeout():
+    # A Germany-wide query legitimately runs for minutes; requests must not
+    # hang up on a server that is still within its own [timeout:...] budget.
+    from pipeline import config
+    assert config.OVERPASS_HTTP_TIMEOUT > config.OVERPASS_QL_TIMEOUT
+    assert f"[timeout:{config.OVERPASS_QL_TIMEOUT}]" in config.changing_table_ql()
+
+
 def _resp(status, url):
     r = requests.Response()
     r.status_code = status

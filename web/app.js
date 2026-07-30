@@ -1,4 +1,7 @@
-import { loadFeatures, filterByStatus, countsByStatus, toFeatureCollection } from "./datasource.js";
+// The ?v= pin matches index.html's — bump all three together, or a cached
+// half-pair (new app.js, stale datasource.js) serves for up to an hour.
+import { loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
+         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=de1";
 
 // Names, hours and tag values in the popups originate from OpenStreetMap
 // (publicly editable), so every interpolated value MUST be HTML-escaped
@@ -30,10 +33,21 @@ const OSM_STYLE = {
   layers: [{ id: "osm", type: "raster", source: "osm" }],
 };
 
+// Germany, fit to the viewport — portrait phones and wide desktops both get
+// the whole country. maxBounds leaves margin so edge cities aren't pinned to
+// the screen border. Rotate/pitch gestures are locked: on a phone an off-axis
+// pinch rotates the map instead of zooming, which reads as jank.
+const DE_BOUNDS = [[5.5, 47.1], [15.4, 55.2]];
+
 const map = new maplibregl.Map({
-  container: "map", style: OSM_STYLE, center: [9.9937, 53.5511], zoom: 11.5,
-  minZoom: 9, maxZoom: 18, attributionControl: false,
+  container: "map", style: OSM_STYLE,
+  bounds: DE_BOUNDS, fitBoundsOptions: { padding: 12 },
+  maxBounds: [[-4, 42.5], [24, 59]],
+  minZoom: 4.5, maxZoom: 18, attributionControl: false,
+  pitchWithRotate: false, touchPitch: false,
 });
+map.dragRotate.disable();
+map.touchZoomRotate.disableRotation();
 
 // ---- State ----
 let allFeatures = [];                                     // flattened GeoJSON
@@ -46,8 +60,10 @@ const topbar = document.getElementById("topbar");
 const zoomCtrl = document.getElementById("zoom-ctrl");
 
 // ---- Pins: one WebGL circle layer, colored by status ----
-// ~100 features for Hamburg, so no clustering. The source carries only
-// {idx, status} per feature; a click looks the full object up in allFeatures.
+// ~5k features Germany-wide — still one WebGL layer, no clustering, no DOM
+// markers. At country zoom the pins shrink to a density dot-map; the source
+// carries only {idx, status} per feature and a click looks the full object up
+// in allFeatures.
 const SRC = "tables";
 const IS_UNKNOWN = ["==", ["get", "status"], "unknown"];
 
@@ -58,6 +74,7 @@ function addTableLayer() {
     paint: {
       // Grey (unknown) pins run one size up — they are the call to action.
       "circle-radius": ["interpolate", ["linear"], ["zoom"],
+        5, ["case", IS_UNKNOWN, 2.5, 2],
         10, ["case", IS_UNKNOWN, 5, 4],
         14, ["case", IS_UNKNOWN, 9, 7],
         17, ["case", IS_UNKNOWN, 13, 10]],
@@ -65,7 +82,9 @@ function addTableLayer() {
         "accessible", STATUS_COLOR.accessible,
         "female_only", STATUS_COLOR.female_only,
         /* unknown */ STATUS_COLOR.unknown],
-      "circle-stroke-width": 2,
+      // Full strokes on 2-px country-zoom dots would read as all-white mush.
+      "circle-stroke-width": ["interpolate", ["linear"], ["zoom"],
+        5, 0.5, 10, 2],
       "circle-stroke-color": "#ffffff",
     },
   });
@@ -187,6 +206,52 @@ document.getElementById("zoom-out").addEventListener("click", () => map.zoomOut(
 function positionZoomCtrl() {
   zoomCtrl.style.top = topbar.offsetHeight + 10 + "px";
 }
+
+// ---- Locate: fly to the user, drop a you-are-here dot ----
+// One reusable DOM marker (a single marker is no perf concern); errors show a
+// transient toast instead of a blocking alert.
+let youMarker = null, toastTimer = null;
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 4000);
+}
+
+document.getElementById("locate").addEventListener("click", () => {
+  if (!navigator.geolocation) { toast("Geolocation is not available in this browser."); return; }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const at = [pos.coords.longitude, pos.coords.latitude];
+      if (!youMarker) {
+        const dot = document.createElement("div");
+        dot.className = "you-dot";
+        youMarker = new maplibregl.Marker({ element: dot });
+      }
+      youMarker.setLngLat(at).addTo(map);
+      map.flyTo({ center: at, zoom: Math.max(map.getZoom(), 14) });
+    },
+    () => toast("Couldn't get your location — check the browser's permission."),
+    { enableHighAccuracy: true, timeout: 10000 },
+  );
+});
+
+// ---- Add a place: deep links out to the editors, at the current view ----
+// The links are (re)built on every open so they always carry the map position
+// the user is actually looking at.
+const addDialog = document.getElementById("add-dialog");
+
+document.getElementById("add-place").addEventListener("click", () => {
+  const c = map.getCenter(), z = map.getZoom();
+  document.getElementById("add-toilet-link").href = mapCompleteAddUrl(c.lng, c.lat, z);
+  document.getElementById("add-venue-link").href = osmEditUrl(c.lng, c.lat, z);
+  addDialog.showModal();
+});
+document.getElementById("add-close").addEventListener("click", () => addDialog.close());
+// Click on the backdrop (the dialog element itself, not its children) closes.
+addDialog.addEventListener("click", (e) => { if (e.target === addDialog) addDialog.close(); });
 
 // ---- Boot ----
 // The chrome (stats strip, chips, count) is decoupled from the map's WebGL
