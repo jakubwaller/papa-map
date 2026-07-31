@@ -18,7 +18,9 @@ OVERPASS_URLS = [u.strip() for u in os.environ.get(
     )),
 ).split(",") if u.strip()]
 OVERPASS_RETRIES = int(os.environ.get("PAPAMAP_OVERPASS_RETRIES", "3"))
-OVERPASS_BACKOFF_S = float(os.environ.get("PAPAMAP_OVERPASS_BACKOFF_S", "2"))
+# Congested evenings 504 (or proxy-kill) for minutes at a stretch, not
+# seconds — 5s·2^n rides that out where the old 2s·2^n just burned attempts.
+OVERPASS_BACKOFF_S = float(os.environ.get("PAPAMAP_OVERPASS_BACKOFF_S", "5"))
 
 # Germany-wide is ~13k changing_table + ~32k toilet objects (2026-07-30), but a
 # single all-Germany area query computes for >60 s before the first response
@@ -46,6 +48,13 @@ def sweep_areas() -> list[tuple[str, str]]:
         return [(AREA_NAME, AREA_ADMIN_LEVEL)]
     return [(name, "4") for name in BUNDESLAENDER]
 
+
+# A congested evening can kill a query on every mirror (observed 2026-07-30:
+# four Länder in, then all mirrors dead for minutes) — so beyond the per-query
+# mirror cascade, run.py sweeps failed areas again in later rounds after a
+# cool-down instead of aborting the 15 good fetches with them.
+SWEEP_ROUNDS = int(os.environ.get("PAPAMAP_SWEEP_ROUNDS", "3"))
+SWEEP_PAUSE_S = float(os.environ.get("PAPAMAP_SWEEP_PAUSE_S", "120"))
 
 # The query budget stays under the observed 60 s cutoff so the server answers
 # (even with a timeout remark) instead of the connection dying mid-compute; the

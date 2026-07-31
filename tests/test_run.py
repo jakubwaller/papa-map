@@ -121,10 +121,48 @@ def test_zero_object_area_refuses_to_overwrite(tmp_path, load_fixture):
     with pytest.raises(RuntimeError, match="zero objects"):
         run_pipeline(geojson_path=str(geojson), stats_path=str(stats),
                      overpass_fetch=empty_overpass,
-                     taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+                     taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
+                     sweep_rounds=2, sweep_pause_s=0)
     # old files survive untouched
     assert json.loads(geojson.read_text(encoding="utf-8"))["features"] == [{"good": True}]
     assert json.loads(stats.read_text(encoding="utf-8"))["local"]["ct_objects"] == 9
+
+
+def test_failed_area_is_retried_in_a_later_round(tmp_path, load_fixture):
+    # A congested spell kills one Land on every mirror mid-sweep; the sweep
+    # must finish the others and pick the failed one up next round instead of
+    # aborting the build.
+    inner = _fake_overpass(load_fixture)
+    fail_next = {"Bayern"}
+
+    def flaky(ql, **kwargs):
+        if any(f'"{name}"' in ql for name in fail_next):
+            fail_next.clear()
+            raise requests.ConnectionError("mirror cascade exhausted")
+        return inner(ql, **kwargs)
+
+    summary = run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
+        now=NOW, sweep_pause_s=0)
+    assert summary["features"] == 7  # nothing lost, Bayern landed on round 2
+    assert inner.areas_seen.count("Bayern") == 2  # failed ct, then both queries
+
+
+def test_sweep_aborts_when_an_area_fails_every_round(tmp_path, load_fixture):
+    def always_down(ql, **kwargs):
+        if '"Saarland"' in ql:
+            raise requests.ConnectionError("still dead")
+        return _fake_overpass(load_fixture)(ql, **kwargs)
+
+    with pytest.raises(RuntimeError, match="Saarland.*after 3 rounds"):
+        run_pipeline(geojson_path=str(tmp_path / "ct.geojson"),
+                     stats_path=str(tmp_path / "stats.json"),
+                     overpass_fetch=always_down,
+                     taginfo_fetch=_fake_taginfo(load_fixture),
+                     now=NOW, sweep_rounds=3, sweep_pause_s=0)
+    assert not (tmp_path / "ct.geojson").exists()  # nothing half-written
 
 
 def test_taginfo_down_with_no_previous_stats_degrades_to_null(tmp_path, load_fixture, capsys):
