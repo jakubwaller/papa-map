@@ -50,6 +50,20 @@ export function countsByStatus(features) {
   return counts;
 }
 
+// Deep links for the "add a place" flow, built from the current map view.
+// Coordinates are clamped to 5 decimals (~1 m) so the URLs stay readable;
+// zoom is rounded and floored at the editors' useful minimum, because handing
+// MapComplete or iD a country-level zoom just strands the user in the clouds.
+export function mapCompleteAddUrl(lon, lat, zoom) {
+  const z = Math.max(14, Math.round(zoom));
+  return `https://mapcomplete.org/toilets?z=${z}&lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}`;
+}
+
+export function osmEditUrl(lon, lat, zoom) {
+  const z = Math.max(17, Math.round(zoom));
+  return `https://www.openstreetmap.org/edit#map=${z}/${lat.toFixed(5)}/${lon.toFixed(5)}`;
+}
+
 // Rebuild a FeatureCollection for the map source. Properties carry only
 // {idx, status}: status drives the data-driven circle color, idx the click
 // lookup. "unknown" features are emitted last so their grey circles draw on

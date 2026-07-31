@@ -1,8 +1,8 @@
 # papa-map
 
-**PapaMap Hamburg — Wickeltische, die Väter erreichen.**
+**PapaMap — Wickeltische, die Väter erreichen.**
 
-A static map of Hamburg places with a baby changing table, colored by whether a dad can
+A static map of places across Germany with a baby changing table, colored by whether a dad can
 actually reach it: **green** = accessible room (men's/unisex/dedicated/wheelchair),
 **red** = women's room only, **grey** = table exists but nobody has recorded which room —
 the call to action. Every grey pin deep-links to the same object on MapComplete so the
@@ -28,7 +28,11 @@ type hints working on the system Python.)
 ```bash
 python -m pipeline.run   # Overpass + taginfo -> web/data/changing_tables.geojson + stats.json
 ```
-Area is configurable: `PAPAMAP_AREA_NAME` (default `Hamburg`).
+The default build sweeps all 16 Bundesländer and merges the results (an
+all-Germany area query dies at a 60 s network idle cutoff; the per-Land queries
+take seconds each, ~5 min in total). `PAPAMAP_AREA_NAME` +
+`PAPAMAP_AREA_ADMIN_LEVEL` select a single area instead (e.g. `Hamburg` / `4`),
+`PAPAMAP_DISPLAY_AREA` names the dataset in the stats strip.
 
 ## Serve locally
 ```bash

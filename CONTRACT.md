@@ -1,5 +1,16 @@
 # papa-map — build contract (v0)
 
+> **v1 amendment (30 Jul 2026, Germany-wide):** the default build now sweeps all 16
+> Bundesländer (`admin_level=4`) and merges + dedups the results — ~13k changing_table +
+> ~32k toilet objects. One all-Germany area query was measured to die at a 60 s
+> network-path idle cutoff, so the sweep stays chunked and each query keeps
+> `[timeout:55]`; a `runtime error` remark in an HTTP-200 Overpass response is treated as
+> a retryable failure. `PAPAMAP_AREA_NAME`/`_ADMIN_LEVEL` still select a single area;
+> `PAPAMAP_DISPLAY_AREA` names the dataset (default `Deutschland`). The map opens on a
+> Germany viewport with a locate button and an add-a-place flow (deep links out to
+> MapComplete / the OSM editor). The data contract below is unchanged. City references
+> below are the v0 build history.
+
 Binding spec for all build agents. Read fully before writing code. Reference implementation for
 patterns: the author's `beer-map` repo (same deploy target). The prior-art sweep and the
 potty-parity spike this build rests on are private research notes and are not part of this repo —
