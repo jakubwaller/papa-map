@@ -1,7 +1,7 @@
 // The ?v= pin matches index.html's — bump all three together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=de1";
+         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=de2";
 
 // Names, hours and tag values in the popups originate from OpenStreetMap
 // (publicly editable), so every interpolated value MUST be HTML-escaped
@@ -48,6 +48,9 @@ const map = new maplibregl.Map({
 });
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
+// Debug/testing handle — MapLibre offers no global registry, and headless
+// verification (Playwright) needs to drive the view.
+window._papamap = map;
 
 // ---- State ----
 let allFeatures = [];                                     // flattened GeoJSON
