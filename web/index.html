@@ -1,23 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f2f5f3" />
   <title>PapaMap — Wickeltische, die Väter erreichen</title>
-  <meta name="description" content="A map of baby changing tables across Germany, colored by whether a dad can actually reach them. Data: OpenStreetMap." />
+  <meta name="description" content="Eine Karte der Wickeltische in ganz Deutschland, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=de2" />
+  <link rel="stylesheet" href="style.css?v=de3" />
 </head>
 <body>
   <div id="map"></div>
 
   <!-- Zoom + locate controls -->
   <div id="zoom-ctrl">
-    <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
-    <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
-    <button id="locate" type="button" aria-label="Show my location" title="Show my location">
+    <button id="zoom-in" type="button" aria-label="Hineinzoomen" data-i18n-aria="ariaZoomIn">+</button>
+    <button id="zoom-out" type="button" aria-label="Herauszoomen" data-i18n-aria="ariaZoomOut">−</button>
+    <button id="locate" type="button" aria-label="Meinen Standort zeigen" title="Meinen Standort zeigen" data-i18n-aria="ariaLocate">
       <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
         <path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -29,7 +29,7 @@
   <!-- Top overlay: header + stats strip + status filter -->
   <div id="topbar">
     <header>
-      <a class="brandmark" href="./" aria-label="PapaMap — home">
+      <a class="brandmark" href="./" aria-label="PapaMap — Startseite" data-i18n-aria="ariaHome">
         <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">
           <rect x="3" y="12" width="18" height="2.8" rx="1.4" fill="#009e73"></rect>
           <rect x="4.6" y="14.8" width="2.4" height="6" rx="1.2" fill="#00775a"></rect>
@@ -42,10 +42,12 @@
           <span class="city">Deutschland</span>
         </span>
       </a>
-      <span class="tagline">Wickeltische, die Väter erreichen</span>
+      <span class="tagline" data-i18n="tagline">Wickeltische, die Väter erreichen</span>
       <nav class="header-actions">
-        <button id="add-place" type="button" class="add-btn">+ Add a place</button>
-        <a href="methods.html">Methods</a>
+        <button id="add-place" type="button" class="add-btn" data-i18n="addPlace">+ Ort hinzufügen</button>
+        <a id="methods-link" href="methods.html" data-i18n="methods">Methoden</a>
+        <button id="lang-toggle" type="button" class="lang-btn" aria-label="Switch to English"
+                data-i18n="langButton" data-i18n-aria="ariaLang">EN</button>
       </nav>
     </header>
 
@@ -62,24 +64,24 @@
 
   <!-- Add-a-place dialog: everything lands in OpenStreetMap, not here -->
   <dialog id="add-dialog">
-    <h3>Add a missing place</h3>
-    <p>PapaMap has no data of its own — new places go into OpenStreetMap and
-    show up here after the nightly refresh.</p>
+    <h3 data-i18n="dlgTitle">Fehlenden Ort hinzufügen</h3>
+    <p data-i18n="dlgIntro">PapaMap hat keine eigenen Daten — neue Orte gehen in OpenStreetMap
+    und erscheinen hier nach dem nächtlichen Update.</p>
     <a id="add-toilet-link" class="btn primary" href="https://mapcomplete.org/toilets" target="_blank" rel="noopener">
-      A public toilet is missing
-      <span class="hint">Opens MapComplete at this map view — add it and answer the changing-table questions. Needs a free OSM login.</span>
+      <span data-i18n="dlgToilet">Eine öffentliche Toilette fehlt</span>
+      <span class="hint" data-i18n="dlgToiletHint">Öffnet MapComplete am aktuellen Kartenausschnitt — Toilette hinzufügen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OSM-Login.</span>
     </a>
     <a id="add-venue-link" class="btn" href="https://www.openstreetmap.org/edit" target="_blank" rel="noopener">
-      A café / shop / restaurant has a table
-      <span class="hint">The place almost certainly exists on OSM already — open the editor here and add the <code>changing_table</code> tags. Step-by-step: see Methods.</span>
+      <span data-i18n="dlgVenue">Ein Café / Laden / Restaurant hat einen Tisch</span>
+      <span class="hint" data-i18n-html="dlgVenueHint">Der Ort existiert auf OSM fast sicher schon — hier den Editor öffnen und die <code>changing_table</code>-Tags ergänzen. Schritt für Schritt: siehe Methoden.</span>
     </a>
-    <p class="dialog-foot"><a href="methods.html#contribute">How to edit, step by step</a></p>
-    <button id="add-close" type="button" class="close" aria-label="Close">×</button>
+    <p class="dialog-foot" data-i18n-html="dlgFoot"><a href="methods.html#contribute">Editieren, Schritt für Schritt</a></p>
+    <button id="add-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
   </dialog>
 
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=de2"></script>
+  <script type="module" src="app.js?v=de3"></script>
 </body>
 </html>

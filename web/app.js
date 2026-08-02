@@ -1,7 +1,32 @@
-// The ?v= pin matches index.html's — bump all three together, or a cached
+// The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=de2";
+         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=de3";
+import { STRINGS, pickLang, fmt } from "./i18n.js?v=de3";
+
+// ---- Language: German default, EN toggle. A shared ?lang= link wins over the
+// stored choice; toggling stores the choice and strips the param so it doesn't
+// override the next visit.
+let lang = pickLang(new URLSearchParams(location.search).get("lang"),
+                    localStorage.getItem("papamap-lang"));
+const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
+
+// Swap every static string in index.html: data-i18n = textContent,
+// data-i18n-html = trusted markup from i18n.js (never user input),
+// data-i18n-aria = aria-label. Idempotent — called on boot and on toggle.
+function applyI18n() {
+  document.documentElement.lang = lang;
+  document.title = t("title");
+  for (const el of document.querySelectorAll("[data-i18n]"))
+    el.textContent = t(el.dataset.i18n);
+  for (const el of document.querySelectorAll("[data-i18n-html]"))
+    el.innerHTML = t(el.dataset.i18nHtml, { href: t("methodsHref") });
+  for (const el of document.querySelectorAll("[data-i18n-aria]")) {
+    el.setAttribute("aria-label", t(el.dataset.i18nAria));
+    if (el.title) el.title = t(el.dataset.i18nAria);
+  }
+  document.getElementById("methods-link").href = t("methodsHref");
+}
 
 // Names, hours and tag values in the popups originate from OpenStreetMap
 // (publicly editable), so every interpolated value MUST be HTML-escaped
@@ -15,15 +40,15 @@ const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
 const STATUS_COLOR = { accessible: "#009e73", female_only: "#d55e00", unknown: "#3d4247" };
 
 const STATUS_DEFS = [
-  { value: "accessible", label: "Dads can reach it" },
-  { value: "female_only", label: "Women's room only" },
-  { value: "unknown", label: "Room unknown" },
+  { value: "accessible", labelKey: "stAccessible" },
+  { value: "female_only", labelKey: "stFemaleOnly" },
+  { value: "unknown", labelKey: "stUnknown" },
 ];
 
 const STATUS_META = {
-  accessible: { cls: "ok", text: "A dad can reach this changing table." },
-  female_only: { cls: "bad", text: "The table is in the women's room only." },
-  unknown: { cls: "ask", text: "Nobody has tagged which room the table is in — can you answer?" },
+  accessible: { cls: "ok", textKey: "metaAccessible" },
+  female_only: { cls: "bad", textKey: "metaFemaleOnly" },
+  unknown: { cls: "ask", textKey: "metaUnknown" },
 };
 
 const OSM_STYLE = {
@@ -103,8 +128,8 @@ function refreshPins() {
   if (!dataReady) return;
   const shown = filterByStatus(allFeatures, visible);
   countEl.textContent = allFeatures.length
-    ? `${shown.length} of ${allFeatures.length} tables`
-    : "No table data yet — run the pipeline";
+    ? t("countShown", { shown: shown.length, total: allFeatures.length })
+    : t("countNoData");
   if (styleReady) map.getSource(SRC).setData(toFeatureCollection(shown));
 }
 
@@ -118,20 +143,20 @@ const safeUrl = (u) => (typeof u === "string" && u.startsWith("https://") ? u : 
 function popupHTML(f) {
   const s = STATUS_META[f.status];
   const rows = [
-    `<div class="status ${s.cls}">${esc(s.text)}</div>`,
-    `<div class="row">Changing table: <b>${esc(f.changing_table)}</b>` +
-      (f.location_raw ? ` · room: ${esc(f.location_raw)}` : "") + `</div>`,
+    `<div class="status ${s.cls}">${esc(t(s.textKey))}</div>`,
+    `<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
+      (f.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(f.location_raw)}` : "") + `</div>`,
   ];
-  if (f.fee) rows.push(`<div class="row">Fee: ${esc(f.fee)}</div>`);
-  if (f.opening_hours) rows.push(`<div class="row">Hours: ${esc(f.opening_hours)}</div>`);
+  if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
+  if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
   const links = [];
   const mcUrl = safeUrl(f.mapcomplete_url), osmUrl = safeUrl(f.osm_url);
   if (mcUrl)
-    links.push(`<a class="btn primary" href="${esc(mcUrl)}" target="_blank" rel="noopener">Answer on MapComplete</a>`);
+    links.push(`<a class="btn primary" href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   if (osmUrl)
-    links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">View on OSM</a>`);
+    links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
-  const title = f.name || (f.amenity === "toilets" ? "Public toilets" : "Unnamed place");
+  const title = f.name || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
   const sub = f.amenity ? `<div class="sub">${esc(f.amenity.replace(/_/g, " "))}</div>` : "";
   return `<div class="popup"><h3>${esc(title)}</h3>${sub}${rows.join("")}</div>`;
 }
@@ -153,7 +178,7 @@ function renderChips() {
     b.className = "chip" + (visible.has(d.value) ? "" : " off");
     b.setAttribute("aria-pressed", String(visible.has(d.value)));
     b.innerHTML = `<span class="dot" style="background:${STATUS_COLOR[d.value]}"></span>` +
-      `${esc(d.label)} <span class="cnt">${counts[d.value]}</span>`;
+      `${esc(t(d.labelKey))} <span class="cnt">${counts[d.value]}</span>`;
     b.addEventListener("click", () => {
       if (visible.has(d.value)) visible.delete(d.value); else visible.add(d.value);
       b.classList.toggle("off", !visible.has(d.value));
@@ -166,13 +191,17 @@ function renderChips() {
 }
 
 // ---- Stats strip (from stats.json, shape per CONTRACT.md) ----
-const num = (n) => Number(n ?? 0).toLocaleString("en-US");
+// Templates come from i18n.js (trusted constants); every value interpolated
+// into them is num()'d or esc()'d here first. lastStats feeds the re-render
+// when the language toggles.
+const num = (n) => Number(n ?? 0).toLocaleString(lang === "de" ? "de-DE" : "en-US");
+let lastStats = null;
 
 function renderStats(stats) {
+  lastStats = stats;
   if (!stats || !stats.local) {
     statsEl.innerHTML =
-      `<span class="stat">Stats unavailable — <code>data/stats.json</code> is missing. ` +
-      `<a href="methods.html">Methods</a></span>`;
+      `<span class="stat">${t("statsMissing", { href: t("methodsHref") })}</span>`;
     return;
   }
   // `global` may be null: the pipeline's cold-start degrade when taginfo is
@@ -180,26 +209,25 @@ function renderStats(stats) {
   const l = stats.local, g = stats.global;
   const tables = (l.ct_yes ?? 0) + (l.ct_limited ?? 0);
   const updated = stats.generated_at
-    ? ` · updated ${esc(String(stats.generated_at).slice(0, 10))}` : "";
+    ? t("statsUpdated", { date: esc(String(stats.generated_at).slice(0, 10)) }) : "";
   let globalPart;
   if (g) {
     const ratio = g.location_male_only > 0
       ? (g.location_female_only / g.location_male_only).toFixed(1) + "×" : "—";
-    globalPart =
-      `<span class="stat">Worldwide, where the room is tagged (${num(g.location_total)}): ` +
-        `<b>${num(g.location_female_only)}</b> women's-room-only vs ` +
-        `<b>${num(g.location_male_only)}</b> men's-room-only — ${ratio}.</span>`;
+    globalPart = `<span class="stat">${t("statsGlobal", {
+      total: num(g.location_total), f: num(g.location_female_only),
+      m: num(g.location_male_only), ratio })}</span>`;
   } else {
-    globalPart = `<span class="stat">Worldwide room-tag stats unavailable right now.</span>`;
+    globalPart = `<span class="stat">${t("statsGlobalMissing")}</span>`;
   }
   statsEl.innerHTML =
-    `<span class="stat"><b>${num(tables)}</b> changing tables in ${esc(stats.area_name || "this area")} — ` +
-      `<b>${num(l.unknown)}</b> in an unknown room. ` +
-      `<span class="cta-grey">Tap the grey pins to fix that.</span></span>` +
+    `<span class="stat">${t("statsLocal", {
+      tables: num(tables), area: esc(stats.area_name || "—"),
+      unknown: num(l.unknown) })}</span>` +
     globalPart +
-    `<span class="stat honesty">${num(l.toilets_total)} toilets mapped here, capacity tags on ` +
-      `${num(l.capacity_tagged_toilets)} — provision itself is unmeasurable. ` +
-      `<a href="methods.html">Methods</a>${updated}</span>`;
+    `<span class="stat honesty">${t("statsHonesty", {
+      toilets: num(l.toilets_total), cap: num(l.capacity_tagged_toilets),
+      href: t("methodsHref"), updated })}</span>`;
 }
 
 // ---- Zoom controls ----
@@ -224,7 +252,7 @@ function toast(msg) {
 }
 
 document.getElementById("locate").addEventListener("click", () => {
-  if (!navigator.geolocation) { toast("Geolocation is not available in this browser."); return; }
+  if (!navigator.geolocation) { toast(t("toastNoGeo")); return; }
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       const at = [pos.coords.longitude, pos.coords.latitude];
@@ -236,7 +264,7 @@ document.getElementById("locate").addEventListener("click", () => {
       youMarker.setLngLat(at).addTo(map);
       map.flyTo({ center: at, zoom: Math.max(map.getZoom(), 14) });
     },
-    () => toast("Couldn't get your location — check the browser's permission."),
+    () => toast(t("toastGeoFail")),
     { enableHighAccuracy: true, timeout: 10000 },
   );
 });
@@ -253,6 +281,24 @@ document.getElementById("add-place").addEventListener("click", () => {
   addDialog.showModal();
 });
 document.getElementById("add-close").addEventListener("click", () => addDialog.close());
+
+// ---- Language toggle: re-render everything that carries text ----
+document.getElementById("lang-toggle").addEventListener("click", () => {
+  lang = lang === "de" ? "en" : "de";
+  localStorage.setItem("papamap-lang", lang);
+  // A ?lang= param would override the stored choice on reload — drop it.
+  if (new URLSearchParams(location.search).has("lang")) {
+    const url = new URL(location.href);
+    url.searchParams.delete("lang");
+    history.replaceState(null, "", url);
+  }
+  if (popup) { popup.remove(); popup = null; }
+  applyI18n();
+  renderStats(lastStats);
+  renderChips();
+  refreshPins();
+  positionZoomCtrl();  // strip height can change with string lengths
+});
 // Click on the backdrop (the dialog element itself, not its children) closes.
 addDialog.addEventListener("click", (e) => { if (e.target === addDialog) addDialog.close(); });
 
@@ -275,6 +321,7 @@ async function loadJSON(url) {
 }
 
 async function boot() {
+  applyI18n();  // markup default is German — swap before first paint if EN
   const [fc, stats] = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
     loadJSON("data/stats.json"),
