@@ -60,13 +60,19 @@ token is configured, zone-level visit totals. Everything is aggregate; no visito
 (if any) plus:
 
 ```sh
-MAILJET_API_KEY=...         # without these three the report only goes to ops.log
-MAILJET_API_SECRET=...
-PAPAMAP_OPS_TO=you@example.com
-PAPAMAP_OPS_FROM=papamap@jakubwaller.eu   # a Mailjet-validated sender
-CF_ANALYTICS_TOKEN=...      # optional: Analytics:Read, this zone only
-CF_ZONE_TAG=...             # the zone id from the Cloudflare dashboard
+PAPAMAP_SMTP_HOST=smtp.protonmail.ch   # any SMTP submission host works
+PAPAMAP_SMTP_PORT=587                  # STARTTLS
+PAPAMAP_SMTP_USER=ops@example.com      # Proton: the address paired with the SMTP token
+PAPAMAP_SMTP_PASSWORD=...              # Proton: the generated SMTP token
+PAPAMAP_OPS_TO=you@example.com         # without SMTP creds + TO, report goes to ops.log only
+PAPAMAP_OPS_FROM=ops@example.com       # optional, defaults to PAPAMAP_SMTP_USER
+CF_ANALYTICS_TOKEN=...                 # optional: Analytics:Read, this zone only
+CF_ZONE_TAG=...                        # the zone id from the Cloudflare dashboard
 ```
+
+(Proton SMTP tokens exist from the Unlimited plan up and pair with a custom-domain
+address — Settings → IMAP/SMTP → SMTP tokens. Any other provider's SMTP relay works
+with the same four variables.)
 
 ## Update the app
 
