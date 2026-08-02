@@ -43,12 +43,17 @@ def test_feature_properties_match_data_contract(load_fixture):
     assert feats[7]["location_raw"] == "hinten im Flur beim Personalraum"
 
 
-def test_mapcomplete_url_only_for_toilets(load_fixture):
+def test_mapcomplete_url_theme_depends_on_amenity(load_fixture):
     feats = {f["properties"]["osm_id"]: f["properties"]
              for f in build_features(load_fixture("overpass_changing_tables.json"))}
-    assert feats[3]["mapcomplete_url"] is None  # cafe
-    assert feats[7]["mapcomplete_url"] is None  # restaurant
-    assert feats[8]["mapcomplete_url"] == (
+    theme = ("https://mapcomplete.org/theme.html?userlayout="
+             "https://raw.githubusercontent.com/jakubwaller/papa-map/"
+             "main/theme/papamap.theme.json")
+    assert feats[3]["mapcomplete_url"] == (  # cafe -> own theme
+        f"{theme}&z=18&lat=53.5637&lon=9.9633#way/3")
+    assert feats[7]["mapcomplete_url"] == (  # restaurant -> own theme
+        f"{theme}&z=18&lat=53.561&lon=9.956#node/7")
+    assert feats[8]["mapcomplete_url"] == (  # toilets -> official theme
         "https://mapcomplete.org/toilets?z=18&lat=53.558&lon=10.001#relation/8")
 
 
