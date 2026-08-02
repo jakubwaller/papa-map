@@ -42,99 +42,93 @@
 
 <p class="back"><a href="index.html">&larr; Back to the map</a> · <a href="methods.html" hreflang="de">Diese Seite auf Deutsch</a></p>
 <h1>PapaMap — methods &amp; honesty</h1>
-<p class="muted">Wickeltische, die Väter erreichen. All figures below are the 26&nbsp;Jul&nbsp;2026
-snapshot; the stats strip on the map is recomputed nightly and may differ.</p>
+<p class="muted">Wickeltische, die Väter erreichen. The numbers below are the snapshot from
+26&nbsp;Jul&nbsp;2026. The strip on the map is recomputed nightly and can differ.</p>
 
-<h2>What this map is — and is not</h2>
-<p>PapaMap shows places across Germany that OpenStreetMap records as having a baby changing table
-(<code>changing_table=yes</code> or <code>limited</code>), colored by whether a dad can actually
-reach the table. It reads OSM, and only OSM. It writes nothing anywhere — fixing the data happens
-on OSM itself, through the links on each pin.</p>
-<p>It is <strong>not</strong> a toilet-provision scorecard, and it does not rank cities. The section
-below explains why that stronger claim cannot honestly be made from open data.</p>
+<h2>What this map is. And what it is not.</h2>
+<p>PapaMap shows places in Germany where OpenStreetMap knows about a baby changing table
+(<code>changing_table=yes</code> or <code>limited</code>). The color says whether a dad can reach
+the table. The map reads OSM and nothing else, and it writes nowhere. Fixing the data happens on
+OSM itself, through the links on each pin.</p>
+<p>A ranking of which city has the best toilet provision this is not. Why that can't honestly be
+done from open data is explained further down.</p>
 
 <h2>What the colors mean (the exact rule)</h2>
-<p>Only objects tagged <code>changing_table=yes</code> or <code>changing_table=limited</code> appear
-on the map (<code>changing_table=no</code> is counted in the stats only). The color comes from
-<code>changing_table:location</code>: the value is split on <code>;</code>, each part trimmed and
-lowercased, and matched as an <em>exact token</em> — never by substring, because
-<code>female_toilet</code> contains the string <code>male</code>.</p>
+<p>Only objects with <code>changing_table=yes</code> or <code>limited</code> make it onto the map
+(<code>no</code> only counts in the stats). The color comes from
+<code>changing_table:location</code>. The value is split on <code>;</code>, trimmed, lowercased
+and compared as a whole token. Never as a substring, because <code>female_toilet</code> contains
+<code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Green — accessible:</strong> any token is one of
+  <li><span class="dot g"></span><strong>Green:</strong> one token is
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
-      <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code>.
-      A dad can reach the table.</li>
-  <li><span class="dot r"></span><strong>Red — women's room only:</strong> otherwise, if any token is
-      <code>female_toilet</code>. The table exists, but it is in a room a dad normally cannot enter.</li>
-  <li><span class="dot u"></span><strong>Grey — unknown:</strong> everything else — no location tag at
-      all, or only unrecognized/free-text values. Nobody has recorded which room the table is in.
-      Grey is the call to action.</li>
+      <code>room</code>, <code>wheelchair_toilet</code> or <code>sales_area</code>.
+      A dad can get to it.</li>
+  <li><span class="dot r"></span><strong>Red:</strong> otherwise, if one token is
+      <code>female_toilet</code>. The table exists, but only in the women's room.</li>
+  <li><span class="dot u"></span><strong>Grey:</strong> everything else. No location tag, or only
+      free text. Nobody has recorded the room. The grey pins are the job.</li>
 </ul>
 
 <h2>How to fix a grey pin</h2>
-<p>Grey means one missing answer: <em>where is the changing table?</em> Anyone with a free
-OpenStreetMap account can supply it, on site, in under a minute:</p>
+<p>Grey means one answer is missing. Where is the changing table? Anyone with a free OSM account
+can answer that, on site, in under a minute:</p>
 <ul>
-  <li><strong>MapComplete (any phone, in the browser):</strong> every grey pin's
-      &ldquo;Answer on MapComplete&rdquo; link opens the same object in
-      <a href="https://mapcomplete.org/toilets">MapComplete's toilets theme</a>. Log in with your OSM
-      account (MapComplete handles the login), and answer its changing-table questions — including
-      which room the table is in. Your answer is saved straight to OpenStreetMap and shows up here
-      after the next nightly rebuild.</li>
-  <li><strong>StreetComplete (Android):</strong> has a dedicated changing-table quest, but it is
-      <strong>disabled by default</strong>. Enable it under
-      <em>Settings &rarr; Quest selection &amp; priority</em>, search for &ldquo;changing table&rdquo;
-      and tick the quest. It asks yes/no at toilets, cafés, restaurants and similar places — great for
-      growing coverage; for the <em>which-room</em> answer on an existing grey pin, use MapComplete.</li>
+  <li><strong>MapComplete (any phone, in the browser):</strong> &ldquo;Answer on
+      MapComplete&rdquo; on a grey pin opens the same object in
+      <a href="https://mapcomplete.org/toilets">MapComplete's toilets theme</a>. Log in with your
+      OSM account and answer the changing-table questions, including the one about the room. The
+      answer goes straight into OpenStreetMap and shows up here after the next nightly update.</li>
+  <li><strong>StreetComplete (Android):</strong> has a changing-table quest, off by default. Go to
+      <em>Settings &rarr; Quest selection &amp; priority</em>, search for &ldquo;changing
+      table&rdquo; and tick it. It only asks yes/no. For the room question on an existing grey
+      pin, use MapComplete.</li>
 </ul>
-<p class="muted">Edits are made under your own OSM account and belong to the commons — they outlive
-this site and benefit every other app reading OpenStreetMap.</p>
+<p class="muted">The edits run under your own OSM account and belong to everyone. They outlive
+this website and help every app that reads OpenStreetMap.</p>
 
 <h2 id="contribute">How to add a missing place</h2>
-<p>PapaMap stores nothing itself, so &ldquo;adding a place&rdquo; always means editing
-OpenStreetMap. The <em>+ Add a place</em> button on the map opens the right editor at your
-current view; here is what to do in each case.</p>
+<p>PapaMap stores nothing itself. Adding a place therefore always means: editing OpenStreetMap.
+The <em>+ Add a place</em> button on the map opens the right editor at your current view.</p>
 
 <h3>A public toilet is missing entirely</h3>
-<p>Use <a href="https://mapcomplete.org/toilets">MapComplete's toilets theme</a> (the button's
-first link). Log in with a free OSM account, tap the map where the toilet is, choose
-&ldquo;public toilet&rdquo; from the add menu, then answer its questions — including whether
-there is a changing table and which room it is in.</p>
+<p>Take <a href="https://mapcomplete.org/toilets">MapComplete's toilets theme</a> (the first link
+in the dialog). Log in, tap the map where the toilet is, pick &ldquo;public toilet&rdquo;, answer
+the questions. Including the ones about the changing table and the room.</p>
 
 <h3>A café, shop or restaurant has a table nobody mapped</h3>
-<p>The venue almost certainly exists in OSM already — what is missing is the
-<code>changing_table</code> tag on it. In OSM's own editor (iD), that takes about two minutes:</p>
+<p>The place almost certainly exists in OSM already. Only the <code>changing_table</code> tag is
+missing. In OSM's own editor (iD) that takes about two minutes:</p>
 <ol>
-  <li>Open <a href="https://www.openstreetmap.org">openstreetmap.org</a>, create a free account
-      (one email, no approval wait) and log in.</li>
-  <li>Find the place — search box or just navigate — and click <strong>Edit</strong>. The place is
-      either a point or a building outline; click it and its tags appear on the left.</li>
-  <li>Scroll the left panel to <strong>All tags</strong> (in German: <em>Alle Eigenschaften</em>)
-      and expand it. Click <strong>+</strong> to add:
+  <li>Create a free account on <a href="https://www.openstreetmap.org">openstreetmap.org</a> (one
+      email is enough) and log in.</li>
+  <li>Find the place and click <strong>Edit</strong>. The place is a point or a building outline.
+      Click it, its tags appear on the left.</li>
+  <li>Expand <strong>All tags</strong> at the bottom and add with <strong>+</strong>:
       <ul>
         <li><code>changing_table</code> = <code>yes</code></li>
         <li><code>changing_table:location</code> = where it is, from the
-            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">approved
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">documented
             value list</a>: <code>male_toilet</code>, <code>female_toilet</code>,
             <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
-            <code>dedicated_room</code>, <code>room</code> or <code>sales_area</code> —
-            semicolon-separated if it is in several (e.g.
-            <code>male_toilet;female_toilet</code>).</li>
+            <code>dedicated_room</code>, <code>room</code> or <code>sales_area</code>.
+            In several rooms: separate with semicolons
+            (<code>male_toilet;female_toilet</code>).</li>
       </ul></li>
-  <li>Press <strong>Save</strong> (top), write a one-line changeset comment like
-      <em>&ldquo;add changing table location&rdquo;</em>, and upload. Done — the edit is live on
-      OSM within a minute and on PapaMap after the next nightly rebuild.</li>
+  <li>Press <strong>Save</strong>, write a short comment (&ldquo;add changing table
+      location&rdquo;), upload. Live on OSM within a minute, on PapaMap after the next nightly
+      update.</li>
 </ol>
-<p class="muted">Only tag what you have seen yourself — OSM records verified reality, not hope.
-If the table exists but you don't know the room, <code>changing_table=yes</code> alone is still a
-useful edit: the place appears as a grey pin, and the next dad can answer the room question.</p>
+<p class="muted">Please only tag what you have seen yourself. OSM records what is, not what should
+be. If you don't know the room, <code>changing_table=yes</code> alone is still useful: the place
+becomes a grey pin, and the next dad answers the room question.</p>
 
-<h2>Why a provision scorecard is impossible from OSM</h2>
-<p>The obvious bigger project — an open male:female toilet-<em>provision</em> ratio per city, the
-number the &ldquo;potty parity&rdquo; argument actually turns on — cannot be computed from
-OpenStreetMap. We checked before building. An empirical spike across eight metro cores
-(Berlin, London, Paris, New York, Tokyo&nbsp;23&nbsp;wards, Amsterdam, Vienna, Melbourne;
-26&nbsp;Jul&nbsp;2026) found:</p>
+<h2>Why a provision scorecard from OSM doesn't work</h2>
+<p>The obvious bigger project would be a male-to-female toilet provision ratio per city. The
+number the &ldquo;potty parity&rdquo; argument actually turns on. It cannot be computed from
+OpenStreetMap. We checked before building, with a sample across eight city cores (Berlin, London,
+Paris, New York, Tokyo&nbsp;23&nbsp;wards, Amsterdam, Vienna, Melbourne;
+26&nbsp;Jul&nbsp;2026):</p>
 <table>
   <tr><th>City</th><th>Mapped toilets</th><th>Any gender tag</th><th>Both M&nbsp;+&nbsp;F</th></tr>
   <tr><td>Berlin</td><td>1,173</td><td>660</td><td>119</td></tr>
@@ -148,65 +142,57 @@ OpenStreetMap. We checked before building. An empirical spike across eight metro
   <tr><td><strong>All</strong></td><td><strong>9,674</strong></td><td><strong>2,888 (29.9%)</strong></td><td><strong>827 (8.5%)</strong></td></tr>
 </table>
 <ul>
-  <li>Only <strong>29.9%</strong> of mapped toilets carry any gender tag at all, and just
-      <strong>8.5%</strong> are tagged both male and female.</li>
-  <li>The gender tags that do exist (<code>male</code>/<code>female</code>/<code>unisex</code>) are
-      presence <em>booleans</em>, never counts. <strong>Zero</strong> gendered capacity or
-      cubicle-count tags were found in any of the eight cities. The one capacity key,
-      <code>toilets:num_chambers</code> (~27k uses), is ungendered and a stale 2014/2017 import;
-      its gendered variants <code>toilets:num_chambers:female</code> /
-      <code>:male</code> have <strong>2 uses each worldwide</strong>.</li>
-  <li>In Hamburg specifically (same-day Overpass check — Hamburg was not one of the eight
-      spike cities): <strong>443</strong> mapped toilets, <strong>none</strong> carrying a
-      <code>toilets:num_chambers*</code> capacity tag; two carry only the bare, ungendered
-      <code>capacity</code> tag. OSM shifts daily — the stats strip on the
-      <a href="./">front page</a> recomputes the toilet and capacity-tag counts nightly.</li>
-  <li>Tagging rates are a mapper-community artifact, not a provision signal — single-occupancy
-      toilets are correctly left ungendered, and communities tag at wildly different rates. A
-      cross-city ranking would grade OSM contributors, not cities' toilet equity.</li>
+  <li>Only 29.9% of mapped toilets carry any gender tag at all. Both (male and female): 8.5%.</li>
+  <li>The tags are pure yes/no flags, never counts. Cubicle counts per gender: zero in all eight
+      cities. The one capacity key, <code>toilets:num_chambers</code> (~27k uses), is ungendered
+      and comes almost entirely from an old import. Its variants <code>:female</code> /
+      <code>:male</code> have 2 uses each worldwide.</li>
+  <li>Hamburg, checked the same day: 443 mapped toilets, none with a
+      <code>toilets:num_chambers*</code> tag. The strip on the <a href="./">front page</a>
+      recomputes these numbers nightly.</li>
+  <li>And: tagging rates measure the mapper community, not the cities. Single-occupancy toilets
+      correctly stay ungendered. A city ranking would grade OSM contributors, not toilet
+      equity.</li>
 </ul>
-<p>So the honest statement is: <strong>toilet provision itself is unmeasurable from open data
-today.</strong> This site measures what is measurable — where changing tables are recorded, and
-which room they are in — and turns the gaps into contributions.</p>
+<p>So the only honest statement is: provision itself cannot be measured from open data today.
+This site measures what is measurable and turns the gaps into contributions.</p>
 
 <h2>The one computable fact: where the tables are</h2>
-<p><code>changing_table:location</code> is, as far as we know, the only open vocabulary on Earth
-recording <em>which room</em> a changing table is in. It is sparse — about 3,659 of ~77,000
-<code>changing_table</code> objects globally, under 5% — but where it exists, it is lopsided
+<p><code>changing_table:location</code> is, as far as we know, the only open vocabulary that
+records which room a changing table is in. It is sparse: about 3,659 of ~77,000
+<code>changing_table</code> objects worldwide, under 5%. But where it exists, it is lopsided
 (taginfo, 26&nbsp;Jul&nbsp;2026):</p>
 <ul>
-  <li>Tables recorded in the <strong>women's room only: ~485</strong>.</li>
-  <li>Tables recorded in the <strong>men's room only: ~71</strong> — roughly a
-      <strong>7:1</strong> skew. ~289 more are tagged in both rooms; ~410 in total record
-      <em>any</em> men's-room table, worldwide.</li>
+  <li>Tables only in the women's room: <strong>~485</strong>.</li>
+  <li>Tables only in the men's room: <strong>~71</strong>. Roughly 7:1. ~289 are tagged in both
+      rooms, ~410 record any men's-room table at all. Worldwide.</li>
 </ul>
-<p>Caveats, stated plainly: the sample is small and tag-biased (mappers choose what to record), so
-the exact ratio should not be over-read. The direction, though, is consistent with what is already
-documented elsewhere: changing infrastructure defaults to women's spaces, which locks dads out and
-quietly assumes childcare is women's work. This map exists to make the missing data visible — and
-easy to fix.</p>
+<p>The sample is small, and mappers choose what they record. So don't over-read the exact ratio.
+The direction matches what has long been documented elsewhere: changing tables hang in the
+women's room by default. That locks dads out, and it quietly assumes who is in charge of
+diapers. This map makes the missing data visible. And easy to fix.</p>
 
 <h2>Data licence &amp; attribution</h2>
 <p>All map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, available under the
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
-The GeoJSON and stats files this site serves are derived from OSM and are therefore also ODbL.
+The GeoJSON and stats files this site serves are derived from OSM and therefore also ODbL.
 Global tag statistics come from <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 The site's own code is MIT-licensed.</p>
 
 <h2>Privacy</h2>
-<p>This is a static site. No accounts, no cookies, no analytics, no tracking scripts; the site
-stores nothing about you and has no server-side database. The map page loads its background tiles
-from OpenStreetMap's tile servers, so those requests are subject to the
+<p>A static site. No accounts, no cookies, no analytics, no tracking scripts. The site stores
+nothing about you and has no database. The map tiles come from OpenStreetMap's tile servers;
+those requests fall under the
 <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privacy policy</a>. If you follow a
 link to MapComplete, StreetComplete or openstreetmap.org, you are on their sites, editing under
-your own OSM account — nothing passes through us. Formal pages:
+your own OSM account. Nothing passes through us. Formal pages:
 <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (German).</p>
 
-<p class="muted">Sources: live Overpass spike over 8 metro cores (9,674 toilets) and taginfo key
-statistics, both 26&nbsp;Jul&nbsp;2026; the local counts come from the same nightly Overpass query
-that builds this map.</p>
+<p class="muted">Sources: Overpass sample across 8 city cores (9,674 toilets) and taginfo key
+statistics, both 26&nbsp;Jul&nbsp;2026. The local numbers come from the same nightly query that
+builds the map.</p>
 
 </body>
 </html>
