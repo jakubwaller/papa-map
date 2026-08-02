@@ -1,8 +1,8 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=de3";
-import { STRINGS, pickLang, fmt } from "./i18n.js?v=de3";
+         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=de4";
+import { STRINGS, pickLang, fmt } from "./i18n.js?v=de4";
 
 // ---- Language: German default, EN toggle. A shared ?lang= link wins over the
 // stored choice; toggling stores the choice and strips the param so it doesn't

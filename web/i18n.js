@@ -24,8 +24,8 @@ export function fmt(template, vars = {}) {
 
 export const STRINGS = {
   de: {
-    title: "PapaMap — Wickeltische, die Väter erreichen",
-    tagline: "Wickeltische, die Väter erreichen",
+    title: "PapaMap — Wickeltische, die ein Vater erreicht",
+    tagline: "Wickeltische, die ein Vater erreicht",
     addPlace: "+ Ort hinzufügen",
     methods: "Methoden",
     methodsHref: "methods.html",

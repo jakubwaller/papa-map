@@ -1,6 +1,6 @@
 # papa-map
 
-**PapaMap — Wickeltische, die Väter erreichen.**
+**PapaMap — Wickeltische, die ein Vater erreicht.**
 
 A static map of places across Germany with a baby changing table, colored by whether a dad can
 actually reach it: **green** = accessible room (men's/unisex/dedicated/wheelchair),
