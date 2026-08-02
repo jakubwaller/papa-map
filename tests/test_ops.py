@@ -123,3 +123,45 @@ def test_unparsable_generated_at_alerts(tmp_path):
     anomalies, _, _, _ = run(tmp_path, stats={"generated_at": "soon"},
                              gj=geojson([("node", 1, "unknown")]), now=TUESDAY)
     assert any("generated_at" in a for a in anomalies)
+
+
+def test_send_mail_unconfigured_is_false(monkeypatch):
+    for key in ("PAPAMAP_SMTP_HOST", "PAPAMAP_SMTP_USER",
+                "PAPAMAP_SMTP_PASSWORD", "PAPAMAP_OPS_TO"):
+        monkeypatch.delenv(key, raising=False)
+    assert ops.send_mail("s", "b") is False
+
+
+def test_send_mail_smtp_flow(monkeypatch):
+    monkeypatch.setenv("PAPAMAP_SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("PAPAMAP_SMTP_USER", "ops@example.com")
+    monkeypatch.setenv("PAPAMAP_SMTP_PASSWORD", "token")
+    monkeypatch.setenv("PAPAMAP_OPS_TO", "inbox@example.com")
+    monkeypatch.delenv("PAPAMAP_OPS_FROM", raising=False)
+    calls = {}
+
+    class FakeSMTP:
+        def __init__(self, host, port, timeout):
+            calls["connect"] = (host, port)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def starttls(self):
+            calls["starttls"] = True
+
+        def login(self, user, password):
+            calls["login"] = (user, password)
+
+        def send_message(self, msg):
+            calls["msg"] = msg
+
+    assert ops.send_mail("subject", "body", smtp=FakeSMTP) is True
+    assert calls["connect"] == ("smtp.example.com", 587)
+    assert calls["starttls"] and calls["login"] == ("ops@example.com", "token")
+    assert calls["msg"]["From"] == "ops@example.com"
+    assert calls["msg"]["To"] == "inbox@example.com"
+    assert calls["msg"]["Subject"] == "subject"

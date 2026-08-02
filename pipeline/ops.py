@@ -12,7 +12,8 @@ Everything in the report is aggregate: dataset counts derived from public ODbL
 OSM data, plus (optionally) Cloudflare's zone-level request totals. No
 visitor-level data is read, stored or sent.
 
-Mail is Mailjet's v3.1 API; without MAILJET_API_KEY/PAPAMAP_OPS_TO configured
+Mail goes out over plain SMTP submission (STARTTLS) — any provider that hands
+out SMTP credentials works. Without PAPAMAP_SMTP_*/PAPAMAP_OPS_TO configured
 the report only goes to stdout (the cron log) and the exit code still says
 healthy/anomalous, so the check is useful before any mail is wired up.
 """
@@ -20,8 +21,10 @@ from __future__ import annotations
 
 import json
 import os
+import smtplib
 import sys
 from datetime import datetime, timezone
+from email.message import EmailMessage
 from pathlib import Path
 
 import requests
@@ -34,7 +37,6 @@ DROP_ALERT_PCT = float(os.environ.get("PAPAMAP_OPS_DROP_PCT", "20"))
 HISTORY_DAYS = 90
 WEEKLY_DIGEST_WEEKDAY = 0  # Monday
 
-MAILJET_URL = "https://api.mailjet.com/v3.1/send"
 CF_GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql"
 
 STATUS_KEYS = ("accessible", "female_only", "unknown")
@@ -181,22 +183,28 @@ def cf_visits(days=7, now=None, post=requests.post):
         return None
 
 
-def send_mail(subject, body, post=requests.post) -> bool:
-    """False = not configured or failed; the report is on stdout either way."""
-    key = os.environ.get("MAILJET_API_KEY")
-    secret = os.environ.get("MAILJET_API_SECRET")
+def send_mail(subject, body, smtp=smtplib.SMTP) -> bool:
+    """Plain SMTP submission with STARTTLS (Proton SMTP token, Mailjet relay,
+    anything). False = not configured or failed; the report is on stdout
+    either way."""
+    host = os.environ.get("PAPAMAP_SMTP_HOST")
+    user = os.environ.get("PAPAMAP_SMTP_USER")
+    password = os.environ.get("PAPAMAP_SMTP_PASSWORD")
     to = os.environ.get("PAPAMAP_OPS_TO")
-    sender = os.environ.get("PAPAMAP_OPS_FROM", "papamap@jakubwaller.eu")
-    if not (key and secret and to):
-        print("mail not configured (MAILJET_API_KEY/MAILJET_API_SECRET/"
+    sender = os.environ.get("PAPAMAP_OPS_FROM") or user
+    port = int(os.environ.get("PAPAMAP_SMTP_PORT", "587"))
+    if not (host and user and password and to):
+        print("mail not configured (PAPAMAP_SMTP_HOST/USER/PASSWORD, "
               "PAPAMAP_OPS_TO) — stdout only", file=sys.stderr)
         return False
+    msg = EmailMessage()
+    msg["From"], msg["To"], msg["Subject"] = sender, to, subject
+    msg.set_content(body)
     try:
-        r = post(MAILJET_URL, timeout=30, auth=(key, secret), json={
-            "Messages": [{"From": {"Email": sender, "Name": "PapaMap ops"},
-                          "To": [{"Email": to}],
-                          "Subject": subject, "TextPart": body}]})
-        r.raise_for_status()
+        with smtp(host, port, timeout=30) as conn:
+            conn.starttls()
+            conn.login(user, password)
+            conn.send_message(msg)
         return True
     except Exception as exc:
         print(f"WARN: sending mail failed: {exc}", file=sys.stderr)
