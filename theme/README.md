@@ -48,10 +48,9 @@ are checked. A single-choice dropdown gives the three statuses without that trap
 
 ## How to load a custom theme (2026)
 
-Two routes. What follows distinguishes *verified from docs/source* from *needs a live
-test* — nothing here has been loaded in a live browser session yet.
+Two routes. Route 1 is live-tested since 2 Aug 2026; Studio remains documented-only.
 
-### 1. URL loading (`userlayout`) — verified against source, not live-tested
+### 1. URL loading (`userlayout`) — live-tested 2 Aug 2026
 
 Verified by reading `src/Logic/DetermineTheme.ts` on the GitHub mirror
 (`github.com/pietervdvn/MapComplete`, master, fetched 26 Jul 2026):
@@ -66,11 +65,12 @@ https://mapcomplete.org/theme.html?userlayout=<URL of papamap.theme.json>
   serving the JSON **must send CORS headers** (`Access-Control-Allow-Origin`). A
   `raw.githubusercontent.com` URL of this file works for that; `python -m http.server`
   does not send CORS headers, so local serving needs a header-adding server. If the
-  theme is ever served from papamap.de (placeholder domain, not set up),
-  Caddy must add that header.
-- Viewing should work without an OSM account; **answering questions requires OSM
-  login** — that full loop (login, answer, tag written) is exactly what still needs a
-  live test.
+  theme is ever served from papamap.de instead, Caddy must add that header.
+- Viewing works without an OSM account; **answering questions requires OSM login**.
+  That full loop — load via `userlayout`, log in, answer, tags written — was completed
+  on 2 Aug 2026 with a real edit through the `dad_changing_table_amenity` layer: a
+  drugstore got `changing_table:location=sales_area` and `changing_table:fee=no`,
+  exactly the intended tags and nothing else.
 
 ### 2. MapComplete Studio — documented, not tested
 
@@ -81,9 +81,12 @@ right place to paste/adapt this theme's layers if URL loading ever misbehaves.
 
 ## Validation — read this before trusting the file
 
-**This theme has not been loaded in a live MapComplete instance.** Here is exactly what
-was and was not verified (all reference files fetched 26 Jul 2026 from the GitHub master
-mirror of MapComplete):
+**Live-tested 2 Aug 2026:** mapcomplete.org loaded the theme via `userlayout` (which
+runs its `PrepareTheme`/`PrevalidateTheme`/`ValidateThemeAndLayers` passes, so the
+runtime accepts the `~i~` conditions too), both layers rendered, and a logged-in edit
+through the second layer wrote its answers as exactly the intended tags. What follows
+records the earlier offline verification (reference files fetched 26 Jul 2026 from the
+GitHub master mirror of MapComplete):
 
 Verified offline:
 
@@ -110,17 +113,15 @@ Verified offline:
   untouched for remote themes per a source read of `FixImages.ts` (known images pass
   through) — source read only, not executed.
 
-**Not verified — needs a live OSM-login test:**
+**Still not live-verified** (the 2 Aug test covered the second layer's location and
+fee questions, answered with single values):
 
-- That mapcomplete.org actually loads the theme via `userlayout` (the runtime
-  `PrepareTheme`/`PrevalidateTheme`/`ValidateThemeAndLayers` passes enforce rules beyond
-  the JSON schema).
 - That the draft group renders separately: `{questions(,draft_capacity)}` for the normal
   questions and `{questions(draft_capacity)}` under the draft header.
-- That `multiAnswer` writes `changing_table:location=a;b` on multi-select.
-- That `~i~` / `!~i~` regex conditions are accepted at runtime inside filter options and
-  marker-color mappings.
-- That answering each question writes exactly the intended tag, and nothing else.
+- That `multiAnswer` writes `changing_table:location=a;b` when several rooms are
+  selected.
+- The `dad_toilet` layer's questions end to end — same building blocks, but no live
+  edit through that layer yet (the official toilets theme covers those objects anyway).
 
 Format wrinkle worth recording: `Docs/Making_Your_Own_Theme.md` still documents a
 `group` attribute on tagRenderings, but the current schema has no such property — the

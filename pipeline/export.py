@@ -9,14 +9,20 @@ from .classify import classify
 from .osm import element_coords
 
 
+PAPAMAP_THEME_URL = ("https://raw.githubusercontent.com/jakubwaller/papa-map/"
+                     "main/theme/papamap.theme.json")
+
+
 def _mapcomplete_url(amenity, osm_type, osm_id, lat, lon):
-    """Deep link into MapComplete's toilets theme, landing next to the feature
-    with the object preselected via the #<type>/<id> fragment (format per
-    MapComplete's Docs/URL_Parameters.md). Other amenities aren't in that
-    theme, so they get no link."""
-    if amenity != "toilets":
-        return None
-    return f"https://mapcomplete.org/toilets?z=18&lat={lat}&lon={lon}#{osm_type}/{osm_id}"
+    """Deep link into MapComplete, landing next to the feature with the object
+    preselected via the #<type>/<id> fragment (format per MapComplete's
+    Docs/URL_Parameters.md). The official toilets theme only selects
+    amenity=toilets; everything else (cafés, shops, ...) is covered by the
+    second layer of our own theme, loaded via userlayout."""
+    if amenity == "toilets":
+        return f"https://mapcomplete.org/toilets?z=18&lat={lat}&lon={lon}#{osm_type}/{osm_id}"
+    return (f"https://mapcomplete.org/theme.html?userlayout={PAPAMAP_THEME_URL}"
+            f"&z=18&lat={lat}&lon={lon}#{osm_type}/{osm_id}")
 
 
 def build_features(ct_data: dict) -> list[dict]:
