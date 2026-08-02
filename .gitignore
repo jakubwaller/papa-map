@@ -11,3 +11,6 @@ pipeline.log
 .DS_Store
 docs/DEPLOY.local.md
 .playwright-mcp/
+ops-state.json
+ops.log
+ops.env

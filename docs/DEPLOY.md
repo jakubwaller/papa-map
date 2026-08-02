@@ -43,6 +43,31 @@ If Caddy runs in a container, bind-mount the site into it first (add
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.
 
+## Ops mail (optional, recommended)
+
+`python -m pipeline.ops` compares today's dataset against yesterday's snapshot (state in
+`ops-state.json`, gitignored) and mails only on an anomaly — stale `generated_at` (>48 h),
+missing files, a >20% drop in the total or accessible count — plus one all-clear digest every
+Monday, so a silent week means the watcher itself died. The digest carries the day's and week's
+changes (new features, grey→green transitions = answered room questions) and, if a Cloudflare
+token is configured, zone-level visit totals. Everything is aggregate; no visitor data.
+
+```cron
+30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1
+```
+
+`ops.env` (git-ignored, `chmod 600`) holds the same `PAPAMAP_*` path overrides as the build cron
+(if any) plus:
+
+```sh
+MAILJET_API_KEY=...         # without these three the report only goes to ops.log
+MAILJET_API_SECRET=...
+PAPAMAP_OPS_TO=you@example.com
+PAPAMAP_OPS_FROM=papamap@jakubwaller.eu   # a Mailjet-validated sender
+CF_ANALYTICS_TOKEN=...      # optional: Analytics:Read, this zone only
+CF_ZONE_TAG=...             # the zone id from the Cloudflare dashboard
+```
+
 ## Update the app
 
 ```bash

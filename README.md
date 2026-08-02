@@ -53,6 +53,10 @@ node --test web/*.test.js  # frontend pure functions (needs Node.js)
 (Paths match the Pi deploy in [`docs/DEPLOY.md`](docs/DEPLOY.md) — adjust if your clone
 lives elsewhere.)
 
+An optional second cron line runs `python -m pipeline.ops`: an anomaly-gated ops mail
+(stale data, missing files, count drops) plus a Monday all-clear digest with the week's
+grey→green transitions — see the "Ops mail" section in `docs/DEPLOY.md`.
+
 ## Deploy
 Static files only — no API, no database, no container needed for v0. Raspberry Pi + Caddy
 `file_server` instructions: [`docs/DEPLOY.md`](docs/DEPLOY.md).
