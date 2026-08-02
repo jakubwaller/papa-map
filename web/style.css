@@ -122,6 +122,22 @@ header {
 }
 .add-btn:hover { background: var(--green-strong); border-color: var(--green-strong); }
 
+/* Language toggle: styled like the nav links, shaped like a small button.
+   Shows the language it switches TO. */
+.lang-btn {
+  padding: 5px 9px;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  background: none;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.lang-btn:hover { border-color: var(--green); color: var(--green); }
+
 /* ---------- Stats strip ---------- */
 #stats {
   display: flex;

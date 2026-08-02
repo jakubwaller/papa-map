@@ -57,7 +57,7 @@ lives elsewhere.)
 Static files only — no API, no database, no container needed for v0. Raspberry Pi + Caddy
 `file_server` instructions: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
-The domain `papamap.de` is a **placeholder** — it is not set up yet and may change.
+Live at [papamap.de](https://papamap.de) (`www.papamap.de` and `papamap.jakubwaller.eu` redirect there).
 
 ## Licences
 Code: MIT (see `LICENSE`). Data: © OpenStreetMap contributors,
