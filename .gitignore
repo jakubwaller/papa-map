@@ -5,8 +5,11 @@ __pycache__/
 web/data/*.geojson
 web/data/*.json
 !web/data/.gitkeep
-# One page per Bundesland, rewritten by every full pipeline run.
-web/wickeltische/
+# One page per Bundesland, rewritten by every full pipeline run. The
+# directory itself is tracked: under Docker it is the mountpoint for the
+# generated pages, and /srv is read-only, so Docker cannot create it.
+web/wickeltische/*
+!web/wickeltische/.gitkeep
 /web-data/
 *.sqlite
 pipeline.log
