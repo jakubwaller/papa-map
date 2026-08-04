@@ -59,8 +59,8 @@ def build_features(ct_data: dict) -> list[dict]:
     return features
 
 
-def write_json_atomic(obj, out_path: str) -> None:
-    """Write JSON via a temp file in the same directory + atomic rename, so a
+def write_text_atomic(text: str, out_path: str) -> None:
+    """Write text via a temp file in the same directory + atomic rename, so a
     crash mid-write never leaves a half-written file for the site to serve.
     The temp name is unique (mkstemp) so two overlapping runs — nightly cron
     plus a manual `python -m pipeline.run` — can't publish each other's
@@ -71,7 +71,7 @@ def write_json_atomic(obj, out_path: str) -> None:
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            fh.write(json.dumps(obj, ensure_ascii=False))
+            fh.write(text)
             fh.flush()
             os.fsync(fh.fileno())
         os.chmod(tmp, 0o644)  # mkstemp creates 0600 — unreadable to the web server
@@ -82,6 +82,10 @@ def write_json_atomic(obj, out_path: str) -> None:
         except OSError:
             pass
         raise
+
+
+def write_json_atomic(obj, out_path: str) -> None:
+    write_text_atomic(json.dumps(obj, ensure_ascii=False), out_path)
 
 
 def export_geojson(features: list[dict], out_path: str) -> int:

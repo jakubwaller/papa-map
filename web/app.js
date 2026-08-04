@@ -1,9 +1,9 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=seo2";
+         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=seo3";
 import { STRINGS, NUMBER_LOCALE, pickLang, nextLang, fmt,
-         langUrl } from "./i18n.js?v=seo2";
+         langUrl } from "./i18n.js?v=seo3";
 
 // ---- Language: German default, DE → EN → DA cycle. A shared ?lang= link wins
 // over the stored choice, which wins over a Danish browser; toggling stores the
@@ -88,9 +88,16 @@ const OSM_STYLE = {
 // map instead of zooming, which reads as jank.
 const HOME_BOUNDS = [[5.5, 47.1], [15.4, 56.6]];
 
+// A Bundesland page links in with ?bbox=… so its "auf der Karte öffnen" button
+// lands on that Land; everything else opens on the home view. The canonical
+// stays https://papamap.de/ (applyHeadTags), so these 16 deep links fold back
+// into the homepage rather than becoming 16 near-duplicate indexed URLs.
+const VIEW_BOUNDS =
+  parseBbox(new URLSearchParams(location.search).get("bbox")) ?? HOME_BOUNDS;
+
 const map = new maplibregl.Map({
   container: "map", style: OSM_STYLE,
-  bounds: HOME_BOUNDS, fitBoundsOptions: { padding: 12 },
+  bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 },
   maxBounds: [[-12, 41], [32, 65]],
   // 3.5, not the old 4.5: fitHome() re-fits under a topbar that eats a third
   // of a portrait phone (half of a landscape one), and the old floor clamped
@@ -314,13 +321,14 @@ statsEl.addEventListener("click", (e) => {
 // Denmark sits at the top of the home view, so an unpadded fit hides the whole
 // country behind the header. Re-fit once the strip has rendered and its real
 // height is known. Not called on resize: by then the user has panned somewhere
-// and yanking the view back would be worse than a slightly off fit.
+// and yanking the view back would be worse than a slightly off fit. Fits
+// whatever the page opened on, so a ?bbox= deep link gets the same treatment.
 function fitHome() {
   // Never pad past half the canvas: on a short landscape phone the strip can
   // approach the full height, and a padding taller than its container makes
   // fitBounds produce a NaN camera.
   const top = Math.min(topbar.offsetHeight + 10, map.getCanvas().clientHeight / 2);
-  map.fitBounds(HOME_BOUNDS, {
+  map.fitBounds(VIEW_BOUNDS, {
     padding: { top, bottom: 12, left: 12, right: 12 },
     animate: false,
   });

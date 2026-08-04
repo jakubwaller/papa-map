@@ -58,6 +58,30 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
   </url>
 
+  <!-- The Bundesland pages: generated nightly by pipeline/pages.py, but their
+       URLs are fixed (the 16 names are a constant in pipeline/config.py), so
+       they are listed by hand like everything else here. German-only by
+       design — someone looking for a Wickeltisch in Hessen searches in German
+       — so no alternates. tests/test_pages.py asserts this list matches the
+       slugs the generator actually writes. -->
+  <url><loc>https://papamap.de/wickeltische/</loc></url>
+  <url><loc>https://papamap.de/wickeltische/baden-wuerttemberg.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/bayern.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/berlin.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/brandenburg.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/bremen.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/hamburg.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/hessen.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/mecklenburg-vorpommern.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/niedersachsen.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/nordrhein-westfalen.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/rheinland-pfalz.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/saarland.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/sachsen.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/sachsen-anhalt.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/schleswig-holstein.html</loc></url>
+  <url><loc>https://papamap.de/wickeltische/thueringen.html</loc></url>
+
   <!-- German-only by design, so no alternates. -->
   <url><loc>https://papamap.de/impressum.html</loc></url>
   <url><loc>https://papamap.de/datenschutz.html</loc></url>

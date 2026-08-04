@@ -50,6 +50,21 @@ export function countsByStatus(features) {
   return counts;
 }
 
+// ?bbox=minLon,minLat,maxLon,maxLat — how the Bundesland pages link into the
+// map, so "Hessen auf der Karte öffnen" opens on Hessen instead of the
+// Germany+Denmark home view. Returns MapLibre's [[w,s],[e,n]] or null; anything
+// malformed degrades to the home view, because handing fitBounds a NaN or an
+// inverted box produces a broken camera the user can't recover from.
+export function parseBbox(value) {
+  const parts = String(value ?? "").split(",");
+  if (parts.length !== 4) return null;
+  const [w, s, e, n] = parts.map(Number);
+  if (![w, s, e, n].every(Number.isFinite)) return null;
+  if (w < -180 || e > 180 || s < -90 || n > 90) return null;
+  if (w >= e || s >= n) return null;   // empty or inverted
+  return [[w, s], [e, n]];
+}
+
 // Deep links for the "add a place" flow, built from the current map view.
 // Coordinates are clamped to 5 decimals (~1 m) so the URLs stay readable;
 // zoom is rounded and floored at the editors' useful minimum, because handing

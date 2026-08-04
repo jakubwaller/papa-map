@@ -329,6 +329,10 @@ header {
   font-size: 10px;
   color: var(--muted);
   background: rgba(255, 255, 255, .8);
+  /* Anchored right with no left edge, so a fourth link (Bundesländer) grows
+     the box off the left of a 375px phone. Cap it and let it wrap instead. */
+  max-width: calc(100vw - 20px);
+  text-align: right;
   padding: 2px 8px;
   border-radius: 6px;
 }

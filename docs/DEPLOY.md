@@ -1,8 +1,8 @@
 # Deploying papa-map (static)
 
-v0 is a static site: the nightly pipeline writes two JSON files into `web/data/`, and any web
-server serves `web/` as plain files. **No container, no API process, no database** — there is
-nothing to keep running except cron.
+v0 is a static site: the nightly pipeline writes two JSON files into `web/data/` and one HTML
+page per Bundesland into `web/wickeltische/`, and any web server serves `web/` as plain files.
+**No container, no API process, no database** — there is nothing to keep running except cron.
 
 Works on any small always-on box (a Raspberry Pi is plenty). Substitute your own paths and
 domain below; `DOMAIN` stands for wherever you host it.
@@ -42,6 +42,18 @@ If Caddy runs in a container, bind-mount the site into it first (add
 
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.
+
+The same run rewrites `web/wickeltische/` — the per-Bundesland pages. They are build output,
+not repo content, so **a fresh clone serves 404s there until the first build runs**: the
+sitemap lists those 17 URLs unconditionally. Run the pipeline once after deploying rather
+than waiting for the nightly cron.
+
+Under Docker the pages need a writable mount like the JSON does. The image sets
+`PAPAMAP_PAGES_DIR=/out/wickeltische` and compose mounts `./web-data/wickeltische` back into
+the served tree at `/srv/wickeltische`, so the URL stays `DOMAIN/wickeltische/`. **The
+`papamap` container has to be recreated (`docker compose up -d papamap`) for that mount to
+exist** — a `git pull` alone leaves it serving the old volume set and every Land page 404s.
+`mkdir -p web-data/wickeltische` first, or Docker creates it root-owned.
 
 Running it from the bundled `docker-compose.yml` instead? Then the cron line is:
 ```cron

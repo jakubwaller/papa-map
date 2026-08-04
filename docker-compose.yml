@@ -11,6 +11,10 @@ services:
       - ./deploy/papamap.Caddyfile:/etc/caddy/Caddyfile:ro
       - ./web:/srv:ro
       - ./web-data:/srv/data:ro   # generated GeoJSON + stats, read-only here
+      # Also generated: one page per Bundesland. Same arrangement as /srv/data —
+      # build output lives in web-data/ and is mounted back into the tree at the
+      # URL it is served from, because web/ itself is read-only to the pipeline.
+      - ./web-data/wickeltische:/srv/wickeltische:ro
     networks:
       - web_proxy
 
