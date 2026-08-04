@@ -43,6 +43,17 @@ If Caddy runs in a container, bind-mount the site into it first (add
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.
 
+Running it from the bundled `docker-compose.yml` instead? Then the cron line is:
+```cron
+30 4 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
+```
+**`--build` is not optional.** The `pipeline` service copies `pipeline/` into its
+image (the site is bind-mounted, the pipeline code is not), so a plain
+`docker compose run` keeps executing whatever code the image was last built with.
+Without it a `git pull` looks like a successful deploy, the build runs green, and
+it silently produces a dataset from the old code — which is exactly what happened
+when Denmark was added.
+
 ## Ops mail (optional, recommended)
 
 `python -m pipeline.ops` compares today's dataset against yesterday's snapshot (state in
@@ -82,7 +93,11 @@ cd ~/papa-map && git pull        # or re-run the rsync
 .venv/bin/python -m pipeline.run            # optional: rebuild data now instead of waiting for cron
 ```
 
-No image rebuild, no restart — the server picks up changed files immediately.
+No restart — the server picks up changed web files immediately, because they are
+bind-mounted. **The pipeline is different if you run it under Docker:** its code
+lives in the image, so a `git pull` alone leaves the old build logic in place. Add
+`docker compose build pipeline` (or use `run --build`, as in the cron above) after
+any change under `pipeline/`.
 
 ## Verify
 
