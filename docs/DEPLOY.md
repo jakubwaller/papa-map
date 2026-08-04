@@ -55,6 +55,12 @@ the served tree at `/srv/wickeltische`, so the URL stays `DOMAIN/wickeltische/`.
 exist** — a `git pull` alone leaves it serving the old volume set and every Land page 404s.
 `mkdir -p web-data/wickeltische` first, or Docker creates it root-owned.
 
+`web/wickeltische/.gitkeep` is tracked for the same reason `web/data/.gitkeep` is: `/srv` is
+mounted **read-only**, so Docker cannot create `/srv/wickeltische` to mount onto and the
+container fails to start outright — not a 404, the whole site goes down. The mountpoint has
+to be in the repo. (Learned the hard way: recreating the container without it took papamap.de
+offline until the directory existed.)
+
 Running it from the bundled `docker-compose.yml` instead? Then the cron line is:
 ```cron
 30 4 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
