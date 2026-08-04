@@ -11,7 +11,7 @@ dependencies beyond bundled icon paths):
 
 - **`dad_toilet`** — all `amenity=toilets`. Pin color mirrors the CONTRACT.md
   classification rule; toilets without a table (or untagged) stay white and get the
-  `changing_table` question on click. Questions (EN + DE): `changing_table` yes/no,
+  `changing_table` question on click. Questions (EN + DE + DA): `changing_table` yes/no,
   `changing_table:location` (approved value list only, multi-answer),
   `changing_table:fee` yes/no — plus a **clearly separated draft question group** for
   `toilets:num_chambers:female` / `toilets:num_chambers:male` (positive-integer inputs,

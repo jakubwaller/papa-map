@@ -1,18 +1,33 @@
-// UI strings for both languages — no DOM, no fetch, unit-tested via node --test.
-// German is the default; English is the toggle. The legal pages (Impressum,
-// Datenschutz) stay German-only by design. Values may carry trusted markup
-// (<b>, <a>, <code>) — they are constants from this file, never user input;
-// anything interpolated into {tokens} must be escaped by the caller.
+// UI strings for all three languages — no DOM, no fetch, unit-tested via
+// node --test. German is the default; the button cycles DE → EN → DA. The
+// legal pages (Impressum, Datenschutz) stay German-only by design. Values may
+// carry trusted markup (<b>, <a>, <code>) — they are constants from this file,
+// never user input; anything interpolated into {tokens} must be escaped by the
+// caller.
 
-export const LANGS = ["de", "en"];
+export const LANGS = ["de", "en", "da"];
 export const DEFAULT_LANG = "de";
 
-// Query param beats stored choice beats default — a shared ?lang=en link
-// should win over the recipient's remembered preference.
-export function pickLang(query, stored) {
+// Thousands separators differ per language and the strip is full of counts.
+export const NUMBER_LOCALE = { de: "de-DE", en: "en-US", da: "da-DK" };
+
+// Query param beats stored choice beats browser language beats default — a
+// shared ?lang=en link should win over the recipient's remembered preference.
+// Only Danish is auto-detected: the site is German-first and plenty of German
+// readers run an English browser, so widening this would flip the default
+// language out from under existing visitors.
+export function pickLang(query, stored, navLang) {
   if (LANGS.includes(query)) return query;
   if (LANGS.includes(stored)) return stored;
+  if (String(navLang ?? "").toLowerCase().startsWith("da")) return "da";
   return DEFAULT_LANG;
+}
+
+// The toggle button cycles rather than flips — three languages, one button,
+// and every langButton value names the language it lands on.
+export function nextLang(lang) {
+  const i = LANGS.indexOf(lang);
+  return LANGS[(i + 1) % LANGS.length] ?? DEFAULT_LANG;
 }
 
 // Tiny {token} interpolation; unknown tokens stay literal so a missing var is
@@ -37,6 +52,12 @@ export const STRINGS = {
     ariaHome: "PapaMap — Startseite",
     ariaClose: "Schließen",
     ariaLang: "Switch to English",
+
+    // Area labels, picked by stats.json's area_key — so a Dane reads
+    // "Tyskland & Danmark", not the pipeline's fallback string.
+    areaDe: "Deutschland",
+    areaDk: "Dänemark",
+    areaDeDk: "Deutschland & Dänemark",
 
     stAccessible: "Für Papas erreichbar",
     stFemaleOnly: "Nur Damen-WC",
@@ -81,14 +102,18 @@ export const STRINGS = {
     addPlace: "+ Add a place",
     methods: "Methods",
     methodsHref: "methods-en.html",
-    langButton: "DE",
+    langButton: "DA",
 
     ariaZoomIn: "Zoom in",
     ariaZoomOut: "Zoom out",
     ariaLocate: "Show my location",
     ariaHome: "PapaMap — home",
     ariaClose: "Close",
-    ariaLang: "Auf Deutsch wechseln",
+    ariaLang: "Skift til dansk",
+
+    areaDe: "Germany",
+    areaDk: "Denmark",
+    areaDeDk: "Germany & Denmark",
 
     stAccessible: "Dads can reach it",
     stFemaleOnly: "Women's room only",
@@ -126,5 +151,61 @@ export const STRINGS = {
     dlgVenue: "A café / shop / restaurant has a table",
     dlgVenueHint: "The place almost certainly exists on OSM already — open the editor here and add the <code>changing_table</code> tags. Step-by-step: see Methods.",
     dlgFoot: '<a href="{href}#contribute">How to edit, step by step</a>',
+  },
+  da: {
+    title: "PapaMap — pusleborde, en far kan nå",
+    tagline: "Pusleborde, en far kan nå",
+    addPlace: "+ Tilføj et sted",
+    methods: "Metode",
+    methodsHref: "methods-da.html",
+    langButton: "DE",
+
+    ariaZoomIn: "Zoom ind",
+    ariaZoomOut: "Zoom ud",
+    ariaLocate: "Vis min placering",
+    ariaHome: "PapaMap — forsiden",
+    ariaClose: "Luk",
+    ariaLang: "Auf Deutsch wechseln",
+
+    areaDe: "Tyskland",
+    areaDk: "Danmark",
+    areaDeDk: "Tyskland & Danmark",
+
+    stAccessible: "En far kan nå det",
+    stFemaleOnly: "Kun på dametoilettet",
+    stUnknown: "Rummet er ukendt",
+    metaAccessible: "Dette puslebord kan en far nå.",
+    metaFemaleOnly: "Puslebordet er kun på dametoilettet.",
+    metaUnknown: "Ingen har registreret, hvilket rum puslebordet står i — ved du det?",
+
+    countShown: "{shown} af {total} pusleborde",
+    countNoData: "Ingen data endnu — kør pipelinen",
+
+    popupTable: "Puslebord",
+    popupRoom: "rum",
+    popupFee: "Gebyr",
+    popupHours: "Åbningstider",
+    popupAnswerMC: "Svar på MapComplete",
+    popupViewOSM: "Se på OSM",
+    popupToilets: "Offentligt toilet",
+    popupUnnamed: "Sted uden navn",
+
+    statsMissing: 'Statistik utilgængelig — <code>data/stats.json</code> mangler. <a href="{href}">Metode</a>',
+    statsLocal: '<b>{tables}</b> pusleborde i {area} — <b>{unknown}</b> i et ukendt rum. <span class="cta-grey">Tryk på de grå nåle for at ændre det.</span>',
+    statsGlobal: "På verdensplan, hvor rummet er registreret ({total}): <b>{f}</b> kun dametoilet mod <b>{m}</b> kun herretoilet — {ratio}.",
+    statsGlobalMissing: "Global statistik over rum er ikke tilgængelig lige nu.",
+    statsHonesty: '{toilets} toiletter registreret her, kapacitets-tags på {cap} — selve udbuddet kan ikke måles. <a href="{href}">Metode</a>{updated}',
+    statsUpdated: " · opdateret {date}",
+
+    toastNoGeo: "Placering er ikke tilgængelig i denne browser.",
+    toastGeoFail: "Kunne ikke finde din placering — tjek browserens tilladelse.",
+
+    dlgTitle: "Tilføj et sted, der mangler",
+    dlgIntro: "PapaMap har ingen egne data — nye steder kommer ind i OpenStreetMap og dukker op her efter den natlige opdatering.",
+    dlgToilet: "Et offentligt toilet mangler",
+    dlgToiletHint: "Åbner MapComplete på dette kortudsnit — tilføj toilettet og besvar spørgsmålene om puslebord. Kræver et gratis OSM-login.",
+    dlgVenue: "En café / butik / restaurant har et puslebord",
+    dlgVenueHint: "Stedet findes næsten helt sikkert i OSM allerede — åbn editoren her og tilføj <code>changing_table</code>-taggene. Trin for trin: se Metode.",
+    dlgFoot: '<a href="{href}#contribute">Sådan redigerer du, trin for trin</a>',
   },
 };

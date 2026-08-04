@@ -5,12 +5,13 @@ import time
 from datetime import datetime, timezone
 
 from . import export, osm, stats
-from .config import (DISPLAY_AREA, GEOJSON_PATH, STATS_PATH, SWEEP_PAUSE_S,
-                     SWEEP_ROUNDS, changing_table_ql, sweep_areas, toilets_ql)
+from .config import (GEOJSON_PATH, STATS_PATH, SWEEP_PAUSE_S, SWEEP_ROUNDS,
+                     changing_table_ql, display_area as configured_area,
+                     sweep_areas, toilets_ql)
 
 
 def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
-                 display_area=None, overpass_fetch=osm.fetch_overpass,
+                 display_area=None, area_key=None, overpass_fetch=osm.fetch_overpass,
                  taginfo_fetch=stats.fetch_taginfo, now=None,
                  sweep_rounds=None, sweep_pause_s=None):
     """One idempotent build: Overpass (per sweep area) -> classify -> GeoJSON +
@@ -21,7 +22,11 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     anything is written (old files survive). A taginfo failure only degrades
     the global block to the previous one."""
     areas = areas or sweep_areas()
-    display_area = display_area or DISPLAY_AREA
+    # A hand-passed display_area is a name only — no translation can exist for
+    # it, so its area_key stays None unless the caller supplies one too.
+    if display_area is None:
+        display_area, configured_key = configured_area()
+        area_key = configured_key if area_key is None else area_key
     rounds = SWEEP_ROUNDS if sweep_rounds is None else sweep_rounds
     pause = SWEEP_PAUSE_S if sweep_pause_s is None else sweep_pause_s
     ct_elements, toilets_elements = [], []
@@ -88,6 +93,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     export.export_stats({
         "generated_at": (now or datetime.now(timezone.utc)).isoformat(timespec="seconds"),
         "area_name": display_area,
+        "area_key": area_key,
         "local": local,
         "global": global_block,
     }, stats_path)

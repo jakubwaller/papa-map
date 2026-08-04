@@ -2,8 +2,8 @@
 
 **PapaMap — Wickeltische, die ein Vater erreicht.**
 
-A static map of places across Germany with a baby changing table, colored by whether a dad can
-actually reach it: **green** = accessible room (men's/unisex/dedicated/wheelchair),
+A static map of places across Germany and Denmark with a baby changing table, colored by whether a
+dad can actually reach it: **green** = accessible room (men's/unisex/dedicated/wheelchair),
 **red** = women's room only, **grey** = table exists but nobody has recorded which room —
 the call to action. Every grey pin deep-links to the same object on MapComplete so the
 missing answer becomes an OpenStreetMap contribution. OSM is the only data source and the
@@ -28,11 +28,16 @@ type hints working on the system Python.)
 ```bash
 python -m pipeline.run   # Overpass + taginfo -> web/data/changing_tables.geojson + stats.json
 ```
-The default build sweeps all 16 Bundesländer and merges the results (an
-all-Germany area query dies at a 60 s network idle cutoff; the per-Land queries
-take seconds each, ~5 min in total). `PAPAMAP_AREA_NAME` +
-`PAPAMAP_AREA_ADMIN_LEVEL` select a single area instead (e.g. `Hamburg` / `4`),
-`PAPAMAP_DISPLAY_AREA` names the dataset in the stats strip.
+The default build sweeps all 16 Bundesländer plus Denmark and merges the
+results (an all-Germany area query dies at a 60 s network idle cutoff, so
+Germany stays chunked per Land; Denmark is small enough to answer whole in one
+`admin_level=2` query, ~15 s). ~5 min in total.
+
+- `PAPAMAP_COUNTRIES=dk` builds one country only (`de,dk` is the default) — an
+  unknown code aborts rather than silently sweeping less.
+- `PAPAMAP_AREA_NAME` + `PAPAMAP_AREA_ADMIN_LEVEL` select a single area instead
+  (e.g. `Hamburg` / `4`), and `PAPAMAP_DISPLAY_AREA` names the dataset in the
+  stats strip.
 
 ## Serve locally
 ```bash

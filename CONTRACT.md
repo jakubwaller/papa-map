@@ -1,5 +1,17 @@
 # papa-map — build contract (v0)
 
+> **v2 amendment (4 Aug 2026, Denmark):** the sweep is now per-country
+> (`PAPAMAP_COUNTRIES`, default `de,dk`). Germany keeps the 16-Land chunking
+> below; Denmark answers whole as one `admin_level=2` area (`Danmark` —
+> 933 changing_table + 4,655 toilet objects, 14.5 s measured, Grønland and
+> Føroyar excluded by that relation). `stats.json` gains **`area_key`**
+> (`"de_dk"` / `"de"` / `"dk"`, or `null` for a hand-named build) next to
+> `area_name`: consumers translate the key when they know it and print
+> `area_name` verbatim otherwise. The site is now trilingual DE/EN/**DA** —
+> the language button cycles DE → EN → DA, a `da*` browser language auto-
+> selects Danish (nothing else does), and each language owns a methods page.
+> The map opens on a Germany+Denmark viewport.
+
 > **v1 amendment (30 Jul 2026, Germany-wide):** the default build now sweeps all 16
 > Bundesländer (`admin_level=4`) and merges + dedups the results — ~13k changing_table +
 > ~32k toilet objects. One all-Germany area query was measured to die at a 60 s
@@ -58,6 +70,7 @@ Overpass `out center`). Feature `properties`:
 {
   "generated_at": "ISO-8601 UTC",
   "area_name": "Hamburg",
+  "area_key": "de_dk | de | dk | null",
   "local": {
     "toilets_total": 443, "ct_objects": 213, "ct_yes": 85, "ct_no": 127, "ct_limited": 1,
     "yes_location_known": 17, "yes_location_unknown": 68,
