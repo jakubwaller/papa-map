@@ -5,7 +5,10 @@
 	root * /srv
 	file_server
 
-	# The data files are regenerated daily; the rest is versioned by URL.
+	# The data files are regenerated daily; the rest is versioned by URL — bar
+	# the Bundesland pages under /wickeltische/, which are also regenerated
+	# nightly but keep plain URLs (they are indexed). An hour of staleness on a
+	# page that changes once a night is not worth a shorter TTL.
 	@data path /data/*
 	header @data Cache-Control "public, max-age=900"
 	header Cache-Control "public, max-age=3600"

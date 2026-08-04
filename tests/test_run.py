@@ -52,13 +52,13 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     fake_overpass = _fake_overpass(load_fixture)
     summary = run_pipeline(
         geojson_path=str(geojson), stats_path=str(stats),
-        overpass_fetch=fake_overpass,
+        overpass_fetch=fake_overpass, pages_dir=str(tmp_path / "pages"),
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
     )
     # Every element appears once in each of the 17 area sweeps; dedup by
     # (type, id) must collapse the totals back to a single fixture's worth.
     assert summary == {"features": 7, "ct_objects": 9, "toilets_total": 3,
-                       "global_source": "taginfo"}
+                       "global_source": "taginfo", "pages": 17}
     assert fake_overpass.areas_seen == [a for a in SWEEP for _ in (1, 2)]
 
     fc = json.loads(geojson.read_text(encoding="utf-8"))
@@ -80,6 +80,7 @@ def test_single_area_build_keeps_its_own_name(tmp_path, load_fixture):
     run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
         areas=[("Hamburg", "4")], display_area="Hamburg",
+        pages_dir=str(tmp_path / "pages"),
         overpass_fetch=_fake_overpass(load_fixture),
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
     )
@@ -93,6 +94,7 @@ def test_single_area_build_keeps_its_own_name(tmp_path, load_fixture):
 def test_run_is_idempotent(tmp_path, load_fixture):
     kwargs = dict(geojson_path=str(tmp_path / "ct.geojson"),
                   stats_path=str(tmp_path / "stats.json"),
+                  pages_dir=str(tmp_path / "pages"),
                   overpass_fetch=_fake_overpass(load_fixture),
                   taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
     assert run_pipeline(**kwargs) == run_pipeline(**kwargs)
@@ -105,7 +107,7 @@ def test_taginfo_down_keeps_previous_global_block(tmp_path, load_fixture, capsys
                      encoding="utf-8")
     summary = run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
-        overpass_fetch=_fake_overpass(load_fixture),
+        overpass_fetch=_fake_overpass(load_fixture), pages_dir=str(tmp_path / "pages"),
         taginfo_fetch=_taginfo_down, now=NOW,
     )
     assert summary["global_source"] == "previous"
@@ -155,7 +157,7 @@ def test_failed_area_is_retried_in_a_later_round(tmp_path, load_fixture):
         geojson_path=str(tmp_path / "ct.geojson"),
         stats_path=str(tmp_path / "stats.json"),
         overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
-        now=NOW, sweep_pause_s=0)
+        pages_dir=str(tmp_path / "pages"), now=NOW, sweep_pause_s=0)
     assert summary["features"] == 7  # nothing lost, Bayern landed on round 2
     # failed ct, then both queries
     assert inner.areas_seen.count(("Bayern", "4")) == 2
@@ -180,7 +182,7 @@ def test_taginfo_down_with_no_previous_stats_degrades_to_null(tmp_path, load_fix
     stats = tmp_path / "stats.json"
     summary = run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
-        overpass_fetch=_fake_overpass(load_fixture),
+        overpass_fetch=_fake_overpass(load_fixture), pages_dir=str(tmp_path / "pages"),
         taginfo_fetch=_taginfo_down, now=NOW,
     )
     assert summary["global_source"] is None

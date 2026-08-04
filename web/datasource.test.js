@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { STATUSES, loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl } from "./datasource.js";
+         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js";
 
 const feat = (lon, lat, props) => ({
   type: "Feature",
@@ -127,4 +127,18 @@ test("toFeatureCollection carries only {idx, status} and idx survives the reorde
     assert.equal(orig.status, f.properties.status);
     assert.deepEqual(f.geometry.coordinates, [orig.lon, orig.lat]);
   }
+});
+
+test("parseBbox accepts a Bundesland page's box and rejects anything unusable", () => {
+  // What pipeline/pages.py writes into the "auf der Karte öffnen" link.
+  assert.deepEqual(parseBbox("8.4,53.0,9.0,53.6"), [[8.4, 53.0], [9.0, 53.6]]);
+  assert.deepEqual(parseBbox("-1.5,-2.5,1.5,2.5"), [[-1.5, -2.5], [1.5, 2.5]]);
+  // Everything below must fall back to the home view rather than reach
+  // fitBounds: a NaN or inverted box leaves a camera the user can't recover.
+  for (const bad of [null, undefined, "", "8.4,53.0,9.0", "8.4,53.0,9.0,53.6,1",
+                     "a,b,c,d", "8.4,53.0,,53.6", "9.0,53.0,8.4,53.6",
+                     "8.4,53.6,9.0,53.0", "8.4,53.0,8.4,53.6", "-181,53,9,53.6",
+                     "8.4,-91,9,53.6", "8.4,53,181,53.6", "8.4,53,9,91",
+                     "Infinity,53,9,53.6"])
+    assert.equal(parseBbox(bad), null, `expected null for ${JSON.stringify(bad)}`);
 });

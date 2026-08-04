@@ -5,6 +5,8 @@ __pycache__/
 web/data/*.geojson
 web/data/*.json
 !web/data/.gitkeep
+# One page per Bundesland, rewritten by every full pipeline run.
+web/wickeltische/
 /web-data/
 *.sqlite
 pipeline.log

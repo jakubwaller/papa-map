@@ -26,7 +26,7 @@ type hints working on the system Python.)
 
 ## Build the dataset
 ```bash
-python -m pipeline.run   # Overpass + taginfo -> web/data/changing_tables.geojson + stats.json
+python -m pipeline.run   # Overpass + taginfo -> web/data/*.json + web/wickeltische/*.html
 ```
 The default build sweeps all 16 Bundesländer plus Denmark and merges the
 results (an all-Germany area query dies at a 60 s network idle cutoff, so
@@ -38,6 +38,27 @@ Germany stays chunked per Land; Denmark is small enough to answer whole in one
 - `PAPAMAP_AREA_NAME` + `PAPAMAP_AREA_ADMIN_LEVEL` select a single area instead
   (e.g. `Hamburg` / `4`), and `PAPAMAP_DISPLAY_AREA` names the dataset in the
   stats strip.
+
+## Bundesland pages
+
+The same run writes one static German page per Bundesland into
+`web/wickeltische/` (git-ignored — they are build output), plus an index at
+`web/wickeltische/index.html`. The map is a single URL for two countries, so a
+search for "Wickeltisch Bayern" had nothing to match: the place names live
+inside a 2.6 MB GeoJSON that crawlers read as a download. These pages put each
+Land's counts and its named places into HTML, and link back into the map at that
+Land's extent via `?bbox=`.
+
+Which Land an object belongs to is recorded during the sweep — it is free, since
+the sweep is already chunked per Land, and the GeoJSON carries no region field.
+So the pages only appear on a build that sweeps German Länder: `PAPAMAP_COUNTRIES=dk`
+or a hand-named single area outside the 16 writes none rather than publishing an
+index that claims Germany has one Bundesland.
+
+The 16 URLs are fixed (the names are a constant in `pipeline/config.py`), so
+they are listed by hand in `web/sitemap.xml`; `tests/test_pages.py` asserts that
+list matches the slugs the generator writes. `PAPAMAP_PAGES_DIR` moves the
+output elsewhere.
 
 ## Serve locally
 ```bash
