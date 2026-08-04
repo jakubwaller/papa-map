@@ -1,9 +1,9 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=seo1";
+         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=seo2";
 import { STRINGS, NUMBER_LOCALE, pickLang, nextLang, fmt,
-         langUrl } from "./i18n.js?v=seo1";
+         langUrl } from "./i18n.js?v=seo2";
 
 // ---- Language: German default, DE → EN → DA cycle. A shared ?lang= link wins
 // over the stored choice, which wins over a Danish browser; toggling stores the
@@ -281,6 +281,34 @@ document.getElementById("zoom-out").addEventListener("click", () => map.zoomOut(
 function positionZoomCtrl() {
   zoomCtrl.style.top = topbar.offsetHeight + 10 + "px";
 }
+
+// ---- Stats strip collapse (mobile only) ----
+// CSS owns which lines are hidden and at what width; this only flips the flag
+// and keeps the label honest. The class lives on the wrapper, not on #stats,
+// so it survives renderStats() rebuilding the strip on a language toggle.
+const statsWrap = document.querySelector(".stats-wrap");
+const statsToggle = document.getElementById("stats-toggle");
+
+function setStatsOpen(open) {
+  statsWrap.classList.toggle("open", open);
+  statsToggle.setAttribute("aria-expanded", String(open));
+  // Swap the key rather than the label: applyI18n() re-reads it on a language
+  // toggle and would otherwise reset an expanded strip's label to "show more".
+  statsToggle.dataset.i18nAria = open ? "ariaStatsLess" : "ariaStatsMore";
+  statsToggle.setAttribute("aria-label", t(statsToggle.dataset.i18nAria));
+  positionZoomCtrl();   // the topbar just changed height
+}
+
+statsToggle.addEventListener("click", () =>
+  setStatsOpen(!statsWrap.classList.contains("open")));
+
+// The chevron alone is a 32px target on a phone. Expanding from anywhere in the
+// collapsed strip gives that a three-line hit area; collapsing stays on the
+// button, so tapping the text you just opened doesn't snap it shut again.
+statsEl.addEventListener("click", (e) => {
+  if (statsWrap.classList.contains("open") || e.target.closest("a")) return;
+  setStatsOpen(true);
+});
 
 // The topbar floats over the map and eats a third of a portrait phone — and
 // Denmark sits at the top of the home view, so an unpadded fit hides the whole
