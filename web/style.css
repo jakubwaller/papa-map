@@ -143,6 +143,13 @@ header {
 .lang-btn:hover { border-color: var(--green); color: var(--green); }
 
 /* ---------- Stats strip ---------- */
+/* Only there to anchor the collapse toggle over the strip's own background. */
+.stats-wrap { position: relative; display: flex; flex-direction: column; }
+
+/* Hidden until the mobile breakpoint: on a wide screen the strip is three
+   short lines and there is nothing worth folding away. */
+.stats-toggle { display: none; }
+
 #stats {
   display: flex;
   flex-wrap: wrap;
@@ -377,4 +384,36 @@ header {
   #stats { padding: 6px 14px; gap: 2px 18px; font-size: 12px; }
   .chip-bar { padding-left: 14px; padding-right: 14px; }
   .chip { padding: 7px 11px; font-size: 12px; }
+
+  /* The strip is 161px of the 308px overlay here — over half the chrome, and
+     the map pays for all of it. Collapsed keeps the headline and its "tap the
+     grey pins" call to action, which is the whole point of the strip; the
+     worldwide comparison and the methodology note fold away. 308px → 214px. */
+  .stats-wrap:not(.open) #stats .stat:not(:first-child) { display: none; }
+  .stats-wrap:not(.open) #stats { cursor: pointer; }
+  #stats { padding-right: 44px; }   /* room for the toggle, which overlays it */
+
+  /* Pinned to the strip's top-right rather than centred: the collapsed strip is
+     three lines tall and the expanded one is seven, so a centred chevron would
+     jump half the screen on every tap. */
+  .stats-toggle {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--muted-2);
+    font-size: 13px;
+    line-height: 1;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform .15s ease;
+  }
+  .stats-toggle[aria-expanded="true"] { transform: rotate(180deg); }
 }

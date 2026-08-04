@@ -63,6 +63,8 @@ export const STRINGS = {
     ariaHome: "PapaMap — Startseite",
     ariaClose: "Schließen",
     ariaLang: "Switch to English",
+    ariaStatsMore: "Mehr Zahlen anzeigen",
+    ariaStatsLess: "Weniger Zahlen anzeigen",
 
     // Area labels, picked by stats.json's area_key — so a Dane reads
     // "Tyskland & Danmark", not the pipeline's fallback string.
@@ -122,6 +124,8 @@ export const STRINGS = {
     ariaHome: "PapaMap — home",
     ariaClose: "Close",
     ariaLang: "Skift til dansk",
+    ariaStatsMore: "Show more numbers",
+    ariaStatsLess: "Show fewer numbers",
 
     areaDe: "Germany",
     areaDk: "Denmark",
@@ -179,6 +183,8 @@ export const STRINGS = {
     ariaHome: "PapaMap — forsiden",
     ariaClose: "Luk",
     ariaLang: "Auf Deutsch wechseln",
+    ariaStatsMore: "Vis flere tal",
+    ariaStatsLess: "Vis færre tal",
 
     areaDe: "Tyskland",
     areaDk: "Danmark",
