@@ -30,7 +30,7 @@ OVERPASS_BACKOFF_S = float(os.environ.get("PAPAMAP_OVERPASS_BACKOFF_S", "5"))
 # one (the largest, Bayern, measured 23 s), merged and deduped in run.py.
 AREA_NAME = os.environ.get("PAPAMAP_AREA_NAME")  # set → single-area build
 AREA_ADMIN_LEVEL = os.environ.get("PAPAMAP_AREA_ADMIN_LEVEL", "4")
-DISPLAY_AREA = os.environ.get("PAPAMAP_DISPLAY_AREA") or AREA_NAME or "Deutschland"
+DISPLAY_AREA_OVERRIDE = os.environ.get("PAPAMAP_DISPLAY_AREA")
 
 BUNDESLAENDER = (
     "Baden-Württemberg", "Bayern", "Berlin", "Brandenburg", "Bremen",
@@ -39,14 +39,58 @@ BUNDESLAENDER = (
     "Sachsen-Anhalt", "Schleswig-Holstein", "Thüringen",
 )
 
+# Sweep areas per country. Germany needs the 16-Land chunking above; Denmark
+# is small enough to answer whole (933 changing_table + 4,655 amenity=toilets
+# objects, one 14.5 s query measured 2026-08-04) and so sweeps as a single
+# admin_level=2 area. That relation is Denmark proper — Grønland and Føroyar
+# carry their own admin_level=2 relations and stay out, which the measured
+# feature bbox (54.7–57.7 N) confirms.
+COUNTRY_AREAS = {
+    "de": tuple((name, "4") for name in BUNDESLAENDER),
+    "dk": (("Danmark", "2"),),
+}
+
+# Fallback display name per country — each in its own language, since the
+# joined label has no single reader. The frontend translates it properly via
+# area_key and only falls back to this string when it has no translation.
+COUNTRY_LABELS = {"de": "Deutschland", "dk": "Danmark"}
+
+# Comma-separated subset for a cheaper build (PAPAMAP_COUNTRIES=dk builds
+# Denmark alone in ~30 s instead of sweeping all 17 areas).
+SWEEP_COUNTRIES = tuple(c.strip().lower() for c in os.environ.get(
+    "PAPAMAP_COUNTRIES", "de,dk").split(",") if c.strip())
+
+
+def _validated_countries() -> tuple[str, ...]:
+    """SWEEP_COUNTRIES, refusing unknown codes — a typo'd PAPAMAP_COUNTRIES
+    must fail the build loudly, not silently sweep fewer areas."""
+    unknown = [c for c in SWEEP_COUNTRIES if c not in COUNTRY_AREAS]
+    if unknown or not SWEEP_COUNTRIES:
+        raise ValueError(
+            f"PAPAMAP_COUNTRIES={','.join(SWEEP_COUNTRIES)!r}: unknown country "
+            f"code(s) {unknown or ['(empty)']} — known: {sorted(COUNTRY_AREAS)}")
+    return SWEEP_COUNTRIES
+
 
 def sweep_areas() -> list[tuple[str, str]]:
     """(name, admin_level) pairs the pipeline sweeps. PAPAMAP_AREA_NAME set →
     just that one area (e.g. Hamburg/4 for a city build); default is all 16
-    Bundesländer."""
+    Bundesländer plus Denmark."""
     if AREA_NAME:
         return [(AREA_NAME, AREA_ADMIN_LEVEL)]
-    return [(name, "4") for name in BUNDESLAENDER]
+    return [area for c in _validated_countries() for area in COUNTRY_AREAS[c]]
+
+
+def display_area() -> tuple[str, str | None]:
+    """(name, i18n key) for the stats strip. The key ("de_dk", "dk", …) lets
+    the frontend print the area in the reader's own language; it is None for a
+    build whose area was named by hand, where no translation can exist."""
+    override = DISPLAY_AREA_OVERRIDE or AREA_NAME
+    if override:
+        return override, None
+    countries = _validated_countries()
+    return (" & ".join(COUNTRY_LABELS[c] for c in countries),
+            "_".join(countries))
 
 
 # A congested evening can kill a query on every mirror (observed 2026-07-30:

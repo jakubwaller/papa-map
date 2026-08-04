@@ -1,14 +1,15 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=de4";
-import { STRINGS, pickLang, fmt } from "./i18n.js?v=de4";
+         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=dk1";
+import { STRINGS, NUMBER_LOCALE, pickLang, nextLang, fmt } from "./i18n.js?v=dk1";
 
-// ---- Language: German default, EN toggle. A shared ?lang= link wins over the
-// stored choice; toggling stores the choice and strips the param so it doesn't
-// override the next visit.
+// ---- Language: German default, DE → EN → DA cycle. A shared ?lang= link wins
+// over the stored choice, which wins over a Danish browser; toggling stores the
+// choice and strips the param so it doesn't override the next visit.
 let lang = pickLang(new URLSearchParams(location.search).get("lang"),
-                    localStorage.getItem("papamap-lang"));
+                    localStorage.getItem("papamap-lang"),
+                    navigator.language);
 const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 
 // Swap every static string in index.html: data-i18n = textContent,
@@ -58,17 +59,32 @@ const OSM_STYLE = {
   layers: [{ id: "osm", type: "raster", source: "osm" }],
 };
 
-// Germany, fit to the viewport — portrait phones and wide desktops both get
-// the whole country. maxBounds leaves margin so edge cities aren't pinned to
-// the screen border. Rotate/pitch gestures are locked: on a phone an off-axis
-// pinch rotates the map instead of zooming, which reads as jank.
-const DE_BOUNDS = [[5.5, 47.1], [15.4, 55.2]];
+// Germany, opened a little wider so Denmark shows at the top rather than
+// filling half the screen: Germany stays the subject, and the north edge at
+// 56.6°N reaches past Copenhagen and Aarhus so Danish pins are visible from
+// the start. Aalborg and Skagen sit above it — maxBounds leaves them a pan
+// away, and the locate button lands a Dane on their own city directly.
+// maxBounds leaves margin so edge cities aren't pinned to the screen border —
+// and has to be roomy enough not to bind on either axis. A landscape window
+// can only zoom out until maxBounds' WIDTH fills it (the old 28°-wide box hit
+// that stop with Denmark still off-screen), and its NORTH edge caps how far
+// fitHome() can push the map down under the topbar — on a portrait phone that
+// header is ~4.6° of latitude at home zoom, so the box clears the home view by
+// more than that, and far enough that Skagen stays reachable by panning.
+// Rotate/pitch gestures are locked: on a phone an off-axis pinch rotates the
+// map instead of zooming, which reads as jank.
+const HOME_BOUNDS = [[5.5, 47.1], [15.4, 56.6]];
 
 const map = new maplibregl.Map({
   container: "map", style: OSM_STYLE,
-  bounds: DE_BOUNDS, fitBoundsOptions: { padding: 12 },
-  maxBounds: [[-4, 42.5], [24, 59]],
-  minZoom: 4.5, maxZoom: 18, attributionControl: false,
+  bounds: HOME_BOUNDS, fitBoundsOptions: { padding: 12 },
+  maxBounds: [[-12, 41], [32, 65]],
+  // 3.5, not the old 4.5: fitHome() re-fits under a topbar that eats a third
+  // of a portrait phone (half of a landscape one), and the old floor clamped
+  // that fit while Denmark — or, in landscape, Bavaria — was still off-screen.
+  // Only narrow viewports ever reach it; on a desktop maxBounds' width stops
+  // the zoom-out long before.
+  minZoom: 3.5, maxZoom: 18, attributionControl: false,
   pitchWithRotate: false, touchPitch: false,
 });
 map.dragRotate.disable();
@@ -86,6 +102,7 @@ const filterBar = document.getElementById("filter-bar");
 const countEl = document.getElementById("count");
 const topbar = document.getElementById("topbar");
 const zoomCtrl = document.getElementById("zoom-ctrl");
+const scopeEl = document.getElementById("scope");
 
 // ---- Pins: one WebGL circle layer, colored by status ----
 // ~5k features Germany-wide — still one WebGL layer, no clustering, no DOM
@@ -194,11 +211,25 @@ function renderChips() {
 // Templates come from i18n.js (trusted constants); every value interpolated
 // into them is num()'d or esc()'d here first. lastStats feeds the re-render
 // when the language toggles.
-const num = (n) => Number(n ?? 0).toLocaleString(lang === "de" ? "de-DE" : "en-US");
+const num = (n) => Number(n ?? 0).toLocaleString(NUMBER_LOCALE[lang] ?? "en-US");
 let lastStats = null;
+
+// The pipeline names the swept area twice: area_key for the sets it knows
+// (translated here, so a Dane reads "Tyskland & Danmark"), area_name as the
+// literal fallback for a hand-named build like PAPAMAP_AREA_NAME=Hamburg.
+const AREA_KEYS = { de: "areaDe", dk: "areaDk", de_dk: "areaDeDk" };
+
+function areaLabel(stats) {
+  const key = AREA_KEYS[stats?.area_key];
+  return key ? t(key) : (stats?.area_name || "");  // "" = nothing to say
+}
 
 function renderStats(stats) {
   lastStats = stats;
+  // A missing stats.json leaves the wordmark on its translated markup default
+  // rather than blanking the header.
+  const area = areaLabel(stats);
+  if (area) scopeEl.textContent = area;
   if (!stats || !stats.local) {
     statsEl.innerHTML =
       `<span class="stat">${t("statsMissing", { href: t("methodsHref") })}</span>`;
@@ -222,7 +253,7 @@ function renderStats(stats) {
   }
   statsEl.innerHTML =
     `<span class="stat">${t("statsLocal", {
-      tables: num(tables), area: esc(stats.area_name || "—"),
+      tables: num(tables), area: esc(area || "—"),
       unknown: num(l.unknown) })}</span>` +
     globalPart +
     `<span class="stat honesty">${t("statsHonesty", {
@@ -236,6 +267,22 @@ document.getElementById("zoom-out").addEventListener("click", () => map.zoomOut(
 
 function positionZoomCtrl() {
   zoomCtrl.style.top = topbar.offsetHeight + 10 + "px";
+}
+
+// The topbar floats over the map and eats a third of a portrait phone — and
+// Denmark sits at the top of the home view, so an unpadded fit hides the whole
+// country behind the header. Re-fit once the strip has rendered and its real
+// height is known. Not called on resize: by then the user has panned somewhere
+// and yanking the view back would be worse than a slightly off fit.
+function fitHome() {
+  // Never pad past half the canvas: on a short landscape phone the strip can
+  // approach the full height, and a padding taller than its container makes
+  // fitBounds produce a NaN camera.
+  const top = Math.min(topbar.offsetHeight + 10, map.getCanvas().clientHeight / 2);
+  map.fitBounds(HOME_BOUNDS, {
+    padding: { top, bottom: 12, left: 12, right: 12 },
+    animate: false,
+  });
 }
 
 // ---- Locate: fly to the user, drop a you-are-here dot ----
@@ -284,7 +331,7 @@ document.getElementById("add-close").addEventListener("click", () => addDialog.c
 
 // ---- Language toggle: re-render everything that carries text ----
 document.getElementById("lang-toggle").addEventListener("click", () => {
-  lang = lang === "de" ? "en" : "de";
+  lang = nextLang(lang);
   localStorage.setItem("papamap-lang", lang);
   // A ?lang= param would override the stored choice on reload — drop it.
   if (new URLSearchParams(location.search).has("lang")) {
@@ -330,6 +377,7 @@ async function boot() {
   renderStats(stats);
   renderChips();
   positionZoomCtrl();  // topbar height depends on the rendered strip
+  fitHome();           // ...and so does the home view's top padding
   dataReady = true;
   refreshPins();
 }

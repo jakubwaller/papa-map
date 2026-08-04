@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PapaMap — metode &amp; ærlighed</title>
+<link rel="alternate" hreflang="de" href="methods.html">
+<link rel="alternate" hreflang="en" href="methods-en.html">
+<link rel="alternate" hreflang="da" href="methods-da.html">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
+    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
+      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+    }
+  }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+         background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
+  table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  li { margin: 0.3rem 0; }
+  .back { font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">&larr; Tilbage til kortet</a> · <a href="methods.html" hreflang="de">Diese Seite auf Deutsch</a> · <a href="methods-en.html" hreflang="en">This page in English</a></p>
+<h1>PapaMap — metode &amp; ærlighed</h1>
+<p class="muted">Pusleborde, en far kan nå. Tallene nedenfor er øjebliksbilledet fra
+26.&nbsp;juli&nbsp;2026. Linjen på kortet regnes om hver nat og kan afvige.</p>
+
+<h2>Hvad dette kort er. Og hvad det ikke er.</h2>
+<p>PapaMap viser steder i Tyskland og Danmark, hvor OpenStreetMap kender et puslebord
+(<code>changing_table=yes</code> eller <code>limited</code>). Farven siger, om en far kan nå
+bordet. Kortet læser kun OSM og skriver ingen steder hen. Data retter du direkte på OSM via
+linkene på hver nål.</p>
+<p>En rangliste over hvilken by der har den bedste toiletdækning er dette ikke. Hvorfor det ikke
+kan gøres ærligt ud fra åbne data, står længere nede.</p>
+
+<h2>Hvad farverne betyder (den præcise regel)</h2>
+<p>Kun objekter med <code>changing_table=yes</code> eller <code>limited</code> havner på kortet
+(<code>no</code> tæller kun med i statistikken). Farven kommer fra
+<code>changing_table:location</code>. Værdien deles ved <code>;</code>, trimmes, sættes med små
+bogstaver og sammenlignes som et helt token. Aldrig som delstreng, for
+<code>female_toilet</code> indeholder <code>male</code>.</p>
+<ul>
+  <li><span class="dot g"></span><strong>Grøn:</strong> et token er
+      <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
+      <code>room</code>, <code>wheelchair_toilet</code> eller <code>sales_area</code>.
+      En far kan komme til.</li>
+  <li><span class="dot r"></span><strong>Rød:</strong> ellers, hvis et token er
+      <code>female_toilet</code>. Bordet findes, men kun på dametoilettet.</li>
+  <li><span class="dot u"></span><strong>Grå:</strong> alt andet. Intet location-tag eller kun
+      fritekst. Ingen har registreret rummet. De grå nåle er opgaven.</li>
+</ul>
+
+<h2>Sådan retter du en grå nål</h2>
+<p>Grå betyder: et svar mangler. Hvor står puslebordet? Det kan enhver med en gratis OSM-konto
+svare på, på stedet, på under et minut:</p>
+<ul>
+  <li><strong>MapComplete (enhver telefon, i browseren):</strong> &raquo;Svar på
+      MapComplete&laquo; på den grå nål åbner det samme objekt i MapComplete. Toiletter i det
+      officielle <a href="https://mapcomplete.org/toilets">toilet-tema</a>, caféer og butikker i
+      PapaMaps eget tema, fordi det officielle kun kender toiletter. MapComplete advarer én gang
+      om et uofficielt tema, det er i orden. Log ind med OSM-kontoen og besvar spørgsmålene om
+      puslebordet, også det om rummet. Svaret går direkte i OpenStreetMap og kan ses her efter
+      næste natlige opdatering.</li>
+  <li><strong>StreetComplete (Android):</strong> har en puslebord-quest, som er slået fra som
+      standard. Under <em>Indstillinger &rarr; Valg og prioritering af quests</em> søger du efter
+      &raquo;puslebord&laquo; og sætter flueben. Den spørger kun ja/nej. Til spørgsmålet om rummet
+      på en grå nål bruger du MapComplete.</li>
+</ul>
+<p class="muted">Rettelserne sker under din egen OSM-konto og tilhører alle. De overlever dette
+websted og gavner enhver app, der læser OpenStreetMap.</p>
+
+<h2 id="contribute">Sådan tilføjer du et sted, der mangler</h2>
+<p>PapaMap gemmer selv ingenting. At tilføje et sted betyder derfor altid: at redigere
+OpenStreetMap. Knappen <em>+ Tilføj et sted</em> på kortet åbner den rigtige editor på det
+aktuelle udsnit.</p>
+
+<h3>Et offentligt toilet mangler helt</h3>
+<p>Brug <a href="https://mapcomplete.org/toilets">MapCompletes toilet-tema</a> (det første link i
+dialogen). Log ind, tryk på kortet dér, hvor toilettet er, vælg &raquo;offentligt toilet&laquo; og
+besvar spørgsmålene. Også dem om puslebord og rum.</p>
+
+<h3>En café, butik eller restaurant har et bord, som ingen har registreret</h3>
+<p>Stedet findes næsten helt sikkert i OSM allerede. Det er kun
+<code>changing_table</code>-tagget, der mangler. I OSM-editoren (iD) tager det omkring to
+minutter:</p>
+<ol>
+  <li>Opret en gratis konto på <a href="https://www.openstreetmap.org">openstreetmap.org</a> (en
+      e-mailadresse er nok) og log ind.</li>
+  <li>Find stedet og klik på <strong>Rediger</strong>. Stedet er et punkt eller et bygningsomrids.
+      Klik på det, og til venstre vises dets tags.</li>
+  <li>Fold <strong>Alle egenskaber</strong> ud nederst og tilføj med <strong>+</strong>:
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = hvor det står, fra den
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">dokumenterede
+            værdiliste</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> eller <code>sales_area</code>.
+            Står det i flere rum: adskil med semikolon
+            (<code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Tryk <strong>Gem</strong>, skriv en kort kommentar
+      (&raquo;tilføjet rum for puslebord&laquo;) og upload. Live på OSM efter et minut, på PapaMap
+      efter næste natlige opdatering.</li>
+</ol>
+<p class="muted">Tag kun det, du selv har set. OSM registrerer, hvad der er, ikke hvad der burde
+være. Kender du ikke rummet, er <code>changing_table=yes</code> alene stadig nyttigt: stedet
+bliver en grå nål, og den næste far svarer på spørgsmålet om rummet.</p>
+
+<h2>Hvorfor et dækningsindeks ikke kan laves ud fra OSM</h2>
+<p>Det oplagte større projekt ville være et forhold mellem toiletdækningen for mænd og kvinder pr.
+by. Tallet, som &raquo;potty parity&laquo; egentlig handler om. Det kan ikke beregnes ud fra
+OpenStreetMap. Vi tjekkede det, før vi byggede, med en stikprøve over otte bymidter (Berlin,
+London, Paris, New York, Tokyo&nbsp;23&nbsp;bydele, Amsterdam, Wien, Melbourne;
+26.&nbsp;juli&nbsp;2026):</p>
+<table>
+  <tr><th>By</th><th>Registrerede toiletter</th><th>Et hvilket som helst køns-tag</th><th>Både M&nbsp;+&nbsp;K</th></tr>
+  <tr><td>Berlin</td><td>1.173</td><td>660</td><td>119</td></tr>
+  <tr><td>London</td><td>1.316</td><td>458</td><td>210</td></tr>
+  <tr><td>Paris</td><td>1.414</td><td>579</td><td>101</td></tr>
+  <tr><td>New York</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Tokyo (23 bydele)</td><td>3.500</td><td>601</td><td>231</td></tr>
+  <tr><td>Amsterdam</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Wien</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
+  <tr><td><strong>Alle</strong></td><td><strong>9.674</strong></td><td><strong>2.888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
+</table>
+<ul>
+  <li>Kun 29,9% af de registrerede toiletter har overhovedet et køns-tag. Begge dele
+      (male og female) har 8,5%.</li>
+  <li>Taggene er rene ja/nej-angivelser, ikke optællinger. Antal kabiner pr. køn: nul i alle otte
+      byer. Den eneste kapacitetsnøgle <code>toilets:num_chambers</code>
+      (~27k anvendelser) er kønsløs og stammer næsten udelukkende fra et gammelt import.
+      Dens varianter <code>:female</code> / <code>:male</code> har hver 2 anvendelser på
+      verdensplan.</li>
+  <li>Hamborg, tjekket samme dag: 443 registrerede toiletter, ingen med et
+      <code>toilets:num_chambers*</code>-tag. Linjen på <a href="./">forsiden</a> regner disse tal
+      om hver nat.</li>
+  <li>Og: tagging-andele måler mapper-fællesskabet, ikke byerne. Enkeltkabiner er stadig korrekte
+      uden køns-tag. En sammenligning af byer ville give OSM-bidragydere karakterer, ikke
+      toiletretfærdighed.</li>
+</ul>
+<p>Ærligt er derfor kun: selve dækningen kan man i dag ikke måle ud fra åbne data. Dette websted
+måler det, der kan måles, og laver hullerne om til bidrag.</p>
+
+<h2>Det ene fakta, der kan beregnes: hvor bordene står</h2>
+<p><code>changing_table:location</code> er så vidt vi ved det eneste åbne vokabular, der noterer,
+i hvilket rum et puslebord står. Det er tyndt besat: omkring 3.659 ud af ~77.000
+<code>changing_table</code>-objekter på verdensplan, under 5%. Men hvor det findes, er det
+ensidigt (taginfo, 26.&nbsp;juli&nbsp;2026):</p>
+<ul>
+  <li>Borde kun på dametoilettet: <strong>~485</strong>.</li>
+  <li>Borde kun på herretoilettet: <strong>~71</strong>. Groft sagt 7:1. ~289 er tagget i begge
+      rum, ~410 noterer overhovedet et bord på et herretoilet. På verdensplan.</li>
+</ul>
+<p>Stikprøven er lille, og mapperne bestemmer, hvad de registrerer. Så det præcise forhold skal
+ikke overfortolkes. Retningen passer dog med det, der længe har været dokumenteret: pusleborde
+hænger som standard på dametoilettet. Det lukker fædre ude og antyder samtidig, hvem der har
+ansvaret for at skifte ble. Dette kort gør de manglende data synlige. Og lette at rette.</p>
+
+<h2>Datalicens &amp; kreditering</h2>
+<p>Alle kortdata &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
+contributors</a>, tilgængelige under
+<a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
+Dette websteds GeoJSON- og statistikfiler er afledt af OSM og dermed også ODbL.
+Den globale tag-statistik kommer fra <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
+Webstedets kode er MIT-licenseret.</p>
+
+<h2>Privatliv</h2>
+<p>Et statisk websted. Ingen konti, ingen cookies, ingen analytics, ingen tracking-scripts. Siden
+gemmer ingenting om dig og har ingen database. Kortfliserne kommer fra OpenStreetMaps
+tile-servere; for de forespørgsler gælder
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF's privatlivspolitik</a>. Følger du et
+link til MapComplete, StreetComplete eller openstreetmap.org, er du på deres sider og redigerer
+under din egen OSM-konto. Intet af det går gennem os. Det formelle (på tysk):
+<a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a>.</p>
+
+<p class="muted">Kilder: Overpass-stikprøve over 8 bymidter (9.674 toiletter) og taginfos
+nøglestatistik, begge 26.&nbsp;juli&nbsp;2026. De lokale tal kommer fra den samme natlige
+forespørgsel, som også bygger kortet.</p>
+
+</body>
+</html>
