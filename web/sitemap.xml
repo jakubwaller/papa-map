@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Hand-maintained: the site is a fixed handful of pages, so generating this
+  would be more machinery than it saves. Add an entry when you add a page.
+
+  No <lastmod>: the map's data changes nightly but its markup does not, and a
+  date that claims otherwise is worse than no date at all. <changefreq> and
+  <priority> are omitted because Google ignores both.
+
+  The xhtml:link alternates repeat what the pages' own hreflang tags say. That
+  is the documented belt-and-braces — for the ?lang= views especially, the
+  sitemap is the channel that does not depend on the crawler rendering JS.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <url>
+    <loc>https://papamap.de/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=da</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+
+  <url>
+    <loc>https://papamap.de/methods.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-en.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-da.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+
+  <!-- German-only by design, so no alternates. -->
+  <url><loc>https://papamap.de/impressum.html</loc></url>
+  <url><loc>https://papamap.de/datenschutz.html</loc></url>
+
+</urlset>

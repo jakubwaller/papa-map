@@ -85,8 +85,12 @@ header {
   color: var(--muted);
 }
 
-/* The one German line in an otherwise English UI. */
+/* The one German line in an otherwise English UI — and the page's <h1>, hence
+   the margin and weight reset: it has to carry the heading semantics without
+   looking like a heading. */
 .tagline {
+  margin: 0;
+  font-weight: 400;
   flex: 1 1 auto;
   font-size: 13px;
   font-style: italic;

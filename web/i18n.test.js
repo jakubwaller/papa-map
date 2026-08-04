@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { STRINGS, LANGS, NUMBER_LOCALE, pickLang, nextLang, fmt,
-         DEFAULT_LANG } from "./i18n.js";
+         langUrl, DEFAULT_LANG } from "./i18n.js";
 
 const tokens = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
@@ -47,6 +47,22 @@ test("pickLang: only Danish browsers are auto-detected", () => {
   // Germany must not silently flip the site's language.
   assert.equal(pickLang(null, null, "en-GB"), DEFAULT_LANG);
   assert.equal(pickLang(null, null, undefined), DEFAULT_LANG);
+});
+
+test("langUrl gives each language a distinct address, German the bare one", () => {
+  assert.equal(langUrl(DEFAULT_LANG), "https://papamap.de/");
+  assert.equal(langUrl("en"), "https://papamap.de/?lang=en");
+  assert.equal(langUrl("da"), "https://papamap.de/?lang=da");
+  // Distinct URLs are the whole point — a collision would make the hreflang
+  // alternates in index.html point two languages at one page.
+  assert.equal(new Set(LANGS.map((l) => langUrl(l))).size, LANGS.length);
+});
+
+test("langUrl round-trips through pickLang", () => {
+  for (const lang of LANGS) {
+    const query = new URL(langUrl(lang)).searchParams.get("lang");
+    assert.equal(pickLang(query, null), lang, `${lang} must survive its own URL`);
+  }
 });
 
 test("fmt interpolates and leaves unknown tokens visible", () => {
