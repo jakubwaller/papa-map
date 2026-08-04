@@ -30,6 +30,14 @@ export function nextLang(lang) {
   return LANGS[(i + 1) % LANGS.length] ?? DEFAULT_LANG;
 }
 
+// The map serves all three languages from one URL, so each language needs a
+// distinct address for search engines to index it separately: German owns the
+// bare URL, the others hang off the same ?lang= param pickLang() already
+// honours. Keep in sync with index.html's hreflang tags and sitemap.xml.
+export function langUrl(lang, base = "https://papamap.de/") {
+  return lang === DEFAULT_LANG ? base : `${base}?lang=${lang}`;
+}
+
 // Tiny {token} interpolation; unknown tokens stay literal so a missing var is
 // visible instead of silently vanishing.
 export function fmt(template, vars = {}) {
@@ -40,6 +48,9 @@ export function fmt(template, vars = {}) {
 export const STRINGS = {
   de: {
     title: "PapaMap — Wickeltische, die ein Vater erreicht",
+    // Mirrors index.html's static <meta name="description">, which stays German
+    // because that is the canonical page; app.js swaps it for the ?lang= views.
+    metaDescription: "Eine Karte der Wickeltische in ganz Deutschland und Dänemark, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap.",
     tagline: "Wickeltische, die ein Vater erreicht",
     addPlace: "+ Ort hinzufügen",
     methods: "Methoden",
@@ -98,6 +109,7 @@ export const STRINGS = {
   },
   en: {
     title: "PapaMap — Changing tables dads can reach",
+    metaDescription: "A map of every changing table in Germany and Denmark, coloured by whether a dad can actually reach it. Data: OpenStreetMap.",
     tagline: "Changing tables dads can reach",
     addPlace: "+ Add a place",
     methods: "Methods",
@@ -154,6 +166,7 @@ export const STRINGS = {
   },
   da: {
     title: "PapaMap — pusleborde, en far kan nå",
+    metaDescription: "Et kort over alle pusleborde i Tyskland og Danmark, farvelagt efter om en far rent faktisk kan nå dem. Data: OpenStreetMap.",
     tagline: "Pusleborde, en far kan nå",
     addPlace: "+ Tilføj et sted",
     methods: "Metode",

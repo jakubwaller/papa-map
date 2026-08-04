@@ -1,8 +1,9 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=dk1";
-import { STRINGS, NUMBER_LOCALE, pickLang, nextLang, fmt } from "./i18n.js?v=dk1";
+         mapCompleteAddUrl, osmEditUrl } from "./datasource.js?v=seo1";
+import { STRINGS, NUMBER_LOCALE, pickLang, nextLang, fmt,
+         langUrl } from "./i18n.js?v=seo1";
 
 // ---- Language: German default, DE → EN → DA cycle. A shared ?lang= link wins
 // over the stored choice, which wins over a Danish browser; toggling stores the
@@ -12,12 +13,24 @@ let lang = pickLang(new URLSearchParams(location.search).get("lang"),
                     navigator.language);
 const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 
+// index.html ships German head tags; the ?lang= views have to carry their own,
+// or the hreflang alternates it advertises would all describe themselves as the
+// German page and fold back into it. Head tags only — the og:* block is left
+// alone on purpose, since link unfurlers never run this.
+function applyHeadTags() {
+  const desc = document.querySelector('meta[name="description"]');
+  if (desc) desc.content = t("metaDescription");
+  const canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical) canonical.href = langUrl(lang);
+}
+
 // Swap every static string in index.html: data-i18n = textContent,
 // data-i18n-html = trusted markup from i18n.js (never user input),
 // data-i18n-aria = aria-label. Idempotent — called on boot and on toggle.
 function applyI18n() {
   document.documentElement.lang = lang;
   document.title = t("title");
+  applyHeadTags();
   for (const el of document.querySelectorAll("[data-i18n]"))
     el.textContent = t(el.dataset.i18n);
   for (const el of document.querySelectorAll("[data-i18n-html]"))
