@@ -102,7 +102,11 @@ Verified offline:
   `helperArgs` is marked `group: hidden` in the schema itself). Conclusion: the theme
   validates **at parity with the official bundled theme**; the published schema is not a
   clean oracle, so "passes the schema" would be an overclaim for any theme, including
-  MapComplete's own.
+  MapComplete's own. Since 12 Aug 2026 this exact procedure (patch the two artifacts,
+  then validate, plus a fetch of the raw URL every pin embeds) runs automatically:
+  `python -m pipeline.theme_check`, weekly in CI and on any change under `theme/` —
+  since the v4 contract amendment *every* MapComplete link on the site loads this file,
+  so it rotting would take down the edit flow on every pin, not just cafés and shops.
 - Structure adapted from the bundled `assets/themes/toilets/toilets.json`,
   `assets/layers/toilet/toilet.json` and `assets/layers/toilet_at_amenity/…` rather than
   invented; tag-expression semantics from `Docs/Tags_format.md`; the

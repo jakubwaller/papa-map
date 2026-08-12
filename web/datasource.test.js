@@ -109,11 +109,13 @@ test("toFeatureCollection emits unknown last so grey pins draw on top", () => {
 
 test("add-place URLs carry the view, rounded, with a floor on the zoom", () => {
   assert.equal(mapCompleteAddUrl(9.993712, 53.551085, 15.7),
-    "https://mapcomplete.org/toilets?z=16&lat=53.55109&lon=9.99371");
+    "https://mapcomplete.org/theme.html?userlayout=" +
+    "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json" +
+    "&z=16&lat=53.55109&lon=9.99371");
   assert.equal(osmEditUrl(9.993712, 53.551085, 18),
     "https://www.openstreetmap.org/edit#map=18/53.55109/9.99371");
   // A Germany-level zoom must not produce a country-level editor link.
-  assert.ok(mapCompleteAddUrl(10, 51, 5.6).includes("?z=14&"));
+  assert.ok(mapCompleteAddUrl(10, 51, 5.6).includes("&z=14&"));
   assert.ok(osmEditUrl(10, 51, 5.6).includes("#map=17/"));
 });
 

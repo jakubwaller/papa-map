@@ -1,5 +1,18 @@
 # papa-map — build contract (v0)
 
+> **v4 amendment (12 Aug 2026, changeset attribution):** every MapComplete
+> link on the site — `mapcomplete_url` on **all** features including
+> `amenity=toilets`, and the add-a-place link — now opens PapaMap's own theme
+> via `theme.html?userlayout=<raw URL of theme/papamap.theme.json>` instead of
+> the official toilets theme. Reason: MapComplete stamps changesets with a
+> `theme` tag, so edits made through the site become countable (the official
+> theme would tag them `theme=toilets`, indistinguishable from any other
+> MapComplete user). The v0 `mapcomplete_url` rule below is superseded.
+> Because the theme is now load-bearing for every pin and only exists in this
+> repo, `python -m pipeline.theme_check` (weekly CI + on theme changes)
+> validates it against MapComplete's published schema and checks the raw URL
+> still serves it.
+
 > **v3 amendment (4 Aug 2026, Bundesland pages):** the build now emits HTML as
 > well as data. `python -m pipeline.run` writes one static German page per
 > Bundesland plus an index into `PAPAMAP_PAGES_DIR` (default `web/wickeltische/`,

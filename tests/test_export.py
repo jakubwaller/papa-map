@@ -35,7 +35,10 @@ def test_feature_properties_match_data_contract(load_fixture):
         "location_raw": "male_toilet", "status": "accessible",
         "fee": "yes", "opening_hours": "24/7",
         "osm_url": "https://www.openstreetmap.org/node/1",
-        "mapcomplete_url": "https://mapcomplete.org/toilets?z=18&lat=53.5528&lon=10.0065#node/1",
+        "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
+                            "https://raw.githubusercontent.com/jakubwaller/papa-map/"
+                            "main/theme/papamap.theme.json"
+                            "&z=18&lat=53.5528&lon=10.0065#node/1"),
     }
     assert feats[2]["name"] is None
     assert feats[3]["location_raw"] is None
@@ -43,18 +46,20 @@ def test_feature_properties_match_data_contract(load_fixture):
     assert feats[7]["location_raw"] == "hinten im Flur beim Personalraum"
 
 
-def test_mapcomplete_url_theme_depends_on_amenity(load_fixture):
+def test_mapcomplete_url_always_uses_own_theme(load_fixture):
+    # theme=papamap in the changeset is what makes website edits countable,
+    # so toilets get the userlayout theme too — never the official one
     feats = {f["properties"]["osm_id"]: f["properties"]
              for f in build_features(load_fixture("overpass_changing_tables.json"))}
     theme = ("https://mapcomplete.org/theme.html?userlayout="
              "https://raw.githubusercontent.com/jakubwaller/papa-map/"
              "main/theme/papamap.theme.json")
-    assert feats[3]["mapcomplete_url"] == (  # cafe -> own theme
+    assert feats[3]["mapcomplete_url"] == (  # cafe
         f"{theme}&z=18&lat=53.5637&lon=9.9633#way/3")
-    assert feats[7]["mapcomplete_url"] == (  # restaurant -> own theme
+    assert feats[7]["mapcomplete_url"] == (  # restaurant
         f"{theme}&z=18&lat=53.561&lon=9.956#node/7")
-    assert feats[8]["mapcomplete_url"] == (  # toilets -> official theme
-        "https://mapcomplete.org/toilets?z=18&lat=53.558&lon=10.001#relation/8")
+    assert feats[8]["mapcomplete_url"] == (  # toilets
+        f"{theme}&z=18&lat=53.558&lon=10.001#relation/8")
 
 
 def test_element_without_coordinates_is_dropped():

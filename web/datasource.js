@@ -69,9 +69,15 @@ export function parseBbox(value) {
 // Coordinates are clamped to 5 decimals (~1 m) so the URLs stay readable;
 // zoom is rounded and floored at the editors' useful minimum, because handing
 // MapComplete or iD a country-level zoom just strands the user in the clouds.
+// Same userlayout theme as the pin popups (pipeline/export.py): its dad_toilet
+// layer has an add-toilet preset, and edits through it carry theme=papamap in
+// the changeset — the official toilets theme would make them uncountable.
+const PAPAMAP_THEME = "https://mapcomplete.org/theme.html?userlayout=" +
+  "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json";
+
 export function mapCompleteAddUrl(lon, lat, zoom) {
   const z = Math.max(14, Math.round(zoom));
-  return `https://mapcomplete.org/toilets?z=${z}&lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}`;
+  return `${PAPAMAP_THEME}&z=${z}&lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}`;
 }
 
 export function osmEditUrl(lon, lat, zoom) {
