@@ -1,0 +1,37 @@
+# The MapComplete theme is fetched by mapcomplete.org at runtime from this
+# repo's raw URL — no build step would ever notice it rotting. This check
+# does: weekly against whatever MapComplete's schema says today, plus on any
+# change to the theme itself. Kept out of ci.yml so a network hiccup or an
+# upstream schema change can't block unrelated PRs.
+name: Theme check
+
+on:
+  schedule:
+    - cron: "20 6 * * 1" # Mondays, alongside the weekly ops digest
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "theme/**"
+      - "pipeline/theme_check.py"
+      - ".github/workflows/theme-check.yml"
+  push:
+    branches: [main]
+    paths:
+      - "theme/**"
+      - "pipeline/theme_check.py"
+      - ".github/workflows/theme-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pipeline.theme_check

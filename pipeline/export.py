@@ -13,14 +13,14 @@ PAPAMAP_THEME_URL = ("https://raw.githubusercontent.com/jakubwaller/papa-map/"
                      "main/theme/papamap.theme.json")
 
 
-def _mapcomplete_url(amenity, osm_type, osm_id, lat, lon):
+def _mapcomplete_url(osm_type, osm_id, lat, lon):
     """Deep link into MapComplete, landing next to the feature with the object
     preselected via the #<type>/<id> fragment (format per MapComplete's
-    Docs/URL_Parameters.md). The official toilets theme only selects
-    amenity=toilets; everything else (cafés, shops, ...) is covered by the
-    second layer of our own theme, loaded via userlayout."""
-    if amenity == "toilets":
-        return f"https://mapcomplete.org/toilets?z=18&lat={lat}&lon={lon}#{osm_type}/{osm_id}"
+    Docs/URL_Parameters.md). Always our own theme via userlayout — its
+    dad_toilet layer covers amenity=toilets too, and edits made through it
+    carry theme=papamap in the changeset, so website contributions stay
+    countable (the official toilets theme would tag them theme=toilets,
+    indistinguishable from any other MapComplete user)."""
     return (f"https://mapcomplete.org/theme.html?userlayout={PAPAMAP_THEME_URL}"
             f"&z=18&lat={lat}&lon={lon}#{osm_type}/{osm_id}")
 
@@ -53,7 +53,7 @@ def build_features(ct_data: dict) -> list[dict]:
                 "fee": tags.get("changing_table:fee") or tags.get("fee"),
                 "opening_hours": tags.get("opening_hours"),
                 "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
-                "mapcomplete_url": _mapcomplete_url(amenity, osm_type, osm_id, lat, lon),
+                "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),
             },
         })
     return features
