@@ -35,7 +35,8 @@ def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None):
         geojson_path=write(tmp_path / "gj.json", gj) if gj is not None
         else str(tmp_path / "absent-gj.json"),
         mail=lambda subject, body: sent.append((subject, body)),
-        visits_fetch=lambda **kw: None)
+        visits_fetch=lambda **kw: None,
+        edits_fetch=lambda **kw: None)
     return anomalies, report, sent, state_path
 
 
@@ -123,6 +124,51 @@ def test_unparsable_generated_at_alerts(tmp_path):
     anomalies, _, _, _ = run(tmp_path, stats={"generated_at": "soon"},
                              gj=geojson([("node", 1, "unknown")]), now=TUESDAY)
     assert any("generated_at" in a for a in anomalies)
+
+
+def test_osmcha_edits_without_token_is_none(monkeypatch):
+    monkeypatch.delenv("OSMCHA_TOKEN", raising=False)
+    assert ops.osmcha_edits(get=lambda *a, **kw: 1 / 0) is None
+
+
+def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
+    monkeypatch.setenv("OSMCHA_TOKEN", "token")
+    seen = {}
+
+    def fake_get(url, timeout, headers, params):
+        seen.update(url=url, headers=headers, params=params)
+
+        class R:
+            def json(self):
+                return {"count": 3, "features": []}
+        return R()
+
+    edits = ops.osmcha_edits(now=NOW, get=fake_get)
+    assert edits == {"days": 7, "changesets": 3}
+    assert seen["url"] == ops.OSMCHA_URL
+    assert seen["headers"]["Authorization"] == "Token token"
+    # the changeset theme tag is the theme URL, not the id (MapComplete
+    # stamps remote themes with forcedId = link)
+    assert seen["params"]["metadata"] == f"theme={ops.PAPAMAP_THEME_URL}"
+    assert seen["params"]["date__gte"] == "2026-07-27"  # NOW minus 7 days
+
+
+def test_osmcha_edits_failure_is_none(monkeypatch):
+    monkeypatch.setenv("OSMCHA_TOKEN", "token")
+    assert ops.osmcha_edits(now=NOW, get=lambda *a, **kw: 1 / 0) is None
+
+
+def test_digest_carries_edits_line(tmp_path):
+    sent = []
+    ops.run_check(
+        now=NOW, state_path=str(tmp_path / "state.json"),
+        stats_path=write(tmp_path / "stats.json", fresh_stats()),
+        geojson_path=write(tmp_path / "gj.json",
+                           geojson([("node", 1, "unknown")])),
+        mail=lambda subject, body: sent.append((subject, body)),
+        visits_fetch=lambda **kw: None,
+        edits_fetch=lambda **kw: {"days": 7, "changesets": 2})
+    assert "edits via papamap theme (OSMCha, 7d): 2 changesets" in sent[0][1]
 
 
 def test_send_mail_unconfigured_is_false(monkeypatch):

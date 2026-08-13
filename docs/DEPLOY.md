@@ -78,8 +78,10 @@ when Denmark was added.
 `ops-state.json`, gitignored) and mails only on an anomaly — stale `generated_at` (>48 h),
 missing files, a >20% drop in the total or accessible count — plus one all-clear digest every
 Monday, so a silent week means the watcher itself died. The digest carries the day's and week's
-changes (new features, grey→green transitions = answered room questions) and, if a Cloudflare
-token is configured, zone-level visit totals. Everything is aggregate; no visitor data.
+changes (new features, grey→green transitions = answered room questions) and, per configured
+token, zone-level visit totals (Cloudflare) and the count of changesets made through the
+site's own MapComplete theme (OSMCha) — the attributable slice of the mission metric.
+Everything is aggregate; no visitor or mapper data.
 
 ```cron
 30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1
@@ -97,6 +99,9 @@ PAPAMAP_OPS_TO=you@example.com         # without SMTP creds + TO, report goes to
 PAPAMAP_OPS_FROM=ops@example.com       # optional, defaults to PAPAMAP_SMTP_USER
 CF_ANALYTICS_TOKEN=...                 # optional: Analytics:Read, this zone only
 CF_ZONE_TAG=...                        # the zone id from the Cloudflare dashboard
+OSMCHA_TOKEN=...                       # optional: osmcha.org API token (log in once with the
+                                       # OSM account, token is under account settings) — adds
+                                       # the papamap-theme changeset count to the digest
 ```
 
 (Proton SMTP tokens exist from the Unlimited plan up and pair with a custom-domain
