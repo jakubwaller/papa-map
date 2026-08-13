@@ -207,7 +207,9 @@ def osmcha_edits(days=7, now=None, get=requests.get):
     since = datetime.fromtimestamp(
         now.timestamp() - days * 86400, tz=timezone.utc).strftime("%Y-%m-%d")
     try:
-        r = get(OSMCHA_URL, timeout=30,
+        # OSMCha's metadata filter scans JSONB and routinely needs ~20-25s;
+        # this runs at most once a day, so wait it out rather than flake
+        r = get(OSMCHA_URL, timeout=120,
                 headers={"Authorization": f"Token {token}"},
                 params={"metadata": f"theme={PAPAMAP_THEME_URL}",
                         "date__gte": since, "page_size": "1"})
