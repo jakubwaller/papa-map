@@ -9,7 +9,8 @@ day's dataset changes: new/removed features and status transitions — a
 grey->green transition is somebody answering the room question on OSM.
 
 Everything in the report is aggregate: dataset counts derived from public ODbL
-OSM data, plus (optionally) Cloudflare's zone-level request totals. No
+OSM data, plus (optionally) Cloudflare's zone-level request totals and an
+OSMCha count of changesets made through the site's own MapComplete theme. No
 visitor-level data is read, stored or sent.
 
 Mail goes out over plain SMTP submission (STARTTLS) — any provider that hands
@@ -30,6 +31,7 @@ from pathlib import Path
 import requests
 
 from .config import GEOJSON_PATH, STATS_PATH
+from .export import PAPAMAP_THEME_URL
 
 STATE_PATH = os.environ.get("PAPAMAP_OPS_STATE_PATH", "ops-state.json")
 STALE_AFTER_H = float(os.environ.get("PAPAMAP_OPS_STALE_H", "48"))
@@ -38,6 +40,7 @@ HISTORY_DAYS = 90
 WEEKLY_DIGEST_WEEKDAY = 0  # Monday
 
 CF_GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql"
+OSMCHA_URL = "https://osmcha.org/api/v1/changesets/"
 
 STATUS_KEYS = ("accessible", "female_only", "unknown")
 
@@ -122,7 +125,8 @@ def find_anomalies(stats, counts, last_counts, now) -> list[str]:
     return anomalies
 
 
-def render_report(counts, changes, history, anomalies, visits=None) -> str:
+def render_report(counts, changes, history, anomalies, visits=None,
+                  edits=None) -> str:
     lines = []
     if anomalies:
         lines.append("ANOMALIES:")
@@ -147,6 +151,10 @@ def render_report(counts, changes, history, anomalies, visits=None) -> str:
             f"+{sum(e['changes']['new'] for e in week)} new, "
             f"{sum(e['changes']['to_accessible'] for e in week)} -> accessible, "
             f"{sum(e['changes']['to_female_only'] for e in week)} -> female-only")
+    if edits:
+        lines.append(
+            f"edits via papamap theme (OSMCha, {edits['days']}d): "
+            f"{edits['changesets']} changesets")
     if visits:
         lines.append(
             f"visits (Cloudflare, {visits['days']}d): "
@@ -183,6 +191,32 @@ def cf_visits(days=7, now=None, post=requests.post):
         return None
 
 
+def osmcha_edits(days=7, now=None, get=requests.get):
+    """Changesets saved through the site's own MapComplete theme — the
+    attributable slice of the mission metric. MapComplete stamps a remote
+    theme's changesets with theme=<the theme's URL> (DetermineTheme.ts:
+    forcedId = link), so the filter is the exact URL every pin embeds;
+    OSMCha's metadata filter matches case-insensitive substrings. Optional:
+    needs OSMCHA_TOKEN (free account on osmcha.org, token under account
+    settings); absent or failing, the report just omits the line. The count
+    is aggregate — no mapper data is read or stored."""
+    token = os.environ.get("OSMCHA_TOKEN")
+    if not token:
+        return None
+    now = now or datetime.now(timezone.utc)
+    since = datetime.fromtimestamp(
+        now.timestamp() - days * 86400, tz=timezone.utc).strftime("%Y-%m-%d")
+    try:
+        r = get(OSMCHA_URL, timeout=30,
+                headers={"Authorization": f"Token {token}"},
+                params={"metadata": f"theme={PAPAMAP_THEME_URL}",
+                        "date__gte": since, "page_size": "1"})
+        return {"days": days, "changesets": r.json()["count"]}
+    except Exception as exc:  # like visits: decoration, never fail the check
+        print(f"WARN: OSMCha query failed: {exc}", file=sys.stderr)
+        return None
+
+
 def send_mail(subject, body, smtp=smtplib.SMTP) -> bool:
     """Plain SMTP submission with STARTTLS (Proton SMTP token, Mailjet relay,
     anything). False = not configured or failed; the report is on stdout
@@ -212,7 +246,7 @@ def send_mail(subject, body, smtp=smtplib.SMTP) -> bool:
 
 
 def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
-              mail=send_mail, visits_fetch=cf_visits):
+              mail=send_mail, visits_fetch=cf_visits, edits_fetch=osmcha_edits):
     """Returns (anomalies, report). State is updated every run so the daily
     diff stays daily even when no mail goes out."""
     now = now or datetime.now(timezone.utc)
@@ -232,7 +266,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     anomalies = find_anomalies(stats, counts, last_counts, now)
     weekly = now.weekday() == WEEKLY_DIGEST_WEEKDAY
     visits = visits_fetch(now=now) if (anomalies or weekly) else None
-    report = render_report(counts, changes, history, anomalies, visits)
+    edits = edits_fetch(now=now) if (anomalies or weekly) else None
+    report = render_report(counts, changes, history, anomalies, visits, edits)
 
     if cur_statuses is not None:
         history.append({"date": now.strftime("%Y-%m-%d"), "counts": counts,
