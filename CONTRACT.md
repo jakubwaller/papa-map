@@ -1,5 +1,22 @@
 # papa-map — build contract (v0)
 
+> **v6 amendment (14 Aug 2026, leaderboard):** the full default build now also
+> maintains **`web/data/history.json`** — one entry per build day with
+> `[accessible, female_only, unknown]` triples per region (`regions`: the 16
+> Länder + `Danmark`) and per city (`cities`: the curated `CITY_AREAS` list in
+> `pipeline/config.py`, membership via one ids-only Overpass query per city) —
+> and renders two pages from it: `wickeltische/rangliste.html` (German) and
+> `wickeltische/leaderboard.html` (English), ranked by the **change of the
+> answered share** (accessible + female_only over total) in percentage points
+> against a snapshot ≥ 7 days back. Change, not level, on purpose: absolute
+> counts measure mapping thoroughness, and the Bundesland index explicitly
+> refuses to rank them. A same-date re-run replaces its history entry (builds
+> stay idempotent); city sweep failures degrade to a WARN and a city-less day,
+> never a failed build; partial builds (`PAPAMAP_AREA_NAME`, country subsets)
+> write no history at all. `python -m pipeline.backfill YYYY-MM-DD ...` seeds
+> past days from Overpass attic (`[date:...]`) queries through the same
+> classify/dedup path; it never overwrites an existing day.
+
 > **v5 amendment (14 Aug 2026, central key locks):** objects with a
 > `centralkey` tag other than `no` (the Euro key and similar central key
 > systems) are not features at all — the key is issued only against proof of

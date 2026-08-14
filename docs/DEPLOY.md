@@ -48,6 +48,12 @@ not repo content, so **a fresh clone serves 404s there until the first build run
 sitemap lists those 17 URLs unconditionally. Run the pipeline once after deploying rather
 than waiting for the nightly cron.
 
+A full build also maintains `history.json` next to the other generated JSON (the
+per-region daily counts behind `wickeltische/rangliste.html`) — same directory, same
+mounts, nothing new to wire up. It is state, not a nightly rebuild: deleting it resets
+the leaderboard to day one, so leave it alone when cleaning build output, and seed it
+with `python -m pipeline.backfill` (see the README) when deploying fresh.
+
 Under Docker the pages need a writable mount like the JSON does. The image sets
 `PAPAMAP_PAGES_DIR=/out/wickeltische` and compose mounts `./web-data/wickeltische` back into
 the served tree at `/srv/wickeltische`, so the URL stays `DOMAIN/wickeltische/`. **The

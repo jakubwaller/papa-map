@@ -60,6 +60,23 @@ they are listed by hand in `web/sitemap.xml`; `tests/test_pages.py` asserts that
 list matches the slugs the generator writes. `PAPAMAP_PAGES_DIR` moves the
 output elsewhere.
 
+## Leaderboard
+
+A full build also appends one entry per day to `web/data/history.json` —
+`[accessible, female_only, unknown]` counts per Bundesland/Denmark and per big
+city (the curated `CITY_AREAS` list, membership via one ids-only Overpass query
+per city) — and renders `web/wickeltische/rangliste.html` (German) plus
+`leaderboard.html` (English) from it. The tables rank the **change** of the
+answered share in percentage points against a snapshot at least a week back,
+never the absolute counts: levels measure mapping thoroughness, movement
+measures people answering the room question, and only the latter is an honest
+race. A same-date re-run replaces its history entry; partial builds write no
+history at all.
+
+`python -m pipeline.backfill 2026-07-17 2026-07-24 ...` seeds past days from
+Overpass attic (`[date:...]`) queries so the page can show a real week-over-week
+delta from day one. It never overwrites a day that already exists.
+
 ## Serve locally
 ```bash
 python3 -m http.server -d web 8000   # http://localhost:8000

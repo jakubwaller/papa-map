@@ -82,6 +82,20 @@
   <url><loc>https://papamap.de/wickeltische/schleswig-holstein.html</loc></url>
   <url><loc>https://papamap.de/wickeltische/thueringen.html</loc></url>
 
+  <!-- The leaderboard pair: one German, one English page, cross-linked. -->
+  <url>
+    <loc>https://papamap.de/wickeltische/rangliste.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/wickeltische/rangliste.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/wickeltische/leaderboard.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/wickeltische/rangliste.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/wickeltische/leaderboard.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/wickeltische/rangliste.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/wickeltische/leaderboard.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/wickeltische/rangliste.html"/>
+  </url>
+
   <!-- German-only by design, so no alternates. -->
   <url><loc>https://papamap.de/impressum.html</loc></url>
   <url><loc>https://papamap.de/datenschutz.html</loc></url>
