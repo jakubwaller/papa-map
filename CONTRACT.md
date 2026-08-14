@@ -1,5 +1,15 @@
 # papa-map — build contract (v0)
 
+> **v5 amendment (14 Aug 2026, central key locks):** objects with a
+> `centralkey` tag other than `no` (the Euro key and similar central key
+> systems) are not features at all — the key is issued only against proof of
+> disability, so whatever room the table is in, the map's audience can't open
+> the door. `classify()` returns None for them before any coloring, and the
+> `local` stats block gains **`centralkey_locked`**: the number of key-locked
+> objects that would otherwise be pins (coordless and `changing_table=no`
+> objects don't count into it). The v0 classification rule below is amended
+> accordingly; ~174 DE+DK objects (2.7%) leave the map with this change.
+
 > **v4 amendment (12 Aug 2026, changeset attribution):** every MapComplete
 > link on the site — `mapcomplete_url` on **all** features including
 > `amenity=toilets`, and the add-a-place link — now opens PapaMap's own theme
