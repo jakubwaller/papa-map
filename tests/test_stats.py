@@ -15,6 +15,7 @@ def test_local_stats_counts_every_bucket(load_fixture):
         "ct_yes": 6, "ct_no": 1, "ct_limited": 1,
         "yes_location_known": 5, "yes_location_unknown": 1,
         "accessible": 3, "female_only": 2, "unknown": 2,
+        "centralkey_locked": 0,
         "capacity_tagged_toilets": 1,
     }
 
@@ -36,6 +37,21 @@ def test_local_stats_skips_coordless_elements_like_build_features(load_fixture):
     assert local["ct_yes"] == 6  # but not as a feature-facing yes
     assert local["yes_location_known"] == 5
     assert local["accessible"] == 3
+
+
+def test_local_stats_counts_centralkey_locked_drops(load_fixture):
+    # Key-locked objects leave every feature-facing counter (the map drops
+    # them too) and land in centralkey_locked instead.
+    ct = load_fixture("overpass_changing_tables.json")
+    ct["elements"].append({"type": "node", "id": 50, "lat": 53.55, "lon": 10.0,
+                           "tags": {"changing_table": "yes",
+                                    "changing_table:location": "wheelchair_toilet",
+                                    "centralkey": "eurokey"}})
+    local = stats.local_stats(ct, load_fixture("overpass_toilets.json"))
+    assert local["ct_objects"] == 10  # still a tagged object
+    assert local["centralkey_locked"] == 1
+    assert local["ct_yes"] == 6  # but never feature-facing
+    assert local["accessible"] == 3  # the room doesn't matter behind the lock
 
 
 def _taginfo_fetch(load_fixture):

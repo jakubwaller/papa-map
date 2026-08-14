@@ -17,6 +17,16 @@ def test_build_features_keeps_only_yes_and_limited(load_fixture):
                         9: "female_only"}
 
 
+def test_centralkey_locked_element_never_becomes_a_pin(load_fixture):
+    ct = load_fixture("overpass_changing_tables.json")
+    ct["elements"].append({"type": "node", "id": 50, "lat": 53.55, "lon": 10.0,
+                           "tags": {"changing_table": "yes",
+                                    "changing_table:location": "wheelchair_toilet",
+                                    "centralkey": "eurokey"}})
+    ids = [f["properties"]["osm_id"] for f in build_features(ct)]
+    assert 50 not in ids
+
+
 def test_way_and_relation_use_center_geometry(load_fixture):
     feats = {f["properties"]["osm_id"]: f
              for f in build_features(load_fixture("overpass_changing_tables.json"))}

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import requests
 
-from .classify import classify, tokens
+from .classify import centralkey_locked, classify, tokens
 from .config import TAGINFO_STATS_URL, TAGINFO_VALUES_URL, USER_AGENT
 from .osm import element_coords
 
@@ -21,10 +21,12 @@ def local_stats(ct_data: dict, toilets_data: dict) -> dict:
     """The `local` stats block, from the two Overpass responses. ct_yes/no/
     limited are exact value counts, so junk values ("02") show up only in
     ct_objects. The feature-facing counters (ct_yes/ct_limited, location and
-    status buckets) skip elements without usable coordinates — the same filter
-    export.build_features applies — so the stats strip never claims more
-    tables than the map has pins."""
-    ct_yes = ct_no = ct_limited = yes_location_known = 0
+    status buckets) skip elements without usable coordinates and elements
+    behind a central key — the same filters export.build_features applies — so
+    the stats strip never claims more tables than the map has pins.
+    centralkey_locked counts the key-locked drops that would otherwise be
+    pins."""
+    ct_yes = ct_no = ct_limited = yes_location_known = locked = 0
     status_counts = {"accessible": 0, "female_only": 0, "unknown": 0}
     elements = ct_data.get("elements", [])
     for el in elements:
@@ -36,6 +38,9 @@ def local_stats(ct_data: dict, toilets_data: dict) -> dict:
             continue
         if element_coords(el)[0] is None:
             continue  # build_features drops it, so we must not count it
+        if centralkey_locked(tags.get("centralkey")):
+            locked += 1  # would be a pin, but the door needs a Euro key
+            continue
         if value == "yes":
             ct_yes += 1
             if location and location.strip():
@@ -57,6 +62,7 @@ def local_stats(ct_data: dict, toilets_data: dict) -> dict:
         "accessible": status_counts["accessible"],
         "female_only": status_counts["female_only"],
         "unknown": status_counts["unknown"],
+        "centralkey_locked": locked,
         "capacity_tagged_toilets": capacity,
     }
 

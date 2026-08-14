@@ -12,6 +12,14 @@ FEMALE_TOKEN = "female_toilet"
 FEATURE_VALUES = {"yes", "limited"}
 
 
+def centralkey_locked(centralkey: str | None) -> bool:
+    """True when the object sits behind a central key system (`centralkey`
+    tag present and not `no`). The Euro key and its siblings are issued only
+    against proof of disability, so whatever room the table is in, the map's
+    audience can't open the door."""
+    return bool(centralkey) and centralkey.strip().lower() not in ("", "no")
+
+
 def tokens(location: str | None) -> list[str]:
     """Split a changing_table:location value on ';' (the OSM list separator)
     into trimmed, lowercased tokens. None/empty -> no tokens."""
@@ -20,12 +28,16 @@ def tokens(location: str | None) -> list[str]:
     return [t.strip().lower() for t in location.split(";") if t.strip()]
 
 
-def classify(changing_table: str | None, location: str | None) -> str | None:
+def classify(changing_table: str | None, location: str | None,
+             centralkey: str | None = None) -> str | None:
     """Status of one OSM object: 'accessible' | 'female_only' | 'unknown', or
     None when the object is not a feature at all (changing_table not
-    yes/limited). Any accessible token wins; else an exact female_toilet token
-    means female_only; else (no tag, free text, unrecognized) -> unknown."""
+    yes/limited, or locked behind a central key). Any accessible token wins;
+    else an exact female_toilet token means female_only; else (no tag, free
+    text, unrecognized) -> unknown."""
     if (changing_table or "").strip() not in FEATURE_VALUES:
+        return None
+    if centralkey_locked(centralkey):
         return None
     toks = tokens(location)
     if any(t in ACCESSIBLE_TOKENS for t in toks):

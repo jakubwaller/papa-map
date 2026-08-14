@@ -33,7 +33,7 @@ def build_features(ct_data: dict) -> list[dict]:
         tags = el.get("tags") or {}
         value = (tags.get("changing_table") or "").strip()
         location = tags.get("changing_table:location")
-        status = classify(value, location)
+        status = classify(value, location, tags.get("centralkey"))
         if status is None:
             continue
         lat, lon = element_coords(el)

@@ -40,6 +40,20 @@ def test_non_feature_values_return_none():
     assert classify("", None) is None
 
 
+def test_centralkey_locked_objects_are_no_features():
+    # A central-key door opens only with proof of disability — the room
+    # doesn't matter when a dad can't get through the door.
+    assert classify("yes", "wheelchair_toilet", "eurokey") is None
+    assert classify("yes", None, "yes") is None
+    assert classify("limited", "male_toilet", " Eurokey ") is None  # trim + lowercase
+
+
+def test_centralkey_no_or_absent_changes_nothing():
+    assert classify("yes", "wheelchair_toilet", "no") == "accessible"
+    assert classify("yes", "wheelchair_toilet", None) == "accessible"
+    assert classify("yes", "wheelchair_toilet", "") == "accessible"
+
+
 def test_limited_is_a_feature():
     assert classify("limited", "wheelchair_toilet") == "accessible"
     assert classify(" yes ", "unisex_toilet") == "accessible"  # tolerate stray whitespace
