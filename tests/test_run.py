@@ -6,14 +6,16 @@ import pytest
 import requests
 
 from pipeline import config
-from pipeline.config import BUNDESLAENDER, sweep_areas
+from pipeline.config import BUNDESLAENDER, CITY_AREAS, sweep_areas
 from pipeline.run import run_pipeline
 
 NOW = datetime(2026, 7, 26, 3, 0, tzinfo=timezone.utc)
 
 # The default sweep: 16 Bundesländer at admin_level=4, then Denmark whole at
-# admin_level=2.
+# admin_level=2. A full build follows up with one ids-only query per
+# leaderboard city.
 SWEEP = [(name, "4") for name in BUNDESLAENDER] + [("Danmark", "2")]
+CITY_SWEEP = [(area, lvl) for _, area, lvl in CITY_AREAS]
 
 
 def _fake_overpass(load_fixture):
@@ -53,13 +55,16 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     summary = run_pipeline(
         geojson_path=str(geojson), stats_path=str(stats),
         overpass_fetch=fake_overpass, pages_dir=str(tmp_path / "pages"),
+        history_path=str(tmp_path / "history.json"),
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
     )
     # Every element appears once in each of the 17 area sweeps; dedup by
     # (type, id) must collapse the totals back to a single fixture's worth.
+    # 19 pages: 16 Länder + index + the two leaderboard languages.
     assert summary == {"features": 7, "ct_objects": 9, "toilets_total": 3,
-                       "global_source": "taginfo", "pages": 17}
-    assert fake_overpass.areas_seen == [a for a in SWEEP for _ in (1, 2)]
+                       "global_source": "taginfo", "pages": 19}
+    assert fake_overpass.areas_seen == ([a for a in SWEEP for _ in (1, 2)]
+                                        + CITY_SWEEP)
 
     fc = json.loads(geojson.read_text(encoding="utf-8"))
     assert fc["type"] == "FeatureCollection"
@@ -95,9 +100,13 @@ def test_run_is_idempotent(tmp_path, load_fixture):
     kwargs = dict(geojson_path=str(tmp_path / "ct.geojson"),
                   stats_path=str(tmp_path / "stats.json"),
                   pages_dir=str(tmp_path / "pages"),
+                  history_path=str(tmp_path / "history.json"),
                   overpass_fetch=_fake_overpass(load_fixture),
                   taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
     assert run_pipeline(**kwargs) == run_pipeline(**kwargs)
+    # The same-date re-run replaced its history entry, not appended a second.
+    history = json.loads((tmp_path / "history.json").read_text(encoding="utf-8"))
+    assert [d["date"] for d in history["days"]] == ["2026-07-26"]
 
 
 def test_taginfo_down_keeps_previous_global_block(tmp_path, load_fixture, capsys):
@@ -108,6 +117,7 @@ def test_taginfo_down_keeps_previous_global_block(tmp_path, load_fixture, capsys
     summary = run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
         overpass_fetch=_fake_overpass(load_fixture), pages_dir=str(tmp_path / "pages"),
+        history_path=str(tmp_path / "history.json"),
         taginfo_fetch=_taginfo_down, now=NOW,
     )
     assert summary["global_source"] == "previous"
@@ -157,7 +167,8 @@ def test_failed_area_is_retried_in_a_later_round(tmp_path, load_fixture):
         geojson_path=str(tmp_path / "ct.geojson"),
         stats_path=str(tmp_path / "stats.json"),
         overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
-        pages_dir=str(tmp_path / "pages"), now=NOW, sweep_pause_s=0)
+        pages_dir=str(tmp_path / "pages"),
+        history_path=str(tmp_path / "history.json"), now=NOW, sweep_pause_s=0)
     assert summary["features"] == 7  # nothing lost, Bayern landed on round 2
     # failed ct, then both queries
     assert inner.areas_seen.count(("Bayern", "4")) == 2
@@ -183,11 +194,64 @@ def test_taginfo_down_with_no_previous_stats_degrades_to_null(tmp_path, load_fix
     summary = run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
         overpass_fetch=_fake_overpass(load_fixture), pages_dir=str(tmp_path / "pages"),
+        history_path=str(tmp_path / "history.json"),
         taginfo_fetch=_taginfo_down, now=NOW,
     )
     assert summary["global_source"] is None
     assert "WARN" in capsys.readouterr().err
     assert json.loads(stats.read_text(encoding="utf-8"))["global"] is None
+
+
+def test_full_build_writes_history_and_leaderboard(tmp_path, load_fixture):
+    history_path = tmp_path / "history.json"
+    run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        pages_dir=str(tmp_path / "pages"), history_path=str(history_path),
+        overpass_fetch=_fake_overpass(load_fixture),
+        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+    history = json.loads(history_path.read_text(encoding="utf-8"))
+    assert [d["date"] for d in history["days"]] == ["2026-07-26"]
+    day = history["days"][0]
+    assert day["source"] == "build"
+    # Every sweep answers with the same fixture, so first-wins assignment puts
+    # every deduped object into the first Land and the first city — and every
+    # other region must still appear as an explicit zero triple, which is a
+    # different statement from being absent (absent = sweep failed).
+    assert day["regions"]["Baden-Württemberg"] == [3, 2, 2]
+    assert day["regions"]["Danmark"] == [0, 0, 0]
+    assert len(day["regions"]) == 17
+    assert day["cities"]["Berlin"] == [3, 2, 2]
+    assert day["cities"]["København"] == [0, 0, 0]
+    assert len(day["cities"]) == len(CITY_AREAS)
+    de = (tmp_path / "pages" / "rangliste.html").read_text(encoding="utf-8")
+    en = (tmp_path / "pages" / "leaderboard.html").read_text(encoding="utf-8")
+    assert 'lang="de"' in de and "Die Rangliste" in de
+    assert 'lang="en"' in en and "The leaderboard" in en
+
+
+def test_city_sweep_failure_degrades_to_warn(tmp_path, load_fixture, capsys):
+    # A city failing every round must cost exactly one city on the leaderboard
+    # — never the build. The map is the artifact that must not be held hostage.
+    inner = _fake_overpass(load_fixture)
+
+    def flaky(ql, **kwargs):
+        if "Københavns Kommune" in ql:
+            raise requests.ConnectionError("kommune down")
+        return inner(ql, **kwargs)
+
+    history_path = tmp_path / "history.json"
+    summary = run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        pages_dir=str(tmp_path / "pages"), history_path=str(history_path),
+        overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
+        now=NOW, sweep_rounds=2, sweep_pause_s=0)
+    assert summary["features"] == 7
+    assert "leaderboard skips København" in capsys.readouterr().err
+    day = json.loads(history_path.read_text(encoding="utf-8"))["days"][0]
+    assert "København" not in day["cities"]
+    assert day["cities"]["Berlin"] == [3, 2, 2]
 
 
 def test_denmark_sweeps_whole_at_country_level():

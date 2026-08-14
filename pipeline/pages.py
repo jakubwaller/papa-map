@@ -433,7 +433,8 @@ def render_index(summaries, generated_at: str, base_url: str = SITE_BASE_URL,
             f"OpenStreetMap, bei {de_num(unknown)} davon ist der Raum nicht erfasst.")
 
     parts = [_head("Wickeltische nach Bundesland — PapaMap", desc, canonical)]
-    parts.append(f'<p class="back"><a href="{UP}">&larr; Zur Karte</a></p>\n')
+    parts.append(f'<p class="back"><a href="{UP}">&larr; Zur Karte</a> · '
+                 '<a href="rangliste.html">Rangliste</a></p>\n')
     parts.append("<h1>Wickeltische nach Bundesland</h1>\n")
     parts.append(f'<p class="muted">Stand {esc(date)} · Daten aus OpenStreetMap</p>\n')
     parts.append(
@@ -455,7 +456,9 @@ def render_index(summaries, generated_at: str, base_url: str = SITE_BASE_URL,
         '<p class="muted">Alphabetisch, nicht nach Anzahl sortiert. Eine Rangliste wäre '
         "irreführend: die Zahlen messen, wie gründlich in einem Land gemappt wurde, nicht "
         "wie gut es mit Wickeltischen versorgt ist. Dieselbe Einschränkung wie beim "
-        f'Städtevergleich in den <a href="{UP}methods.html">Methoden</a>. Die '
+        f'Städtevergleich in den <a href="{UP}methods.html">Methoden</a>. Was sich '
+        "ehrlich vergleichen lässt, ist die Veränderung — die steht auf der "
+        '<a href="rangliste.html">Rangliste</a>. Die '
         "Spalte <em>Toiletten</em> zählt alle erfassten öffentlichen Toiletten, mit oder "
         "ohne Wickeltisch.</p>\n")
     parts.append(FOOTER.format(up=UP))

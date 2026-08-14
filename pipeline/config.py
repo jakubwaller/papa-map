@@ -55,6 +55,53 @@ COUNTRY_AREAS = {
 # area_key and only falls back to this string when it has no translation.
 COUNTRY_LABELS = {"de": "Deutschland", "dk": "Danmark"}
 
+# Leaderboard city sweep: (display name, OSM area name, admin_level). Curated —
+# big cities only, so one answered question moves a share the reader can see
+# without a 20-pin village jumping the table on a single edit. The levels are
+# not uniform on purpose: Berlin and Hamburg exist only as Länder (4), Bremen
+# the city is level 6 inside Land Bremen (which also contains Bremerhaven),
+# Hannover sits at 8 under Region Hannover, and Danish Kommuner are level 7.
+# Each entry was verified to resolve as an Overpass area with a plausible
+# changing_table count before it went in; a new city must be verified the same
+# way, because a typo'd name resolves to zero objects and run.py can only
+# treat that as a failed sweep.
+CITY_AREAS = (
+    ("Berlin", "Berlin", "4"),
+    ("Hamburg", "Hamburg", "4"),
+    ("München", "München", "6"),
+    ("Köln", "Köln", "6"),
+    ("Frankfurt am Main", "Frankfurt am Main", "6"),
+    ("Stuttgart", "Stuttgart", "6"),
+    ("Düsseldorf", "Düsseldorf", "6"),
+    ("Leipzig", "Leipzig", "6"),
+    ("Dortmund", "Dortmund", "6"),
+    ("Essen", "Essen", "6"),
+    ("Dresden", "Dresden", "6"),
+    ("Nürnberg", "Nürnberg", "6"),
+    ("Duisburg", "Duisburg", "6"),
+    ("Bochum", "Bochum", "6"),
+    ("Wuppertal", "Wuppertal", "6"),
+    ("Bielefeld", "Bielefeld", "6"),
+    ("Bonn", "Bonn", "6"),
+    ("Münster", "Münster", "6"),
+    ("Karlsruhe", "Karlsruhe", "6"),
+    ("Mannheim", "Mannheim", "6"),
+    ("Augsburg", "Augsburg", "6"),
+    ("Wiesbaden", "Wiesbaden", "6"),
+    ("Bremen", "Bremen", "6"),
+    ("Hannover", "Hannover", "8"),
+    ("København", "Københavns Kommune", "7"),
+    ("Aarhus", "Aarhus Kommune", "7"),
+    ("Odense", "Odense Kommune", "7"),
+    ("Aalborg", "Aalborg Kommune", "7"),
+)
+
+# Per-region daily snapshots, appended by every full build and rendered into
+# the leaderboard pages. Lives next to stats.json so it lands in the one
+# writable mount under Docker and survives image rebuilds.
+HISTORY_PATH = os.environ.get("PAPAMAP_HISTORY_PATH", "web/data/history.json")
+HISTORY_MAX_DAYS = int(os.environ.get("PAPAMAP_HISTORY_MAX_DAYS", "400"))
+
 # Comma-separated subset for a cheaper build (PAPAMAP_COUNTRIES=dk builds
 # Denmark alone in ~30 s instead of sweeping all 17 areas).
 SWEEP_COUNTRIES = tuple(c.strip().lower() for c in os.environ.get(
@@ -126,18 +173,32 @@ TAGINFO_VALUES_URL = ("https://taginfo.openstreetmap.org/api/4/key/values"
                       "&sortname=count&sortorder=desc")
 
 
-def _area_ql(area_name: str, admin_level: str) -> str:
-    return (f'[out:json][timeout:{OVERPASS_QL_TIMEOUT}];'
+def _area_ql(area_name: str, admin_level: str, date: str | None = None) -> str:
+    # [date:...] turns the query attic: the data as of that moment. Areas
+    # themselves are derived from *current* boundaries — acceptable, Länder and
+    # city limits move on a scale of decades, our history on a scale of weeks.
+    attic = f'[date:"{date}"]' if date else ""
+    return (f'[out:json][timeout:{OVERPASS_QL_TIMEOUT}]{attic};'
             f'area["name"="{area_name}"]["admin_level"="{admin_level}"]->.a;')
 
 
-def changing_table_ql(area_name: str = "Deutschland", admin_level: str = "2") -> str:
+def changing_table_ql(area_name: str = "Deutschland", admin_level: str = "2",
+                      date: str | None = None) -> str:
     """All objects carrying a changing_table tag (any value — `no` and junk
     values feed the stats even though only yes/limited become features)."""
-    return _area_ql(area_name, admin_level) + 'nwr["changing_table"](area.a);out tags center;'
+    return _area_ql(area_name, admin_level, date) + 'nwr["changing_table"](area.a);out tags center;'
 
 
-def toilets_ql(area_name: str = "Deutschland", admin_level: str = "2") -> str:
+def changing_table_ids_ql(area_name: str, admin_level: str,
+                          date: str | None = None) -> str:
+    """Ids only — enough to say *which* already-classified objects lie in a
+    city, at a fraction of the tag query's payload. Any changing_table value:
+    the join against the feature list drops the `no`s for free."""
+    return _area_ql(area_name, admin_level, date) + 'nwr["changing_table"](area.a);out ids;'
+
+
+def toilets_ql(area_name: str = "Deutschland", admin_level: str = "2",
+               date: str | None = None) -> str:
     """All amenity=toilets, tags only — counted for the honesty stat and
     scanned for toilets:num_chambers* capacity tags. No geometry needed."""
-    return _area_ql(area_name, admin_level) + 'nwr["amenity"="toilets"](area.a);out tags;'
+    return _area_ql(area_name, admin_level, date) + 'nwr["amenity"="toilets"](area.a);out tags;'
