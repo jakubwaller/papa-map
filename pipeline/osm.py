@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import sys
 import time
+from datetime import datetime, timedelta, timezone
 
 import requests
 
-from .config import (OVERPASS_BACKOFF_S, OVERPASS_HTTP_TIMEOUT, OVERPASS_RETRIES,
-                     OVERPASS_URLS, USER_AGENT)
+from .config import (OVERPASS_BACKOFF_S, OVERPASS_HTTP_TIMEOUT,
+                     OVERPASS_MAX_DATA_AGE_H, OVERPASS_RETRIES, OVERPASS_URLS,
+                     USER_AGENT)
 
 # Transient responses worth retrying: rate limiting (429), gateway/overload
 # (5xx), and the 406 the main balancer returns when its backends are saturated.
@@ -35,6 +38,23 @@ def dedup_elements(elements) -> list:
     return out
 
 
+class StaleMirror(requests.RequestException):
+    """The mirror answered from a database older than OVERPASS_MAX_DATA_AGE_H.
+    Its data is complete and well-formed — just from another season."""
+
+
+def check_fresh(data: dict, url: str, now: datetime | None = None,
+                max_age_h: float | None = None) -> None:
+    ts = (data.get("osm3s") or {}).get("timestamp_osm_base")
+    if not ts:
+        return  # not every frontend reports it; absence is not evidence
+    base = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    max_age_h = OVERPASS_MAX_DATA_AGE_H if max_age_h is None else max_age_h
+    age = (now or datetime.now(timezone.utc)) - base
+    if age > timedelta(hours=max_age_h):
+        raise StaleMirror(f"{url}: database is {age.days} days old ({ts})")
+
+
 def _fetch_once(url: str, ql: str) -> dict:
     resp = requests.get(url, params={"data": ql},
                         headers={"User-Agent": USER_AGENT}, timeout=OVERPASS_HTTP_TIMEOUT)
@@ -47,14 +67,16 @@ def _fetch_once(url: str, ql: str) -> dict:
     remark = data.get("remark") or ""
     if "runtime error" in remark:
         raise requests.RequestException(f"overpass remark: {remark}")
+    check_fresh(data, url)
     return data
 
 
 def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
     """Fetch from Overpass, trying each mirror in turn and retrying transient
     failures (429/5xx/406, timeouts, transport errors) with exponential backoff.
-    A non-transient status (e.g. 400) raises at once — mirrors won't differ. Only
-    when every mirror is exhausted does the last transient error propagate."""
+    A non-transient status (e.g. 400) raises at once — mirrors won't differ. A
+    mirror answering from a stale database is skipped, not retried. Only when
+    every mirror is exhausted does the last transient error propagate."""
     urls = urls or OVERPASS_URLS
     retries = OVERPASS_RETRIES if retries is None else retries
     backoff = OVERPASS_BACKOFF_S if backoff is None else backoff
@@ -69,6 +91,10 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
                 if exc.response is None or exc.response.status_code not in _RETRY_STATUS:
                     raise
                 last_exc = exc
+            except StaleMirror as exc:
+                print(f"  WARN {exc} — skipping mirror", file=sys.stderr)
+                last_exc = exc
+                break  # a frozen database will not thaw in five seconds
             except requests.RequestException as exc:  # timeouts, resets, DNS, etc.
                 last_exc = exc
             if attempt < retries - 1:

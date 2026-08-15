@@ -121,3 +121,58 @@ def test_fetch_raises_when_all_mirrors_exhausted(monkeypatch):
     with pytest.raises(requests.HTTPError):
         fetch_overpass("out;", urls=["http://m1", "http://m2"], retries=2, backoff=0)
     assert seen == ["http://m1", "http://m1", "http://m2", "http://m2"]
+
+
+def _fake_get_json(sequence):
+    """Like _fake_get, but each entry is the JSON body a 200 answer carries."""
+    seen = []
+
+    def _get(url, params=None, headers=None, timeout=None):
+        seen.append(url)
+        r = _resp(200, url)
+        r.json = lambda i=len(seen) - 1: sequence[i]
+        return r
+
+    return _get, seen
+
+
+def test_check_fresh_accepts_recent_and_missing_timestamp():
+    from datetime import datetime, timezone
+    now = datetime(2026, 8, 15, 8, 0, tzinfo=timezone.utc)
+    osm.check_fresh({"osm3s": {"timestamp_osm_base": "2026-08-15T07:34:33Z"},
+                     "elements": []}, "http://m1", now=now)
+    osm.check_fresh({"elements": []}, "http://m1", now=now)  # no osm3s block at all
+
+
+def test_check_fresh_rejects_frozen_database():
+    # overpass.kumi.systems, 2026-08-15: HTTP 200, no remark, database from May.
+    from datetime import datetime, timezone
+    now = datetime(2026, 8, 15, 8, 0, tzinfo=timezone.utc)
+    with pytest.raises(osm.StaleMirror, match="75 days old"):
+        osm.check_fresh({"osm3s": {"timestamp_osm_base": "2026-05-31T22:37:44Z"},
+                         "elements": []}, "http://m1", now=now)
+
+
+def test_fetch_skips_stale_mirror_without_retrying(monkeypatch, capsys):
+    from datetime import datetime, timezone
+    stale = {"osm3s": {"timestamp_osm_base": "2026-05-31T22:37:44Z"},
+             "elements": [{"type": "node", "id": 1}]}
+    fresh = {"osm3s": {"timestamp_osm_base": datetime.now(timezone.utc).isoformat()},
+             "elements": [{"type": "node", "id": 1}, {"type": "node", "id": 2}]}
+    get, seen = _fake_get_json([stale, fresh])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    assert fetch_overpass("out;", urls=["http://m1", "http://m2"],
+                          retries=3, backoff=0) == fresh
+    assert seen == ["http://m1", "http://m2"]  # m1 dropped after one look, no retries
+    assert "WARN http://m1: database is" in capsys.readouterr().err
+
+
+def test_fetch_raises_stale_when_no_mirror_is_fresh(monkeypatch):
+    stale = {"osm3s": {"timestamp_osm_base": "2026-05-31T22:37:44Z"}, "elements": []}
+    get, seen = _fake_get_json([stale, stale])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    with pytest.raises(osm.StaleMirror):
+        fetch_overpass("out;", urls=["http://m1", "http://m2"], retries=3, backoff=0)
+    assert seen == ["http://m1", "http://m2"]

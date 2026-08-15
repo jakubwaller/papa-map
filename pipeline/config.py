@@ -18,6 +18,15 @@ OVERPASS_URLS = [u.strip() for u in os.environ.get(
     )),
 ).split(",") if u.strip()]
 OVERPASS_RETRIES = int(os.environ.get("PAPAMAP_OVERPASS_RETRIES", "3"))
+# A mirror can fall behind without ever failing: overpass.kumi.systems served a
+# database frozen on 2026-05-31 for weeks, HTTP 200 and no remark, and every
+# region the cascade handed it on a busy night lost two months of mapping —
+# a quiet data bug on the map, and poison for a leaderboard that ranks change.
+# Every answer carries the database timestamp it was computed from; older than
+# this and the mirror is treated as dead and skipped. Healthy mirrors lag by
+# minutes, the main instance by hours on a bad day — a day is generous, a
+# season is not.
+OVERPASS_MAX_DATA_AGE_H = float(os.environ.get("PAPAMAP_OVERPASS_MAX_DATA_AGE_H", "24"))
 # Congested evenings 504 (or proxy-kill) for minutes at a stretch, not
 # seconds — 5s·2^n rides that out where the old 2s·2^n just burned attempts.
 OVERPASS_BACKOFF_S = float(os.environ.get("PAPAMAP_OVERPASS_BACKOFF_S", "5"))
