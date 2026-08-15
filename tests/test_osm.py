@@ -114,13 +114,26 @@ def test_fetch_raises_on_non_transient_status(monkeypatch):
     assert seen == ["http://m1"]  # aborted before retrying or falling over
 
 
-def test_fetch_raises_when_all_mirrors_exhausted(monkeypatch):
-    get, seen, _ = _fake_get([504, 504, 504, 504])
+def test_fetch_raises_when_all_mirrors_exhausted(monkeypatch, capsys):
+    get, seen, _ = _fake_get([504, 504, requests.ConnectTimeout("slow"), 504])
     monkeypatch.setattr(osm.requests, "get", get)
     monkeypatch.setattr(osm.time, "sleep", lambda s: None)
     with pytest.raises(requests.HTTPError):
         fetch_overpass("out;", urls=["http://m1", "http://m2"], retries=2, backoff=0)
     assert seen == ["http://m1", "http://m1", "http://m2", "http://m2"]
+    # Each exhausted mirror says so, with its own last excuse — the log must
+    # show why the main instance failed, not just what the last fallback said.
+    err = capsys.readouterr().err
+    assert "WARN http://m1: gave up after 2 attempts (HTTP 504)" in err
+    assert "WARN http://m2: gave up after 2 attempts (HTTP 504)" in err
+
+
+def test_fetch_success_after_retry_logs_nothing(monkeypatch, capsys):
+    get, seen, _ = _fake_get([503, 200])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    fetch_overpass("out;", urls=["http://m1"], retries=3, backoff=0)
+    assert capsys.readouterr().err == ""  # a healthy night stays quiet
 
 
 def _fake_get_json(sequence):

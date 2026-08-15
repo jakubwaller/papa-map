@@ -99,4 +99,16 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
                 last_exc = exc
             if attempt < retries - 1:
                 time.sleep(backoff * (2 ** attempt))
+        else:
+            # Without this line the nightly log only ever shows the *last*
+            # mirror's excuse — on the 2026-08-15 heal that was always the
+            # stale fallback, and why the main instance had failed was lost.
+            print(f"  WARN {url}: gave up after {retries} attempts "
+                  f"({_short(last_exc)})", file=sys.stderr)
     raise last_exc  # every mirror exhausted its retries
+
+
+def _short(exc: Exception | None) -> str:
+    if isinstance(exc, requests.HTTPError) and exc.response is not None:
+        return f"HTTP {exc.response.status_code}"
+    return str(exc).split(" for url:")[0][:120]
