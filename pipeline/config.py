@@ -152,8 +152,13 @@ def display_area() -> tuple[str, str | None]:
 # A congested evening can kill a query on every mirror (observed 2026-07-30:
 # four Länder in, then all mirrors dead for minutes) — so beyond the per-query
 # mirror cascade, run.py sweeps failed areas again in later rounds after a
-# cool-down instead of aborting the 15 good fetches with them.
-SWEEP_ROUNDS = int(os.environ.get("PAPAMAP_SWEEP_ROUNDS", "3"))
+# cool-down instead of aborting the 15 good fetches with them. Six rounds, not
+# three, since the freshness guard: the fallbacks used to "succeed" with stale
+# data, now they are honestly rejected and everything rides on the main
+# instance, which flaps 504/200 within seconds when busy (2026-08-15: one
+# Land missed three rounds in a row). Rounds only re-query the failures, so
+# a healthy night still costs nothing extra.
+SWEEP_ROUNDS = int(os.environ.get("PAPAMAP_SWEEP_ROUNDS", "6"))
 SWEEP_PAUSE_S = float(os.environ.get("PAPAMAP_SWEEP_PAUSE_S", "120"))
 
 # The query budget stays under the observed 60 s cutoff so the server answers
