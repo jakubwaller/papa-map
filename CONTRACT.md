@@ -1,5 +1,18 @@
 # papa-map — build contract (v0)
 
+> **v7 amendment (15 Aug 2026, mirror freshness):** every Overpass answer is
+> checked against its own `osm3s.timestamp_osm_base`; a database older than
+> `PAPAMAP_OVERPASS_MAX_DATA_AGE_H` (default 24 h) is a **stale mirror** — the
+> answer is discarded, the mirror skipped without retries, and the next one
+> tried. Prompted by overpass.kumi.systems serving a database frozen on
+> 2026-05-31 with HTTP 200 and no remark: on busy nights the cascade handed it
+> whole Länder, and every one silently lost two months of mapping — a data bug
+> on the map and a false "mover" on the leaderboard. Attic queries are checked
+> the same way (a frozen mirror can't answer any date after its freeze). The
+> backfill's own lesson: attic queries over a whole Land take ~3 min on the
+> main instance even off-peak, so `pipeline.backfill` runs on the VPS with
+> `PAPAMAP_OVERPASS_QL_TIMEOUT=300`, never from a laptop behind the 60 s cutoff.
+
 > **v6 amendment (14 Aug 2026, leaderboard):** the full default build now also
 > maintains **`web/data/history.json`** — one entry per build day with
 > `[accessible, female_only, unknown]` triples per region (`regions`: the 16

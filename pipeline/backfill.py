@@ -5,7 +5,11 @@ week-over-week delta on day one instead of staying empty for its first week.
 
 Each date costs one changing_table tag query per sweep area plus one ids
 query per city (~45 queries), spaced with a pause — attic queries are heavier
-for the servers than live ones, and this runs attended, once. A date already
+for the servers than live ones, and this runs attended, once. Much heavier:
+Baden-Württemberg alone computes for ~3 minutes on the main instance even
+off-peak, so the nightly `[timeout:55]` can never finish it. Run this where
+no 60 s connection cutoff exists (the VPS, not a laptop) with
+`PAPAMAP_OVERPASS_QL_TIMEOUT=300`; one date is roughly an hour. A date already
 present in the history is skipped, never overwritten: build days are the
 better data, and re-running the backfill must be a no-op.
 """

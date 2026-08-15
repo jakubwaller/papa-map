@@ -75,7 +75,14 @@ history at all.
 
 `python -m pipeline.backfill 2026-07-17 2026-07-24 ...` seeds past days from
 Overpass attic (`[date:...]`) queries so the page can show a real week-over-week
-delta from day one. It never overwrites a day that already exists.
+delta from day one. It never overwrites a day that already exists. Attic queries
+over a whole Land run for minutes, so give it `PAPAMAP_OVERPASS_QL_TIMEOUT=300`
+and a host without a 60 s connection cutoff (see `docs/DEPLOY.md`).
+
+Every Overpass answer is checked for freshness (`osm3s.timestamp_osm_base`,
+`PAPAMAP_OVERPASS_MAX_DATA_AGE_H`, default 24 h): a mirror serving a frozen
+database is skipped, because a region quietly computed from months-old data is
+a data bug on the map and a fake mover on the leaderboard.
 
 ## Serve locally
 ```bash

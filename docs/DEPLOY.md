@@ -52,7 +52,18 @@ A full build also maintains `history.json` next to the other generated JSON (the
 per-region daily counts behind `wickeltische/rangliste.html`) — same directory, same
 mounts, nothing new to wire up. It is state, not a nightly rebuild: deleting it resets
 the leaderboard to day one, so leave it alone when cleaning build output, and seed it
-with `python -m pipeline.backfill` (see the README) when deploying fresh.
+with `pipeline.backfill` when deploying fresh — on the VPS, detached, with a bigger query
+budget than the nightly build (attic queries over a whole Land take ~3 minutes):
+
+```bash
+docker compose run -d --name papamap-backfill -e PAPAMAP_OVERPASS_QL_TIMEOUT=300 \
+  pipeline python -u -m pipeline.backfill 2026-08-07
+docker logs -f papamap-backfill      # one line per region; ~1 h per date
+```
+
+It writes into the same mounted `history.json` and never overwrites a day that exists,
+so it is safe to run next to (or after) the nightly build. Re-render the pages afterwards
+with a build, or wait for the next one.
 
 Under Docker the pages need a writable mount like the JSON does. The image sets
 `PAPAMAP_PAGES_DIR=/out/wickeltische` and compose mounts `./web-data/wickeltische` back into
