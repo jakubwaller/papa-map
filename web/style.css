@@ -90,6 +90,7 @@ header {
    looking like a heading. */
 .tagline {
   margin: 0;
+  order: 2;
   font-weight: 400;
   flex: 1 1 auto;
   font-size: 13px;
@@ -100,11 +101,16 @@ header {
   text-overflow: ellipsis;
 }
 
+/* Header order is set explicitly (brand → tagline → action → links) so the
+   phone rules can reshuffle the rows without touching the markup. */
 .header-actions {
+  order: 4;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 14px;
 }
 .header-actions a {
   font-size: 14px;
@@ -114,6 +120,7 @@ header {
 .header-actions a:hover { text-decoration: underline; }
 
 .add-btn {
+  order: 3;
   padding: 7px 13px;
   border-radius: 999px;
   border: 1px solid var(--green);
@@ -383,7 +390,16 @@ header {
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
   header { padding: 8px 14px; gap: 6px 12px; }
-  .tagline { flex-basis: 100%; order: 3; font-size: 12px; }
+  /* Four links no longer fit beside the wordmark, and a nav that wraps into a
+     ragged block next to it reads as debris. Row of its own instead, under the
+     brand and its button, above the tagline. That is three rows only because
+     the swept-area subtitle steps aside here: "Deutschland & Dänemark" is 170
+     of the 347 available pixels, and the stats strip says it again one line
+     below. Without this the button drops to a row of its own — 132px of header
+     on a 375px phone instead of 100. */
+  .wordmark .city { display: none; }
+  .header-actions { order: 3; flex: 1 0 100%; justify-content: flex-start; }
+  .tagline { order: 4; flex-basis: 100%; font-size: 12px; }
   .add-btn { padding: 6px 11px; font-size: 12px; }
   #stats { padding: 6px 14px; gap: 2px 18px; font-size: 12px; }
   .chip-bar { padding-left: 14px; padding-right: 14px; }

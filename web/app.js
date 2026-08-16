@@ -40,6 +40,7 @@ function applyI18n() {
     if (el.title) el.title = t(el.dataset.i18nAria);
   }
   document.getElementById("methods-link").href = t("methodsHref");
+  document.getElementById("board-link").href = t("boardHref");
 }
 
 // Names, hours and tag values in the popups originate from OpenStreetMap
