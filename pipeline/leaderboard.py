@@ -162,6 +162,97 @@ How things are counted and coloured: <a href="{up}methods-en.html">Methods</a> �
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 """
 
+SORT_STYLE = """\
+  /* A sortable header must look exactly like the header text it replaced; the
+     small arrow is the whole affordance. The button carries the cell's padding
+     instead of sitting inside it, so the whole header is the tap target — 22px
+     of text on a phone is not one. */
+  th.sortable { padding: 0; }
+  th button.sort { font: inherit; color: inherit; background: none; border: 0;
+                   padding: 0.45rem 0.55rem; width: 100%; cursor: pointer;
+                   display: flex; align-items: center; gap: 0.3em;
+                   justify-content: flex-end; }
+  th.l button.sort { justify-content: flex-start; }
+  th button.sort:hover { color: var(--accent); }
+  th button.sort:focus-visible { outline: 2px solid var(--accent);
+                                 outline-offset: 2px; }
+  .arr { font-size: 0.75em; }
+  .arr::after { content: "\\2195"; opacity: 0.4; }
+  th[aria-sort="ascending"] .arr::after { content: "\\25B2"; opacity: 1; }
+  th[aria-sort="descending"] .arr::after { content: "\\25BC"; opacity: 1; }
+  p.hint { font-size: 0.8rem; margin-top: -0.7rem; }
+"""
+
+# Progressive enhancement, deliberately: the table arrives sorted by the column
+# the page is about, so a reader with JavaScript blocked loses a convenience,
+# not the content. Sort values ride on each cell's data-v — "20,0 %" and "+12,3"
+# are for reading, and nothing should have to parse a decimal comma back.
+SORT_JS = """\
+<script>
+(function () {
+  var tables = document.querySelectorAll("table[data-sortable]");
+  var hinted = false;
+  for (var t = 0; t < tables.length; t++) upgrade(tables[t]);
+
+  function upgrade(table) {
+    var head = table.tHead && table.tHead.rows[0];
+    var body = table.tBodies[0];
+    if (!head || !body) return;
+    for (var i = 0; i < head.cells.length; i++) arm(table, body, head.cells[i], i);
+    // Once per page: the second table works the same way and does not need to
+    // be told so again.
+    var hint = hinted ? null : table.getAttribute("data-sort-hint");
+    if (hint) {
+      hinted = true;
+      var p = document.createElement("p");
+      p.className = "muted hint";
+      p.textContent = hint;
+      table.parentNode.parentNode.insertBefore(p, table.parentNode.nextSibling);
+    }
+  }
+
+  function arm(table, body, th, index) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sort";
+    btn.innerHTML = th.innerHTML + '<span class="arr" aria-hidden="true"></span>';
+    th.innerHTML = "";
+    th.className = th.className ? th.className + " sortable" : "sortable";
+    th.appendChild(btn);
+    btn.addEventListener("click", function () {
+      // A column already sorted flips; a fresh one opens the way its header
+      // asked for — biggest share first, but rank and names from the top.
+      var dir = th.hasAttribute("aria-sort")
+        ? (th.getAttribute("aria-sort") === "ascending" ? -1 : 1)
+        : (th.getAttribute("data-first") === "asc" ? 1 : -1);
+      sort(body, index, th.getAttribute("data-sort"), dir);
+      for (var i = 0; i < table.tHead.rows[0].cells.length; i++)
+        table.tHead.rows[0].cells[i].removeAttribute("aria-sort");
+      th.setAttribute("aria-sort", dir === 1 ? "ascending" : "descending");
+    });
+  }
+
+  function sort(body, index, kind, dir) {
+    var rows = [];
+    for (var i = 0; i < body.rows.length; i++)
+      rows.push({ row: body.rows[i], i: i,
+                  v: body.rows[i].cells[index].getAttribute("data-v") });
+    rows.sort(function (a, b) {
+      // An empty cell is unknown, not small: it stays at the bottom in both
+      // directions instead of flooding the top when the order is reversed.
+      if (a.v === null && b.v === null) return a.i - b.i;
+      if (a.v === null) return 1;
+      if (b.v === null) return -1;
+      var d = kind === "num" ? parseFloat(a.v) - parseFloat(b.v)
+                             : a.v.localeCompare(b.v);
+      return d ? d * dir : a.i - b.i;
+    });
+    for (var j = 0; j < rows.length; j++) body.appendChild(rows[j].row);
+  }
+})();
+</script>
+"""
+
 L = {
     "de": {
         "file": DE_FILE,
@@ -209,6 +300,8 @@ L = {
         "col_name_city": "Stadt", "col_name_region": "Region",
         "col_delta": "Δ Punkte", "col_share": "beantwortet",
         "col_total": "Orte", "col_acc": "+ erreichbar", "col_new": "+ Orte",
+        "sort_hint": ("Auf eine Spaltenüberschrift tippen, um danach zu "
+                      "sortieren — nochmal tippen dreht die Richtung um."),
         "footer": FOOTER,
     },
     "en": {
@@ -254,6 +347,8 @@ L = {
         "col_name_city": "City", "col_name_region": "Region",
         "col_delta": "Δ points", "col_share": "answered",
         "col_total": "places", "col_acc": "+ reachable", "col_new": "+ places",
+        "sort_hint": ("Tap a column header to sort by it — tap again to "
+                      "reverse."),
         "footer": FOOTER_EN,
     },
 }
@@ -309,37 +404,77 @@ def _head(lang: str, tab: dict, base_url: str, base_path: str) -> str:
 <link rel="alternate" hreflang="en" href="{esc(en_url)}">
 <link rel="alternate" hreflang="x-default" href="{esc(de_url)}">
 <style>
-{STYLE}</style>
+{STYLE}{SORT_STYLE}</style>
 </head>
 <body>
 """
 
 
+def _num_attr(v) -> str | None:
+    """The sort value a cell carries for the client-side sorter. Kept separate
+    from the rendered text on purpose: "20,0 %" and "+12,3" are for reading,
+    and no browser should have to guess which comma is a decimal point."""
+    return None if v is None else f"{v:g}"
+
+
+def _cell(text: str, value=None, cls: str = "") -> str:
+    attrs = f' class="{cls}"' if cls else ""
+    if value is not None:
+        attrs += f' data-v="{esc(value)}"'
+    return f"<td{attrs}>{text}</td>"
+
+
+def _th(label: str, kind: str, first: str, cls: str = "",
+        sorted_dir: str = "") -> str:
+    """data-sort is how the column compares ("num"/"text"), data-first which
+    way it opens on the first click. The two are separate because rank is the
+    counter-example to every rule of thumb: it is a number, and #1 belongs at
+    the top. Without JavaScript this is an ordinary header cell."""
+    attrs = f' class="{cls}"' if cls else ""
+    attrs += f' data-sort="{kind}" data-first="{first}"'
+    if sorted_dir:
+        attrs += f' aria-sort="{sorted_dir}"'
+    return f"<th{attrs}>{esc(label)}</th>"
+
+
 def _table(rows, name_col: str, tab: dict, lang: str) -> str:
-    parts = ['<div class="scroll">\n<table>\n']
+    parts = [f'<div class="scroll">\n<table data-sortable '
+             f'data-sort-hint="{esc(tab["sort_hint"])}">\n<thead>\n']
     parts.append(
-        f'<tr><th>#</th><th class="l">{esc(name_col)}</th>'
-        f'<th>{esc(tab["col_delta"])}</th><th>{esc(tab["col_share"])}</th>'
-        f'<th>{esc(tab["col_total"])}</th><th>{esc(tab["col_acc"])}</th>'
-        f'<th>{esc(tab["col_new"])}</th></tr>\n')
+        "<tr>" + _th("#", "num", "asc")
+        + _th(name_col, "text", "asc", cls="l")
+        # The page arrives sorted by this column, so it is the one that starts
+        # out marked — a sort indicator that lies on first paint is worse than
+        # none at all.
+        + _th(tab["col_delta"], "num", "desc", sorted_dir="descending")
+        + _th(tab["col_share"], "num", "desc")
+        + _th(tab["col_total"], "num", "desc")
+        + _th(tab["col_acc"], "num", "desc")
+        + _th(tab["col_new"], "num", "desc")
+        + "</tr>\n</thead>\n<tbody>\n")
     rank = 0
     for r in rows:
         mover = r["delta_pp"] is not None and r["delta_pp"] > 0
         if mover:
             rank += 1
         cells = [
-            f"<td>{rank}</td>" if mover else '<td class="zero">–</td>',
-            f'<td class="l">{esc(r["name"])}</td>',
+            # Rank keeps its number under every sort order: it says "third
+            # biggest mover", which stays true while you look at the table by
+            # size. Rows without one sort last, restoring the default order.
+            _cell(str(rank), rank) if mover else _cell("–", None, "zero"),
+            _cell(esc(r["name"]), sort_key(r["name"])[0], "l"),
         ]
-        for text in (_fmt_delta_pp(r["delta_pp"], lang),
-                     _fmt_share(r["share"], lang),
-                     _fmt_int(r["total"], lang),
-                     _fmt_delta_int(r["delta_accessible"]),
-                     _fmt_delta_int(r["delta_total"])):
-            cells.append('<td class="zero">–</td>' if text == "–"
-                         else f"<td>{text}</td>")
+        for text, value in (
+                (_fmt_delta_pp(r["delta_pp"], lang), _num_attr(r["delta_pp"])),
+                (_fmt_share(r["share"], lang), _num_attr(r["share"])),
+                (_fmt_int(r["total"], lang), _num_attr(r["total"])),
+                (_fmt_delta_int(r["delta_accessible"]),
+                 _num_attr(r["delta_accessible"])),
+                (_fmt_delta_int(r["delta_total"]),
+                 _num_attr(r["delta_total"]))):
+            cells.append(_cell(text, value, "zero" if text == "–" else ""))
         parts.append("<tr>" + "".join(cells) + "</tr>\n")
-    parts.append("</table>\n</div>\n")
+    parts.append("</tbody>\n</table>\n</div>\n")
     return "".join(parts)
 
 
@@ -376,6 +511,8 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         parts.append(_table(data["regions"], tab["col_name_region"], tab, lang))
 
     parts.append(tab["footer"].format(up=UP))
+    if data["cities"] or data["regions"]:
+        parts.append(SORT_JS)
     parts.append("\n</body>\n</html>\n")
     return "".join(parts)
 
