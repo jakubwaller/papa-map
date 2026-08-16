@@ -106,8 +106,16 @@
       <!-- Also the page's only <h1>: the map had no heading at all, so search
            engines had nothing but <title> to go on. Styled to look unchanged. -->
       <h1 class="tagline" data-i18n="tagline">Wickeltische, die ein Vater erreicht</h1>
+      <!-- Outside the <nav>: it opens a dialog, it doesn't navigate. That also
+           lets it stay on the wordmark's row on a phone while the four links
+           take the next one, which is what keeps the header three rows tall. -->
+      <button id="add-place" type="button" class="add-btn" data-i18n="addPlace">+ Ort hinzufügen</button>
       <nav class="header-actions">
-        <button id="add-place" type="button" class="add-btn" data-i18n="addPlace">+ Ort hinzufügen</button>
+        <!-- "Bundesländer" stays German in every language, same as Impressum and
+             Datenschutz: it points at German-only pages. Both links sat in the
+             attribution line until 2026-08-16, where nobody found them. -->
+        <a id="regions-link" href="wickeltische/">Bundesländer</a>
+        <a id="board-link" href="wickeltische/rangliste.html" data-i18n="board">Rangliste</a>
         <a id="methods-link" href="methods.html" data-i18n="methods">Methoden</a>
         <button id="lang-toggle" type="button" class="lang-btn" aria-label="Switch to English"
                 data-i18n="langButton" data-i18n-aria="ariaLang">EN</button>
@@ -132,11 +140,7 @@
     </div>
   </div>
 
-  <!-- "Bundesländer" stays German in every language, same as Impressum and
-       Datenschutz: it points at German-only pages. It is also the only crawlable
-       link into that section, which is why it lives in the markup rather than
-       being injected by app.js. -->
-  <div id="attribution">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="wickeltische/">Bundesländer</a> · <a href="wickeltische/rangliste.html">Rangliste</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></div>
+  <div id="attribution">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></div>
 
   <!-- Add-a-place dialog: everything lands in OpenStreetMap, not here -->
   <dialog id="add-dialog">

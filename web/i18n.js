@@ -55,6 +55,10 @@ export const STRINGS = {
     addPlace: "+ Ort hinzufügen",
     methods: "Methoden",
     methodsHref: "methods.html",
+    // The leaderboard exists as a DE/EN pair only; Danish borrows the English
+    // page, and "Rangliste" happens to be the Danish word for it too.
+    board: "Rangliste",
+    boardHref: "wickeltische/rangliste.html",
     langButton: "EN",
 
     ariaZoomIn: "Hineinzoomen",
@@ -116,6 +120,8 @@ export const STRINGS = {
     addPlace: "+ Add a place",
     methods: "Methods",
     methodsHref: "methods-en.html",
+    board: "Leaderboard",
+    boardHref: "wickeltische/leaderboard.html",
     langButton: "DA",
 
     ariaZoomIn: "Zoom in",
@@ -175,6 +181,8 @@ export const STRINGS = {
     addPlace: "+ Tilføj et sted",
     methods: "Metode",
     methodsHref: "methods-da.html",
+    board: "Rangliste",
+    boardHref: "wickeltische/leaderboard.html",
     langButton: "DE",
 
     ariaZoomIn: "Zoom ind",
