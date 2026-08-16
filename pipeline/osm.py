@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -7,8 +8,9 @@ from datetime import datetime, timedelta, timezone
 import requests
 
 from .config import (OVERPASS_BACKOFF_S, OVERPASS_HTTP_TIMEOUT,
-                     OVERPASS_MAX_DATA_AGE_H, OVERPASS_RETRIES, OVERPASS_URLS,
-                     USER_AGENT)
+                     OVERPASS_MAX_DATA_AGE_H, OVERPASS_RETRIES,
+                     OVERPASS_SLOT_WAIT_MAX_S, OVERPASS_STATUS_HOSTS,
+                     OVERPASS_URLS, USER_AGENT)
 
 # Transient responses worth retrying: rate limiting (429), gateway/overload
 # (5xx), and the 406 the main balancer returns when its backends are saturated.
@@ -36,6 +38,29 @@ def dedup_elements(elements) -> list:
         seen.add(key)
         out.append(el)
     return out
+
+
+def slot_wait_s(url: str, get=None) -> float:
+    """Seconds until overpass-api.de will accept a query from this IP, per
+    its /api/status page ("2 slots available now." or "Slot available after:
+    ..., in 37 seconds."). The main instance holds a used slot for ~40 s
+    regardless of the query's runtime, so a sweep that fires back-to-back
+    gets a 429 for two of every three queries; asking first is both quicker
+    and politer than colliding. Hosts without that page (the mirrors) and any
+    failure to read it answer 0 — the fetch then just tries."""
+    host = url.split("/")[2] if "//" in url else ""
+    if host not in OVERPASS_STATUS_HOSTS:
+        return 0
+    try:
+        resp = (get or requests.get)(f"https://{host}/api/status",
+                                     headers={"User-Agent": USER_AGENT}, timeout=15)
+        text = resp.text
+    except requests.RequestException:
+        return 0
+    if re.search(r"[1-9]\d* slots? available now", text):
+        return 0
+    waits = [int(x) for x in re.findall(r"in (\d+) seconds", text)]
+    return min(min(waits) + 1, OVERPASS_SLOT_WAIT_MAX_S) if waits else 0
 
 
 class StaleMirror(requests.RequestException):
@@ -85,6 +110,9 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
     last_exc: Exception | None = None
     for url in urls:
         for attempt in range(retries):
+            wait = slot_wait_s(url)
+            if wait:
+                time.sleep(wait)
             try:
                 return _fetch_once(url, ql)
             except requests.HTTPError as exc:
@@ -99,4 +127,16 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
                 last_exc = exc
             if attempt < retries - 1:
                 time.sleep(backoff * (2 ** attempt))
+        else:
+            # Without this line the nightly log only ever shows the *last*
+            # mirror's excuse — on the 2026-08-15 heal that was always the
+            # stale fallback, and why the main instance had failed was lost.
+            print(f"  WARN {url}: gave up after {retries} attempts "
+                  f"({_short(last_exc)})", file=sys.stderr)
     raise last_exc  # every mirror exhausted its retries
+
+
+def _short(exc: Exception | None) -> str:
+    if isinstance(exc, requests.HTTPError) and exc.response is not None:
+        return f"HTTP {exc.response.status_code}"
+    return str(exc).split(" for url:")[0][:120]

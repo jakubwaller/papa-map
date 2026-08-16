@@ -18,6 +18,15 @@ OVERPASS_URLS = [u.strip() for u in os.environ.get(
     )),
 ).split(",") if u.strip()]
 OVERPASS_RETRIES = int(os.environ.get("PAPAMAP_OVERPASS_RETRIES", "3"))
+# overpass-api.de rate-limits per IP: 2 slots, and a used slot stays blocked
+# for ~40 s whatever the query's runtime (measured 2026-08-15: a 2.7 s query
+# and a 7 s query both left "slot available in ~36 s"). Its /api/status page
+# says so up front, so the fetcher asks before every query on these hosts and
+# sleeps the reported wait instead of collecting 429s. Mirrors have no such
+# page — for them the answer is always "go".
+OVERPASS_STATUS_HOSTS = {h.strip() for h in os.environ.get(
+    "PAPAMAP_OVERPASS_STATUS_HOSTS", "overpass-api.de").split(",") if h.strip()}
+OVERPASS_SLOT_WAIT_MAX_S = float(os.environ.get("PAPAMAP_OVERPASS_SLOT_WAIT_MAX_S", "120"))
 # A mirror can fall behind without ever failing: overpass.kumi.systems served a
 # database frozen on 2026-05-31 for weeks, HTTP 200 and no remark, and every
 # region the cascade handed it on a busy night lost two months of mapping —
@@ -152,8 +161,13 @@ def display_area() -> tuple[str, str | None]:
 # A congested evening can kill a query on every mirror (observed 2026-07-30:
 # four Länder in, then all mirrors dead for minutes) — so beyond the per-query
 # mirror cascade, run.py sweeps failed areas again in later rounds after a
-# cool-down instead of aborting the 15 good fetches with them.
-SWEEP_ROUNDS = int(os.environ.get("PAPAMAP_SWEEP_ROUNDS", "3"))
+# cool-down instead of aborting the 15 good fetches with them. Six rounds, not
+# three, since the freshness guard: the fallbacks used to "succeed" with stale
+# data, now they are honestly rejected and everything rides on the main
+# instance, which flaps 504/200 within seconds when busy (2026-08-15: one
+# Land missed three rounds in a row). Rounds only re-query the failures, so
+# a healthy night still costs nothing extra.
+SWEEP_ROUNDS = int(os.environ.get("PAPAMAP_SWEEP_ROUNDS", "6"))
 SWEEP_PAUSE_S = float(os.environ.get("PAPAMAP_SWEEP_PAUSE_S", "120"))
 
 # The query budget stays under the observed 60 s cutoff so the server answers

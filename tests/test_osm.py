@@ -114,13 +114,26 @@ def test_fetch_raises_on_non_transient_status(monkeypatch):
     assert seen == ["http://m1"]  # aborted before retrying or falling over
 
 
-def test_fetch_raises_when_all_mirrors_exhausted(monkeypatch):
-    get, seen, _ = _fake_get([504, 504, 504, 504])
+def test_fetch_raises_when_all_mirrors_exhausted(monkeypatch, capsys):
+    get, seen, _ = _fake_get([504, 504, requests.ConnectTimeout("slow"), 504])
     monkeypatch.setattr(osm.requests, "get", get)
     monkeypatch.setattr(osm.time, "sleep", lambda s: None)
     with pytest.raises(requests.HTTPError):
         fetch_overpass("out;", urls=["http://m1", "http://m2"], retries=2, backoff=0)
     assert seen == ["http://m1", "http://m1", "http://m2", "http://m2"]
+    # Each exhausted mirror says so, with its own last excuse — the log must
+    # show why the main instance failed, not just what the last fallback said.
+    err = capsys.readouterr().err
+    assert "WARN http://m1: gave up after 2 attempts (HTTP 504)" in err
+    assert "WARN http://m2: gave up after 2 attempts (HTTP 504)" in err
+
+
+def test_fetch_success_after_retry_logs_nothing(monkeypatch, capsys):
+    get, seen, _ = _fake_get([503, 200])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    fetch_overpass("out;", urls=["http://m1"], retries=3, backoff=0)
+    assert capsys.readouterr().err == ""  # a healthy night stays quiet
 
 
 def _fake_get_json(sequence):
@@ -176,3 +189,45 @@ def test_fetch_raises_stale_when_no_mirror_is_fresh(monkeypatch):
     with pytest.raises(osm.StaleMirror):
         fetch_overpass("out;", urls=["http://m1", "http://m2"], retries=3, backoff=0)
     assert seen == ["http://m1", "http://m2"]
+
+
+class _Text:
+    def __init__(self, text):
+        self.text = text
+
+
+def test_slot_wait_parses_the_main_instance_status_page():
+    api = "https://overpass-api.de/api/interpreter"
+    free = _Text("Connected as: 1\nRate limit: 2\n2 slots available now.\n")
+    one_free = _Text("Rate limit: 2\n1 slots available now.\n"
+                     "Slot available after: 2026-08-15T10:48:03Z, in 36 seconds.\n")
+    none_free = _Text("Rate limit: 2\n"
+                      "Slot available after: 2026-08-15T10:48:03Z, in 29 seconds.\n"
+                      "Slot available after: 2026-08-15T10:48:07Z, in 33 seconds.\n")
+    assert osm.slot_wait_s(api, get=lambda *a, **k: free) == 0
+    assert osm.slot_wait_s(api, get=lambda *a, **k: one_free) == 0
+    assert osm.slot_wait_s(api, get=lambda *a, **k: none_free) == 30  # soonest slot + 1
+
+
+def test_slot_wait_is_capped_and_zero_for_mirrors_or_errors():
+    api = "https://overpass-api.de/api/interpreter"
+    far = _Text("Slot available after: 2026-08-15T11:00:00Z, in 900 seconds.\n")
+    assert osm.slot_wait_s(api, get=lambda *a, **k: far) == osm.OVERPASS_SLOT_WAIT_MAX_S
+
+    def boom(*a, **k):
+        raise requests.ConnectionError("status down")
+    assert osm.slot_wait_s(api, get=boom) == 0
+    # Mirrors have no such page: never even asked.
+    assert osm.slot_wait_s("https://overpass.kumi.systems/api/interpreter",
+                           get=boom) == 0
+    assert osm.slot_wait_s("http://m1", get=boom) == 0
+
+
+def test_fetch_sleeps_the_reported_slot_wait_before_querying(monkeypatch):
+    slept, asked = [], []
+    monkeypatch.setattr(osm, "slot_wait_s", lambda url: asked.append(url) or 7)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: slept.append(s))
+    get, seen, _ = _fake_get([200])
+    monkeypatch.setattr(osm.requests, "get", get)
+    fetch_overpass("out;", urls=["http://m1"], retries=1, backoff=0)
+    assert asked == ["http://m1"] and slept == [7]  # asked first, waited, then queried
