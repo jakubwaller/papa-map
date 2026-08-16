@@ -134,6 +134,43 @@ def test_render_quiet_and_fresh_notes():
     assert "Recording started on 14 August 2026" in html
 
 
+def test_table_carries_machine_readable_sort_values():
+    history = {"v": 1, "days": [
+        day("2026-08-07", regions={"Bayern": [1, 0, 9]},
+            cities={"München": [1, 0, 1]}),
+        day("2026-08-14", regions={"Bayern": [3, 0, 7]},
+            cities={"München": [1, 1, 0], "Aarhus": [0, 0, 4]}),
+    ]}
+    html = leaderboard.render_leaderboard(
+        "de", leaderboard.leaderboard_data(history))
+    assert "<thead>" in html and "<tbody>" in html   # the sorter needs both
+    # Rank opens ascending (#1 belongs on top) even though it is a number.
+    assert '<th data-sort="num" data-first="asc">#</th>' in html
+    # The column the page is already sorted by is the one marked on first paint.
+    assert ('<th data-sort="num" data-first="desc" aria-sort="descending">'
+            "Δ Punkte</th>") in html
+    # Values are machine-readable next to the German text, never instead of it.
+    assert '<td data-v="20">+20,0</td>' in html          # Δ 10 % → 30 %
+    assert '<td data-v="30">30,0&nbsp;%</td>' in html
+    assert '<td data-v="10">10</td>' in html             # total, unformatted
+    assert '<td class="l" data-v="munchen">München</td>' in html  # folded key
+    # A measured zero and a missing baseline both read "–" but are not the same
+    # thing: the zero sorts as a number, the unknown sorts last.
+    assert '<td class="zero" data-v="0">–</td>' in html  # Bayern gained no rows
+    assert '<td class="zero">–</td>' in html             # Aarhus, no baseline
+    assert "<script>" in html and "data-sortable" in html
+
+
+def test_pages_without_rows_carry_no_sorter():
+    """Nothing to sort, nothing to ship: the script rides along only when a
+    table does."""
+    html = leaderboard.render_leaderboard(
+        "en", {"date": "2026-08-14", "base_date": None,
+               "cities": [], "regions": []})
+    assert "<script>" not in html
+    assert "Recording started" in html
+
+
 def test_write_leaderboard_pages(tmp_path):
     assert leaderboard.write_leaderboard_pages({"v": 1, "days": []},
                                                str(tmp_path)) == []

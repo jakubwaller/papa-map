@@ -1,5 +1,17 @@
 # papa-map — build contract (v0)
 
+> **v8 amendment (16 Aug 2026, sortable leaderboard):** the leaderboard tables
+> are emitted as `<thead>`/`<tbody>`, every cell carrying its sort value in
+> `data-v` (the raw number, or the DIN-5007 folded name) beside the German
+> text, and each header its `data-sort` (num/text) and `data-first` (which way
+> it opens). An inline script — no external file, no state stored, nothing
+> loaded — upgrades the headers into buttons at runtime, so a reader with
+> JavaScript blocked sees the same complete table, sorted by Δ points as
+> before, and no dead controls. Two rules the sorter must keep: a cell with no
+> value (no baseline to compare) sorts last in **both** directions, and a
+> measured 0 is a number that does not; rank opens ascending though it is
+> numeric, because #1 belongs on top.
+
 > **v7 amendment (15 Aug 2026, mirror freshness):** every Overpass answer is
 > checked against its own `osm3s.timestamp_osm_base`; a database older than
 > `PAPAMAP_OVERPASS_MAX_DATA_AGE_H` (default 24 h) is a **stale mirror** — the
