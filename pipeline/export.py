@@ -62,6 +62,54 @@ def build_features(ct_data: dict) -> list[dict]:
     return features
 
 
+# What the object *is*, most specific first — a shopping centre is both
+# shop=mall and building=retail, and only the first says anything useful. Used
+# for the popup subtitle; None when the object is tagged in none of them.
+KIND_KEYS = ("leisure", "amenity", "shop", "tourism", "healthcare")
+
+
+def build_play_features(play_data: dict) -> list[dict]:
+    """GeoJSON features for places that record an indoor play area and carry no
+    `changing_table` tag at all — the prospecting list, and a strictly
+    different dataset from the pins.
+
+    These are not a fourth status. A pin is a place where a table is *known* to
+    exist and the only open question is which room; here nobody has answered
+    the first question, so there is no color to give them and nothing to say
+    about a dad's chances. What they do have is the one thing that gets a
+    father through the door with a toddler, which makes them the best-targeted
+    list of places worth asking about — and the popup's MapComplete link opens
+    on exactly that question.
+
+    Objects tagged `changing_table=no` are deliberately absent: someone did
+    answer, and the answer was no."""
+    features = []
+    for el in play_data.get("elements", []):
+        tags = el.get("tags") or {}
+        # Applied here as well as in osm.split_sweep, the same way
+        # build_features re-applies classify(): what a file contains must be
+        # decided by the exporter, not by whoever assembled its input.
+        if "changing_table" in tags or not has_play_area(tags):
+            continue
+        lat, lon = element_coords(el)
+        if lat is None:
+            continue
+        osm_type, osm_id = el["type"], el["id"]
+        features.append({
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [lon, lat]},
+            "properties": {
+                "osm_type": osm_type, "osm_id": osm_id,
+                "name": tags.get("name"),
+                "kind": next((tags[k] for k in KIND_KEYS if tags.get(k)), None),
+                "opening_hours": tags.get("opening_hours"),
+                "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
+                "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),
+            },
+        })
+    return features
+
+
 def write_text_atomic(text: str, out_path: str) -> None:
     """Write text via a temp file in the same directory + atomic rename, so a
     crash mid-write never leaves a half-written file for the site to serve.

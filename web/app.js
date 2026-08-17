@@ -1,9 +1,10 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
-import { loadFeatures, filterFeatures, countsByStatus, countPlay, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=play1";
+import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
+         toFeatureCollection, placesToFeatureCollection,
+         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=play2";
 import { STRINGS, NUMBER_LOCALE, pickLang, nextLang, fmt,
-         langUrl } from "./i18n.js?v=play1";
+         langUrl } from "./i18n.js?v=play2";
 
 // ---- Language: German default, DE → EN → DA cycle. A shared ?lang= link wins
 // over the stored choice, which wins over a Danish browser; toggling stores the
@@ -122,8 +123,10 @@ window._papamap = map;
 
 // ---- State ----
 let allFeatures = [];                                     // flattened GeoJSON
+let allPlaces = [];                                       // play-area prospects
 let visible = new Set(STATUS_DEFS.map((d) => d.value));   // toggled-on statuses
 let playOnly = false;                                     // narrow to play corners
+let placesOn = false;                                     // add the prospects
 
 const statsEl = document.getElementById("stats");
 const filterBar = document.getElementById("filter-bar");
@@ -139,6 +142,7 @@ const scopeEl = document.getElementById("scope");
 // object up in allFeatures.
 const SRC = "tables";
 const PLAY_LAYER = "tables-play";
+const PLACES = "play-places";
 const IS_UNKNOWN = ["==", ["get", "status"], "unknown"];
 
 // Pin radius by zoom, grey one size up. Shared so the halo can be defined as
@@ -150,8 +154,25 @@ const pinRadius = (extra) => ["interpolate", ["linear"], ["zoom"],
   17, ["case", IS_UNKNOWN, 13 + extra, 10 + extra]];
 
 function addTableLayer() {
+  map.addSource(PLACES, { type: "geojson", data: placesToFeatureCollection([]) });
   map.addSource(SRC, { type: "geojson", data: toFeatureCollection([]) });
-  // Drawn first, so the status circle lands on top of it and what remains
+  // Bottom of the stack, and hollow: a filled circle would compete with the
+  // status pins, and these places have no status to claim. White fill rather
+  // than none, so a ring over a dark basemap tile still reads as a place and
+  // the whole disc stays clickable.
+  map.addLayer({
+    id: PLACES, type: "circle", source: PLACES,
+    paint: {
+      "circle-radius": ["interpolate", ["linear"], ["zoom"],
+        5, 2, 10, 4, 14, 7, 17, 10],
+      "circle-color": "#ffffff",
+      "circle-opacity": 0.9,
+      "circle-stroke-color": PLAY_COLOR,
+      "circle-stroke-width": ["interpolate", ["linear"], ["zoom"],
+        5, 1, 10, 2, 14, 2.5],
+    },
+  });
+  // Drawn next, so the status circle lands on top of it and what remains
   // visible is a ring. Below zoom 8 the pins are 2-3 px dots and a halo would
   // just fatten them into blobs, so it fades in with the pins themselves.
   // The +5.5 clears the pin's own white stroke, which MapLibre draws OUTSIDE
@@ -181,13 +202,19 @@ function addTableLayer() {
       "circle-stroke-color": "#ffffff",
     },
   });
-  // Both layers, so the halo's extra 3.5 px is part of the hit target rather
+  // Both layers, so the halo's extra 5.5 px is part of the hit target rather
   // than a dead ring around a clickable pin.
   for (const layer of [PLAY_LAYER, SRC]) {
     map.on("click", layer, (e) => {
       const f = allFeatures[e.features[0].properties.idx];
       if (f) openPopup(f);
     });
+  }
+  map.on("click", PLACES, (e) => {
+    const p = allPlaces[e.features[0].properties.idx];
+    if (p) openPlacePopup(p);
+  });
+  for (const layer of [PLAY_LAYER, SRC, PLACES]) {
     map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
   }
@@ -196,10 +223,18 @@ function addTableLayer() {
 function refreshPins() {
   if (!dataReady) return;
   const shown = filterFeatures(allFeatures, visible, playOnly);
+  // The count stays a count of changing tables even with the prospects on —
+  // they are not tables, and folding them in would inflate the one number the
+  // whole map is about. They get their own clause instead.
   countEl.textContent = allFeatures.length
     ? t("countShown", { shown: shown.length, total: allFeatures.length })
+      + (placesOn && allPlaces.length
+        ? t("countPlaces", { n: allPlaces.length }) : "")
     : t("countNoData");
-  if (styleReady) map.getSource(SRC).setData(toFeatureCollection(shown));
+  if (!styleReady) return;
+  map.getSource(SRC).setData(toFeatureCollection(shown));
+  map.getSource(PLACES).setData(
+    placesToFeatureCollection(placesOn ? allPlaces : []));
 }
 
 // ---- Popup ----
@@ -231,18 +266,48 @@ function popupHTML(f) {
   return `<div class="popup"><h3>${esc(title)}</h3>${sub}${rows.join("")}</div>`;
 }
 
+// A prospect's popup says one thing the pin popups never do: nobody has
+// answered the changing-table question here at all. So it leads with the one
+// fact OSM does record, and the primary button opens MapComplete on exactly
+// that question rather than on the room follow-up.
+function placeHTML(p) {
+  const rows = [
+    `<div class="status play">${esc(t("metaPlaces"))}</div>`,
+    `<div class="row">${esc(t("popupPlacesCta"))}</div>`,
+  ];
+  if (p.opening_hours)
+    rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(p.opening_hours)}</div>`);
+  const links = [];
+  const mcUrl = safeUrl(p.mapcomplete_url), osmUrl = safeUrl(p.osm_url);
+  if (mcUrl)
+    links.push(`<a class="btn primary" href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+  if (osmUrl)
+    links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
+  if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
+  const title = p.name || t("popupUnnamed");
+  const sub = p.kind ? `<div class="sub">${esc(p.kind.replace(/_/g, " "))}</div>` : "";
+  return `<div class="popup"><h3>${esc(title)}</h3>${sub}${rows.join("")}</div>`;
+}
+
 function openPopup(f) {
   if (popup) popup.remove();
   popup = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
     .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
 }
 
+function openPlacePopup(p) {
+  if (popup) popup.remove();
+  popup = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
+    .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
+}
+
 // ---- Status chips: legend, count badges and filter toggles in one ----
 // Three status chips (on by default, each one subtracts when switched off),
-// then the play chip — off by default and the other way round: switching it on
-// narrows to the places with a recorded play corner. It reads differently
-// because it *is* different, and rendering it as a fourth status would claim
-// every other pin has no play area, which OSM never said.
+// then two blue ones — both off by default and the other way round. The first
+// narrows to the pins with a recorded play corner; the second adds the places
+// that have a play corner and no changing-table answer at all. Neither is a
+// status: rendering them as one would claim every other pin has no play area,
+// which OSM never said.
 function renderChips() {
   const counts = countsByStatus(allFeatures);
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
@@ -263,25 +328,44 @@ function renderChips() {
     frag.appendChild(b);
   }
   frag.appendChild(playChip(countPlay(allFeatures)));
+  frag.appendChild(placesChip(allPlaces.length));
   filterBar.insertBefore(frag, filterBar.firstChild);
 }
 
-function playChip(count) {
+// The two blue chips are deliberately not one. "Mit Spielecke" narrows the
+// table pins; "Nur Spielecke" adds a different dataset that has no table
+// answer at all. One chip doing both would have to mean two things at once.
+function blueChip({ label, aria, count, on, hollow, toggle }) {
   const b = document.createElement("button");
   b.type = "button";
-  b.className = "chip play" + (playOnly ? " on" : "");
-  b.setAttribute("aria-pressed", String(playOnly));
-  b.setAttribute("aria-label", t("ariaPlay"));
-  // A ring, not a filled dot — the same shape the halo draws on the map.
-  b.innerHTML = `<span class="ring" style="border-color:${PLAY_COLOR}"></span>` +
-    `${esc(t("stPlay"))} <span class="cnt">${count}</span>`;
+  b.className = "chip play" + (on ? " on" : "") + (hollow ? " hollow" : "");
+  b.setAttribute("aria-pressed", String(on));
+  b.setAttribute("aria-label", t(aria));
+  b.title = t(aria);
+  // A ring, not a filled dot — the same shape the map draws.
+  b.innerHTML = `<span class="ring"></span>` +
+    `${esc(t(label))} <span class="cnt">${count}</span>`;
   b.addEventListener("click", () => {
-    playOnly = !playOnly;
-    b.classList.toggle("on", playOnly);
-    b.setAttribute("aria-pressed", String(playOnly));
+    const now = toggle();
+    b.classList.toggle("on", now);
+    b.setAttribute("aria-pressed", String(now));
     refreshPins();
   });
   return b;
+}
+
+function playChip(count) {
+  return blueChip({
+    label: "stPlay", aria: "ariaPlay", count, on: playOnly,
+    toggle: () => (playOnly = !playOnly),
+  });
+}
+
+function placesChip(count) {
+  return blueChip({
+    label: "stPlaces", aria: "ariaPlaces", count, on: placesOn, hollow: true,
+    toggle: () => (placesOn = !placesOn),
+  });
 }
 
 // ---- Stats strip (from stats.json, shape per CONTRACT.md) ----
@@ -475,11 +559,13 @@ async function loadJSON(url) {
 
 async function boot() {
   applyI18n();  // markup default is German — swap before first paint if EN
-  const [fc, stats] = await Promise.all([
+  const [fc, places, stats] = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
+    loadJSON("data/play_places.geojson"),
     loadJSON("data/stats.json"),
   ]);
   allFeatures = loadFeatures(fc);
+  allPlaces = loadPlaces(places);
   renderStats(stats);
   renderChips();
   positionZoomCtrl();  // topbar height depends on the rendered strip

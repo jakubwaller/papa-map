@@ -6,20 +6,22 @@ from datetime import datetime, timezone
 
 from . import export, leaderboard, osm, pages, stats
 from .config import (BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTORY_PATH,
-                     PAGES_DIR, STATS_PATH, SWEEP_PAUSE_S, SWEEP_ROUNDS,
-                     changing_table_ids_ql, changing_table_ql,
-                     display_area as configured_area, sweep_areas, toilets_ql)
+                     PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_PAUSE_S,
+                     SWEEP_ROUNDS, changing_table_ids_ql,
+                     display_area as configured_area, sweep_areas, sweep_ql,
+                     toilets_ql)
 
 
 def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                  display_area=None, area_key=None, overpass_fetch=osm.fetch_overpass,
                  taginfo_fetch=stats.fetch_taginfo, now=None,
                  sweep_rounds=None, sweep_pause_s=None, pages_dir=PAGES_DIR,
-                 cities=None, history_path=HISTORY_PATH):
+                 cities=None, history_path=HISTORY_PATH,
+                 play_geojson_path=PLAY_GEOJSON_PATH):
     """One idempotent build: Overpass (per sweep area) -> classify -> GeoJSON +
-    stats.json + the per-Bundesland pages, plus (on a full build) the
-    per-region history and the leaderboard pages rendered from it. An area
-    whose queries fail on every
+    play_places.geojson + stats.json + the per-Bundesland pages, plus (on a
+    full build) the per-region history and the leaderboard pages rendered from
+    it. An area whose queries fail on every
     mirror — including one that resolves to zero objects (stale mirror area
     database, typo'd PAPAMAP_AREA_NAME) — is retried in later sweep rounds
     after a cool-down; only an area still failing after every round aborts the
@@ -39,7 +41,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         area_key = configured_key if area_key is None else area_key
     rounds = SWEEP_ROUNDS if sweep_rounds is None else sweep_rounds
     pause = SWEEP_PAUSE_S if sweep_pause_s is None else sweep_pause_s
-    ct_elements, toilets_elements = [], []
+    ct_elements, toilets_elements, play_elements = [], [], []
     # Which sweep area each object came from. The geojson carries coordinates
     # and no region field, so the Overpass area query is the only authority on
     # which Land an object sits in — and it is free, since the sweep is already
@@ -65,7 +67,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         failed = []
         for area_name, admin_level in remaining:
             try:
-                ct = overpass_fetch(changing_table_ql(area_name, admin_level))
+                sweep = overpass_fetch(sweep_ql(area_name, admin_level))
                 toilets = overpass_fetch(toilets_ql(area_name, admin_level))
                 # Every sweep area has at least one amenity=toilets or
                 # changing_table object. Both empty means the *area* didn't
@@ -74,7 +76,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 # through would silently drop the area (or, single-area, wipe
                 # the served dataset). Retryable: a later round may hit a
                 # mirror with a healthy area database.
-                if not ct.get("elements") and not toilets.get("elements"):
+                if not sweep.get("elements") and not toilets.get("elements"):
                     raise RuntimeError(
                         f"area {area_name!r} resolved to zero objects on this "
                         "mirror (stale area database or typo'd "
@@ -86,13 +88,15 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 continue
             # A retried area re-fetches both queries; dedup absorbs any
             # elements its first, half-successful attempt already collected.
-            ct_elements.extend(ct["elements"])
+            ct, play = osm.split_sweep(sweep["elements"])
+            ct_elements.extend(ct)
+            play_elements.extend(play)
             toilets_elements.extend(toilets["elements"])
-            for el in ct["elements"]:
+            for el in ct:
                 ct_area.setdefault((el.get("type"), el.get("id")), area_name)
             for el in toilets["elements"]:
                 toilets_area.setdefault((el.get("type"), el.get("id")), area_name)
-            print(f"  {area_name}: ct={len(ct['elements'])} "
+            print(f"  {area_name}: ct={len(ct)} play={len(play)} "
                   f"toilets={len(toilets['elements'])}", file=sys.stderr)
         failed_cities = []
         for display, area_name, admin_level in remaining_cities:
@@ -127,8 +131,10 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # sweeps — count and plot it once.
     ct_data = {"elements": osm.dedup_elements(ct_elements)}
     toilets_data = {"elements": osm.dedup_elements(toilets_elements)}
+    play_data = {"elements": osm.dedup_elements(play_elements)}
     features = export.build_features(ct_data)
-    local = stats.local_stats(ct_data, toilets_data)
+    play_features = export.build_play_features(play_data)
+    local = stats.local_stats(ct_data, toilets_data, play_data)
 
     try:
         global_block = stats.global_stats(fetch=taginfo_fetch)
@@ -141,6 +147,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
 
     generated_at = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
     exported = export.export_geojson(features, geojson_path)
+    exported_play = export.export_geojson(play_features, play_geojson_path)
     export.export_stats({
         "generated_at": generated_at,
         "area_name": display_area,
@@ -191,7 +198,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         export.write_json_atomic(history, history_path)
         written += leaderboard.write_leaderboard_pages(history, pages_dir)
 
-    return {"features": exported, "ct_objects": local["ct_objects"],
+    return {"features": exported, "play_places": exported_play,
+            "ct_objects": local["ct_objects"],
             "toilets_total": local["toilets_total"],
             "global_source": global_source, "pages": len(written)}
 

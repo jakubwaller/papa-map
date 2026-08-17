@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
+from .classify import has_play_area
 from .config import (OVERPASS_BACKOFF_S, OVERPASS_HTTP_TIMEOUT,
                      OVERPASS_MAX_DATA_AGE_H, OVERPASS_RETRIES,
                      OVERPASS_SLOT_WAIT_MAX_S, OVERPASS_STATUS_HOSTS,
@@ -38,6 +39,27 @@ def dedup_elements(elements) -> list:
         seen.add(key)
         out.append(el)
     return out
+
+
+def split_sweep(elements) -> tuple[list, list]:
+    """The union sweep's answer (config.sweep_ql), back into its two halves:
+
+      * objects carrying a `changing_table` tag — any value, since `no` and
+        junk like "02" still feed the stats;
+      * objects that carry none but do record an indoor play area.
+
+    An object with both belongs to the first list only: it is already a pin,
+    and its play corner rides along as the feature's `play` property. Anything
+    in neither list is the Overpass prefilter being looser than has_play_area
+    (`kids_area:indoor=no` over a bare `kids_area=yes`) and is dropped."""
+    ct, play = [], []
+    for el in elements:
+        tags = el.get("tags") or {}
+        if "changing_table" in tags:
+            ct.append(el)
+        elif has_play_area(tags):
+            play.append(el)
+    return ct, play
 
 
 def slot_wait_s(url: str, get=None) -> float:

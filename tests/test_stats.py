@@ -3,7 +3,7 @@ import json
 import pytest
 import requests
 
-from pipeline import config, stats
+from pipeline import config, osm, stats
 
 
 def test_local_stats_counts_every_bucket(load_fixture):
@@ -16,8 +16,26 @@ def test_local_stats_counts_every_bucket(load_fixture):
         "yes_location_known": 5, "yes_location_unknown": 1,
         "accessible": 3, "female_only": 2, "unknown": 2,
         "centralkey_locked": 0,
+        # One fixture pin carries kids_area=yes; no play half was passed in,
+        # which is the single-argument caller's honest zero.
+        "play_tables": 1, "play_places": 0,
         "capacity_tagged_toilets": 1,
     }
+
+
+def test_local_stats_separates_play_pins_from_play_prospects(load_fixture):
+    # The two play numbers answer different questions and must never be added
+    # up: play_tables counts pins that also have a corner to play in,
+    # play_places counts places with a corner and no changing-table answer at
+    # all. The coordless prospect is skipped, exactly like a coordless pin.
+    # play_data is the sweep's already-split half, as run.py hands it over.
+    _, play = osm.split_sweep(load_fixture("overpass_play_places.json")["elements"])
+    local = stats.local_stats(load_fixture("overpass_changing_tables.json"),
+                              load_fixture("overpass_toilets.json"),
+                              {"elements": play})
+    assert local["play_tables"] == 1
+    # 5 fixture objects: one is outdoors, one has no coordinates.
+    assert local["play_places"] == 3
 
 
 def test_local_stats_empty_responses():
