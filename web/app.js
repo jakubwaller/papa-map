@@ -1,9 +1,9 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
-import { loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=seo3";
+import { loadFeatures, filterFeatures, countsByStatus, countPlay, toFeatureCollection,
+         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=play1";
 import { STRINGS, NUMBER_LOCALE, pickLang, nextLang, fmt,
-         langUrl } from "./i18n.js?v=seo3";
+         langUrl } from "./i18n.js?v=play1";
 
 // ---- Language: German default, DE → EN → DA cycle. A shared ?lang= link wins
 // over the stored choice, which wins over a Danish browser; toggling stores the
@@ -53,6 +53,12 @@ const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
 // of color-vision deficiency. Grey is deliberately the darkest pin and one size
 // up on the map: an untagged room is the call to action, not a footnote.
 const STATUS_COLOR = { accessible: "#009e73", female_only: "#d55e00", unknown: "#3d4247" };
+
+// Okabe-Ito blue for the play-corner halo — the fourth palette entry, far
+// enough from all three status colors to stay readable under color-vision
+// deficiency. A ring around the pin rather than a fourth fill on purpose:
+// color still means "can a dad reach the table", and the halo annotates.
+const PLAY_COLOR = "#0072b2";
 
 const STATUS_DEFS = [
   { value: "accessible", labelKey: "stAccessible" },
@@ -117,6 +123,7 @@ window._papamap = map;
 // ---- State ----
 let allFeatures = [];                                     // flattened GeoJSON
 let visible = new Set(STATUS_DEFS.map((d) => d.value));   // toggled-on statuses
+let playOnly = false;                                     // narrow to play corners
 
 const statsEl = document.getElementById("stats");
 const filterBar = document.getElementById("filter-bar");
@@ -128,22 +135,42 @@ const scopeEl = document.getElementById("scope");
 // ---- Pins: one WebGL circle layer, colored by status ----
 // ~5k features Germany-wide — still one WebGL layer, no clustering, no DOM
 // markers. At country zoom the pins shrink to a density dot-map; the source
-// carries only {idx, status} per feature and a click looks the full object up
-// in allFeatures.
+// carries only {idx, status, play} per feature and a click looks the full
+// object up in allFeatures.
 const SRC = "tables";
+const PLAY_LAYER = "tables-play";
 const IS_UNKNOWN = ["==", ["get", "status"], "unknown"];
+
+// Pin radius by zoom, grey one size up. Shared so the halo can be defined as
+// "this, plus a ring" and the two can never drift apart.
+const pinRadius = (extra) => ["interpolate", ["linear"], ["zoom"],
+  5, ["case", IS_UNKNOWN, 2.5 + extra, 2 + extra],
+  10, ["case", IS_UNKNOWN, 5 + extra, 4 + extra],
+  14, ["case", IS_UNKNOWN, 9 + extra, 7 + extra],
+  17, ["case", IS_UNKNOWN, 13 + extra, 10 + extra]];
 
 function addTableLayer() {
   map.addSource(SRC, { type: "geojson", data: toFeatureCollection([]) });
+  // Drawn first, so the status circle lands on top of it and what remains
+  // visible is a ring. Below zoom 8 the pins are 2-3 px dots and a halo would
+  // just fatten them into blobs, so it fades in with the pins themselves.
+  // The +5.5 clears the pin's own white stroke, which MapLibre draws OUTSIDE
+  // the fill radius (up to 2 px): at +3.5 the stroke ate all but ~1.5 px of
+  // the ring and the halo read as a smudge rather than a mark.
+  map.addLayer({
+    id: PLAY_LAYER, type: "circle", source: SRC,
+    filter: ["==", ["get", "play"], true],
+    paint: {
+      "circle-radius": pinRadius(5.5),
+      "circle-color": PLAY_COLOR,
+      "circle-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0, 9, 1],
+    },
+  });
   map.addLayer({
     id: SRC, type: "circle", source: SRC,
     paint: {
       // Grey (unknown) pins run one size up — they are the call to action.
-      "circle-radius": ["interpolate", ["linear"], ["zoom"],
-        5, ["case", IS_UNKNOWN, 2.5, 2],
-        10, ["case", IS_UNKNOWN, 5, 4],
-        14, ["case", IS_UNKNOWN, 9, 7],
-        17, ["case", IS_UNKNOWN, 13, 10]],
+      "circle-radius": pinRadius(0),
       "circle-color": ["match", ["get", "status"],
         "accessible", STATUS_COLOR.accessible,
         "female_only", STATUS_COLOR.female_only,
@@ -154,17 +181,21 @@ function addTableLayer() {
       "circle-stroke-color": "#ffffff",
     },
   });
-  map.on("click", SRC, (e) => {
-    const f = allFeatures[e.features[0].properties.idx];
-    if (f) openPopup(f);
-  });
-  map.on("mouseenter", SRC, () => { map.getCanvas().style.cursor = "pointer"; });
-  map.on("mouseleave", SRC, () => { map.getCanvas().style.cursor = ""; });
+  // Both layers, so the halo's extra 3.5 px is part of the hit target rather
+  // than a dead ring around a clickable pin.
+  for (const layer of [PLAY_LAYER, SRC]) {
+    map.on("click", layer, (e) => {
+      const f = allFeatures[e.features[0].properties.idx];
+      if (f) openPopup(f);
+    });
+    map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
+  }
 }
 
 function refreshPins() {
   if (!dataReady) return;
-  const shown = filterByStatus(allFeatures, visible);
+  const shown = filterFeatures(allFeatures, visible, playOnly);
   countEl.textContent = allFeatures.length
     ? t("countShown", { shown: shown.length, total: allFeatures.length })
     : t("countNoData");
@@ -185,6 +216,7 @@ function popupHTML(f) {
     `<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
       (f.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(f.location_raw)}` : "") + `</div>`,
   ];
+  if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
   if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
   const links = [];
@@ -206,6 +238,11 @@ function openPopup(f) {
 }
 
 // ---- Status chips: legend, count badges and filter toggles in one ----
+// Three status chips (on by default, each one subtracts when switched off),
+// then the play chip — off by default and the other way round: switching it on
+// narrows to the places with a recorded play corner. It reads differently
+// because it *is* different, and rendering it as a fourth status would claim
+// every other pin has no play area, which OSM never said.
 function renderChips() {
   const counts = countsByStatus(allFeatures);
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
@@ -225,7 +262,26 @@ function renderChips() {
     });
     frag.appendChild(b);
   }
+  frag.appendChild(playChip(countPlay(allFeatures)));
   filterBar.insertBefore(frag, filterBar.firstChild);
+}
+
+function playChip(count) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "chip play" + (playOnly ? " on" : "");
+  b.setAttribute("aria-pressed", String(playOnly));
+  b.setAttribute("aria-label", t("ariaPlay"));
+  // A ring, not a filled dot — the same shape the halo draws on the map.
+  b.innerHTML = `<span class="ring" style="border-color:${PLAY_COLOR}"></span>` +
+    `${esc(t("stPlay"))} <span class="cnt">${count}</span>`;
+  b.addEventListener("click", () => {
+    playOnly = !playOnly;
+    b.classList.toggle("on", playOnly);
+    b.setAttribute("aria-pressed", String(playOnly));
+    refreshPins();
+  });
+  return b;
 }
 
 // ---- Stats strip (from stats.json, shape per CONTRACT.md) ----

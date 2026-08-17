@@ -17,11 +17,13 @@
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
     --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
       --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
     }
   }
   body {
@@ -41,6 +43,7 @@
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
   .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
 </style>
@@ -79,6 +82,31 @@ bogstaver og sammenlignes som et helt token. Aldrig som delstreng, for
 <p>Én undtagelse: objekter med et <code>centralkey</code>-tag (bortset fra <code>no</code>) vises
 slet ikke. Euronøglen og lignende centralnøgler udleveres kun mod dokumenteret handicap — uanset
 hvilket rum bordet står i, kommer de fleste fædre ikke gennem den dør.</p>
+
+<h2>Den blå ring: legeområde</h2>
+<p>En nål med en blå ring har også et legeområde &mdash; et sted, hvor man ikke bare skifter barnet,
+men bliver lidt. Filteret <em>Med legeområde</em> viser kun dem. Et sted tæller med, hvis OSM
+angiver én af disse:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> eller
+      <code>designated</code> &mdash; wikiens dokumenterede måde at sige indendørs på.</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> eller
+      <code>designated</code> &mdash; legekrogen på caféen, restauranten, bageriet. Det mest
+      brugte tag, men det siger ikke, om det er inde eller ude.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; en indendørs legeplads.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> sammen med
+      <code>indoor=yes</code> &mdash; det samme, tagget omvendt.</li>
+</ul>
+<p><code>outdoor</code> tæller ikke med: sandkassen i haven er ikke det, ringen lover. Det gør
+<code>no</code> heller ikke, og heller ikke <code>limited</code> &mdash; wikien definerer det som
+&bdquo;legetøj findes, men intet egentligt område&ldquo;. Står der udtrykkeligt
+<code>kids_area:indoor=no</code>, vinder det over et blot <code>kids_area=yes</code>.</p>
+<p>Det er et mærke, ikke en fjerde status. Et sted uden disse tags har ikke &bdquo;intet
+legeområde&ldquo; &mdash; OSM siger bare ingenting om det. Derfor er der ingen grå farve her og
+ingen opgave: ved <code>changing_table:location</code> betyder tavsheden noget, fordi bordet
+beviseligt findes. Her tier næsten alle objekter, og det betyder ingenting. Kender du et
+legeområde, er det stadig velkomment at tilføje det &mdash; i OSM-editoren, som
+<code>kids_area=yes</code>.</p>
 
 <h2>Sådan retter du en grå nål</h2>
 <p>Grå betyder: et svar mangler. Hvor står puslebordet? Det kan enhver med en gratis OSM-konto

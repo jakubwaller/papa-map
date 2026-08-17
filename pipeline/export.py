@@ -5,7 +5,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from .classify import classify
+from .classify import classify, has_play_area
 from .osm import element_coords
 
 
@@ -49,6 +49,9 @@ def build_features(ct_data: dict) -> list[dict]:
                 "name": tags.get("name"), "amenity": amenity,
                 "changing_table": value, "location_raw": location,
                 "status": status,
+                # Free: the sweep already asks for every tag on these objects,
+                # so the play corner costs no extra Overpass query.
+                "play": has_play_area(tags),
                 # the table-specific fee wins over the venue-level fee tag
                 "fee": tags.get("changing_table:fee") or tags.get("fee"),
                 "opening_hours": tags.get("opening_hours"),

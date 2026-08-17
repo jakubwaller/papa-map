@@ -28,6 +28,9 @@ export function loadFeatures(fc) {
       changing_table: p.changing_table ?? null,
       location_raw: p.location_raw ?? null,
       status: STATUSES.includes(p.status) ? p.status : "unknown",
+      // Strict === true: a dataset written before this property existed leaves
+      // it undefined, and "no play corner recorded" must never render as one.
+      play: p.play === true,
       fee: p.fee ?? null,
       opening_hours: p.opening_hours ?? null,
       osm_url: p.osm_url ?? null,
@@ -48,6 +51,22 @@ export function countsByStatus(features) {
   const counts = Object.fromEntries(STATUSES.map((s) => [s, 0]));
   for (const f of features) counts[f.status] += 1;
   return counts;
+}
+
+// How many of these also have a play corner. Its own function rather than a
+// fourth key on countsByStatus: play is orthogonal to status, and folding it
+// in would make the three counts stop summing to the total.
+export function countPlay(features) {
+  return features.reduce((n, f) => n + (f.play ? 1 : 0), 0);
+}
+
+// What the map actually draws: the status toggles, then the play filter
+// narrowing on top. The play filter subtracts and never adds — an untagged
+// object is unrecorded, not known to lack a play corner, so switching it on
+// promises "these definitely have one", not "the rest definitely don't".
+export function filterFeatures(features, visible, playOnly = false) {
+  const byStatus = filterByStatus(features, visible);
+  return playOnly ? byStatus.filter((f) => f.play) : byStatus;
 }
 
 // ?bbox=minLon,minLat,maxLon,maxLat — how the Bundesland pages link into the
@@ -86,9 +105,10 @@ export function osmEditUrl(lon, lat, zoom) {
 }
 
 // Rebuild a FeatureCollection for the map source. Properties carry only
-// {idx, status}: status drives the data-driven circle color, idx the click
-// lookup. "unknown" features are emitted last so their grey circles draw on
-// top of the others — the untagged rooms are the call to action.
+// {idx, status, play}: status drives the data-driven circle color, play the
+// halo layer's filter, idx the click lookup. "unknown" features are emitted
+// last so their grey circles draw on top of the others — the untagged rooms
+// are the call to action.
 export function toFeatureCollection(features) {
   const ordered = [...features].sort(
     (a, b) => (a.status === "unknown") - (b.status === "unknown"));
@@ -97,7 +117,7 @@ export function toFeatureCollection(features) {
     features: ordered.map((f) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [f.lon, f.lat] },
-      properties: { idx: f.idx, status: f.status },
+      properties: { idx: f.idx, status: f.status, play: f.play },
     })),
   };
 }

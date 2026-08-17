@@ -1,5 +1,30 @@
 # papa-map — build contract (v0)
 
+> **v9 amendment (17 Aug 2026, play corners):** every feature gains a boolean
+> **`play`** property — true when the object also records an indoor place for
+> the kid to play, by any of `kids_area:indoor` or `kids_area` in {`yes`,
+> `indoor`, `designated`}, `leisure=indoor_play`, or `leisure=playground` +
+> `indoor=yes` (`pipeline/classify.py::has_play_area`). `outdoor`, `no` and
+> `limited` are excluded on purpose (the wiki defines `limited` as "toys are
+> available, but no designated area"), and an explicit `kids_area:indoor=no`
+> overrules a bare `kids_area=yes`, which says nothing about indoor or outdoor.
+> It costs no new Overpass query: the sweep already asks for every tag on these
+> objects. The map draws it as an Okabe-Ito blue **halo** under the
+> pin, and the chip bar gains a fourth chip that *narrows* to those places.
+>
+> `play` is a badge, never a status, and the distinction is load-bearing.
+> `changing_table:location` can honestly render a grey "nobody has answered
+> this" pin because the object is known to have a table, so the silence is a
+> question. A missing `kids_area` is silent across ~13k pins and asks nothing —
+> so there is no third state, no grey, no call to action, and the filter starts
+> **off** and subtracts rather than starting on like the three status chips.
+> Rendering it as a fourth status would claim every other pin has no play area,
+> which OSM never said. Measured 17 Aug 2026: 828 objects in DE+DK pass the
+> rule (222 via `kids_area:indoor`, 213 indoor `leisure=playground`, 199
+> `leisure=indoor_play`, 194 bare `kids_area`) and 111 of them are already pins
+> — 48 accessible, 13 female_only, 50 unknown. The other 717 have a play area
+> and no changing-table answer at all.
+
 > **v8 amendment (16 Aug 2026, sortable leaderboard):** the leaderboard tables
 > are emitted as `<thead>`/`<tbody>`, every cell carrying its sort value in
 > `data-v` (the raw number, or the DIN-5007 folded name) beside the German
@@ -135,6 +160,7 @@ Overpass `out center`). Feature `properties`:
   "changing_table": "yes|limited",
   "location_raw": "raw changing_table:location value or null",
   "status": "accessible|female_only|unknown",
+  "play": "true|false — indoor play area recorded (v9); false also means unrecorded",
   "fee": "string or null",
   "opening_hours": "string or null",
   "osm_url": "https://www.openstreetmap.org/<type>/<id>",

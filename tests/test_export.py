@@ -43,6 +43,7 @@ def test_feature_properties_match_data_contract(load_fixture):
         "osm_type": "node", "osm_id": 1, "name": "Hauptbahnhof WC",
         "amenity": "toilets", "changing_table": "yes",
         "location_raw": "male_toilet", "status": "accessible",
+        "play": False,
         "fee": "yes", "opening_hours": "24/7",
         "osm_url": "https://www.openstreetmap.org/node/1",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
@@ -54,6 +55,46 @@ def test_feature_properties_match_data_contract(load_fixture):
     assert feats[3]["location_raw"] is None
     assert feats[4]["fee"] == "no"  # changing_table:fee wins over fee=yes
     assert feats[7]["location_raw"] == "hinten im Flur beim Personalraum"
+
+
+def test_play_area_is_a_property_not_a_status(load_fixture):
+    feats = {f["properties"]["osm_id"]: f["properties"]
+             for f in build_features(load_fixture("overpass_changing_tables.json"))}
+    assert feats[3]["play"] is True    # cafe with kids_area=yes
+    assert feats[7]["play"] is False   # restaurant with kids_area=no
+    assert feats[1]["play"] is False   # no kids_area tag at all
+    # the badge never moves a pin's color
+    assert feats[3]["status"] == "unknown"
+
+
+def test_play_area_recognizes_all_three_tagging_patterns():
+    def play(tags):
+        tags = {"changing_table": "yes", **tags}
+        el = {"type": "node", "id": 1, "lat": 53.5, "lon": 10.0, "tags": tags}
+        return build_features({"elements": [el]})[0]["properties"]["play"]
+
+    assert play({"kids_area": "yes"}) is True
+    assert play({"kids_area": "indoor"}) is True
+    assert play({"kids_area": "designated"}) is True
+    assert play({"kids_area:indoor": "yes"}) is True       # the wiki's own form
+    assert play({"kids_area:indoor": "designated"}) is True
+    assert play({"leisure": "indoor_play"}) is True
+    assert play({"leisure": "playground", "indoor": "yes"}) is True
+    # an outdoor sandpit is not the promise the badge makes
+    assert play({"kids_area": "outdoor"}) is False
+    assert play({"kids_area": "no"}) is False
+    assert play({"kids_area": "limited"}) is False         # "toys, but no area"
+    assert play({"kids_area:indoor": "no"}) is False
+    # explicit beats ambiguous: kids_area=yes doesn't say indoor, :indoor=no does
+    assert play({"kids_area": "yes", "kids_area:indoor": "no"}) is False
+    assert play({"kids_area": "yes", "kids_area:outdoor": "yes"}) is True
+    assert play({"kids_area": "no", "kids_area:indoor": "yes"}) is True
+    # a plain outdoor playground stays out, indoor= is what makes it count
+    assert play({"leisure": "playground"}) is False
+    assert play({"leisure": "playground", "indoor": "no"}) is False
+    assert play({}) is False
+    # case and whitespace are the mapper's, not ours
+    assert play({"kids_area": " Yes "}) is True
 
 
 def test_mapcomplete_url_always_uses_own_theme(load_fixture):

@@ -60,6 +60,24 @@ they are listed by hand in `web/sitemap.xml`; `tests/test_pages.py` asserts that
 list matches the slugs the generator writes. `PAPAMAP_PAGES_DIR` moves the
 output elsewhere.
 
+## Play corners
+
+Every feature carries a boolean `play`: true when the object also records an
+indoor place for the kid to play (`kids_area:indoor` or `kids_area` =
+`yes|indoor|designated`, `leisure=indoor_play`, or `leisure=playground` +
+`indoor=yes`). `outdoor`, `no` and `limited` are excluded, and an explicit
+`kids_area:indoor=no` overrules a bare `kids_area=yes`. The map draws it as a
+blue halo under the pin and the chip bar gains a filter that narrows to those
+places.
+
+It is a badge, not a fourth status. A missing `kids_area` is silent across all
+~13k pins and means nothing, so — unlike a grey `changing_table:location` pin —
+there is no "unknown" state to render and no call to action attached to it. The
+chip therefore starts **off** and subtracts, while the three status chips start
+on. Costs no extra Overpass query: the sweep already returns every tag on these
+objects. DE+DK on 17 Aug 2026: 828 objects pass the rule and 111 of them are
+already pins (48 accessible / 13 female_only / 50 unknown).
+
 ## Leaderboard
 
 A full build also appends one entry per day to `web/data/history.json` —

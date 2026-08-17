@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUSES, loadFeatures, filterByStatus, countsByStatus, toFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js";
+import { STATUSES, loadFeatures, filterByStatus, filterFeatures, countsByStatus,
+         countPlay, toFeatureCollection, mapCompleteAddUrl, osmEditUrl,
+         parseBbox } from "./datasource.js";
 
 const feat = (lon, lat, props) => ({
   type: "Feature",
@@ -22,7 +23,7 @@ const FC = {
     feat(10.0, 53.56, {
       osm_type: "way", osm_id: 2, name: "Café Elbblick", amenity: "cafe",
       changing_table: "yes", location_raw: "female_toilet", status: "female_only",
-      fee: null, opening_hours: null,
+      play: true, fee: null, opening_hours: null,
       osm_url: "https://www.openstreetmap.org/way/2", mapcomplete_url: null,
     }),
     feat(10.01, 53.57, {
@@ -96,6 +97,34 @@ test("countsByStatus of an empty list is all zeros", () => {
   assert.deepEqual(countsByStatus([]), { accessible: 0, female_only: 0, unknown: 0 });
 });
 
+test("play is strictly boolean — a dataset without the property has none", () => {
+  const v = loadFeatures(FC);
+  assert.deepEqual(v.map((f) => f.play), [false, true, false]);
+  // pre-play GeoJSON, and every value that is not exactly true
+  for (const p of [undefined, null, "yes", 1, "true", 0, ""])
+    assert.equal(loadFeatures({ type: "FeatureCollection",
+      features: [feat(9.9, 53.5, { status: "unknown", play: p })] })[0].play, false);
+});
+
+test("countPlay counts the play corners, never the statuses", () => {
+  assert.equal(countPlay(loadFeatures(FC)), 1);
+  assert.equal(countPlay([]), 0);
+  // orthogonal to status: the three status counts still sum to the total
+  const counts = countsByStatus(loadFeatures(FC));
+  assert.equal(counts.accessible + counts.female_only + counts.unknown, 3);
+});
+
+test("filterFeatures narrows to play corners on top of the status filter", () => {
+  const v = loadFeatures(FC);
+  // off: identical to the plain status filter
+  assert.deepEqual(filterFeatures(v, new Set(STATUSES)).map((f) => f.idx), [0, 1, 2]);
+  assert.deepEqual(filterFeatures(v, new Set(STATUSES), false).map((f) => f.idx), [0, 1, 2]);
+  // on: subtracts, and never adds back a status the user switched off
+  assert.deepEqual(filterFeatures(v, new Set(STATUSES), true).map((f) => f.idx), [1]);
+  assert.deepEqual(filterFeatures(v, new Set(["accessible"]), true), []);
+  assert.deepEqual(filterFeatures(v, new Set(), true), []);
+});
+
 test("toFeatureCollection emits unknown last so grey pins draw on top", () => {
   const fc = { type: "FeatureCollection", features: [
     feat(1, 1, { status: "unknown" }),
@@ -119,14 +148,15 @@ test("add-place URLs carry the view, rounded, with a floor on the zoom", () => {
   assert.ok(osmEditUrl(10, 51, 5.6).includes("#map=17/"));
 });
 
-test("toFeatureCollection carries only {idx, status} and idx survives the reorder", () => {
+test("toFeatureCollection carries only {idx, status, play} and idx survives the reorder", () => {
   const v = loadFeatures(FC);
   const out = toFeatureCollection(filterByStatus(v, ["unknown", "accessible"]));
   assert.equal(out.type, "FeatureCollection");
   for (const f of out.features) {
-    assert.deepEqual(Object.keys(f.properties).sort(), ["idx", "status"]);
+    assert.deepEqual(Object.keys(f.properties).sort(), ["idx", "play", "status"]);
     const orig = v[f.properties.idx];  // the click-lookup the app does
     assert.equal(orig.status, f.properties.status);
+    assert.equal(orig.play, f.properties.play);   // drives the halo layer filter
     assert.deepEqual(f.geometry.coordinates, [orig.lon, orig.lat]);
   }
 });
