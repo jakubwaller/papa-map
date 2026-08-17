@@ -52,8 +52,8 @@
 
 <p class="back"><a href="index.html">&larr; Tilbage til kortet</a> · <a href="methods.html" hreflang="de">Diese Seite auf Deutsch</a> · <a href="methods-en.html" hreflang="en">This page in English</a></p>
 <h1>PapaMap — metode &amp; ærlighed</h1>
-<p class="muted">Pusleborde, en far kan nå. Tallene nedenfor er øjebliksbilledet fra
-26.&nbsp;juli&nbsp;2026. Linjen på kortet regnes om hver nat og kan afvige.</p>
+<p class="muted">Pusleborde, en far kan nå. De globale taginfo-tal nedenfor hentes af det
+natlige build. Stikprøven over otte bymidter er fra 26.&nbsp;juli&nbsp;2026 og bliver stående.</p>
 
 <h2>Hvad dette kort er. Og hvad det ikke er.</h2>
 <p>PapaMap viser steder i Tyskland og Danmark, hvor OpenStreetMap kender et puslebord
@@ -204,13 +204,17 @@ måler det, der kan måles, og laver hullerne om til bidrag.</p>
 
 <h2>Det ene fakta, der kan beregnes: hvor bordene står</h2>
 <p><code>changing_table:location</code> er så vidt vi ved det eneste åbne vokabular, der noterer,
-i hvilket rum et puslebord står. Det er tyndt besat: omkring 3.659 ud af ~77.000
-<code>changing_table</code>-objekter på verdensplan, under 5%. Men hvor det findes, er det
-ensidigt (taginfo, 26.&nbsp;juli&nbsp;2026):</p>
+i hvilket rum et puslebord står. Det er tyndt besat:
+<span data-stat="location_total">3.659</span> ud af <span data-stat="ct_total">77.000</span>
+<code>changing_table</code>-objekter på verdensplan, <span data-stat="share">4,8&nbsp;%</span>.
+Men hvor det findes, er det ensidigt
+(taginfo, <span data-stat="date">26.&nbsp;juli&nbsp;2026</span>):</p>
 <ul>
-  <li>Borde kun på dametoilettet: <strong>~485</strong>.</li>
-  <li>Borde kun på herretoilettet: <strong>~71</strong>. Groft sagt 7:1. ~289 er tagget i begge
-      rum, ~410 noterer overhovedet et bord på et herretoilet. På verdensplan.</li>
+  <li>Borde kun på dametoilettet: <strong data-stat="female_only">485</strong>.</li>
+  <li>Borde kun på herretoilettet: <strong data-stat="male_only">71</strong>. Groft sagt
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> er tagget i
+      begge rum, <span data-stat="male_any">410</span> noterer overhovedet et bord på et
+      herretoilet. På verdensplan.</li>
 </ul>
 <p>Stikprøven er lille, og mapperne bestemmer, hvad de registrerer. Så det præcise forhold skal
 ikke overfortolkes. Retningen passer dog med det, der længe har været dokumenteret: pusleborde
@@ -235,9 +239,56 @@ under din egen OSM-konto. Intet af det går gennem os. Det formelle (på tysk):
 <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
 
-<p class="muted">Kilder: Overpass-stikprøve over 8 bymidter (9.674 toiletter) og taginfos
-nøglestatistik, begge 26.&nbsp;juli&nbsp;2026. De lokale tal kommer fra den samme natlige
-forespørgsel, som også bygger kortet.</p>
+<p class="muted">Kilder: Overpass-stikprøve over 8 bymidter (9.674 toiletter) fra
+26.&nbsp;juli&nbsp;2026 og taginfos nøglestatistik med den dato, der står ovenfor. De lokale tal
+kommer fra den samme natlige forespørgsel, som også bygger kortet.</p>
+
+<script>
+// taginfo-tallene ovenfor er de samme, som det natlige build i forvejen skriver
+// til data/stats.json. Læs dem derfra i stedet for at vedligeholde dem i hånden:
+// afskrevne tal bliver forældede, og på netop denne side er det pinligt.
+// Markup'en holder den sidst kendte værdi, så uden JS — eller hvis hentningen
+// fejler — læses siden stadig rigtigt, bare en smule ældre.
+(function () {
+  var LOCALE = "da-DK";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      var g = (s || {}).global;
+      if (!g || g.source !== "taginfo" || !g.location_total || !g.ct_total) return;
+      var raw = {
+        ct_total: g.ct_total,
+        location_total: g.location_total,
+        female_only: g.location_female_only,
+        male_only: g.location_male_only,
+        male_any: g.location_male_any,
+        male_and_female: g.location_male_and_female
+      };
+      var vals = {};
+      Object.keys(raw).forEach(function (k) {
+        if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+      });
+      if (raw.female_only && raw.male_only) {
+        vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+      }
+      vals.share = (100 * raw.location_total / raw.ct_total)
+        .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + " %";
+      if (g.data_until) {
+        var d = new Date(g.data_until);
+        if (!isNaN(d)) {
+          vals.date = d.toLocaleDateString(LOCALE, {
+            day: "numeric", month: "long", year: "numeric"
+          });
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* tallene i markup'en bliver stående */ });
+})();
+</script>
 
 </body>
 </html>
