@@ -221,6 +221,21 @@ def _jsonld(obj) -> str:
     return f'<script type="application/ld+json">{body}</script>\n\n'
 
 
+# The same mark index.html carries, inlined for the same reason: a data URI
+# costs no request and — unlike a root-relative /icon.svg — resolves from any
+# directory depth, so the pages under wickeltische/ need no {up} dance. Without
+# it a browser falls back to /favicon.ico, which this site does not serve: every
+# generated page logged a 404 until 2026-08-17.
+ICON = (
+    '<link rel="icon" href="data:image/svg+xml,'
+    "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E"
+    "%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E"
+    "%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E"
+    "%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E"
+    "%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E"
+    '%3C/svg%3E">'
+)
+
 STYLE = """\
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
@@ -279,6 +294,7 @@ def _head(title: str, description: str, canonical: str) -> str:
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(description)}">
 <link rel="canonical" href="{esc(canonical)}">
+{ICON}
 <style>
 {STYLE}</style>
 </head>

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .config import HISTORY_MAX_DAYS, PAGES_BASE_PATH, SITE_BASE_URL
 from .export import write_text_atomic
-from .pages import FOOTER, STYLE, UP, de_date, de_num, esc, sort_key
+from .pages import FOOTER, ICON, STYLE, UP, de_date, de_num, esc, sort_key
 
 # Per-region history and the leaderboard pages built from it.
 #
@@ -403,6 +403,7 @@ def _head(lang: str, tab: dict, base_url: str, base_path: str) -> str:
 <link rel="alternate" hreflang="de" href="{esc(de_url)}">
 <link rel="alternate" hreflang="en" href="{esc(en_url)}">
 <link rel="alternate" hreflang="x-default" href="{esc(de_url)}">
+{ICON}
 <style>
 {STYLE}{SORT_STYLE}</style>
 </head>
