@@ -83,6 +83,12 @@ export const STRINGS = {
     metaFemaleOnly: "Der Wickeltisch ist nur im Damen-WC.",
     metaUnknown: "Niemand hat erfasst, in welchem Raum der Wickeltisch ist — weißt du es?",
 
+    // Kein vierter Status, sondern ein Filter: die Karte zeigt nur die Orte,
+    // an denen eine Spielecke erfasst IST. Über den Rest sagt OSM nichts.
+    stPlay: "Mit Spielecke",
+    ariaPlay: "Nur Orte mit erfasster Spielecke zeigen",
+    popupPlay: "Spielecke zum Bleiben",
+
     countShown: "{shown} von {total} Wickeltischen",
     countNoData: "Noch keine Daten — Pipeline ausführen",
 
@@ -144,6 +150,10 @@ export const STRINGS = {
     metaFemaleOnly: "The table is in the women's room only.",
     metaUnknown: "Nobody has tagged which room the table is in — can you answer?",
 
+    stPlay: "With play area",
+    ariaPlay: "Show only places with a recorded play area",
+    popupPlay: "Play area — worth staying",
+
     countShown: "{shown} of {total} tables",
     countNoData: "No table data yet — run the pipeline",
 
@@ -204,6 +214,10 @@ export const STRINGS = {
     metaAccessible: "Dette puslebord kan en far nå.",
     metaFemaleOnly: "Puslebordet er kun på dametoilettet.",
     metaUnknown: "Ingen har registreret, hvilket rum puslebordet står i — ved du det?",
+
+    stPlay: "Med legeområde",
+    ariaPlay: "Vis kun steder med et registreret legeområde",
+    popupPlay: "Legeområde — værd at blive",
 
     countShown: "{shown} af {total} pusleborde",
     countNoData: "Ingen data endnu — kør pipelinen",

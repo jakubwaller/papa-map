@@ -17,11 +17,13 @@
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
     --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
       --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
     }
   }
   body {
@@ -41,6 +43,7 @@
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
   .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
 </style>
@@ -79,6 +82,31 @@ and compared as a whole token. Never as a substring, because <code>female_toilet
 <p>One exception: objects with a <code>centralkey</code> tag (other than <code>no</code>) are not
 shown at all. The Euro key and similar central key systems are only issued against proof of
 disability — whatever room the table is in, most dads don't get through that door.</p>
+
+<h2>The blue ring: play area</h2>
+<p>A pin with a blue ring also has a play area &mdash; a place you don't just change the kid, you
+stay a while. The <em>With play area</em> chip filters the map down to those. A place counts if OSM
+records any one of these:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> or <code>designated</code>
+      &mdash; the wiki's documented way of saying indoors.</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> or
+      <code>designated</code> &mdash; the play corner in a café, a restaurant, a bakery. The
+      most-used tag, though it leaves indoor or outdoor open.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; a commercial indoor
+      playground.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> together with
+      <code>indoor=yes</code> &mdash; the same thing, tagged the other way round.</li>
+</ul>
+<p><code>outdoor</code> does not count: a beer garden's sandpit is not what the ring promises.
+Neither does <code>no</code>, nor <code>limited</code> — the wiki defines that one as "toys are
+available, but no designated area". Where an explicit <code>kids_area:indoor=no</code> is present,
+it beats a bare <code>kids_area=yes</code>.</p>
+<p>This is a badge, not a fourth status. A place without these tags does not "have no play area" —
+OSM simply says nothing about it. So there is no grey here and no call to action: with
+<code>changing_table:location</code> the silence is meaningful, because the table is known to
+exist. Here almost every object is silent, and that means nothing. If you know a play area, adding
+it is still welcome — in the OSM editor, as <code>kids_area=yes</code>.</p>
 
 <h2>How to fix a grey pin</h2>
 <p>Grey means one answer is missing. Where is the changing table? Anyone with a free OSM account

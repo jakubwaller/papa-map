@@ -17,11 +17,13 @@
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
     --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
       --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
     }
   }
   body {
@@ -41,6 +43,7 @@
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
   .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
 </style>
@@ -80,6 +83,33 @@ kleingeschrieben und als ganzes Token verglichen. Nie als Teilstring, denn
 zeigt die Karte gar nicht. Den Euroschlüssel und ähnliche Zentralschlüssel bekommt man nur mit
 nachgewiesener Behinderung — egal in welchem Raum der Tisch hängt, die meisten Väter kommen durch
 diese Tür nicht durch.</p>
+
+<h2>Der blaue Ring: Spielecke</h2>
+<p>Ein Pin mit blauem Ring hat außerdem eine Spielecke &mdash; ein Ort, an dem man nicht nur
+wickelt, sondern auch bleibt. Der Filter <em>Mit Spielecke</em> in der Chip-Leiste zeigt nur diese.
+Gezählt wird ein Ort, wenn eines davon in OSM steht:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> oder
+      <code>designated</code> &mdash; die im Wiki dokumentierte Art, &bdquo;drinnen&ldquo; zu
+      sagen.</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> oder
+      <code>designated</code> &mdash; die Spielecke im Café, im Restaurant, beim Bäcker. Das
+      meistbenutzte Tag, das aber offen lässt, ob drinnen oder draußen.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; ein Indoorspielplatz.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> zusammen mit
+      <code>indoor=yes</code> &mdash; dasselbe, andersherum getaggt.</li>
+</ul>
+<p><code>outdoor</code> zählt nicht: der Sandkasten im Biergarten ist nicht das, was der Ring
+verspricht. <code>no</code> zählt nicht und <code>limited</code> auch nicht &mdash; das Wiki
+definiert es als &bdquo;Spielzeug vorhanden, aber keine eigene Fläche&ldquo;. Steht irgendwo
+ausdrücklich <code>kids_area:indoor=no</code>, gewinnt das gegen ein bloßes
+<code>kids_area=yes</code>.</p>
+<p>Das ist ein Abzeichen, kein vierter Status. Ein Ort ohne diese Tags hat nicht &bdquo;keine
+Spielecke&ldquo; &mdash; über ihn steht in OSM einfach nichts. Deshalb gibt es hier kein Grau und
+keine Aufgabe: bei <code>changing_table:location</code> ist das Schweigen aussagekräftig, weil der
+Tisch nachweislich existiert. Hier schweigen fast alle Objekte, und das heißt nichts. Wer eine
+Spielecke kennt, trägt sie trotzdem gern ein &mdash; im OSM-Editor, mit
+<code>kids_area=yes</code>.</p>
 
 <h2>Wie du einen grauen Pin reparierst</h2>
 <p>Grau heißt: eine Antwort fehlt. Wo ist der Wickeltisch? Beantworten kann das jeder mit einem
