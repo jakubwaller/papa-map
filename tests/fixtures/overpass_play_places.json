@@ -1,0 +1,58 @@
+{
+  "version": 0.6,
+  "generator": "handwritten fixture — the play-only half of the union sweep",
+  "elements": [
+    {
+      "type": "node",
+      "id": 9001,
+      "lat": 53.5545,
+      "lon": 9.9925,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Café Bauklotz",
+        "kids_area": "yes",
+        "opening_hours": "Mo-Fr 09:00-18:00"
+      }
+    },
+    {
+      "type": "way",
+      "id": 9002,
+      "center": { "lat": 53.5601, "lon": 10.0102 },
+      "tags": {
+        "leisure": "indoor_play",
+        "name": "Hallenhüpfer",
+        "shop": "toys"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9003,
+      "lat": 53.5488,
+      "lon": 9.9871,
+      "tags": {
+        "leisure": "playground",
+        "indoor": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9004,
+      "lat": 53.5502,
+      "lon": 9.9903,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Gasthof Sandkasten",
+        "kids_area": "yes",
+        "kids_area:indoor": "no"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 9005,
+      "tags": {
+        "leisure": "indoor_play",
+        "name": "Koordinatenlose Spielwelt"
+      }
+    }
+  ]
+}

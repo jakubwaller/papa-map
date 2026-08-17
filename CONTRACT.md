@@ -1,5 +1,41 @@
 # papa-map — build contract (v0)
 
+> **v10 amendment (17 Aug 2026, places to play):** the build emits a second
+> dataset, **`web/data/play_places.geojson`** (`PAPAMAP_PLAY_GEOJSON_PATH`) —
+> the objects that pass the v9 play-area rule and carry **no `changing_table`
+> tag at all**. `changing_table=no` is excluded on purpose: someone answered,
+> and the answer was no. Feature `properties`: `osm_type`, `osm_id`, `name`,
+> `kind` (the first of `leisure`/`amenity`/`shop`/`tourism`/`healthcare` the
+> object carries), `opening_hours`, `osm_url`, `mapcomplete_url`. **No
+> `status`, no `changing_table`** — nobody has answered the first question, so
+> there is nothing to colour them by, and a fourth status value would have
+> broken the leaderboard, the Bundesland pages and the stats, all of which
+> count changing tables and must keep doing so. Measured 17 Aug 2026: **701**
+> such objects in DE+DK.
+>
+> It costs **no extra Overpass query**. `config.sweep_ql()` replaces
+> `changing_table_ql` in the nightly build with a union of the changing_table
+> clause and four play-area clauses, and `osm.split_sweep()` sorts the answer
+> back into the two halves by tag; a second query would have cost a whole ~40 s
+> slot per area for a few hundred objects nationwide (measured on Hamburg: 222
+> changing_table objects, 15 play-only, 147 kB for the union). The QL value
+> regex is generated from `classify.PLAY_AREA_VALUES`, so the query cannot
+> drift from the rule, and it is a *prefilter* — `has_play_area` is re-applied
+> in Python because QL cannot express "an explicit `kids_area:indoor=no`
+> overrules a bare `kids_area=yes`". `pipeline.backfill` keeps the narrow
+> `changing_table_ql`: attic queries already take ~3 min per Land and the
+> leaderboard has only ever counted tables.
+>
+> `local` stats gain **`play_tables`** (pins that also have a play corner) and
+> **`play_places`** (prospects) — two different questions, never to be added
+> up; both skip coordless objects, like every other feature-facing counter. The
+> map draws the prospects as hollow blue rings under a fifth chip, off by
+> default, and `theme/papamap.theme.json` gains a third layer
+> (`dad_play_place`) so their MapComplete deep links land on a selectable
+> object whose first question is "does this place have a changing table?" —
+> plus a `kids-area` question on the amenity layer, which is the half that
+> grows the data.
+
 > **v9 amendment (17 Aug 2026, play corners):** every feature gains a boolean
 > **`play`** property — true when the object also records an indoor place for
 > the kid to play, by any of `kids_area:indoor` or `kids_area` in {`yes`,
@@ -168,6 +204,21 @@ Overpass `out center`). Feature `properties`:
 }
 ```
 
+`web/data/play_places.geojson` — same FeatureCollection shape, the v10 dataset
+of places with a play area and no changing-table answer. Feature `properties`:
+
+```json
+{
+  "osm_type": "node|way|relation",
+  "osm_id": 123,
+  "name": "string or null",
+  "kind": "cafe|indoor_play|mall|... or null",
+  "opening_hours": "string or null",
+  "osm_url": "https://www.openstreetmap.org/<type>/<id>",
+  "mapcomplete_url": "string or null"
+}
+```
+
 `web/data/stats.json`:
 
 ```json
@@ -179,6 +230,7 @@ Overpass `out center`). Feature `properties`:
     "toilets_total": 443, "ct_objects": 213, "ct_yes": 85, "ct_no": 127, "ct_limited": 1,
     "yes_location_known": 17, "yes_location_unknown": 68,
     "accessible": 0, "female_only": 0, "unknown": 0,
+    "play_tables": 0, "play_places": 0,
     "capacity_tagged_toilets": 2
   },
   "global": {

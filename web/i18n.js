@@ -89,7 +89,16 @@ export const STRINGS = {
     ariaPlay: "Nur Orte mit erfasster Spielecke zeigen",
     popupPlay: "Spielecke zum Bleiben",
 
+    // Der zweite blaue Chip: kein Filter über die Pins, sondern ein zweiter
+    // Datensatz. Das kurze Label passt in die Chipleiste, das aria-label sagt,
+    // was es wirklich ist.
+    stPlaces: "Nur Spielecke",
+    ariaPlaces: "Orte mit Spielecke anzeigen, an denen niemand einen Wickeltisch erfasst hat",
+    metaPlaces: "Spielecke erfasst — über einen Wickeltisch sagt OSM hier nichts.",
+    popupPlacesCta: "Warst du hier? Dann weißt du, ob es einen Wickeltisch gibt.",
+
     countShown: "{shown} von {total} Wickeltischen",
+    countPlaces: " + {n} Spielorte",
     countNoData: "Noch keine Daten — Pipeline ausführen",
 
     popupTable: "Wickeltisch",
@@ -154,7 +163,13 @@ export const STRINGS = {
     ariaPlay: "Show only places with a recorded play area",
     popupPlay: "Play area — worth staying",
 
+    stPlaces: "Play area only",
+    ariaPlaces: "Show places with a play area where nobody has recorded a changing table",
+    metaPlaces: "A play area is recorded here — about a changing table, OSM says nothing.",
+    popupPlacesCta: "Been here? Then you know whether there is a changing table.",
+
     countShown: "{shown} of {total} tables",
+    countPlaces: " + {n} play places",
     countNoData: "No table data yet — run the pipeline",
 
     popupTable: "Changing table",
@@ -219,7 +234,13 @@ export const STRINGS = {
     ariaPlay: "Vis kun steder med et registreret legeområde",
     popupPlay: "Legeområde — værd at blive",
 
+    stPlaces: "Kun legeområde",
+    ariaPlaces: "Vis steder med legeområde, hvor ingen har registreret et puslebord",
+    metaPlaces: "Her er der registreret et legeområde — om et puslebord siger OSM intet.",
+    popupPlacesCta: "Har du været her? Så ved du, om der er et puslebord.",
+
     countShown: "{shown} af {total} pusleborde",
+    countPlaces: " + {n} legesteder",
     countNoData: "Ingen data endnu — kør pipelinen",
 
     popupTable: "Puslebord",

@@ -3,7 +3,8 @@ import json
 import pytest
 
 from pipeline import export
-from pipeline.export import build_features, export_geojson, write_json_atomic
+from pipeline.export import (build_features, build_play_features,
+                             export_geojson, write_json_atomic)
 
 
 def test_build_features_keeps_only_yes_and_limited(load_fixture):
@@ -95,6 +96,44 @@ def test_play_area_recognizes_all_three_tagging_patterns():
     assert play({}) is False
     # case and whitespace are the mapper's, not ours
     assert play({"kids_area": " Yes "}) is True
+
+
+def test_play_features_are_their_own_dataset(load_fixture):
+    # These carry no status and no changing_table field at all: nobody has
+    # answered the first question, so there is nothing to color them by.
+    feats = build_play_features(load_fixture("overpass_play_places.json"))
+    assert [f["properties"]["osm_id"] for f in feats] == [9001, 9002, 9003]
+    assert feats[0]["properties"] == {
+        "osm_type": "node", "osm_id": 9001, "name": "Café Bauklotz",
+        "kind": "cafe", "opening_hours": "Mo-Fr 09:00-18:00",
+        "osm_url": "https://www.openstreetmap.org/node/9001",
+        "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
+                            "https://raw.githubusercontent.com/jakubwaller/papa-map/"
+                            "main/theme/papamap.theme.json"
+                            "&z=18&lat=53.5545&lon=9.9925#node/9001"),
+    }
+    for f in feats:
+        assert "status" not in f["properties"]
+        assert "changing_table" not in f["properties"]
+
+
+def test_play_feature_kind_takes_the_most_specific_tag(load_fixture):
+    feats = {f["properties"]["osm_id"]: f["properties"]
+             for f in build_play_features(load_fixture("overpass_play_places.json"))}
+    # leisure beats the shop tag on the same object — "indoor_play" says what
+    # the place is, "toys" says what it also sells.
+    assert feats[9002]["kind"] == "indoor_play"
+    assert feats[9002]["osm_type"] == "way"   # via out center
+    assert feats[9003]["name"] is None        # unnamed indoor playground
+    assert feats[9003]["opening_hours"] is None
+
+
+def test_play_feature_without_coordinates_is_dropped(load_fixture):
+    # Same rule as the pins: a relation Overpass gave no center to cannot be
+    # drawn, so it must not be counted as if it could.
+    ids = [f["properties"]["osm_id"]
+           for f in build_play_features(load_fixture("overpass_play_places.json"))]
+    assert 9005 not in ids
 
 
 def test_mapcomplete_url_always_uses_own_theme(load_fixture):

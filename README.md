@@ -78,6 +78,23 @@ on. Costs no extra Overpass query: the sweep already returns every tag on these
 objects. DE+DK on 17 Aug 2026: 828 objects pass the rule and 111 of them are
 already pins (48 accessible / 13 female_only / 50 unknown).
 
+## Places to play
+
+The other 701 pass the same rule and carry no `changing_table` tag at all, so
+they are not pins and never could be — nobody has answered the first question
+about them. They get their own file, `web/data/play_places.geojson`, their own
+hollow-blue-ring layer and their own chip, off by default. `changing_table=no`
+places stay out: somebody did answer.
+
+They are the best-targeted open questions on the map. A father with a toddler
+is going to an indoor playground or a café with a ball pit anyway, and while he
+is there he knows the answer. So the popup leads with the MapComplete link, the
+theme has a `dad_play_place` layer so that link lands on a selectable object,
+and the layer's first question is "does this place have a baby changing table?"
+
+The sweep pays nothing for them: one union Overpass query per area returns both
+halves, and `osm.split_sweep()` sorts them apart by tag.
+
 ## Leaderboard
 
 A full build also appends one entry per day to `web/data/history.json` —

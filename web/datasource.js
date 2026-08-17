@@ -11,13 +11,19 @@ export const STATUSES = ["accessible", "female_only", "unknown"];
 // geometry are skipped; an unrecognized status degrades to "unknown". idx is
 // the object's position in the returned array: the map layer carries only idx
 // and clicks look the full object up again.
+// [lon, lat] of a Point feature, or null for anything this map can't draw.
+function pointOf(f) {
+  const coords = f && f.geometry && f.geometry.type === "Point"
+    ? f.geometry.coordinates : null;
+  return Array.isArray(coords) && coords.length >= 2 ? coords : null;
+}
+
 export function loadFeatures(fc) {
   if (!fc || !Array.isArray(fc.features)) return [];
   const out = [];
   for (const f of fc.features) {
-    const coords = f && f.geometry && f.geometry.type === "Point"
-      ? f.geometry.coordinates : null;
-    if (!Array.isArray(coords) || coords.length < 2) continue;
+    const coords = pointOf(f);
+    if (!coords) continue;
     const p = f.properties || {};
     out.push({
       idx: out.length,
@@ -32,6 +38,32 @@ export function loadFeatures(fc) {
       // it undefined, and "no play corner recorded" must never render as one.
       play: p.play === true,
       fee: p.fee ?? null,
+      opening_hours: p.opening_hours ?? null,
+      osm_url: p.osm_url ?? null,
+      mapcomplete_url: p.mapcomplete_url ?? null,
+    });
+  }
+  return out;
+}
+
+// play_places.geojson — places that record an indoor play area and carry no
+// changing_table tag at all. A separate dataset, not a fourth status: these
+// have no answer to colour, so they get no status field, no filter by status
+// and no count in the table totals. Same tolerance as loadFeatures — a missing
+// file degrades to [] and the chip simply reads 0.
+export function loadPlaces(fc) {
+  if (!fc || !Array.isArray(fc.features)) return [];
+  const out = [];
+  for (const f of fc.features) {
+    const coords = pointOf(f);
+    if (!coords) continue;
+    const p = f.properties || {};
+    out.push({
+      idx: out.length,
+      lon: coords[0],
+      lat: coords[1],
+      name: p.name ?? null,
+      kind: p.kind ?? null,
       opening_hours: p.opening_hours ?? null,
       osm_url: p.osm_url ?? null,
       mapcomplete_url: p.mapcomplete_url ?? null,
@@ -118,6 +150,19 @@ export function toFeatureCollection(features) {
       type: "Feature",
       geometry: { type: "Point", coordinates: [f.lon, f.lat] },
       properties: { idx: f.idx, status: f.status, play: f.play },
+    })),
+  };
+}
+
+// The same for the play places, which need no status and no ordering — one
+// uniform ring layer, and idx for the click lookup.
+export function placesToFeatureCollection(places) {
+  return {
+    type: "FeatureCollection",
+    features: places.map((p) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [p.lon, p.lat] },
+      properties: { idx: p.idx },
     })),
   };
 }

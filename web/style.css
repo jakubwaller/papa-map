@@ -245,6 +245,11 @@ header {
   background: var(--play-soft);
 }
 .chip.play.on .ring { background: var(--play); }
+/* The prospects chip keeps its ring hollow even when switched on — that is
+   exactly how those places draw on the map, and the difference from the filled
+   halo next to it is the whole distinction between "has a table too" and
+   "nobody has said". */
+.chip.play.hollow.on .ring { background: #fff; }
 
 /* ---------- Zoom controls ---------- */
 #zoom-ctrl {
@@ -394,6 +399,9 @@ header {
 .popup .status.ok { color: var(--green-strong); }
 .popup .status.bad { color: #a84a00; }   /* darker vermillion for contrast on white */
 .popup .status.ask { color: var(--grey-pin); }
+/* A prospect's headline: blue like the ring it was clicked on, and darker than
+   --play so 13px bold still clears contrast on white. */
+.popup .status.play { color: #005b8f; }
 .popup .row { font-size: 12.5px; color: var(--muted-2); margin: 2px 0; }
 /* Matches the map halo and the chip ring, so the three read as one signal. */
 .popup .row.play { color: var(--play); font-weight: 600; }

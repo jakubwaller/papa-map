@@ -6,7 +6,7 @@ OSM questions that fix the data gaps.
 
 ## What's in it
 
-Two layers, both self-contained (no builtin-layer references, so the file has no hidden
+Three layers, all self-contained (no builtin-layer references, so the file has no hidden
 dependencies beyond bundled icon paths):
 
 - **`dad_toilet`** — all `amenity=toilets`. Pin color mirrors the CONTRACT.md
@@ -20,6 +20,37 @@ dependencies beyond bundled icon paths):
 - **`dad_changing_table_amenity`** — `changing_table=*` on everything that is *not*
   `amenity=toilets` (cafés, restaurants, shops...). Same colors and questions, no draft
   group, no presets (you can't meaningfully "add a changing-table amenity" from scratch).
+  Since v10 it also asks **`kids-area`** (see below).
+- **`dad_play_place`** — added v10: places that record a kids' area and carry **no
+  `changing_table` tag at all**, minus `amenity=toilets` (which has its own layer above).
+  Blue `#0072b2` circle under the bundled playground pictogram, hollow on the website to
+  match. It exists because the site draws those places as pins and their MapComplete deep
+  links have to land on something selectable — a layer-less object opens to nothing. Its
+  first question is `changing_table` yes/no, which is the whole point: these are the
+  places a father goes to anyway, so he is the one who can answer it. Same location/fee
+  follow-ups as the other layers, then `kids-area`.
+
+### The `kids-area` question (v10)
+
+Asked on the two amenity layers, writing the OSM keys `kids_area` and `kids_area:indoor`:
+
+- `kids_area:indoor=yes` → *"Yes, there is an indoor play area"* (adds `kids_area=yes`)
+- `kids_area=no` → *"No, there is nowhere for children to play"*
+- `kids_area:indoor=no` → *"There is a play area, but it is outdoors only"* (adds
+  `kids_area=yes`)
+
+Two deliberate choices. **Matching is on the `:indoor` sub-key alone**, with the parent
+tag supplied via `addExtraTags` — so the 715 objects worldwide already tagged the wiki's
+documented way render their answer instead of being asked again, while answering still
+leaves both keys behind. And **a bare `kids_area=yes` matches no mapping on purpose**, so
+those objects *are* asked: the tag says a kids' area exists and says nothing about
+whether it is indoors, which is exactly the open question. `kids_area=no` is by far the
+most-used value (2,780 vs 1,318 `yes` on taginfo, 17 Aug 2026), so this is a question
+people demonstrably answer.
+
+No `condition` limits which venues get asked. An allowlist of plausible amenity values
+would rot, and "no" is an informative answer anywhere — the Hamburg sample turned up
+doctors' surgeries with a play corner.
 
 ### Classification → tagRendering conditions
 
@@ -119,6 +150,15 @@ Verified offline:
 
 **Still not live-verified** (the 2 Aug test covered the second layer's location and
 fee questions, answered with single values):
+
+- The v10 additions end to end: no logged-in edit has been made through the
+  `dad_play_place` layer or the `kids-area` question. What *has* been checked is that the
+  file still passes `python -m pipeline.theme_check` (so `addExtraTags` and the new
+  layer's nested source expression are schema-valid) and that the new layer's source
+  matcher is a superset of the pipeline's `has_play_area` rule — deliberately broader, so
+  no deep link from the site can land on an object the theme fails to match.
+- That the new layer's source expression translates to a working Overpass query. The
+  `changing_table!~*` clause (key absent) is the part with no precedent in this file.
 
 - That the draft group renders separately: `{questions(,draft_capacity)}` for the normal
   questions and `{questions(draft_capacity)}` under the draft header.

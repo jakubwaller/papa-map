@@ -6,7 +6,7 @@ from pathlib import Path
 
 import requests
 
-from .classify import centralkey_locked, classify, tokens
+from .classify import centralkey_locked, classify, has_play_area, tokens
 from .config import TAGINFO_STATS_URL, TAGINFO_VALUES_URL, USER_AGENT
 from .osm import element_coords
 
@@ -17,16 +17,19 @@ def fetch_taginfo(url: str) -> dict:
     return resp.json()
 
 
-def local_stats(ct_data: dict, toilets_data: dict) -> dict:
-    """The `local` stats block, from the two Overpass responses. ct_yes/no/
+def local_stats(ct_data: dict, toilets_data: dict, play_data=None) -> dict:
+    """The `local` stats block, from the Overpass responses. ct_yes/no/
     limited are exact value counts, so junk values ("02") show up only in
     ct_objects. The feature-facing counters (ct_yes/ct_limited, location and
     status buckets) skip elements without usable coordinates and elements
     behind a central key — the same filters export.build_features applies — so
     the stats strip never claims more tables than the map has pins.
     centralkey_locked counts the key-locked drops that would otherwise be
-    pins."""
-    ct_yes = ct_no = ct_limited = yes_location_known = locked = 0
+    pins.
+
+    play_data is the sweep's play-only half (objects with an indoor play area
+    and no changing_table tag); omit it and both play counters read 0."""
+    ct_yes = ct_no = ct_limited = yes_location_known = locked = play_tables = 0
     status_counts = {"accessible": 0, "female_only": 0, "unknown": 0}
     elements = ct_data.get("elements", [])
     for el in elements:
@@ -50,6 +53,8 @@ def local_stats(ct_data: dict, toilets_data: dict) -> dict:
         status = classify(value, location)
         if status:
             status_counts[status] += 1
+            if has_play_area(tags):
+                play_tables += 1  # counted over pins only, like the statuses
     toilets = toilets_data.get("elements", [])
     capacity = sum(1 for el in toilets
                    if any(k.startswith("toilets:num_chambers")
@@ -63,6 +68,13 @@ def local_stats(ct_data: dict, toilets_data: dict) -> dict:
         "female_only": status_counts["female_only"],
         "unknown": status_counts["unknown"],
         "centralkey_locked": locked,
+        # Two different things, kept apart: pins that also have a play corner,
+        # and places with a play corner that are not pins at all because
+        # nobody has recorded a changing table there. Both count what the map
+        # can actually draw, so the coordless are skipped here too.
+        "play_tables": play_tables,
+        "play_places": sum(1 for el in (play_data or {}).get("elements", [])
+                           if element_coords(el)[0] is not None),
         "capacity_tagged_toilets": capacity,
     }
 

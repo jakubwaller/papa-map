@@ -1,7 +1,8 @@
 import pytest
 import requests
 
-from pipeline import osm
+from pipeline import config, osm
+from pipeline.classify import PLAY_AREA_VALUES
 from pipeline.osm import element_coords, fetch_overpass
 
 
@@ -18,6 +19,52 @@ def test_dedup_elements_keeps_first_occurrence_and_order():
            {"type": "node", "id": 1, "v": "dup from second Land"}]
     out = osm.dedup_elements(els)
     assert out == els[:3]  # way#1 is not node#1; node#1's repeat dropped
+
+
+def test_sweep_ql_unions_both_halves_into_one_query(load_fixture):
+    ql = config.sweep_ql("Hamburg", "4")
+    # One query, one area clause, one out — a second query would cost a whole
+    # ~40 s Overpass slot per area for a few hundred objects nationwide.
+    assert ql.count("out tags center;") == 1
+    assert ql.count("area[") == 1
+    assert 'nwr["changing_table"](area.a);' in ql
+    assert 'nwr["leisure"="playground"]["indoor"="yes"](area.a);' in ql
+    # The value regex is generated from the rule's own value set, so a value
+    # added to PLAY_AREA_VALUES cannot be silently left out of the query.
+    for value in PLAY_AREA_VALUES:
+        assert value in ql
+    assert "limited" not in ql and "outdoor" not in ql
+    assert f"[timeout:{config.OVERPASS_QL_TIMEOUT}]" in ql
+
+
+def test_backfill_query_stays_narrow():
+    # The leaderboard has only ever counted changing tables, and attic queries
+    # already take ~3 min per Land — the play half must not ride along there.
+    ql = config.changing_table_ql("Hamburg", "4", date="2026-07-17T00:00:00Z")
+    assert "kids_area" not in ql
+    assert '[date:"2026-07-17T00:00:00Z"]' in ql
+
+
+def test_split_sweep_sorts_the_union_into_pins_and_prospects(load_fixture):
+    elements = (load_fixture("overpass_changing_tables.json")["elements"]
+                + load_fixture("overpass_play_places.json")["elements"])
+    ct, play = osm.split_sweep(elements)
+    # Every changing_table object stays on the pin side whatever its value —
+    # `no` and junk still feed the stats.
+    assert len(ct) == 9
+    assert all("changing_table" in el["tags"] for el in ct)
+    # ...including the café that has both a table and a play corner: it is
+    # already a pin, and its corner rides along as the feature's `play` flag.
+    assert 3 in [el["id"] for el in ct]
+    # The outdoor kids' area is the Overpass prefilter being looser than the
+    # rule, and must not survive the split.
+    assert [el["id"] for el in play] == [9001, 9002, 9003, 9005]
+
+
+def test_split_sweep_ignores_objects_matching_neither_half():
+    ct, play = osm.split_sweep([{"type": "node", "id": 1, "tags": {"amenity": "cafe"}},
+                                {"type": "node", "id": 2}])
+    assert (ct, play) == ([], [])
 
 
 def test_fetch_retries_on_runtime_error_remark(monkeypatch):

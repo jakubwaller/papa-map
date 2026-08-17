@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUSES, loadFeatures, filterByStatus, filterFeatures, countsByStatus,
-         countPlay, toFeatureCollection, mapCompleteAddUrl, osmEditUrl,
+import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
+         countsByStatus, countPlay, toFeatureCollection,
+         placesToFeatureCollection, mapCompleteAddUrl, osmEditUrl,
          parseBbox } from "./datasource.js";
 
 const feat = (lon, lat, props) => ({
@@ -35,6 +36,62 @@ const FC = {
     }),
   ],
 };
+
+const PLACES_FC = {
+  type: "FeatureCollection",
+  features: [
+    feat(9.98, 53.54, {
+      osm_type: "node", osm_id: 9001, name: "Café Bauklotz", kind: "cafe",
+      opening_hours: "Mo-Fr 09:00-18:00",
+      osm_url: "https://www.openstreetmap.org/node/9001",
+      mapcomplete_url: "https://mapcomplete.org/theme.html#node/9001",
+    }),
+    feat(10.02, 53.58, {
+      osm_type: "way", osm_id: 9002, kind: "indoor_play",
+      osm_url: "https://www.openstreetmap.org/way/9002",
+    }),
+    // no geometry at all — must not become a ring on the map
+    { type: "Feature", geometry: null, properties: { osm_id: 9003 } },
+  ],
+};
+
+test("loadPlaces flattens the prospects and skips undrawable ones", () => {
+  const places = loadPlaces(PLACES_FC);
+  assert.equal(places.length, 2);
+  assert.deepEqual(places[0], {
+    idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe",
+    opening_hours: "Mo-Fr 09:00-18:00",
+    osm_url: "https://www.openstreetmap.org/node/9001",
+    mapcomplete_url: "https://mapcomplete.org/theme.html#node/9001",
+  });
+  // idx is the position in the returned array, so it still addresses the
+  // right object after the geometry-less feature was dropped.
+  assert.equal(places[1].idx, 1);
+  assert.equal(places[1].name, null);
+  assert.equal(places[1].mapcomplete_url, null);
+});
+
+test("loadPlaces carries no status — these places have no answer to colour", () => {
+  for (const p of loadPlaces(PLACES_FC)) {
+    assert.equal("status" in p, false);
+    assert.equal("play" in p, false);
+    assert.equal("changing_table" in p, false);
+  }
+});
+
+test("loadPlaces tolerates a missing or malformed file", () => {
+  assert.deepEqual(loadPlaces(null), []);
+  assert.deepEqual(loadPlaces({}), []);
+  assert.deepEqual(loadPlaces({ features: "nope" }), []);
+});
+
+test("placesToFeatureCollection carries only idx", () => {
+  const out = placesToFeatureCollection(loadPlaces(PLACES_FC));
+  assert.equal(out.type, "FeatureCollection");
+  assert.deepEqual(out.features.map((f) => f.properties), [{ idx: 0 }, { idx: 1 }]);
+  assert.deepEqual(out.features[0].geometry.coordinates, [9.98, 53.54]);
+  assert.deepEqual(placesToFeatureCollection([]).features, []);
+});
 
 test("loadFeatures flattens coordinates and the contract properties", () => {
   const f = loadFeatures(FC)[0];
