@@ -112,6 +112,20 @@ right place to paste/adapt this theme's layers if URL loading ever misbehaves.
 
 ## Validation — read this before trusting the file
 
+**Live-tested 17 Aug 2026 (v10):** mapcomplete.org loaded the three-layer theme from a
+branch raw URL and rendered all of it, logged out:
+
+- `dad_play_place` resolved to a working Overpass query — including the `changing_table!~*`
+  (key absent) clause, which had no precedent in this file — and a `#node/<id>` deep link
+  of the kind the site emits selected the object, showed the blue "children can play here,
+  nobody has recorded whether there is a changing table" line and asked
+  *Does this place have a baby changing table?* first (node/6374378143, node/2368201975).
+- Sub-key matching behaves as designed: an object tagged only `kids_area:indoor=yes`
+  rendered *"Yes, there is an indoor play area"* instead of being asked again, while one
+  tagged only `kids_area=yes` was left unanswered and queued for the question.
+- `kids-area` renders on `dad_changing_table_amenity` with its hint and all three answers,
+  once the changing-table questions above it are answered (node/1578038179).
+
 **Live-tested 2 Aug 2026:** mapcomplete.org loaded the theme via `userlayout` (which
 runs its `PrepareTheme`/`PrevalidateTheme`/`ValidateThemeAndLayers` passes, so the
 runtime accepts the `~i~` conditions too), both layers rendered, and a logged-in edit
@@ -151,14 +165,9 @@ Verified offline:
 **Still not live-verified** (the 2 Aug test covered the second layer's location and
 fee questions, answered with single values):
 
-- The v10 additions end to end: no logged-in edit has been made through the
-  `dad_play_place` layer or the `kids-area` question. What *has* been checked is that the
-  file still passes `python -m pipeline.theme_check` (so `addExtraTags` and the new
-  layer's nested source expression are schema-valid) and that the new layer's source
-  matcher is a superset of the pipeline's `has_play_area` rule — deliberately broader, so
-  no deep link from the site can land on an object the theme fails to match.
-- That the new layer's source expression translates to a working Overpass query. The
-  `changing_table!~*` clause (key absent) is the part with no precedent in this file.
+- **Writing** the v10 answers: no logged-in edit has been made through the
+  `dad_play_place` layer or the `kids-area` question, so `addExtraTags` supplying
+  `kids_area=yes` alongside the sub-key is source-read and schema-valid, not observed.
 
 - That the draft group renders separately: `{questions(,draft_capacity)}` for the normal
   questions and `{questions(draft_capacity)}` under the draft header.
