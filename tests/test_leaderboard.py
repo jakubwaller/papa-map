@@ -1,6 +1,6 @@
 import json
 
-from pipeline import backfill, leaderboard
+from pipeline import backfill, leaderboard, pages
 from pipeline.config import changing_table_ids_ql
 
 
@@ -118,6 +118,7 @@ def test_render_german_page(tmp_path):
     assert "Veränderung gegenüber dem 7. August 2026" in html
     assert 'hreflang="en"' in html and "leaderboard.html" in html
     assert "Damen-WC" in html  # the honesty line about red answers
+    assert pages.ICON in html  # or the browser 404s on /favicon.ico
 
 
 def test_render_quiet_and_fresh_notes():

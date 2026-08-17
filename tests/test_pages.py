@@ -133,6 +133,9 @@ def test_land_page_carries_one_h1_a_canonical_and_the_counts():
     # The one number the whole site is about has to be on the page as text.
     assert "Wickeltische in Bremen" in html
     assert "Café Mitte" in html
+    # No icon means the browser asks for /favicon.ico, which this site does not
+    # serve — a 404 in the console of every generated page.
+    assert pages.ICON in html
 
 
 def test_land_page_deep_links_into_the_map_at_its_own_extent():
