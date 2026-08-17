@@ -70,6 +70,9 @@ def test_global_stats_exact_vs_any_token_counts(load_fixture):
         "location_female_only": 485,  # exactly "female_toilet" — combos excluded
         "location_male_only": 71,  # exactly "male_toilet"
         "location_male_any": 110,  # 71 + the two ;-combos containing male_toilet
+        # both tokens present, either order — the "tagged in both rooms" figure
+        # the methods pages quote. 30 + 9, and NOT the bare male_toilet 71.
+        "location_male_and_female": 39,
         "source": "taginfo",
         "data_until": "2026-07-25T00:00:00Z",
     }
@@ -95,6 +98,8 @@ def test_global_stats_follows_taginfo_pagination(load_fixture):
     assert g["location_total"] == 3105  # 3100 from page 1 + 5 from page 2
     assert g["location_male_any"] == 114  # 110 + the page-2 combo
     assert g["location_female_only"] == 485  # exact counts unchanged
+    # "male_toilet;room" carries no female token, so both-rooms is untouched
+    assert g["location_male_and_female"] == 39
 
 
 def test_global_stats_warns_when_pagination_stalls(load_fixture, capsys):

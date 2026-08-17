@@ -72,7 +72,9 @@ def global_stats(fetch=fetch_taginfo) -> dict:
     list, paginated when >999 distinct values exist). Raises on any
     upstream failure — the caller decides how to degrade. *_only means the
     value is exactly that token; male_any counts every value containing a
-    male_toilet token after ';'-splitting (so combos count once)."""
+    male_toilet token after ';'-splitting (so combos count once);
+    male_and_female counts the values carrying both tokens, which is the
+    "tagged in both rooms" figure the methods pages quote."""
     key_stats = fetch(TAGINFO_STATS_URL)
     values = fetch(TAGINFO_VALUES_URL)
     ct_total = next((d.get("count", 0) for d in key_stats.get("data", [])
@@ -93,7 +95,7 @@ def global_stats(fetch=fetch_taginfo) -> dict:
     if len(rows) < distinct:
         print(f"WARN: taginfo values truncated ({len(rows)} of {distinct} distinct "
               "values fetched) — location_total undercounts", file=sys.stderr)
-    total = female_only = male_only = male_any = 0
+    total = female_only = male_only = male_any = male_and_female = 0
     for row in rows:
         count = row.get("count", 0)
         toks = tokens(row.get("value"))
@@ -104,10 +106,13 @@ def global_stats(fetch=fetch_taginfo) -> dict:
             male_only += count
         if "male_toilet" in toks:
             male_any += count
+        if "male_toilet" in toks and "female_toilet" in toks:
+            male_and_female += count
     return {
         "ct_total": ct_total, "location_total": total,
         "location_female_only": female_only, "location_male_only": male_only,
         "location_male_any": male_any,
+        "location_male_and_female": male_and_female,
         "source": "taginfo",
         "data_until": values.get("data_until") or key_stats.get("data_until"),
     }

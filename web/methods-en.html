@@ -52,8 +52,9 @@
 
 <p class="back"><a href="index.html">&larr; Back to the map</a> · <a href="methods.html" hreflang="de">Diese Seite auf Deutsch</a> · <a href="methods-da.html" hreflang="da">Denne side på dansk</a></p>
 <h1>PapaMap — methods &amp; honesty</h1>
-<p class="muted">Wickeltische, die ein Vater erreicht. The numbers below are the snapshot from
-26&nbsp;Jul&nbsp;2026. The strip on the map is recomputed nightly and can differ.</p>
+<p class="muted">Wickeltische, die ein Vater erreicht. The worldwide taginfo numbers below come
+from the nightly build. The sample across eight city cores is from 26&nbsp;Jul&nbsp;2026 and stays
+that way.</p>
 
 <h2>What this map is. And what it is not.</h2>
 <p>PapaMap shows places in Germany and Denmark where OpenStreetMap knows about a baby changing table
@@ -199,13 +200,16 @@ This site measures what is measurable and turns the gaps into contributions.</p>
 
 <h2>The one computable fact: where the tables are</h2>
 <p><code>changing_table:location</code> is, as far as we know, the only open vocabulary that
-records which room a changing table is in. It is sparse: about 3,659 of ~77,000
-<code>changing_table</code> objects worldwide, under 5%. But where it exists, it is lopsided
-(taginfo, 26&nbsp;Jul&nbsp;2026):</p>
+records which room a changing table is in. It is sparse:
+<span data-stat="location_total">3,659</span> of <span data-stat="ct_total">77,000</span>
+<code>changing_table</code> objects worldwide, <span data-stat="share">4.8%</span>. But where it
+exists, it is lopsided (taginfo, <span data-stat="date">26&nbsp;Jul&nbsp;2026</span>):</p>
 <ul>
-  <li>Tables only in the women's room: <strong>~485</strong>.</li>
-  <li>Tables only in the men's room: <strong>~71</strong>. Roughly 7:1. ~289 are tagged in both
-      rooms, ~410 record any men's-room table at all. Worldwide.</li>
+  <li>Tables only in the women's room: <strong data-stat="female_only">485</strong>.</li>
+  <li>Tables only in the men's room: <strong data-stat="male_only">71</strong>. Roughly
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> are tagged
+      in both rooms, <span data-stat="male_any">410</span> record any men's-room table at all.
+      Worldwide.</li>
 </ul>
 <p>The sample is small, and mappers choose what they record. So don't over-read the exact ratio.
 The direction matches what has long been documented elsewhere: changing tables hang in the
@@ -230,9 +234,56 @@ your own OSM account. Nothing passes through us. Formal pages:
 <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (German).</p>
 
-<p class="muted">Sources: Overpass sample across 8 city cores (9,674 toilets) and taginfo key
-statistics, both 26&nbsp;Jul&nbsp;2026. The local numbers come from the same nightly query that
-builds the map.</p>
+<p class="muted">Sources: Overpass sample across 8 city cores (9,674 toilets) from
+26&nbsp;Jul&nbsp;2026, and taginfo key statistics as of the date given above. The local numbers
+come from the same nightly query that builds the map.</p>
+
+<script>
+// The taginfo numbers above are the same ones the nightly build already writes
+// to data/stats.json. Read them from there rather than maintaining them by
+// hand: copied numbers rot, and on this page of all pages that is embarrassing.
+// The markup holds the last known value, so without JS — or if the fetch fails
+// — the page still reads correctly, just a little older.
+(function () {
+  var LOCALE = "en-GB";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      var g = (s || {}).global;
+      if (!g || g.source !== "taginfo" || !g.location_total || !g.ct_total) return;
+      var raw = {
+        ct_total: g.ct_total,
+        location_total: g.location_total,
+        female_only: g.location_female_only,
+        male_only: g.location_male_only,
+        male_any: g.location_male_any,
+        male_and_female: g.location_male_and_female
+      };
+      var vals = {};
+      Object.keys(raw).forEach(function (k) {
+        if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+      });
+      if (raw.female_only && raw.male_only) {
+        vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+      }
+      vals.share = (100 * raw.location_total / raw.ct_total)
+        .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+      if (g.data_until) {
+        var d = new Date(g.data_until);
+        if (!isNaN(d)) {
+          vals.date = d.toLocaleDateString(LOCALE, {
+            day: "numeric", month: "short", year: "numeric"
+          });
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* the numbers in the markup stand */ });
+})();
+</script>
 
 </body>
 </html>

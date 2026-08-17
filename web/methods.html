@@ -52,8 +52,9 @@
 
 <p class="back"><a href="index.html">&larr; Zurück zur Karte</a> · <a href="methods-en.html" hreflang="en">This page in English</a> · <a href="methods-da.html" hreflang="da">Denne side på dansk</a></p>
 <h1>PapaMap — Methoden &amp; Ehrlichkeit</h1>
-<p class="muted">Wickeltische, die ein Vater erreicht. Die Zahlen unten sind der Stand vom
-26.&nbsp;Juli&nbsp;2026. Die Leiste auf der Karte wird jede Nacht neu berechnet und kann abweichen.</p>
+<p class="muted">Wickeltische, die ein Vater erreicht. Die weltweiten taginfo-Zahlen unten holt
+der nächtliche Build. Die Stichprobe über acht Innenstädte ist vom 26.&nbsp;Juli&nbsp;2026 und
+bleibt so stehen.</p>
 
 <h2>Was diese Karte ist. Und was nicht.</h2>
 <p>PapaMap zeigt Orte in Deutschland und Dänemark, für die OpenStreetMap einen Wickeltisch kennt
@@ -206,13 +207,16 @@ Diese Website misst, was messbar ist, und macht aus den Lücken Beiträge.</p>
 
 <h2>Der eine berechenbare Fakt: wo die Tische sind</h2>
 <p><code>changing_table:location</code> ist unseres Wissens das einzige offene Vokabular, das
-festhält, in welchem Raum ein Wickeltisch steht. Es ist dünn besetzt: rund 3.659 von ~77.000
-<code>changing_table</code>-Objekten weltweit, unter 5%. Aber wo es existiert, ist es einseitig
-(taginfo, 26.&nbsp;Juli&nbsp;2026):</p>
+festhält, in welchem Raum ein Wickeltisch steht. Es ist dünn besetzt:
+<span data-stat="location_total">3.659</span> von <span data-stat="ct_total">77.000</span>
+<code>changing_table</code>-Objekten weltweit, <span data-stat="share">4,8&nbsp;%</span>. Aber wo
+es existiert, ist es einseitig (taginfo, <span data-stat="date">26.&nbsp;Juli&nbsp;2026</span>):</p>
 <ul>
-  <li>Tische nur im Damen-WC: <strong>~485</strong>.</li>
-  <li>Tische nur im Herren-WC: <strong>~71</strong>. Grob 7:1. ~289 sind in beiden Räumen
-      getaggt, ~410 verzeichnen überhaupt einen Herren-WC-Tisch. Weltweit.</li>
+  <li>Tische nur im Damen-WC: <strong data-stat="female_only">485</strong>.</li>
+  <li>Tische nur im Herren-WC: <strong data-stat="male_only">71</strong>. Grob
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> sind in
+      beiden Räumen getaggt, <span data-stat="male_any">410</span> verzeichnen überhaupt einen
+      Herren-WC-Tisch. Weltweit.</li>
 </ul>
 <p>Die Stichprobe ist klein, und Mapper entscheiden, was sie erfassen. Das exakte Verhältnis also
 nicht überinterpretieren. Die Richtung passt aber zu dem, was längst dokumentiert ist:
@@ -238,9 +242,56 @@ editierst unter deinem eigenen OSM-Konto. Über uns läuft dabei nichts. Formale
 <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
 
-<p class="muted">Quellen: Overpass-Stichprobe über 8 Innenstädte (9.674 Toiletten) und
-taginfo-Schlüsselstatistik, beide 26.&nbsp;Juli&nbsp;2026. Die lokalen Zahlen kommen aus derselben
-nächtlichen Abfrage, die auch die Karte baut.</p>
+<p class="muted">Quellen: Overpass-Stichprobe über 8 Innenstädte (9.674 Toiletten) vom
+26.&nbsp;Juli&nbsp;2026 und die taginfo-Schlüsselstatistik mit dem oben genannten Stand. Die
+lokalen Zahlen kommen aus derselben nächtlichen Abfrage, die auch die Karte baut.</p>
+
+<script>
+// Die taginfo-Zahlen oben sind dieselben, die der nächtliche Build ohnehin nach
+// data/stats.json schreibt. Von dort lesen, statt sie hier von Hand zu pflegen:
+// abgeschriebene Zahlen veralten, und auf dieser Seite ist genau das peinlich.
+// Im Markup steht der jeweils letzte bekannte Wert. Ohne JS oder wenn der Fetch
+// scheitert, liest sich die Seite also weiterhin richtig, nur etwas älter.
+(function () {
+  var LOCALE = "de-DE";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      var g = (s || {}).global;
+      if (!g || g.source !== "taginfo" || !g.location_total || !g.ct_total) return;
+      var raw = {
+        ct_total: g.ct_total,
+        location_total: g.location_total,
+        female_only: g.location_female_only,
+        male_only: g.location_male_only,
+        male_any: g.location_male_any,
+        male_and_female: g.location_male_and_female
+      };
+      var vals = {};
+      Object.keys(raw).forEach(function (k) {
+        if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+      });
+      if (raw.female_only && raw.male_only) {
+        vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+      }
+      vals.share = (100 * raw.location_total / raw.ct_total)
+        .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + " %";
+      if (g.data_until) {
+        var d = new Date(g.data_until);
+        if (!isNaN(d)) {
+          vals.date = d.toLocaleDateString(LOCALE, {
+            day: "numeric", month: "long", year: "numeric"
+          });
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* die Zahlen im Markup bleiben stehen */ });
+})();
+</script>
 
 </body>
 </html>
