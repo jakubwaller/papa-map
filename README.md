@@ -2,7 +2,8 @@
 
 **PapaMap — Wickeltische, die ein Vater erreicht.**
 
-A static map of places across Germany and Denmark with a baby changing table, colored by whether a
+A static map of places across nine European countries — Germany, Denmark, Belgium, the Netherlands,
+Austria, Switzerland, Czechia, Poland and Sweden — with a baby changing table, colored by whether a
 dad can actually reach it: **green** = accessible room (men's/unisex/dedicated/wheelchair),
 **red** = women's room only, **grey** = table exists but nobody has recorded which room —
 the call to action. Every grey pin deep-links to the same object on MapComplete so the
@@ -28,20 +29,26 @@ type hints working on the system Python.)
 ```bash
 python -m pipeline.run   # Overpass + taginfo -> web/data/*.json + web/wickeltische/*.html
 ```
-The default build sweeps all 16 Bundesländer plus Denmark and merges the
+A fresh checkout sweeps all 16 Bundesländer plus Denmark and merges the
 results (an all-Germany area query dies at a 60 s network idle cutoff, so
 Germany stays chunked per Land; Denmark is small enough to answer whole in one
-`admin_level=2` query, ~15 s). ~5 min in total.
+`admin_level=2` query, ~15 s). ~5 min in total. papamap.de sweeps more than
+that — see the first bullet.
 
-- `PAPAMAP_COUNTRIES` picks the countries. **The default is `de,dk`** — that is
-  what papamap.de builds, and no served *number* changes until someone sets the
-  variable. (One thing does ship ahead of it: the map's `maxBounds` north edge
-  moved 65°N → 70°N, or Swedish pins could never be panned to. It only widens
-  where a visitor may pan.) Also selectable, one `admin_level=2` area each: `be`
-  Belgium, `nl` Netherlands, `at` Austria, `ch` Switzerland, `cz` Czechia, `pl`
-  Poland, `se` Sweden. So `PAPAMAP_COUNTRIES=dk` builds Denmark alone and
-  `de,dk,at,ch` adds the German-speaking neighbours; an unknown code aborts
-  rather than silently sweeping less.
+- `PAPAMAP_COUNTRIES` picks the countries. **The code default is `de,dk`** — a
+  fresh checkout and the test suite build Germany + Denmark, and that stays
+  that way on purpose, so neither depends on a nine-country sweep.
+  **The deployment sets the variable instead:** `docker-compose.yml` carries
+  `PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se`, so from the 04:30 run of
+  19 Aug 2026 onward papamap.de sweeps nine European countries — Germany,
+  Denmark, Belgium, the Netherlands, Austria, Switzerland, Czechia, Poland and
+  Sweden. The seven neighbours are one `admin_level=2` area each, the way
+  Denmark is: `be` Belgium, `nl` Netherlands, `at` Austria, `ch` Switzerland,
+  `cz` Czechia, `pl` Poland, `se` Sweden. So `PAPAMAP_COUNTRIES=dk` builds
+  Denmark alone and `de,dk,at,ch` adds the German-speaking neighbours; an
+  unknown code aborts rather than silently sweeping less. (The map's
+  `maxBounds` north edge is 70°N rather than 65°N, or Swedish pins could never
+  be panned to. It only widens where a visitor may pan.)
 - Those seven areas are matched on `name:en`, because a country's own `name` can
   be several languages at once — Belgium is "België / Belgique / Belgien",
   Switzerland "Schweiz/Suisse/Svizzera/Svizra" — and a `name=` miss resolves to
@@ -63,11 +70,11 @@ Germany stays chunked per Land; Denmark is small enough to answer whole in one
 
 The same run writes one static German page per Bundesland into
 `web/wickeltische/` (git-ignored — they are build output), plus an index at
-`web/wickeltische/index.html`. The map is a single URL for two countries, so a
-search for "Wickeltisch Bayern" had nothing to match: the place names live
-inside a 2.6 MB GeoJSON that crawlers read as a download. These pages put each
-Land's counts and its named places into HTML, and link back into the map at that
-Land's extent via `?bbox=`.
+`web/wickeltische/index.html`. The map is a single URL for every country it
+sweeps, so a search for "Wickeltisch Bayern" had nothing to match: the place
+names live inside a 2.6 MB GeoJSON that crawlers read as a download. These pages
+put each Land's counts and its named places into HTML, and link back into the
+map at that Land's extent via `?bbox=`.
 
 Which Land an object belongs to is recorded during the sweep — it is free, since
 the sweep is already chunked per Land, and the GeoJSON carries no region field.
@@ -95,16 +102,20 @@ It is a badge, not a fourth status. A missing `kids_area` is silent across all
 there is no "unknown" state to render and no call to action attached to it. The
 chip therefore starts **off** and subtracts, while the three status chips start
 on. Costs no extra Overpass query: the sweep already returns every tag on these
-objects. DE+DK on 17 Aug 2026: 828 objects pass the rule and 111 of them are
-already pins (48 accessible / 13 female_only / 50 unknown).
+objects. Measured on the DE+DK build of 17 Aug 2026: 828 objects pass the rule
+and 111 of them are already pins (48 accessible / 13 female_only / 50 unknown).
+Those are DE+DK figures and the nine-country sweep is larger, so the served
+numbers come from `stats.json` (`local.play_tables`, `local.play_places`) —
+the methods pages read them from there rather than repeating a number that
+moves every night.
 
 ## Places to play
 
-The other 701 pass the same rule and carry no `changing_table` tag at all, so
-they are not pins and never could be — nobody has answered the first question
-about them. They get their own file, `web/data/play_places.geojson`, their own
-hollow-blue-ring layer and their own chip, off by default. `changing_table=no`
-places stay out: somebody did answer.
+The other 701 of those DE+DK objects pass the same rule and carry no
+`changing_table` tag at all, so they are not pins and never could be — nobody
+has answered the first question about them. They get their own file,
+`web/data/play_places.geojson`, their own hollow-blue-ring layer and their own
+chip, off by default. `changing_table=no` places stay out: somebody did answer.
 
 They are the best-targeted open questions on the map. A father with a toddler
 is going to an indoor playground or a café with a ball pit anyway, and while he
@@ -118,7 +129,8 @@ halves, and `osm.split_sweep()` sorts them apart by tag.
 ## Leaderboard
 
 A full build also appends one entry per day to `web/data/history.json` —
-`[accessible, female_only, unknown]` counts per Bundesland/Denmark and per big
+`[accessible, female_only, unknown]` counts per region (the 16 Bundesländer,
+plus every swept country outside Germany under its own label) and per big
 city (the curated `CITY_AREAS` list, membership via one ids-only Overpass query
 per city) — and renders `web/wickeltische/rangliste.html` (German) plus
 `leaderboard.html` (English) from it. The tables rank the **change** of the

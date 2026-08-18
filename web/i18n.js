@@ -50,7 +50,9 @@ export const STRINGS = {
     title: "PapaMap — Wickeltische, die ein Vater erreicht",
     // Mirrors index.html's static <meta name="description">, which stays German
     // because that is the canonical page; app.js swaps it for the ?lang= views.
-    metaDescription: "Eine Karte der Wickeltische in ganz Deutschland und Dänemark, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap.",
+    // Counted, not listed, for the same reason as there: the nine names add
+    // ~110 characters to a snippet Google cuts at about 160.
+    metaDescription: "Eine Karte der Wickeltische in neun europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap.",
     tagline: "Wickeltische, die ein Vater erreicht",
     addPlace: "+ Ort hinzufügen",
     methods: "Methoden",
@@ -140,7 +142,7 @@ export const STRINGS = {
   },
   en: {
     title: "PapaMap — Changing tables dads can reach",
-    metaDescription: "A map of every changing table in Germany and Denmark, coloured by whether a dad can actually reach it. Data: OpenStreetMap.",
+    metaDescription: "A map of every changing table in nine European countries, coloured by whether a dad can actually reach it. Data: OpenStreetMap.",
     tagline: "Changing tables dads can reach",
     addPlace: "+ Add a place",
     methods: "Methods",
@@ -218,7 +220,7 @@ export const STRINGS = {
   },
   da: {
     title: "PapaMap — pusleborde, en far kan nå",
-    metaDescription: "Et kort over alle pusleborde i Tyskland og Danmark, farvelagt efter om en far rent faktisk kan nå dem. Data: OpenStreetMap.",
+    metaDescription: "Et kort over alle pusleborde i ni europæiske lande, farvelagt efter om en far rent faktisk kan nå dem. Data: OpenStreetMap.",
     tagline: "Pusleborde, en far kan nå",
     addPlace: "+ Tilføj et sted",
     methods: "Metode",

@@ -1,5 +1,44 @@
 # papa-map — build contract (v0)
 
+> **v12 amendment (18 Aug 2026, the deployment sweeps the ring):** papamap.de
+> now sweeps **nine countries** — Deutschland, Danmark, Belgium, Netherlands,
+> Austria, Switzerland, Czechia, Poland, Sweden — because `docker-compose.yml`
+> sets `PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se` on the `pipeline`
+> service. First run under it: the 04:30 cron of 19 Aug 2026. This is the
+> operator flipping the variable v11 below deliberately left unflipped, so
+> v11's "papamap.de builds exactly what it built yesterday" now reads as the
+> statement about the code default that it always was.
+>
+> **`config.DEFAULT_COUNTRIES` stays `de,dk`**, deliberately and not by
+> oversight. A `git clone` and `pytest -v` must keep building exactly what they
+> built yesterday: the default is what a stranger and the offline test suite
+> get, and neither should inherit a sweep this deployment chose — nine areas
+> cost nine areas' worth of Overpass rounds, and a fixture-backed test suite has
+> no business tracking the operator's country list. The environment variable is
+> where the deployment speaks, `config.py` is where the repo does. So
+> `stats.json` carries `area_key: "countries_9"` (v11) on the live site and
+> `"de_dk"` in a checkout, and consumers must tolerate both.
+>
+> **Site copy is corrected to match the deployment, not the default** — the
+> `<meta>` description, the JSON-LD **`spatialCoverage`**, the three methods
+> pages (DE/EN/DA) and the `metaDescription` strings in the i18n bundle now say
+> nine European countries / neun europäischen Ländern / ni europæiske lande.
+> This is not cosmetic: a map that claims Germany and Denmark while plotting
+> Poland is simply lying to the reader, and `methods.html` exists precisely to
+> be the honest account of what the site did.
+>
+> **The methods pages' play-corner counts now come from `stats.json`** instead
+> of standing in the prose. 828 / 111 / 701 (v9, v10) were measured on DE+DK on
+> 17 Aug 2026 and stopped describing the served dataset the night the ring was
+> swept; a hardcoded number nobody rebuilds is worse than no number. The pages
+> read `local.play_tables` and `local.play_places` from the file the stats
+> strip already loads. **828 is not derivable from `stats.json`**: it counts
+> every object passing the play rule, pin or not, while the file records only
+> the pins (`play_tables`) and the prospects (`play_places`) — two different
+> questions that must never be added up (v10). The sentence was therefore
+> rewritten to use those two numbers alone rather than reconstruct a total the
+> data contract does not carry.
+
 > **v11 amendment (18 Aug 2026, neighbouring countries):** seven more countries
 > are selectable through `PAPAMAP_COUNTRIES` — `be` Belgium, `nl` Netherlands,
 > `at` Austria, `ch` Switzerland, `cz` Czechia, `pl` Poland, `se` Sweden — each
