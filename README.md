@@ -33,8 +33,28 @@ results (an all-Germany area query dies at a 60 s network idle cutoff, so
 Germany stays chunked per Land; Denmark is small enough to answer whole in one
 `admin_level=2` query, ~15 s). ~5 min in total.
 
-- `PAPAMAP_COUNTRIES=dk` builds one country only (`de,dk` is the default) — an
-  unknown code aborts rather than silently sweeping less.
+- `PAPAMAP_COUNTRIES` picks the countries. **The default is `de,dk`** — that is
+  what papamap.de builds, and no served *number* changes until someone sets the
+  variable. (One thing does ship ahead of it: the map's `maxBounds` north edge
+  moved 65°N → 70°N, or Swedish pins could never be panned to. It only widens
+  where a visitor may pan.) Also selectable, one `admin_level=2` area each: `be`
+  Belgium, `nl` Netherlands, `at` Austria, `ch` Switzerland, `cz` Czechia, `pl`
+  Poland, `se` Sweden. So `PAPAMAP_COUNTRIES=dk` builds Denmark alone and
+  `de,dk,at,ch` adds the German-speaking neighbours; an unknown code aborts
+  rather than silently sweeping less.
+- Those seven areas are matched on `name:en`, because a country's own `name` can
+  be several languages at once — Belgium is "België / Belgique / Belgien",
+  Switzerland "Schweiz/Suisse/Svizzera/Svizra" — and a `name=` miss resolves to
+  zero objects, which the build can only read as a failed sweep. Their region
+  labels, on the leaderboard and in `history.json`, are therefore the English
+  names. Germany and Denmark keep `name=`: `Deutschland` and `Danmark` are
+  existing history keys. France is left out on purpose — 7,739 `changing_table`
+  objects (measured 18 Aug 2026) do not fit one `[timeout:55]` query, so it
+  needs a per-région area list first.
+- A build of three or more countries names itself by count rather than by name:
+  `stats.json`'s `area_key` becomes `countries_<n>` (`countries_9` for all
+  nine), since nine joined labels overflow the stats strip. One and two
+  countries keep `de` / `dk` / `de_dk`.
 - `PAPAMAP_AREA_NAME` + `PAPAMAP_AREA_ADMIN_LEVEL` select a single area instead
   (e.g. `Hamburg` / `4`), and `PAPAMAP_DISPLAY_AREA` names the dataset in the
   stats strip.

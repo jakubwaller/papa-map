@@ -45,6 +45,40 @@ def test_backfill_query_stays_narrow():
     assert '[date:"2026-07-17T00:00:00Z"]' in ql
 
 
+def test_multilingual_countries_are_selected_by_name_en():
+    # Belgium's own `name` is "België / Belgique / Belgien" and Switzerland's
+    # "Schweiz/Suisse/Svizzera/Svizra", so area["name"="Belgium"] resolves to
+    # nothing — and run.py can only read a zero-object area as a failed sweep,
+    # which burns six rounds and kills the whole build with an error about a
+    # stale mirror. Every builder goes through _area_ql, so all of them must
+    # agree on the selector.
+    assert ('area["name:en"="Belgium"]["admin_level"="2"]'
+            in config.changing_table_ql("Belgium", "2"))
+    assert ('area["name:en"="Switzerland"]["admin_level"="2"]'
+            in config.sweep_ql("Switzerland", "2"))
+    assert ('area["name:en"="Czechia"]["admin_level"="2"]'
+            in config.toilets_ql("Czechia", "2"))
+    for name in sorted(config.NAME_EN_AREAS):
+        ql = config.sweep_ql(name, "2")
+        assert f'area["name:en"="{name}"]' in ql
+        assert '["name"=' not in ql
+
+
+def test_germany_and_denmark_keep_the_plain_name_selector():
+    # "Deutschland" and "Danmark" are also the region keys in history.json and
+    # the row labels on the leaderboard: selecting them by name:en would rename
+    # them and orphan every existing baseline.
+    for ql in (config.sweep_ql("Danmark", "2"), config.toilets_ql("Danmark", "2"),
+               config.changing_table_ql("Danmark", "2")):
+        assert 'area["name"="Danmark"]["admin_level"="2"]' in ql
+        assert "name:en" not in ql
+    assert 'area["name"="Bayern"]["admin_level"="4"]' in config.sweep_ql("Bayern", "4")
+    assert "name:en" not in config.changing_table_ql()  # defaults to Deutschland/2
+    # The city sweep names Kommuner and Kreise in their own language too.
+    assert ('area["name"="Københavns Kommune"]["admin_level"="7"]'
+            in config.changing_table_ids_ql("Københavns Kommune", "7"))
+
+
 def test_split_sweep_sorts_the_union_into_pins_and_prospects(load_fixture):
     elements = (load_fixture("overpass_changing_tables.json")["elements"]
                 + load_fixture("overpass_play_places.json")["elements"])

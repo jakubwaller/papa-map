@@ -4,7 +4,8 @@ import json
 from datetime import date as _date, timedelta
 from pathlib import Path
 
-from .config import HISTORY_MAX_DAYS, PAGES_BASE_PATH, SITE_BASE_URL
+from .config import (BUNDESLAENDER, HISTORY_MAX_DAYS, PAGES_BASE_PATH,
+                     SITE_BASE_URL)
 from .export import write_text_atomic
 from .pages import FOOTER, ICON, STYLE, UP, de_date, de_num, esc, sort_key
 
@@ -297,8 +298,17 @@ L = {
                         "Bremen stehen auch unten bei den Ländern — hier "
                         "zählt die Stadt.</p>\n"),
         "regions_h2": "Bundesländer und Dänemark",
-        "regions_note": ("<p>Dieselbe Rechnung für die 16 Bundesländer und "
+        "regions_note": ("<p>Dieselbe Rechnung für die {n} Bundesländer und "
                          "Dänemark als Ganzes.</p>\n"),
+        "regions_h2_many": "Bundesländer und ganze Länder",
+        "regions_note_many": ("<p>Dieselbe Rechnung für die {n} Bundesländer "
+                              "und für {c} Länder als Ganzes: {names}.</p>\n"),
+        "regions_h2_one": "Bundesländer und ein ganzes Land",
+        "regions_note_one": ("<p>Dieselbe Rechnung für die {n} Bundesländer "
+                             "und für {names} als Ganzes.</p>\n"),
+        "regions_h2_lands": "Bundesländer",
+        "regions_note_lands": ("<p>Dieselbe Rechnung für die {n} "
+                               "Bundesländer.</p>\n"),
         "col_name_city": "Stadt", "col_name_region": "Region",
         "col_delta": "Δ Punkte", "col_share": "beantwortet",
         "col_total": "Orte", "col_acc": "+ erreichbar", "col_new": "+ Orte",
@@ -344,8 +354,18 @@ L = {
                         "appear under the states below — here the city "
                         "counts.</p>\n"),
         "regions_h2": "German states and Denmark",
-        "regions_note": ("<p>The same arithmetic for the 16 Bundesländer "
+        "regions_note": ("<p>The same arithmetic for the {n} Bundesländer "
                          "and Denmark as a whole.</p>\n"),
+        "regions_h2_many": "German states and whole countries",
+        "regions_note_many": ("<p>The same arithmetic for the {n} Bundesländer "
+                              "and for {c} countries as a whole: "
+                              "{names}.</p>\n"),
+        "regions_h2_one": "German states and one whole country",
+        "regions_note_one": ("<p>The same arithmetic for the {n} Bundesländer "
+                             "and for {names} as a whole.</p>\n"),
+        "regions_h2_lands": "German states",
+        "regions_note_lands": ("<p>The same arithmetic for the {n} "
+                               "Bundesländer.</p>\n"),
         "col_name_city": "City", "col_name_region": "Region",
         "col_delta": "Δ points", "col_share": "answered",
         "col_total": "places", "col_acc": "+ reachable", "col_new": "+ places",
@@ -481,6 +501,22 @@ def _table(rows, name_col: str, tab: dict, lang: str) -> str:
     return "".join(parts)
 
 
+def _region_kinds(rows) -> tuple[int, list[str]]:
+    """(number of Bundesland rows, names of the whole-country rows), read off
+    the rows about to be printed.
+
+    The regions table shows whatever the sweep produced, and since 18 Aug 2026
+    that is a list the operator can extend: PAPAMAP_COUNTRIES=de,dk,be,… puts
+    Belgium and its neighbours next to Bayern. A heading that hard-codes "16
+    Bundesländer und Dänemark" is then simply false, so the section counts the
+    table in front of it instead. Everything not a Bundesland is a country
+    swept whole (config.COUNTRY_AREAS), which is exactly the distinction the
+    copy has to make. Country names sort like every other name column."""
+    lands = sum(1 for r in rows if r["name"] in BUNDESLAENDER)
+    countries = [r["name"] for r in rows if r["name"] not in BUNDESLAENDER]
+    return lands, sorted(countries, key=sort_key)
+
+
 def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
                        base_path: str = PAGES_BASE_PATH) -> str:
     tab = L[lang]
@@ -509,8 +545,33 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         parts.append(tab["cities_note"].format(n=len(data["cities"])))
         parts.append(_table(data["cities"], tab["col_name_city"], tab, lang))
     if data["regions"]:
-        parts.append(f'<h2>{esc(tab["regions_h2"])}</h2>\n')
-        parts.append(tab["regions_note"])
+        lands, countries = _region_kinds(data["regions"])
+        # Which sentence fits is a question about *which* countries are in the
+        # table, never about how many. The default build's one country is
+        # Denmark and the German page has always named it outright, so that
+        # sentence stays untouched — but it may only be used when Denmark is
+        # in fact the country there. Gating on len(countries) == 1 instead
+        # would print "Bundesländer und Dänemark" over a table whose only
+        # country row is Switzerland (PAPAMAP_COUNTRIES=de,ch), and gating on
+        # "no countries" would print it over a table with no country row at
+        # all (PAPAMAP_COUNTRIES=de). Past Denmark alone, no sentence can name
+        # them all without becoming a list, so the copy counts them and then
+        # names them once — a reader who meets "Czechia" between two
+        # Bundesländer can find out what it is.
+        if countries == ["Danmark"]:
+            kind = ""
+        elif len(countries) > 1:
+            kind = "_many"
+        elif countries:
+            # One country that is not Denmark: name it instead of counting it,
+            # because "für 1 Länder" is not German and "für ein Land" would
+            # withhold the one fact the sentence exists to give.
+            kind = "_one"
+        else:
+            kind = "_lands"
+        parts.append(f'<h2>{esc(tab["regions_h2" + kind])}</h2>\n')
+        parts.append(tab["regions_note" + kind].format(
+            n=lands, c=len(countries), names=esc(", ".join(countries))))
         parts.append(_table(data["regions"], tab["col_name_region"], tab, lang))
 
     parts.append(tab["footer"].format(up=UP))

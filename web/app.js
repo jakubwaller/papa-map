@@ -92,6 +92,15 @@ const OSM_STYLE = {
 // fitHome() can push the map down under the topbar — on a portrait phone that
 // header is ~4.6° of latitude at home zoom, so the box clears the home view by
 // more than that, and far enough that Skagen stays reachable by panning.
+// The north edge is 70°N, not the 65° Denmark alone needed: a build that
+// sweeps the neighbours includes Sweden, whose northernmost pin sits at
+// 68.43°N (the country reaches 69.06°N at Treriksröset), and a pin outside
+// maxBounds cannot be panned to at all. HOME_BOUNDS is deliberately left
+// alone: it is the box the map fits, not the extent it shows, and on any real
+// viewport the fit spills well past it — which is why the neighbours already
+// render as empty space today. So this is the one line here that changes what
+// papamap.de does before the sweep is widened, and all it does is let a
+// visitor pan 5° further north over sea.
 // Rotate/pitch gestures are locked: on a phone an off-axis pinch rotates the
 // map instead of zooming, which reads as jank.
 const HOME_BOUNDS = [[5.5, 47.1], [15.4, 56.6]];
@@ -106,7 +115,7 @@ const VIEW_BOUNDS =
 const map = new maplibregl.Map({
   container: "map", style: OSM_STYLE,
   bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 },
-  maxBounds: [[-12, 41], [32, 65]],
+  maxBounds: [[-12, 41], [32, 70]],
   // 3.5, not the old 4.5: fitHome() re-fits under a topbar that eats a third
   // of a portrait phone (half of a landscape one), and the old floor clamped
   // that fit while Denmark — or, in landscape, Bavaria — was still off-screen.
@@ -379,8 +388,19 @@ let lastStats = null;
 // (translated here, so a Dane reads "Tyskland & Danmark"), area_name as the
 // literal fallback for a hand-named build like PAPAMAP_AREA_NAME=Hamburg.
 const AREA_KEYS = { de: "areaDe", dk: "areaDk", de_dk: "areaDeDk" };
+// Past two countries the pipeline stops naming the set and counts it
+// ("countries_9") — one translated string per language instead of three more
+// every time a country is added.
+const COUNTED_AREA_KEY = /^countries_(\d+)$/;
 
-function areaLabel(stats) {
+// inSentence picks the grammatical slot: German's wordmark reads "9 Länder"
+// where statsLocal needs the dative "in 9 Ländern". English and Danish use one
+// string for both.
+function areaLabel(stats, inSentence = false) {
+  const counted = COUNTED_AREA_KEY.exec(stats?.area_key ?? "");
+  if (counted) {
+    return t(inSentence ? "areaCountriesIn" : "areaCountries", { n: num(counted[1]) });
+  }
   const key = AREA_KEYS[stats?.area_key];
   return key ? t(key) : (stats?.area_name || "");  // "" = nothing to say
 }
@@ -412,9 +432,11 @@ function renderStats(stats) {
   } else {
     globalPart = `<span class="stat">${t("statsGlobalMissing")}</span>`;
   }
+  // Not the wordmark's `area`: a counted label declines inside the sentence.
+  const areaInSentence = areaLabel(stats, true);
   statsEl.innerHTML =
     `<span class="stat">${t("statsLocal", {
-      tables: num(tables), area: esc(area || "—"),
+      tables: num(tables), area: esc(areaInSentence || "—"),
       unknown: num(l.unknown) })}</span>` +
     globalPart +
     `<span class="stat honesty">${t("statsHonesty", {

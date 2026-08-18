@@ -17,6 +17,16 @@ NOW = datetime(2026, 7, 26, 3, 0, tzinfo=timezone.utc)
 SWEEP = [(name, "4") for name in BUNDESLAENDER] + [("Danmark", "2")]
 CITY_SWEEP = [(area, lvl) for _, area, lvl in CITY_AREAS]
 
+# The widest subset an operator can select today: Germany and Denmark plus the
+# seven neighbours that each answer whole inside the [timeout:55] budget.
+# France is deliberately not among them (7,739 objects, twice the UK's) until
+# it gets a per-région area list. Selecting it is not the default — see
+# test_default_sweep_is_still_germany_and_denmark.
+RING = ("de", "dk", "be", "nl", "at", "ch", "cz", "pl", "se")
+RING_SWEEP = SWEEP + [("Belgium", "2"), ("Netherlands", "2"), ("Austria", "2"),
+                      ("Switzerland", "2"), ("Czechia", "2"), ("Poland", "2"),
+                      ("Sweden", "2")]
+
 
 def _fake_overpass(load_fixture):
     """Answers every sweep area with the same fixtures — dedup_elements must
@@ -30,7 +40,10 @@ def _fake_overpass(load_fixture):
     areas_seen = []
 
     def fetch(ql, **kwargs):
-        m = re.search(r'area\["name"="([^"]+)"\]\["admin_level"="(\d+)"\]', ql)
+        # name:en for the countries whose own `name` is multilingual
+        # (config.NAME_EN_AREAS) — an area is an area to the sweep either way,
+        # so the recorder must not care which tag selected it.
+        m = re.search(r'area\["name(?::en)?"="([^"]+)"\]\["admin_level"="(\d+)"\]', ql)
         assert m, f"no area clause in {ql!r}"
         areas_seen.append((m.group(1), m.group(2)))
         if '"kids_area"' in ql:
@@ -255,6 +268,41 @@ def test_full_build_writes_history_and_leaderboard(tmp_path, load_fixture):
     assert 'lang="en"' in en and "The leaderboard" in en
 
 
+def test_ring_build_files_each_neighbour_under_its_english_name(
+        tmp_path, load_fixture, monkeypatch):
+    # A nine-country build end to end: every neighbour is swept as one area,
+    # lands in history.json under the same English string the query selected it
+    # by (so the leaderboard prints "Belgium" next to "Bayern"), and changes
+    # nothing about the pages — those follow BUNDESLAENDER, not the sweep.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", RING)
+    fake_overpass = _fake_overpass(load_fixture)
+    stats = tmp_path / "stats.json"
+    history_path = tmp_path / "history.json"
+    summary = run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
+        play_geojson_path=str(tmp_path / "play.geojson"),
+        pages_dir=str(tmp_path / "pages"), history_path=str(history_path),
+        overpass_fetch=fake_overpass,
+        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+    assert fake_overpass.areas_seen == ([a for a in RING_SWEEP for _ in (1, 2)]
+                                        + CITY_SWEEP)
+    payload = json.loads(stats.read_text(encoding="utf-8"))
+    assert payload["area_key"] == "countries_9"
+    day = json.loads(history_path.read_text(encoding="utf-8"))["days"][0]
+    assert len(day["regions"]) == 24
+    # First-wins assignment again puts every deduped object in the first area;
+    # the neighbours must still each appear as an explicit zero triple, keyed
+    # by the name the sweep asked for.
+    assert day["regions"]["Baden-Württemberg"] == [3, 2, 2]
+    assert day["regions"]["Belgium"] == [0, 0, 0]
+    assert day["regions"]["Sweden"] == [0, 0, 0]
+    # Still 16 Länder + index + the two leaderboard languages: a country that
+    # is not a Bundesland gets no page, whatever else was swept.
+    written = sorted(p.name for p in (tmp_path / "pages").glob("*.html"))
+    assert summary["pages"] == len(written) == 19
+    assert not [p for p in written if "belgi" in p or "sweden" in p]
+
+
 def test_city_sweep_failure_degrades_to_warn(tmp_path, load_fixture, capsys):
     # A city failing every round must cost exactly one city on the leaderboard
     # — never the build. The map is the artifact that must not be held hostage.
@@ -288,10 +336,75 @@ def test_denmark_sweeps_whole_at_country_level():
     assert areas == SWEEP
 
 
+def test_default_sweep_is_still_germany_and_denmark(monkeypatch):
+    # The seven neighbours are *selectable*, not selected: papamap.de keeps
+    # building de,dk until the operator sets PAPAMAP_COUNTRIES, and every
+    # served number (stats strip, leaderboard, per-Land pages) is about those
+    # two. This is the assertion that fails if the default ever moves quietly.
+    #
+    # It reads DEFAULT_COUNTRIES rather than SWEEP_COUNTRIES on purpose: the
+    # latter has already absorbed the environment, so this test would fail for
+    # an operator who has exported PAPAMAP_COUNTRIES — punishing exactly the
+    # person this change invites to try a wider build.
+    assert config.DEFAULT_COUNTRIES == "de,dk"
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES",
+                        tuple(config.DEFAULT_COUNTRIES.split(",")))
+    areas = sweep_areas()
+    assert areas == SWEEP
+    assert not [a for a in areas if a[0] in config.NAME_EN_AREAS]
+    assert config.display_area() == ("Deutschland & Danmark", "de_dk")
+
+
 def test_country_subset_builds_only_that_country(monkeypatch):
     monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("dk",))
     assert config.sweep_areas() == [("Danmark", "2")]
     assert config.display_area() == ("Danmark", "dk")
+
+
+def test_single_neighbour_is_named_by_the_string_it_is_selected_by(monkeypatch):
+    # PAPAMAP_COUNTRIES=ch is the cheap one-country build. Switzerland has no
+    # single endonym to print instead ("Schweiz/Suisse/Svizzera/Svizra" is the
+    # whole `name` tag), so label and selector are the same English string and
+    # stats.json can never name an area no query asked for.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("ch",))
+    assert config.sweep_areas() == [("Switzerland", "2")]
+    assert config.display_area() == ("Switzerland", "ch")
+
+
+def test_ring_subset_sweeps_each_neighbour_as_one_country_area(monkeypatch):
+    # Each neighbour answers whole inside the [timeout:55] budget, so it is a
+    # single admin_level=2 area; only Germany still needs the 16-Land chunking
+    # that the ~60 s network-path cutoff forces.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", RING)
+    areas = config.sweep_areas()
+    assert areas == RING_SWEEP
+    assert len(areas) == 24  # 16 Bundesländer + 8 whole countries
+    assert all(lvl == "2" for name, lvl in areas if name not in BUNDESLAENDER)
+
+
+def test_display_area_counts_the_set_past_two_countries(monkeypatch):
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", RING)
+    name, key = config.display_area()
+    # The key counts the set instead of naming it: a key per set would need
+    # three new translations every time a country is added, a count needs one
+    # string per language, ever.
+    assert key == "countries_9"
+    assert name == ("Deutschland & Danmark & Belgium & Netherlands & Austria "
+                    "& Switzerland & Czechia & Poland & Sweden")
+    # Three countries is already past the point where naming the set scales.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("de", "dk", "nl"))
+    assert config.display_area() == ("Deutschland & Danmark & Netherlands",
+                                     "countries_3")
+
+
+def test_hand_named_neighbour_resolves_like_the_nightly_sweep(monkeypatch):
+    # PAPAMAP_AREA_NAME=Switzerland is the debug build for one country; it must
+    # select by the same tag the sweep uses, or it resolves to zero objects and
+    # dies six rounds later blaming a stale mirror.
+    monkeypatch.setattr(config, "AREA_NAME", "Switzerland")
+    monkeypatch.setattr(config, "AREA_ADMIN_LEVEL", "2")
+    assert config.sweep_areas() == [("Switzerland", "2")]
+    assert 'area["name:en"="Switzerland"]' in config.sweep_ql("Switzerland", "2")
 
 
 def test_unknown_country_code_fails_the_build(monkeypatch):
@@ -300,6 +413,21 @@ def test_unknown_country_code_fails_the_build(monkeypatch):
     monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("de", "dl"))
     with pytest.raises(ValueError, match="dl"):
         config.sweep_areas()
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", ())
+    with pytest.raises(ValueError, match="empty"):
+        config.sweep_areas()
+
+
+def test_a_country_not_in_the_list_fails_the_build(monkeypatch):
+    # France is deliberately outside COUNTRY_AREAS (7,739 objects, twice the
+    # UK's — it does not fit the [timeout:55] budget as one area and needs a
+    # per-région list first). Asking for it must abort the build rather than
+    # build the rest and publish a map that quietly stops at the border.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("de", "fr"))
+    with pytest.raises(ValueError, match="fr"):
+        config.sweep_areas()
+    with pytest.raises(ValueError, match="fr"):
+        config.display_area()  # the stats strip must not degrade quietly either
 
 
 def test_hand_named_area_has_no_translation_key(monkeypatch):
