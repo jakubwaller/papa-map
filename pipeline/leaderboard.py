@@ -160,6 +160,8 @@ page is regenerated every night from an Overpass query and stores nothing about 
 How things are counted and coloured: <a href="{up}methods-en.html">Methods</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
+<p class="muted">PapaMap is free and ad-free.
+<a href="https://ko-fi.com/jakubwaller">&#9749; Buy me a coffee</a>.</p>
 """
 
 SORT_STYLE = """\

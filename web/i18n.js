@@ -60,6 +60,7 @@ export const STRINGS = {
     board: "Rangliste",
     boardHref: "wickeltische/rangliste.html",
     langButton: "EN",
+    kofi: "☕ Kaffee",
 
     ariaZoomIn: "Hineinzoomen",
     ariaZoomOut: "Herauszoomen",
@@ -67,6 +68,7 @@ export const STRINGS = {
     ariaHome: "PapaMap — Startseite",
     ariaClose: "Schließen",
     ariaLang: "Switch to English",
+    ariaKofi: "Kaffee spendieren (Ko-fi)",
     ariaStatsMore: "Mehr Zahlen anzeigen",
     ariaStatsLess: "Weniger Zahlen anzeigen",
 
@@ -138,6 +140,7 @@ export const STRINGS = {
     board: "Leaderboard",
     boardHref: "wickeltische/leaderboard.html",
     langButton: "DA",
+    kofi: "☕ Coffee",
 
     ariaZoomIn: "Zoom in",
     ariaZoomOut: "Zoom out",
@@ -145,6 +148,7 @@ export const STRINGS = {
     ariaHome: "PapaMap — home",
     ariaClose: "Close",
     ariaLang: "Skift til dansk",
+    ariaKofi: "Buy me a coffee (Ko-fi)",
     ariaStatsMore: "Show more numbers",
     ariaStatsLess: "Show fewer numbers",
 
@@ -209,6 +213,7 @@ export const STRINGS = {
     board: "Rangliste",
     boardHref: "wickeltische/leaderboard.html",
     langButton: "DE",
+    kofi: "☕ Kaffe",
 
     ariaZoomIn: "Zoom ind",
     ariaZoomOut: "Zoom ud",
@@ -216,6 +221,7 @@ export const STRINGS = {
     ariaHome: "PapaMap — forsiden",
     ariaClose: "Luk",
     ariaLang: "Auf Deutsch wechseln",
+    ariaKofi: "Giv mig en kaffe (Ko-fi)",
     ariaStatsMore: "Vis flere tal",
     ariaStatsLess: "Vis færre tal",
 
