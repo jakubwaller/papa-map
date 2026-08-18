@@ -1,5 +1,52 @@
 # papa-map — build contract (v0)
 
+> **v11 amendment (18 Aug 2026, neighbouring countries):** seven more countries
+> are selectable through `PAPAMAP_COUNTRIES` — `be` Belgium, `nl` Netherlands,
+> `at` Austria, `ch` Switzerland, `cz` Czechia, `pl` Poland, `se` Sweden — each
+> a single `admin_level=2` area, the way Denmark has answered since v2 rather
+> than the way Germany has to be chunked. **The default is still `de,dk`**:
+> this makes the countries *available*, and papamap.de builds exactly what it
+> built yesterday until the operator flips the variable.
+>
+> The seven are selected on **`name:en`**, not `name`
+> (`config.NAME_EN_AREAS`, applied by `config.area_name_key()`). A country's
+> `name` is whatever its own mappers write, and for two of the neighbours that
+> is several languages at once: Belgium is `België / Belgique / Belgien`,
+> Switzerland `Schweiz/Suisse/Svizzera/Svizra`. `area["name"="Belgium"]`
+> resolves to nothing, and `run.py` can only read a zero-object area as a
+> failed sweep — the build would burn all six rounds and then die complaining
+> about a stale mirror. `name:en` is exact on all seven, and resolved for all
+> 25 European countries probed on 18 Aug 2026. Germany and Denmark keep `name`
+> on purpose: `Deutschland` and `Danmark` are also the region keys in
+> `history.json`, so selecting them by another tag would orphan every baseline
+> already recorded.
+>
+> Because the sweep selects them by their English name, that is also the string
+> they carry everywhere else: `Belgium`, `Netherlands`, `Austria`,
+> `Switzerland`, `Czechia`, `Poland`, `Sweden` in `COUNTRY_LABELS`, in
+> `history.json`, and as leaderboard rows beside `Bayern` and `Danmark`. The
+> label always names the area actually queried, and Belgium and Switzerland
+> have no single endonym to use instead. The Bundesland pages are unaffected —
+> `pages.py` only writes pages for names in `BUNDESLAENDER`, so a swept country
+> produces none.
+>
+> **`area_key` in `stats.json` gains the form `countries_<n>`** for three or
+> more countries (`countries_9` for all nine). One and two countries are
+> untouched, so `de`, `dk` and `de_dk` keep meaning what they meant. This
+> amends both the v2 amendment below and the `"de_dk | de | dk | null"` in the
+> data contract further down, which are now `"de_dk | de | dk | countries_<n> |
+> null"`. A count rather than a key per set, because nine joined labels
+> overflow the stats strip anyway, and a key per set would cost three new
+> translations every time a country is added — where a count costs one string
+> per language, ever. `area_name` is unchanged: still the labels joined with
+> " & ", still the verbatim fallback for consumers that don't know the key.
+>
+> **France is deliberately left out.** 7,739 `changing_table` objects (measured
+> 18 Aug 2026) — about twice the UK's 3,707, and the UK's single-area sweep
+> already spent 38.7 s of the 55 s `[timeout:55]` budget. France needs a
+> per-région area list, the way Germany needs its 16 Länder, before it can join
+> the list.
+
 > **v10 amendment (17 Aug 2026, places to play):** the build emits a second
 > dataset, **`web/data/play_places.geojson`** (`PAPAMAP_PLAY_GEOJSON_PATH`) —
 > the objects that pass the v9 play-area rule and carry **no `changing_table`
@@ -144,7 +191,8 @@
 > below; Denmark answers whole as one `admin_level=2` area (`Danmark` —
 > 933 changing_table + 4,655 toilet objects, 14.5 s measured, Grønland and
 > Føroyar excluded by that relation). `stats.json` gains **`area_key`**
-> (`"de_dk"` / `"de"` / `"dk"`, or `null` for a hand-named build) next to
+> (`"de_dk"` / `"de"` / `"dk"`, or `null` for a hand-named build; v11 adds
+> `"countries_<n>"` for three or more countries) next to
 > `area_name`: consumers translate the key when they know it and print
 > `area_name` verbatim otherwise. The site is now trilingual DE/EN/**DA** —
 > the language button cycles DE → EN → DA, a `da*` browser language auto-
@@ -225,7 +273,7 @@ of places with a play area and no changing-table answer. Feature `properties`:
 {
   "generated_at": "ISO-8601 UTC",
   "area_name": "Hamburg",
-  "area_key": "de_dk | de | dk | null",
+  "area_key": "de_dk | de | dk | countries_<n> | null",
   "local": {
     "toilets_total": 443, "ct_objects": 213, "ct_yes": 85, "ct_no": 127, "ct_limited": 1,
     "yes_location_known": 17, "yes_location_unknown": 68,

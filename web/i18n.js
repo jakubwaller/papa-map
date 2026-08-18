@@ -77,6 +77,14 @@ export const STRINGS = {
     areaDe: "Deutschland",
     areaDk: "Dänemark",
     areaDeDk: "Deutschland & Dänemark",
+    // Past two swept countries stats.json counts the set instead of naming it
+    // (area_key "countries_9"): nine joined names overflow the strip, and a
+    // count stays one string per language however many countries follow.
+    // Two forms because German declines: the wordmark reads "9 Länder", while
+    // statsLocal already supplies the preposition and needs the dative —
+    // "… Wickeltische in 9 Ländern".
+    areaCountries: "{n} Länder",
+    areaCountriesIn: "{n} Ländern",
 
     stAccessible: "Für Papas erreichbar",
     stFemaleOnly: "Nur Damen-WC",
@@ -155,6 +163,11 @@ export const STRINGS = {
     areaDe: "Germany",
     areaDk: "Denmark",
     areaDeDk: "Germany & Denmark",
+    // The two are identical on purpose: English does not decline after "in".
+    // The pair exists for German ("9 Länder" vs "in 9 Ländern") — collapsing
+    // it here would break that one language, not tidy this one.
+    areaCountries: "{n} countries",
+    areaCountriesIn: "{n} countries",
 
     stAccessible: "Dads can reach it",
     stFemaleOnly: "Women's room only",
@@ -228,6 +241,10 @@ export const STRINGS = {
     areaDe: "Tyskland",
     areaDk: "Danmark",
     areaDeDk: "Tyskland & Danmark",
+    // Same string twice on purpose: Danish does not decline after "i" either.
+    // The pair exists for German ("9 Länder" vs "in 9 Ländern").
+    areaCountries: "{n} lande",
+    areaCountriesIn: "{n} lande",
 
     stAccessible: "En far kan nå det",
     stFemaleOnly: "Kun på dametoilettet",

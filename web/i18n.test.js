@@ -28,6 +28,28 @@ test("every language has its own methods page and number locale", () => {
   for (const lang of LANGS) assert.ok(NUMBER_LOCALE[lang], `no number locale for ${lang}`);
 });
 
+test("every language counts the swept countries with a live {n}", () => {
+  for (const lang of LANGS) {
+    for (const key of ["areaCountries", "areaCountriesIn"]) {
+      const s = STRINGS[lang][key];
+      assert.ok(s, `${lang}.${key} is missing`);
+      // A hard-coded number would go stale the moment a country is added; the
+      // count has to come from area_key's countries_<n>.
+      assert.deepEqual(tokens(s), ["n"], `${lang}.${key} must carry only {n}`);
+      assert.equal(fmt(s, { n: 9 }).includes("9"), true, `${lang}.${key}`);
+    }
+  }
+});
+
+test("the counted area label declines in German and only in German", () => {
+  // The wordmark says "9 Länder", the statsLocal sentence "… in 9 Ländern".
+  assert.notEqual(STRINGS.de.areaCountries, STRINGS.de.areaCountriesIn);
+  // English and Danish are identical in both slots on purpose — this pins that
+  // down so the duplication does not look like a copy-paste slip worth "fixing".
+  assert.equal(STRINGS.en.areaCountries, STRINGS.en.areaCountriesIn);
+  assert.equal(STRINGS.da.areaCountries, STRINGS.da.areaCountriesIn);
+});
+
 test("pickLang: query beats stored beats browser beats default", () => {
   assert.equal(pickLang("en", null), "en");
   assert.equal(pickLang("de", "en"), "de");

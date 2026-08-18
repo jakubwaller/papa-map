@@ -59,21 +59,71 @@ BUNDESLAENDER = (
     "Sachsen-Anhalt", "Schleswig-Holstein", "Thüringen",
 )
 
-# Sweep areas per country. Germany needs the 16-Land chunking above; Denmark
-# is small enough to answer whole (933 changing_table + 4,655 amenity=toilets
-# objects, one 14.5 s query measured 2026-08-04) and so sweeps as a single
-# admin_level=2 area. That relation is Denmark proper — Grønland and Føroyar
-# carry their own admin_level=2 relations and stay out, which the measured
-# feature bbox (54.7–57.7 N) confirms.
+# Areas whose Overpass selector is name:en instead of name. A country's `name`
+# is whatever its own mappers write, and for two of the neighbours that is
+# several languages at once: Belgium is "België / Belgique / Belgien" and
+# Switzerland "Schweiz/Suisse/Svizzera/Svizra" (spaces around the slashes in
+# one, none in the other). area["name"="Belgium"] resolves to nothing, and
+# run.py can only read a zero-object area as a failed sweep — the build would
+# burn six rounds and die with an error about a stale mirror. name:en is exact
+# on all of them, and was verified to resolve for all 25 European countries
+# probed on 18 Aug 2026.
+#
+# Germany and Denmark deliberately keep `name`: those strings are also the
+# region keys in history.json and the row labels on the leaderboard, so
+# renaming them would orphan every existing baseline.
+NAME_EN_AREAS = frozenset({
+    "Belgium", "Netherlands", "Austria", "Switzerland", "Czechia",
+    "Poland", "Sweden",
+})
+
+# Sweep areas per country. Germany needs the 16-Land chunking above; every
+# other country so far is small enough to answer whole as a single
+# admin_level=2 area. Denmark: 933 changing_table + 4,655 amenity=toilets
+# objects, one 14.5 s query measured 2026-08-04 — that relation is Denmark
+# proper, Grønland and Føroyar carry their own admin_level=2 relations and stay
+# out, which the measured feature bbox (54.7–57.7 N) confirms.
+#
+# The seven neighbours were each measured whole on 18 Aug 2026 against the
+# production [timeout:55] budget. changing_table / amenity=toilets objects:
+#   Belgium 3,624/2,340   Netherlands 814/3,398   Austria 1,539/6,146
+#   Switzerland 1,435/6,760   Czechia 696/3,143   Poland 1,927/8,128
+#   Sweden 1,330/6,794
+# Every one answered inside the budget. The slowest sweep was the Netherlands
+# at 41.7 s to first byte — payload has little to do with it (0.54 MB, against
+# Belgium's 2.13 MB in 30.7 s); resolving the area dominates. That is real
+# headroom against the ~60 s network-path cutoff that forces Germany's
+# chunking, but not a lot, so these stay one area per country only for as long
+# as they keep measuring like this. Three of the fourteen probes came back 504
+# on the first attempt — ordinary congestion, and exactly what the mirror
+# cascade and SWEEP_ROUNDS absorb.
+#
+# France is the one neighbour that does NOT fit: 7,739 changing_table objects,
+# twice the UK's 3,707, where the UK sweep already spent 38.7 s of the 55 s
+# budget. It needs a per-région area list before it can join.
 COUNTRY_AREAS = {
     "de": tuple((name, "4") for name in BUNDESLAENDER),
     "dk": (("Danmark", "2"),),
+    "be": (("Belgium", "2"),),
+    "nl": (("Netherlands", "2"),),
+    "at": (("Austria", "2"),),
+    "ch": (("Switzerland", "2"),),
+    "cz": (("Czechia", "2"),),
+    "pl": (("Poland", "2"),),
+    "se": (("Sweden", "2"),),
 }
 
-# Fallback display name per country — each in its own language, since the
-# joined label has no single reader. The frontend translates it properly via
-# area_key and only falls back to this string when it has no translation.
-COUNTRY_LABELS = {"de": "Deutschland", "dk": "Danmark"}
+# Fallback display name per country. Germany and Denmark are named in their own
+# language, from when the joined label had two readers; the countries added
+# since are named the way the sweep selects them (NAME_EN_AREAS above), so the
+# string in stats.json always names the area actually queried — Belgium and
+# Switzerland have no single endonym to use instead. The frontend translates
+# via area_key and only falls back to these when it has no translation.
+COUNTRY_LABELS = {
+    "de": "Deutschland", "dk": "Danmark", "be": "Belgium",
+    "nl": "Netherlands", "at": "Austria", "ch": "Switzerland",
+    "cz": "Czechia", "pl": "Poland", "se": "Sweden",
+}
 
 # Leaderboard city sweep: (display name, OSM area name, admin_level). Curated —
 # big cities only, so one answered question moves a share the reader can see
@@ -124,8 +174,13 @@ HISTORY_MAX_DAYS = int(os.environ.get("PAPAMAP_HISTORY_MAX_DAYS", "400"))
 
 # Comma-separated subset for a cheaper build (PAPAMAP_COUNTRIES=dk builds
 # Denmark alone in ~30 s instead of sweeping all 17 areas).
+# Named, not inlined into the os.environ.get() below, so a test can assert the
+# default without the ambient PAPAMAP_COUNTRIES of whoever runs it: an operator
+# who has exported a nine-country build would otherwise see the guard that
+# exists to catch a moved default fail on their own machine instead.
+DEFAULT_COUNTRIES = "de,dk"
 SWEEP_COUNTRIES = tuple(c.strip().lower() for c in os.environ.get(
-    "PAPAMAP_COUNTRIES", "de,dk").split(",") if c.strip())
+    "PAPAMAP_COUNTRIES", DEFAULT_COUNTRIES).split(",") if c.strip())
 
 
 def _validated_countries() -> tuple[str, ...]:
@@ -151,13 +206,21 @@ def sweep_areas() -> list[tuple[str, str]]:
 def display_area() -> tuple[str, str | None]:
     """(name, i18n key) for the stats strip. The key ("de_dk", "dk", …) lets
     the frontend print the area in the reader's own language; it is None for a
-    build whose area was named by hand, where no translation can exist."""
+    build whose area was named by hand, where no translation can exist.
+
+    Past two countries the key stops naming the set and starts counting it
+    ("countries_9"). Joining nine labels overflows the strip, and a key per
+    set would need three new translations every time a country is added —
+    whereas a count needs one string per language, ever. One and two countries
+    keep their existing keys untouched, so "de_dk" survives."""
     override = DISPLAY_AREA_OVERRIDE or AREA_NAME
     if override:
         return override, None
     countries = _validated_countries()
-    return (" & ".join(COUNTRY_LABELS[c] for c in countries),
-            "_".join(countries))
+    name = " & ".join(COUNTRY_LABELS[c] for c in countries)
+    if len(countries) > 2:
+        return name, f"countries_{len(countries)}"
+    return name, "_".join(countries)
 
 
 # A congested evening can kill a query on every mirror (observed 2026-07-30:
@@ -204,13 +267,22 @@ TAGINFO_VALUES_URL = ("https://taginfo.openstreetmap.org/api/4/key/values"
                       "&sortname=count&sortorder=desc")
 
 
+def area_name_key(area_name: str) -> str:
+    """Which tag selects this area — `name` for everything the project started
+    with, `name:en` for the areas whose own `name` is multilingual. Applies to
+    a hand-set PAPAMAP_AREA_NAME too, which is what you want: "Switzerland"
+    should resolve however it resolves in the nightly build."""
+    return "name:en" if area_name in NAME_EN_AREAS else "name"
+
+
 def _area_ql(area_name: str, admin_level: str, date: str | None = None) -> str:
     # [date:...] turns the query attic: the data as of that moment. Areas
     # themselves are derived from *current* boundaries — acceptable, Länder and
     # city limits move on a scale of decades, our history on a scale of weeks.
     attic = f'[date:"{date}"]' if date else ""
+    key = area_name_key(area_name)
     return (f'[out:json][timeout:{OVERPASS_QL_TIMEOUT}]{attic};'
-            f'area["name"="{area_name}"]["admin_level"="{admin_level}"]->.a;')
+            f'area["{key}"="{area_name}"]["admin_level"="{admin_level}"]->.a;')
 
 
 def changing_table_ql(area_name: str = "Deutschland", admin_level: str = "2",
