@@ -131,20 +131,22 @@ pytest -v                  # pipeline (Python, offline — fixtures only)
 node --test web/*.test.js  # frontend pure functions (needs Node.js)
 ```
 
-## Cron (Raspberry Pi)
+## Cron
 ```cron
-0 4 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1
+30 4 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
 ```
-(Paths match the Pi deploy in [`docs/DEPLOY.md`](docs/DEPLOY.md) — adjust if your clone
-lives elsewhere.)
+(Matches the deploy in [`docs/DEPLOY.md`](docs/DEPLOY.md) — adjust if your clone lives
+elsewhere. Running the pipeline outside Docker works too; the venv variant is in the same
+file.)
 
 An optional second cron line runs `python -m pipeline.ops`: an anomaly-gated ops mail
 (stale data, missing files, count drops) plus a Monday all-clear digest with the week's
 grey→green transitions — see the "Ops mail" section in `docs/DEPLOY.md`.
 
 ## Deploy
-Static files only — no API, no database, no container needed for v0. Raspberry Pi + Caddy
-`file_server` instructions: [`docs/DEPLOY.md`](docs/DEPLOY.md).
+Static files only — no API and no database. The site runs as a `caddy:2-alpine` container
+that bind-mounts `web/`, so `git pull` is the deploy; serving the directory with any static
+web server works just as well. Instructions: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 Live at [papamap.de](https://papamap.de) (`www.papamap.de` and `papamap.jakubwaller.eu` redirect there).
 

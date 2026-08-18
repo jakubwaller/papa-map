@@ -108,7 +108,7 @@ def de_num(n) -> str:
 
 def de_date(iso: str) -> str:
     """'2026-08-04T21:10:40+00:00' → '4. August 2026'. Hand-rolled because
-    strftime('%B') follows the process locale, which on the Pi is C."""
+    strftime('%B') follows the process locale, which on the server is C."""
     try:
         y, m, d = int(iso[0:4]), int(iso[5:7]), int(iso[8:10])
         return f"{d}. {GERMAN_MONTHS[m - 1]} {y}"

@@ -1,13 +1,33 @@
 # Deploying papa-map (static)
 
-v0 is a static site: the nightly pipeline writes two JSON files into `web/data/` and one HTML
+The site is static: the nightly pipeline writes two JSON files into `web/data/` and one HTML
 page per Bundesland into `web/wickeltische/`, and any web server serves `web/` as plain files.
-**No container, no API process, no database** — there is nothing to keep running except cron.
+**No API process and no database** — nothing to keep running except a web server and cron.
 
-Works on any small always-on box (a Raspberry Pi is plenty). Substitute your own paths and
-domain below; `DOMAIN` stands for wherever you host it.
+The live deployment runs the bundled `docker-compose.yml`: a `caddy:2-alpine` container that
+bind-mounts `web/`, which is why `git pull` is the whole deploy for a web-only change and no
+image rebuild is involved. Serving the directory with a static web server you already run works
+just as well — both paths are below.
+
+Works on any always-on Linux box. Substitute your own paths and domain; `DOMAIN` stands for
+wherever you host it.
 
 ## One-time
+
+With Docker, which is how the live site runs:
+
+```bash
+ssh <your-server>
+git clone <repo-url> papa-map && cd papa-map
+mkdir -p web-data/wickeltische             # mountpoint — see the warning further down
+docker compose up -d papamap               # static server on :8012, no host port
+docker compose run --build --rm pipeline   # first dataset build
+```
+
+The container publishes no host port; point your existing ingress at it. The live setup
+reverse-proxies `papamap:8012` from a shared host Caddy over the external `web_proxy` network.
+
+**Without Docker** — a venv plus any static web server:
 
 ```bash
 ssh <your-server>
@@ -19,7 +39,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 (No git remote yet? `rsync -av --exclude .venv --exclude .git ./ <your-server>:~/papa-map/`
 from the dev machine works the same; re-run it to update.)
 
-Serve `web/` with anything that can serve static files. Caddy example:
+Then serve `web/` with anything that can serve static files. Caddy example:
 
 ```
 DOMAIN {
@@ -35,10 +55,12 @@ If Caddy runs in a container, bind-mount the site into it first (add
 
 ## Daily data refresh
 
-`crontab -e`:
+`crontab -e`, matching the live schedule:
 ```cron
-0 4 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1
+30 4 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
 ```
+Outside Docker the equivalent line is
+`0 4 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
 
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.
@@ -78,11 +100,7 @@ container fails to start outright — not a 404, the whole site goes down. The m
 to be in the repo. (Learned the hard way: recreating the container without it took papamap.de
 offline until the directory existed.)
 
-Running it from the bundled `docker-compose.yml` instead? Then the cron line is:
-```cron
-30 4 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
-```
-**`--build` is not optional.** The `pipeline` service copies `pipeline/` into its
+About that cron line: **`--build` is not optional.** The `pipeline` service copies `pipeline/` into its
 image (the site is bind-mounted, the pipeline code is not), so a plain
 `docker compose run` keeps executing whatever code the image was last built with.
 Without it a `git pull` looks like a successful deploy, the build runs green, and
