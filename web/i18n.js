@@ -85,6 +85,10 @@ export const STRINGS = {
     // Two forms because German declines: the wordmark reads "9 Länder", while
     // statsLocal already supplies the preposition and needs the dative —
     // "… Wickeltische in 9 Ländern".
+    // Static fallback for the wordmark: index.html paints it before
+    // stats.json arrives, and keeps it if the fetch fails. Count-free,
+    // because applyI18n() calls t() with no vars and "{n}" would show.
+    areaFallback: "neun europäische Länder",
     areaCountries: "{n} Länder",
     areaCountriesIn: "{n} Ländern",
 
@@ -168,6 +172,10 @@ export const STRINGS = {
     // The two are identical on purpose: English does not decline after "in".
     // The pair exists for German ("9 Länder" vs "in 9 Ländern") — collapsing
     // it here would break that one language, not tidy this one.
+    // Static fallback for the wordmark: index.html paints it before
+    // stats.json arrives, and keeps it if the fetch fails. Count-free,
+    // because applyI18n() calls t() with no vars and "{n}" would show.
+    areaFallback: "nine European countries",
     areaCountries: "{n} countries",
     areaCountriesIn: "{n} countries",
 
@@ -245,6 +253,10 @@ export const STRINGS = {
     areaDeDk: "Tyskland & Danmark",
     // Same string twice on purpose: Danish does not decline after "i" either.
     // The pair exists for German ("9 Länder" vs "in 9 Ländern").
+    // Static fallback for the wordmark: index.html paints it before
+    // stats.json arrives, and keeps it if the fetch fails. Count-free,
+    // because applyI18n() calls t() with no vars and "{n}" would show.
+    areaFallback: "ni europæiske lande",
     areaCountries: "{n} lande",
     areaCountriesIn: "{n} lande",
 
