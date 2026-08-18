@@ -52,6 +52,19 @@ MapComplete's format changes — it would just stop loading, silently, on every 
 **`web/data/` and `web/wickeltische/` are build output** and git-ignored. In the container they are
 bind-mounted back into the served tree because `web/` itself is read-only to the pipeline.
 
+## Working in this repo
+
+**Work in a git worktree, not this checkout.** More than one session runs here at once and they
+share the working tree. Run `git status` before you edit anything: modified or untracked files you
+did not create mean someone else is mid-task, and a `git add -A` or `git checkout -- .` will eat
+their work with no warning. Isolate instead:
+
+```bash
+git worktree add -b <branch> ~/gitlab/.worktrees/papa-map-<task> main
+```
+
+Stage by naming paths, never `git add -A` / `git commit -a`, in any checkout you share.
+
 ## Shipping
 
 Branch, PR, squash-merge — never push to `main` directly, even for a one-line docs change.
