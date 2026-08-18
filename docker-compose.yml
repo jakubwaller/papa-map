@@ -24,6 +24,12 @@ services:
     build: .
     container_name: papamap-pipeline
     profiles: ["tools"]
+    # The code default stays de,dk (config.DEFAULT_COUNTRIES) — this is the
+    # deployment saying what *this* site sweeps, so a checkout and the test
+    # suite keep their conservative default while papamap.de builds the ring.
+    # Overridable per run: `docker compose run -e PAPAMAP_COUNTRIES=dk ...`.
+    environment:
+      - PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se
     volumes:
       - ./web-data:/out
     networks:
