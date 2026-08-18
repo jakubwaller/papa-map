@@ -2,9 +2,9 @@
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=play2";
+         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=eu1";
 import { STRINGS, NUMBER_LOCALE, pickLang, nextLang, fmt,
-         langUrl } from "./i18n.js?v=play2";
+         langUrl } from "./i18n.js?v=eu1";
 
 // ---- Language: German default, DE → EN → DA cycle. A shared ?lang= link wins
 // over the stored choice, which wins over a Danish browser; toggling stores the
