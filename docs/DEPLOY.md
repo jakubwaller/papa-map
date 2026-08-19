@@ -57,10 +57,17 @@ If Caddy runs in a container, bind-mount the site into it first (add
 
 `crontab -e`, matching the live schedule:
 ```cron
-30 4 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
+30 3 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
 ```
 Outside Docker the equivalent line is
-`0 4 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
+`30 3 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
+
+**03:30, not 04:30, since the UK and France joined the sweep (2026-08-19).** Eleven
+countries are 38 sweep areas and 104 Overpass queries, about 64 minutes against the
+nine-country 47 — and the ops mail below runs at 05:30. From 04:30 the build would still
+be writing when the digest reads `stats.json`, so the one health signal the site has
+would report a half-finished dataset. If the sweep grows again, move this line before
+adding the country, not after.
 
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.

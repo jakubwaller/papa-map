@@ -1,5 +1,54 @@
 # papa-map — build contract (v0)
 
+> **v13 amendment (19 Aug 2026, the UK and France, and nine UI languages):**
+> papamap.de sweeps **eleven countries** — the nine of v12 plus **United
+> Kingdom** and **France** — because `docker-compose.yml` now sets
+> `PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se,gb,fr`. Codes are ISO 3166-1
+> alpha-2, so the UK is `gb`. `config.DEFAULT_COUNTRIES` still stays `de,dk`;
+> the v12 reasoning is unchanged and unrepeated.
+>
+> **The emitted shape does not change.** No new feature property, no new
+> `stats.json` field, no new file. `area_key` becomes `countries_11`, which is
+> the `countries_<n>` form v11 already contracted and the frontend already
+> parses with `/^countries_(\d+)$/`. This amendment exists for the three
+> statements it has to retract, not for a shape change.
+>
+> **Retraction 1 — v11's "France is deliberately left out".** v11 states that
+> France needs a per-région area list before it can join. It has one:
+> `config.FRANCE_REGIONS`, the 13 metropolitan régions at `admin_level=4`,
+> selected on `name` and **not** `name:en` (which is `Bourgogne – Franche-Comté`
+> with an en dash and `Ile-de-France` without the accent). It is an allowlist,
+> not a subdivision — the five overseas régions are `admin_level=4` as well.
+> Measured 19 Aug 2026: France whole is an empty reply at 60.14 s; the slowest
+> région is Auvergne-Rhône-Alpes at 27.1 s.
+>
+> **Retraction 2 — v6's "`regions`: the 16 Länder + `Danmark`".** History keys
+> and leaderboard rows are, and always were, the sweep-area names verbatim. With
+> a second chunked country that is 16 Länder + 13 French régions + the nine
+> countries swept whole = **38 region keys**. France never appears as a key;
+> "France" exists only as a `COUNTRY_LABELS` value inside `area_name`. Anything
+> reading `history.json` must treat the region set as open, which it already
+> had to after v11.
+>
+> **Retraction 3 — v2's "a `da*` browser language auto-selects Danish (nothing
+> else does)".** Every language is auto-detected now. `pickLang` reads the
+> browser's full ordered preference list, matches on the primary subtag only
+> (`en-GB`, `de-AT`, `fr-CH` all match), and falls through unsupported entries
+> instead of stopping. Precedence is unchanged: `?lang=` beats the stored
+> choice beats the browser. The known cost, which v2 named as the reason not to
+> do this: a German reader on an English browser now lands on English until
+> they pick once.
+>
+> **Nine UI languages** — `de en da nl fr it cs pl sv`, one per official
+> language of the eleven countries with a monolingual readership, plus English.
+> `i18n.js`'s `LANGS` is the source of truth; `index.html`'s hreflang block,
+> `sitemap.xml` and the `methods-*.html` set must list exactly the same nine.
+> Each language ships a `methods-<code>.html`; the leaderboard stays a DE/EN
+> pair and every other language borrows the English page, as Danish already
+> did. `nextLang()` is **removed** — nine languages are picked from a
+> `<select>`, not cycled — and the `langButton` string key is replaced by
+> `langName`, each language's own endonym.
+
 > **v12 amendment (18 Aug 2026, the deployment sweeps the ring):** papamap.de
 > now sweeps **nine countries** — Deutschland, Danmark, Belgium, Netherlands,
 > Austria, Switzerland, Czechia, Poland, Sweden — because `docker-compose.yml`

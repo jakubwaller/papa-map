@@ -59,6 +59,35 @@ BUNDESLAENDER = (
     "Sachsen-Anhalt", "Schleswig-Holstein", "Thüringen",
 )
 
+# France's 13 metropolitan régions, the analogue of BUNDESLAENDER: admin_level=4
+# is the région, 6 the département (96 of those would be 192 queries a night).
+#
+# This is an ALLOWLIST, not a subdivision, and the distinction is load-bearing.
+# The five overseas régions — Guadeloupe, Martinique, Guyane, La Réunion,
+# Mayotte — are ALSO admin_level=4 and also carry ISO3166-2 FR-*, so the level
+# does not exclude them; only these thirteen names do. Sweeping France whole
+# instead would drop ~170 pins into the Caribbean, the Indian Ocean and South
+# America, every one of them outside the frontend's maxBounds, where a pin
+# cannot be panned to at all.
+#
+# Selected on `name`, never name:en — the opposite of the countries in
+# NAME_EN_AREAS below. Every French région has a single unambiguous `name`,
+# while name:en is actively wrong for this set: "Bourgogne – Franche-Comté"
+# carries an EN DASH with spaces, "Ile-de-France" silently drops the accent,
+# and four of the thirteen are translated (Brittany, Corsica, Normandy,
+# Occitania) while the rest are not.
+#
+# All 13 verified to resolve as Overpass areas on 19 Aug 2026, each with a
+# plausible count (7,568 objects total; largest Île-de-France 1,356, smallest
+# Corse 32). Corse is admin_level=4 despite being a collectivité territoriale
+# unique since 2018, and its `name` is "Corse", not "Collectivité de Corse".
+FRANCE_REGIONS = (
+    "Auvergne-Rhône-Alpes", "Bourgogne-Franche-Comté", "Bretagne",
+    "Centre-Val de Loire", "Corse", "Grand Est", "Hauts-de-France",
+    "Île-de-France", "Normandie", "Nouvelle-Aquitaine", "Occitanie",
+    "Pays de la Loire", "Provence-Alpes-Côte d'Azur",
+)
+
 # Areas whose Overpass selector is name:en instead of name. A country's `name`
 # is whatever its own mappers write, and for two of the neighbours that is
 # several languages at once: Belgium is "België / Belgique / Belgien" and
@@ -98,9 +127,34 @@ NAME_EN_AREAS = frozenset({
 # on the first attempt — ordinary congestion, and exactly what the mirror
 # cascade and SWEEP_ROUNDS absorb.
 #
-# France is the one neighbour that does NOT fit: 7,739 changing_table objects,
-# twice the UK's 3,707, where the UK sweep already spent 38.7 s of the 55 s
-# budget. It needs a per-région area list before it can join.
+# France is the second chunked country, for the same reason Germany is: a
+# whole-France sweep produced ZERO bytes and died at 60.14 s (measured
+# 19 Aug 2026 against overpass-api.de itself, not a mirror — the ~60 s cutoff
+# is in the network path, and the main instance is not exempt from it).
+# Per-région it is comfortable: the three largest measured 27.1 s
+# (Auvergne-Rhône-Alpes), 19.7 s (Île-de-France) and 13.3 s
+# (Nouvelle-Aquitaine) against the same [timeout:55] budget. See FRANCE_REGIONS
+# above for why the list is an allowlist and why it is selected on `name`.
+#
+# The UK answers whole, but it is the tightest area in the project and the
+# number to watch is NOT the object sweep. Every area is resolved twice a
+# night, and for the UK the cheap-looking counting query is the slower of the
+# two (measured 19 Aug 2026):
+#   sweep_ql            41.9 s to first byte, 51.5 s total, 2.15 MB
+#   toilets_counts_ql   45.2 s, 633 bytes  <- the binding one
+# 45.2 s is 82 % of the budget. Judge any future area on the MAX of its two
+# queries, not on the sweep alone; the slowest area otherwise shipped is the
+# Netherlands at 41.7 s, so ~45 s is the line. If the UK crosses it, the only
+# clean split is the four nations at admin_level=4 — and their names are
+# bilingual ("Alba / Scotland", "Cymru / Wales"), so all of them would need
+# name:en, while England keeps ~80 % of the objects anyway. England has no
+# clean cover below that short of admin_level=6.
+#
+# "United Kingdom" is exact on `name` (name and name:en are identical), so it
+# stays out of NAME_EN_AREAS. The relation covers England, Scotland, Wales and
+# Northern Ireland only: the Crown Dependencies and Gibraltar carry their own
+# admin_level=2 relations and are NOT swept (Isle of Man 9, Jersey 28,
+# Gibraltar 3 changing_table objects, verified absent from the UK answer).
 COUNTRY_AREAS = {
     "de": tuple((name, "4") for name in BUNDESLAENDER),
     "dk": (("Danmark", "2"),),
@@ -111,18 +165,23 @@ COUNTRY_AREAS = {
     "cz": (("Czechia", "2"),),
     "pl": (("Poland", "2"),),
     "se": (("Sweden", "2"),),
+    "gb": (("United Kingdom", "2"),),
+    "fr": tuple((name, "4") for name in FRANCE_REGIONS),
 }
 
 # Fallback display name per country. Germany and Denmark are named in their own
 # language, from when the joined label had two readers; the countries added
 # since are named the way the sweep selects them (NAME_EN_AREAS above), so the
 # string in stats.json always names the area actually queried — Belgium and
-# Switzerland have no single endonym to use instead. The frontend translates
+# Switzerland have no single endonym to use instead. France is the exception
+# that proves it: the sweep selects 13 régions, so the label is the aggregate
+# "France", exactly as "Deutschland" aggregates 16 Länder. The frontend translates
 # via area_key and only falls back to these when it has no translation.
 COUNTRY_LABELS = {
     "de": "Deutschland", "dk": "Danmark", "be": "Belgium",
     "nl": "Netherlands", "at": "Austria", "ch": "Switzerland",
     "cz": "Czechia", "pl": "Poland", "se": "Sweden",
+    "gb": "United Kingdom", "fr": "France",
 }
 
 # Leaderboard city sweep: (display name, OSM area name, admin_level). Curated —
@@ -176,7 +235,7 @@ HISTORY_MAX_DAYS = int(os.environ.get("PAPAMAP_HISTORY_MAX_DAYS", "400"))
 # Denmark alone in ~30 s instead of sweeping all 17 areas).
 # Named, not inlined into the os.environ.get() below, so a test can assert the
 # default without the ambient PAPAMAP_COUNTRIES of whoever runs it: an operator
-# who has exported a nine-country build would otherwise see the guard that
+# who has exported an eleven-country build would otherwise see the guard that
 # exists to catch a moved default fail on their own machine instead.
 DEFAULT_COUNTRIES = "de,dk"
 SWEEP_COUNTRIES = tuple(c.strip().lower() for c in os.environ.get(
@@ -194,6 +253,21 @@ def _validated_countries() -> tuple[str, ...]:
     return SWEEP_COUNTRIES
 
 
+def chunked_area_names() -> frozenset[str]:
+    """Sweep-area names that are one chunk of a chunked country — Germany's 16
+    Bundesländer and France's 13 régions — rather than a country swept whole.
+
+    The leaderboard's regions table mixes both, and until France it could tell
+    them apart with "everything that is not a Bundesland is a whole country".
+    That stopped being true the moment a second country was chunked: it would
+    have printed 13 French régions as sovereign states. Derived from
+    COUNTRY_AREAS rather than listed, so a third chunked country cannot
+    reintroduce the bug by omission.
+    """
+    return frozenset(name for areas in COUNTRY_AREAS.values() if len(areas) > 1
+                     for name, _ in areas)
+
+
 def sweep_areas() -> list[tuple[str, str]]:
     """(name, admin_level) pairs the pipeline sweeps. PAPAMAP_AREA_NAME set →
     just that one area (e.g. Hamburg/4 for a city build); default is all 16
@@ -209,7 +283,7 @@ def display_area() -> tuple[str, str | None]:
     build whose area was named by hand, where no translation can exist.
 
     Past two countries the key stops naming the set and starts counting it
-    ("countries_9"). Joining nine labels overflows the strip, and a key per
+    ("countries_11"). Joining eleven labels overflows the strip, and a key per
     set would need three new translations every time a country is added —
     whereas a count needs one string per language, ever. One and two countries
     keep their existing keys untouched, so "de_dk" survives."""
@@ -339,7 +413,7 @@ _CHAMBERS_KEY_RE = "^toilets:num_chambers"
 
 def toilets_counts_ql(area_name: str = "Deutschland", admin_level: str = "2",
                       date: str | None = None) -> str:
-    """Two integers, not every public toilet in nine countries: how many
+    """Two integers, not every public toilet in eleven countries: how many
     amenity=toilets the area holds, and how many of those carry a
     toilets:num_chambers* capacity tag.
 

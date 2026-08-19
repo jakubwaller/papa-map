@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PapaMap — Méthodes &amp; honnêteté</title>
+<meta name="description" content="Comment PapaMap colore les tables à langer d'OpenStreetMap, pourquoi on ne peut pas en tirer un indice de l'offre en toilettes, et comment réparer toi-même un marqueur gris.">
+<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
+     language versions were never actually linked to each other. Nine of them
+     since 2026-08-19; every page must list every other or the set is
+     unreciprocated and ignored. -->
+<link rel="canonical" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
+<link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html">
+<link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html">
+<link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html">
+<link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
+<link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
+<link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
+    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
+      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
+    }
+  }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+         background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
+  table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
+  li { margin: 0.3rem 0; }
+  .back { font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">&larr; Retour à la carte</a> · <a href="methods.html" hreflang="de">Diese Seite auf Deutsch</a> · <a href="methods-da.html" hreflang="da">Denne side på dansk</a></p>
+<h1>PapaMap — méthodes &amp; honnêteté</h1>
+<p class="muted">Des tables à langer accessibles aux papas. Les chiffres taginfo mondiaux
+ci-dessous viennent du build nocturne. L'échantillon sur huit centres-villes date du
+26&nbsp;juillet&nbsp;2026 et reste tel quel.</p>
+
+<h2>Ce que cette carte est. Et ce qu'elle n'est pas.</h2>
+<p>PapaMap montre les lieux de onze pays européens &mdash; l'Allemagne, le Danemark, la Belgique,
+les Pays-Bas, l'Autriche, la Suisse, la Tchéquie, la Pologne, la Suède, le Royaume-Uni et la
+France &mdash; pour lesquels OpenStreetMap connaît une table à langer
+(<code>changing_table=yes</code> ou <code>limited</code>). La couleur dit si un papa peut
+atteindre la table. La carte lit OSM et rien d'autre, et elle n'écrit nulle part. Les données, tu
+peux les corriger directement sur OSM, par les liens de chaque marqueur.</p>
+<p>Un classement des villes selon leur offre de toilettes, ce n'est pas ça. Pourquoi on ne peut pas
+le faire honnêtement à partir de données ouvertes, c'est expliqué plus bas.</p>
+
+<h2>Ce que les couleurs veulent dire (la règle exacte)</h2>
+<p>Seuls les objets avec <code>changing_table=yes</code> ou <code>limited</code> arrivent sur la
+carte (<code>no</code> ne compte que dans les statistiques). La couleur vient de
+<code>changing_table:location</code>. La valeur est découpée aux <code>;</code>, débarrassée des
+espaces, mise en minuscules et comparée comme un token entier. Jamais comme une sous-chaîne, car
+<code>female_toilet</code> contient <code>male</code>.</p>
+<ul>
+  <li><span class="dot g"></span><strong>Vert :</strong> un token est
+      <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
+      <code>room</code>, <code>wheelchair_toilet</code> ou <code>sales_area</code>.
+      Un papa peut y accéder.</li>
+  <li><span class="dot r"></span><strong>Rouge :</strong> sinon, si un token est
+      <code>female_toilet</code>. La table existe, mais seulement dans les WC femmes.</li>
+  <li><span class="dot u"></span><strong>Gris :</strong> tout le reste. Pas de tag de localisation,
+      ou seulement du texte libre. Personne n'a renseigné la pièce. Les marqueurs gris, voilà le
+      travail.</li>
+</ul>
+<p>Une exception : les objets portant un tag <code>centralkey</code> (autre que <code>no</code>) ne
+sont pas affichés du tout. La clé européenne (« Euroschlüssel », « Eurokey » en Suisse) et les
+systèmes de clé centralisée du même genre ne sont délivrés que sur justificatif de handicap
+&mdash; quelle que soit la pièce où se trouve la table, la plupart des papas ne passent pas cette
+porte.</p>
+
+<h2>L'anneau bleu : le coin jeux</h2>
+<p>Un marqueur avec un anneau bleu a en plus un coin jeux &mdash; un endroit où l'on ne fait pas que
+changer le petit, on y reste un moment. Le filtre <em>Avec coin jeux</em> ne montre que ceux-là. Un
+lieu compte si l'un de ces tags est dans OSM :</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> ou <code>designated</code>
+      &mdash; la façon documentée dans le wiki de dire « à l'intérieur ».</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> ou
+      <code>designated</code> &mdash; le coin jeux du café, du restaurant, de la boulangerie. Le
+      tag le plus utilisé, même s'il laisse ouvert dedans ou dehors.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; un parc de jeux
+      couvert.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> avec
+      <code>indoor=yes</code> &mdash; la même chose, taguée dans l'autre sens.</li>
+</ul>
+<p><code>outdoor</code> ne compte pas : le bac à sable d'une guinguette n'est pas ce que l'anneau
+promet. <code>no</code> non plus, ni <code>limited</code> &mdash; le wiki définit celui-ci comme
+« des jouets sont disponibles, mais pas d'espace dédié ». Là où un
+<code>kids_area:indoor=no</code> explicite est présent, il l'emporte sur un simple
+<code>kids_area=yes</code>.</p>
+<p>C'est un badge, pas un quatrième statut. Un lieu sans ces tags n'est pas pour autant « sans coin
+jeux » &mdash; OSM n'en dit tout simplement rien. Il n'y a donc ici ni gris ni appel à contribuer :
+avec <code>changing_table:location</code>, le silence est parlant, parce qu'on sait que la table
+existe. Ici presque tous les objets se taisent, et cela ne veut rien dire. Si tu connais un coin
+jeux, l'ajouter reste bienvenu &mdash; dans l'éditeur OSM, avec <code>kids_area=yes</code>.</p>
+
+<h2>Les anneaux bleus vides : des lieux pour jouer, sans réponse</h2>
+<p>La même règle correspond à bien plus de lieux que la carte n'a de marqueurs. Seuls
+<span data-stat="play_tables">111</span> d'entre eux portent un tag <code>changing_table</code>.
+Pour <span data-stat="play_places">701</span> autres, personne n'a répondu à la première question :
+y a-t-il une table à langer ici ? Oui, non, personne ne sait &mdash; OSM n'en dit absolument
+rien.</p>
+<p>Ces <span data-stat="play_places">701</span> lieux, la carte ne peut pas les colorer, parce qu'il
+n'y a rien à colorer. Ils ne sont pas gris non plus : gris veut dire « la table existe, la pièce
+manque », et ce n'est pas le cas ici. Ils ont donc leur propre filtre, <em>Coin jeux
+uniquement</em>, désactivé par défaut, et un anneau bleu vide au lieu d'un marqueur plein.</p>
+<p>Ce sont les questions ouvertes les plus prometteuses de toute la carte. Un parc de jeux couvert,
+un café avec piscine à balles, un restaurant avec une salle de jeux &mdash; un père avec un
+tout-petit y va de toute façon, et une fois sur place, il connaît la réponse. Un clic sur l'anneau
+ouvre MapComplete exactement sur cette question. Réponds-y et l'anneau disparaît à la prochaine
+mise à jour nocturne, remplacé par un vrai marqueur.</p>
+
+<h2>Comment réparer un marqueur gris</h2>
+<p>Gris veut dire qu'il manque une réponse. Où est la table à langer ? N'importe qui avec un compte
+OSM gratuit peut y répondre, sur place, en moins d'une minute :</p>
+<ul>
+  <li><strong>MapComplete (n'importe quel téléphone, dans le navigateur) :</strong> « Répondre sur
+      MapComplete » sur un marqueur gris ouvre le même objet dans le thème MapComplete propre à
+      PapaMap &mdash; sur chaque marqueur, pour que les modifications soient reconnaissables
+      comme venant d'ici. MapComplete prévient une seule fois qu'il s'agit d'un thème non
+      officiel, c'est normal. Connecte-toi avec ton compte OSM et réponds aux questions sur la table à langer, y
+      compris celle sur la pièce. La réponse part directement dans OpenStreetMap et apparaît ici
+      après la prochaine mise à jour nocturne.</li>
+  <li><strong>StreetComplete (Android) :</strong> propose une quête sur les tables à langer,
+      désactivée
+      par défaut. Va dans <em>Paramètres &rarr; Sélection et priorité des quêtes</em>, cherche
+      « table à langer » et coche-la. Elle ne demande que oui/non. Pour la question de la pièce
+      sur un marqueur gris existant, utilise MapComplete.</li>
+</ul>
+<p class="muted">Les modifications se font sous ton propre compte OSM et appartiennent à tout le
+monde. Elles survivent à ce site et servent à toutes les applications qui lisent
+OpenStreetMap.</p>
+
+<h2 id="contribute">Comment ajouter un lieu manquant</h2>
+<p>PapaMap ne stocke rien lui-même. Ajouter un lieu veut donc toujours dire : éditer
+OpenStreetMap. Le bouton <em>+ Ajouter un lieu</em> sur la carte ouvre le bon éditeur sur la vue en
+cours.</p>
+
+<h3>Il manque complètement des toilettes publiques</h3>
+<p>Prends le <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">thème
+MapComplete de PapaMap</a> (le premier lien du dialogue). Connecte-toi, touche la carte à
+l'endroit des toilettes, choisis « des toilettes publiques », réponds aux questions. Y compris
+celles sur la table à langer et la pièce.</p>
+
+<h3>Un café, un magasin ou un restaurant a une table que personne n'a cartographiée</h3>
+<p>Le lieu existe quasi certainement déjà dans OSM. Il ne manque que le tag
+<code>changing_table</code>. Dans l'éditeur d'OSM (iD), cela prend environ deux minutes :</p>
+<ol>
+  <li>Crée un compte gratuit sur <a href="https://www.openstreetmap.org">openstreetmap.org</a>
+      (une adresse e-mail suffit) et connecte-toi.</li>
+  <li>Cherche le lieu et clique sur <strong>Modifier</strong>. Le lieu est un point ou le contour
+      d'un bâtiment. Clique dessus, ses tags apparaissent à gauche.</li>
+  <li>Déplie <strong>Toutes les balises</strong> en bas et ajoute avec <strong>+</strong> :
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = où elle se trouve, dans la
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">liste de
+            valeurs documentée</a> : <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> ou <code>sales_area</code>.
+            Dans plusieurs pièces : séparer par des points-virgules
+            (<code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Appuie sur <strong>Enregistrer</strong>, écris un court commentaire (« ajout de
+      l'emplacement de la table à langer »), envoie. En ligne sur OSM en une minute, sur PapaMap
+      après la prochaine mise à jour nocturne.</li>
+</ol>
+<p class="muted">Merci de ne taguer que ce que tu as vu toi-même. OSM note ce qui est, pas ce qui
+devrait être. Si tu ne connais pas la pièce, <code>changing_table=yes</code> tout seul reste
+utile : le lieu devient un marqueur gris, et le prochain papa répondra à la question de la
+pièce.</p>
+
+<h2>Pourquoi un indice de l'offre en toilettes ne sort pas d'OSM</h2>
+<p>Le projet plus ambitieux qui vient à l'esprit serait un rapport hommes/femmes de l'offre de
+toilettes par ville. Le chiffre dont il est vraiment question dans le débat sur la « potty
+parity ». Il ne se calcule pas à partir d'OpenStreetMap. Nous avons vérifié avant de construire
+le site, avec un échantillon sur huit centres-villes (Berlin, Londres, Paris, New York,
+Tokyo&nbsp;23&nbsp;arrondissements, Amsterdam, Vienne, Melbourne ;
+26&nbsp;juillet&nbsp;2026) :</p>
+<table>
+  <tr><th>Ville</th><th>Toilettes cartographiées</th><th>Un tag de genre</th><th>Les deux M&nbsp;+&nbsp;F</th></tr>
+  <tr><td>Berlin</td><td>1&nbsp;173</td><td>660</td><td>119</td></tr>
+  <tr><td>Londres</td><td>1&nbsp;316</td><td>458</td><td>210</td></tr>
+  <tr><td>Paris</td><td>1&nbsp;414</td><td>579</td><td>101</td></tr>
+  <tr><td>New York</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Tokyo (23 arrondissements)</td><td>3&nbsp;500</td><td>601</td><td>231</td></tr>
+  <tr><td>Amsterdam</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Vienne</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
+  <tr><td><strong>Toutes</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888 (29,9&nbsp;%)</strong></td><td><strong>827 (8,5&nbsp;%)</strong></td></tr>
+</table>
+<ul>
+  <li>Seuls 29,9&nbsp;% des toilettes cartographiées portent un tag de genre, quel qu'il soit. Les
+      deux (male et female) : 8,5&nbsp;%.</li>
+  <li>Les tags sont de simples oui/non, jamais des comptages. Nombre de cabines par genre :
+      zéro dans les huit villes. La seule clé de capacité, <code>toilets:num_chambers</code>
+      (~27k utilisations), est sans genre et vient presque entièrement d'un vieil import. Ses
+      variantes <code>:female</code> / <code>:male</code> ont 2 utilisations chacune dans le
+      monde.</li>
+  <li>Hambourg, le même jour : 443 toilettes cartographiées, aucune avec un tag
+      <code>toilets:num_chambers*</code>. Le bandeau de la <a href="./">page d'accueil</a>
+      recalcule ces chiffres chaque nuit.</li>
+  <li>Et puis : les taux de tags mesurent la communauté des contributeurs, pas les villes. Les
+      toilettes à cabine unique restent correctement sans tag de genre. Un classement des villes
+      noterait les contributeurs d'OSM, pas l'équité des toilettes.</li>
+</ul>
+<p>La seule chose honnête à dire est donc : l'offre elle-même ne se mesure pas à partir de données
+ouvertes aujourd'hui. Ce site mesure ce qui est mesurable et transforme les manques en
+contributions.</p>
+
+<h2>Le seul fait calculable : où sont les tables</h2>
+<p><code>changing_table:location</code> est, à notre connaissance, le seul vocabulaire ouvert qui
+note dans quelle pièce se trouve une table à langer. Il est peu répandu :
+<span data-stat="location_total">3&nbsp;659</span> des <span data-stat="ct_total">77&nbsp;000</span>
+objets <code>changing_table</code> dans le monde, soit <span data-stat="share">4,8&nbsp;%</span>.
+Mais là où il existe, il est déséquilibré (taginfo,
+<span data-stat="date">26&nbsp;juillet&nbsp;2026</span>) :</p>
+<ul>
+  <li>Tables uniquement dans les WC femmes : <strong data-stat="female_only">485</strong>.</li>
+  <li>Tables uniquement dans les WC hommes : <strong data-stat="male_only">71</strong>. Environ
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> sont taguées
+      dans les deux pièces, <span data-stat="male_any">410</span> mentionnent ne serait-ce qu'une
+      table côté hommes. Dans le monde entier.</li>
+</ul>
+<p>L'échantillon est petit, et les contributeurs choisissent ce qu'ils notent. Il ne faut donc pas
+surinterpréter le rapport exact. La direction, elle, correspond à ce qui est documenté depuis
+longtemps ailleurs : par défaut, les tables à langer sont dans les WC femmes. Cela laisse les papas
+à la porte et désigne au passage qui s'occupe des couches. Cette carte rend visibles les données
+qui manquent. Et faciles à corriger.</p>
+
+<h2>Licence des données &amp; attribution</h2>
+<p>Toutes les données cartographiques &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
+contributors</a>, disponibles sous la
+<a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
+Les fichiers GeoJSON et de statistiques servis par ce site sont dérivés d'OSM et donc eux aussi
+sous ODbL. Les statistiques mondiales de tags viennent de
+<a href="https://taginfo.openstreetmap.org/">taginfo</a>.
+Le code du site est sous licence MIT.</p>
+
+<h2>Confidentialité</h2>
+<p>Un site statique. Pas de comptes, pas de cookies, pas d'analytics, pas de scripts de suivi. Le
+site ne stocke rien sur toi et n'a pas de base de données. Les tuiles de la carte viennent des
+serveurs de tuiles d'OpenStreetMap ; ces requêtes relèvent de la
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">politique de confidentialité de
+l'OSMF</a>. Si tu suis un lien vers MapComplete, StreetComplete ou openstreetmap.org, tu es sur
+leurs sites et tu édites sous ton propre compte OSM. Rien ne passe par nous. Pages officielles :
+<a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (en allemand).</p>
+
+<p class="muted">Sources : échantillon Overpass sur 8 centres-villes (9&nbsp;674 toilettes) du
+26&nbsp;juillet&nbsp;2026, et les statistiques de clés taginfo à la date indiquée plus haut. Les
+chiffres locaux viennent de la même requête nocturne qui construit la carte.</p>
+
+<h2>Comment ce site est fait</h2>
+<p>Pour coder et pour rédiger les textes, l'IA m'aide. Mais tout passe quand même sous mes yeux
+d'humain.</p>
+
+<script>
+// The taginfo numbers above and the two play-area numbers are the same ones the
+// nightly build already writes to data/stats.json. Read them from there rather
+// than maintaining them by hand: copied numbers rot, and on this page of all
+// pages that is embarrassing.
+// The markup holds the last known value, so without JS — or if the fetch fails
+// — the page still reads correctly, just a little older.
+(function () {
+  var LOCALE = "fr-FR";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      s = s || {};
+      var vals = {};
+      // The play-area numbers live in s.local, the taginfo values in s.global.
+      // Read them separately so the taginfo check below cannot swallow them:
+      // since the eleven-country build of 19 Aug 2026 both change every night,
+      // independently of each other.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
+      }
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "short", year: "numeric"
+            });
+          }
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* the numbers in the markup stand */ });
+})();
+</script>
+
+</body>
+</html>

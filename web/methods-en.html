@@ -5,12 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PapaMap — Methods &amp; honesty</title>
 <meta name="description" content="How PapaMap colours changing tables from OpenStreetMap, why no provision scorecard can be built from that data, and how to fix a grey pin yourself.">
-<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the three
-     language versions were never actually linked to each other. -->
+<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
+     language versions were never actually linked to each other. Nine of them
+     since 2026-08-19; every page must list every other or the set is
+     unreciprocated and ignored. -->
 <link rel="canonical" href="https://papamap.de/methods-en.html">
 <link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
 <link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
 <link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html">
+<link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html">
+<link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html">
+<link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
+<link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
+<link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
 <link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
 <style>
@@ -57,8 +65,9 @@ from the nightly build. The sample across eight city cores is from 26&nbsp;Jul&n
 that way.</p>
 
 <h2>What this map is. And what it is not.</h2>
-<p>PapaMap shows places in nine European countries — Germany, Denmark, Belgium, the Netherlands,
-Austria, Switzerland, Czechia, Poland and Sweden — where OpenStreetMap knows about a baby changing
+<p>PapaMap shows places in eleven European countries — Germany, Denmark, Belgium, the Netherlands,
+Austria, Switzerland, Czechia, Poland, Sweden, the United Kingdom and France — where OpenStreetMap
+knows about a baby changing
 table (<code>changing_table=yes</code> or <code>limited</code>). The color says whether a dad can
 reach the table. The map reads OSM and nothing else, and it writes nowhere. Fixing the data happens
 on OSM itself, through the links on each pin.</p>
@@ -273,7 +282,7 @@ eyes though.</p>
       var vals = {};
       // The play-area numbers live in s.local, the taginfo values in s.global.
       // Read them separately so the taginfo check below cannot swallow them:
-      // since the nine-country build of 19 Aug 2026 both change every night,
+      // since the eleven-country build of 19 Aug 2026 both change every night,
       // independently of each other.
       var l = s.local;
       if (l) {

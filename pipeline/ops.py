@@ -36,6 +36,15 @@ from .export import PAPAMAP_THEME_URL
 STATE_PATH = os.environ.get("PAPAMAP_OPS_STATE_PATH", "ops-state.json")
 STALE_AFTER_H = float(os.environ.get("PAPAMAP_OPS_STALE_H", "48"))
 DROP_ALERT_PCT = float(os.environ.get("PAPAMAP_OPS_DROP_PCT", "20"))
+# The mirror image of DROP_ALERT_PCT, and it exists because the drop check on
+# its own is one-sided. The dataset only ever jumps by a fifth for one reason —
+# the sweep got wider (a country added to PAPAMAP_COUNTRIES) — and the digest
+# reports that as "+4,200 new" mapping activity, then carries it inside the
+# rolling 7-day total for a week. That is the one number the weekly all-clear
+# exists to convey, so a quiet inbox would be actively misleading. Higher than
+# the drop threshold: real mapping never does this, but a Land coming back
+# after a failed night legitimately can.
+JUMP_ALERT_PCT = float(os.environ.get("PAPAMAP_OPS_JUMP_PCT", "25"))
 HISTORY_DAYS = 90
 WEEKLY_DIGEST_WEEKDAY = 0  # Monday
 
@@ -122,6 +131,12 @@ def find_anomalies(stats, counts, last_counts, now) -> list[str]:
                     f"{label} dropped {before} -> {after} "
                     f"(>{DROP_ALERT_PCT:.0f}%) — Overpass hiccup or "
                     "classification regression?")
+            elif before > 0 and after > before * (1 + JUMP_ALERT_PCT / 100):
+                anomalies.append(
+                    f"{label} jumped {before} -> {after} "
+                    f"(>{JUMP_ALERT_PCT:.0f}%) — sweep widened rather than "
+                    "mapping activity? the 'since yesterday' and 7-day "
+                    "figures below count the new area as new pins")
     return anomalies
 
 

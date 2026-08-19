@@ -4,7 +4,7 @@ import json
 from datetime import date as _date, timedelta
 from pathlib import Path
 
-from .config import (BUNDESLAENDER, HISTORY_MAX_DAYS, PAGES_BASE_PATH,
+from .config import (BUNDESLAENDER, FRANCE_REGIONS, chunked_area_names, HISTORY_MAX_DAYS, PAGES_BASE_PATH,
                      SITE_BASE_URL)
 from .export import write_text_atomic
 from .pages import FOOTER, ICON, STYLE, UP, de_date, de_num, esc, sort_key
@@ -300,6 +300,18 @@ L = {
         "regions_h2": "Bundesländer und Dänemark",
         "regions_note": ("<p>Dieselbe Rechnung für die {n} Bundesländer und "
                          "Dänemark als Ganzes.</p>\n"),
+        "regions_h2_regions": "Bundesländer, Régions und ganze Länder",
+        # Three groups now, and any of them can be absent (de,fr has no whole
+        # country at all), so the sentence is assembled from clauses rather
+        # than written out: a fixed template produces either "1 Länder", which
+        # is not German, or a dangling "und". Same problem regions_note_one
+        # below solves for the two-group case.
+        "regions_note_regions": "<p>Dieselbe Rechnung für {list}.</p>\n",
+        "cl_lands": "die {n} Bundesländer",
+        "cl_regions": "die {r} französischen Régions",
+        "cl_country_one": "{names} als Ganzes",
+        "cl_country_many": "{c} Länder als Ganzes ({names})",
+        "and_sep": " und ",
         "regions_h2_many": "Bundesländer und ganze Länder",
         "regions_note_many": ("<p>Dieselbe Rechnung für die {n} Bundesländer "
                               "und für {c} Länder als Ganzes: {names}.</p>\n"),
@@ -356,6 +368,14 @@ L = {
         "regions_h2": "German states and Denmark",
         "regions_note": ("<p>The same arithmetic for the {n} Bundesländer "
                          "and Denmark as a whole.</p>\n"),
+        "regions_h2_regions": ("German states, French régions and whole "
+                               "countries"),
+        "regions_note_regions": "<p>The same arithmetic for {list}.</p>\n",
+        "cl_lands": "the {n} Bundesländer",
+        "cl_regions": "the {r} French régions",
+        "cl_country_one": "{names} as a whole",
+        "cl_country_many": "{c} countries as a whole ({names})",
+        "and_sep": " and ",
         "regions_h2_many": "German states and whole countries",
         "regions_note_many": ("<p>The same arithmetic for the {n} Bundesländer "
                               "and for {c} countries as a whole: "
@@ -501,20 +521,27 @@ def _table(rows, name_col: str, tab: dict, lang: str) -> str:
     return "".join(parts)
 
 
-def _region_kinds(rows) -> tuple[int, list[str]]:
-    """(number of Bundesland rows, names of the whole-country rows), read off
-    the rows about to be printed.
+def _region_kinds(rows) -> tuple[int, int, list[str]]:
+    """(Bundesland rows, French-région rows, names of the whole-country rows),
+    read off the rows about to be printed.
 
     The regions table shows whatever the sweep produced, and since 18 Aug 2026
     that is a list the operator can extend: PAPAMAP_COUNTRIES=de,dk,be,… puts
     Belgium and its neighbours next to Bayern. A heading that hard-codes "16
     Bundesländer und Dänemark" is then simply false, so the section counts the
-    table in front of it instead. Everything not a Bundesland is a country
-    swept whole (config.COUNTRY_AREAS), which is exactly the distinction the
-    copy has to make. Country names sort like every other name column."""
+    table in front of it instead.
+
+    "Everything not a Bundesland is a country swept whole" was true until
+    France, and would now print Bretagne and Corse as sovereign states. The
+    whole-country list is therefore filtered against every chunk name in
+    config.COUNTRY_AREAS, not just the German ones — so a third chunked
+    country is at worst missing from the sentence, never miscounted in it.
+    Country names sort like every other name column."""
+    chunks = chunked_area_names()
     lands = sum(1 for r in rows if r["name"] in BUNDESLAENDER)
-    countries = [r["name"] for r in rows if r["name"] not in BUNDESLAENDER]
-    return lands, sorted(countries, key=sort_key)
+    regions = sum(1 for r in rows if r["name"] in FRANCE_REGIONS)
+    countries = [r["name"] for r in rows if r["name"] not in chunks]
+    return lands, regions, sorted(countries, key=sort_key)
 
 
 def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
@@ -545,7 +572,7 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         parts.append(tab["cities_note"].format(n=len(data["cities"])))
         parts.append(_table(data["cities"], tab["col_name_city"], tab, lang))
     if data["regions"]:
-        lands, countries = _region_kinds(data["regions"])
+        lands, fr_regions, countries = _region_kinds(data["regions"])
         # Which sentence fits is a question about *which* countries are in the
         # table, never about how many. The default build's one country is
         # Denmark and the German page has always named it outright, so that
@@ -558,7 +585,14 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         # them all without becoming a list, so the copy counts them and then
         # names them once — a reader who meets "Czechia" between two
         # Bundesländer can find out what it is.
-        if countries == ["Danmark"]:
+        if fr_regions:
+            # A second chunked country is in the table, so the two-way split
+            # the sentences below assume no longer describes it: France
+            # contributes régions, which are neither Bundesländer nor whole
+            # countries. Named rather than counted-and-listed, because 13 more
+            # names would turn the sentence into a directory.
+            kind = "_regions"
+        elif countries == ["Danmark"]:
             kind = ""
         elif len(countries) > 1:
             kind = "_many"
@@ -570,8 +604,23 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         else:
             kind = "_lands"
         parts.append(f'<h2>{esc(tab["regions_h2" + kind])}</h2>\n')
+        names = esc(", ".join(countries))
+        # Only the _regions sentence is assembled; the other three spell
+        # themselves out and ignore {list}.
+        clauses = []
+        if lands:
+            clauses.append(tab["cl_lands"].format(n=lands))
+        if fr_regions:
+            clauses.append(tab["cl_regions"].format(r=fr_regions))
+        if len(countries) == 1:
+            clauses.append(tab["cl_country_one"].format(names=names))
+        elif countries:
+            clauses.append(tab["cl_country_many"].format(
+                c=len(countries), names=names))
+        listed = (tab["and_sep"].join((", ".join(clauses[:-1]), clauses[-1]))
+                  if len(clauses) > 1 else (clauses[0] if clauses else ""))
         parts.append(tab["regions_note" + kind].format(
-            n=lands, c=len(countries), names=esc(", ".join(countries))))
+            n=lands, r=fr_regions, c=len(countries), names=names, list=listed))
         parts.append(_table(data["regions"], tab["col_name_region"], tab, lang))
 
     parts.append(tab["footer"].format(up=UP))

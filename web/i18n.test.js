@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { STRINGS, LANGS, NUMBER_LOCALE, pickLang, nextLang, fmt,
+import { STRINGS, LANGS, NUMBER_LOCALE, pickLang, fmt,
          langUrl, DEFAULT_LANG } from "./i18n.js";
 
 const tokens = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
@@ -36,16 +36,19 @@ test("every language counts the swept countries with a live {n}", () => {
       // A hard-coded number would go stale the moment a country is added; the
       // count has to come from area_key's countries_<n>.
       assert.deepEqual(tokens(s), ["n"], `${lang}.${key} must carry only {n}`);
-      assert.equal(fmt(s, { n: 9 }).includes("9"), true, `${lang}.${key}`);
+      assert.equal(fmt(s, { n: 11 }).includes("11"), true, `${lang}.${key}`);
     }
   }
 });
 
-test("the counted area label declines in German and only in German", () => {
-  // The wordmark says "9 Länder", the statsLocal sentence "… in 9 Ländern".
+test("the counted area label declines where the language declines", () => {
+  // The wordmark says "11 Länder", the statsLocal sentence "… in 11 Ländern".
   assert.notEqual(STRINGS.de.areaCountries, STRINGS.de.areaCountriesIn);
   // English and Danish are identical in both slots on purpose — this pins that
   // down so the duplication does not look like a copy-paste slip worth "fixing".
+  // The languages added in 2026-08 are deliberately NOT pinned either way:
+  // Czech and Polish inflect after their preposition, Dutch and French do not,
+  // and that is the translator's call, not this file's.
   assert.equal(STRINGS.en.areaCountries, STRINGS.en.areaCountriesIn);
   assert.equal(STRINGS.da.areaCountries, STRINGS.da.areaCountriesIn);
 });
@@ -59,16 +62,32 @@ test("pickLang: query beats stored beats browser beats default", () => {
   assert.equal(pickLang("xx", "yy"), DEFAULT_LANG);
 });
 
-test("pickLang: only Danish browsers are auto-detected", () => {
-  assert.equal(pickLang(null, null, "da-DK"), "da");
-  assert.equal(pickLang(null, null, "DA"), "da");
-  // A stored or shared choice still wins over the browser.
-  assert.equal(pickLang(null, "de", "da-DK"), "de");
-  assert.equal(pickLang("en", null, "da-DK"), "en");
-  // Everything else keeps the German default — an English-locale browser in
-  // Germany must not silently flip the site's language.
-  assert.equal(pickLang(null, null, "en-GB"), DEFAULT_LANG);
+test("pickLang: every language is auto-detected, not only Danish", () => {
+  for (const lang of LANGS) {
+    assert.equal(pickLang(null, null, lang), lang, `${lang} must be detected`);
+  }
+  assert.equal(pickLang(null, null, "DA"), "da", "case-insensitive");
+  // Region subtags are ignored — the tag still names the language.
+  assert.equal(pickLang(null, null, "en-GB"), "en");
+  assert.equal(pickLang(null, null, "de-AT"), "de");
+  assert.equal(pickLang(null, null, "fr-CH"), "fr");
+  assert.equal(pickLang(null, null, "pt-BR"), DEFAULT_LANG);
   assert.equal(pickLang(null, null, undefined), DEFAULT_LANG);
+});
+
+test("pickLang: reads the whole preference list, skipping what we don't speak", () => {
+  // navigator.languages is ordered by preference. An unsupported first entry
+  // must fall through to the next, not end the search at the German default.
+  assert.equal(pickLang(null, null, ["ga", "cs-CZ", "en"]), "cs");
+  assert.equal(pickLang(null, null, ["ja", "ko"]), DEFAULT_LANG);
+  assert.equal(pickLang(null, null, []), DEFAULT_LANG);
+  assert.equal(pickLang(null, null, ["sv"]), "sv");
+});
+
+test("pickLang: a stored or shared choice still beats the browser", () => {
+  assert.equal(pickLang(null, "de", ["da-DK"]), "de");
+  assert.equal(pickLang("en", null, ["da-DK"]), "en");
+  assert.equal(pickLang("pl", "de", ["sv"]), "pl");
 });
 
 test("langUrl gives each language a distinct address, German the bare one", () => {
@@ -92,14 +111,27 @@ test("fmt interpolates and leaves unknown tokens visible", () => {
   assert.equal(fmt("{a} und {missing}", { a: "x" }), "x und {missing}");
 });
 
-test("nextLang cycles through every language and back", () => {
-  assert.deepEqual(LANGS.map(nextLang), ["en", "da", "de"]);
-  assert.equal(nextLang("nonsense"), DEFAULT_LANG);
+test("every language names itself, distinctly, for the picker", () => {
+  // The picker is the only way to change language, so a reader who cannot read
+  // the current UI has to find their own row in it. Endonyms, never
+  // translated: a Czech looking for "Čeština" will not recognise "Tschechisch".
+  const names = LANGS.map((l) => STRINGS[l].langName);
+  for (const [i, lang] of LANGS.entries()) {
+    assert.ok(names[i] && names[i].trim(), `${lang} has no langName`);
+  }
+  assert.equal(new Set(names).size, LANGS.length, "langNames must be distinct");
+  assert.equal(STRINGS.de.langName, "Deutsch");
+  assert.equal(STRINGS.en.langName, "English");
 });
 
-test("the language button always names the language it lands on", () => {
+test("no language advertises a leaderboard page that is not built", () => {
+  // pipeline/leaderboard.py renders exactly two pages. Everything else has to
+  // borrow the English one — a boardHref pointing at rangliste-sv.html would
+  // be a 404 in the header of every Swedish page.
+  const built = new Set(["wickeltische/rangliste.html",
+                         "wickeltische/leaderboard.html"]);
   for (const lang of LANGS) {
-    assert.equal(STRINGS[lang].langButton, nextLang(lang).toUpperCase(),
-      `${lang}'s button must name ${nextLang(lang)}`);
+    assert.ok(built.has(STRINGS[lang].boardHref),
+      `${lang}.boardHref ${STRINGS[lang].boardHref} is not a generated page`);
   }
 });
