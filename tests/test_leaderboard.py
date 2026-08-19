@@ -121,6 +121,46 @@ def test_render_german_page(tmp_path):
     assert pages.ICON in html  # or the browser 404s on /favicon.ico
 
 
+def test_french_regions_are_not_printed_as_whole_countries():
+    # The regression this guards: "everything not a Bundesland is a country
+    # swept whole" was true until France was chunked, and would have listed
+    # Bretagne and Corse next to Sweden as sovereign states.
+    rows = [{"name": n} for n in
+            ["Bayern", "Berlin", "Bretagne", "Corse", "Île-de-France",
+             "Danmark", "Sweden", "United Kingdom"]]
+    lands, fr_regions, countries = leaderboard._region_kinds(rows)
+    assert lands == 2
+    assert fr_regions == 3
+    assert countries == ["Danmark", "Sweden", "United Kingdom"]
+
+
+def test_regions_heading_names_regions_when_france_is_swept(tmp_path):
+    history = {"v": 1, "days": [
+        day("2026-08-07", regions={"Bayern": [1, 0, 9], "Bretagne": [1, 0, 9],
+                                   "United Kingdom": [1, 0, 9]}),
+        day("2026-08-14", regions={"Bayern": [3, 0, 7], "Bretagne": [2, 0, 8],
+                                   "United Kingdom": [2, 0, 8]}),
+    ]}
+    data = leaderboard.leaderboard_data(history)
+    for lang, heading, claim in (
+            ("de", "Bundesländer, Régions und ganze Länder", "französischen Régions"),
+            ("en", "German states, French régions and whole countries",
+             "French régions")):
+        html = leaderboard.render_leaderboard(lang, data)
+        assert heading in html, lang
+        assert claim in html, lang
+        # The one thing the old copy got wrong: Bretagne counted as a country.
+        assert "Bretagne" not in html.split("<table")[0]
+    # One whole country must read as a name, never as "1 Länder"/"1 countries",
+    # and the clauses must not collide into "und ... und ...".
+    de = leaderboard.render_leaderboard("de", data)
+    assert "französischen Régions und United Kingdom als Ganzes" in de
+    assert "1 Länder" not in de
+    en = leaderboard.render_leaderboard("en", data)
+    assert "French régions and United Kingdom as a whole" in en
+    assert "1 countries" not in en
+
+
 def test_render_quiet_and_fresh_notes():
     still = {"Bayern": [2, 0, 8]}
     history = {"v": 1, "days": [day("2026-08-01", regions=dict(still)),

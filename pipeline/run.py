@@ -32,6 +32,9 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # the full default build: a partial or single-area sweep writing history
     # would poison every later delta with a day that misses most regions.
     if cities is None:
+        # `n in BUNDESLAENDER`, not just `lvl == "4"`: France's 13 régions are
+        # also admin_level=4, so the level alone stopped identifying a German
+        # Land the day France joined. Same in land_names below.
         lands = {n for n, lvl in areas if lvl == "4" and n in BUNDESLAENDER}
         cities = CITY_AREAS if len(lands) == len(BUNDESLAENDER) else ()
     # A hand-passed display_area is a name only — no translation can exist for
@@ -190,6 +193,9 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # a single-area debug build) writes none at all rather than publishing an
     # index page that claims Germany has one Bundesland. A partial German sweep
     # can't reach here: the sweep above aborts unless every area succeeded.
+    # Membership in BUNDESLAENDER is what makes this German-only; French
+    # régions share admin_level=4 and must not get /wickeltische/ pages, whose
+    # whole premise is that "Wickeltisch Bayern" is searched in German.
     land_names = sorted((n for n, lvl in areas if lvl == "4" and n in BUNDESLAENDER),
                         key=pages.sort_key)
     written = []

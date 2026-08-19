@@ -4,7 +4,7 @@ Guidance for coding agents working in this repository.
 
 ## What this is
 
-A static map of places in nine European countries with a baby changing table, coloured by whether a dad
+A static map of places in eleven European countries with a baby changing table, coloured by whether a dad
 can reach it: green = accessible room, red = women's room only, grey = nobody has recorded the room.
 A Python pipeline queries Overpass and taginfo and writes GeoJSON + one static German page per
 Bundesland; a vanilla-JS frontend renders them; a `caddy:2-alpine` container serves `web/` behind the
@@ -37,13 +37,23 @@ dad-accessible — inverting the entire point of the map. `ACCESSIBLE_TOKENS`, `
 **`CONTRACT.md` is the pipeline↔frontend contract.** Classification lives only in Python; the
 frontend consumes the `status` property and never re-derives it. `STATUSES` in `web/datasource.js`
 is the stable key set the UI renders zero badges from. Changing the emitted shape means amending
-CONTRACT.md — it is versioned by amendment, currently v12.
+CONTRACT.md — it is versioned by amendment, currently v13.
 
-**Overpass lies in two directions.** An all-Germany area query dies at a 60 s network idle cutoff,
-so Germany stays chunked per Bundesland (Denmark answers whole). And a mirror can return HTTP 200
-from a database months out of date — `pipeline/osm.py` reads `osm3s.timestamp_osm_base` and raises
-`StaleMirror`, which is skipped rather than retried on the same host. Never "simplify" either of
+**Overpass lies in two directions.** An all-Germany area query dies at a ~60 s network idle cutoff,
+so Germany stays chunked per Bundesland — and **France per région**, for the same reason and
+measured the same way (empty reply at 60.14 s for the country whole, 19 Aug 2026). Two chunked
+countries now, so a 13-entry `COUNTRY_AREAS["fr"]` is not redundant; collapsing it to one
+`admin_level=2` area brings back the failure and adds pins in the Caribbean, because the five
+overseas régions are `admin_level=4` too. The other nine answer whole. And a mirror can return HTTP
+200 from a database months out of date — `pipeline/osm.py` reads `osm3s.timestamp_osm_base` and
+raises `StaleMirror`, which is skipped rather than retried on the same host. Never "simplify" any of
 these away.
+
+**Judge a new sweep area on the slower of its TWO queries.** Every area is fetched twice a night,
+by `sweep_ql` and by `toilets_counts_ql`, and the cheap-looking counting one can be the slower:
+the UK measured 41.9 s sweeping but **45.2 s counting**, which is 82 % of the `[timeout:55]` budget
+and the tightest area in the project. The line is ~45 s (the slowest area otherwise shipped is the
+Netherlands at 41.7 s).
 
 **The MapComplete theme is loaded at runtime from this repo's raw URL**, so nobody migrates it when
 MapComplete's format changes — it would just stop loading, silently, on every grey pin.

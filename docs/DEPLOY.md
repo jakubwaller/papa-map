@@ -57,10 +57,17 @@ If Caddy runs in a container, bind-mount the site into it first (add
 
 `crontab -e`, matching the live schedule:
 ```cron
-30 4 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
+30 3 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
 ```
 Outside Docker the equivalent line is
-`0 4 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
+`30 3 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
+
+**03:30, not 04:30, since the UK and France joined the sweep (2026-08-19).** Eleven
+countries are 38 sweep areas and 104 Overpass queries, about 64 minutes against the
+nine-country 47 — and the ops mail below runs at 05:30. From 04:30 the build would still
+be writing when the digest reads `stats.json`, so the one health signal the site has
+would report a half-finished dataset. If the sweep grows again, move this line before
+adding the country, not after.
 
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.
@@ -111,7 +118,8 @@ when Denmark was added.
 
 `python -m pipeline.ops` compares today's dataset against yesterday's snapshot (state in
 `ops-state.json`, gitignored) and mails only on an anomaly — stale `generated_at` (>48 h),
-missing files, a >20% drop in the total or accessible count — plus one all-clear digest every
+missing files, a >20% drop **or a >25% jump** in the total or accessible count — plus one
+all-clear digest every
 Monday, so a silent week means the watcher itself died. The digest carries the day's and week's
 changes (new features, grey→green transitions = answered room questions) and, per configured
 token, zone-level visit totals (Cloudflare) and the count of changesets made through the
@@ -164,3 +172,18 @@ curl -s -o /dev/null -w "%{http_code}\n" https://DOMAIN/
 curl -s https://DOMAIN/data/stats.json | head
 tail -n 20 /path/to/papa-map/pipeline.log
 ```
+
+**After a change to `PAPAMAP_COUNTRIES`, check the served `area_key` before believing the
+deploy.** The site's copy is bind-mounted and live within seconds of a `git pull`, while the
+dataset only changes on the next build — so the two can disagree, and the failure is silent
+prose rather than an error:
+
+```bash
+curl -s https://DOMAIN/data/stats.json | grep -o '"area_key": *"[^"]*"'   # want countries_11
+curl -s https://DOMAIN/ | grep -c 'elf europäische Länder'                # want 1
+```
+
+Both or neither. If `area_key` still counts the old set, the build has not run under the new
+variable yet — run it by hand rather than waiting for cron, or the site claims a coverage it
+does not have until the next morning. `/data/*` is served with `Cache-Control: max-age=900`,
+so allow up to 15 minutes, or add `?x=1` to bust it.

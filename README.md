@@ -2,8 +2,9 @@
 
 **PapaMap — Wickeltische, die ein Vater erreicht.**
 
-A static map of places across nine European countries — Germany, Denmark, Belgium, the Netherlands,
-Austria, Switzerland, Czechia, Poland and Sweden — with a baby changing table, colored by whether a
+A static map of places across eleven European countries — Germany, Denmark, Belgium, the
+Netherlands, Austria, Switzerland, Czechia, Poland, Sweden, the United Kingdom and France — with a
+baby changing table, colored by whether a
 dad can actually reach it: **green** = accessible room (men's/unisex/dedicated/wheelchair),
 **red** = women's room only, **grey** = table exists but nobody has recorded which room —
 the call to action. Every grey pin deep-links to the same object on MapComplete so the
@@ -30,37 +31,46 @@ type hints working on the system Python.)
 python -m pipeline.run   # Overpass + taginfo -> web/data/*.json + web/wickeltische/*.html
 ```
 A fresh checkout sweeps all 16 Bundesländer plus Denmark and merges the
-results (an all-Germany area query dies at a 60 s network idle cutoff, so
+results (an all-Germany area query dies at a ~60 s network idle cutoff, so
 Germany stays chunked per Land; Denmark is small enough to answer whole in one
 `admin_level=2` query, ~15 s). ~5 min in total. papamap.de sweeps more than
-that — see the first bullet.
+that — see the first bullet. Germany is no longer the only chunked country:
+France is swept as its 13 metropolitan régions for exactly the same reason,
+measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
 
 - `PAPAMAP_COUNTRIES` picks the countries. **The code default is `de,dk`** — a
   fresh checkout and the test suite build Germany + Denmark, and that stays
-  that way on purpose, so neither depends on a nine-country sweep.
+  that way on purpose, so neither depends on an eleven-country sweep.
   **The deployment sets the variable instead:** `docker-compose.yml` carries
-  `PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se`, so from the 04:30 run of
-  19 Aug 2026 onward papamap.de sweeps nine European countries — Germany,
-  Denmark, Belgium, the Netherlands, Austria, Switzerland, Czechia, Poland and
-  Sweden. The seven neighbours are one `admin_level=2` area each, the way
-  Denmark is: `be` Belgium, `nl` Netherlands, `at` Austria, `ch` Switzerland,
-  `cz` Czechia, `pl` Poland, `se` Sweden. So `PAPAMAP_COUNTRIES=dk` builds
-  Denmark alone and `de,dk,at,ch` adds the German-speaking neighbours; an
-  unknown code aborts rather than silently sweeping less. (The map's
-  `maxBounds` north edge is 70°N rather than 65°N, or Swedish pins could never
-  be panned to. It only widens where a visitor may pan.)
-- Those seven areas are matched on `name:en`, because a country's own `name` can
-  be several languages at once — Belgium is "België / Belgique / Belgien",
+  `PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se,gb,fr`, so papamap.de sweeps
+  eleven European countries — Germany, Denmark, Belgium, the Netherlands,
+  Austria, Switzerland, Czechia, Poland, Sweden, the United Kingdom and France.
+  Codes are ISO 3166-1 alpha-2, so the UK is **`gb`**, not `uk`. Eight of them
+  are one `admin_level=2` area each, the way Denmark is: `be` Belgium, `nl`
+  Netherlands, `at` Austria, `ch` Switzerland, `cz` Czechia, `pl` Poland, `se`
+  Sweden, `gb` United Kingdom. `fr` is 13 areas, one per metropolitan région,
+  chunked the way `de` is. So `PAPAMAP_COUNTRIES=dk` builds Denmark alone and
+  `de,dk,at,ch` adds the German-speaking neighbours; an unknown code aborts
+  rather than silently sweeping less. (The map's `maxBounds` is
+  `[[-12,41],[32,70]]`: the north edge is 70°N rather than 65°N or Swedish pins
+  could never be panned to, and the south edge now has Corsica 0.38° inside it —
+  widen it *with* any push toward Spain or Italy, not after.)
+- Seven of those areas are matched on `name:en`, because a country's own `name`
+  can be several languages at once — Belgium is "België / Belgique / Belgien",
   Switzerland "Schweiz/Suisse/Svizzera/Svizra" — and a `name=` miss resolves to
   zero objects, which the build can only read as a failed sweep. Their region
   labels, on the leaderboard and in `history.json`, are therefore the English
   names. Germany and Denmark keep `name=`: `Deutschland` and `Danmark` are
-  existing history keys. France is left out on purpose — 7,739 `changing_table`
-  objects (measured 18 Aug 2026) do not fit one `[timeout:55]` query, so it
-  needs a per-région area list first.
+  existing history keys. The United Kingdom keeps it too — its `name` and
+  `name:en` are the same string. **France's régions must use `name=`**, where
+  `name:en` would actively break: it is `Bourgogne – Franche-Comté` with an en
+  dash, `Ile-de-France` with the accent dropped, and translated for four of the
+  thirteen. The 13 are an allowlist, not a subdivision — the five overseas
+  régions are `admin_level=4` too, and sweeping them would put pins in the
+  Caribbean, outside `maxBounds` where nothing can be panned to.
 - A build of three or more countries names itself by count rather than by name:
-  `stats.json`'s `area_key` becomes `countries_<n>` (`countries_9` for all
-  nine), since nine joined labels overflow the stats strip. One and two
+  `stats.json`'s `area_key` becomes `countries_<n>` (`countries_11` for all
+  eleven), since eleven joined labels overflow the stats strip. One and two
   countries keep `de` / `dk` / `de_dk`.
 - `PAPAMAP_AREA_NAME` + `PAPAMAP_AREA_ADMIN_LEVEL` select a single area instead
   (e.g. `Hamburg` / `4`), and `PAPAMAP_DISPLAY_AREA` names the dataset in the
@@ -104,7 +114,7 @@ chip therefore starts **off** and subtracts, while the three status chips start
 on. Costs no extra Overpass query: the sweep already returns every tag on these
 objects. Measured on the DE+DK build of 17 Aug 2026: 828 objects pass the rule
 and 111 of them are already pins (48 accessible / 13 female_only / 50 unknown).
-Those are DE+DK figures and the nine-country sweep is larger, so the served
+Those are DE+DK figures and the eleven-country sweep is larger, so the served
 numbers come from `stats.json` (`local.play_tables`, `local.play_places`) —
 the methods pages read them from there rather than repeating a number that
 moves every night.
@@ -165,14 +175,16 @@ node --test web/*.test.js  # frontend pure functions (needs Node.js)
 
 ## Cron
 ```cron
-30 4 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
+30 3 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
 ```
+(03:30 since the eleven-country sweep — ~64 min, and the ops mail is at 05:30.)
 (Matches the deploy in [`docs/DEPLOY.md`](docs/DEPLOY.md) — adjust if your clone lives
 elsewhere. Running the pipeline outside Docker works too; the venv variant is in the same
 file.)
 
 An optional second cron line runs `python -m pipeline.ops`: an anomaly-gated ops mail
-(stale data, missing files, count drops) plus a Monday all-clear digest with the week's
+(stale data, missing files, count drops **and count jumps** — a widened sweep is not
+mapping activity) plus a Monday all-clear digest with the week's
 grey→green transitions — see the "Ops mail" section in `docs/DEPLOY.md`.
 
 ## Deploy

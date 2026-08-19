@@ -152,6 +152,27 @@ header {
   cursor: pointer;
 }
 .lang-btn:hover { border-color: var(--green); color: var(--green); }
+/* The language control is a <select> since the set grew to nine (a cycle
+   button would have needed seven taps to reach Svenska). Kept visually
+   identical to the button it replaced: the platform's own arrow is dropped,
+   because at this size it crowded the two-to-ten-character label and the
+   control already reads as interactive from its border. The native popup
+   still opens on click, tap and keyboard. */
+select.lang-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  max-width: 10.5em;
+  text-overflow: ellipsis;
+  /* Safari right-aligns select text by default at some widths. */
+  text-align: left;
+}
+/* Options render in the OS popup, which does not inherit the header's
+   colours — say so explicitly or Windows dark mode draws black on black. */
+select.lang-btn option { background: #fff; color: #1c2b26; }
+@media (prefers-color-scheme: dark) {
+  select.lang-btn option { background: #1e2422; color: #e8ede9; }
+}
+.lang-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
 /* ---------- Stats strip ---------- */
 /* Only there to anchor the collapse toggle over the strip's own background. */

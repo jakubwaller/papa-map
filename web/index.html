@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f2f5f3" />
   <title>PapaMap — Wickeltische, die ein Vater erreicht</title>
-  <!-- Nine countries since the sweep of 2026-08-19; counted here, not listed —
-       the nine names add ~110 characters and Google shows about 160, so the
-       point of the sentence would fall outside the snippet. The JSON-LD block
-       below names all nine, where length costs nothing. -->
-  <meta name="description" content="Eine Karte der Wickeltische in neun europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
+  <!-- Eleven countries since the UK and France joined the sweep on 2026-08-19;
+       counted here, not listed — the eleven names add ~135 characters and
+       Google shows about 160, so the point of the sentence would fall outside
+       the snippet. The JSON-LD block below names all eleven, where length
+       costs nothing. -->
+  <meta name="description" content="Eine Karte der Wickeltische in elf europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
   <meta property="og:title" content="PapaMap — Wickeltische, die ein Vater erreicht" />
-  <meta property="og:description" content="Eine Karte der Wickeltische in neun europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
+  <meta property="og:description" content="Eine Karte der Wickeltische in elf europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://papamap.de/" />
   <meta property="og:image" content="https://papamap.de/og-image.jpg" />
@@ -20,22 +21,35 @@
   <meta property="og:locale" content="de_DE" />
   <meta property="og:locale:alternate" content="en_GB" />
   <meta property="og:locale:alternate" content="da_DK" />
+  <meta property="og:locale:alternate" content="nl_NL" />
+  <meta property="og:locale:alternate" content="fr_FR" />
+  <meta property="og:locale:alternate" content="it_IT" />
+  <meta property="og:locale:alternate" content="cs_CZ" />
+  <meta property="og:locale:alternate" content="pl_PL" />
+  <meta property="og:locale:alternate" content="sv_SE" />
   <meta name="twitter:card" content="summary_large_image" />
 
   <!-- The og:* block above stays German on purpose: link unfurlers don't run
        JS, so they only ever see this markup, and the German page is the one
        that gets shared. -->
 
-  <!-- One URL serves all three languages (?lang= is honoured on load), so each
+  <!-- One URL serves all nine languages (?lang= is honoured on load), so each
        language needs its own address before a search engine can index it —
-       until now Google only ever saw the German view. app.js rewrites the
-       canonical below to match the language it renders, otherwise the ?lang=
-       views advertised here would all fold back into the German one.
-       Absolute URLs: relative hreflang hrefs are ignored. -->
+       until 2026-08-04 Google only ever saw the German view. app.js rewrites
+       the canonical below to match the language it renders, otherwise the
+       ?lang= views advertised here would all fold back into the German one.
+       Absolute URLs: relative hreflang hrefs are ignored.
+       Keep in sync with i18n.js's LANGS and with sitemap.xml. -->
   <link rel="canonical" href="https://papamap.de/" />
   <link rel="alternate" hreflang="de" href="https://papamap.de/" />
   <link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en" />
   <link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da" />
+  <link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl" />
+  <link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr" />
+  <link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it" />
+  <link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs" />
+  <link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl" />
+  <link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv" />
   <link rel="alternate" hreflang="x-default" href="https://papamap.de/" />
 
   <!-- Mastodon link verification: the profile lists papamap.de, this is the
@@ -46,21 +60,23 @@
        index it as one. Deliberately free of table counts — the pipeline
        rewrites the data nightly and a hard-coded number would rot within a
        day; the country count only moves when the sweep itself grows.
-       spatialCoverage names all nine instead of summarising them: a machine
-       reading "neun europäische Länder" learns nothing about which. Germany
-       and Denmark keep OSM's endonyms; the seven added on 2026-08-19 carry the
-       plain English names the pipeline selects them by, which is also what
-       stats.json and the leaderboard show. -->
+       spatialCoverage names all eleven instead of summarising them: a machine
+       reading "elf europäische Länder" learns nothing about which. Germany
+       and Denmark keep OSM's endonyms; the nine added since carry the plain
+       English names the pipeline selects them by, which is also what
+       stats.json and the leaderboard show. France is named as the country
+       even though the sweep chunks it into 13 régions — the coverage claim is
+       about territory, not about query shape. -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Dataset",
-    "name": "PapaMap — Wickeltische in neun europäischen Ländern",
-    "description": "Wickeltische in neun europäischen Ländern — Deutschland, Dänemark, Belgien, den Niederlanden, Österreich, der Schweiz, Tschechien, Polen und Schweden — aus OpenStreetMap, klassifiziert danach, ob der Tisch für einen Vater erreichbar ist (Herren-/Unisex-WC oder eigener Wickelraum) oder nur im Damen-WC steht.",
+    "name": "PapaMap — Wickeltische in elf europäischen Ländern",
+    "description": "Wickeltische in elf europäischen Ländern — Deutschland, Dänemark, Belgien, den Niederlanden, Österreich, der Schweiz, Tschechien, Polen, Schweden, dem Vereinigten Königreich und Frankreich — aus OpenStreetMap, klassifiziert danach, ob der Tisch für einen Vater erreichbar ist (Herren-/Unisex-WC oder eigener Wickelraum) oder nur im Damen-WC steht.",
     "url": "https://papamap.de/",
-    "inLanguage": ["de", "en", "da"],
+    "inLanguage": ["de", "en", "da", "nl", "fr", "it", "cs", "pl", "sv"],
     "isAccessibleForFree": true,
-    "keywords": ["Wickeltisch", "changing table", "puslebord", "Wickelraum", "OpenStreetMap", "Barrierefreiheit"],
+    "keywords": ["Wickeltisch", "changing table", "puslebord", "table à langer", "verschoontafel", "Wickelraum", "OpenStreetMap", "Barrierefreiheit"],
     "license": "https://opendatacommons.org/licenses/odbl/1-0/",
     "isBasedOn": "https://www.openstreetmap.org/",
     "creator": { "@type": "Organization", "name": "PapaMap", "url": "https://papamap.de/" },
@@ -73,7 +89,9 @@
       { "@type": "Country", "name": "Switzerland" },
       { "@type": "Country", "name": "Czechia" },
       { "@type": "Country", "name": "Poland" },
-      { "@type": "Country", "name": "Sweden" }
+      { "@type": "Country", "name": "Sweden" },
+      { "@type": "Country", "name": "United Kingdom" },
+      { "@type": "Country", "name": "France" }
     ],
     "distribution": {
       "@type": "DataDownload",
@@ -85,7 +103,7 @@
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=eu1" />
+  <link rel="stylesheet" href="style.css?v=eu2" />
 </head>
 <body>
   <div id="map"></div>
@@ -117,7 +135,7 @@
         <span class="wordmark">
           <span class="name">PapaMap</span>
           <!-- Replaced by app.js with the area the pipeline actually swept. -->
-          <span class="city" id="scope" data-i18n="areaFallback">neun europäische Länder</span>
+          <span class="city" id="scope" data-i18n="areaFallback">elf europäische Länder</span>
         </span>
       </a>
       <!-- Also the page's only <h1>: the map had no heading at all, so search
@@ -134,8 +152,15 @@
         <a id="regions-link" href="wickeltische/">Bundesländer</a>
         <a id="board-link" href="wickeltische/rangliste.html" data-i18n="board">Rangliste</a>
         <a id="methods-link" href="methods.html" data-i18n="methods">Methoden</a>
-        <button id="lang-toggle" type="button" class="lang-btn" aria-label="Switch to English"
-                data-i18n="langButton" data-i18n-aria="ariaLang">EN</button>
+        <!-- A picker, not the old DE → EN → DA cycle button: nine languages
+             cannot be reached by cycling, and the native control is keyboard-
+             and screen-reader-accessible for free. app.js fills the options
+             from i18n.js's LANGS, each written in its own language; German is
+             inlined so the control is never empty before the module runs. -->
+        <select id="lang-select" class="lang-btn" aria-label="Sprache wählen"
+                data-i18n-aria="ariaLang">
+          <option value="de">Deutsch</option>
+        </select>
       </nav>
     </header>
 
@@ -182,6 +207,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=eu1"></script>
+  <script type="module" src="app.js?v=eu2"></script>
 </body>
 </html>

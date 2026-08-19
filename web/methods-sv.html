@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PapaMap — metod &amp; ärlighet</title>
+<meta name="description" content="Hur PapaMap färglägger skötbord från OpenStreetMap, varför man inte kan bygga något täckningsindex ur de uppgifterna, och hur du själv fixar en grå nål.">
+<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
+     language versions were never actually linked to each other. Nine of them
+     since 2026-08-19; every page must list every other or the set is
+     unreciprocated and ignored. -->
+<link rel="canonical" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
+<link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html">
+<link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html">
+<link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html">
+<link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
+<link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
+<link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
+    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
+      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
+    }
+  }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+         background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
+  table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
+  li { margin: 0.3rem 0; }
+  .back { font-size: 0.9rem; }
+  /* Nine languages, listed by their own names — "This page in X" nine times
+     would be a paragraph, and a reader who cannot read this page still
+     recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">&larr; Tillbaka till kartan</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <strong lang="sv">Svenska</strong></p>
+<h1>PapaMap — metod &amp; ärlighet</h1>
+<p class="muted">Skötbord som en pappa kommer åt. De globala taginfo-siffrorna nedan hämtas av
+det nattliga bygget. Stickprovet över åtta stadskärnor är från 26&nbsp;juli&nbsp;2026 och står
+kvar oförändrat.</p>
+
+<h2>Vad den här kartan är. Och vad den inte är.</h2>
+<p>PapaMap visar platser i elva europeiska länder — Tyskland, Danmark, Belgien, Nederländerna,
+Österrike, Schweiz, Tjeckien, Polen, Sverige, Storbritannien och Frankrike — där OpenStreetMap
+känner till ett skötbord
+(<code>changing_table=yes</code> eller <code>limited</code>). Färgen säger om en pappa kommer åt
+bordet. Kartan läser bara OSM och skriver ingenstans. Rätta uppgifterna gör du direkt i OSM,
+via länkarna på varje nål.</p>
+<p>Någon rankning av vilken stad som har bäst tillgång till toaletter är det här inte. Varför det
+inte går att göra ärligt ur öppna data står längre ner.</p>
+
+<h2>Vad färgerna betyder (den exakta regeln)</h2>
+<p>På kartan hamnar bara objekt med <code>changing_table=yes</code> eller <code>limited</code>
+(<code>no</code> räknas bara i statistiken). Färgen kommer från
+<code>changing_table:location</code>. Värdet delas vid <code>;</code>, trimmas, görs till gemener
+och jämförs som ett helt token. Aldrig som delsträng, för <code>female_toilet</code> innehåller
+<code>male</code>.</p>
+<ul>
+  <li><span class="dot g"></span><strong>Grönt:</strong> ett token är
+      <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
+      <code>room</code>, <code>wheelchair_toilet</code> eller <code>sales_area</code>.
+      En pappa kommer åt det.</li>
+  <li><span class="dot r"></span><strong>Rött:</strong> annars, om ett token är
+      <code>female_toilet</code>. Bordet finns, men bara på damtoaletten.</li>
+  <li><span class="dot u"></span><strong>Grått:</strong> allt annat. Ingen location-tagg, eller
+      bara fritext. Ingen har registrerat rummet. De grå nålarna är uppgiften.</li>
+</ul>
+<p>Ett undantag finns: objekt med en <code>centralkey</code>-tagg (utom <code>no</code>) visar
+kartan inte alls. Euronyckeln (tyska Euroschlüssel) och liknande centralnyckelsystem får man bara
+mot styrkt funktionsnedsättning — oavsett vilket rum bordet står i kommer de flesta pappor inte
+genom den dörren.</p>
+
+<h2>Den blå ringen: lekhörna</h2>
+<p>En nål med blå ring har dessutom en lekhörna &mdash; en plats där man inte bara byter blöja utan
+också blir kvar en stund. Filtret <em>Med lekhörna</em> i filterraden visar bara dem. En plats räknas
+om något av det här står i OSM:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> eller <code>designated</code>
+      &mdash; wikins dokumenterade sätt att säga &rdquo;inomhus&rdquo;.</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> eller
+      <code>designated</code> &mdash; lekhörnan på caféet, på restaurangen, på bageriet. Den mest
+      använda taggen, men den lämnar öppet om det är inne eller ute.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; en kommersiell
+      inomhuslekplats.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> tillsammans med
+      <code>indoor=yes</code> &mdash; samma sak, taggat tvärtom.</li>
+</ul>
+<p><code>outdoor</code> räknas inte: sandlådan på uteserveringen är inte det ringen lovar.
+<code>no</code> räknas inte, och inte <code>limited</code> heller — wikin definierar det som
+&rdquo;leksaker finns, men ingen egen yta&rdquo;. Står det någonstans uttryckligen
+<code>kids_area:indoor=no</code>, vinner det över ett ensamt <code>kids_area=yes</code>.</p>
+<p>Det här är ett märke, inte en fjärde status. En plats utan de här taggarna har inte &rdquo;ingen
+lekhörna&rdquo; — OSM säger helt enkelt ingenting om den. Därför finns här inget grått och ingen
+uppgift: vid <code>changing_table:location</code> är tystnaden talande, eftersom bordet bevisligen
+finns. Här tiger nästan alla objekt, och det betyder ingenting. Den som känner till en lekhörna får
+gärna lägga in den ändå — i OSM-editorn, med <code>kids_area=yes</code>.</p>
+
+<h2>De tomma blå ringarna: lekställen utan svar</h2>
+<p>Samma regel matchar långt fler platser än kartan har nålar. Bara
+<span data-stat="play_tables">111</span> av dem har över huvud taget en
+<code>changing_table</code>-tagg. På <span data-stat="play_places">701</span> till har ingen svarat
+på den första frågan: finns det ett skötbord här? Ja, nej, ingen vet — i OSM står det ingenting
+alls om det.</p>
+<p>De där <span data-stat="play_places">701</span> kan kartan inte färglägga, för det finns inget
+att färglägga. De är inte heller grå: grått betyder &rdquo;bordet finns, rummet saknas&rdquo;, och
+det gäller inte här. Därför får de ett eget filter, <em>Bara lekhörna</em>, som är avstängt som
+standard, och en tom blå ring i stället för en fylld nål.</p>
+<p>Det är de mest lovande öppna frågorna på hela kartan. En inomhuslekplats, ett café med bollhav,
+en restaurang med lekrum — en pappa med ett litet barn går dit ändå, och väl på plats vet han
+svaret. Ett klick på ringen öppnar MapComplete direkt på just den frågan. Blir den besvarad
+försvinner ringen vid nästa nattliga uppdatering, och en riktig nål står där i stället.</p>
+
+<h2>Så fixar du en grå nål</h2>
+<p>Grått betyder: ett svar saknas. Var står skötbordet? Det kan vem som helst med ett gratis
+OSM-konto besvara, på plats, på under en minut:</p>
+<ul>
+  <li><strong>MapComplete (vilken mobil som helst, i webbläsaren):</strong> &rdquo;Svara på
+      MapComplete&rdquo; på en grå nål öppnar samma objekt i PapaMaps eget MapComplete-tema
+      &mdash; på varje nål, så att redigeringarna går att känna igen som gjorda härifrån.
+      MapComplete varnar en gång för ett inofficiellt tema, det är okej. Logga in med ditt
+      OSM-konto och svara på skötbordsfrågorna, även den om rummet. Svaret går rakt in i
+      OpenStreetMap och syns här efter nästa nattliga uppdatering.</li>
+  <li><strong>StreetComplete (Android):</strong> har ett skötbordsuppdrag som är avstängt som
+      standard. Gå till <em>Inställningar &rarr; Uppdragsval och visningsordning</em>, sök efter
+      &rdquo;skötbord&rdquo; och bocka i det. Det frågar bara ja/nej. För rumsfrågan på en
+      befintlig grå nål tar du MapComplete.</li>
+</ul>
+<p class="muted">Redigeringarna görs under ditt eget OSM-konto och tillhör alla. De överlever den
+här webbplatsen och är till nytta för varje app som läser OpenStreetMap.</p>
+
+<h2 id="contribute">Så lägger du till en plats som saknas</h2>
+<p>PapaMap sparar ingenting själv. Att lägga till en plats betyder därför alltid: att redigera
+OpenStreetMap. Knappen <em>+ Ny plats</em> på kartan öppnar rätt editor vid det aktuella
+kartutsnittet.</p>
+
+<h3>En offentlig toalett saknas helt</h3>
+<p>Öppna <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMaps
+MapComplete-tema</a> (den första länken i dialogrutan). Logga in, tryck på kartan där toaletten
+finns, välj &rdquo;en offentlig toalett&rdquo; och svara på frågorna. Även de om skötbord och
+rum.</p>
+
+<h3>Ett café, en butik eller en restaurang har ett bord som ingen har registrerat</h3>
+<p>Platsen finns nästan säkert redan i OSM. Det är bara <code>changing_table</code>-taggen som
+saknas. I OSM:s egen editor (iD) tar det ungefär två minuter:</p>
+<ol>
+  <li>Skapa ett gratis konto på <a href="https://www.openstreetmap.org">openstreetmap.org</a>
+      (en e-postadress räcker) och logga in.</li>
+  <li>Sök upp platsen och klicka på <strong>Redigera</strong>. Platsen är en punkt eller en
+      byggnadskontur. Klicka på den, till vänster dyker dess taggar upp.</li>
+  <li>Fäll ut <strong>Alla taggar</strong> längst ner och lägg till med <strong>+</strong>:
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = var det står, ur den
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">dokumenterade
+            värdelistan</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> eller <code>sales_area</code>.
+            Står det i flera rum: separera med semikolon
+            (<code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Tryck <strong>Spara</strong>, skriv en kort kommentar (&rdquo;lade till skötbordets
+      rum&rdquo;) och ladda upp. Live på OSM inom en minut, på PapaMap efter nästa nattliga
+      uppdatering.</li>
+</ol>
+<p class="muted">Tagga bara det du själv har sett. OSM registrerar vad som finns, inte vad som
+borde finnas. Vet du inte vilket rum det är, är <code>changing_table=yes</code> ensamt ändå
+användbart: platsen blir en grå nål, och nästa pappa svarar på rumsfrågan.</p>
+
+<h2>Varför ett täckningsindex ur OSM inte går</h2>
+<p>Det närliggande, större projektet vore ett mått på tillgången till toaletter för män jämfört med
+kvinnor, stad för stad. Siffran som &rdquo;potty parity&rdquo; egentligen handlar om. Ur
+OpenStreetMap går den inte att räkna fram. Vi kontrollerade det innan vi byggde, med ett stickprov
+över åtta stadskärnor (Berlin, London, Paris, New York, Tokyo&nbsp;23&nbsp;stadsdelar, Amsterdam,
+Wien, Melbourne; 26&nbsp;juli&nbsp;2026):</p>
+<table>
+  <tr><th>Stad</th><th>Registrerade toaletter</th><th>Någon könstagg alls</th><th>Både M&nbsp;+&nbsp;K</th></tr>
+  <tr><td>Berlin</td><td>1&nbsp;173</td><td>660</td><td>119</td></tr>
+  <tr><td>London</td><td>1&nbsp;316</td><td>458</td><td>210</td></tr>
+  <tr><td>Paris</td><td>1&nbsp;414</td><td>579</td><td>101</td></tr>
+  <tr><td>New York</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Tokyo (23 stadsdelar)</td><td>3&nbsp;500</td><td>601</td><td>231</td></tr>
+  <tr><td>Amsterdam</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Wien</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
+  <tr><td><strong>Alla</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888 (29,9&nbsp;%)</strong></td><td><strong>827 (8,5&nbsp;%)</strong></td></tr>
+</table>
+<ul>
+  <li>Bara 29,9&nbsp;% av de registrerade toaletterna har över huvud taget en könstagg. Båda
+      (male och female): 8,5&nbsp;%.</li>
+  <li>Taggarna är rena ja/nej-uppgifter, aldrig antal. Antal bås per kön: noll i alla åtta
+      städerna. Den enda kapacitetsnyckeln, <code>toilets:num_chambers</code> (~27k användningar),
+      saknar könsuppdelning och kommer nästan helt från en gammal import. Dess varianter
+      <code>:female</code> / <code>:male</code> har 2 användningar var i hela världen.</li>
+  <li>Hamburg, kontrollerat samma dag: 443 registrerade toaletter, ingen med en
+      <code>toilets:num_chambers*</code>-tagg. Raden på <a href="./">startsidan</a> räknar om de
+      här talen varje natt.</li>
+  <li>Och: taggningsgrader mäter kartläggarna, inte städerna. Toaletter med ett enda bås
+      står korrekt utan könstagg. En jämförelse mellan städer skulle betygsätta OSM-bidragsgivare, inte
+      toalettjämlikhet.</li>
+</ul>
+<p>Det enda ärliga är alltså: själva tillgången går inte att mäta ur öppna data i dag. Den här
+webbplatsen mäter det som går att mäta och gör luckorna till bidrag.</p>
+
+<h2>Det enda som går att räkna fram: var borden står</h2>
+<p><code>changing_table:location</code> är såvitt vi vet det enda öppna vokabulär som håller reda
+på vilket rum ett skötbord står i. Det är glest ifyllt:
+<span data-stat="location_total">3&nbsp;659</span> av <span data-stat="ct_total">77&nbsp;000</span>
+<code>changing_table</code>-objekt i hela världen, <span data-stat="share">4,8&nbsp;%</span>. Men
+där det finns är det ensidigt (taginfo, <span data-stat="date">26&nbsp;juli&nbsp;2026</span>):</p>
+<ul>
+  <li>Bord bara på damtoaletten: <strong data-stat="female_only">485</strong>.</li>
+  <li>Bord bara på herrtoaletten: <strong data-stat="male_only">71</strong>. Grovt räknat
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> är taggade
+      i båda rummen, <span data-stat="male_any">410</span> noterar över huvud taget ett bord på
+      herrtoaletten. I hela världen.</li>
+</ul>
+<p>Stickprovet är litet, och det är kartläggarna som avgör vad de registrerar. Övertolka alltså inte
+det exakta förhållandet. Riktningen stämmer ändå med det som länge varit dokumenterat: skötbord
+hänger som standard på damtoaletten. Det stänger ute pappor och antyder på köpet vem som har
+ansvaret för blöjbyten. Den här kartan gör de saknade uppgifterna synliga. Och lätta att fixa.</p>
+
+<h2>Datalicens &amp; attribution</h2>
+<p>Alla kartdata &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
+contributors</a>, tillgängliga under
+<a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
+GeoJSON- och statistikfilerna som den här webbplatsen levererar är härledda ur OSM och därmed
+också ODbL. Den globala taggstatistiken kommer från
+<a href="https://taginfo.openstreetmap.org/">taginfo</a>.
+Webbplatsens egen kod är MIT-licensierad.</p>
+
+<h2>Integritet</h2>
+<p>En statisk webbplats. Inga konton, inga kakor, ingen webbanalys, inga spårningsskript. Sidan sparar
+ingenting om dig och har ingen databas. Kartrutorna kommer från OpenStreetMaps tile-servrar; för
+de förfrågningarna gäller
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF:s integritetspolicy</a>. Följer du en
+länk till MapComplete, StreetComplete eller openstreetmap.org är du på deras sidor och redigerar
+under ditt eget OSM-konto. Ingenting går via oss. Formalia:
+<a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (på tyska).</p>
+
+<p class="muted">Källor: Overpass-stickprov över 8 stadskärnor (9&nbsp;674 toaletter) från
+26&nbsp;juli&nbsp;2026 och taginfos nyckelstatistik med det datum som anges ovan. De lokala
+siffrorna kommer från samma nattliga fråga som bygger kartan.</p>
+
+<h2>Hur den här sidan blir till</h2>
+<p>När jag programmerar och skriver texterna får jag hjälp av AI. Men allt har jag ändå läst
+igenom själv.</p>
+
+<script>
+// The taginfo numbers above and the two play-area numbers are the same ones the
+// nightly build already writes to data/stats.json. Read them from there rather
+// than maintaining them by hand: copied numbers rot, and on this page of all
+// pages that is embarrassing.
+// The markup holds the last known value, so without JS — or if the fetch fails
+// — the page still reads correctly, just a little older.
+(function () {
+  var LOCALE = "sv-SE";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      s = s || {};
+      var vals = {};
+      // The play-area numbers live in s.local, the taginfo values in s.global.
+      // Read them separately so the taginfo check below cannot swallow them:
+      // since the eleven-country build of 19 Aug 2026 both change every night,
+      // independently of each other.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
+      }
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "short", year: "numeric"
+            });
+          }
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* the numbers in the markup stand */ });
+})();
+</script>
+
+</body>
+</html>

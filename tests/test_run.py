@@ -17,15 +17,22 @@ NOW = datetime(2026, 7, 26, 3, 0, tzinfo=timezone.utc)
 SWEEP = [(name, "4") for name in BUNDESLAENDER] + [("Danmark", "2")]
 CITY_SWEEP = [(area, lvl) for _, area, lvl in CITY_AREAS]
 
-# The widest subset an operator can select today: Germany and Denmark plus the
-# seven neighbours that each answer whole inside the [timeout:55] budget.
-# France is deliberately not among them (7,739 objects, twice the UK's) until
-# it gets a per-région area list. Selecting it is not the default — see
-# test_default_sweep_is_still_germany_and_denmark.
+# The seven neighbours that each answer whole inside the [timeout:55] budget,
+# plus Germany and Denmark. Kept as its own name because several tests are
+# about exactly this shape — one admin_level=2 area per country.
 RING = ("de", "dk", "be", "nl", "at", "ch", "cz", "pl", "se")
 RING_SWEEP = SWEEP + [("Belgium", "2"), ("Netherlands", "2"), ("Austria", "2"),
                       ("Switzerland", "2"), ("Czechia", "2"), ("Poland", "2"),
                       ("Sweden", "2")]
+
+# What papamap.de actually sweeps (docker-compose.yml). The UK is one whole
+# area like the neighbours; France is the second CHUNKED country, 13
+# metropolitan régions at admin_level=4, because the country whole is an empty
+# reply at 60.14 s. Selecting either is not the default — see
+# test_default_sweep_is_still_germany_and_denmark.
+DEPLOYED = RING + ("gb", "fr")
+DEPLOYED_SWEEP = (RING_SWEEP + [("United Kingdom", "2")]
+                  + [(n, "4") for n in config.FRANCE_REGIONS])
 
 
 def _fake_overpass(load_fixture):
@@ -404,6 +411,60 @@ def test_ring_subset_sweeps_each_neighbour_as_one_country_area(monkeypatch):
     assert all(lvl == "2" for name, lvl in areas if name not in BUNDESLAENDER)
 
 
+def test_deployed_set_chunks_france_and_sweeps_the_uk_whole(monkeypatch):
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", DEPLOYED)
+    areas = config.sweep_areas()
+    assert areas == DEPLOYED_SWEEP
+    # 16 Bundesländer + 8 whole countries + the UK + 13 French régions.
+    assert len(areas) == 38
+    assert ("United Kingdom", "2") in areas
+    # France must never appear as one area: that query returns nothing at all.
+    assert ("France", "2") not in areas
+    assert sum(1 for n, lvl in areas if n in config.FRANCE_REGIONS) == 13
+
+
+def test_french_regions_are_selected_by_name_not_name_en(monkeypatch):
+    # The opposite of the neighbours. name:en is actively wrong on this set —
+    # "Bourgogne – Franche-Comté" carries an en dash and "Ile-de-France" drops
+    # the accent — and a miss resolves to zero objects, which run.py can only
+    # read as a failed sweep.
+    for region in config.FRANCE_REGIONS:
+        assert region not in config.NAME_EN_AREAS, region
+        assert config.area_name_key(region) == "name"
+        assert f'area["name"="{region}"]' in config.sweep_ql(region, "4")
+
+
+def test_france_overseas_regions_are_excluded_by_name_not_by_level():
+    # The five DROM are admin_level=4 as well, so the level does not filter
+    # them — only the hard-coded allowlist does. Sweeping them would put pins
+    # in the Caribbean, outside the frontend's maxBounds where nothing can be
+    # panned to.
+    for drom in ("Guadeloupe", "Martinique", "Guyane", "La Réunion", "Mayotte"):
+        assert drom not in config.FRANCE_REGIONS
+    assert len(config.FRANCE_REGIONS) == 13
+
+
+def test_united_kingdom_needs_no_name_en_and_stays_one_area():
+    assert "United Kingdom" not in config.NAME_EN_AREAS
+    assert config.area_name_key("United Kingdom") == "name"
+    assert config.COUNTRY_AREAS["gb"] == (("United Kingdom", "2"),)
+
+
+def test_every_country_code_has_a_label(monkeypatch):
+    # display_area() indexes COUNTRY_LABELS with no .get(): a code present in
+    # COUNTRY_AREAS but missing here is a bare KeyError at the top of the run.
+    assert set(config.COUNTRY_AREAS) == set(config.COUNTRY_LABELS)
+
+
+def test_chunked_area_names_covers_both_chunked_countries():
+    # The leaderboard uses this to avoid printing Bretagne as a sovereign state.
+    chunks = config.chunked_area_names()
+    assert set(config.BUNDESLAENDER) <= chunks
+    assert set(config.FRANCE_REGIONS) <= chunks
+    for whole in ("Danmark", "Sweden", "United Kingdom", "Poland"):
+        assert whole not in chunks
+
+
 def test_display_area_counts_the_set_past_two_countries(monkeypatch):
     monkeypatch.setattr(config, "SWEEP_COUNTRIES", RING)
     name, key = config.display_area()
@@ -413,6 +474,11 @@ def test_display_area_counts_the_set_past_two_countries(monkeypatch):
     assert key == "countries_9"
     assert name == ("Deutschland & Danmark & Belgium & Netherlands & Austria "
                     "& Switzerland & Czechia & Poland & Sweden")
+    # What the deployment actually publishes.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", DEPLOYED)
+    name11, key11 = config.display_area()
+    assert key11 == "countries_11"
+    assert name11.endswith("& Sweden & United Kingdom & France")
     # Three countries is already past the point where naming the set scales.
     monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("de", "dk", "nl"))
     assert config.display_area() == ("Deutschland & Danmark & Netherlands",
@@ -441,12 +507,13 @@ def test_unknown_country_code_fails_the_build(monkeypatch):
 
 
 def test_a_country_not_in_the_list_fails_the_build(monkeypatch):
-    # France is deliberately outside COUNTRY_AREAS (7,739 objects, twice the
-    # UK's — it does not fit the [timeout:55] budget as one area and needs a
-    # per-région list first). Asking for it must abort the build rather than
-    # build the rest and publish a map that quietly stops at the border.
-    monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("de", "fr"))
-    with pytest.raises(ValueError, match="fr"):
+    # "zz" is not a country and never will be — deliberately bogus rather than
+    # a real ISO code, because this test used to say "fr" and quietly stopped
+    # testing anything the day France was added. Asking for an unknown code
+    # must abort the build rather than build the rest and publish a map that
+    # quietly stops at the border.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("de", "zz"))
+    with pytest.raises(ValueError, match="zz"):
         config.sweep_areas()
     with pytest.raises(ValueError, match="fr"):
         config.display_area()  # the stats strip must not degrade quietly either

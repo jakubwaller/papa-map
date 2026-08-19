@@ -2,16 +2,20 @@
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=eu1";
-import { STRINGS, NUMBER_LOCALE, pickLang, nextLang, fmt,
-         langUrl } from "./i18n.js?v=eu1";
+         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=eu2";
+import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
+         langUrl } from "./i18n.js?v=eu2";
 
-// ---- Language: German default, DE → EN → DA cycle. A shared ?lang= link wins
-// over the stored choice, which wins over a Danish browser; toggling stores the
-// choice and strips the param so it doesn't override the next visit.
+// ---- Language: German default, nine languages, picked not cycled. A shared
+// ?lang= link wins over the stored choice, which wins over the browser's own
+// preference list; choosing stores it and strips the param so it doesn't
+// override the next visit.
+// navigator.languages, not navigator.language: it is the full ordered
+// preference list, so a reader whose first choice we don't speak still gets
+// their second rather than falling straight to German.
 let lang = pickLang(new URLSearchParams(location.search).get("lang"),
                     localStorage.getItem("papamap-lang"),
-                    navigator.language);
+                    navigator.languages ?? navigator.language);
 const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 
 // index.html ships German head tags; the ?lang= views have to carry their own,
@@ -42,6 +46,10 @@ function applyI18n() {
   }
   document.getElementById("methods-link").href = t("methodsHref");
   document.getElementById("board-link").href = t("boardHref");
+  // Boot may have resolved a language the markup does not show (a stored
+  // choice, or a Czech browser): the control has to agree with the page.
+  const sel = document.getElementById("lang-select");
+  if (sel && sel.value !== lang) sel.value = lang;
 }
 
 // Names, hours and tag values in the popups originate from OpenStreetMap
@@ -541,9 +549,27 @@ document.getElementById("add-place").addEventListener("click", () => {
 });
 document.getElementById("add-close").addEventListener("click", () => addDialog.close());
 
-// ---- Language toggle: re-render everything that carries text ----
-document.getElementById("lang-toggle").addEventListener("click", () => {
-  lang = nextLang(lang);
+// ---- Language picker: re-render everything that carries text ----
+// A <select> rather than the old DE → EN → DA cycle button. Nine languages
+// cannot be reached by cycling — a Swede would tap seven times — and the
+// native control is keyboard- and screen-reader-accessible for free and gets
+// the platform's own wheel on a phone.
+//
+// Options are built from LANGS rather than written into index.html, so the
+// list and the language set cannot drift apart, and each is labelled with that
+// language's own name: a reader who cannot read the current UI can still find
+// their own row.
+const langSelect = document.getElementById("lang-select");
+langSelect.replaceChildren(...LANGS.map((code) => {
+  const opt = document.createElement("option");
+  opt.value = code;
+  opt.textContent = STRINGS[code]?.langName ?? code;
+  return opt;
+}));
+langSelect.value = lang;
+
+langSelect.addEventListener("change", () => {
+  lang = LANGS.includes(langSelect.value) ? langSelect.value : DEFAULT_LANG;
   localStorage.setItem("papamap-lang", lang);
   // A ?lang= param would override the stored choice on reload — drop it.
   if (new URLSearchParams(location.search).has("lang")) {
@@ -580,7 +606,7 @@ async function loadJSON(url) {
 }
 
 async function boot() {
-  applyI18n();  // markup default is German — swap before first paint if EN
+  applyI18n();  // markup default is German — swap before first paint if not
   const [fc, places, stats] = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
     loadJSON("data/play_places.geojson"),
