@@ -51,11 +51,13 @@ WEEKLY_DIGEST_WEEKDAY = 0  # Monday
 
 CF_GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql"
 OSMCHA_URL = "https://osmcha.org/api/v1/changesets/"
-# OSMCha's metadata filter is a JSONB scan over its whole changeset table, so
-# it gets slower as OSM grows, not as our query changes: 21.9 s when the line
-# was added (2026-08-13), over 150 s by 2026-08-18. This runs once a day at
-# 03:30 and nothing waits on it, so the budget is set generously rather than
-# tightly — a re-measurement is not something anyone will remember to do.
+# OSMCha's metadata filter is a JSONB scan over its whole changeset table, and
+# what it costs is not ours to predict: the same query measured 21.9 s on
+# 2026-08-13, over 150 s on 2026-08-18 (280 s to complete), and 0.5 s on
+# 2026-08-19. That is variance in their service, not drift we could track —
+# so the budget is deliberately far above any measurement rather than fitted
+# to the last one, and the caller reports a timeout instead of hiding it.
+# Nothing waits on this: it runs once a day, after the build.
 OSMCHA_TIMEOUT_S = float(os.environ.get("PAPAMAP_OSMCHA_TIMEOUT_S", "300"))
 
 STATUS_KEYS = ("accessible", "female_only", "unknown")
