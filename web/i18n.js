@@ -332,7 +332,7 @@ export const STRINGS = {
   // Nederlands — added 19 Aug 2026 with the UK and France; the Netherlands and Flanders.
   nl: {
     title: "PapaMap — Verschoontafels waar een papa bij kan",
-    metaDescription: "Een kaart van de verschoontafels in elf Europese landen, ingekleurd naar de vraag of een papa er echt bij kan. Data: OpenStreetMap.",
+    metaDescription: "Een kaart van de verschoontafels (luiertafels) in elf Europese landen, ingekleurd naar de vraag of een papa er echt bij kan. Data: OpenStreetMap.",
     tagline: "Verschoontafels waar een papa bij kan",
     addPlace: "+ Plek toevoegen",
     methods: "Methode",

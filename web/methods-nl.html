@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PapaMap — Methoden &amp; eerlijkheid</title>
-<meta name="description" content="Hoe PapaMap verschoontafels uit OpenStreetMap inkleurt, waarom je daaruit geen index van het toiletaanbod kunt bouwen en hoe je zelf een grijze pin repareert.">
+<meta name="description" content="Hoe PapaMap verschoontafels (luiertafels) uit OpenStreetMap inkleurt, waarom je daaruit geen index van het toiletaanbod kunt bouwen en hoe je zelf een grijze pin repareert.">
 <!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
      language versions were never actually linked to each other. Nine of them
      since 2026-08-19; every page must list every other or the set is
@@ -84,6 +84,9 @@ Oostenrijk, Zwitserland, Tsjechië, Polen, Zweden, het Verenigd Koninkrijk en Fr
 OpenStreetMap een verschoontafel kent (<code>changing_table=yes</code> of <code>limited</code>).
 De kleur zegt of een papa bij de tafel kan. De kaart leest alleen OSM en schrijft nergens naartoe.
 De gegevens verbeter je op OSM zelf, via de links bij elke pin.</p>
+<p class="muted">Verschoontafel, luiertafel, babyverschooncommode &mdash; hetzelfde ding, ander
+woord per streek. In Vlaanderen is het doorgaans de <em>luiertafel</em>; deze pagina houdt het
+bij één woord.</p>
 <p>Een ranglijst van welke stad het beste toiletaanbod heeft, is dit niet. Waarom dat uit open
 data niet eerlijk kan, staat verderop.</p>
 
@@ -155,13 +158,14 @@ een gratis OSM-account beantwoorden, ter plekke, in minder dan een minuut:</p>
   <li><strong>MapComplete (elke telefoon, in de browser):</strong> &ldquo;Beantwoorden op
       MapComplete&rdquo; bij een grijze pin opent hetzelfde object in het eigen PapaMap-thema van
       MapComplete &mdash; bij elke pin, zodat de bewerkingen herkenbaar van hier komen. MapComplete
-      waarschuwt één keer voor een niet-officieel thema, dat is prima. Log in met je OSM-account en
-      beantwoord de vragen over de verschoontafel, ook die over de ruimte. Het antwoord gaat
+      waarschuwt één keer voor een niet-officieel thema, dat is prima. De vragen van het thema
+      staan er voorlopig alleen in het Engels. Log in met je OSM-account en beantwoord de vragen
+      over de verschoontafel, ook die over de ruimte. Het antwoord gaat
       rechtstreeks naar OpenStreetMap en is hier na de volgende nachtelijke update te zien.</li>
   <li><strong>StreetComplete (Android):</strong> heeft een verschoontafel-quest, die standaard uit
       staat. Ga naar <em>Instellingen &rarr; Vraagselectie en -prioriteit</em>, zoek op
-      &ldquo;verschonen&rdquo;) en vink hem aan. Hij vraagt alleen
-      ja/nee. Voor de vraag over de ruimte bij een bestaande grijze pin gebruik je MapComplete.</li>
+      &ldquo;verschonen&rdquo; en vink hem aan. Hij vraagt alleen ja/nee. Voor de vraag over de
+      ruimte bij een bestaande grijze pin gebruik je MapComplete.</li>
 </ul>
 <p class="muted">De bewerkingen lopen onder je eigen OSM-account en zijn van iedereen. Ze overleven
 deze website en helpen elke app die OpenStreetMap leest.</p>
@@ -184,7 +188,7 @@ In de eigen editor van OSM (iD) duurt dat ongeveer twee minuten:</p>
       (één e-mailadres is genoeg) en log in.</li>
   <li>Zoek de plek op en klik op <strong>Bewerken</strong>. De plek is een punt of een
       gebouwomtrek. Klik erop, links verschijnen de tags.</li>
-  <li>Klap onderaan <strong>Alle tags</strong> open en voeg met <strong>+</strong> toe:
+  <li>Klap onderaan <strong>Tags</strong> open en voeg met <strong>+</strong> toe:
       <ul>
         <li><code>changing_table</code> = <code>yes</code></li>
         <li><code>changing_table:location</code> = waar hij staat, uit de
