@@ -54,11 +54,25 @@
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
+  /* Nine languages, listed by their own names — "This page in X" nine times
+     would be a paragraph, and a reader who cannot read this page still
+     recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
 </style>
 </head>
 <body>
 
-<p class="back"><a href="index.html">&larr; Zpět na mapu</a> · <a href="methods.html" hreflang="de">Diese Seite auf Deutsch</a> · <a href="methods-da.html" hreflang="da">Denne side på dansk</a></p>
+<p class="back"><a href="index.html">&larr; Zpět na mapu</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <strong lang="cs">Čeština</strong>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a></p>
 <h1>PapaMap — metody &amp; upřímnost</h1>
 <p class="muted">Přebalovací pulty, ke kterým se táta dostane. Celosvětová čísla z taginfo níže
 načítá noční build. Vzorek z osmi center měst je z 26.&nbsp;července&nbsp;2026 a zůstává beze
@@ -71,20 +85,20 @@ OpenStreetMap ví, že tam je přebalovací pult
 (<code>changing_table=yes</code> nebo <code>limited</code>). Barva říká, jestli se táta k pultu
 dostane. Mapa čte jen OSM a nikam nezapisuje. Opravit data můžeš přímo na OSM, přes odkazy u
 každého špendlíku.</p>
-<p>Žebříček, které město má nejlepší vybavenost toaletami, tohle není. Proč to z otevřených dat
-poctivě nejde, je popsané níž.</p>
+<p>Žebříček měst podle vybavenosti toaletami to není. Proč to z otevřených dat poctivě nejde, je
+popsané níž.</p>
 
 <h2>Co barvy znamenají (přesné pravidlo)</h2>
 <p>Na mapu se dostanou jen objekty s <code>changing_table=yes</code> nebo <code>limited</code>
 (<code>no</code> se počítá jen do statistiky). Barva vychází z
-<code>changing_table:location</code>. Hodnota se rozdělí podle <code>;</code>, ořízne o mezery,
+<code>changing_table:location</code>. Hodnota se rozdělí podle <code>;</code>, zbaví okolních mezer,
 převede na malá písmena a porovnává se jako celý token. Nikdy jako podřetězec, protože
 <code>female_toilet</code> obsahuje <code>male</code>.</p>
 <ul>
   <li><span class="dot g"></span><strong>Zelená:</strong> jeden z tokenů je
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code> nebo <code>sales_area</code>.
-      Táta se k němu dostane.</li>
+      Táta se k pultu dostane.</li>
   <li><span class="dot r"></span><strong>Červená:</strong> jinak, pokud je jeden z tokenů
       <code>female_toilet</code>. Pult existuje, ale jen na dámském WC.</li>
   <li><span class="dot u"></span><strong>Šedá:</strong> všechno ostatní. Žádný location tag, nebo
@@ -101,7 +115,7 @@ se dá i chvíli zůstat. Filtr <em>S dětským koutkem</em> zúží mapu jen na
 je v OSM aspoň jedno z toho:</p>
 <ul>
   <li><span class="ring"></span><code>kids_area:indoor=yes</code> nebo <code>designated</code>
-      &mdash; způsob, jakým se podle wiki říká &bdquo;uvnitř&ldquo;.</li>
+      &mdash; způsob, jakým se podle wiki zapisuje &bdquo;uvnitř&ldquo;.</li>
   <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> nebo
       <code>designated</code> &mdash; dětský koutek v kavárně, v restauraci, u pekaře.
       Nejpoužívanější tag, který ale nechává otevřené, jestli je uvnitř, nebo venku.</li>
@@ -121,13 +135,13 @@ mlčí skoro všechny objekty, a to neznamená nic. Kdo dětský koutek zná, kl
 editoru OSM, tagem <code>kids_area=yes</code>.</p>
 
 <h2>Prázdné modré kroužky: místa na hraní bez odpovědi</h2>
-<p>Stejné pravidlo sedí na mnohem víc míst, než kolik má mapa špendlíků. Jen
+<p>Stejné pravidlo platí pro mnohem víc míst, než kolik má mapa špendlíků. Jen
 <span data-stat="play_tables">111</span> z nich má vůbec nějaký tag <code>changing_table</code>. U
 dalších <span data-stat="play_places">701</span> nikdo neodpověděl na první otázku: je tady
 přebalovací pult? Ano, ne, nikdo neví — v OSM o tom není vůbec nic.</p>
 <p>Těchto <span data-stat="play_places">701</span> míst mapa obarvit nemůže, protože není co
 barvit. Nejsou ani šedá: šedá znamená &bdquo;pult existuje, chybí místnost&ldquo;, a to sem
-nepatří. Dostávají proto vlastní chip, <em>Jen dětský koutek</em>, který je ve výchozím stavu
+nepatří. Dostávají proto vlastní filtr <em>Jen dětský koutek</em>, který je ve výchozím stavu
 vypnutý, a místo plného špendlíku prázdný modrý kroužek.</p>
 <p>Jsou to nejnadějnější otevřené otázky na celé mapě. Kryté hřiště, kavárna s balónkovým bazénem,
 restaurace s hernou &mdash; táta s batoletem tam stejně jde, a když už tam je, odpověď zná.
@@ -145,8 +159,8 @@ bezplatným účtem na OSM, přímo na místě, za necelou minutu:</p>
       odpověz na otázky k přebalovacímu pultu, i na tu o místnosti. Odpověď jde rovnou do
       OpenStreetMap a je tady vidět po nejbližší noční aktualizaci.</li>
   <li><strong>StreetComplete (Android):</strong> má úkol na přebalovací pult, který je ve výchozím
-      stavu vypnutý. V <em>Nastavení &rarr; Výběr úkolů &amp; priorita</em> vyhledej
-      &bdquo;přebalovací pult&ldquo; a zaškrtni ho. Ptá se jen ano/ne. Na otázku po místnosti u
+      stavu vypnutý. V <em>Nastavení &rarr; Výběr úkolů a jejich priorita</em> vyhledej
+      &bdquo;přebalovací&ldquo; a zaškrtni ho. Ptá se jen ano/ne. Na otázku po místnosti u
       existujícího šedého špendlíku použij MapComplete.</li>
 </ul>
 <p class="muted">Úpravy běží pod tvým vlastním účtem na OSM a patří všem. Přežijí tenhle web a
@@ -157,7 +171,7 @@ pomůžou každé aplikaci, která čte OpenStreetMap.</p>
 <em>+ Přidat místo</em> na mapě otevře správný editor na aktuálním výřezu.</p>
 
 <h3>Veřejné WC úplně chybí</h3>
-<p>Vezmi <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">téma
+<p>Otevři si <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">téma
 PapaMap pro MapComplete</a> (první odkaz v dialogu). Přihlas se, ťukni na mapu tam, kde WC je,
 vyber &bdquo;veřejná toaleta&ldquo;, odpověz na otázky. I na ty o přebalovacím pultu a
 místnosti.</p>
@@ -192,8 +206,8 @@ se stane šedý špendlík a na otázku po místnosti odpoví další táta.</p>
 <h2>Proč index vybavenosti z OSM nejde</h2>
 <p>Nabízel by se větší projekt: poměr vybavenosti toaletami pro muže a pro ženy podle měst. Číslo, o
 které při &bdquo;potty parity&ldquo; ve skutečnosti jde. Z OpenStreetMap ho spočítat nelze.
-Ověřili jsme si to ještě předtím, než jsme mapu postavili, vzorkem z osmi center měst (Berlín, Londýn, Paříž, New
-York, Tokio&nbsp;23&nbsp;obvodů, Amsterdam, Vídeň, Melbourne;
+Ověřili jsme si to ještě předtím, než jsme mapu postavili, vzorkem z osmi center měst (Berlín,
+Londýn, Paříž, New York, Tokio&nbsp;23&nbsp;obvodů, Amsterdam, Vídeň, Melbourne;
 26.&nbsp;července&nbsp;2026):</p>
 <table>
   <tr><th>Město</th><th>Zaznamenané toalety</th><th>Nějaký tag pohlaví</th><th>Obojí M&nbsp;+&nbsp;F</th></tr>
@@ -208,7 +222,8 @@ York, Tokio&nbsp;23&nbsp;obvodů, Amsterdam, Vídeň, Melbourne;
   <tr><td><strong>Celkem</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888 (29,9&nbsp;%)</strong></td><td><strong>827 (8,5&nbsp;%)</strong></td></tr>
 </table>
 <ul>
-  <li>Nějaký tag pohlaví má jen 29,9&nbsp;% zaznamenaných toalet. Obojí (male i female) má 8,5&nbsp;%.</li>
+  <li>Nějaký tag pohlaví má jen 29,9&nbsp;% zaznamenaných toalet. Obojí (male i female) má
+      8,5&nbsp;%.</li>
   <li>Tagy jsou čistě ano/ne, nikdy počty. Počty kabinek podle pohlaví: ve všech osmi městech nula.
       Jediný klíč ke kapacitě, <code>toilets:num_chambers</code> (~27k použití), je bez rozlišení
       pohlaví a pochází skoro celý ze starého importu. Jeho varianty <code>:female</code> /
@@ -216,7 +231,7 @@ York, Tokio&nbsp;23&nbsp;obvodů, Amsterdam, Vídeň, Melbourne;
   <li>Hamburk, prověřený týž den: 443 zaznamenaných toalet, žádná s tagem
       <code>toilets:num_chambers*</code>. Lišta na <a href="./">úvodní stránce</a> tahle čísla
       přepočítává každou noc.</li>
-  <li>A ještě: míra otagování měří komunitu mapperů, ne města. Jednokabinkové toalety správně
+  <li>A ještě: míra otagování měří komunitu přispěvatelů, ne města. Jednokabinkové toalety správně
       zůstávají bez tagu pohlaví. Srovnání měst by známkovalo přispěvatele OSM, ne toaletní
       spravedlnost.</li>
 </ul>
@@ -237,9 +252,9 @@ tam, kde existuje, je jednostranný (taginfo,
       otagovaných v obou místnostech, <span data-stat="male_any">410</span> zaznamenává vůbec
       nějaký pult na pánském WC. Celosvětově.</li>
 </ul>
-<p>Vzorek je malý a mappeři si sami vybírají, co zaznamenají. Přesný poměr proto nepřeceňuj. Směr
-ale sedí na to, co je odjinud dávno doložené: přebalovací pulty visí standardně na dámském WC. To
-tátům zavírá dveře a mimochodem tiše předpokládá, kdo má přebalování na starosti. Tahle mapa dělá
+<p>Vzorek je malý a přispěvatelé si sami vybírají, co zaznamenají. Přesný poměr proto nepřeceňuj.
+Směr ale sedí na to, co je odjinud dávno doložené: přebalovací pulty visí standardně na dámském WC.
+To tátům zavírá dveře a tiše přitom předpokládá, kdo má přebalování na starosti. Tahle mapa dělá
 chybějící data viditelnými. A snadno opravitelnými.</p>
 
 <h2>Licence dat &amp; uvedení zdroje</h2>
@@ -252,8 +267,8 @@ Vlastní kód webu je pod licencí MIT.</p>
 
 <h2>Soukromí</h2>
 <p>Statický web. Žádné účty, žádné cookies, žádná analytika, žádné sledovací skripty. Stránka o
-tobě nic neukládá a nemá databázi. Mapové dlaždice pocházejí z dlaždicových serverů OpenStreetMap, na
-tyhle požadavky se vztahují
+tobě nic neukládá a nemá databázi. Mapové dlaždice pocházejí ze serverů OpenStreetMap, na tyhle
+požadavky se vztahují
 <a href="https://osmfoundation.org/wiki/Privacy_Policy">zásady ochrany soukromí OSMF</a>. Když
 klikneš na odkaz na MapComplete, StreetComplete nebo openstreetmap.org, jsi na jejich stránkách a
 edituješ pod svým vlastním účtem na OSM. Přes nás při tom nejde nic. Formality:

@@ -118,7 +118,8 @@ when Denmark was added.
 
 `python -m pipeline.ops` compares today's dataset against yesterday's snapshot (state in
 `ops-state.json`, gitignored) and mails only on an anomaly — stale `generated_at` (>48 h),
-missing files, a >20% drop in the total or accessible count — plus one all-clear digest every
+missing files, a >20% drop **or a >25% jump** in the total or accessible count — plus one
+all-clear digest every
 Monday, so a silent week means the watcher itself died. The digest carries the day's and week's
 changes (new features, grey→green transitions = answered room questions) and, per configured
 token, zone-level visit totals (Cloudflare) and the count of changesets made through the
@@ -171,3 +172,18 @@ curl -s -o /dev/null -w "%{http_code}\n" https://DOMAIN/
 curl -s https://DOMAIN/data/stats.json | head
 tail -n 20 /path/to/papa-map/pipeline.log
 ```
+
+**After a change to `PAPAMAP_COUNTRIES`, check the served `area_key` before believing the
+deploy.** The site's copy is bind-mounted and live within seconds of a `git pull`, while the
+dataset only changes on the next build — so the two can disagree, and the failure is silent
+prose rather than an error:
+
+```bash
+curl -s https://DOMAIN/data/stats.json | grep -o '"area_key": *"[^"]*"'   # want countries_11
+curl -s https://DOMAIN/ | grep -c 'elf europäische Länder'                # want 1
+```
+
+Both or neither. If `area_key` still counts the old set, the build has not run under the new
+variable yet — run it by hand rather than waiting for cron, or the site claims a coverage it
+does not have until the next morning. `/data/*` is served with `Cache-Control: max-age=900`,
+so allow up to 15 minutes, or add `?x=1` to bust it.

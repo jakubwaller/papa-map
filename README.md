@@ -183,7 +183,8 @@ elsewhere. Running the pipeline outside Docker works too; the venv variant is in
 file.)
 
 An optional second cron line runs `python -m pipeline.ops`: an anomaly-gated ops mail
-(stale data, missing files, count drops) plus a Monday all-clear digest with the week's
+(stale data, missing files, count drops **and count jumps** — a widened sweep is not
+mapping activity) plus a Monday all-clear digest with the week's
 grey→green transitions — see the "Ops mail" section in `docs/DEPLOY.md`.
 
 ## Deploy

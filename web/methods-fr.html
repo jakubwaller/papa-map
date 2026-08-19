@@ -54,11 +54,25 @@
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
+  /* Nine languages, listed by their own names — "This page in X" nine times
+     would be a paragraph, and a reader who cannot read this page still
+     recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
 </style>
 </head>
 <body>
 
-<p class="back"><a href="index.html">&larr; Retour à la carte</a> · <a href="methods.html" hreflang="de">Diese Seite auf Deutsch</a> · <a href="methods-da.html" hreflang="da">Denne side på dansk</a></p>
+<p class="back"><a href="index.html">&larr; Retour à la carte</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <strong lang="fr">Français</strong>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a></p>
 <h1>PapaMap — méthodes &amp; honnêteté</h1>
 <p class="muted">Des tables à langer accessibles aux papas. Les chiffres taginfo mondiaux
 ci-dessous viennent du build nocturne. L'échantillon sur huit centres-villes date du
@@ -77,7 +91,7 @@ le faire honnêtement à partir de données ouvertes, c'est expliqué plus bas.<
 <h2>Ce que les couleurs veulent dire (la règle exacte)</h2>
 <p>Seuls les objets avec <code>changing_table=yes</code> ou <code>limited</code> arrivent sur la
 carte (<code>no</code> ne compte que dans les statistiques). La couleur vient de
-<code>changing_table:location</code>. La valeur est découpée aux <code>;</code>, débarrassée des
+<code>changing_table:location</code>. La valeur est découpée à chaque <code>;</code>, débarrassée des
 espaces, mise en minuscules et comparée comme un token entier. Jamais comme une sous-chaîne, car
 <code>female_toilet</code> contient <code>male</code>.</p>
 <ul>
@@ -99,8 +113,8 @@ porte.</p>
 
 <h2>L'anneau bleu : le coin jeux</h2>
 <p>Un marqueur avec un anneau bleu a en plus un coin jeux &mdash; un endroit où l'on ne fait pas que
-changer le petit, on y reste un moment. Le filtre <em>Avec coin jeux</em> ne montre que ceux-là. Un
-lieu compte si l'un de ces tags est dans OSM :</p>
+changer le petit, où l'on reste aussi un moment. Le filtre <em>Avec coin jeux</em> ne montre que
+ceux-là. Un lieu compte si l'un de ces tags est dans OSM :</p>
 <ul>
   <li><span class="ring"></span><code>kids_area:indoor=yes</code> ou <code>designated</code>
       &mdash; la façon documentée dans le wiki de dire « à l'intérieur ».</li>
@@ -121,7 +135,7 @@ promet. <code>no</code> non plus, ni <code>limited</code> &mdash; le wiki défin
 jeux » &mdash; OSM n'en dit tout simplement rien. Il n'y a donc ici ni gris ni appel à contribuer :
 avec <code>changing_table:location</code>, le silence est parlant, parce qu'on sait que la table
 existe. Ici presque tous les objets se taisent, et cela ne veut rien dire. Si tu connais un coin
-jeux, l'ajouter reste bienvenu &mdash; dans l'éditeur OSM, avec <code>kids_area=yes</code>.</p>
+jeux, ajoute-le quand même &mdash; dans l'éditeur OSM, avec <code>kids_area=yes</code>.</p>
 
 <h2>Les anneaux bleus vides : des lieux pour jouer, sans réponse</h2>
 <p>La même règle correspond à bien plus de lieux que la carte n'a de marqueurs. Seuls
@@ -147,14 +161,13 @@ OSM gratuit peut y répondre, sur place, en moins d'une minute :</p>
       MapComplete » sur un marqueur gris ouvre le même objet dans le thème MapComplete propre à
       PapaMap &mdash; sur chaque marqueur, pour que les modifications soient reconnaissables
       comme venant d'ici. MapComplete prévient une seule fois qu'il s'agit d'un thème non
-      officiel, c'est normal. Connecte-toi avec ton compte OSM et réponds aux questions sur la table à langer, y
-      compris celle sur la pièce. La réponse part directement dans OpenStreetMap et apparaît ici
-      après la prochaine mise à jour nocturne.</li>
+      officiel, c'est normal. Connecte-toi avec ton compte OSM et réponds aux questions sur la
+      table à langer, y compris celle sur la pièce. La réponse part directement dans OpenStreetMap
+      et apparaît ici après la prochaine mise à jour nocturne.</li>
   <li><strong>StreetComplete (Android) :</strong> propose une quête sur les tables à langer,
-      désactivée
-      par défaut. Va dans <em>Paramètres &rarr; Sélection et priorité des quêtes</em>, cherche
-      « table à langer » et coche-la. Elle ne demande que oui/non. Pour la question de la pièce
-      sur un marqueur gris existant, utilise MapComplete.</li>
+      désactivée par défaut. Va dans <em>Paramètres &rarr; Sélection des quêtes et priorités</em>,
+      cherche « table à langer » et coche-la. Elle ne demande que oui/non. Pour la question de la
+      pièce sur un marqueur gris existant, utilise MapComplete.</li>
 </ul>
 <p class="muted">Les modifications se font sous ton propre compte OSM et appartiennent à tout le
 monde. Elles survivent à ce site et servent à toutes les applications qui lisent
@@ -259,8 +272,8 @@ qui manquent. Et faciles à corriger.</p>
 
 <h2>Licence des données &amp; attribution</h2>
 <p>Toutes les données cartographiques &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
-contributors</a>, disponibles sous la
-<a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
+contributors</a>, disponibles sous l'<a href="https://opendatacommons.org/licenses/odbl/">Open
+Database License (ODbL)</a>.
 Les fichiers GeoJSON et de statistiques servis par ce site sont dérivés d'OSM et donc eux aussi
 sous ODbL. Les statistiques mondiales de tags viennent de
 <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
@@ -269,15 +282,15 @@ Le code du site est sous licence MIT.</p>
 <h2>Confidentialité</h2>
 <p>Un site statique. Pas de comptes, pas de cookies, pas d'analytics, pas de scripts de suivi. Le
 site ne stocke rien sur toi et n'a pas de base de données. Les tuiles de la carte viennent des
-serveurs de tuiles d'OpenStreetMap ; ces requêtes relèvent de la
+serveurs d'OpenStreetMap ; ces requêtes relèvent de la
 <a href="https://osmfoundation.org/wiki/Privacy_Policy">politique de confidentialité de
 l'OSMF</a>. Si tu suis un lien vers MapComplete, StreetComplete ou openstreetmap.org, tu es sur
-leurs sites et tu édites sous ton propre compte OSM. Rien ne passe par nous. Pages officielles :
+leurs sites et tu édites sous ton propre compte OSM. Rien ne passe par nous. Mentions légales :
 <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (en allemand).</p>
 
 <p class="muted">Sources : échantillon Overpass sur 8 centres-villes (9&nbsp;674 toilettes) du
-26&nbsp;juillet&nbsp;2026, et les statistiques de clés taginfo à la date indiquée plus haut. Les
+26&nbsp;juillet&nbsp;2026, et statistiques de clés taginfo à la date indiquée plus haut. Les
 chiffres locaux viennent de la même requête nocturne qui construit la carte.</p>
 
 <h2>Comment ce site est fait</h2>

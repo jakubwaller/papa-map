@@ -54,11 +54,25 @@
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
+  /* Nine languages, listed by their own names — "This page in X" nine times
+     would be a paragraph, and a reader who cannot read this page still
+     recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
 </style>
 </head>
 <body>
 
-<p class="back"><a href="index.html">&larr; Powrót do mapy</a> · <a href="methods.html" hreflang="de">Diese Seite auf Deutsch</a> · <a href="methods-da.html" hreflang="da">Denne side på dansk</a></p>
+<p class="back"><a href="index.html">&larr; Powrót do mapy</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <strong lang="pl">Polski</strong>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a></p>
 <h1>PapaMap — metody i uczciwość</h1>
 <p class="muted">Przewijaki, do których dotrze tata. Światowe liczby z taginfo poniżej pobiera
 nocny build. Próbka z ośmiu centrów miast jest z 26&nbsp;lipca&nbsp;2026 i taka zostaje.</p>
@@ -83,7 +97,7 @@ zamieniana na małe litery i porównywana jako cały token. Nigdy jako fragment 
   <li><span class="dot g"></span><strong>Zielony:</strong> któryś token to
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code> albo <code>sales_area</code>.
-      Tata do niego dotrze.</li>
+      Tata dotrze do przewijaka.</li>
   <li><span class="dot r"></span><strong>Czerwony:</strong> w przeciwnym razie, jeśli któryś token
       to <code>female_toilet</code>. Przewijak jest, ale tylko w damskiej toalecie.</li>
   <li><span class="dot u"></span><strong>Szary:</strong> cała reszta. Brak tagu z lokalizacją albo
@@ -101,7 +115,7 @@ przewija, ale i zostaje na dłużej. Filtr <em>Z kącikiem zabaw</em> pokazuje n
 Miejsce się liczy, jeśli w OSM jest którykolwiek z tych zapisów:</p>
 <ul>
   <li><span class="ring"></span><code>kids_area:indoor=yes</code> albo <code>designated</code>
-      &mdash; udokumentowany w wiki sposób na powiedzenie &bdquo;w środku&rdquo;.</li>
+      &mdash; udokumentowany w wiki zapis oznaczający &bdquo;w środku&rdquo;.</li>
   <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> albo
       <code>designated</code> &mdash; kącik zabaw w kawiarni, w restauracji, u piekarza.
       Najczęściej używany tag, choć nie rozstrzyga, czy w środku, czy na dworze.</li>
@@ -112,8 +126,8 @@ Miejsce się liczy, jeśli w OSM jest którykolwiek z tych zapisów:</p>
 </ul>
 <p><code>outdoor</code> się nie liczy: piaskownica w ogródku piwnym to nie jest to, co obwódka
 obiecuje. <code>no</code> też nie i <code>limited</code> też nie — wiki definiuje je jako
-&bdquo;są zabawki, ale nie ma wydzielonego miejsca&rdquo;. Jeśli gdzieś stoi wyraźne
-<code>kids_area:indoor=no</code>, wygrywa ono z samym <code>kids_area=yes</code>.</p>
+&bdquo;są zabawki, ale nie ma wydzielonego miejsca&rdquo;. Jeśli gdzieś jest wyraźne
+<code>kids_area:indoor=no</code>, ma ono pierwszeństwo przed samym <code>kids_area=yes</code>.</p>
 <p>To odznaka, a nie czwarty status. Jeśli miejsce nie ma tych tagów, to nie znaczy, że nie ma
 kącika zabaw — OSM po prostu nic o nim nie mówi. Dlatego nie ma tu szarości ani zadania do
 wykonania: przy <code>changing_table:location</code> milczenie jest wymowne, bo wiadomo, że
@@ -132,11 +146,11 @@ zabaw</em>, domyślnie wyłączony, i pustą niebieską obwódkę zamiast wypeł
 <p>To najbardziej obiecujące otwarte pytania na całej mapie. Sala zabaw, kawiarnia z basenem
 z kulkami, restauracja z pokojem zabaw &mdash; tata z małym dzieckiem i tak tam pójdzie, a kiedy
 już tam jest, zna odpowiedź. Kliknięcie w obwódkę otwiera MapComplete dokładnie na tym jednym
-pytaniu. Wystarczy odpowiedzieć, a przy najbliższej nocnej aktualizacji obwódka zniknie, a na jej
-miejscu stanie prawdziwa pinezka.</p>
+pytaniu. Wystarczy odpowiedzieć, a przy najbliższej nocnej aktualizacji obwódka zniknie i jej
+miejsce zajmie prawdziwa pinezka.</p>
 
 <h2>Jak naprawić szarą pinezkę</h2>
-<p>Szary znaczy: brakuje jednej odpowiedzi. Gdzie jest przewijak? Może jej udzielić każdy, kto ma
+<p>Szary znaczy: brakuje jednej odpowiedzi. Gdzie jest przewijak? Odpowiedzieć może każdy, kto ma
 darmowe konto OSM, na miejscu, w niecałą minutę:</p>
 <ul>
   <li><strong>MapComplete (dowolny telefon, w przeglądarce):</strong> &bdquo;Odpowiedz
@@ -146,7 +160,7 @@ darmowe konto OSM, na miejscu, w niecałą minutę:</p>
       się kontem OSM i odpowiedz na pytania o przewijak, także na to o pomieszczenie. Odpowiedź
       idzie prosto do OpenStreetMap i widać ją tutaj po najbliższej nocnej aktualizacji.</li>
   <li><strong>StreetComplete (Android):</strong> ma zadanie o przewijak, domyślnie wyłączone.
-      Wejdź w <em>Ustawienia &rarr; Wybór zadań i priorytety</em>, wyszukaj &bdquo;przewijak&rdquo;
+      Wejdź w <em>Ustawienia &rarr; Wybór zadań i priorytet ich wyświetlania na mapie</em>, wyszukaj &bdquo;przewijak&rdquo;
       i zaznacz je. Pyta tylko tak/nie. Do pytania o pomieszczenie przy istniejącej szarej pinezce
       użyj MapComplete.</li>
 </ul>
@@ -158,8 +172,8 @@ stronę i przydadzą się każdej aplikacji, która czyta OpenStreetMap.</p>
 OpenStreetMap. Przycisk <em>+ Dodaj miejsce</em> na mapie otwiera właściwy edytor na aktualnym
 wycinku mapy.</p>
 
-<h3>Brakuje całej toalety publicznej</h3>
-<p>Weź <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">motyw
+<h3>W ogóle brakuje toalety publicznej</h3>
+<p>Otwórz <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">motyw
 PapaMap w MapComplete</a> (pierwszy link w oknie). Zaloguj się, stuknij w mapę tam, gdzie jest
 toaleta, wybierz &bdquo;toaletę publiczną&rdquo;, odpowiedz na pytania. Także na te o przewijak
 i o pomieszczenie.</p>
@@ -187,7 +201,7 @@ W edytorze samego OSM (iD) zajmuje to jakieś dwie minuty:</p>
       przewijaka&rdquo;), wyślij. Na OSM widać to po minucie, na PapaMap po najbliższej nocnej
       aktualizacji.</li>
 </ol>
-<p class="muted">Taguj proszę tylko to, co widzisz na własne oczy. OSM zapisuje to, co jest, a nie
+<p class="muted">Proszę, taguj tylko to, co widzisz na własne oczy. OSM zapisuje to, co jest, a nie
 to, co być powinno. Jeśli nie znasz pomieszczenia, samo <code>changing_table=yes</code> i tak się
 przyda: miejsce staje się szarą pinezką, a kolejny tata odpowie na pytanie o pomieszczenie.</p>
 
@@ -223,14 +237,14 @@ Amsterdam, Wiedeń, Melbourne; 26&nbsp;lipca&nbsp;2026):</p>
       OSM, a nie sprawiedliwość toaletową.</li>
 </ul>
 <p>Uczciwe jest więc tylko jedno: samej dostępności nie da się dziś zmierzyć z otwartych danych.
-Ta strona mierzy to, co mierzalne, i zamienia luki w dane w konkretne poprawki.</p>
+Ta strona mierzy to, co mierzalne, i zamienia braki w danych w konkretne poprawki.</p>
 
 <h2>Jedyny policzalny fakt: gdzie są przewijaki</h2>
 <p><code>changing_table:location</code> jest, o ile wiemy, jedynym otwartym słownikiem, który
 zapisuje, w jakim pomieszczeniu stoi przewijak. Wypełniany jest rzadko:
 <span data-stat="location_total">3&nbsp;659</span> z <span data-stat="ct_total">77&nbsp;000</span>
 obiektów <code>changing_table</code> na całym świecie, <span data-stat="share">4,8%</span>. Ale
-tam, gdzie jest, jest jednostronny (taginfo,
+tam, gdzie się pojawia, jest jednostronny (taginfo,
 <span data-stat="date">26&nbsp;lipca&nbsp;2026</span>):</p>
 <ul>
   <li>Przewijaki tylko w damskiej toalecie: <strong data-stat="female_only">485</strong>.</li>
@@ -248,12 +262,12 @@ za przewijanie. Ta mapa pokazuje brakujące dane. I ułatwia ich naprawę.</p>
 <p>Wszystkie dane mapowe &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, dostępne na licencji
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
-Pliki GeoJSON i pliki statystyk, które serwuje ta strona, pochodzą z OSM, więc też są na ODbL.
+Pliki GeoJSON i pliki statystyk, które udostępnia ta strona, pochodzą z OSM, więc też są na ODbL.
 Światowe statystyki tagów pochodzą z <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Własny kod strony jest na licencji MIT.</p>
 
 <h2>Prywatność</h2>
-<p>Statyczna strona. Żadnych kont, żadnych ciasteczek, żadnych analytics, żadnych skryptów
+<p>Statyczna strona. Żadnych kont, żadnych ciasteczek, żadnej analityki, żadnych skryptów
 śledzących. Strona nic o tobie nie zapisuje i nie ma bazy danych. Kafelki mapy pochodzą
 z serwerów OpenStreetMap; tych zapytań dotyczy
 <a href="https://osmfoundation.org/wiki/Privacy_Policy">polityka prywatności OSMF</a>. Jeśli

@@ -54,11 +54,25 @@
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
+  /* Nine languages, listed by their own names — "This page in X" nine times
+     would be a paragraph, and a reader who cannot read this page still
+     recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
 </style>
 </head>
 <body>
 
-<p class="back"><a href="index.html">&larr; Terug naar de kaart</a> · <a href="methods.html" hreflang="de">Diese Seite auf Deutsch</a> · <a href="methods-da.html" hreflang="da">Denne side på dansk</a></p>
+<p class="back"><a href="index.html">&larr; Terug naar de kaart</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <strong lang="nl">Nederlands</strong>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a></p>
 <h1>PapaMap — methoden &amp; eerlijkheid</h1>
 <p class="muted">Verschoontafels waar een papa bij kan. De wereldwijde taginfo-cijfers hieronder
 haalt de nachtelijke build op. De steekproef over acht binnensteden is van 26&nbsp;juli&nbsp;2026
@@ -97,7 +111,7 @@ ruimte de tafel ook hangt, de meeste vaders komen niet door die deur heen.</p>
 <h2>De blauwe ring: speelhoek</h2>
 <p>Een pin met een blauwe ring heeft ook een speelhoek &mdash; een plek waar je niet alleen
 verschoont, maar ook even blijft. Het filter <em>Met speelhoek</em> laat alleen die plekken zien.
-Een plek telt mee als OSM een van deze dingen vermeldt:</p>
+Een plek telt mee als een van deze dingen in OSM staat:</p>
 <ul>
   <li><span class="ring"></span><code>kids_area:indoor=yes</code> of <code>designated</code>
       &mdash; de in de wiki gedocumenteerde manier om &ldquo;binnen&rdquo; te zeggen.</li>
@@ -120,7 +134,7 @@ aantoonbaar. Hier zwijgen bijna alle objecten, en dat betekent niets. Ken je een
 hem dan gerust toe &mdash; in de OSM-editor, met <code>kids_area=yes</code>.</p>
 
 <h2>De lege blauwe ringen: speelplekken zonder antwoord</h2>
-<p>Dezelfde regel past op veel meer plekken dan de kaart pins heeft. Slechts
+<p>Dezelfde regel geldt voor veel meer plekken dan de kaart pins heeft. Slechts
 <span data-stat="play_tables">111</span> daarvan dragen ook echt een <code>changing_table</code>-tag.
 Bij <span data-stat="play_places">701</span> andere heeft niemand de eerste vraag beantwoord: is
 hier een verschoontafel? Ja, nee, niemand weet het &mdash; OSM zegt er helemaal niets over.</p>
@@ -145,9 +159,9 @@ een gratis OSM-account beantwoorden, ter plekke, in minder dan een minuut:</p>
       beantwoord de vragen over de verschoontafel, ook die over de ruimte. Het antwoord gaat
       rechtstreeks naar OpenStreetMap en is hier na de volgende nachtelijke update te zien.</li>
   <li><strong>StreetComplete (Android):</strong> heeft een verschoontafel-quest, die standaard uit
-      staat. Ga naar <em>Instellingen &rarr; Questselectie &amp; prioriteit</em>, zoek op
-      &ldquo;verschoontafel&rdquo; en vink hem aan. Hij vraagt alleen ja/nee. Voor de vraag over de
-      ruimte bij een bestaande grijze pin gebruik je MapComplete.</li>
+      staat. Ga naar <em>Instellingen &rarr; Vraagselectie en -prioriteit</em>, zoek op
+      &ldquo;verschonen&rdquo;) en vink hem aan. Hij vraagt alleen
+      ja/nee. Voor de vraag over de ruimte bij een bestaande grijze pin gebruik je MapComplete.</li>
 </ul>
 <p class="muted">De bewerkingen lopen onder je eigen OSM-account en zijn van iedereen. Ze overleven
 deze website en helpen elke app die OpenStreetMap leest.</p>
@@ -263,7 +277,7 @@ onder je eigen OSM-account. Via ons loopt daarbij niets. Formele pagina&rsquo;s:
 <a href="datenschutz.html">Datenschutzerklärung</a> (Duits).</p>
 
 <p class="muted">Bronnen: Overpass-steekproef over 8 binnensteden (9.674 toiletten) van
-26&nbsp;juli&nbsp;2026 en de taginfo-cijfers voor die sleutel, met de hierboven genoemde datum.
+26&nbsp;juli&nbsp;2026 en de taginfo-cijfers voor die sleutel op de hierboven genoemde datum.
 De lokale cijfers komen uit dezelfde nachtelijke query die ook de kaart bouwt.</p>
 
 <h2>Hoe deze site tot stand komt</h2>

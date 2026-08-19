@@ -332,7 +332,7 @@ export const STRINGS = {
   // Nederlands — added 19 Aug 2026 with the UK and France; the Netherlands and Flanders.
   nl: {
     title: "PapaMap — Verschoontafels waar een papa bij kan",
-    metaDescription: "Een kaart van alle verschoontafels in elf Europese landen, ingekleurd naar of een papa er echt bij kan. Data: OpenStreetMap.",
+    metaDescription: "Een kaart van de verschoontafels in elf Europese landen, ingekleurd naar de vraag of een papa er echt bij kan. Data: OpenStreetMap.",
     tagline: "Verschoontafels waar een papa bij kan",
     addPlace: "+ Plek toevoegen",
     methods: "Methode",
@@ -468,7 +468,7 @@ export const STRINGS = {
     statsMissing: "Statistiques indisponibles — <code>data/stats.json</code> est absent. <a href=\"{href}\">Méthodes</a>",
     statsLocal: "<b>{tables}</b> tables à langer dans {area} — <b>{unknown}</b> dans une pièce inconnue. <span class=\"cta-grey\">Touche les marqueurs gris pour changer ça.</span>",
     statsGlobal: "Dans le monde, là où la pièce est renseignée ({total}) : <b>{f}</b> uniquement WC femmes contre <b>{m}</b> uniquement WC hommes — {ratio}.",
-    statsGlobalMissing: "Statistiques mondiales sur les pièces indisponibles pour le moment.",
+    statsGlobalMissing: "Pas de statistiques mondiales sur les pièces pour le moment.",
     statsHonesty: "{toilets} toilettes recensées ici, tags de capacité sur {cap} — l'offre elle-même n'est pas mesurable. <a href=\"{href}\">Méthodes</a>{updated}",
     statsUpdated: " · mis à jour le {date}",
 
@@ -480,7 +480,7 @@ export const STRINGS = {
     dlgToilet: "Il manque des toilettes publiques",
     dlgToiletHint: "Ouvre MapComplete sur la vue actuelle — ajoute-les et réponds aux questions sur la table à langer. Nécessite un compte OSM gratuit.",
     dlgVenue: "Un café / magasin / restaurant a une table",
-    dlgVenueHint: "Le lieu existe presque à coup sûr déjà sur OSM — ouvre l'éditeur ici et ajoute les tags <code>changing_table</code>. Pas à pas : voir Méthodes.",
+    dlgVenueHint: "Le lieu existe presque certainement déjà sur OSM — ouvre l'éditeur ici et ajoute les tags <code>changing_table</code>. Pas à pas : voir Méthodes.",
     dlgFoot: "<a href=\"{href}#contribute\">Éditer, pas à pas</a>",
   },
   // Italiano — added 19 Aug 2026 with the UK and France; Ticino and the Italian-speaking Grisons.
@@ -513,7 +513,7 @@ export const STRINGS = {
     areaCountries: "{n} paesi",
     areaCountriesIn: "{n} paesi",
 
-    stAccessible: "Un papà lo raggiunge",
+    stAccessible: "Un papà ci arriva",
     stFemaleOnly: "Solo bagno donne",
     stUnknown: "Stanza sconosciuta",
     metaAccessible: "Questo fasciatoio un papà può raggiungerlo.",
@@ -623,7 +623,7 @@ export const STRINGS = {
     statsLocal: "<b>{tables}</b> přebalovacích pultů v {area} — u <b>{unknown}</b> není známá místnost. <span class=\"cta-grey\">Klepni na šedé špendlíky a změň to.</span>",
     statsGlobal: "Celosvětově tam, kde je místnost zaznamenaná ({total}): <b>{f}</b> jen dámské WC vs. <b>{m}</b> jen pánské WC — {ratio}.",
     statsGlobalMissing: "Celosvětová statistika místností teď není k dispozici.",
-    statsHonesty: "{toilets} zaznamenaných toalet, tagy s kapacitou u {cap} — samotnou vybavenost změřit nejde. <a href=\"{href}\">Metody</a>{updated}",
+    statsHonesty: "Tady zaznamenáno {toilets} toalet, tagy s kapacitou u {cap} — samotnou vybavenost změřit nejde. <a href=\"{href}\">Metody</a>{updated}",
     statsUpdated: " · aktualizováno {date}",
 
     toastNoGeo: "Určování polohy není v tomto prohlížeči k dispozici.",
@@ -679,7 +679,7 @@ export const STRINGS = {
     popupPlay: "Kącik zabaw — warto zostać",
 
     stPlaces: "Tylko kącik zabaw",
-    ariaPlaces: "Pokaż miejsca z kącikiem zabaw, przy których nikt nie zapisał przewijaka",
+    ariaPlaces: "Pokaż miejsca z kącikiem zabaw, w których nikt nie zapisał przewijaka",
     metaPlaces: "Kącik zabaw jest zapisany — o przewijaku OSM nic tu nie mówi.",
     popupPlacesCta: "Znasz to miejsce? To wiesz, czy jest tu przewijak.",
 
