@@ -53,9 +53,27 @@ def _fake_overpass(load_fixture):
         if '"changing_table"' in ql:
             return load_fixture("overpass_changing_tables.json")
         assert '"amenity"="toilets"' in ql
-        return load_fixture("overpass_toilets.json")
+        # Toilets come back as two server-side counts, not objects. Derived
+        # from the same fixture so it stays the single source of truth: 3
+        # toilets, 1 of them capacity-tagged.
+        toilets = load_fixture("overpass_toilets.json")["elements"]
+        return _count_answer(
+            len(toilets),
+            sum(1 for el in toilets
+                if any(k.startswith("toilets:num_chambers")
+                       for k in (el.get("tags") or {}))))
     fetch.areas_seen = areas_seen
     return fetch
+
+
+def _count_answer(*totals):
+    """An Overpass `out count;` response: one synthetic element per count
+    statement, shaped like the real server's (verified against Bremen on
+    19 Aug 2026)."""
+    return {"elements": [{"type": "count", "id": 0,
+                          "tags": {"nodes": "0", "ways": "0", "relations": "0",
+                                   "areas": "0", "total": str(n)}}
+                         for n in totals]}
 
 
 def _fake_taginfo(load_fixture):
@@ -87,8 +105,12 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     # 19 pages: 16 Länder + index + the two leaderboard languages. The play
     # fixture holds 5 objects, of which one is outdoors (dropped by the rule)
     # and one has no coordinates (dropped by the exporter).
+    # Toilet counts SUM where objects dedup — the pipeline never sees the
+    # objects, so it cannot tell one area's copy from another's. Here that
+    # means 17 identical fixture answers really do add to 17x3; in the real
+    # sweep the areas are disjoint, so summing is the correct total.
     assert summary == {"features": 7, "play_places": 3, "ct_objects": 9,
-                       "toilets_total": 3, "global_source": "taginfo",
+                       "toilets_total": 51, "global_source": "taginfo",
                        "pages": 19}
     # Still two object queries per area, not three: the play half rides along
     # in the changing_table sweep instead of costing its own Overpass slot.
@@ -109,7 +131,7 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     assert payload["area_name"] == "Deutschland & Danmark"
     assert payload["area_key"] == "de_dk"  # frontend translates this per language
     assert payload["local"]["ct_yes"] == 6
-    assert payload["local"]["capacity_tagged_toilets"] == 1
+    assert payload["local"]["capacity_tagged_toilets"] == 17  # 1 per area, summed
     # One fixture pin carries kids_area=yes; three prospects have a play area
     # and no changing-table answer at all. Different numbers, different files.
     assert payload["local"]["play_tables"] == 1
@@ -433,3 +455,64 @@ def test_a_country_not_in_the_list_fails_the_build(monkeypatch):
 def test_hand_named_area_has_no_translation_key(monkeypatch):
     monkeypatch.setattr(config, "DISPLAY_AREA_OVERRIDE", "Hamburg")
     assert config.display_area() == ("Hamburg", None)
+
+
+def test_a_retried_area_does_not_double_count_its_toilets(tmp_path, load_fixture):
+    # The failure the object halves are immune to and the counts are not:
+    # Bayern's sweep succeeds, its toilets query dies, and round 2 re-fetches
+    # BOTH. dedup_elements collapses the repeated objects, but a count carries
+    # no identity — so the counts are stored per area and overwritten, never
+    # added to a running total. 17 areas x 3 fixture toilets = 51 either way.
+    inner = _fake_overpass(load_fixture)
+    fail_next = {"Bayern"}
+
+    def flaky(ql, **kwargs):
+        if '"amenity"="toilets"' in ql and any(f'"{n}"' in ql for n in fail_next):
+            fail_next.clear()
+            raise requests.ConnectionError("mirror cascade exhausted")
+        return inner(ql, **kwargs)
+
+    summary = run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
+        pages_dir=str(tmp_path / "pages"),
+        history_path=str(tmp_path / "history.json"), now=NOW, sweep_pause_s=0)
+    assert summary["toilets_total"] == 51
+    # Bayern really was swept twice — otherwise the assertion above is vacuous.
+    assert inner.areas_seen.count(("Bayern", "4")) == 3
+
+
+def test_a_half_answered_count_query_is_an_error_not_a_zero(tmp_path, load_fixture):
+    # One count where two were asked for means the second `out count;` did not
+    # run. Reading the missing one as zero would publish "no capacity tags in
+    # this Land" as a fact, so it fails the area and is retried instead.
+    inner = _fake_overpass(load_fixture)
+
+    def truncated(ql, **kwargs):
+        if '"amenity"="toilets"' in ql and '"Saarland"' in ql:
+            return _count_answer(325)  # total only, capacity count missing
+        return inner(ql, **kwargs)
+
+    with pytest.raises(RuntimeError, match="1 count"):
+        run_pipeline(geojson_path=str(tmp_path / "ct.geojson"),
+                     stats_path=str(tmp_path / "stats.json"),
+                     overpass_fetch=truncated,
+                     taginfo_fetch=_fake_taginfo(load_fixture),
+                     pages_dir=str(tmp_path / "pages"),
+                     history_path=str(tmp_path / "history.json"),
+                     now=NOW, sweep_rounds=2, sweep_pause_s=0)
+
+
+def test_per_land_toilet_counts_reach_the_bundesland_pages(tmp_path, load_fixture):
+    # The page for each Land prints its own toilet count, which now comes
+    # straight from that area's count query rather than from tallying objects
+    # back to the area they were fetched from.
+    run_pipeline(geojson_path=str(tmp_path / "ct.geojson"),
+                 stats_path=str(tmp_path / "stats.json"),
+                 overpass_fetch=_fake_overpass(load_fixture),
+                 taginfo_fetch=_fake_taginfo(load_fixture),
+                 pages_dir=str(tmp_path / "pages"),
+                 history_path=str(tmp_path / "history.json"), now=NOW)
+    page = (tmp_path / "pages" / "bayern.html").read_text(encoding="utf-8")
+    assert "3 öffentliche Toiletten" in page

@@ -17,7 +17,7 @@ def fetch_taginfo(url: str) -> dict:
     return resp.json()
 
 
-def local_stats(ct_data: dict, toilets_data: dict, play_data=None) -> dict:
+def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
     """The `local` stats block, from the Overpass responses. ct_yes/no/
     limited are exact value counts, so junk values ("02") show up only in
     ct_objects. The feature-facing counters (ct_yes/ct_limited, location and
@@ -28,7 +28,13 @@ def local_stats(ct_data: dict, toilets_data: dict, play_data=None) -> dict:
     pins.
 
     play_data is the sweep's play-only half (objects with an indoor play area
-    and no changing_table tag); omit it and both play counters read 0."""
+    and no changing_table tag); omit it and both play counters read 0.
+
+    toilets_counts is {"total", "capacity_tagged"} — two integers Overpass
+    counted server-side (config.toilets_counts_ql), not a response full of
+    elements. Nothing here ever needed the toilet objects themselves, and
+    downloading ~74k of them for two counters was about 12 MB of the nightly
+    ~28 MB."""
     ct_yes = ct_no = ct_limited = yes_location_known = locked = play_tables = 0
     status_counts = {"accessible": 0, "female_only": 0, "unknown": 0}
     elements = ct_data.get("elements", [])
@@ -55,12 +61,10 @@ def local_stats(ct_data: dict, toilets_data: dict, play_data=None) -> dict:
             status_counts[status] += 1
             if has_play_area(tags):
                 play_tables += 1  # counted over pins only, like the statuses
-    toilets = toilets_data.get("elements", [])
-    capacity = sum(1 for el in toilets
-                   if any(k.startswith("toilets:num_chambers")
-                          for k in (el.get("tags") or {})))
+    toilets = toilets_counts or {}
     return {
-        "toilets_total": len(toilets), "ct_objects": len(elements),
+        "toilets_total": int(toilets.get("total", 0)),
+        "ct_objects": len(elements),
         "ct_yes": ct_yes, "ct_no": ct_no, "ct_limited": ct_limited,
         "yes_location_known": yes_location_known,
         "yes_location_unknown": ct_yes - yes_location_known,
@@ -75,7 +79,7 @@ def local_stats(ct_data: dict, toilets_data: dict, play_data=None) -> dict:
         "play_tables": play_tables,
         "play_places": sum(1 for el in (play_data or {}).get("elements", [])
                            if element_coords(el)[0] is not None),
-        "capacity_tagged_toilets": capacity,
+        "capacity_tagged_toilets": int(toilets.get("capacity_tagged", 0)),
     }
 
 
