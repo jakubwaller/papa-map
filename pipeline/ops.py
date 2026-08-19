@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import smtplib
 import sys
 from datetime import datetime, timezone
@@ -50,6 +51,12 @@ WEEKLY_DIGEST_WEEKDAY = 0  # Monday
 
 CF_GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql"
 OSMCHA_URL = "https://osmcha.org/api/v1/changesets/"
+# OSMCha's metadata filter is a JSONB scan over its whole changeset table, so
+# it gets slower as OSM grows, not as our query changes: 21.9 s when the line
+# was added (2026-08-13), over 150 s by 2026-08-18. This runs once a day at
+# 03:30 and nothing waits on it, so the budget is set generously rather than
+# tightly — a re-measurement is not something anyone will remember to do.
+OSMCHA_TIMEOUT_S = float(os.environ.get("PAPAMAP_OSMCHA_TIMEOUT_S", "300"))
 
 STATUS_KEYS = ("accessible", "female_only", "unknown")
 
@@ -166,7 +173,11 @@ def render_report(counts, changes, history, anomalies, visits=None,
             f"+{sum(e['changes']['new'] for e in week)} new, "
             f"{sum(e['changes']['to_accessible'] for e in week)} -> accessible, "
             f"{sum(e['changes']['to_female_only'] for e in week)} -> female-only")
-    if edits:
+    if edits and edits.get("error"):
+        lines.append(
+            f"edits via papamap theme (OSMCha, {edits['days']}d): "
+            f"UNKNOWN — query failed ({edits['error']}). Not zero.")
+    elif edits:
         lines.append(
             f"edits via papamap theme (OSMCha, {edits['days']}d): "
             f"{edits['changesets']} changesets")
@@ -222,16 +233,26 @@ def osmcha_edits(days=7, now=None, get=requests.get):
     since = datetime.fromtimestamp(
         now.timestamp() - days * 86400, tz=timezone.utc).strftime("%Y-%m-%d")
     try:
-        # OSMCha's metadata filter scans JSONB and routinely needs ~20-25s;
-        # this runs at most once a day, so wait it out rather than flake
-        r = get(OSMCHA_URL, timeout=120,
+        r = get(OSMCHA_URL, timeout=OSMCHA_TIMEOUT_S,
                 headers={"Authorization": f"Token {token}"},
                 params={"metadata": f"theme={PAPAMAP_THEME_URL}",
                         "date__gte": since, "page_size": "1"})
         return {"days": days, "changesets": r.json()["count"]}
     except Exception as exc:  # like visits: decoration, never fail the check
+        # Reported, not swallowed. A dropped line and a genuine zero both read
+        # as "nobody edited through the site this week", and that is the one
+        # number the digest exists to carry — so the failure says so out loud.
         print(f"WARN: OSMCha query failed: {exc}", file=sys.stderr)
-        return None
+        return {"days": days, "error": _short_exc(exc)}
+
+
+def _short_exc(exc: Exception) -> str:
+    """The readable core of an exception. requests buries the one useful
+    phrase ("Read timed out. (read timeout=300)") inside connection-pool and
+    URL boilerplate, and this line has to stay legible in an email subject."""
+    text = (str(exc) or exc.__class__.__name__).split(" (Caused by")[0]
+    text = re.sub(r"^HTTP[S]?ConnectionPool\([^)]*\):\s*", "", text.strip())
+    return text[:80]
 
 
 def send_mail(subject, body, smtp=smtplib.SMTP) -> bool:

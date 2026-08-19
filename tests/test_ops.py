@@ -1,6 +1,8 @@
 import json
 from datetime import datetime, timezone
 
+import requests
+
 from pipeline import ops
 
 NOW = datetime(2026, 8, 3, 5, 30, tzinfo=timezone.utc)  # a Monday
@@ -153,9 +155,59 @@ def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
     assert seen["params"]["date__gte"] == "2026-07-27"  # NOW minus 7 days
 
 
-def test_osmcha_edits_failure_is_none(monkeypatch):
+def test_osmcha_edits_failure_reports_itself_rather_than_reading_as_zero(
+        monkeypatch):
+    """A failed query and a genuine zero must not render the same. The
+    JSONB scan behind the metadata filter slows down as OSM grows — it went
+    21.9 s -> 150 s+ in five days — so this failure is expected to recur,
+    and "0 changesets" is the answer nobody may guess from silence."""
     monkeypatch.setenv("OSMCHA_TOKEN", "token")
-    assert ops.osmcha_edits(now=NOW, get=lambda *a, **kw: 1 / 0) is None
+
+    def boom(*a, **kw):
+        raise requests.exceptions.ReadTimeout(
+            "HTTPSConnectionPool(host='osmcha.org', port=443): "
+            "Read timed out. (read timeout=300)")
+
+    edits = ops.osmcha_edits(now=NOW, get=boom)
+    assert edits["days"] == 7
+    assert "changesets" not in edits  # never a number we did not receive
+    assert "Read timed out" in edits["error"]
+
+    line = [ln for ln in ops.render_report(None, None, [], [], edits=edits)
+            .splitlines() if "OSMCha" in ln]
+    assert len(line) == 1
+    assert "UNKNOWN" in line[0] and "Not zero." in line[0]
+
+
+def test_osmcha_timeout_is_generous_enough_for_the_jsonb_scan():
+    """Guards the 2026-08-18 regression: at 120 s the query timed out and
+    the digest silently dropped the line for weeks."""
+    assert ops.OSMCHA_TIMEOUT_S >= 300
+
+
+def test_osmcha_edits_passes_the_configured_timeout(monkeypatch):
+    monkeypatch.setenv("OSMCHA_TOKEN", "token")
+    seen = {}
+
+    def fake_get(url, timeout, headers, params):
+        seen["timeout"] = timeout
+
+        class R:
+            def json(self):
+                return {"count": 0}
+        return R()
+
+    assert ops.osmcha_edits(now=NOW, get=fake_get) == {"days": 7,
+                                                       "changesets": 0}
+    assert seen["timeout"] == ops.OSMCHA_TIMEOUT_S
+
+
+def test_a_genuine_zero_still_prints(tmp_path):
+    """`if edits:` on a dict is truthy at zero — keep it that way, since
+    "0 changesets" is a real and reportable answer."""
+    report = ops.render_report(None, None, [], [],
+                               edits={"days": 7, "changesets": 0})
+    assert "0 changesets" in report
 
 
 def test_digest_carries_edits_line(tmp_path):

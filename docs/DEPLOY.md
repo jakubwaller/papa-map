@@ -126,6 +126,12 @@ token, zone-level visit totals (Cloudflare) and the count of changesets made thr
 site's own MapComplete theme (OSMCha) — the attributable slice of the mission metric.
 Everything is aggregate; no visitor or mapper data.
 
+The OSMCha line can read `UNKNOWN — query failed (…). Not zero.` That is the metadata filter
+timing out, not a week without edits: it is a JSONB scan over OSMCha's whole changeset table and
+gets slower as OSM grows (21.9 s in Aug 2026, >150 s five days later). The budget is
+`OSMCHA_TIMEOUT_S`, 300 s, overridable with `PAPAMAP_OSMCHA_TIMEOUT_S`. Raise it rather than
+reading the missing line as a zero.
+
 ```cron
 30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1
 ```
