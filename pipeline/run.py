@@ -9,7 +9,7 @@ from .config import (BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTORY_PATH,
                      PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_PAUSE_S,
                      SWEEP_ROUNDS, changing_table_ids_ql,
                      display_area as configured_area, sweep_areas, sweep_ql,
-                     toilets_ql)
+                     toilets_counts_ql)
 
 
 def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
@@ -41,13 +41,21 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         area_key = configured_key if area_key is None else area_key
     rounds = SWEEP_ROUNDS if sweep_rounds is None else sweep_rounds
     pause = SWEEP_PAUSE_S if sweep_pause_s is None else sweep_pause_s
-    ct_elements, toilets_elements, play_elements = [], [], []
-    # Which sweep area each object came from. The geojson carries coordinates
-    # and no region field, so the Overpass area query is the only authority on
-    # which Land an object sits in — and it is free, since the sweep is already
-    # chunked per Land. First sweep wins for an object on (or area-assigned
-    # across) a boundary, which is the same copy dedup_elements() keeps.
-    ct_area, toilets_area = {}, {}
+    ct_elements, play_elements = [], []
+    # Toilets arrive as two server-side counts per area, not objects
+    # (config.toilets_counts_ql). Keyed by area and *assigned*, never added to
+    # a running total, so a retried area overwrites its earlier attempt
+    # instead of counting it twice — the job dedup_elements does for the
+    # object halves.
+    toilets_by_area: dict[str, int] = {}
+    toilets_capacity_by_area: dict[str, int] = {}
+    # Which sweep area each changing-table object came from. The geojson
+    # carries coordinates and no region field, so the Overpass area query is
+    # the only authority on which Land an object sits in — and it is free,
+    # since the sweep is already chunked per Land. First sweep wins for an
+    # object on (or area-assigned across) a boundary, which is the same copy
+    # dedup_elements() keeps.
+    ct_area = {}
     # Which leaderboard city each object lies in, from an ids-only query per
     # city — the same area-query authority as ct_area, at a fraction of the
     # payload. City sweeps are non-fatal: the map must never be held hostage
@@ -68,7 +76,21 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         for area_name, admin_level in remaining:
             try:
                 sweep = overpass_fetch(sweep_ql(area_name, admin_level))
-                toilets = overpass_fetch(toilets_ql(area_name, admin_level))
+                counts = osm.parse_counts(
+                    overpass_fetch(toilets_counts_ql(area_name, admin_level)))
+                # A real answer carries one count per `out count;` statement,
+                # two zeros included when the area resolved to nothing — so
+                # *no* counts at all is not "no toilets", it is a response
+                # that was never a count answer (the empty body a mirror with
+                # no area database returns), and the zero-objects check below
+                # names that properly. Exactly one count is the genuinely
+                # broken case: reading the missing one as zero would publish
+                # "no capacity tags anywhere" as though it were a fact.
+                if len(counts) == 1:
+                    raise RuntimeError(
+                        f"area {area_name!r}: toilets query answered 1 count, "
+                        "expected 2")
+                toilets_total, capacity_total = counts or (0, 0)
                 # Every sweep area has at least one amenity=toilets or
                 # changing_table object. Both empty means the *area* didn't
                 # resolve — a fallback mirror whose area database is stale/
@@ -76,7 +98,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 # through would silently drop the area (or, single-area, wipe
                 # the served dataset). Retryable: a later round may hit a
                 # mirror with a healthy area database.
-                if not sweep.get("elements") and not toilets.get("elements"):
+                if not sweep.get("elements") and not toilets_total:
                     raise RuntimeError(
                         f"area {area_name!r} resolved to zero objects on this "
                         "mirror (stale area database or typo'd "
@@ -87,17 +109,17 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 failed.append((area_name, admin_level))
                 continue
             # A retried area re-fetches both queries; dedup absorbs any
-            # elements its first, half-successful attempt already collected.
+            # elements its first, half-successful attempt already collected,
+            # and the toilet counts are assigned rather than accumulated.
             ct, play = osm.split_sweep(sweep["elements"])
             ct_elements.extend(ct)
             play_elements.extend(play)
-            toilets_elements.extend(toilets["elements"])
+            toilets_by_area[area_name] = toilets_total
+            toilets_capacity_by_area[area_name] = capacity_total
             for el in ct:
                 ct_area.setdefault((el.get("type"), el.get("id")), area_name)
-            for el in toilets["elements"]:
-                toilets_area.setdefault((el.get("type"), el.get("id")), area_name)
             print(f"  {area_name}: ct={len(ct)} play={len(play)} "
-                  f"toilets={len(toilets['elements'])}", file=sys.stderr)
+                  f"toilets={toilets_total}", file=sys.stderr)
         failed_cities = []
         for display, area_name, admin_level in remaining_cities:
             try:
@@ -130,11 +152,17 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # An object on (or area-assigned across) a Länder boundary shows up in two
     # sweeps — count and plot it once.
     ct_data = {"elements": osm.dedup_elements(ct_elements)}
-    toilets_data = {"elements": osm.dedup_elements(toilets_elements)}
     play_data = {"elements": osm.dedup_elements(play_elements)}
     features = export.build_features(ct_data)
     play_features = export.build_play_features(play_data)
-    local = stats.local_stats(ct_data, toilets_data, play_data)
+    # Summed, where the object halves are deduped: a count cannot tell us
+    # whether a toilet on a Länder boundary was already counted next door.
+    # Overpass assigns a node to exactly one area, so only a *way* straddling
+    # a boundary can be double-counted; on 19 Aug 2026 the per-area sums
+    # matched the deduped totals exactly (73,860) across all 24 areas.
+    toilets_counts = {"total": sum(toilets_by_area.values()),
+                      "capacity_tagged": sum(toilets_capacity_by_area.values())}
+    local = stats.local_stats(ct_data, toilets_counts, play_data)
 
     try:
         global_block = stats.global_stats(fetch=taginfo_fetch)
@@ -167,11 +195,6 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     written = []
     if land_names:
         by_area = pages.group_by_area(features, ct_area)
-        toilets_by_area = {}
-        for el in toilets_data["elements"]:
-            area = toilets_area.get((el.get("type"), el.get("id")))
-            if area:
-                toilets_by_area[area] = toilets_by_area.get(area, 0) + 1
         summaries = [pages.summarize(name, by_area.get(name, []),
                                      toilets_by_area.get(name, 0))
                      for name in land_names]

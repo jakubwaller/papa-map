@@ -41,6 +41,21 @@ def dedup_elements(elements) -> list:
     return out
 
 
+def parse_counts(data: dict) -> list[int]:
+    """The totals from a query's `out count;` statements, in statement order.
+    Overpass answers each one with a synthetic element of type "count" whose
+    tags carry the per-kind breakdown and a `total`; only the total interests
+    us. Elements of any other type are ignored, so this is safe on a mixed
+    response.
+
+    A short list means the server answered fewer counts than the query asked
+    for — the caller checks, because silently reading a missing count as zero
+    would publish "0 toilets" as though it were a fact."""
+    return [int((el.get("tags") or {}).get("total", 0))
+            for el in data.get("elements", ()) or ()
+            if el.get("type") == "count"]
+
+
 def split_sweep(elements) -> tuple[list, list]:
     """The union sweep's answer (config.sweep_ql), back into its two halves:
 

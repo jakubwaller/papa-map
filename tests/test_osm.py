@@ -57,7 +57,7 @@ def test_multilingual_countries_are_selected_by_name_en():
     assert ('area["name:en"="Switzerland"]["admin_level"="2"]'
             in config.sweep_ql("Switzerland", "2"))
     assert ('area["name:en"="Czechia"]["admin_level"="2"]'
-            in config.toilets_ql("Czechia", "2"))
+            in config.toilets_counts_ql("Czechia", "2"))
     for name in sorted(config.NAME_EN_AREAS):
         ql = config.sweep_ql(name, "2")
         assert f'area["name:en"="{name}"]' in ql
@@ -68,7 +68,7 @@ def test_germany_and_denmark_keep_the_plain_name_selector():
     # "Deutschland" and "Danmark" are also the region keys in history.json and
     # the row labels on the leaderboard: selecting them by name:en would rename
     # them and orphan every existing baseline.
-    for ql in (config.sweep_ql("Danmark", "2"), config.toilets_ql("Danmark", "2"),
+    for ql in (config.sweep_ql("Danmark", "2"), config.toilets_counts_ql("Danmark", "2"),
                config.changing_table_ql("Danmark", "2")):
         assert 'area["name"="Danmark"]["admin_level"="2"]' in ql
         assert "name:en" not in ql
@@ -312,3 +312,38 @@ def test_fetch_sleeps_the_reported_slot_wait_before_querying(monkeypatch):
     monkeypatch.setattr(osm.requests, "get", get)
     fetch_overpass("out;", urls=["http://m1"], retries=1, backoff=0)
     assert asked == ["http://m1"] and slept == [7]  # asked first, waited, then queried
+
+
+def test_toilets_query_asks_for_two_counts_not_objects():
+    ql = config.toilets_counts_ql("Bayern", "4")
+    assert ql.count("out count;") == 2
+    assert "out tags" not in ql  # the whole point: no objects come back
+    # The capacity scan must still catch the prefixed variants people map,
+    # exactly as the Python `k.startswith("toilets:num_chambers")` it replaced
+    # did — toilets:num_chambers:female is the common form.
+    assert '[~"^toilets:num_chambers"~"."]' in ql
+
+
+def test_parse_counts_reads_totals_in_statement_order():
+    # Shaped like the real answer, verified against Bremen on 19 Aug 2026.
+    answer = {"elements": [
+        {"type": "count", "id": 0,
+         "tags": {"nodes": "143", "ways": "120", "relations": "0",
+                  "areas": "0", "total": "263"}},
+        {"type": "count", "id": 0,
+         "tags": {"nodes": "0", "ways": "1", "relations": "0",
+                  "areas": "0", "total": "1"}}]}
+    assert osm.parse_counts(answer) == [263, 1]
+
+
+def test_parse_counts_ignores_anything_that_is_not_a_count():
+    mixed = {"elements": [{"type": "node", "id": 1, "tags": {"total": "999"}},
+                          {"type": "count", "id": 0, "tags": {"total": "7"}}]}
+    assert osm.parse_counts(mixed) == [7]
+
+
+def test_parse_counts_on_an_empty_answer_is_empty_not_zero():
+    # An empty body is a mirror with no area database, not an area with no
+    # toilets — run.py must be able to tell those apart.
+    assert osm.parse_counts({"elements": []}) == []
+    assert osm.parse_counts({}) == []

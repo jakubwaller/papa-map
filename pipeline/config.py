@@ -331,8 +331,37 @@ def changing_table_ids_ql(area_name: str, admin_level: str,
     return _area_ql(area_name, admin_level, date) + 'nwr["changing_table"](area.a);out ids;'
 
 
-def toilets_ql(area_name: str = "Deutschland", admin_level: str = "2",
-               date: str | None = None) -> str:
-    """All amenity=toilets, tags only — counted for the honesty stat and
-    scanned for toilets:num_chambers* capacity tags. No geometry needed."""
-    return _area_ql(area_name, admin_level, date) + 'nwr["amenity"="toilets"](area.a);out tags;'
+# Key regex for the capacity scan, mirroring the Python it replaced
+# (`k.startswith("toilets:num_chambers")`) so the prefixed variants people
+# actually map — toilets:num_chambers:female, :male — still count.
+_CHAMBERS_KEY_RE = "^toilets:num_chambers"
+
+
+def toilets_counts_ql(area_name: str = "Deutschland", admin_level: str = "2",
+                      date: str | None = None) -> str:
+    """Two integers, not every public toilet in nine countries: how many
+    amenity=toilets the area holds, and how many of those carry a
+    toilets:num_chambers* capacity tag.
+
+    Those two numbers are all stats.local_stats ever took from this query, and
+    fetching them as objects was most of the nightly download: 73,860 of the
+    99,224 elements swept on 19 Aug 2026, about 12 MB of roughly 28 MB, for
+    two counters. Measured the same day on Danmark, which holds 4,676 of them:
+    786,302 bytes with `out tags;`, 633 bytes with the two `out count;`
+    statements below.
+
+    It does NOT make the build faster — the server still has to find every
+    object, and the slot cost is unchanged. What it buys is our share of the
+    ~1 GB/day download budget Overpass asks users to stay under
+    (https://dev.overpass-api.de/overpass-doc/en/preface/commons.html).
+
+    Two `out count;` statements in ONE query, not two queries: counting costs
+    the same slot as listing, and a second query would burn another ~40 s
+    slot per area for one number. osm.parse_counts reads them back in this
+    order — total first, capacity-tagged second.
+    """
+    return (_area_ql(area_name, admin_level, date)
+            + 'nwr["amenity"="toilets"](area.a)->.t;'
+            + '.t out count;'
+            + f'nwr.t[~"{_CHAMBERS_KEY_RE}"~"."];'
+            + 'out count;')

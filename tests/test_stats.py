@@ -8,7 +8,7 @@ from pipeline import config, osm, stats
 
 def test_local_stats_counts_every_bucket(load_fixture):
     local = stats.local_stats(load_fixture("overpass_changing_tables.json"),
-                              load_fixture("overpass_toilets.json"))
+                              {"total": 3, "capacity_tagged": 1})
     assert local == {
         "toilets_total": 3, "ct_objects": 9,
         # junk "02" is in ct_objects but in none of the value buckets
@@ -31,7 +31,7 @@ def test_local_stats_separates_play_pins_from_play_prospects(load_fixture):
     # play_data is the sweep's already-split half, as run.py hands it over.
     _, play = osm.split_sweep(load_fixture("overpass_play_places.json")["elements"])
     local = stats.local_stats(load_fixture("overpass_changing_tables.json"),
-                              load_fixture("overpass_toilets.json"),
+                              {"total": 3, "capacity_tagged": 1},
                               {"elements": play})
     assert local["play_tables"] == 1
     # 5 fixture objects: one is outdoors, one has no coordinates.
@@ -50,7 +50,7 @@ def test_local_stats_skips_coordless_elements_like_build_features(load_fixture):
     ct = load_fixture("overpass_changing_tables.json")
     ct["elements"].append({"type": "way", "id": 99, "tags": {
         "changing_table": "yes", "changing_table:location": "male_toilet"}})
-    local = stats.local_stats(ct, load_fixture("overpass_toilets.json"))
+    local = stats.local_stats(ct, {"total": 3, "capacity_tagged": 1})
     assert local["ct_objects"] == 10  # still counted as a tagged object
     assert local["ct_yes"] == 6  # but not as a feature-facing yes
     assert local["yes_location_known"] == 5
@@ -65,7 +65,7 @@ def test_local_stats_counts_centralkey_locked_drops(load_fixture):
                            "tags": {"changing_table": "yes",
                                     "changing_table:location": "wheelchair_toilet",
                                     "centralkey": "eurokey"}})
-    local = stats.local_stats(ct, load_fixture("overpass_toilets.json"))
+    local = stats.local_stats(ct, {"total": 3, "capacity_tagged": 1})
     assert local["ct_objects"] == 10  # still a tagged object
     assert local["centralkey_locked"] == 1
     assert local["ct_yes"] == 6  # but never feature-facing
