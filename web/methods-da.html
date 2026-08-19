@@ -56,7 +56,8 @@
 natlige build. Stikprøven over otte bymidter er fra 26.&nbsp;juli&nbsp;2026 og bliver stående.</p>
 
 <h2>Hvad dette kort er. Og hvad det ikke er.</h2>
-<p>PapaMap viser steder i Tyskland og Danmark, hvor OpenStreetMap kender et puslebord
+<p>PapaMap viser steder i ni europæiske lande &mdash; Tyskland, Danmark, Belgien, Nederlandene,
+Østrig, Schweiz, Tjekkiet, Polen og Sverige &mdash;, hvor OpenStreetMap kender et puslebord
 (<code>changing_table=yes</code> eller <code>limited</code>). Farven siger, om en far kan nå
 bordet. Kortet læser kun OSM og skriver ingen steder hen. Data retter du direkte på OSM via
 linkene på hver nål.</p>
@@ -109,14 +110,14 @@ legeområde, er det stadig velkomment at tilføje det &mdash; i OSM-editoren, so
 <code>kids_area=yes</code>.</p>
 
 <h2>De tomme blå ringe: legesteder uden svar</h2>
-<p>Den samme regel rammer langt flere steder, end kortet har nåle. I Tyskland og Danmark opfylder
-828 objekter den &mdash; men kun 111 af dem har overhovedet et <code>changing_table</code>-tag. For
-de øvrige 701 har ingen besvaret det første spørgsmål: er der et puslebord her? Ja, nej, ingen ved
-det &mdash; OSM siger slet ingenting.</p>
-<p>De 701 kan kortet ikke farvelægge, for der er intet at farvelægge. De er heller ikke grå: grå
-betyder &bdquo;bordet findes, rummet mangler&ldquo;, og det gælder ikke her. Derfor får de deres
-egen chip, <em>Kun legeområde</em>, som er slået fra som standard, og en tom blå ring i stedet for
-en udfyldt nål.</p>
+<p>Den samme regel rammer langt flere steder, end kortet har nåle. Kun
+<span data-stat="play_tables">111</span> af dem har overhovedet et <code>changing_table</code>-tag. For
+<span data-stat="play_places">701</span> andre har ingen besvaret det første spørgsmål: er der et
+puslebord her? Ja, nej, ingen ved det &mdash; OSM siger slet ingenting.</p>
+<p>De <span data-stat="play_places">701</span> kan kortet ikke farvelægge, for der er intet at
+farvelægge. De er heller ikke grå: grå betyder &bdquo;bordet findes, rummet mangler&ldquo;, og det
+gælder ikke her. Derfor får de deres egen chip, <em>Kun legeområde</em>, som er slået fra som
+standard, og en tom blå ring i stedet for en udfyldt nål.</p>
 <p>Det er hele kortets mest lovende åbne spørgsmål. En indendørs legeplads, en café med boldbassin,
 en restaurant med legerum &mdash; en far med et lille barn kommer der alligevel, og når han er der,
 kender han svaret. Et klik på ringen åbner MapComplete på præcis det ene spørgsmål. Bliver det
@@ -262,9 +263,10 @@ kommer fra den samme natlige forespørgsel, som også bygger kortet.</p>
 det hele igennem.</p>
 
 <script>
-// taginfo-tallene ovenfor er de samme, som det natlige build i forvejen skriver
-// til data/stats.json. Læs dem derfra i stedet for at vedligeholde dem i hånden:
-// afskrevne tal bliver forældede, og på netop denne side er det pinligt.
+// taginfo-tallene ovenfor og de to legestedstal er de samme, som det natlige
+// build i forvejen skriver til data/stats.json. Læs dem derfra i stedet for at
+// vedligeholde dem i hånden: afskrevne tal bliver forældede, og på netop denne
+// side er det pinligt.
 // Markup'en holder den sidst kendte værdi, så uden JS — eller hvis hentningen
 // fejler — læses siden stadig rigtigt, bare en smule ældre.
 (function () {
@@ -272,31 +274,43 @@ det hele igennem.</p>
   fetch("data/stats.json", { cache: "no-cache" })
     .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
     .then(function (s) {
-      var g = (s || {}).global;
-      if (!g || g.source !== "taginfo" || !g.location_total || !g.ct_total) return;
-      var raw = {
-        ct_total: g.ct_total,
-        location_total: g.location_total,
-        female_only: g.location_female_only,
-        male_only: g.location_male_only,
-        male_any: g.location_male_any,
-        male_and_female: g.location_male_and_female
-      };
+      s = s || {};
       var vals = {};
-      Object.keys(raw).forEach(function (k) {
-        if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
-      });
-      if (raw.female_only && raw.male_only) {
-        vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+      // Legestedstallene ligger i s.local, taginfo-værdierne i s.global. Læs dem
+      // hver for sig, så taginfo-tjekket nedenfor ikke også kvæler dem: siden
+      // ni-lande-buildet den 19. august 2026 ændrer begge dele sig hver nat,
+      // uafhængigt af hinanden.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
       }
-      vals.share = (100 * raw.location_total / raw.ct_total)
-        .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + " %";
-      if (g.data_until) {
-        var d = new Date(g.data_until);
-        if (!isNaN(d)) {
-          vals.date = d.toLocaleDateString(LOCALE, {
-            day: "numeric", month: "long", year: "numeric"
-          });
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + " %";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "long", year: "numeric"
+            });
+          }
         }
       }
       Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {

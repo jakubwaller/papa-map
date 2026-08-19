@@ -57,10 +57,11 @@ der nächtliche Build. Die Stichprobe über acht Innenstädte ist vom 26.&nbsp;J
 bleibt so stehen.</p>
 
 <h2>Was diese Karte ist. Und was nicht.</h2>
-<p>PapaMap zeigt Orte in Deutschland und Dänemark, für die OpenStreetMap einen Wickeltisch kennt
-(<code>changing_table=yes</code> oder <code>limited</code>). Die Farbe sagt, ob ein Papa den Tisch
-erreicht. Die Karte liest nur OSM und schreibt nirgendwohin. Reparieren kannst du die Daten direkt
-auf OSM, über die Links an jedem Pin.</p>
+<p>PapaMap zeigt Orte in neun europäischen Ländern &mdash; Deutschland, Dänemark, Belgien, den
+Niederlanden, Österreich, der Schweiz, Tschechien, Polen und Schweden &mdash;, für die
+OpenStreetMap einen Wickeltisch kennt (<code>changing_table=yes</code> oder <code>limited</code>).
+Die Farbe sagt, ob ein Papa den Tisch erreicht. Die Karte liest nur OSM und schreibt nirgendwohin.
+Reparieren kannst du die Daten direkt auf OSM, über die Links an jedem Pin.</p>
 <p>Ein Ranking, welche Stadt die beste Toilettenversorgung hat, ist das hier nicht. Warum das aus
 offenen Daten nicht ehrlich geht, steht weiter unten.</p>
 
@@ -113,14 +114,16 @@ Spielecke kennt, trägt sie trotzdem gern ein &mdash; im OSM-Editor, mit
 <code>kids_area=yes</code>.</p>
 
 <h2>Die leeren blauen Ringe: Spielorte ohne Antwort</h2>
-<p>Dieselbe Regel trifft auf viel mehr Orte zu, als die Karte Pins hat. In Deutschland und Dänemark
-erfüllen sie 828 Objekte &mdash; aber nur 111 davon haben überhaupt ein
-<code>changing_table</code>-Tag. Bei den anderen 701 hat niemand die erste Frage beantwortet: Gibt
-es hier einen Wickeltisch? Ja, nein, weiß keiner &mdash; in OSM steht dazu gar nichts.</p>
-<p>Diese 701 kann die Karte nicht einfärben, denn es gibt nichts einzufärben. Sie sind auch nicht
-grau: Grau heißt &bdquo;der Tisch existiert, der Raum fehlt&ldquo;, und das gilt hier nicht. Sie
-bekommen deshalb einen eigenen Chip, <em>Nur Spielecke</em>, der standardmäßig aus ist, und einen
-leeren blauen Ring statt eines gefüllten Pins.</p>
+<p>Dieselbe Regel trifft auf viel mehr Orte zu, als die Karte Pins hat. Nur
+<span data-stat="play_tables">111</span> von ihnen haben überhaupt ein
+<code>changing_table</code>-Tag. Bei <span data-stat="play_places">701</span> weiteren hat niemand
+die erste Frage beantwortet: Gibt es hier einen Wickeltisch? Ja, nein, weiß keiner &mdash; in OSM
+steht dazu gar nichts.</p>
+<p>Diese <span data-stat="play_places">701</span> kann die Karte nicht einfärben, denn es gibt
+nichts einzufärben. Sie sind auch nicht grau: Grau heißt &bdquo;der Tisch existiert, der Raum
+fehlt&ldquo;, und das gilt hier nicht. Sie bekommen deshalb einen eigenen Chip, <em>Nur
+Spielecke</em>, der standardmäßig aus ist, und einen leeren blauen Ring statt eines gefüllten
+Pins.</p>
 <p>Es sind die aussichtsreichsten offenen Fragen der ganzen Karte. Ein Indoorspielplatz, ein Café
 mit Bällebad, ein Restaurant mit Spielzimmer &mdash; ein Vater mit Kleinkind geht dort ohnehin hin,
 und wenn er da ist, weiß er die Antwort. Ein Klick auf den Ring öffnet MapComplete direkt auf dieser
@@ -266,9 +269,10 @@ lokalen Zahlen kommen aus derselben nächtlichen Abfrage, die auch die Karte bau
 trotzdem alles selbst.</p>
 
 <script>
-// Die taginfo-Zahlen oben sind dieselben, die der nächtliche Build ohnehin nach
-// data/stats.json schreibt. Von dort lesen, statt sie hier von Hand zu pflegen:
-// abgeschriebene Zahlen veralten, und auf dieser Seite ist genau das peinlich.
+// Die taginfo-Zahlen oben und die beiden Spielort-Zahlen sind dieselben, die
+// der nächtliche Build ohnehin nach data/stats.json schreibt. Von dort lesen,
+// statt sie hier von Hand zu pflegen: abgeschriebene Zahlen veralten, und auf
+// dieser Seite ist genau das peinlich.
 // Im Markup steht der jeweils letzte bekannte Wert. Ohne JS oder wenn der Fetch
 // scheitert, liest sich die Seite also weiterhin richtig, nur etwas älter.
 (function () {
@@ -276,31 +280,43 @@ trotzdem alles selbst.</p>
   fetch("data/stats.json", { cache: "no-cache" })
     .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
     .then(function (s) {
-      var g = (s || {}).global;
-      if (!g || g.source !== "taginfo" || !g.location_total || !g.ct_total) return;
-      var raw = {
-        ct_total: g.ct_total,
-        location_total: g.location_total,
-        female_only: g.location_female_only,
-        male_only: g.location_male_only,
-        male_any: g.location_male_any,
-        male_and_female: g.location_male_and_female
-      };
+      s = s || {};
       var vals = {};
-      Object.keys(raw).forEach(function (k) {
-        if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
-      });
-      if (raw.female_only && raw.male_only) {
-        vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+      // Die Spielort-Zahlen stehen in s.local, die taginfo-Werte in s.global.
+      // Getrennt lesen, damit die taginfo-Prüfung unten sie nicht mit abwürgt:
+      // seit dem Neun-Länder-Build vom 19. August 2026 ändert sich jede Nacht
+      // beides unabhängig voneinander.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
       }
-      vals.share = (100 * raw.location_total / raw.ct_total)
-        .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + " %";
-      if (g.data_until) {
-        var d = new Date(g.data_until);
-        if (!isNaN(d)) {
-          vals.date = d.toLocaleDateString(LOCALE, {
-            day: "numeric", month: "long", year: "numeric"
-          });
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + " %";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "long", year: "numeric"
+            });
+          }
         }
       }
       Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {

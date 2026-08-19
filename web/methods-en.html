@@ -57,10 +57,11 @@ from the nightly build. The sample across eight city cores is from 26&nbsp;Jul&n
 that way.</p>
 
 <h2>What this map is. And what it is not.</h2>
-<p>PapaMap shows places in Germany and Denmark where OpenStreetMap knows about a baby changing table
-(<code>changing_table=yes</code> or <code>limited</code>). The color says whether a dad can reach
-the table. The map reads OSM and nothing else, and it writes nowhere. Fixing the data happens on
-OSM itself, through the links on each pin.</p>
+<p>PapaMap shows places in nine European countries — Germany, Denmark, Belgium, the Netherlands,
+Austria, Switzerland, Czechia, Poland and Sweden — where OpenStreetMap knows about a baby changing
+table (<code>changing_table=yes</code> or <code>limited</code>). The color says whether a dad can
+reach the table. The map reads OSM and nothing else, and it writes nowhere. Fixing the data happens
+on OSM itself, through the links on each pin.</p>
 <p>A ranking of which city has the best toilet provision this is not. Why that can't honestly be
 done from open data is explained further down.</p>
 
@@ -110,13 +111,14 @@ exist. Here almost every object is silent, and that means nothing. If you know a
 it is still welcome — in the OSM editor, as <code>kids_area=yes</code>.</p>
 
 <h2>The empty blue rings: places to play, no answer</h2>
-<p>The same rule matches far more places than the map has pins. In Germany and Denmark 828 objects
-pass it — but only 111 of them carry a <code>changing_table</code> tag at all. For the other 701
-nobody has answered the first question: is there a changing table here? Yes, no, nobody knows —
-OSM says nothing whatsoever.</p>
-<p>The map cannot colour those 701, because there is nothing to colour. They are not grey either:
-grey means "the table exists, the room is missing", and that does not apply here. So they get their
-own chip, <em>Play area only</em>, off by default, and an empty blue ring instead of a filled pin.</p>
+<p>The same rule matches far more places than the map has pins. Only
+<span data-stat="play_tables">111</span> of them carry a <code>changing_table</code> tag at
+all. At <span data-stat="play_places">701</span> more, nobody has answered the first question: is
+there a changing table here? Yes, no, nobody knows — OSM says nothing whatsoever.</p>
+<p>The map cannot colour those <span data-stat="play_places">701</span>, because there is nothing to
+colour. They are not grey either: grey means "the table exists, the room is missing", and that does
+not apply here. So they get their own chip, <em>Play area only</em>, off by default, and an empty
+blue ring instead of a filled pin.</p>
 <p>They are the most promising open questions on the whole map. An indoor playground, a café with a
 ball pit, a restaurant with a play room — a father with a toddler is going there anyway, and once
 he is there, he knows the answer. Clicking a ring opens MapComplete on exactly that one question.
@@ -256,9 +258,10 @@ come from the same nightly query that builds the map.</p>
 eyes though.</p>
 
 <script>
-// The taginfo numbers above are the same ones the nightly build already writes
-// to data/stats.json. Read them from there rather than maintaining them by
-// hand: copied numbers rot, and on this page of all pages that is embarrassing.
+// The taginfo numbers above and the two play-area numbers are the same ones the
+// nightly build already writes to data/stats.json. Read them from there rather
+// than maintaining them by hand: copied numbers rot, and on this page of all
+// pages that is embarrassing.
 // The markup holds the last known value, so without JS — or if the fetch fails
 // — the page still reads correctly, just a little older.
 (function () {
@@ -266,31 +269,43 @@ eyes though.</p>
   fetch("data/stats.json", { cache: "no-cache" })
     .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
     .then(function (s) {
-      var g = (s || {}).global;
-      if (!g || g.source !== "taginfo" || !g.location_total || !g.ct_total) return;
-      var raw = {
-        ct_total: g.ct_total,
-        location_total: g.location_total,
-        female_only: g.location_female_only,
-        male_only: g.location_male_only,
-        male_any: g.location_male_any,
-        male_and_female: g.location_male_and_female
-      };
+      s = s || {};
       var vals = {};
-      Object.keys(raw).forEach(function (k) {
-        if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
-      });
-      if (raw.female_only && raw.male_only) {
-        vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+      // The play-area numbers live in s.local, the taginfo values in s.global.
+      // Read them separately so the taginfo check below cannot swallow them:
+      // since the nine-country build of 19 Aug 2026 both change every night,
+      // independently of each other.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
       }
-      vals.share = (100 * raw.location_total / raw.ct_total)
-        .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
-      if (g.data_until) {
-        var d = new Date(g.data_until);
-        if (!isNaN(d)) {
-          vals.date = d.toLocaleDateString(LOCALE, {
-            day: "numeric", month: "short", year: "numeric"
-          });
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "short", year: "numeric"
+            });
+          }
         }
       }
       Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {

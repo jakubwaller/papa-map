@@ -5,9 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f2f5f3" />
   <title>PapaMap — Wickeltische, die ein Vater erreicht</title>
-  <meta name="description" content="Eine Karte der Wickeltische in ganz Deutschland und Dänemark, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
+  <!-- Nine countries since the sweep of 2026-08-19; counted here, not listed —
+       the nine names add ~110 characters and Google shows about 160, so the
+       point of the sentence would fall outside the snippet. The JSON-LD block
+       below names all nine, where length costs nothing. -->
+  <meta name="description" content="Eine Karte der Wickeltische in neun europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
   <meta property="og:title" content="PapaMap — Wickeltische, die ein Vater erreicht" />
-  <meta property="og:description" content="Eine Karte der Wickeltische in ganz Deutschland und Dänemark, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
+  <meta property="og:description" content="Eine Karte der Wickeltische in neun europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://papamap.de/" />
   <meta property="og:image" content="https://papamap.de/og-image.jpg" />
@@ -39,14 +43,20 @@
   <link rel="me" href="https://hostux.social/@aloissiola" />
 
   <!-- The map is a view onto a dataset; saying so lets Google Dataset Search
-       index it as one. Deliberately free of counts — the pipeline rewrites the
-       data nightly and a hard-coded number would rot within a day. -->
+       index it as one. Deliberately free of table counts — the pipeline
+       rewrites the data nightly and a hard-coded number would rot within a
+       day; the country count only moves when the sweep itself grows.
+       spatialCoverage names all nine instead of summarising them: a machine
+       reading "neun europäische Länder" learns nothing about which. Germany
+       and Denmark keep OSM's endonyms; the seven added on 2026-08-19 carry the
+       plain English names the pipeline selects them by, which is also what
+       stats.json and the leaderboard show. -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Dataset",
-    "name": "PapaMap — Wickeltische in Deutschland und Dänemark",
-    "description": "Wickeltische in Deutschland und Dänemark aus OpenStreetMap, klassifiziert danach, ob der Tisch für einen Vater erreichbar ist (Herren-/Unisex-WC oder eigener Wickelraum) oder nur im Damen-WC steht.",
+    "name": "PapaMap — Wickeltische in neun europäischen Ländern",
+    "description": "Wickeltische in neun europäischen Ländern — Deutschland, Dänemark, Belgien, den Niederlanden, Österreich, der Schweiz, Tschechien, Polen und Schweden — aus OpenStreetMap, klassifiziert danach, ob der Tisch für einen Vater erreichbar ist (Herren-/Unisex-WC oder eigener Wickelraum) oder nur im Damen-WC steht.",
     "url": "https://papamap.de/",
     "inLanguage": ["de", "en", "da"],
     "isAccessibleForFree": true,
@@ -56,7 +66,14 @@
     "creator": { "@type": "Organization", "name": "PapaMap", "url": "https://papamap.de/" },
     "spatialCoverage": [
       { "@type": "Country", "name": "Deutschland" },
-      { "@type": "Country", "name": "Danmark" }
+      { "@type": "Country", "name": "Danmark" },
+      { "@type": "Country", "name": "Belgium" },
+      { "@type": "Country", "name": "Netherlands" },
+      { "@type": "Country", "name": "Austria" },
+      { "@type": "Country", "name": "Switzerland" },
+      { "@type": "Country", "name": "Czechia" },
+      { "@type": "Country", "name": "Poland" },
+      { "@type": "Country", "name": "Sweden" }
     ],
     "distribution": {
       "@type": "DataDownload",
@@ -100,7 +117,7 @@
         <span class="wordmark">
           <span class="name">PapaMap</span>
           <!-- Replaced by app.js with the area the pipeline actually swept. -->
-          <span class="city" id="scope" data-i18n="areaDeDk">Deutschland &amp; Dänemark</span>
+          <span class="city" id="scope" data-i18n="areaFallback">neun europäische Länder</span>
         </span>
       </a>
       <!-- Also the page's only <h1>: the map had no heading at all, so search

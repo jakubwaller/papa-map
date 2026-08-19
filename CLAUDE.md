@@ -4,7 +4,7 @@ Guidance for coding agents working in this repository.
 
 ## What this is
 
-A static map of places in Germany and Denmark with a baby changing table, coloured by whether a dad
+A static map of places in nine European countries with a baby changing table, coloured by whether a dad
 can reach it: green = accessible room, red = women's room only, grey = nobody has recorded the room.
 A Python pipeline queries Overpass and taginfo and writes GeoJSON + one static German page per
 Bundesland; a vanilla-JS frontend renders them; a `caddy:2-alpine` container serves `web/` behind the
@@ -37,7 +37,7 @@ dad-accessible — inverting the entire point of the map. `ACCESSIBLE_TOKENS`, `
 **`CONTRACT.md` is the pipeline↔frontend contract.** Classification lives only in Python; the
 frontend consumes the `status` property and never re-derives it. `STATUSES` in `web/datasource.js`
 is the stable key set the UI renders zero badges from. Changing the emitted shape means amending
-CONTRACT.md — it is versioned by amendment, currently v11.
+CONTRACT.md — it is versioned by amendment, currently v12.
 
 **Overpass lies in two directions.** An all-Germany area query dies at a 60 s network idle cutoff,
 so Germany stays chunked per Bundesland (Denmark answers whole). And a mirror can return HTTP 200
