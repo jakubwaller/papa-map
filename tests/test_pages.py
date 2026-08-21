@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import re
 
 from pipeline import leaderboard, pages
@@ -204,8 +205,113 @@ def test_sitemap_lists_exactly_the_generated_pages():
         encoding="utf-8")
     listed = set(re.findall(
         rf"<loc>https://papamap\.de{re.escape(PAGES_BASE_PATH)}([a-z-]+)\.html</loc>", xml))
+    from pipeline.config import COUNTRY_PAGES, FRANCE_REGIONS
     generated = ({pages.slugify(n) for n in BUNDESLAENDER}
+                 | {pages.slugify(n) for _, n, _, _ in COUNTRY_PAGES.values()}
+                 | {pages.slugify(r) for r in FRANCE_REGIONS}
                  | {leaderboard.DE_FILE.removesuffix(".html"),
                     leaderboard.EN_FILE.removesuffix(".html")})
     assert listed == generated
     assert f"<loc>https://papamap.de{PAGES_BASE_PATH}</loc>" in xml
+
+
+# ---- Country and région pages (21 Aug 2026): every swept country gets a page
+# in its own language, France a hub plus 13 région pages in French.
+
+def test_country_and_region_slugs_are_pinned():
+    # Public URLs, so pinned, not derived. The slug comes from the LOCAL name
+    # ("België" → belgie), never from the English sweep selector.
+    from pipeline.config import COUNTRY_PAGES, FRANCE_REGIONS
+    assert {pages.slugify(name) for _, name, _, _ in COUNTRY_PAGES.values()} == {
+        "danmark", "belgie", "nederland", "oesterreich", "schweiz", "cesko",
+        "polska", "sverige", "united-kingdom", "france"}
+    assert [pages.slugify(r) for r in FRANCE_REGIONS] == [
+        "auvergne-rhone-alpes", "bourgogne-franche-comte", "bretagne",
+        "centre-val-de-loire", "corse", "grand-est", "hauts-de-france",
+        "ile-de-france", "normandie", "nouvelle-aquitaine", "occitanie",
+        "pays-de-la-loire", "provence-alpes-cote-d-azur"]
+    # No collision with the Bundesland slugs or each other.
+    from pipeline.config import BUNDESLAENDER as BL
+    all_slugs = ([pages.slugify(n) for n in BL]
+                 + [pages.slugify(n) for _, n, _, _ in COUNTRY_PAGES.values()]
+                 + [pages.slugify(r) for r in FRANCE_REGIONS])
+    assert len(all_slugs) == len(set(all_slugs))
+
+
+def test_french_region_forms_cover_exactly_the_regions():
+    from pipeline.config import FRANCE_REGIONS
+    from pipeline.pages_l10n import FRANCE_REGION_FORMS
+    assert set(FRANCE_REGION_FORMS) == set(FRANCE_REGIONS)
+
+
+def test_write_all_pages_writes_each_country_in_its_own_language(tmp_path):
+    from pipeline.config import FRANCE_REGIONS
+    areas = ([(n, "4") for n in BUNDESLAENDER]
+             + [("Danmark", "2"), ("Switzerland", "2"),
+                ("United Kingdom", "2")]
+             + [(r, "4") for r in FRANCE_REGIONS])
+    features = [feat(1), feat(2, "Legoland", "accessible", amenity="cafe"),
+                feat(3, "Pub & Co", "unknown", amenity="pub"),
+                feat(4, "Crêperie", "female_only", amenity="cafe")]
+    area_by_key = {("node", 1): "Bremen", ("node", 2): "Danmark",
+                   ("node", 3): "United Kingdom", ("node", 4): "Bretagne"}
+    toilets = {name: 7 for name, _ in areas}
+    written = pages.write_all_pages(areas, features, area_by_key, toilets,
+                                    str(tmp_path), GEN)
+    names = sorted(Path(p).name for p in written)
+    # 16 Länder + index + 3 countries + france.html + 13 régions.
+    assert len(names) == len(set(names)) == 16 + 1 + 3 + 1 + 13
+
+    da = (tmp_path / "danmark.html").read_text(encoding="utf-8")
+    assert 'lang="da"' in da
+    assert "<h1>Pusleborde i Danmark</h1>" in da
+    assert "Legoland" in da
+    assert 'href="../methods-da.html"' in da  # Danish footer + methods link
+    # The shared country list links the other pages, never itself.
+    assert 'href="united-kingdom.html"' in da and 'href="schweiz.html"' in da
+    assert 'href="danmark.html"' not in da
+    assert 'href="./"' in da  # Deutschland row in the country list
+
+    en = (tmp_path / "united-kingdom.html").read_text(encoding="utf-8")
+    assert 'lang="en"' in en
+    assert "<h1>Changing tables in the United Kingdom</h1>" in en
+    assert "The numbers for the United Kingdom" in en
+    assert "Pub &amp; Co" in en
+
+    de = (tmp_path / "schweiz.html").read_text(encoding="utf-8")
+    assert "<h1>Wickeltische in der Schweiz</h1>" in de   # dative article
+    assert "Die Zahlen für die Schweiz" in de             # accusative article
+
+    fr = (tmp_path / "bretagne.html").read_text(encoding="utf-8")
+    assert 'lang="fr"' in fr
+    assert "<h1>Tables à langer en Bretagne</h1>" in fr
+    assert "Les chiffres pour la Bretagne" in fr
+    assert 'href="france.html"' in fr                     # back to the hub
+    assert "Crêperie" in fr
+
+    hub = (tmp_path / "france.html").read_text(encoding="utf-8")
+    assert "Tables à langer en France, par région" in hub
+    for r in FRANCE_REGIONS:
+        assert f'href="{pages.slugify(r)}.html"' in hub
+
+    land = (tmp_path / "bremen.html").read_text(encoding="utf-8")
+    assert "PapaMap in anderen Ländern" in land
+    assert 'href="danmark.html"' in land
+    index = (tmp_path / "index.html").read_text(encoding="utf-8")
+    assert 'href="france.html"' in index
+
+    # Rewritten nightly: a second run must be byte-identical.
+    before = (tmp_path / "danmark.html").read_bytes()
+    pages.write_all_pages(areas, features, area_by_key, toilets,
+                          str(tmp_path), GEN)
+    assert (tmp_path / "danmark.html").read_bytes() == before
+
+
+def test_write_all_pages_without_germany_writes_no_german_pages(tmp_path):
+    written = pages.write_all_pages([("Danmark", "2")], [feat(1)],
+                                    {("node", 1): "Danmark"},
+                                    {"Danmark": 3}, str(tmp_path), GEN)
+    assert [Path(p).name for p in written] == ["danmark.html"]
+    da = (tmp_path / "danmark.html").read_text(encoding="utf-8")
+    # Alone in the build, the page has no other countries to link.
+    assert "PapaMap i andre lande" not in da

@@ -46,6 +46,9 @@ function applyI18n() {
   }
   document.getElementById("methods-link").href = t("methodsHref");
   document.getElementById("board-link").href = t("boardHref");
+  // Each language's footer leads to the area page its readers search
+  // for — the Danish UI to danmark.html, the French one to france.html.
+  document.getElementById("regions-link").href = t("regionsHref");
   // Boot may have resolved a language the markup does not show (a stored
   // choice, or a Czech browser): the control has to agree with the page.
   const sel = document.getElementById("lang-select");

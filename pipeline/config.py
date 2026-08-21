@@ -191,6 +191,34 @@ COUNTRY_LABELS = {
     "gb": "United Kingdom", "fr": "France",
 }
 
+# One static page per country beyond Germany (pipeline/pages.py), each in the
+# language its readers search in — the same argument that created the German
+# Bundesland pages ("Wickeltisch Bayern" is searched in German) says
+# "puslebord Danmark" is searched in Danish. Values: (page language, local
+# display name, prepositional phrase for running prose, and the form a heading
+# like "Die Zahlen für …" needs — None when the plain name serves). The
+# phrases exist because names inflect: German says "in der Schweiz", Czech
+# "v Česku", Polish "w Polsce" — see pages_l10n.py for how templates use them.
+# The page slug is slugify(local name), pinned in test_pages.
+#
+# Belgium and Switzerland are multilingual; each page is written in the
+# majority language (Dutch, German) rather than duplicated per language.
+# France's entry is the hub page over its 13 région pages, which are written
+# in French from FRANCE_REGION_FORMS in pages_l10n.py.
+COUNTRY_PAGES = {
+    "dk": ("da", "Danmark", "i Danmark", None),
+    "be": ("nl", "België", "in België", None),
+    "nl": ("nl", "Nederland", "in Nederland", None),
+    "at": ("de", "Österreich", "in Österreich", None),
+    "ch": ("de", "Schweiz", "in der Schweiz", "die Schweiz"),
+    "cz": ("cs", "Česko", "v Česku", None),
+    "pl": ("pl", "Polska", "w Polsce", None),
+    "se": ("sv", "Sverige", "i Sverige", None),
+    "gb": ("en", "United Kingdom", "in the United Kingdom",
+           "the United Kingdom"),
+    "fr": ("fr", "France", "en France", "la France"),
+}
+
 # Leaderboard city sweep: (display name, OSM area name, admin_level). Curated —
 # big cities only, so one answered question moves a share the reader can see
 # without a 20-pin village jumping the table on a single edit. The levels are
