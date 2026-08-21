@@ -72,9 +72,10 @@ adding the country, not after.
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.
 
-The same run rewrites `web/wickeltische/` — the per-Bundesland pages. They are build output,
+The same run rewrites `web/wickeltische/` — the per-area pages (16 Bundesländer + index,
+one page per other country, france.html + 13 région pages). They are build output,
 not repo content, so **a fresh clone serves 404s there until the first build runs**: the
-sitemap lists those 17 URLs unconditionally. Run the pipeline once after deploying rather
+sitemap lists all 40 of those URLs unconditionally. Run the pipeline once after deploying rather
 than waiting for the nightly cron.
 
 A full build also maintains `history.json` next to the other generated JSON (the

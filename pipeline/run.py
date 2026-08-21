@@ -187,24 +187,17 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         "global": global_block,
     }, stats_path)
 
-    # The Bundesland pages, written last: they are derived from the same
-    # features the map just got, and the map data is the artifact that must
-    # never be missing. A build that sweeps no German Land (PAPAMAP_COUNTRIES=dk,
-    # a single-area debug build) writes none at all rather than publishing an
-    # index page that claims Germany has one Bundesland. A partial German sweep
-    # can't reach here: the sweep above aborts unless every area succeeded.
-    # Membership in BUNDESLAENDER is what makes this German-only; French
-    # régions share admin_level=4 and must not get /wickeltische/ pages, whose
-    # whole premise is that "Wickeltisch Bayern" is searched in German.
-    land_names = sorted((n for n, lvl in areas if lvl == "4" and n in BUNDESLAENDER),
-                        key=pages.sort_key)
-    written = []
-    if land_names:
-        by_area = pages.group_by_area(features, ct_area)
-        summaries = [pages.summarize(name, by_area.get(name, []),
-                                     toilets_by_area.get(name, 0))
-                     for name in land_names]
-        written = pages.write_pages(summaries, pages_dir, generated_at)
+    # The area pages, written last: they are derived from the same features
+    # the map just got, and the map data is the artifact that must never be
+    # missing. German pages only appear when all 16 Länder were swept
+    # (PAPAMAP_COUNTRIES=dk must not publish an index claiming Germany has one
+    # Bundesland — and a partial German sweep can't reach here, the sweep
+    # above aborts unless every area succeeded); every other swept country
+    # gets one page in its own language, France additionally its 13 région
+    # pages. The routing and the reasoning live in config.COUNTRY_PAGES and
+    # pages.write_all_pages.
+    written = pages.write_all_pages(areas, features, ct_area, toilets_by_area,
+                                    pages_dir, generated_at)
 
     # History + leaderboard, only when the city sweep ran (i.e. a full build).
     # The history append replaces a same-date entry, so a manual re-run after

@@ -78,6 +78,8 @@ export const STRINGS = {
     // renders those two); every other language borrows the English page, the
     // way Danish already did — and "Rangliste" happens to be the Danish word
     // for it too.
+    regions: "Bundesländer",
+    regionsHref: "wickeltische/",
     board: "Rangliste",
     boardHref: "wickeltische/rangliste.html",
     // The picker's own entry: every language names itself, so a reader who
@@ -172,6 +174,10 @@ export const STRINGS = {
     addPlace: "+ Add a place",
     methods: "Methods",
     methodsHref: "methods-en.html",
+    // en is also the x-default: readers outside the UK reach the other
+    // countries through the page's own country list.
+    regions: "United Kingdom",
+    regionsHref: "wickeltische/united-kingdom.html",
     board: "Leaderboard",
     boardHref: "wickeltische/leaderboard.html",
     langName: "English",
@@ -254,6 +260,8 @@ export const STRINGS = {
     addPlace: "+ Tilføj et sted",
     methods: "Metode",
     methodsHref: "methods-da.html",
+    regions: "Danmark",
+    regionsHref: "wickeltische/danmark.html",
     board: "Rangliste",
     boardHref: "wickeltische/leaderboard.html",
     langName: "Dansk",
@@ -337,6 +345,9 @@ export const STRINGS = {
     addPlace: "+ Plek toevoegen",
     methods: "Methode",
     methodsHref: "methods-nl.html",
+    // Flanders reaches belgie.html one hop away, via the country list.
+    regions: "Nederland",
+    regionsHref: "wickeltische/nederland.html",
     board: "Ranglijst",
     boardHref: "wickeltische/leaderboard.html",
     langName: "Nederlands",
@@ -414,6 +425,8 @@ export const STRINGS = {
     addPlace: "+ Ajouter un lieu",
     methods: "Méthodes",
     methodsHref: "methods-fr.html",
+    regions: "France",
+    regionsHref: "wickeltische/france.html",
     board: "Classement",
     boardHref: "wickeltische/leaderboard.html",
     langName: "Français",
@@ -491,6 +504,10 @@ export const STRINGS = {
     addPlace: "+ Aggiungi luogo",
     methods: "Metodo",
     methodsHref: "methods-it.html",
+    // No swept country is Italian-first, so Italian keeps the index —
+    // whose country list at least lets the reader pick.
+    regions: "Regioni",
+    regionsHref: "wickeltische/",
     board: "Classifica",
     boardHref: "wickeltische/leaderboard.html",
     langName: "Italiano",
@@ -568,6 +585,8 @@ export const STRINGS = {
     addPlace: "+ Přidat místo",
     methods: "Metody",
     methodsHref: "methods-cs.html",
+    regions: "Česko",
+    regionsHref: "wickeltische/cesko.html",
     board: "Žebříček",
     boardHref: "wickeltische/leaderboard.html",
     langName: "Čeština",
@@ -645,6 +664,8 @@ export const STRINGS = {
     addPlace: "+ Dodaj miejsce",
     methods: "Metody",
     methodsHref: "methods-pl.html",
+    regions: "Polska",
+    regionsHref: "wickeltische/polska.html",
     board: "Ranking",
     boardHref: "wickeltische/leaderboard.html",
     langName: "Polski",
@@ -722,6 +743,8 @@ export const STRINGS = {
     addPlace: "+ Ny plats",
     methods: "Metod",
     methodsHref: "methods-sv.html",
+    regions: "Sverige",
+    regionsHref: "wickeltische/sverige.html",
     board: "Topplista",
     boardHref: "wickeltische/leaderboard.html",
     langName: "Svenska",
