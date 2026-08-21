@@ -4,8 +4,8 @@ import json
 from datetime import date as _date, timedelta
 from pathlib import Path
 
-from .config import (BUNDESLAENDER, FRANCE_REGIONS, chunked_area_names, HISTORY_MAX_DAYS, PAGES_BASE_PATH,
-                     SITE_BASE_URL)
+from .config import (AREA_COUNTRY, BUNDESLAENDER, FRANCE_REGIONS, chunked_area_names,
+                     HISTORY_MAX_DAYS, PAGES_BASE_PATH, SITE_BASE_URL)
 from .export import write_text_atomic
 from .pages import FOOTER, ICON, STYLE, UP, de_date, de_num, esc, sort_key
 
@@ -322,6 +322,7 @@ L = {
         "regions_note_lands": ("<p>Dieselbe Rechnung für die {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Stadt", "col_name_region": "Region",
+        "col_country": "Land",
         "col_delta": "Δ Punkte", "col_share": "beantwortet",
         "col_total": "Orte", "col_acc": "+ erreichbar", "col_new": "+ Orte",
         "sort_hint": ("Auf eine Spaltenüberschrift tippen, um danach zu "
@@ -387,6 +388,7 @@ L = {
         "regions_note_lands": ("<p>The same arithmetic for the {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "City", "col_name_region": "Region",
+        "col_country": "Country",
         "col_delta": "Δ points", "col_share": "answered",
         "col_total": "places", "col_acc": "+ reachable", "col_new": "+ places",
         "sort_hint": ("Tap a column header to sort by it — tap again to "
@@ -486,6 +488,12 @@ def _table(rows, name_col: str, tab: dict, lang: str) -> str:
     parts.append(
         "<tr>" + _th("#", "num", "asc")
         + _th(name_col, "text", "asc", cls="l")
+        # Both tables mix eleven countries since 21 Aug 2026, and a reader
+        # meeting "Gent" between two Bundesländer deserves to know whose city
+        # is moving without guessing from the spelling. Codes, not names: two
+        # letters read the same in both page languages and keep the column
+        # narrower than its own header.
+        + _th(tab["col_country"], "text", "asc")
         # The page arrives sorted by this column, so it is the one that starts
         # out marked — a sort indicator that lies on first paint is worse than
         # none at all.
@@ -500,12 +508,17 @@ def _table(rows, name_col: str, tab: dict, lang: str) -> str:
         mover = r["delta_pp"] is not None and r["delta_pp"] > 0
         if mover:
             rank += 1
+        # A row whose name is in no config map is a history key from an area
+        # since removed from config — a dash, not a KeyError on every build.
+        country = AREA_COUNTRY.get(r["name"])
         cells = [
             # Rank keeps its number under every sort order: it says "third
             # biggest mover", which stays true while you look at the table by
             # size. Rows without one sort last, restoring the default order.
             _cell(str(rank), rank) if mover else _cell("–", None, "zero"),
             _cell(esc(r["name"]), sort_key(r["name"])[0], "l"),
+            (_cell(country.upper(), country) if country
+             else _cell("–", None, "zero")),
         ]
         for text, value in (
                 (_fmt_delta_pp(r["delta_pp"], lang), _num_attr(r["delta_pp"])),

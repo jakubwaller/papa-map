@@ -221,84 +221,123 @@ COUNTRY_LABELS = {
 # Each city costs one ids-only query — one ~40 s Overpass slot — per night;
 # these 34 add ~23 min, which the 03:30 cron absorbs while still finishing
 # well before the 05:30 ops mail.
-CITY_AREAS = (
-    ("Berlin", "Berlin", "4"),
-    ("Hamburg", "Hamburg", "4"),
-    ("München", "München", "6"),
-    ("Köln", "Köln", "6"),
-    ("Frankfurt am Main", "Frankfurt am Main", "6"),
-    ("Stuttgart", "Stuttgart", "6"),
-    ("Düsseldorf", "Düsseldorf", "6"),
-    ("Leipzig", "Leipzig", "6"),
-    ("Dortmund", "Dortmund", "6"),
-    ("Essen", "Essen", "6"),
-    ("Dresden", "Dresden", "6"),
-    ("Nürnberg", "Nürnberg", "6"),
-    ("Duisburg", "Duisburg", "6"),
-    ("Bochum", "Bochum", "6"),
-    ("Wuppertal", "Wuppertal", "6"),
-    ("Bielefeld", "Bielefeld", "6"),
-    ("Bonn", "Bonn", "6"),
-    ("Münster", "Münster", "6"),
-    ("Karlsruhe", "Karlsruhe", "6"),
-    ("Mannheim", "Mannheim", "6"),
-    ("Augsburg", "Augsburg", "6"),
-    ("Wiesbaden", "Wiesbaden", "6"),
-    ("Bremen", "Bremen", "6"),
-    ("Hannover", "Hannover", "8"),
-    ("København", "Københavns Kommune", "7"),
-    ("Aarhus", "Aarhus Kommune", "7"),
-    ("Odense", "Odense Kommune", "7"),
-    ("Aalborg", "Aalborg Kommune", "7"),
-    # Belgium. Brussels is the Capital Region (19 communes, selected on
-    # name:en — see NAME_EN_AREAS); the level-8 commune "Bruxelles - Brussel"
-    # would cover about a fifth of the city.
-    ("Brussels", "Brussels-Capital", "4"),
-    ("Antwerpen", "Antwerpen", "8"),
-    ("Gent", "Gent", "8"),
-    # Netherlands: gemeenten. "Utrecht" the province is level 4, no clash.
-    ("Amsterdam", "Amsterdam", "8"),
-    ("Rotterdam", "Rotterdam", "8"),
-    ("Den Haag", "Den Haag", "8"),
-    ("Utrecht", "Utrecht", "8"),
-    # Austria: Wien is a Bundesland, Graz and Linz are Statutarstädte.
-    ("Wien", "Wien", "4"),
-    ("Graz", "Graz", "6"),
-    ("Linz", "Linz", "6"),
-    # Switzerland: Gemeinden — the level-4 relations of the same names are
-    # the cantons.
-    ("Zürich", "Zürich", "8"),
-    ("Bern", "Bern", "8"),
-    ("Basel", "Basel", "8"),
-    ("Genève", "Genève", "8"),
-    # Czechia: Praha is its own kraj; Brno is an obec. (A level-8 "Praha"
-    # exists too — a Slovak village, excluded by the level.)
-    ("Praha", "Praha", "4"),
-    ("Brno", "Brno", "8"),
-    # Poland: city powiats.
-    ("Warszawa", "Warszawa", "6"),
-    ("Kraków", "Kraków", "6"),
-    ("Wrocław", "Wrocław", "6"),
-    ("Gdańsk", "Gdańsk", "6"),
-    ("Poznań", "Poznań", "6"),
-    # Sweden: kommuner, and two of the three carry official names a reader
-    # would not type — same display-vs-selector split as København.
-    ("Stockholm", "Stockholms kommun", "7"),
-    ("Göteborg", "Göteborgs Stad", "7"),
-    ("Malmö", "Malmö kommun", "7"),
-    # United Kingdom.
-    ("London", "Greater London", "5"),
-    ("Birmingham", "Birmingham", "8"),
-    ("Manchester", "Manchester", "8"),
-    ("Glasgow", "Glasgow City", "6"),
-    ("Edinburgh", "City of Edinburgh", "6"),
-    # France: communes, except Paris (see above).
-    ("Paris", "Paris", "6"),
-    ("Marseille", "Marseille", "8"),
-    ("Lyon", "Lyon", "8"),
-    ("Toulouse", "Toulouse", "8"),
-    ("Bordeaux", "Bordeaux", "8"),
-)
+#
+# Grouped by country code, not flat, because the leaderboard's country column
+# renders from AREA_COUNTRY below — a flat list would need a second, hand-kept
+# name→country table that could silently disagree with this one.
+CITY_AREAS_BY_COUNTRY = {
+    "de": (
+        ("Berlin", "Berlin", "4"),
+        ("Hamburg", "Hamburg", "4"),
+        ("München", "München", "6"),
+        ("Köln", "Köln", "6"),
+        ("Frankfurt am Main", "Frankfurt am Main", "6"),
+        ("Stuttgart", "Stuttgart", "6"),
+        ("Düsseldorf", "Düsseldorf", "6"),
+        ("Leipzig", "Leipzig", "6"),
+        ("Dortmund", "Dortmund", "6"),
+        ("Essen", "Essen", "6"),
+        ("Dresden", "Dresden", "6"),
+        ("Nürnberg", "Nürnberg", "6"),
+        ("Duisburg", "Duisburg", "6"),
+        ("Bochum", "Bochum", "6"),
+        ("Wuppertal", "Wuppertal", "6"),
+        ("Bielefeld", "Bielefeld", "6"),
+        ("Bonn", "Bonn", "6"),
+        ("Münster", "Münster", "6"),
+        ("Karlsruhe", "Karlsruhe", "6"),
+        ("Mannheim", "Mannheim", "6"),
+        ("Augsburg", "Augsburg", "6"),
+        ("Wiesbaden", "Wiesbaden", "6"),
+        ("Bremen", "Bremen", "6"),
+        ("Hannover", "Hannover", "8"),
+    ),
+    "dk": (
+        ("København", "Københavns Kommune", "7"),
+        ("Aarhus", "Aarhus Kommune", "7"),
+        ("Odense", "Odense Kommune", "7"),
+        ("Aalborg", "Aalborg Kommune", "7"),
+    ),
+    # Brussels is the Capital Region (19 communes, selected on name:en — see
+    # NAME_EN_AREAS); the level-8 commune "Bruxelles - Brussel" would cover
+    # about a fifth of the city.
+    "be": (
+        ("Brussels", "Brussels-Capital", "4"),
+        ("Antwerpen", "Antwerpen", "8"),
+        ("Gent", "Gent", "8"),
+    ),
+    # Gemeenten. "Utrecht" the province is level 4, no clash.
+    "nl": (
+        ("Amsterdam", "Amsterdam", "8"),
+        ("Rotterdam", "Rotterdam", "8"),
+        ("Den Haag", "Den Haag", "8"),
+        ("Utrecht", "Utrecht", "8"),
+    ),
+    # Wien is a Bundesland, Graz and Linz are Statutarstädte.
+    "at": (
+        ("Wien", "Wien", "4"),
+        ("Graz", "Graz", "6"),
+        ("Linz", "Linz", "6"),
+    ),
+    # Gemeinden — the level-4 relations of the same names are the cantons.
+    "ch": (
+        ("Zürich", "Zürich", "8"),
+        ("Bern", "Bern", "8"),
+        ("Basel", "Basel", "8"),
+        ("Genève", "Genève", "8"),
+    ),
+    # Praha is its own kraj; Brno is an obec. (A level-8 "Praha" exists too —
+    # a Slovak village, excluded by the level.)
+    "cz": (
+        ("Praha", "Praha", "4"),
+        ("Brno", "Brno", "8"),
+    ),
+    # City powiats.
+    "pl": (
+        ("Warszawa", "Warszawa", "6"),
+        ("Kraków", "Kraków", "6"),
+        ("Wrocław", "Wrocław", "6"),
+        ("Gdańsk", "Gdańsk", "6"),
+        ("Poznań", "Poznań", "6"),
+    ),
+    # Kommuner, and two of the three carry official names a reader would not
+    # type — same display-vs-selector split as København.
+    "se": (
+        ("Stockholm", "Stockholms kommun", "7"),
+        ("Göteborg", "Göteborgs Stad", "7"),
+        ("Malmö", "Malmö kommun", "7"),
+    ),
+    "gb": (
+        ("London", "Greater London", "5"),
+        ("Birmingham", "Birmingham", "8"),
+        ("Manchester", "Manchester", "8"),
+        ("Glasgow", "Glasgow City", "6"),
+        ("Edinburgh", "City of Edinburgh", "6"),
+    ),
+    # Communes, except Paris (see above).
+    "fr": (
+        ("Paris", "Paris", "6"),
+        ("Marseille", "Marseille", "8"),
+        ("Lyon", "Lyon", "8"),
+        ("Toulouse", "Toulouse", "8"),
+        ("Bordeaux", "Bordeaux", "8"),
+    ),
+}
+
+# The flat (display name, OSM area name, admin_level) list everything else
+# consumes, in the grouping's order.
+CITY_AREAS = tuple(city for cities in CITY_AREAS_BY_COUNTRY.values()
+                   for city in cities)
+
+# Leaderboard row label → country code, for the country column on both tables.
+# Region rows are keyed by sweep-area name, city rows by display name; Berlin,
+# Hamburg and Bremen appear in both maps with the same answer. A history key
+# that matches neither (an area removed from config after it was recorded)
+# renders as a dash rather than KeyErroring a page build.
+AREA_COUNTRY = {name: c for c, areas in COUNTRY_AREAS.items()
+                for name, _ in areas}
+AREA_COUNTRY.update({display: c for c, cities in CITY_AREAS_BY_COUNTRY.items()
+                     for display, _, _ in cities})
 
 # Per-region daily snapshots, appended by every full build and rendered into
 # the leaderboard pages. Lives next to stats.json so it lands in the one
