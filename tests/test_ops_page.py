@@ -229,7 +229,8 @@ def test_run_check_writes_the_page_and_caches_edits(tmp_path):
             mail=lambda *a: None, visits_fetch=lambda **kw: None,
             edits_fetch=lambda **kw: edits,
             html_path=str(html_path), history_path=str(tmp_path / "history.json"),
-            build_log_path=str(tmp_path / "pipeline.log"))
+            build_log_path=str(tmp_path / "pipeline.log"),
+            private_html_path=str(tmp_path / "out" / "private" / "ops.html"))
 
     run(NOW, {"days": 7, "changesets": 9})  # Sunday: no digest, no fetch
     html = html_path.read_text()
@@ -255,8 +256,9 @@ def test_run_check_with_empty_html_path_writes_nothing(tmp_path):
                   stats_path=str(tmp_path / "stats.json"),
                   geojson_path=str(tmp_path / "absent.json"),
                   mail=lambda *a: None, visits_fetch=lambda **kw: None,
-                  edits_fetch=lambda **kw: None, html_path="")
-    assert not list(tmp_path.glob("*.html"))
+                  edits_fetch=lambda **kw: None, html_path="",
+                  private_html_path="")
+    assert not list(tmp_path.glob("**/*.html"))
 
 
 def test_unwritable_page_does_not_fail_the_check(tmp_path, capsys):
@@ -269,7 +271,8 @@ def test_unwritable_page_does_not_fail_the_check(tmp_path, capsys):
         stats_path=str(tmp_path / "stats.json"),
         geojson_path=str(tmp_path / "absent.json"),
         mail=lambda *a: None, visits_fetch=lambda **kw: None,
-        edits_fetch=lambda **kw: None, html_path=str(blocker / "ops.html"))
+        edits_fetch=lambda **kw: None, html_path=str(blocker / "ops.html"),
+        private_html_path="")
     assert "ops page not written" in capsys.readouterr().err
     assert report  # the check itself still answered
 

@@ -39,7 +39,8 @@ def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None):
         mail=lambda subject, body: sent.append((subject, body)),
         visits_fetch=lambda **kw: None,
         edits_fetch=lambda **kw: None,
-        html_path=str(tmp_path / "ops.html"))
+        html_path=str(tmp_path / "ops.html"),
+        private_html_path=str(tmp_path / "private-ops.html"))
     return anomalies, report, sent, state_path
 
 
@@ -221,7 +222,7 @@ def test_digest_carries_edits_line(tmp_path):
         mail=lambda subject, body: sent.append((subject, body)),
         visits_fetch=lambda **kw: None,
         edits_fetch=lambda **kw: {"days": 7, "changesets": 2},
-        html_path="")
+        html_path="", private_html_path="")
     assert "edits via papamap theme (OSMCha, 7d): 2 changesets" in sent[0][1]
 
 
