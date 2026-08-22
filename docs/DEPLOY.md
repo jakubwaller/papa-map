@@ -139,6 +139,22 @@ line says UNKNOWN, re-run the check before believing anything about that week.
 30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1
 ```
 
+The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
+the report as a page plus what the mail has no room for: per-area results and warnings from
+last night's `pipeline.log`, per-region counts with a week's delta from `history.json`, the
+daily run history, the last OSMCha count dated. Everything on it is aggregate; the one number
+it deliberately omits is the Cloudflare request total, because `methods.html` promises
+"keine Analytics" and a traffic figure on a public page reads as exactly that.
+
+It is written to `PAPAMAP_OPS_HTML_PATH`, default `ops.html` next to `stats.json` — under the
+Docker layout that is `web-data/ops.html`, served at `/data/ops.html` and rewritten to
+`/ops.html` by `deploy/papamap.Caddyfile`. That rewrite is new as of this page: after
+pulling it, `docker compose restart papamap` (the Caddyfile is a bind mount; a running
+container does not re-read it). `PAPAMAP_BUILD_LOG_PATH` (default `pipeline.log`, i.e. the
+build cron's log in the repo directory) feeds the build section; absent, the page says so.
+Set `PAPAMAP_OPS_HTML_PATH=` (empty) to not write the page at all. A page that fails to
+render or write is a WARN in `ops.log`, never a failed check.
+
 `ops.env` (git-ignored, `chmod 600`) holds the same `PAPAMAP_*` path overrides as the build cron
 (if any) plus:
 
