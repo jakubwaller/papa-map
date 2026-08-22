@@ -272,3 +272,114 @@ def test_unwritable_page_does_not_fail_the_check(tmp_path, capsys):
         edits_fetch=lambda **kw: None, html_path=str(blocker / "ops.html"))
     assert "ops page not written" in capsys.readouterr().err
     assert report  # the check itself still answered
+
+
+# ---- The private copy --------------------------------------------------------
+
+VISITS = {"2026-08-20": {"requests": 2500, "uniques": 600},
+          "2026-08-21": {"requests": 2600, "uniques": 640},
+          "2026-08-22": {"requests": 2400, "uniques": 590}}
+
+
+def test_private_page_carries_visitors_and_public_never_does():
+    private = render(private=True, visits=VISITS)
+    assert "<title>PapaMap ops (private)</title>" in private
+    assert "<h2>Visitors</h2>" in private
+    assert "1,830" in private and "7,500" in private  # 3-day sums
+    assert "uniques, last 3 days" in private
+    assert "2026-08-21" in private and "640" in private
+    assert "identifies nobody" in private
+    public = render(private=False, visits=VISITS)
+    assert "Visitors" not in public and "7,500" not in public
+    assert "no analytics" in public
+
+
+def test_private_page_without_figures_says_so():
+    html = render(private=True, visits=None)
+    assert "<h2>Visitors</h2>" in html and "No Cloudflare figures yet" in html
+
+
+def test_cf_visits_returns_per_day_figures(monkeypatch):
+    monkeypatch.setenv("CF_ANALYTICS_TOKEN", "t")
+    monkeypatch.setenv("CF_ZONE_TAG", "z")
+    groups = [{"dimensions": {"date": "2026-08-21"},
+               "sum": {"requests": 10}, "uniq": {"uniques": 3}},
+              {"dimensions": {"date": "2026-08-22"},
+               "sum": {"requests": 20}, "uniq": {"uniques": 4}}]
+
+    class R:
+        def json(self):
+            return {"data": {"viewer": {"zones": [
+                {"httpRequests1dGroups": groups}]}}}
+
+    seen = {}
+
+    def post(url, **kw):
+        seen["query"] = kw["json"]["query"]
+        return R()
+
+    v = ops.cf_visits(now=NOW, post=post)
+    assert "dimensions { date }" in seen["query"]
+    assert v["requests"] == 30 and v["uniques"] == 7
+    assert v["by_day"] == {"2026-08-21": {"requests": 10, "uniques": 3},
+                           "2026-08-22": {"requests": 20, "uniques": 4}}
+
+
+def test_merge_visits_skips_today_overwrites_earlier_and_caps():
+    kept = {"2026-08-21": {"requests": 1, "uniques": 1},
+            "2026-08-01": {"requests": 5, "uniques": 5}}
+    fetched = {"by_day": {"2026-08-21": {"requests": 2600, "uniques": 640},
+                          "2026-08-22": {"requests": 2400, "uniques": 590},
+                          "2026-08-23": {"requests": 300, "uniques": 90}}}
+    merged = ops.merge_visits(kept, fetched, NOW)  # NOW is 2026-08-23
+    assert list(merged) == ["2026-08-01", "2026-08-21", "2026-08-22"]
+    assert merged["2026-08-21"] == {"requests": 2600, "uniques": 640}
+    assert ops.merge_visits(kept, None, NOW) == dict(sorted(kept.items()))
+    from datetime import date, timedelta
+    many = {(date(2024, 1, 1) + timedelta(days=i)).isoformat():
+            {"requests": 1, "uniques": 1} for i in range(500)}
+    assert len(ops.merge_visits(many, {"by_day": {"2026-08-22": {"requests": 1, "uniques": 1}}}, NOW)) == ops.VISITS_HISTORY_DAYS
+
+
+def test_run_check_fetches_visits_daily_and_writes_the_private_page(tmp_path):
+    (tmp_path / "stats.json").write_text(json.dumps(
+        {"generated_at": NOW.isoformat(timespec="seconds")}))
+    (tmp_path / "gj.json").write_text(json.dumps({"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": None,
+         "properties": {"osm_type": "node", "osm_id": 1, "status": "unknown"}}]}))
+    state_path = tmp_path / "state.json"
+    private_path = tmp_path / "out" / "private" / "ops.html"
+    public_path = tmp_path / "out" / "ops.html"
+    sent = []
+    calls = []
+
+    def run(now, by_day):
+        return ops.run_check(
+            now=now, state_path=str(state_path),
+            stats_path=str(tmp_path / "stats.json"),
+            geojson_path=str(tmp_path / "gj.json"),
+            mail=lambda subject, body: sent.append(body),
+            visits_fetch=lambda **kw: (calls.append(kw["now"]) or
+                                       {"days": 7, "requests": sum(v["requests"] for v in by_day.values()),
+                                        "uniques": 1, "by_day": by_day}),
+            edits_fetch=lambda **kw: None,
+            html_path=str(public_path), private_html_path=str(private_path),
+            history_path=str(tmp_path / "none.json"),
+            build_log_path=str(tmp_path / "none.log"))
+
+    # A Sunday: fetched (for the history) but not mailed.
+    run(NOW, {"2026-08-22": {"requests": 2400, "uniques": 590},
+              "2026-08-23": {"requests": 100, "uniques": 10}})
+    assert calls == [NOW] and sent == []
+    state = json.loads(state_path.read_text())
+    assert state["visits"] == {"2026-08-22": {"requests": 2400, "uniques": 590}}
+    private = private_path.read_text()
+    assert "<h2>Visitors</h2>" in private and "2,400" in private
+    assert "2,400" not in public_path.read_text()
+
+    # Monday: the digest carries the 7-day line as before.
+    monday = datetime(2026, 8, 24, 5, 30, tzinfo=timezone.utc)
+    run(monday, {"2026-08-23": {"requests": 2500, "uniques": 600}})
+    assert any("visits (Cloudflare, 7d): 2500 requests" in b for b in sent)
+    state = json.loads(state_path.read_text())
+    assert list(state["visits"]) == ["2026-08-22", "2026-08-23"]

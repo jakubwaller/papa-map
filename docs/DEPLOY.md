@@ -155,6 +155,32 @@ build cron's log in the repo directory) feeds the build section; absent, the pag
 Set `PAPAMAP_OPS_HTML_PATH=` (empty) to not write the page at all. A page that fails to
 render or write is a WARN in `ops.log`, never a failed check.
 
+### The private ops page
+
+The same run also writes a **private copy** — the public page plus a Visitors block:
+Cloudflare's zone-level requests and uniques per complete UTC day, 7/30-day sums, a curve, a
+table. The per-day figures are fetched on every run now (the mail still quotes them on digest
+days only) and kept in `ops-state.json` under `visits`, capped at 400 days, because the free
+Cloudflare plan forgets a day after about a week. `PAPAMAP_OPS_PRIVATE_HTML_PATH` (default
+`private/ops.html` next to `stats.json`, i.e. `web-data/private/ops.html`; empty disables).
+
+It is served at `https://papamap.de/private/ops.html` **only once you add the auth snippet** —
+`deploy/papamap.Caddyfile` answers 404 under `/private/` until `deploy/private/*.caddy`
+exists, so a checkout without it never exposes the page. One-time setup on the server:
+
+```sh
+cd ~/papa-map
+mkdir -p web-data/private                      # before `up`: Docker would create it as root
+HASH=$(docker run --rm caddy:2-alpine caddy hash-password --plaintext 'the password')
+printf 'basic_auth {\n\t%s %s\n}\nfile_server\n' you "$HASH" > deploy/private/ops-auth.caddy
+docker compose up -d papamap                   # new mounts: recreate, a restart is not enough
+curl -sI https://papamap.de/private/ops.html | head -1          # HTTP/2 401
+curl -sI -u you:'the password' https://papamap.de/private/ops.html | head -1   # 200
+```
+
+To change the password, regenerate the hash and rewrite the snippet, then
+`docker compose restart papamap` (the snippet is a bind mount — restart, not reload).
+
 `ops.env` (git-ignored, `chmod 600`) holds the same `PAPAMAP_*` path overrides as the build cron
 (if any) plus:
 

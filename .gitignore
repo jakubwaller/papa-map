@@ -20,3 +20,5 @@ docs/DEPLOY.local.md
 ops-state.json
 ops.log
 ops.env
+# The private ops page's auth snippet (password hash) — server-only.
+deploy/private/*.caddy

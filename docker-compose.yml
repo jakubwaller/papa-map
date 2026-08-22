@@ -15,6 +15,12 @@ services:
       # build output lives in web-data/ and is mounted back into the tree at the
       # URL it is served from, because web/ itself is read-only to the pipeline.
       - ./web-data/wickeltische:/srv/wickeltische:ro
+      # The private ops page and the auth snippet that gates it. Both
+      # directories must exist before `up` (the ops cron creates the first
+      # as the unprivileged user; Docker would create it as root), see
+      # docs/DEPLOY.md. Without a *.caddy in deploy/private, /private/ is 404.
+      - ./web-data/private:/srv/private:ro
+      - ./deploy/private:/etc/caddy/private:ro
     networks:
       - web_proxy
 
