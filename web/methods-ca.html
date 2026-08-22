@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PapaMap — Mètodes &amp; honestedat</title>
+<meta name="description" content="Com PapaMap acoloreix els canviadors d'OpenStreetMap, per què amb aquestes dades no es pot construir un índex de l'oferta de lavabos i com reparar tu mateix un pin gris.">
+<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
+     language versions were never actually linked to each other. Thirty-one
+     of them since the Europe-complete sweep (2026-08-22); every page must
+     list every other or the set is unreciprocated and ignored. -->
+<link rel="canonical" href="https://papamap.de/methods-ca.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
+<link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html">
+<link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html">
+<link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html">
+<link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
+<link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
+<link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html">
+<link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html">
+<link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html">
+<link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html">
+<link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html">
+<link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html">
+<link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html">
+<link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html">
+<link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html">
+<link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html">
+<link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html">
+<link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html">
+<link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html">
+<link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html">
+<link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html">
+<link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html">
+<link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html">
+<link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html">
+<link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html">
+<link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html">
+<link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html">
+<link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
+    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
+      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
+    }
+  }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+         background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
+  table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
+  li { margin: 0.3rem 0; }
+  .back { font-size: 0.9rem; }
+  /* Thirty-one languages, listed by their own names — "This page in X" that
+     many times would be a page of its own, and a reader who cannot read this
+     page still recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">&larr; Torna al mapa</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a>
+  &middot; <a href="methods-bs.html" hreflang="bs" lang="bs">Bosanski</a>
+  &middot; <strong lang="ca">Català</strong>
+  &middot; <a href="methods-et.html" hreflang="et" lang="et">Eesti</a>
+  &middot; <a href="methods-es.html" hreflang="es" lang="es">Español</a>
+  &middot; <a href="methods-hr.html" hreflang="hr" lang="hr">Hrvatski</a>
+  &middot; <a href="methods-is.html" hreflang="is" lang="is">Íslenska</a>
+  &middot; <a href="methods-lv.html" hreflang="lv" lang="lv">Latviešu</a>
+  &middot; <a href="methods-lt.html" hreflang="lt" lang="lt">Lietuvių</a>
+  &middot; <a href="methods-hu.html" hreflang="hu" lang="hu">Magyar</a>
+  &middot; <a href="methods-no.html" hreflang="no" lang="no">Norsk</a>
+  &middot; <a href="methods-pt.html" hreflang="pt" lang="pt">Português</a>
+  &middot; <a href="methods-ro.html" hreflang="ro" lang="ro">Română</a>
+  &middot; <a href="methods-sq.html" hreflang="sq" lang="sq">Shqip</a>
+  &middot; <a href="methods-sk.html" hreflang="sk" lang="sk">Slovenčina</a>
+  &middot; <a href="methods-sl.html" hreflang="sl" lang="sl">Slovenščina</a>
+  &middot; <a href="methods-fi.html" hreflang="fi" lang="fi">Suomi</a>
+  &middot; <a href="methods-el.html" hreflang="el" lang="el">Ελληνικά</a>
+  &middot; <a href="methods-be.html" hreflang="be" lang="be">Беларуская</a>
+  &middot; <a href="methods-bg.html" hreflang="bg" lang="bg">Български</a>
+  &middot; <a href="methods-mk.html" hreflang="mk" lang="mk">Македонски</a>
+  &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
+  &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a></p>
+<h1>PapaMap — mètodes &amp; honestedat</h1>
+<p class="muted">Canviadors a l'abast d'un pare. Les xifres mundials de taginfo de més avall
+provenen del build nocturn. La mostra de vuit centres urbans és del 26&nbsp;jul.&nbsp;2026 i es
+queda així.</p>
+
+<h2>Què és aquest mapa. I què no és.</h2>
+<p>PapaMap mostra llocs de 44 països europeus — des d'Islàndia fins a Xipre, des de Portugal fins
+a Ucraïna — on OpenStreetMap
+sap que hi ha un canviador
+de bolquers (<code>changing_table=yes</code> o <code>limited</code>). El color diu si un pare hi
+pot arribar. El mapa només llegeix OSM i no escriu enlloc. Les dades es corregeixen a OSM mateix, a
+través dels enllaços de cada pin.</p>
+<p>Una classificació de quina ciutat té la millor oferta de lavabos, això no ho és. Més avall
+expliquem per què no es pot fer honestament amb dades obertes.</p>
+
+<h2>Què signifiquen els colors (la regla exacta)</h2>
+<p>Al mapa només hi arriben els objectes amb <code>changing_table=yes</code> o
+<code>limited</code> (<code>no</code> només compta a les estadístiques). El color surt de
+<code>changing_table:location</code>. El valor es divideix per <code>;</code>, es retalla, es
+passa a minúscules i es compara com a token sencer. Mai com a subcadena, perquè
+<code>female_toilet</code> conté <code>male</code>.</p>
+<ul>
+  <li><span class="dot g"></span><strong>Verd:</strong> un token és
+      <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
+      <code>room</code>, <code>wheelchair_toilet</code> o <code>sales_area</code>.
+      Un pare hi pot arribar.</li>
+  <li><span class="dot r"></span><strong>Vermell:</strong> si no, quan un token és
+      <code>female_toilet</code>. El canviador existeix, però només al lavabo de dones.</li>
+  <li><span class="dot u"></span><strong>Gris:</strong> tota la resta. Sense etiqueta de
+      localització, o només text lliure. Ningú no ha registrat la sala. Els pins grisos són la
+      feina pendent.</li>
+</ul>
+<p>Una excepció: els objectes amb una etiqueta <code>centralkey</code> (diferent de
+<code>no</code>) no es mostren de cap manera. La clau Euro i sistemes de clau central semblants
+només es donen amb un certificat de discapacitat — sigui quina sigui la sala on és el canviador,
+la majoria de pares no passen per aquesta porta.</p>
+
+<h2>L'anell blau: racó de jocs</h2>
+<p>Un pin amb un anell blau també té un racó de jocs &mdash; un lloc on no només canvies el nadó,
+sinó que t'hi quedes una estona. El filtre <em>Amb racó de jocs</em> redueix el mapa a aquests
+llocs. Un lloc compta si OSM en registra qualsevol d'aquests:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> o <code>designated</code>
+      &mdash; la manera documentada al wiki de dir a l'interior.</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> o
+      <code>designated</code> &mdash; el racó de jocs d'un cafè, d'un restaurant, d'un forn. L'etiqueta
+      més utilitzada, encara que deixa obert si és interior o exterior.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; un parc infantil cobert
+      de tipus comercial.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> juntament amb
+      <code>indoor=yes</code> &mdash; el mateix, etiquetat a l'inrevés.</li>
+</ul>
+<p><code>outdoor</code> no compta: la sorrera d'un jardí de cervesa no és el que promet l'anell.
+Tampoc compta <code>no</code>, ni <code>limited</code> — el wiki defineix aquest últim com
+&ldquo;hi ha joguines disponibles, però no hi ha cap zona designada&rdquo;. Quan hi ha un
+<code>kids_area:indoor=no</code> explícit, aquest guanya a un simple <code>kids_area=yes</code>.</p>
+<p>Això és un distintiu, no un quart estat. Un lloc sense aquestes etiquetes no vol dir que
+&ldquo;no tingui racó de jocs&rdquo; — OSM simplement no en diu res. Per això aquí no hi ha gris ni
+crida a l'acció: amb <code>changing_table:location</code> el silenci vol dir alguna cosa, perquè
+se sap que el canviador existeix. Aquí gairebé tots els objectes callen, i això no vol dir res. Si
+coneixes un racó de jocs, afegir-lo és sempre benvingut — a l'editor d'OSM, com a
+<code>kids_area=yes</code>.</p>
+
+<h2>Els anells blaus buits: llocs per jugar, sense resposta</h2>
+<p>La mateixa regla afecta molts més llocs dels que el mapa té pins. Només
+<span data-stat="play_tables">111</span> tenen alguna etiqueta <code>changing_table</code>. A
+<span data-stat="play_places">701</span> més, ningú no ha respost la primera pregunta: hi ha un
+canviador aquí? Sí, no, ningú ho sap — OSM no en diu absolutament res.</p>
+<p>El mapa no pot acolorir aquests <span data-stat="play_places">701</span>, perquè no hi ha res a
+acolorir. Tampoc són grisos: gris vol dir &ldquo;el canviador existeix, falta la sala&rdquo;, i
+això aquí no s'aplica. Per això tenen un filtre propi, <em>Només racó de jocs</em>, desactivat per
+defecte, i un anell blau buit en lloc d'un pin ple.</p>
+<p>Són les preguntes obertes més prometedores de tot el mapa. Un parc infantil cobert, un cafè amb
+piscina de boles, un restaurant amb sala de jocs — un pare amb un infant petit hi anirà igualment,
+i un cop allà, ja sap la resposta. Fent clic a l'anell s'obre MapComplete amb exactament aquesta
+pregunta. Respon-la i l'anell desapareixerà a la propera actualització nocturna, substituït per un
+pin de veritat.</p>
+
+<h2>Com reparar un pin gris</h2>
+<p>Gris vol dir que falta una resposta. On és el canviador? Qualsevol persona amb un compte
+gratuït d'OSM ho pot respondre, allà mateix, en menys d'un minut:</p>
+<ul>
+  <li><strong>MapComplete (qualsevol mòbil, al navegador):</strong> &ldquo;Respon a
+      MapComplete&rdquo; en un pin gris obre el mateix objecte al tema propi de PapaMap a
+      MapComplete &mdash; a tots els pins, perquè les edicions es reconeguin com a fetes des
+      d'aquí. MapComplete avisa un cop que és un tema no oficial, no passa res. Les preguntes del
+      tema, de moment, només són en anglès. Inicia sessió amb el teu compte d'OSM i respon les
+      preguntes sobre el canviador, també la de la sala. La resposta va directa a OpenStreetMap i
+      apareix aquí després de la propera actualització nocturna.</li>
+  <li><strong>StreetComplete (Android):</strong> té una missió sobre canviadors, desactivada per
+      defecte. Vés a <em>Configuració &rarr; Selecció i ordre de les missions</em>, cerca
+      &ldquo;canviador&rdquo; i marca-la. Només pregunta sí/no. Per a la pregunta de la sala en un
+      pin gris ja existent, fes servir MapComplete.</li>
+</ul>
+<p class="muted">Les edicions es fan amb el teu propi compte d'OSM i són de tothom. Duraran més
+que aquest lloc web i ajuden totes les aplicacions que llegeixen OpenStreetMap.</p>
+
+<h2 id="contribute">Com afegir un lloc que falta</h2>
+<p>PapaMap no desa res per si mateix. Afegir un lloc, doncs, sempre vol dir: editar OpenStreetMap.
+El botó <em>+ Afegeix un lloc</em> del mapa obre l'editor adequat a la vista actual.</p>
+
+<h3>Falta del tot un lavabo públic</h3>
+<p>Fes servir el <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">tema
+de MapComplete de PapaMap</a> (el primer enllaç del quadre de diàleg). Inicia sessió, toca el mapa
+on és el lavabo, tria &ldquo;un lavabo públic&rdquo;, respon les preguntes. També les del
+canviador i la sala.</p>
+
+<h3>Un cafè, botiga o restaurant té un canviador que ningú ha mapejat</h3>
+<p>El lloc gairebé segur que ja existeix a OSM. Només falta l'etiqueta <code>changing_table</code>.
+Amb l'editor propi d'OSM (iD) això triga uns dos minuts:</p>
+<ol>
+  <li>Crea un compte gratuït a <a href="https://www.openstreetmap.org">openstreetmap.org</a>
+      (n'hi ha prou amb un correu electrònic) i inicia sessió.</li>
+  <li>Cerca el lloc i clica a <strong>Edita</strong>. El lloc és un punt o el contorn d'un
+      edifici. Clica-hi, i les etiquetes apareixen a l'esquerra.</li>
+  <li>Desplega <strong>Etiquetes</strong> a baix de tot i afegeix amb <strong>+</strong>:
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = on és, de la
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">llista de
+            valors documentada</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> o <code>sales_area</code>.
+            Si és en diverses sales: separa-les amb punt i coma
+            (<code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Prem <strong>Desa</strong>, escriu un comentari breu (&ldquo;afegeix la sala del
+      canviador&rdquo;), puja els canvis. En un minut és a OSM, i a PapaMap després de la propera
+      actualització nocturna.</li>
+</ol>
+<p class="muted">Etiqueta només el que hagis vist tu mateix. OSM registra el que hi ha, no el que
+hauria d'haver-hi. Si no saps la sala, <code>changing_table=yes</code> tot sol ja és útil: el lloc
+esdevé un pin gris, i el proper pare respon la pregunta de la sala.</p>
+
+<h2>Per què un índex de disponibilitat a partir d'OSM no funciona</h2>
+<p>El projecte més gran i evident seria una proporció d'oferta de lavabos entre homes i dones per
+ciutat. El número del qual depèn de debò l'argument de la &ldquo;paritat de lavabos&rdquo;. No es
+pot calcular a partir d'OpenStreetMap. Ho vam comprovar abans de construir el lloc, amb una mostra
+de vuit centres urbans (Berlín, Londres, París, Nova York, Tòquio&nbsp;23&nbsp;districtes,
+Amsterdam, Viena, Melbourne;
+26&nbsp;jul.&nbsp;2026):</p>
+<table>
+  <tr><th>Ciutat</th><th>Lavabos mapejats</th><th>Amb alguna etiqueta de gènere</th><th>Amb totes dues, H&nbsp;+&nbsp;D</th></tr>
+  <tr><td>Berlín</td><td>1,173</td><td>660</td><td>119</td></tr>
+  <tr><td>Londres</td><td>1,316</td><td>458</td><td>210</td></tr>
+  <tr><td>París</td><td>1,414</td><td>579</td><td>101</td></tr>
+  <tr><td>Nova York</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Tòquio (23 districtes)</td><td>3,500</td><td>601</td><td>231</td></tr>
+  <tr><td>Amsterdam</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Viena</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
+  <tr><td><strong>Totes</strong></td><td><strong>9,674</strong></td><td><strong>2,888 (29.9%)</strong></td><td><strong>827 (8.5%)</strong></td></tr>
+</table>
+<ul>
+  <li>Només el 29,9% dels lavabos mapejats porten alguna etiqueta de gènere. Amb totes dues (home
+      i dona): 8,5%.</li>
+  <li>Les etiquetes són senzills indicadors de sí/no, mai recomptes. Nombre de cabines per gènere:
+      zero a les vuit ciutats. L'única clau de capacitat, <code>toilets:num_chambers</code>
+      (~27k usos), no distingeix el gènere i prové gairebé del tot d'una importació antiga. Les
+      seves variants <code>:female</code> / <code>:male</code> tenen 2 usos cadascuna arreu del
+      món.</li>
+  <li>Hamburg, comprovat el mateix dia: 443 lavabos mapejats, cap amb una etiqueta
+      <code>toilets:num_chambers*</code>. La barra de la <a href="./">pàgina d'inici</a> recalcula
+      aquestes xifres cada nit.</li>
+  <li>I: les taxes d'etiquetatge mesuren la comunitat de mappers, no les ciutats. Els lavabos d'un
+      sol ús es queden, amb raó, sense etiqueta de gènere. Una classificació de ciutats puntuaria
+      els col·laboradors d'OSM, no l'equitat en l'oferta de lavabos.</li>
+</ul>
+<p>Així que l'única afirmació honesta és: avui l'oferta en si no es pot mesurar amb dades obertes.
+Aquest lloc mesura el que es pot mesurar i converteix els buits en contribucions.</p>
+
+<h2>L'únic fet calculable: on són els canviadors</h2>
+<p><code>changing_table:location</code> és, pel que sabem, l'únic vocabulari obert que registra en
+quina sala hi ha un canviador. És escàs:
+<span data-stat="location_total">3,659</span> de <span data-stat="ct_total">77,000</span>
+objectes <code>changing_table</code> arreu del món, <span data-stat="share">4.8%</span>. Però on
+existeix, és desequilibrat (taginfo, <span data-stat="date">26&nbsp;Jul&nbsp;2026</span>):</p>
+<ul>
+  <li>Canviadors només al lavabo de dones: <strong data-stat="female_only">485</strong>.</li>
+  <li>Canviadors només al lavabo d'homes: <strong data-stat="male_only">71</strong>. Aproximadament
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> estan
+      etiquetats a totes dues sales, <span data-stat="male_any">410</span> registren algun
+      canviador al lavabo d'homes. Arreu del món.</li>
+</ul>
+<p>La mostra és petita, i els mappers trien què registren. Així que no li donis massa importància
+a la proporció exacta. La tendència coincideix amb el que fa temps que està documentat en altres
+llocs: els canviadors pengen per defecte al lavabo de dones. Això deixa els pares fora, i dona per
+fet, sense dir-ho, qui s'encarrega dels bolquers. Aquest mapa fa visibles les dades que falten. I
+fàcils de corregir.</p>
+
+<h2>Llicència de les dades i atribució</h2>
+<p>Totes les dades del mapa &copy; <a href="https://www.openstreetmap.org/copyright">col·laboradors
+d'OpenStreetMap</a>, disponibles sota la
+<a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
+Els fitxers GeoJSON i d'estadístiques que serveix aquest lloc deriven d'OSM i, per tant, també són
+ODbL. Les estadístiques globals d'etiquetes provenen de
+<a href="https://taginfo.openstreetmap.org/">taginfo</a>. El codi del lloc en si té llicència MIT.</p>
+
+<h2>Privadesa</h2>
+<p>Un lloc estàtic. Sense comptes, sense galetes, sense analítica, sense scripts de seguiment. El
+lloc no desa res sobre tu i no té base de dades. Les tessel·les del mapa vénen dels servidors de
+tessel·les d'OpenStreetMap; aquestes peticions es regeixen per la
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">política de privadesa de l'OSMF</a>. Si
+segueixes un enllaç a MapComplete, StreetComplete o openstreetmap.org, ets als seus llocs,
+editant amb el teu propi compte d'OSM. Res no passa per nosaltres. Pàgines formals:
+<a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (alemany).</p>
+
+<p class="muted">Fonts: mostra d'Overpass en 8 centres urbans (9.674 lavabos) del
+26&nbsp;jul.&nbsp;2026, i les estadístiques de la clau a taginfo a la data indicada més amunt. Les
+xifres locals provenen de la mateixa consulta nocturna que construeix el mapa.</p>
+
+<h2>Com es fa aquest lloc</h2>
+<p>Faig servir IA per ajudar-me a programar i a escriure els textos. Tot i així, ho reviso tot jo
+mateix.</p>
+
+<script>
+// The taginfo numbers above and the two play-area numbers are the same ones the
+// nightly build already writes to data/stats.json. Read them from there rather
+// than maintaining them by hand: copied numbers rot, and on this page of all
+// pages that is embarrassing.
+// The markup holds the last known value, so without JS — or if the fetch fails
+// — the page still reads correctly, just a little older.
+(function () {
+  var LOCALE = "ca-AD";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      s = s || {};
+      var vals = {};
+      // The play-area numbers live in s.local, the taginfo values in s.global.
+      // Read them separately so the taginfo check below cannot swallow them:
+      // since the eleven-country build of 19 Aug 2026 both change every night,
+      // independently of each other.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
+      }
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "short", year: "numeric"
+            });
+          }
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* the numbers in the markup stand */ });
+})();
+</script>
+
+</body>
+</html>

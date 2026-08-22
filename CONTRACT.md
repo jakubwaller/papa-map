@@ -1,5 +1,55 @@
 # papa-map — build contract (v0)
 
+> **v15 amendment (22 Aug 2026, Europe complete):** papamap.de sweeps
+> **44 countries** — the eleven of v13 plus every remaining European
+> sovereign: `no fi is ie ee lv lt lu li ad mc sm mt es pt it gr cy si sk hu
+> hr ro bg rs ba me al mk xk md ua by` (ISO 3166-1 alpha-2; Kosovo is the
+> user-assigned `xk`). Each is **one whole `admin_level=2` area selected on
+> `name:en`**, extending v11's rule to the whole list — several would break
+> on `name` outright ("Ireland / Éire", "Україна"). Germany and France stay
+> the only chunked countries. Vatican City is deliberately absent: an area
+> with zero `changing_table` **and** zero `amenity=toilets` objects is
+> indistinguishable from a failed sweep (`run.py`'s zero-objects check), so
+> it cannot join under the current pipeline semantics.
+>
+> **The emitted shape does not change.** No new feature property, no new
+> `stats.json` field, no new file. `area_key` becomes `countries_44`, the
+> form v11 contracted and the frontend parses. Region keys in `history.json`
+> grow 38 → **71** (16 Länder + 13 régions + 42 whole countries); the set
+> stays open, as v13 already required.
+>
+> **Retraction — v13's implication that overseas territory stays out.**
+> France's five overseas régions are excluded by the `FRANCE_REGIONS`
+> allowlist, and v13 presented that as the pattern. It does not generalise:
+> Spain and Portugal answer **whole**, so the Canary Islands (27.6°N), Ceuta,
+> Melilla, Madeira and the Azores (−31.3°W) are *in* the dataset by the same
+> mechanism that keeps Guadeloupe out of it — the shape of the OSM relation,
+> not a papamap policy. The frontend's `maxBounds` widened to
+> `[[-32, 27], [41, 71.5]]` so every swept pin stays pannable-to; the
+> France exclusion stands only because its allowlist predates this and its
+> removal would re-litigate v13 for no reader benefit.
+>
+> **UI languages grow nine → 31**, keeping v13's rule that every swept
+> country gets at least one of its official languages: the 22 additions are
+> `bs ca et es hr is lv lt hu no pt ro sq sk sl fi el be bg mk sr uk` (sr in
+> Cyrillic; `no` is Bokmål, with `nb`/`nn` browser tags aliased to it in
+> `pickLang`). Skipped on the Romansh precedent — every speaker reads another
+> UI language: Luxembourgish, Maltese, Irish, Montenegrin, and Turkish for
+> Cyprus. Each language is a `STRINGS` block plus its own `methods-<code>.html`;
+> `index.html`'s hreflang block, `sitemap.xml` and the methods pages'
+> cross-links must list exactly the same 31 (the sitemap's two multilingual
+> clusters and every methods page's hreflang + language nav are generated
+> from one table, not hand-typed). The leaderboard renders one page per
+> language too (`pipeline/leaderboard_strings.py` is the translation table;
+> de/en keep `rangliste.html`/`leaderboard.html` so inbound links survive,
+> the rest are `leaderboard-<code>.html`, and every page carries v14's
+> country-code column). The 33 new countries join the sweep **without**
+> `COUNTRY_PAGES` entries, so v14's per-country pages still cover only the
+> eleven — extending them is its own amendment once the page translations
+> exist. The site's copy counts the set ("44 European countries") instead
+> of naming it everywhere except the JSON-LD `spatialCoverage`, which
+> enumerates for machines.
+
 > **v14 amendment (21 Aug 2026, area pages for every country):** the build's
 > HTML output grows from the German set to one page per swept area: the v3
 > Bundesland pages and their index stay exactly as they were, and every other

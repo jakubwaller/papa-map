@@ -57,16 +57,18 @@ If Caddy runs in a container, bind-mount the site into it first (add
 
 `crontab -e`, matching the live schedule:
 ```cron
-30 3 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
+0 2 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
 ```
 Outside Docker the equivalent line is
-`30 3 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
+`0 2 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
 
-**03:30, not 04:30, since the UK and France joined the sweep (2026-08-19).** Eleven
-countries are 38 sweep areas and 104 Overpass queries, about 64 minutes against the
-nine-country 47 — and the ops mail below runs at 05:30. From 04:30 the build would still
-be writing when the digest reads `stats.json`, so the one health signal the site has
-would report a half-finished dataset. If the sweep grows again, move this line before
+**02:00, not 03:30, since the Europe-complete sweep (2026-08-22).** 44 countries are
+71 sweep areas and 170 Overpass queries, projected ~105 minutes against the
+eleven-country 64 — and the ops mail below runs at 05:30, so the earlier start keeps
+almost two hours of congestion headroom between the projected finish and the digest
+reading `stats.json`. (The 03:30 slot was itself the same move when the UK and France
+joined: a build still writing when the digest reads is the one health signal the site
+has reporting a half-finished dataset.) If the sweep grows again, move this line before
 adding the country, not after.
 
 The pipeline writes atomically (temp file + rename), so the server never serves a
@@ -186,8 +188,8 @@ dataset only changes on the next build — so the two can disagree, and the fail
 prose rather than an error:
 
 ```bash
-curl -s https://DOMAIN/data/stats.json | grep -o '"area_key": *"[^"]*"'   # want countries_11
-curl -s https://DOMAIN/ | grep -c 'elf europäische Länder'                # want 1
+curl -s https://DOMAIN/data/stats.json | grep -o '"area_key": *"[^"]*"'   # want countries_44
+curl -s https://DOMAIN/ | grep -c '44 europäische Länder'                 # want 1
 ```
 
 Both or neither. If `area_key` still counts the old set, the build has not run under the new

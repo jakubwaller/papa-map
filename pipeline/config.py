@@ -111,6 +111,23 @@ NAME_EN_AREAS = frozenset({
     "Belgium", "Netherlands", "Austria", "Switzerland", "Czechia",
     "Poland", "Sweden",
     "Brussels-Capital",
+    # The Europe-complete ring (2026-08-22), all on name:en as one rule, even
+    # where `name` happens to coincide (Malta, San Marino, Liechtenstein):
+    # every one was verified to resolve on name:en with a plausible count
+    # before it went in, and one rule survives the next reader where two
+    # don't. Several would break on `name` outright — "Ireland / Éire",
+    # "Suomi / Finland", "Ελλάδα", "Україна", "Bosna i Hercegovina /
+    # Босна и Херцеговина".
+    "Norway", "Finland", "Iceland", "Ireland",
+    "Estonia", "Latvia", "Lithuania",
+    "Luxembourg", "Liechtenstein", "Andorra", "Monaco", "San Marino",
+    "Malta",
+    "Spain", "Portugal", "Italy", "Greece", "Cyprus",
+    "Slovenia", "Slovakia", "Hungary", "Croatia",
+    "Romania", "Bulgaria",
+    "Serbia", "Bosnia and Herzegovina", "Montenegro", "Albania",
+    "North Macedonia", "Kosovo",
+    "Moldova", "Ukraine", "Belarus",
 })
 
 # Sweep areas per country. Germany needs the 16-Land chunking above; every
@@ -174,6 +191,40 @@ COUNTRY_AREAS = {
     "se": (("Sweden", "2"),),
     "gb": (("United Kingdom", "2"),),
     "fr": tuple((name, "4") for name in FRANCE_REGIONS),
+    # ------ the Europe-complete ring, added 2026-08-22 ------
+    "no": (("Norway", "2"),),
+    "fi": (("Finland", "2"),),
+    "is": (("Iceland", "2"),),
+    "ie": (("Ireland", "2"),),
+    "ee": (("Estonia", "2"),),
+    "lv": (("Latvia", "2"),),
+    "lt": (("Lithuania", "2"),),
+    "lu": (("Luxembourg", "2"),),
+    "li": (("Liechtenstein", "2"),),
+    "ad": (("Andorra", "2"),),
+    "mc": (("Monaco", "2"),),
+    "sm": (("San Marino", "2"),),
+    "mt": (("Malta", "2"),),
+    "es": (("Spain", "2"),),
+    "pt": (("Portugal", "2"),),
+    "it": (("Italy", "2"),),
+    "gr": (("Greece", "2"),),
+    "cy": (("Cyprus", "2"),),
+    "si": (("Slovenia", "2"),),
+    "sk": (("Slovakia", "2"),),
+    "hu": (("Hungary", "2"),),
+    "hr": (("Croatia", "2"),),
+    "ro": (("Romania", "2"),),
+    "bg": (("Bulgaria", "2"),),
+    "rs": (("Serbia", "2"),),
+    "ba": (("Bosnia and Herzegovina", "2"),),
+    "me": (("Montenegro", "2"),),
+    "al": (("Albania", "2"),),
+    "mk": (("North Macedonia", "2"),),
+    "xk": (("Kosovo", "2"),),
+    "md": (("Moldova", "2"),),
+    "ua": (("Ukraine", "2"),),
+    "by": (("Belarus", "2"),),
 }
 
 # Fallback display name per country. Germany and Denmark are named in their own
@@ -189,6 +240,16 @@ COUNTRY_LABELS = {
     "nl": "Netherlands", "at": "Austria", "ch": "Switzerland",
     "cz": "Czechia", "pl": "Poland", "se": "Sweden",
     "gb": "United Kingdom", "fr": "France",
+    "no": "Norway", "fi": "Finland", "is": "Iceland", "ie": "Ireland",
+    "ee": "Estonia", "lv": "Latvia", "lt": "Lithuania",
+    "lu": "Luxembourg", "li": "Liechtenstein", "ad": "Andorra",
+    "mc": "Monaco", "sm": "San Marino", "mt": "Malta",
+    "es": "Spain", "pt": "Portugal", "it": "Italy", "gr": "Greece",
+    "cy": "Cyprus", "si": "Slovenia", "sk": "Slovakia", "hu": "Hungary",
+    "hr": "Croatia", "ro": "Romania", "bg": "Bulgaria", "rs": "Serbia",
+    "ba": "Bosnia and Herzegovina", "me": "Montenegro", "al": "Albania",
+    "mk": "North Macedonia", "xk": "Kosovo", "md": "Moldova",
+    "ua": "Ukraine", "by": "Belarus",
 }
 
 # One static page per country beyond Germany (pipeline/pages.py), each in the

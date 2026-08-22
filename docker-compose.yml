@@ -26,16 +26,18 @@ services:
     profiles: ["tools"]
     # The code default stays de,dk (config.DEFAULT_COUNTRIES) — this is the
     # deployment saying what *this* site sweeps, so a checkout and the test
-    # suite keep their conservative default while papamap.de builds the ring.
+    # suite keep their conservative default while papamap.de builds Europe.
     # Overridable per run: `docker compose run -e PAPAMAP_COUNTRIES=dk ...`.
     #
-    # 11 countries = 38 sweep areas = 104 Overpass queries, ~64 min against
-    # the nine-country ~47 min. That is why the cron moved 04:30 -> 03:30
+    # 44 countries = 71 sweep areas = 170 Overpass queries a night (142 area
+    # queries + 28 leaderboard cities), projected ~105 min against the
+    # eleven-country ~64. That is why the cron moved 03:30 -> 02:00
     # (docs/DEPLOY.md): the 05:30 ops mail must not read a half-written
-    # stats.json. gb is one admin_level=2 area; fr is 13 régions, chunked the
-    # way Germany is (pipeline/config.py explains both measurements).
+    # stats.json. de and fr are chunked (16 Länder, 13 régions); every other
+    # country answers whole as one admin_level=2 area (pipeline/config.py
+    # holds the per-country measurements).
     environment:
-      - PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se,gb,fr
+      - PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se,gb,fr,no,fi,is,ie,ee,lv,lt,lu,li,ad,mc,sm,mt,es,pt,it,gr,cy,si,sk,hu,hr,ro,bg,rs,ba,me,al,mk,xk,md,ua,by
     volumes:
       - ./web-data:/out
     networks:

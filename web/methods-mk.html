@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="mk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PapaMap — методи и чесност</title>
+<meta name="description" content="Како PapaMap ги обојува масите за пеленање со податоци од OpenStreetMap, зошто од нив не може чесно да се состави индекс на опременост, и како сам да поправиш сива точка.">
+<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
+     language versions were never actually linked to each other. Thirty-one
+     of them since the Europe-complete sweep (2026-08-22); every page must
+     list every other or the set is unreciprocated and ignored. -->
+<link rel="canonical" href="https://papamap.de/methods-mk.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
+<link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html">
+<link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html">
+<link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html">
+<link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
+<link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
+<link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html">
+<link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html">
+<link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html">
+<link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html">
+<link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html">
+<link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html">
+<link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html">
+<link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html">
+<link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html">
+<link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html">
+<link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html">
+<link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html">
+<link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html">
+<link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html">
+<link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html">
+<link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html">
+<link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html">
+<link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html">
+<link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html">
+<link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html">
+<link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html">
+<link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
+    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
+      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
+    }
+  }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+         background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
+  table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
+  li { margin: 0.3rem 0; }
+  .back { font-size: 0.9rem; }
+  /* Thirty-one languages, listed by their own names — "This page in X" that
+     many times would be a page of its own, and a reader who cannot read this
+     page still recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">&larr; Назад на мапата</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a>
+  &middot; <a href="methods-bs.html" hreflang="bs" lang="bs">Bosanski</a>
+  &middot; <a href="methods-ca.html" hreflang="ca" lang="ca">Català</a>
+  &middot; <a href="methods-et.html" hreflang="et" lang="et">Eesti</a>
+  &middot; <a href="methods-es.html" hreflang="es" lang="es">Español</a>
+  &middot; <a href="methods-hr.html" hreflang="hr" lang="hr">Hrvatski</a>
+  &middot; <a href="methods-is.html" hreflang="is" lang="is">Íslenska</a>
+  &middot; <a href="methods-lv.html" hreflang="lv" lang="lv">Latviešu</a>
+  &middot; <a href="methods-lt.html" hreflang="lt" lang="lt">Lietuvių</a>
+  &middot; <a href="methods-hu.html" hreflang="hu" lang="hu">Magyar</a>
+  &middot; <a href="methods-no.html" hreflang="no" lang="no">Norsk</a>
+  &middot; <a href="methods-pt.html" hreflang="pt" lang="pt">Português</a>
+  &middot; <a href="methods-ro.html" hreflang="ro" lang="ro">Română</a>
+  &middot; <a href="methods-sq.html" hreflang="sq" lang="sq">Shqip</a>
+  &middot; <a href="methods-sk.html" hreflang="sk" lang="sk">Slovenčina</a>
+  &middot; <a href="methods-sl.html" hreflang="sl" lang="sl">Slovenščina</a>
+  &middot; <a href="methods-fi.html" hreflang="fi" lang="fi">Suomi</a>
+  &middot; <a href="methods-el.html" hreflang="el" lang="el">Ελληνικά</a>
+  &middot; <a href="methods-be.html" hreflang="be" lang="be">Беларуская</a>
+  &middot; <a href="methods-bg.html" hreflang="bg" lang="bg">Български</a>
+  &middot; <strong lang="mk">Македонски</strong>
+  &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
+  &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a></p>
+<h1>PapaMap — методи и чесност</h1>
+<p class="muted">Маси за пеленање до кои татковците навистина можат да стигнат. Светските бројки од
+taginfo подолу доаѓаат од ноќниот билд. Примерокот низ осум градски центри е од 26&nbsp;јул&nbsp;2026
+и си останува таков.</p>
+
+<h2>Што е оваа мапа. А што не е.</h2>
+<p>PapaMap прикажува места во 44 европски земји — од Исланд до Кипар, од Португалија до Украина —
+за кои OpenStreetMap знае дека имаат маса за пеленање (<code>changing_table=yes</code> или
+<code>limited</code>). Бојата кажува дали татко може да стигне до масата. Мапата само чита од OSM
+и никаде не запишува. Поправката на податоците се случува директно во OSM, преку линковите на секоја
+точка.</p>
+<p>Ранг-листа за тоа кој град има најдобра опременост со тоалети ова не е. Зошто тоа чесно не може да
+се направи од отворени податоци, е објаснето подолу.</p>
+
+<h2>Што значат боите (точното правило)</h2>
+<p>На мапата стигнуваат само објекти со <code>changing_table=yes</code> или <code>limited</code>
+(<code>no</code> се смета само во статистиката). Бојата доаѓа од <code>changing_table:location</code>.
+Вредноста се дели по <code>;</code>, се чисти од празни места, се претвора во мали букви и се
+споредува како цел token. Никогаш како подниз, зашто <code>female_toilet</code> го содржи
+<code>male</code>.</p>
+<ul>
+  <li><span class="dot g"></span><strong>Зелено:</strong> еден од token-ите е
+      <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
+      <code>room</code>, <code>wheelchair_toilet</code> или <code>sales_area</code>.
+      Татко може да стигне до неа.</li>
+  <li><span class="dot r"></span><strong>Црвено:</strong> во спротивно, ако еден token е
+      <code>female_toilet</code>. Масата постои, но само во женскиот тоалет.</li>
+  <li><span class="dot u"></span><strong>Сиво:</strong> сè друго. Нема ознака за локација, или само
+      слободен текст. Никој не ја запишал просторијата. Сивите точки се задачата.</li>
+</ul>
+<p>Едно исклучение: објектите со ознака <code>centralkey</code> (различна од <code>no</code>) воопшто
+не се прикажуваат. Euro-клучот и слични системи со централен клуч се издаваат само со докажан
+инвалидитет — без разлика во која просторија е масата, повеќето татковци не поминуваат низ таа
+врата.</p>
+
+<h2>Синиот прстен: простор за игра</h2>
+<p>Точка со син прстен има и простор за игра &mdash; место каде не само што го преповиваш детето,
+туку и остануваш подолго. Филтерот <em>Со простор за игра</em> ја сведува мапата само на нив. Местото
+се брои ако OSM забележал барем едно од следново:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> или <code>designated</code>
+      &mdash; начинот документиран на wiki-то за да се каже „внатре“.</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> или
+      <code>designated</code> &mdash; детскиот агол во кафуле, ресторан, пекарница.
+      Најкористената ознака, иако остава отворено прашањето дали е внатре или надвор.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; комерцијално затворено
+      детско игралиште.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> заедно со
+      <code>indoor=yes</code> &mdash; истото, но означено на обратен начин.</li>
+</ul>
+<p><code>outdoor</code> не се брои: песочникот во градина со пиво не е она што прстенот го ветува.
+Не се брои ни <code>no</code>, ни <code>limited</code> — wiki-то последново го дефинира како „има
+играчки, но нема наменска површина“. Каде постои изречна ознака <code>kids_area:indoor=no</code>, таа
+победува над обичното <code>kids_area=yes</code>.</p>
+<p>Ова е само ознака, не четврт статус. Место без овие ознаки нема „никаков простор за игра“ — OSM
+едноставно не кажува ништо за тоа. Затоа тука нема сиво и нема повик за акција: кај
+<code>changing_table:location</code> молчењето значи нешто, бидејќи се знае дека масата постои. Тука
+молчи речиси секој објект, а тоа не значи ништо. Ако знаеш за простор за игра, слободно додади го — во
+уредувачот на OSM, како <code>kids_area=yes</code>.</p>
+
+<h2>Празните сини прстени: места за игра, без одговор</h2>
+<p>Истото правило се совпаѓа со многу повеќе места отколку што мапата има точки. Само
+<span data-stat="play_tables">111</span> од нив имаат воопшто ознака <code>changing_table</code>. Кај
+уште <span data-stat="play_places">701</span>, никој не одговорил на првото прашање: дали тука има
+маса за пеленање? Да, не, никој не знае — OSM не кажува воопшто ништо.</p>
+<p>Мапата не може да ги обои тие <span data-stat="play_places">701</span>, зашто нема што да се обои.
+Тие не се ни сиви: сиво значи „масата постои, недостасува просторијата“, а тоа тука не важи. Затоа
+добиваат свој филтер, <em>Само простор за игра</em>, стандардно исклучен, и празен син прстен наместо
+полна точка.</p>
+<p>Тие се најветувачките отворени прашања на цела мапа. Затворено детско игралиште, кафуле со базен
+со топки, ресторан со детска соба за игра &mdash; тато со мало дете и онака ќе оди таму, а штом е таму,
+го знае одговорот. Клик на прстенот го отвора MapComplete точно на тоа едно прашање. Одговори на него
+и прстенот исчезнува при следното ноќно ажурирање, заменет со вистинска точка.</p>
+
+<h2>Како да поправиш сива точка</h2>
+<p>Сиво значи дека недостасува еден одговор. Каде е масата за пеленање? На тоа може да одговори секој
+со бесплатна OSM-сметка, на самото место, за помалку од минута:</p>
+<ul>
+  <li><strong>MapComplete (било кој телефон, во прелистувачот):</strong> „Одговори на
+      MapComplete“ на сива точка ја отвора истиот објект во сопствената MapComplete-тема на PapaMap
+      &mdash; на секоја точка, за да се препознае дека измените доаѓаат оттука. MapComplete еднаш
+      предупредува за неофицијална тема, тоа е во ред. Прашањата во темата засега се достапни само на
+      англиски. Најави се со твојата OSM-сметка и одговори на прашањата за масата за пеленање,
+      вклучително и на прашањето за просторијата. Одговорот оди директно во OpenStreetMap и се
+      појавува тука по следното ноќно ажурирање.</li>
+  <li><strong>StreetComplete (Android):</strong> има задача за маса за пеленање, стандардно исклучена.
+      Оди во <em>Поставки &rarr; Избор на задачи и редослед на прикажување</em>, побарај
+      „пеленање“ и штиклирај ја. Прашува само да/не. За прашањето за просторијата кај веќе постоечка
+      сива точка, користи MapComplete.</li>
+</ul>
+<p class="muted">Измените одат под твојата сопствена OSM-сметка и им припаѓаат на сите. Тие го
+надживуваат овој сајт и помагаат на секоја апликација што ја чита OpenStreetMap.</p>
+
+<h2 id="contribute">Како да додадеш место што недостасува</h2>
+<p>PapaMap самиот ништо не чува. Затоа додавање место секогаш значи: уредување на OpenStreetMap.
+Копчето <em>+ Додади место</em> на мапата го отвора правилниот уредувач на твојот тековен приказ.</p>
+
+<h3>Целосно недостасува јавен тоалет</h3>
+<p>Отвори ја <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">MapComplete-темата
+на PapaMap</a> (првиот линк во дијалогот). Најави се, допри ја мапата таму каде е тоалетот, избери
+„јавен тоалет“, одговори на прашањата. Вклучително и на оние за масата за пеленање и просторијата.</p>
+
+<h3>Кафуле, продавница или ресторан имаат маса што никој не ја означил</h3>
+<p>Местото речиси сигурно веќе постои во OSM. Недостасува само ознаката <code>changing_table</code>.
+Во сопствениот уредувач на OSM (iD) тоа зема околу две минути:</p>
+<ol>
+  <li>Создај бесплатна сметка на <a href="https://www.openstreetmap.org">openstreetmap.org</a>
+      (доволен е еден е-маил) и најави се.</li>
+  <li>Пронајди го местото и кликни на <strong>Уреди</strong>. Местото е точка или контура на зграда.
+      Кликни на него, неговите ознаки се појавуваат лево.</li>
+  <li>Отвори го <strong>Ознаки</strong> на дното и додади со <strong>+</strong>:
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = каде се наоѓа, од
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">документираниот
+            список на вредности</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> или <code>sales_area</code>.
+            Ако е во повеќе простории: одвои со точка-запирка
+            (<code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Кликни <strong>Зачувај</strong>, напиши краток коментар („додадена локација на маса за
+      пеленање“), поднеси. На OSM е видливо за помалку од минута, на PapaMap по следното ноќно
+      ажурирање.</li>
+</ol>
+<p class="muted">Означувај само тоа што сам си го видел. OSM запишува што е, не што треба да биде. Ако
+не ја знаеш просторијата, само <code>changing_table=yes</code> сепак е корисно: местото станува сива
+точка, а следниот тато одговара на прашањето за просторијата.</p>
+
+<h2>Зошто индекс на опременост од OSM не функционира</h2>
+<p>Очигледниот поголем проект би бил сооднос на опременост со тоалети машки-женски по градови. Бројот
+околу кој навистина се врти аргументот „potty parity“ (тоалетна еднаквост). Не може да се пресмета од
+OpenStreetMap. Проверивме пред да ја изградиме мапата, со примерок низ осум градски центри (Берлин,
+Лондон, Париз, Њујорк, Токио &mdash; 23 четврти, Амстердам, Виена, Мелбурн;
+26&nbsp;јул&nbsp;2026):</p>
+<table>
+  <tr><th>Град</th><th>Означени тоалети</th><th>Со било каква ознака за пол</th><th>И двата (М&nbsp;+&nbsp;Ж)</th></tr>
+  <tr><td>Берлин</td><td>1,173</td><td>660</td><td>119</td></tr>
+  <tr><td>Лондон</td><td>1,316</td><td>458</td><td>210</td></tr>
+  <tr><td>Париз</td><td>1,414</td><td>579</td><td>101</td></tr>
+  <tr><td>Њујорк</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Токио (23 четврти)</td><td>3,500</td><td>601</td><td>231</td></tr>
+  <tr><td>Амстердам</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Виена</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><td>Мелбурн</td><td>418</td><td>142</td><td>35</td></tr>
+  <tr><td><strong>Вкупно</strong></td><td><strong>9,674</strong></td><td><strong>2,888 (29.9%)</strong></td><td><strong>827 (8.5%)</strong></td></tr>
+</table>
+<ul>
+  <li>Само 29.9% од означените тоалети имаат воопшто некаква ознака за пол. Двата пола заедно
+      (машки и женски): 8.5%.</li>
+  <li>Ознаките се чисти да/не-заставиња, никогаш броеви. Број на кабини по пол: нула во сите осум
+      градови. Единствениот клуч за капацитет, <code>toilets:num_chambers</code> (~27k употреби), не
+      разликува пол и потекнува речиси целосно од стар увоз. Неговите варијанти <code>:female</code> /
+      <code>:male</code> имаат по 2 употреби ширум светот.</li>
+  <li>Хамбург, проверен истиот ден: 443 означени тоалети, ниту еден со ознака
+      <code>toilets:num_chambers*</code>. Лентата на <a href="./">почетната страница</a> ги
+      прекалкулира тие бројки секоја ноќ.</li>
+  <li>И уште: стапката на означување ја мери заедницата на мапери, не градовите. Тоалетите со едно
+      место точно остануваат без ознака за пол. Ранг-листа на градови би ја оценувала заедницата на
+      OSM-соработници, не тоалетната еднаквост.</li>
+</ul>
+<p>Значи единствената чесна изјава е: самата опременост денес не може да се измери од отворени
+податоци. Оваа страница мери тоа што е мерливо, а празнините ги претвора во придонеси.</p>
+
+<h2>Единствениот факт што може да се пресмета: каде се масите</h2>
+<p><code>changing_table:location</code> е, колку што знаеме, единствениот отворен речник кој запишува
+во која просторија е масата за пеленање. Тој е редок:
+<span data-stat="location_total">3,659</span> од <span data-stat="ct_total">77,000</span>
+објекти <code>changing_table</code> ширум светот, <span data-stat="share">4.8%</span>. Но каде постои,
+е нерамномерен (taginfo, <span data-stat="date">26&nbsp;Jul&nbsp;2026</span>):</p>
+<ul>
+  <li>Маси само во женскиот тоалет: <strong data-stat="female_only">485</strong>.</li>
+  <li>Маси само во машкиот тоалет: <strong data-stat="male_only">71</strong>. Приближно
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> се означени
+      во двете простории, <span data-stat="male_any">410</span> запишуваат воопшто некаква маса во
+      машкиот тоалет. Ширум светот.</li>
+</ul>
+<p>Примерокот е мал, а маперите сами избираат што ќе запишат. Затоа не читај премногу во точниот
+сооднос. Насоката се совпаѓа со тоа што одамна е документирано и на друго место: масите за пеленање
+стандардно висат во женскиот тоалет. Тоа ги затвора вратите за татковците, а истовремено тивко
+претпоставува кој е задолжен за пеленање. Оваа мапа ги прави видливи податоците што недостасуваат. И
+лесни за поправка.</p>
+
+<h2>Лиценца на податоците &amp; наведување извор</h2>
+<p>Сите податоци на мапата &copy; <a href="https://www.openstreetmap.org/copyright">соработниците на
+OpenStreetMap</a>, достапни под лиценцата
+<a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
+Датотеките GeoJSON и статистиките што ги служи оваа страница се изведени од OSM, па затоа исто така се
+под ODbL. Глобалните статистики за ознаки доаѓаат од
+<a href="https://taginfo.openstreetmap.org/">taginfo</a>. Сопствениот код на страницата е под
+MIT-лиценца.</p>
+
+<h2>Приватност</h2>
+<p>Статична страница. Нема сметки, нема колачиња, нема аналитика, нема скрипти за следење. Страницата
+не чува ништо за тебе и нема база на податоци. Плочките на мапата доаѓаат од серверите на
+OpenStreetMap за плочки; тие барања потпаѓаат под
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">политиката за приватност на OSMF</a>. Ако
+следиш линк до MapComplete, StreetComplete или openstreetmap.org, си на нивните страници и уредуваш
+под својата сопствена OSM-сметка. Ништо не поминува преку нас. Формални страници:
+<a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (германски).</p>
+
+<p class="muted">Извори: примерок од Overpass низ 8 градски центри (9,674 тоалети) од
+26&nbsp;јул&nbsp;2026, и статистика на клучеви од taginfo кон датумот наведен погоре. Локалните бројки
+доаѓаат од истата ноќна обработка што ја гради мапата.</p>
+
+<h2>Како е направена оваа страница</h2>
+<p>Навистина користам вештачка интелигенција (AI) како помош при пишувањето код и текстови. Сепак, сè
+на крајот поминува низ моите сопствени очи.</p>
+
+<script>
+// The taginfo numbers above and the two play-area numbers are the same ones the
+// nightly build already writes to data/stats.json. Read them from there rather
+// than maintaining them by hand: copied numbers rot, and on this page of all
+// pages that is embarrassing.
+// The markup holds the last known value, so without JS — or if the fetch fails
+// — the page still reads correctly, just a little older.
+(function () {
+  var LOCALE = "mk-MK";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      s = s || {};
+      var vals = {};
+      // The play-area numbers live in s.local, the taginfo values in s.global.
+      // Read them separately so the taginfo check below cannot swallow them:
+      // since the eleven-country build of 19 Aug 2026 both change every night,
+      // independently of each other.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
+      }
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "short", year: "numeric"
+            });
+          }
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* the numbers in the markup stand */ });
+})();
+</script>
+
+</body>
+</html>

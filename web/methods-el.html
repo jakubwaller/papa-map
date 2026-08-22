@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PapaMap — Μέθοδος &amp; ειλικρίνεια</title>
+<meta name="description" content="Πώς το PapaMap χρωματίζει τις αλλαξιέρες από το OpenStreetMap, γιατί δεν μπορεί να φτιαχτεί καμία κάρτα βαθμολόγησης προσφοράς από αυτά τα δεδομένα, και πώς να διορθώσεις μια γκρι καρφίτσα μόνος σου.">
+<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
+     language versions were never actually linked to each other. Thirty-one
+     of them since the Europe-complete sweep (2026-08-22); every page must
+     list every other or the set is unreciprocated and ignored. -->
+<link rel="canonical" href="https://papamap.de/methods-el.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
+<link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html">
+<link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html">
+<link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html">
+<link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
+<link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
+<link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html">
+<link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html">
+<link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html">
+<link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html">
+<link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html">
+<link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html">
+<link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html">
+<link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html">
+<link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html">
+<link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html">
+<link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html">
+<link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html">
+<link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html">
+<link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html">
+<link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html">
+<link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html">
+<link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html">
+<link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html">
+<link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html">
+<link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html">
+<link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html">
+<link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
+    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
+      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
+    }
+  }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+         background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
+  table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
+  li { margin: 0.3rem 0; }
+  .back { font-size: 0.9rem; }
+  /* Thirty-one languages, listed by their own names — "This page in X" that
+     many times would be a page of its own, and a reader who cannot read this
+     page still recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">&larr; Πίσω στον χάρτη</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a>
+  &middot; <a href="methods-bs.html" hreflang="bs" lang="bs">Bosanski</a>
+  &middot; <a href="methods-ca.html" hreflang="ca" lang="ca">Català</a>
+  &middot; <a href="methods-et.html" hreflang="et" lang="et">Eesti</a>
+  &middot; <a href="methods-es.html" hreflang="es" lang="es">Español</a>
+  &middot; <a href="methods-hr.html" hreflang="hr" lang="hr">Hrvatski</a>
+  &middot; <a href="methods-is.html" hreflang="is" lang="is">Íslenska</a>
+  &middot; <a href="methods-lv.html" hreflang="lv" lang="lv">Latviešu</a>
+  &middot; <a href="methods-lt.html" hreflang="lt" lang="lt">Lietuvių</a>
+  &middot; <a href="methods-hu.html" hreflang="hu" lang="hu">Magyar</a>
+  &middot; <a href="methods-no.html" hreflang="no" lang="no">Norsk</a>
+  &middot; <a href="methods-pt.html" hreflang="pt" lang="pt">Português</a>
+  &middot; <a href="methods-ro.html" hreflang="ro" lang="ro">Română</a>
+  &middot; <a href="methods-sq.html" hreflang="sq" lang="sq">Shqip</a>
+  &middot; <a href="methods-sk.html" hreflang="sk" lang="sk">Slovenčina</a>
+  &middot; <a href="methods-sl.html" hreflang="sl" lang="sl">Slovenščina</a>
+  &middot; <a href="methods-fi.html" hreflang="fi" lang="fi">Suomi</a>
+  &middot; <strong lang="el">Ελληνικά</strong>
+  &middot; <a href="methods-be.html" hreflang="be" lang="be">Беларуская</a>
+  &middot; <a href="methods-bg.html" hreflang="bg" lang="bg">Български</a>
+  &middot; <a href="methods-mk.html" hreflang="mk" lang="mk">Македонски</a>
+  &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
+  &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a></p>
+<h1>PapaMap — μέθοδος &amp; ειλικρίνεια</h1>
+<p class="muted">Αλλαξιέρες που φτάνει ένας μπαμπάς. Οι παγκόσμιοι αριθμοί του taginfo παρακάτω
+προέρχονται από τη νυχτερινή κατασκευή. Το δείγμα από οκτώ κέντρα πόλεων είναι από
+26&nbsp;Ιουλ&nbsp;2026 και παραμένει έτσι.</p>
+
+<h2>Τι είναι αυτός ο χάρτης. Και τι δεν είναι.</h2>
+<p>Το PapaMap δείχνει μέρη σε 44 ευρωπαϊκές χώρες — από την Ισλανδία μέχρι την Κύπρο, από την
+Πορτογαλία μέχρι την Ουκρανία — όπου το OpenStreetMap
+γνωρίζει για μια αλλαξιέρα
+μωρού (<code>changing_table=yes</code> ή <code>limited</code>). Το χρώμα λέει αν ένας μπαμπάς
+μπορεί να φτάσει την αλλαξιέρα. Ο χάρτης διαβάζει το OSM και τίποτα άλλο, και δεν γράφει πουθενά.
+Η διόρθωση των δεδομένων γίνεται στο ίδιο το OSM, μέσω των συνδέσμων σε κάθε καρφίτσα.</p>
+<p>Μια κατάταξη για το ποια πόλη έχει την καλύτερη προσφορά τουαλετών, αυτό δεν είναι. Γιατί αυτό
+δεν μπορεί να γίνει τίμια από ανοιχτά δεδομένα εξηγείται παρακάτω.</p>
+
+<h2>Τι σημαίνουν τα χρώματα (ο ακριβής κανόνας)</h2>
+<p>Μόνο αντικείμενα με <code>changing_table=yes</code> ή <code>limited</code> μπαίνουν στον χάρτη
+(το <code>no</code> μετράει μόνο στα στατιστικά). Το χρώμα προκύπτει από το
+<code>changing_table:location</code>. Η τιμή χωρίζεται στο <code>;</code>, καθαρίζεται από κενά,
+μετατρέπεται σε πεζά και συγκρίνεται ως ολόκληρο token. Ποτέ ως substring, γιατί το
+<code>female_toilet</code> περιέχει το <code>male</code>.</p>
+<ul>
+  <li><span class="dot g"></span><strong>Πράσινο:</strong> ένα token είναι
+      <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
+      <code>room</code>, <code>wheelchair_toilet</code> ή <code>sales_area</code>.
+      Ένας μπαμπάς μπορεί να φτάσει εκεί.</li>
+  <li><span class="dot r"></span><strong>Κόκκινο:</strong> διαφορετικά, αν ένα token είναι
+      <code>female_toilet</code>. Η αλλαξιέρα υπάρχει, αλλά μόνο στη γυναικεία τουαλέτα.</li>
+  <li><span class="dot u"></span><strong>Γκρι:</strong> όλα τα υπόλοιπα. Καμία ετικέτα τοποθεσίας, ή
+      μόνο ελεύθερο κείμενο. Κανείς δεν έχει καταγράψει τον χώρο. Οι γκρι καρφίτσες είναι η
+      δουλειά που μένει.</li>
+</ul>
+<p>Μία εξαίρεση: αντικείμενα με ετικέτα <code>centralkey</code> (διαφορετική από <code>no</code>)
+δεν εμφανίζονται καθόλου. Το Euro key και παρόμοια συστήματα κεντρικού κλειδιού εκδίδονται μόνο με
+απόδειξη αναπηρίας — όποιος κι αν είναι ο χώρος όπου βρίσκεται η αλλαξιέρα, οι περισσότεροι
+μπαμπάδες δεν περνούν από εκείνη την πόρτα.</p>
+
+<h2>Το μπλε δαχτυλίδι: παιδική γωνιά</h2>
+<p>Μια καρφίτσα με μπλε δαχτυλίδι έχει επίσης παιδική γωνιά &mdash; ένα μέρος όπου δεν αλλάζεις
+απλώς την πάνα, μένεις και λίγο. Το φίλτρο <em>Με παιδική γωνιά</em> περιορίζει τον χάρτη σε αυτά.
+Ένα μέρος μετράει αν το OSM καταγράφει οποιοδήποτε από τα εξής:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> ή <code>designated</code>
+      &mdash; ο τρόπος που καταγράφει το wiki για να πει «μέσα».</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> ή
+      <code>designated</code> &mdash; η γωνιά παιχνιδιού σε μια καφετέρια, ένα εστιατόριο, ένα
+      αρτοποιείο. Η πιο διαδεδομένη ετικέτα, αν και αφήνει ανοιχτό αν είναι εσωτερική ή
+      εξωτερική.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; μια εμπορική εσωτερική
+      παιδική χαρά.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> μαζί με
+      <code>indoor=yes</code> &mdash; το ίδιο πράγμα, καταγεγραμμένο με τον αντίστροφο τρόπο.</li>
+</ul>
+<p>Το <code>outdoor</code> δεν μετράει: η αμμοδόχος ενός κήπου μπίρας δεν είναι αυτό που υπόσχεται
+το δαχτυλίδι. Ούτε το <code>no</code>, ούτε το <code>limited</code> — το wiki ορίζει αυτό ως
+«υπάρχουν παιχνίδια, αλλά όχι καθορισμένος χώρος». Όπου υπάρχει ρητά ένα
+<code>kids_area:indoor=no</code>, αυτό υπερισχύει ενός απλού <code>kids_area=yes</code>.</p>
+<p>Αυτό είναι ένα σήμα, όχι μια τέταρτη κατάσταση. Ένα μέρος χωρίς αυτές τις ετικέτες δεν «δεν έχει
+παιδική γωνιά» — το OSM απλώς δεν λέει τίποτα γι' αυτό. Άρα δεν υπάρχει γκρι εδώ ούτε κάλεσμα για
+δράση: με το <code>changing_table:location</code> η σιωπή έχει νόημα, γιατί είναι γνωστό ότι η
+αλλαξιέρα υπάρχει. Εδώ σχεδόν κάθε αντικείμενο σιωπά, και αυτό δεν σημαίνει τίποτα. Αν ξέρεις μια
+παιδική γωνιά, το να την προσθέσεις είναι πάντα καλοδεχούμενο — στον επεξεργαστή του OSM, ως
+<code>kids_area=yes</code>.</p>
+
+<h2>Τα άδεια μπλε δαχτυλίδια: μέρη για παιχνίδι, χωρίς απάντηση</h2>
+<p>Ο ίδιος κανόνας ταιριάζει σε πολύ περισσότερα μέρη από όσες καρφίτσες έχει ο χάρτης. Μόνο
+<span data-stat="play_tables">111</span> από αυτά έχουν ετικέτα <code>changing_table</code>. Σε
+<span data-stat="play_places">701</span> ακόμα, κανείς δεν έχει απαντήσει στην πρώτη ερώτηση:
+υπάρχει εδώ αλλαξιέρα; Ναι, όχι, κανείς δεν ξέρει — το OSM δεν λέει απολύτως τίποτα.</p>
+<p>Ο χάρτης δεν μπορεί να χρωματίσει αυτά τα <span data-stat="play_places">701</span>, γιατί δεν
+υπάρχει τίποτα να χρωματιστεί. Δεν είναι ούτε γκρι: γκρι σημαίνει «η αλλαξιέρα υπάρχει, ο χώρος
+λείπει», και αυτό δεν ισχύει εδώ. Έτσι παίρνουν το δικό τους φίλτρο, <em>Μόνο παιδική γωνιά</em>,
+ανενεργό εξ ορισμού, και ένα άδειο μπλε δαχτυλίδι αντί για γεμάτη καρφίτσα.</p>
+<p>Είναι οι πιο ελπιδοφόρες ανοιχτές ερωτήσεις σε ολόκληρο τον χάρτη. Μια εσωτερική παιδική χαρά,
+μια καφετέρια με μπάλες, ένα εστιατόριο με δωμάτιο παιχνιδιού — ένας μπαμπάς με νήπιο πηγαίνει
+ούτως ή άλλως εκεί, και μόλις φτάσει, ξέρει την απάντηση. Κάνοντας κλικ σε ένα δαχτυλίδι ανοίγει
+το MapComplete ακριβώς σε αυτή τη μία ερώτηση. Απάντησέ την και το δαχτυλίδι εξαφανίζεται στην
+επόμενη νυχτερινή ενημέρωση, αντικαθίσταται από μια πραγματική καρφίτσα.</p>
+
+<h2>Πώς να διορθώσεις μια γκρι καρφίτσα</h2>
+<p>Γκρι σημαίνει ότι λείπει μία απάντηση. Πού βρίσκεται η αλλαξιέρα; Οποιοσδήποτε έχει δωρεάν
+λογαριασμό OSM μπορεί να απαντήσει σε αυτό, επιτόπου, σε λιγότερο από ένα λεπτό:</p>
+<ul>
+  <li><strong>MapComplete (οποιοδήποτε κινητό, στο πρόγραμμα περιήγησης):</strong> Το «Απάντηση στο
+      MapComplete» πάνω σε μια γκρι καρφίτσα ανοίγει το ίδιο αντικείμενο στο δικό του θέμα
+      MapComplete του PapaMap &mdash; σε κάθε καρφίτσα, ώστε οι επεξεργασίες να αναγνωρίζονται ότι
+      προέρχονται από εδώ. Το MapComplete προειδοποιεί μία φορά για μη επίσημο θέμα, αυτό είναι
+      φυσιολογικό. Οι ερωτήσεις του θέματος είναι προς το παρόν μόνο στα αγγλικά. Συνδέσου με τον
+      λογαριασμό σου στο OSM και απάντησε στις ερωτήσεις για την αλλαξιέρα, μαζί με αυτή για τον
+      χώρο. Η απάντηση πηγαίνει κατευθείαν στο OpenStreetMap και εμφανίζεται εδώ μετά την επόμενη
+      νυχτερινή ενημέρωση.</li>
+  <li><strong>StreetComplete (Android):</strong> έχει μια αποστολή για την αλλαξιέρα, ανενεργή εξ
+      ορισμού. Πήγαινε στις <em>Ρυθμίσεις &rarr; Επιλογή αποστολών και σειρά εμφάνισης</em>,
+      αναζήτησε «αλλαξιέρα» και ενεργοποίησέ την. Ρωτάει μόνο ναι/όχι. Για την ερώτηση σχετικά με
+      τον χώρο σε μια υπάρχουσα γκρι καρφίτσα, χρησιμοποίησε το MapComplete.</li>
+</ul>
+<p class="muted">Οι επεξεργασίες γίνονται με τον δικό σου λογαριασμό OSM και ανήκουν σε όλους. Θα
+υπάρχουν και μετά από αυτόν τον ιστότοπο και βοηθούν κάθε εφαρμογή που διαβάζει το
+OpenStreetMap.</p>
+
+<h2 id="contribute">Πώς να προσθέσεις ένα μέρος που λείπει</h2>
+<p>Το PapaMap δεν αποθηκεύει τίποτα το ίδιο. Η προσθήκη ενός μέρους σημαίνει λοιπόν πάντα:
+επεξεργασία του OpenStreetMap. Το κουμπί <em>+ Προσθήκη μέρους</em> στον χάρτη ανοίγει τον σωστό
+επεξεργαστή στην τρέχουσα προβολή σου.</p>
+
+<h3>Λείπει εντελώς μια δημόσια τουαλέτα</h3>
+<p>Άνοιξε το <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">θέμα
+MapComplete του PapaMap</a> (ο πρώτος σύνδεσμος στο παράθυρο διαλόγου). Συνδέσου, πάτησε στον
+χάρτη εκεί όπου βρίσκεται η τουαλέτα, επίλεξε «δημόσια τουαλέτα», απάντησε στις ερωτήσεις. Μαζί με
+αυτές για την αλλαξιέρα και τον χώρο.</p>
+
+<h3>Μια καφετέρια, κατάστημα ή εστιατόριο έχει αλλαξιέρα που κανείς δεν κατέγραψε</h3>
+<p>Το μέρος σχεδόν σίγουρα υπάρχει ήδη στο OSM. Λείπει μόνο η ετικέτα <code>changing_table</code>.
+Στον δικό του επεξεργαστή του OSM (iD) αυτό παίρνει περίπου δύο λεπτά:</p>
+<ol>
+  <li>Δημιούργησε δωρεάν λογαριασμό στο <a href="https://www.openstreetmap.org">openstreetmap.org</a>
+      (αρκεί ένα email) και συνδέσου.</li>
+  <li>Βρες το μέρος και κάνε κλικ στο <strong>Επεξεργασία</strong>. Το μέρος είναι ένα σημείο ή το
+      περίγραμμα ενός κτιρίου. Κάνε κλικ πάνω του, οι ετικέτες του εμφανίζονται αριστερά.</li>
+  <li>Άνοιξε τις <strong>Ετικέτες</strong> στο κάτω μέρος και πρόσθεσε με <strong>+</strong>:
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = πού βρίσκεται, από τον
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">τεκμηριωμένο
+            κατάλογο τιμών</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> ή <code>sales_area</code>.
+            Σε περισσότερους από έναν χώρους: χώρισέ τα με ερωτηματικά
+            (<code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Πάτησε <strong>Αποθήκευση</strong>, γράψε ένα σύντομο σχόλιο («προσθήκη τοποθεσίας
+      αλλαξιέρας»), ανέβασέ το. Ζωντανό στο OSM μέσα σε ένα λεπτό, στο PapaMap μετά την επόμενη
+      νυχτερινή ενημέρωση.</li>
+</ol>
+<p class="muted">Κατέγραψε μόνο ό,τι έχεις δει ο ίδιος. Το OSM καταγράφει το τι υπάρχει, όχι το τι
+θα έπρεπε να υπάρχει. Αν δεν ξέρεις τον χώρο, μόνο το <code>changing_table=yes</code> είναι ήδη
+χρήσιμο: το μέρος γίνεται γκρι καρφίτσα, και ο επόμενος μπαμπάς απαντά στην ερώτηση για τον
+χώρο.</p>
+
+<h2>Γιατί μια κάρτα βαθμολόγησης προσφοράς δεν βγαίνει από το OSM</h2>
+<p>Το προφανές μεγαλύτερο εγχείρημα θα ήταν μια αναλογία προσφοράς τουαλετών ανδρών προς γυναίκες
+ανά πόλη. Ο αριθμός στον οποίο βασίζεται στην πραγματικότητα το επιχείρημα της «potty parity». Δεν
+μπορεί να υπολογιστεί από το OpenStreetMap. Το ελέγξαμε πριν την κατασκευή, με ένα δείγμα από
+οκτώ κέντρα πόλεων (Βερολίνο, Λονδίνο, Παρίσι, Νέα Υόρκη, Τόκιο&nbsp;23&nbsp;συνοικίες, Άμστερνταμ,
+Βιέννη, Μελβούρνη·
+26&nbsp;Ιουλ&nbsp;2026):</p>
+<table>
+  <tr><th>Πόλη</th><th>Χαρτογραφημένες τουαλέτες</th><th>Οποιαδήποτε ετικέτα φύλου</th><th>Και τα δύο M&nbsp;+&nbsp;F</th></tr>
+  <tr><td>Βερολίνο</td><td>1,173</td><td>660</td><td>119</td></tr>
+  <tr><td>Λονδίνο</td><td>1,316</td><td>458</td><td>210</td></tr>
+  <tr><td>Παρίσι</td><td>1,414</td><td>579</td><td>101</td></tr>
+  <tr><td>Νέα Υόρκη</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Τόκιο (23 συνοικίες)</td><td>3,500</td><td>601</td><td>231</td></tr>
+  <tr><td>Άμστερνταμ</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Βιέννη</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><td>Μελβούρνη</td><td>418</td><td>142</td><td>35</td></tr>
+  <tr><td><strong>Σύνολο</strong></td><td><strong>9,674</strong></td><td><strong>2,888 (29.9%)</strong></td><td><strong>827 (8.5%)</strong></td></tr>
+</table>
+<ul>
+  <li>Μόνο το 29.9% των χαρτογραφημένων τουαλετών έχει οποιαδήποτε ετικέτα φύλου. Και τα δύο
+      (ανδρική και γυναικεία): 8.5%.</li>
+  <li>Οι ετικέτες είναι απλές σημαίες ναι/όχι, ποτέ αριθμοί. Αριθμός καμπινών ανά φύλο: μηδέν και
+      στις οκτώ πόλεις. Το μοναδικό κλειδί χωρητικότητας, <code>toilets:num_chambers</code>
+      (~27k χρήσεις), δεν έχει φύλο και προέρχεται σχεδόν εξ ολοκλήρου από παλιά εισαγωγή
+      δεδομένων. Οι παραλλαγές του <code>:female</code> / <code>:male</code> έχουν 2 χρήσεις η
+      καθεμία παγκοσμίως.</li>
+  <li>Το Αμβούργο, ελεγμένο την ίδια μέρα: 443 χαρτογραφημένες τουαλέτες, καμία με ετικέτα
+      <code>toilets:num_chambers*</code>. Η λωρίδα στην <a href="./">αρχική σελίδα</a>
+      υπολογίζει ξανά αυτούς τους αριθμούς κάθε βράδυ.</li>
+  <li>Και: τα ποσοστά καταγραφής μετρούν την κοινότητα των χαρτογράφων, όχι τις πόλεις. Οι
+      τουαλέτες μονής χρήσης παραμένουν σωστά χωρίς φύλο. Μια κατάταξη πόλεων θα βαθμολογούσε τους
+      συνεισφέροντες του OSM, όχι την ισότητα στις τουαλέτες.</li>
+</ul>
+<p>Άρα η μόνη τίμια δήλωση είναι: η ίδια η προσφορά δεν μπορεί να μετρηθεί από ανοιχτά δεδομένα
+σήμερα. Αυτός ο ιστότοπος μετράει ό,τι είναι μετρήσιμο και μετατρέπει τα κενά σε συνεισφορές.</p>
+
+<h2>Το ένα υπολογίσιμο γεγονός: πού βρίσκονται οι αλλαξιέρες</h2>
+<p><code>changing_table:location</code> είναι, απ' όσο ξέρουμε, το μόνο ανοιχτό λεξιλόγιο που
+καταγράφει σε ποιον χώρο βρίσκεται μια αλλαξιέρα. Είναι σπάνιο:
+<span data-stat="location_total">3,659</span> από <span data-stat="ct_total">77,000</span>
+αντικείμενα <code>changing_table</code> παγκοσμίως, <span data-stat="share">4.8%</span>. Αλλά όπου
+υπάρχει, είναι μονόπλευρο (taginfo, <span data-stat="date">26&nbsp;Ιουλ&nbsp;2026</span>):</p>
+<ul>
+  <li>Αλλαξιέρες μόνο στη γυναικεία τουαλέτα: <strong data-stat="female_only">485</strong>.</li>
+  <li>Αλλαξιέρες μόνο στην ανδρική τουαλέτα: <strong data-stat="male_only">71</strong>. Περίπου
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> είναι
+      καταγεγραμμένες και στους δύο χώρους, <span data-stat="male_any">410</span> καταγράφουν
+      οποιαδήποτε αλλαξιέρα σε ανδρική τουαλέτα. Παγκοσμίως.</li>
+</ul>
+<p>Το δείγμα είναι μικρό, και οι χαρτογράφοι επιλέγουν τι καταγράφουν. Οπότε μην ερμηνεύεις
+υπερβολικά την ακριβή αναλογία. Η κατεύθυνση ταιριάζει με ό,τι έχει τεκμηριωθεί εδώ και καιρό
+αλλού: οι αλλαξιέρες κρέμονται στη γυναικεία τουαλέτα εξ ορισμού. Αυτό κλείνει την πόρτα στους
+μπαμπάδες, και υποθέτει σιωπηλά ποιος έχει την ευθύνη για τις πάνες. Αυτός ο χάρτης κάνει τα
+δεδομένα που λείπουν ορατά. Και εύκολα να διορθωθούν.</p>
+
+<h2>Άδεια δεδομένων &amp; αναφορά πηγής</h2>
+<p>Όλα τα δεδομένα του χάρτη &copy; <a href="https://www.openstreetmap.org/copyright">συνεισφέροντες
+του OpenStreetMap</a>, διαθέσιμα υπό την
+<a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
+Τα αρχεία GeoJSON και στατιστικών που σερβίρει αυτός ο ιστότοπος προέρχονται από το OSM και
+επομένως είναι επίσης ODbL.
+Τα παγκόσμια στατιστικά ετικετών προέρχονται από το <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
+Ο κώδικας του ιστότοπου έχει άδεια MIT.</p>
+
+<h2>Απόρρητο</h2>
+<p>Ένας στατικός ιστότοπος. Χωρίς λογαριασμούς, χωρίς cookies, χωρίς analytics, χωρίς σενάρια
+παρακολούθησης. Ο ιστότοπος δεν αποθηκεύει τίποτα για εσένα και δεν έχει βάση δεδομένων. Τα
+κομμάτια του χάρτη προέρχονται από τους διακομιστές πλακιδίων του OpenStreetMap· αυτά τα αιτήματα
+εμπίπτουν στην
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">πολιτική απορρήτου του OSMF</a>. Αν
+ακολουθήσεις έναν σύνδεσμο προς το MapComplete, το StreetComplete ή το openstreetmap.org,
+βρίσκεσαι στους δικούς τους ιστότοπους, επεξεργάζεσαι με τον δικό σου λογαριασμό OSM. Τίποτα δεν
+περνάει από εμάς. Επίσημες σελίδες:
+<a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (στα γερμανικά).</p>
+
+<p class="muted">Πηγές: δείγμα Overpass από 8 κέντρα πόλεων (9,674 τουαλέτες) από
+26&nbsp;Ιουλ&nbsp;2026, και στατιστικά κλειδιών taginfo από την ημερομηνία που αναφέρεται
+παραπάνω. Οι τοπικοί αριθμοί προέρχονται από το ίδιο νυχτερινό ερώτημα που κατασκευάζει τον
+χάρτη.</p>
+
+<h2>Πώς φτιάχνεται αυτός ο ιστότοπος</h2>
+<p>Χρησιμοποιώ AI για να με βοηθήσει με τον κώδικα και τη σύνταξη κειμένων. Όλα όμως περνούν από
+τα δικά μου ανθρώπινα μάτια.</p>
+
+<script>
+// The taginfo numbers above and the two play-area numbers are the same ones the
+// nightly build already writes to data/stats.json. Read them from there rather
+// than maintaining them by hand: copied numbers rot, and on this page of all
+// pages that is embarrassing.
+// The markup holds the last known value, so without JS — or if the fetch fails
+// — the page still reads correctly, just a little older.
+(function () {
+  var LOCALE = "el-GR";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      s = s || {};
+      var vals = {};
+      // The play-area numbers live in s.local, the taginfo values in s.global.
+      // Read them separately so the taginfo check below cannot swallow them:
+      // since the eleven-country build of 19 Aug 2026 both change every night,
+      // independently of each other.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
+      }
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "short", year: "numeric"
+            });
+          }
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* the numbers in the markup stand */ });
+})();
+</script>
+
+</body>
+</html>
