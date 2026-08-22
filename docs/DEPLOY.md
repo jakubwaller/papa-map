@@ -174,6 +174,8 @@ mkdir -p web-data/private                      # before `up`: Docker would creat
 HASH=$(docker run --rm caddy:2-alpine caddy hash-password --plaintext 'the password')
 printf 'basic_auth {\n\t%s %s\n}\nfile_server\n' you "$HASH" > deploy/private/ops-auth.caddy
 docker compose up -d papamap                   # new mounts: recreate, a restart is not enough
+# (web/private/.gitkeep is the mountpoint inside the read-only /srv — it is tracked, and
+# without it the container refuses to start and the whole site answers 502.)
 curl -sI https://papamap.de/private/ops.html | head -1          # HTTP/2 401
 curl -sI -u you:'the password' https://papamap.de/private/ops.html | head -1   # 200
 ```

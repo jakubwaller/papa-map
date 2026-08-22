@@ -16,7 +16,12 @@
 	# server-only) and brings its own basic_auth + file_server — a checkout
 	# without it answers 404 there, never the page. docs/DEPLOY.md has the
 	# three-line snippet and how to hash the password.
-	handle /private/* {
+	#
+	# `route`, not `handle`: handle re-sorts its directives into Caddy's
+	# standard order, and in that order respond comes BEFORE file_server, so
+	# the 404 fallback won every time (the 22 Aug 2026 deploy). route keeps
+	# the written order — snippet first, the 404 only if nothing served.
+	route /private/* {
 		import /etc/caddy/private/*.caddy
 		respond 404
 	}
