@@ -234,6 +234,29 @@ def test_table_carries_machine_readable_sort_values():
     assert "<script>" in html and "data-sortable" in html
 
 
+def test_every_row_names_its_country():
+    # Both tables mix eleven countries, so each row carries a country code —
+    # rendered from AREA_COUNTRY, which is derived from the same config the
+    # sweep uses, for city rows (display names) and region rows (sweep-area
+    # names) alike. A history key no longer in config renders a dash instead
+    # of failing the nightly build.
+    history = {"v": 1, "days": [day(
+        "2026-08-14",
+        regions={"Bayern": [1, 0, 1], "Bretagne": [1, 0, 1],
+                 "Danmark": [1, 0, 1], "Atlantis": [1, 0, 1]},
+        cities={"M\u00fcnchen": [1, 0, 1], "Gent": [1, 0, 1]})]}
+    for lang, header in (("de", "Land"), ("en", "Country")):
+        html = leaderboard.render_leaderboard(
+            lang, leaderboard.leaderboard_data(history))
+        assert f'<th data-sort="text" data-first="asc">{header}</th>' in html
+        assert '<td data-v="de">DE</td>' in html   # M\u00fcnchen, a city row
+        assert '<td data-v="be">BE</td>' in html   # Gent
+        assert '<td data-v="fr">FR</td>' in html   # Bretagne, a r\u00e9gion row
+        assert '<td data-v="dk">DK</td>' in html   # Danmark, a whole country
+        # Atlantis has no country: dash, sorts last, page still renders.
+        assert '<td class="zero">\u2013</td>' in html
+
+
 def test_pages_without_rows_carry_no_sorter():
     """Nothing to sort, nothing to ship: the script rides along only when a
     table does."""

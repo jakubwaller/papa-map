@@ -76,24 +76,37 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   (e.g. `Hamburg` / `4`), and `PAPAMAP_DISPLAY_AREA` names the dataset in the
   stats strip.
 
-## Bundesland pages
+## Area pages
 
-The same run writes one static German page per Bundesland into
-`web/wickeltische/` (git-ignored — they are build output), plus an index at
-`web/wickeltische/index.html`. The map is a single URL for every country it
-sweeps, so a search for "Wickeltisch Bayern" had nothing to match: the place
-names live inside a 2.6 MB GeoJSON that crawlers read as a download. These pages
-put each Land's counts and its named places into HTML, and link back into the
-map at that Land's extent via `?bbox=`.
+The same run writes one static page per swept area into `web/wickeltische/`
+(git-ignored — they are build output). The map is a single URL for every
+country it sweeps, so a search for "Wickeltisch Bayern" — or "puslebord
+Danmark", or "table à langer Bretagne" — had nothing to match: the place names
+live inside a multi-megabyte GeoJSON that crawlers read as a download. These
+pages put each area's counts and its named places into HTML, and link back
+into the map at that area's extent via `?bbox=`.
 
-Which Land an object belongs to is recorded during the sweep — it is free, since
-the sweep is already chunked per Land, and the GeoJSON carries no region field.
-So the pages only appear on a build that sweeps German Länder: `PAPAMAP_COUNTRIES=dk`
-or a hand-named single area outside the 16 writes none rather than publishing an
-index that claims Germany has one Bundesland.
+Each page is written in the language its readers search in, which is the whole
+point of their existing: German for the 16 Bundesländer (plus their index at
+`web/wickeltische/index.html`) and for Austria and Switzerland, Danish for
+`danmark.html`, English for `united-kingdom.html`, French for `france.html` —
+a hub over 13 per-région pages — and so on. The routing (including the
+inflected name forms prose needs: "in der Schweiz", "w Polsce") lives in
+`config.COUNTRY_PAGES` and `pipeline/pages_l10n.py`; slugs are the local
+names (`belgie.html`, `cesko.html`, `oesterreich.html`). The map's footer
+"Bundesländer" link is language-routed the same way (`regionsHref` in
+`web/i18n.js`): the Danish UI links danmark.html, the French UI france.html.
+Every page carries a country list linking the others.
 
-The 16 URLs are fixed (the names are a constant in `pipeline/config.py`), so
-they are listed by hand in `web/sitemap.xml`; `tests/test_pages.py` asserts that
+Which area an object belongs to is recorded during the sweep — it is free,
+since the sweep is already chunked per area, and the GeoJSON carries no region
+field. German pages only appear on a build that sweeps all 16 Länder
+(`PAPAMAP_COUNTRIES=dk` must not publish an index claiming Germany has one
+Bundesland); every other country's page appears whenever that country's sweep
+is complete.
+
+The URLs are fixed (the names are constants in `pipeline/config.py`), so they
+are listed by hand in `web/sitemap.xml`; `tests/test_pages.py` asserts that
 list matches the slugs the generator writes. `PAPAMAP_PAGES_DIR` moves the
 output elsewhere.
 

@@ -1,6 +1,6 @@
 # papa-map — build contract (v0)
 
-> **v14 amendment (22 Aug 2026, Europe complete):** papamap.de sweeps
+> **v15 amendment (22 Aug 2026, Europe complete):** papamap.de sweeps
 > **44 countries** — the eleven of v13 plus every remaining European
 > sovereign: `no fi is ie ee lv lt lu li ad mc sm mt es pt it gr cy si sk hu
 > hr ro bg rs ba me al mk xk md ua by` (ISO 3166-1 alpha-2; Kosovo is the
@@ -42,12 +42,33 @@
 > from one table, not hand-typed). The leaderboard renders one page per
 > language too (`pipeline/leaderboard_strings.py` is the translation table;
 > de/en keep `rangliste.html`/`leaderboard.html` so inbound links survive,
-> the rest are `leaderboard-<code>.html`). Adding a country still adds pins,
-> never
-> `/wickeltische/`-style pages: the "Wickeltisch Bayern" premise (searched in
-> German) does not survive translation, and the site's copy counts the set
-> ("44 European countries") instead of naming it everywhere except the
-> JSON-LD `spatialCoverage`, which enumerates for machines.
+> the rest are `leaderboard-<code>.html`, and every page carries v14's
+> country-code column). The 33 new countries join the sweep **without**
+> `COUNTRY_PAGES` entries, so v14's per-country pages still cover only the
+> eleven — extending them is its own amendment once the page translations
+> exist. The site's copy counts the set ("44 European countries") instead
+> of naming it everywhere except the JSON-LD `spatialCoverage`, which
+> enumerates for machines.
+
+> **v14 amendment (21 Aug 2026, area pages for every country):** the build's
+> HTML output grows from the German set to one page per swept area: the v3
+> Bundesland pages and their index stay exactly as they were, and every other
+> swept country now gets **one page in its own language** under its
+> local-name slug (`danmark.html` in Danish, `belgie.html` in Dutch,
+> `cesko.html` in Czech, `oesterreich.html`/`schweiz.html` in German,
+> `united-kingdom.html` in English …), while France gets `france.html` — a
+> French hub in the role /wickeltische/ plays for the Länder — plus 13
+> per-région pages in French. Routing and the inflected name forms live in
+> `config.COUNTRY_PAGES` and `pipeline/pages_l10n.py`; a country's page is
+> written whenever that country's sweep is complete, so a
+> `PAPAMAP_COUNTRIES=dk` build writes `danmark.html` and nothing German.
+> All slugs are pinned in `tests/test_pages.py` and hand-listed in
+> `web/sitemap.xml`, as before. The map's footer link is language-routed to
+> match (`regions`/`regionsHref` in `web/i18n.js`): the Danish UI links
+> danmark.html, the French UI france.html, German keeps the Bundesland
+> index. **The data files do not change**: no new feature property, no new
+> `stats.json` field, no change to history.json — this amendment is HTML
+> surface only.
 
 > **v13 amendment (19 Aug 2026, the UK and France, and nine UI languages):**
 > papamap.de sweeps **eleven countries** — the nine of v12 plus **United

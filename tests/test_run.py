@@ -121,17 +121,17 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     )
     # Every element appears once in each of the 17 area sweeps; dedup by
     # (type, id) must collapse the totals back to a single fixture's worth.
-    # 19 pages: 16 Länder + index + the two leaderboard languages. The play
-    # fixture holds 5 objects, of which one is outdoors (dropped by the rule)
-    # and one has no coordinates (dropped by the exporter).
+    # Pages: 16 Länder + index + danmark.html (Denmark was swept whole, so
+    # it gets its Danish country page) + one leaderboard per UI language. The
+    # play fixture holds 5 objects, of which one is outdoors (dropped by the
+    # rule) and one has no coordinates (dropped by the exporter).
     # Toilet counts SUM where objects dedup — the pipeline never sees the
     # objects, so it cannot tell one area's copy from another's. Here that
     # means 17 identical fixture answers really do add to 17x3; in the real
     # sweep the areas are disjoint, so summing is the correct total.
-    # 16 Land pages + the index + one leaderboard per UI language.
     assert summary == {"features": 7, "play_places": 3, "ct_objects": 9,
                        "toilets_total": 51, "global_source": "taginfo",
-                       "pages": 17 + len(leaderboard.L)}
+                       "pages": 18 + len(leaderboard.L)}
     # Still two object queries per area, not three: the play half rides along
     # in the changing_table sweep instead of costing its own Overpass slot.
     assert fake_overpass.areas_seen == ([a for a in SWEEP for _ in (1, 2)]
@@ -314,8 +314,8 @@ def test_ring_build_files_each_neighbour_under_its_english_name(
         tmp_path, load_fixture, monkeypatch):
     # A nine-country build end to end: every neighbour is swept as one area,
     # lands in history.json under the same English string the query selected it
-    # by (so the leaderboard prints "Belgium" next to "Bayern"), and changes
-    # nothing about the pages — those follow BUNDESLAENDER, not the sweep.
+    # by (so the leaderboard prints "Belgium" next to "Bayern"), and gets one
+    # page under its local-language slug (config.COUNTRY_PAGES).
     monkeypatch.setattr(config, "SWEEP_COUNTRIES", RING)
     fake_overpass = _fake_overpass(load_fixture)
     stats = tmp_path / "stats.json"
@@ -338,11 +338,16 @@ def test_ring_build_files_each_neighbour_under_its_english_name(
     assert day["regions"]["Baden-Württemberg"] == [3, 2, 2]
     assert day["regions"]["Belgium"] == [0, 0, 0]
     assert day["regions"]["Sweden"] == [0, 0, 0]
-    # Still 16 Länder + index + one leaderboard per UI language: a country
-    # that is not a Bundesland gets no page, whatever else was swept.
+    # 16 Länder + index + one leaderboard per UI language + one page per swept
+    # country, each under its local-language slug: belgie.html, not
+    # belgium.html — the page is written in Dutch, for the people who search
+    # "verschoontafel", and its slug follows its own headline.
     written = sorted(p.name for p in (tmp_path / "pages").glob("*.html"))
-    assert summary["pages"] == len(written) == 17 + len(leaderboard.L)
-    assert not [p for p in written if "belgi" in p or "sweden" in p]
+    assert summary["pages"] == len(written) == 25 + len(leaderboard.L)
+    for name in ("danmark", "belgie", "nederland", "oesterreich", "schweiz",
+                 "cesko", "polska", "sverige"):
+        assert f"{name}.html" in written, name
+    assert "sweden.html" not in written
 
 
 def test_city_sweep_failure_degrades_to_warn(tmp_path, load_fixture, capsys):

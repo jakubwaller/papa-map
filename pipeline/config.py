@@ -101,9 +101,16 @@ FRANCE_REGIONS = (
 # Germany and Denmark deliberately keep `name`: those strings are also the
 # region keys in history.json and the row labels on the leaderboard, so
 # renaming them would orphan every existing baseline.
+#
+# Brussels-Capital is the one non-country in the set: the leaderboard city
+# area for Brussels (CITY_AREAS below). Its `name` has Belgium's disease —
+# the bilingual "Région de Bruxelles-Capitale - Brussels Hoofdstedelijk
+# Gewest" — and name:en="Brussels-Capital" is exact on the admin_level=4
+# region (verified 21 Aug 2026, 351 changing_table objects).
 NAME_EN_AREAS = frozenset({
     "Belgium", "Netherlands", "Austria", "Switzerland", "Czechia",
     "Poland", "Sweden",
+    "Brussels-Capital",
     # The Europe-complete ring (2026-08-22), all on name:en as one rule, even
     # where `name` happens to coincide (Malta, San Marino, Liechtenstein):
     # every one was verified to resolve on name:en with a plausible count
@@ -245,6 +252,34 @@ COUNTRY_LABELS = {
     "ua": "Ukraine", "by": "Belarus",
 }
 
+# One static page per country beyond Germany (pipeline/pages.py), each in the
+# language its readers search in — the same argument that created the German
+# Bundesland pages ("Wickeltisch Bayern" is searched in German) says
+# "puslebord Danmark" is searched in Danish. Values: (page language, local
+# display name, prepositional phrase for running prose, and the form a heading
+# like "Die Zahlen für …" needs — None when the plain name serves). The
+# phrases exist because names inflect: German says "in der Schweiz", Czech
+# "v Česku", Polish "w Polsce" — see pages_l10n.py for how templates use them.
+# The page slug is slugify(local name), pinned in test_pages.
+#
+# Belgium and Switzerland are multilingual; each page is written in the
+# majority language (Dutch, German) rather than duplicated per language.
+# France's entry is the hub page over its 13 région pages, which are written
+# in French from FRANCE_REGION_FORMS in pages_l10n.py.
+COUNTRY_PAGES = {
+    "dk": ("da", "Danmark", "i Danmark", None),
+    "be": ("nl", "België", "in België", None),
+    "nl": ("nl", "Nederland", "in Nederland", None),
+    "at": ("de", "Österreich", "in Österreich", None),
+    "ch": ("de", "Schweiz", "in der Schweiz", "die Schweiz"),
+    "cz": ("cs", "Česko", "v Česku", None),
+    "pl": ("pl", "Polska", "w Polsce", None),
+    "se": ("sv", "Sverige", "i Sverige", None),
+    "gb": ("en", "United Kingdom", "in the United Kingdom",
+           "the United Kingdom"),
+    "fr": ("fr", "France", "en France", "la France"),
+}
+
 # Leaderboard city sweep: (display name, OSM area name, admin_level). Curated —
 # big cities only, so one answered question moves a share the reader can see
 # without a 20-pin village jumping the table on a single edit. The levels are
@@ -255,36 +290,143 @@ COUNTRY_LABELS = {
 # changing_table count before it went in; a new city must be verified the same
 # way, because a typo'd name resolves to zero objects and run.py can only
 # treat that as a failed sweep.
-CITY_AREAS = (
-    ("Berlin", "Berlin", "4"),
-    ("Hamburg", "Hamburg", "4"),
-    ("München", "München", "6"),
-    ("Köln", "Köln", "6"),
-    ("Frankfurt am Main", "Frankfurt am Main", "6"),
-    ("Stuttgart", "Stuttgart", "6"),
-    ("Düsseldorf", "Düsseldorf", "6"),
-    ("Leipzig", "Leipzig", "6"),
-    ("Dortmund", "Dortmund", "6"),
-    ("Essen", "Essen", "6"),
-    ("Dresden", "Dresden", "6"),
-    ("Nürnberg", "Nürnberg", "6"),
-    ("Duisburg", "Duisburg", "6"),
-    ("Bochum", "Bochum", "6"),
-    ("Wuppertal", "Wuppertal", "6"),
-    ("Bielefeld", "Bielefeld", "6"),
-    ("Bonn", "Bonn", "6"),
-    ("Münster", "Münster", "6"),
-    ("Karlsruhe", "Karlsruhe", "6"),
-    ("Mannheim", "Mannheim", "6"),
-    ("Augsburg", "Augsburg", "6"),
-    ("Wiesbaden", "Wiesbaden", "6"),
-    ("Bremen", "Bremen", "6"),
-    ("Hannover", "Hannover", "8"),
-    ("København", "Københavns Kommune", "7"),
-    ("Aarhus", "Aarhus Kommune", "7"),
-    ("Odense", "Odense Kommune", "7"),
-    ("Aalborg", "Aalborg Kommune", "7"),
-)
+#
+# The 34 cities outside Germany and Denmark joined on 21 Aug 2026, two days
+# after the regions table went to eleven countries while the city table still
+# ended at Aalborg. Same curation rule, and levels stay non-uniform because
+# the countries are: London is "Greater London" at 5 (a bare "London" at any
+# level is Ontario, not England), Glasgow and Edinburgh carry their council
+# areas' official names at 6, Wien and Praha are their country's level 4 the
+# way Berlin is, the Polish five are city powiats at 6, Swedish kommuner sit
+# at 7 like the Danish ones, and Paris-the-commune is also Paris-the-
+# département in one level-6 relation.
+#
+# Some name+level pairs also match namesake areas abroad (Manchester,
+# Birmingham, Bern, Lyon and Amsterdam at level 8 are each also small US
+# towns). Harmless by construction: city membership is a join against the
+# features the country sweep produced, and an id from Kansas never matches
+# one — the namesakes only pad the ids-only payload by a few objects.
+#
+# Each city costs one ids-only query — one ~40 s Overpass slot — per night;
+# these 34 add ~23 min, which the 03:30 cron absorbs while still finishing
+# well before the 05:30 ops mail.
+#
+# Grouped by country code, not flat, because the leaderboard's country column
+# renders from AREA_COUNTRY below — a flat list would need a second, hand-kept
+# name→country table that could silently disagree with this one.
+CITY_AREAS_BY_COUNTRY = {
+    "de": (
+        ("Berlin", "Berlin", "4"),
+        ("Hamburg", "Hamburg", "4"),
+        ("München", "München", "6"),
+        ("Köln", "Köln", "6"),
+        ("Frankfurt am Main", "Frankfurt am Main", "6"),
+        ("Stuttgart", "Stuttgart", "6"),
+        ("Düsseldorf", "Düsseldorf", "6"),
+        ("Leipzig", "Leipzig", "6"),
+        ("Dortmund", "Dortmund", "6"),
+        ("Essen", "Essen", "6"),
+        ("Dresden", "Dresden", "6"),
+        ("Nürnberg", "Nürnberg", "6"),
+        ("Duisburg", "Duisburg", "6"),
+        ("Bochum", "Bochum", "6"),
+        ("Wuppertal", "Wuppertal", "6"),
+        ("Bielefeld", "Bielefeld", "6"),
+        ("Bonn", "Bonn", "6"),
+        ("Münster", "Münster", "6"),
+        ("Karlsruhe", "Karlsruhe", "6"),
+        ("Mannheim", "Mannheim", "6"),
+        ("Augsburg", "Augsburg", "6"),
+        ("Wiesbaden", "Wiesbaden", "6"),
+        ("Bremen", "Bremen", "6"),
+        ("Hannover", "Hannover", "8"),
+    ),
+    "dk": (
+        ("København", "Københavns Kommune", "7"),
+        ("Aarhus", "Aarhus Kommune", "7"),
+        ("Odense", "Odense Kommune", "7"),
+        ("Aalborg", "Aalborg Kommune", "7"),
+    ),
+    # Brussels is the Capital Region (19 communes, selected on name:en — see
+    # NAME_EN_AREAS); the level-8 commune "Bruxelles - Brussel" would cover
+    # about a fifth of the city.
+    "be": (
+        ("Brussels", "Brussels-Capital", "4"),
+        ("Antwerpen", "Antwerpen", "8"),
+        ("Gent", "Gent", "8"),
+    ),
+    # Gemeenten. "Utrecht" the province is level 4, no clash.
+    "nl": (
+        ("Amsterdam", "Amsterdam", "8"),
+        ("Rotterdam", "Rotterdam", "8"),
+        ("Den Haag", "Den Haag", "8"),
+        ("Utrecht", "Utrecht", "8"),
+    ),
+    # Wien is a Bundesland, Graz and Linz are Statutarstädte.
+    "at": (
+        ("Wien", "Wien", "4"),
+        ("Graz", "Graz", "6"),
+        ("Linz", "Linz", "6"),
+    ),
+    # Gemeinden — the level-4 relations of the same names are the cantons.
+    "ch": (
+        ("Zürich", "Zürich", "8"),
+        ("Bern", "Bern", "8"),
+        ("Basel", "Basel", "8"),
+        ("Genève", "Genève", "8"),
+    ),
+    # Praha is its own kraj; Brno is an obec. (A level-8 "Praha" exists too —
+    # a Slovak village, excluded by the level.)
+    "cz": (
+        ("Praha", "Praha", "4"),
+        ("Brno", "Brno", "8"),
+    ),
+    # City powiats.
+    "pl": (
+        ("Warszawa", "Warszawa", "6"),
+        ("Kraków", "Kraków", "6"),
+        ("Wrocław", "Wrocław", "6"),
+        ("Gdańsk", "Gdańsk", "6"),
+        ("Poznań", "Poznań", "6"),
+    ),
+    # Kommuner, and two of the three carry official names a reader would not
+    # type — same display-vs-selector split as København.
+    "se": (
+        ("Stockholm", "Stockholms kommun", "7"),
+        ("Göteborg", "Göteborgs Stad", "7"),
+        ("Malmö", "Malmö kommun", "7"),
+    ),
+    "gb": (
+        ("London", "Greater London", "5"),
+        ("Birmingham", "Birmingham", "8"),
+        ("Manchester", "Manchester", "8"),
+        ("Glasgow", "Glasgow City", "6"),
+        ("Edinburgh", "City of Edinburgh", "6"),
+    ),
+    # Communes, except Paris (see above).
+    "fr": (
+        ("Paris", "Paris", "6"),
+        ("Marseille", "Marseille", "8"),
+        ("Lyon", "Lyon", "8"),
+        ("Toulouse", "Toulouse", "8"),
+        ("Bordeaux", "Bordeaux", "8"),
+    ),
+}
+
+# The flat (display name, OSM area name, admin_level) list everything else
+# consumes, in the grouping's order.
+CITY_AREAS = tuple(city for cities in CITY_AREAS_BY_COUNTRY.values()
+                   for city in cities)
+
+# Leaderboard row label → country code, for the country column on both tables.
+# Region rows are keyed by sweep-area name, city rows by display name; Berlin,
+# Hamburg and Bremen appear in both maps with the same answer. A history key
+# that matches neither (an area removed from config after it was recorded)
+# renders as a dash rather than KeyErroring a page build.
+AREA_COUNTRY = {name: c for c, areas in COUNTRY_AREAS.items()
+                for name, _ in areas}
+AREA_COUNTRY.update({display: c for c, cities in CITY_AREAS_BY_COUNTRY.items()
+                     for display, _, _ in cities})
 
 # Per-region daily snapshots, appended by every full build and rendered into
 # the leaderboard pages. Lives next to stats.json so it lands in the one

@@ -97,6 +97,7 @@ L = {
         "regions_note_lands": ("<p>Dieselbe Rechnung für die {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Stadt", "col_name_region": "Region",
+        "col_country": "Land",
         "col_delta": "Δ Punkte", "col_share": "beantwortet",
         "col_total": "Orte", "col_acc": "+ erreichbar", "col_new": "+ Orte",
         "sort_hint": ("Auf eine Spaltenüberschrift tippen, um danach zu "
@@ -166,6 +167,7 @@ L = {
         "regions_note_lands": ("<p>The same arithmetic for the {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "City", "col_name_region": "Region",
+        "col_country": "Country",
         "col_delta": "Δ points", "col_share": "answered",
         "col_total": "places", "col_acc": "+ reachable", "col_new": "+ places",
         "sort_hint": ("Tap a column header to sort by it — tap again to "
@@ -246,6 +248,7 @@ How things are counted and coloured: <a href="{up}methods-en.html">Methods</a> �
         "regions_note_lands": ("<p>Samme regnestykke for de {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "By", "col_name_region": "Region",
+        "col_country": "Land",
         "col_delta": "Δ point", "col_share": "besvaret",
         "col_total": "steder", "col_acc": "+ tilgængelig", "col_new": "+ steder",
         "sort_hint": ("Tryk på en kolonneoverskrift for at sortere efter "
@@ -331,6 +334,7 @@ Sådan tælles og farvelægges der: <a href="{up}methods-da.html">Metode</a> ·
         "regions_note_lands": ("<p>Dezelfde rekensom voor de {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Stad", "col_name_region": "Regio",
+        "col_country": "Land",
         "col_delta": "Δ punten", "col_share": "beantwoord",
         "col_total": "plekken", "col_acc": "+ bereikbaar", "col_new": "+ plekken",
         "sort_hint": ("Tik op een kolomkop om erop te sorteren — nog een "
@@ -415,6 +419,7 @@ Hoe geteld en gekleurd wordt: <a href="{up}methods-nl.html">Methode</a> ·
         "regions_note_lands": ("<p>Le même calcul pour les {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Ville", "col_name_region": "Région",
+        "col_country": "Pays",
         "col_delta": "Δ points", "col_share": "répondu",
         "col_total": "lieux", "col_acc": "+ accessibles", "col_new": "+ lieux",
         "sort_hint": ("Touche l'en-tête d'une colonne pour trier — touche à "
@@ -497,6 +502,7 @@ Comment le comptage et les couleurs fonctionnent : <a href="{up}methods-fr.html"
         "regions_note_lands": ("<p>Lo stesso calcolo per i {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Città", "col_name_region": "Regione",
+        "col_country": "Paese",
         "col_delta": "Δ punti", "col_share": "risposto",
         "col_total": "luoghi", "col_acc": "+ raggiungibili", "col_new": "+ luoghi",
         "sort_hint": ("Tocca l'intestazione di una colonna per ordinare la "
@@ -577,6 +583,7 @@ Come si conta e si colora: <a href="{up}methods-it.html">Metodo</a> ·
         "regions_note_lands": ("<p>Stejný výpočet pro {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Město", "col_name_region": "Region",
+        "col_country": "Země",
         "col_delta": "Δ body", "col_share": "zodpovězeno",
         "col_total": "místa", "col_acc": "+ dostupná", "col_new": "+ místa",
         "sort_hint": ("Klepni na záhlaví sloupce a seřadíš podle něj — "
@@ -658,6 +665,7 @@ Jak se tu počítá a barví: <a href="{up}methods-cs.html">Metody</a> ·
         "regions_note_lands": ("<p>Ten sam rachunek dla {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Miasto", "col_name_region": "Region",
+        "col_country": "Kraj",
         "col_delta": "Δ punkty", "col_share": "odpowiedziane",
         "col_total": "miejsca", "col_acc": "+ dostępne", "col_new": "+ miejsca",
         "sort_hint": ("Stuknij nagłówek kolumny, żeby sortować według niej — "
@@ -737,6 +745,7 @@ Jak liczymy i kolorujemy: <a href="{up}methods-pl.html">Metody</a> ·
         "regions_note_lands": ("<p>Samma räkning för de {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Stad", "col_name_region": "Region",
+        "col_country": "Land",
         "col_delta": "Δ poäng", "col_share": "besvarat",
         "col_total": "platser", "col_acc": "+ nåbara", "col_new": "+ platser",
         "sort_hint": ("Tryck på en kolumnrubrik för att sortera efter den — "
@@ -819,6 +828,7 @@ Hur saker räknas och färgläggs: <a href="{up}methods-sv.html">Metod</a> ·
         "regions_note_lands": ("<p>Ista računica za {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Grad", "col_name_region": "Regija",
+        "col_country": "Zemlja",
         "col_delta": "Δ poena", "col_share": "odgovoreno",
         "col_total": "mjesta", "col_acc": "+ dostupno", "col_new": "+ mjesta",
         "sort_hint": ("Dodirni naslov kolone da sortiraš po njoj — dodirni "
@@ -899,6 +909,7 @@ Kako se broji i boji: <a href="{up}methods-bs.html">Metode</a> ·
         "regions_note_lands": ("<p>El mateix càlcul per als {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Ciutat", "col_name_region": "Regió",
+        "col_country": "País",
         "col_delta": "Δ punts", "col_share": "resposta",
         "col_total": "llocs", "col_acc": "+ a l'abast", "col_new": "+ llocs",
         "sort_hint": ("Toca una capçalera de columna per ordenar-hi — torna "
@@ -978,6 +989,7 @@ Com es compta i s'acoloreix: <a href="{up}methods-ca.html">Mètodes</a> ·
         "regions_h2_lands": "Bundesländer",
         "regions_note_lands": "<p>Sama arvutus: {n} Bundesländer.</p>\n",
         "col_name_city": "Linn", "col_name_region": "Piirkond",
+        "col_country": "Riik",
         "col_delta": "Δ punktid", "col_share": "vastatud",
         "col_total": "kohad", "col_acc": "+ ligipääsetavad", "col_new": "+ kohad",
         "sort_hint": ("Puuduta veeru pealkirja, et selle järgi sortida — "
@@ -1058,6 +1070,7 @@ Kuidas kohti loetakse ja värvitakse: <a href="{up}methods-et.html">Meetodid</a>
         "regions_note_lands": ("<p>El mismo cálculo para los {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Ciudad", "col_name_region": "Región",
+        "col_country": "País",
         "col_delta": "Δ puntos", "col_share": "respondido",
         "col_total": "lugares", "col_acc": "+ accesible", "col_new": "+ lugares",
         "sort_hint": ("Toca el encabezado de una columna para ordenar por "
@@ -1139,6 +1152,7 @@ Cómo se cuenta y se colorea: <a href="{up}methods-es.html">Métodos</a> ·
         "regions_h2_lands": "Njemačke pokrajine",
         "regions_note_lands": ("<p>Isti izračun za {n} Bundesländer.</p>\n"),
         "col_name_city": "Grad", "col_name_region": "Regija",
+        "col_country": "Zemlja",
         "col_delta": "Δ bodovi", "col_share": "odgovoreno",
         "col_total": "mjesta", "col_acc": "+ dostupno", "col_new": "+ mjesta",
         "sort_hint": ("Dodirni zaglavlje stupca za sortiranje po njemu — "
@@ -1222,6 +1236,7 @@ Kako se broji i boji: <a href="{up}methods-hr.html">Metode</a> ·
         "regions_note_lands": ("<p>Sami útreikningur fyrir þau {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Borg", "col_name_region": "Svæði",
+        "col_country": "Land",
         "col_delta": "Δ stig", "col_share": "svarað",
         "col_total": "staðir", "col_acc": "+ aðgengilegt", "col_new": "+ staðir",
         "sort_hint": ("Ýttu á dálkfyrirsögn til að raða eftir henni — "
@@ -1304,6 +1319,7 @@ Hvernig talið er og litað: <a href="{up}methods-is.html">Aðferð</a> ·
         "regions_note_lands": ("<p>Tas pats aprēķins: {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Pilsēta", "col_name_region": "Reģions",
+        "col_country": "Valsts",
         "col_delta": "Δ punkti", "col_share": "atbildēts",
         "col_total": "vietas", "col_acc": "+ pieejami", "col_new": "+ vietas",
         "sort_hint": ("Uzspied uz kolonnas virsraksta, lai kārtotu pēc tā — "
@@ -1389,6 +1405,7 @@ Kā tiek skaitīts un iekrāsots: <a href="{up}methods-lv.html">Metodika</a> ·
         "regions_note_lands": ("<p>Tas pats skaičiavimas — {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Miestas", "col_name_region": "Regionas",
+        "col_country": "Šalis",
         "col_delta": "Δ punktai", "col_share": "atsakyta",
         "col_total": "vietos", "col_acc": "+ pasiekiama", "col_new": "+ vietos",
         "sort_hint": ("Bakstelėk stulpelio antraštę, kad pagal ją "
@@ -1476,6 +1493,7 @@ Kaip skaičiuojama ir spalvinama: <a href="{up}methods-lt.html">Metodai</a> ·
         "regions_note_lands": ("<p>Ugyanaz a számítás a {n} Bundesländer "
                                "esetén.</p>\n"),
         "col_name_city": "Város", "col_name_region": "Régió",
+        "col_country": "Ország",
         "col_delta": "Δ pont", "col_share": "megválaszolva",
         "col_total": "hely", "col_acc": "+ elérhető", "col_new": "+ hely",
         "sort_hint": ("Koppints egy oszlopfejlécre, hogy aszerint rendezz "
@@ -1556,6 +1574,7 @@ Hogyan számolunk és színezünk: <a href="{up}methods-hu.html">Módszertan</a>
         "regions_note_lands": ("<p>Samme regnestykke for de {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "By", "col_name_region": "Region",
+        "col_country": "Land",
         "col_delta": "Δ poeng", "col_share": "besvart",
         "col_total": "steder", "col_acc": "+ nåbare", "col_new": "+ steder",
         "sort_hint": ("Trykk på en kolonneoverskrift for å sortere etter "
@@ -1637,6 +1656,7 @@ Slik telles og fargelegges det: <a href="{up}methods-no.html">Metode</a> ·
         "regions_note_lands": ("<p>A mesma conta para os {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Cidade", "col_name_region": "Região",
+        "col_country": "País",
         "col_delta": "Δ pontos", "col_share": "respondido",
         "col_total": "locais", "col_acc": "+ acessível", "col_new": "+ locais",
         "sort_hint": ("Toca no cabeçalho de uma coluna para ordenar por "
@@ -1723,6 +1743,7 @@ Como se conta e colore: <a href="{up}methods-pt.html">Métodos</a> ·
         "regions_note_lands": ("<p>Același calcul pentru cele {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Oraș", "col_name_region": "Regiune",
+        "col_country": "Țară",
         "col_delta": "Δ puncte", "col_share": "răspuns",
         "col_total": "locuri", "col_acc": "+ accesibile", "col_new": "+ locuri",
         "sort_hint": ("Atinge un antet de coloană pentru a sorta după el "
@@ -1804,6 +1825,7 @@ Cum se numără și se colorează: <a href="{up}methods-ro.html">Metode</a> ·
         "regions_note_lands": ("<p>E njëjta llogaritje për {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Qyteti", "col_name_region": "Rajoni",
+        "col_country": "Shteti",
         "col_delta": "Δ pika", "col_share": "e përgjigjur",
         "col_total": "vende", "col_acc": "+ e arritshme", "col_new": "+ vende",
         "sort_hint": ("Prek titullin e një kolone për ta renditur sipas tij "
@@ -1887,6 +1909,7 @@ Si numërohet dhe ngjyroset: <a href="{up}methods-sq.html">Metodologjia</a> ·
         "regions_note_lands": ("<p>Rovnaký výpočet pre {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Mesto", "col_name_region": "Región",
+        "col_country": "Krajina",
         "col_delta": "Δ body", "col_share": "zodpovedané",
         "col_total": "miesta", "col_acc": "+ dostupné", "col_new": "+ miesta",
         "sort_hint": ("Ťukni na záhlavie stĺpca a zoradíš podľa neho — "
@@ -1970,6 +1993,7 @@ Ako sa počíta a farbí: <a href="{up}methods-sk.html">Metódy</a> ·
         "regions_note_lands": ("<p>Enak izračun za {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Mesto", "col_name_region": "Regija",
+        "col_country": "Država",
         "col_delta": "Δ točke", "col_share": "odgovorjeno",
         "col_total": "kraji", "col_acc": "+ dostopno", "col_new": "+ kraji",
         "sort_hint": ("Tapni glavo stolpca, da razvrstiš po njem — tapni še "
@@ -2050,6 +2074,7 @@ Kako se šteje in barva: <a href="{up}methods-sl.html">Metode</a> ·
         "regions_h2_lands": "Saksan osavaltiot",
         "regions_note_lands": ("<p>Sama laskutapa: {n} Bundesländer.</p>\n"),
         "col_name_city": "Kaupunki", "col_name_region": "Alue",
+        "col_country": "Maa",
         "col_delta": "Δ pistettä", "col_share": "Vastattu",
         "col_total": "Paikkoja", "col_acc": "+ Saavutettavaa", "col_new": "+ Paikkoja",
         "sort_hint": ("Napauta sarakkeen otsikkoa lajitellaksesi sen "
@@ -2131,6 +2156,7 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
         "regions_note_lands": ("<p>Ο ίδιος υπολογισμός για τα {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Πόλη", "col_name_region": "Περιοχή",
+        "col_country": "Χώρα",
         "col_delta": "Δ μονάδες", "col_share": "απαντημένο",
         "col_total": "μέρη", "col_acc": "+ προσβάσιμα", "col_new": "+ μέρη",
         "sort_hint": ("Πάτησε μια επικεφαλίδα στήλης για ταξινόμηση — πάτα "
@@ -2216,6 +2242,7 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
         "regions_note_lands": ("<p>Тыя ж падлікі для {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Горад", "col_name_region": "Рэгіён",
+        "col_country": "Краіна",
         "col_delta": "Δ пункты", "col_share": "адказана",
         "col_total": "месцы", "col_acc": "+ даступна", "col_new": "+ месцы",
         "sort_hint": ("Націсні на загаловак слупка, каб адсартаваць па ім "
@@ -2297,6 +2324,7 @@ OpenStreetMap</a>, паводле <a href="https://opendatacommons.org/licenses/
         "regions_note_lands": ("<p>Същото изчисление за {n}-те "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Град", "col_name_region": "Регион",
+        "col_country": "Държава",
         "col_delta": "Δ пункта", "col_share": "отговорено",
         "col_total": "места", "col_acc": "+ достъпни", "col_new": "+ места",
         "sort_hint": ("Докосни заглавие на колона, за да подредиш по нея "
@@ -2378,6 +2406,7 @@ contributors</a>, под <a href="https://opendatacommons.org/licenses/odbl/">OD
         "regions_note_lands": ("<p>Истата сметка за {n}-те "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Град", "col_name_region": "Регион",
+        "col_country": "Земја",
         "col_delta": "Δ поени", "col_share": "одговорено",
         "col_total": "места", "col_acc": "+ достапни", "col_new": "+ места",
         "sort_hint": ("Допри наслов на колона за да сортираш по неа — допри "
@@ -2460,6 +2489,7 @@ OpenStreetMap</a>, под лиценцата <a href="https://opendatacommons.or
         "regions_note_lands": ("<p>Исти рачун за {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Град", "col_name_region": "Регион",
+        "col_country": "Земља",
         "col_delta": "Δ поени", "col_share": "одговорено",
         "col_total": "места", "col_acc": "+ доступно", "col_new": "+ места",
         "sort_hint": ("Додирни заглавље колоне да сортираш по њему — "
@@ -2540,6 +2570,7 @@ OpenStreetMap-а</a>, под лиценцом <a href="https://opendatacommons.o
         "regions_note_lands": ("<p>Той самий підрахунок для {n} "
                                "Bundesländer.</p>\n"),
         "col_name_city": "Місто", "col_name_region": "Регіон",
+        "col_country": "Країна",
         "col_delta": "Δ пункти", "col_share": "відповіли",
         "col_total": "місця", "col_acc": "+ доступні", "col_new": "+ місця",
         "sort_hint": ("Торкнися заголовка стовпця, щоб сортувати за ним — "
