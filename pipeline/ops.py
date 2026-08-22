@@ -31,10 +31,21 @@ from pathlib import Path
 
 import requests
 
-from .config import GEOJSON_PATH, STATS_PATH
-from .export import PAPAMAP_THEME_URL
+from . import ops_page
+from .config import GEOJSON_PATH, HISTORY_PATH, STATS_PATH
+from .export import PAPAMAP_THEME_URL, write_text_atomic
 
 STATE_PATH = os.environ.get("PAPAMAP_OPS_STATE_PATH", "ops-state.json")
+# The public ops page. Next to stats.json by default, because that directory
+# is the one the served tree mounts back in (web-data/ -> /srv/data), so the
+# page is reachable at /data/ops.html the moment it is written — and at
+# /ops.html through the rewrite in deploy/papamap.Caddyfile. Empty string
+# disables it.
+OPS_HTML_PATH = os.environ.get(
+    "PAPAMAP_OPS_HTML_PATH", str(Path(STATS_PATH).parent / "ops.html"))
+# The build cron's log, `>> pipeline.log` in the repo directory where the ops
+# cron also runs; read for the "last build" section, optional.
+BUILD_LOG_PATH = os.environ.get("PAPAMAP_BUILD_LOG_PATH", "pipeline.log")
 STALE_AFTER_H = float(os.environ.get("PAPAMAP_OPS_STALE_H", "48"))
 DROP_ALERT_PCT = float(os.environ.get("PAPAMAP_OPS_DROP_PCT", "20"))
 # The mirror image of DROP_ALERT_PCT, and it exists because the drop check on
@@ -286,9 +297,11 @@ def send_mail(subject, body, smtp=smtplib.SMTP) -> bool:
 
 
 def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
-              mail=send_mail, visits_fetch=cf_visits, edits_fetch=osmcha_edits):
+              mail=send_mail, visits_fetch=cf_visits, edits_fetch=osmcha_edits,
+              html_path=None, history_path=None, build_log_path=None):
     """Returns (anomalies, report). State is updated every run so the daily
-    diff stays daily even when no mail goes out."""
+    diff stays daily even when no mail goes out, and the ops page is
+    rewritten every run from the same numbers. html_path="" skips the page."""
     now = now or datetime.now(timezone.utc)
     state_path = Path(state_path or STATE_PATH)
     stats = load_json(stats_path or STATS_PATH)
@@ -296,6 +309,10 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
 
     state = load_json(state_path) or {"statuses": {}, "history": []}
     prev_statuses, history = state["statuses"], state["history"]
+    # The OSMCha count is only fetched on digest days (see below), so the
+    # page shows the last one it got, dated — a number without its date
+    # would read as today's.
+    cached_edits = state.get("edits")
     last_counts = history[-1]["counts"] if history else None
 
     cur_statuses = feature_statuses(geojson) if geojson else None
@@ -309,19 +326,48 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     edits = edits_fetch(now=now) if (anomalies or weekly) else None
     report = render_report(counts, changes, history, anomalies, visits, edits)
 
+    if edits and not edits.get("error"):
+        cached_edits = dict(edits, as_of=now.strftime("%Y-%m-%d"))
     if cur_statuses is not None:
         history.append({"date": now.strftime("%Y-%m-%d"), "counts": counts,
                         "changes": changes or diff_statuses({}, {})})
         state = {"statuses": cur_statuses, "history": history[-HISTORY_DAYS:]}
+        if cached_edits:
+            state["edits"] = cached_edits
         tmp = state_path.with_suffix(".tmp")
         tmp.write_text(json.dumps(state))
         tmp.replace(state_path)
+
+    html_path = OPS_HTML_PATH if html_path is None else html_path
+    if html_path:
+        write_ops_page(html_path, now=now, stats=stats, counts=counts,
+                       changes=changes, history=history[-HISTORY_DAYS:],
+                       anomalies=anomalies, edits=cached_edits,
+                       history_path=history_path or HISTORY_PATH,
+                       build_log_path=build_log_path or BUILD_LOG_PATH)
 
     if anomalies:
         mail("[papamap] ALERT: " + "; ".join(anomalies)[:120], report)
     elif weekly:
         mail("[papamap] weekly: all clear", report)
     return anomalies, report
+
+
+def write_ops_page(path, *, history_path, build_log_path, **ctx) -> None:
+    """The page is decoration on the check: a failure to render or write it
+    is reported and never fails the run (the state is already saved, the
+    mail already sent)."""
+    try:
+        log_text = Path(build_log_path).read_text(errors="replace")
+    except OSError:
+        log_text = None
+    try:
+        page = ops_page.render_page(
+            regions=ops_page.region_rows(load_json(history_path)),
+            build=ops_page.parse_build_log(log_text), **ctx)
+        write_text_atomic(page, str(path))
+    except Exception as exc:  # noqa: BLE001 — see docstring
+        print(f"WARN: ops page not written: {exc}", file=sys.stderr)
 
 
 if __name__ == "__main__":

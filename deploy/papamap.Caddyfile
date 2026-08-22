@@ -5,11 +5,16 @@
 	root * /srv
 	file_server
 
+	# The ops page is written by `pipeline.ops` next to stats.json (it lands
+	# in the same mounted directory, /srv/data), but /ops.html is the address
+	# worth remembering. Rewrite, not redirect: a bookmark keeps the short URL.
+	rewrite /ops.html /data/ops.html
+
 	# The data files are regenerated daily; the rest is versioned by URL — bar
 	# the Bundesland pages under /wickeltische/, which are also regenerated
 	# nightly but keep plain URLs (they are indexed). An hour of staleness on a
 	# page that changes once a night is not worth a shorter TTL.
-	@data path /data/*
+	@data path /data/* /ops.html
 	header @data Cache-Control "public, max-age=900"
 	header Cache-Control "public, max-age=3600"
 }

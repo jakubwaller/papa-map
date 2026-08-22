@@ -199,6 +199,8 @@ An optional second cron line runs `python -m pipeline.ops`: an anomaly-gated ops
 (stale data, missing files, count drops **and count jumps** — a widened sweep is not
 mapping activity) plus a Monday all-clear digest with the week's
 grey→green transitions — see the "Ops mail" section in `docs/DEPLOY.md`.
+The same run rewrites a public ops page, `/ops.html`: the report plus last night's per-area
+build results, per-region counts and the daily history — aggregates only, no traffic numbers.
 
 ## Deploy
 Static files only — no API and no database. The site runs as a `caddy:2-alpine` container

@@ -38,7 +38,8 @@ def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None):
         else str(tmp_path / "absent-gj.json"),
         mail=lambda subject, body: sent.append((subject, body)),
         visits_fetch=lambda **kw: None,
-        edits_fetch=lambda **kw: None)
+        edits_fetch=lambda **kw: None,
+        html_path=str(tmp_path / "ops.html"))
     return anomalies, report, sent, state_path
 
 
@@ -219,7 +220,8 @@ def test_digest_carries_edits_line(tmp_path):
                            geojson([("node", 1, "unknown")])),
         mail=lambda subject, body: sent.append((subject, body)),
         visits_fetch=lambda **kw: None,
-        edits_fetch=lambda **kw: {"days": 7, "changesets": 2})
+        edits_fetch=lambda **kw: {"days": 7, "changesets": 2},
+        html_path="")
     assert "edits via papamap theme (OSMCha, 7d): 2 changesets" in sent[0][1]
 
 
