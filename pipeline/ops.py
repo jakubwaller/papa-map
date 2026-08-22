@@ -43,6 +43,14 @@ STATE_PATH = os.environ.get("PAPAMAP_OPS_STATE_PATH", "ops-state.json")
 # disables it.
 OPS_HTML_PATH = os.environ.get(
     "PAPAMAP_OPS_HTML_PATH", str(Path(STATS_PATH).parent / "ops.html"))
+# The private copy: the same page plus Cloudflare's zone-level request totals
+# and their per-day history. Written into a private/ subdirectory so the
+# served tree can mount it separately and gate it — see deploy/papamap.Caddyfile
+# and docs/DEPLOY.md. Empty string disables it.
+OPS_PRIVATE_HTML_PATH = os.environ.get(
+    "PAPAMAP_OPS_PRIVATE_HTML_PATH",
+    str(Path(STATS_PATH).parent / "private" / "ops.html"))
+VISITS_HISTORY_DAYS = 400
 # history.json, the leaderboard's per-region counts. The build writes it next
 # to stats.json in every layout (Dockerfile, config defaults), so the sibling
 # is the right default here too — config.HISTORY_PATH's own default is the
@@ -220,7 +228,7 @@ def cf_visits(days=7, now=None, post=requests.post):
       query($zone: String!, $since: String!) {
         viewer { zones(filter: {zoneTag: $zone}) {
           httpRequests1dGroups(limit: 31, filter: {date_geq: $since}) {
-            sum { requests } uniq { uniques } } } } }"""
+            dimensions { date } sum { requests } uniq { uniques } } } } }"""
     since = datetime.fromtimestamp(
         now.timestamp() - days * 86400, tz=timezone.utc).strftime("%Y-%m-%d")
     try:
@@ -229,9 +237,15 @@ def cf_visits(days=7, now=None, post=requests.post):
                  json={"query": query,
                        "variables": {"zone": zone, "since": since}})
         groups = r.json()["data"]["viewer"]["zones"][0]["httpRequests1dGroups"]
+        # by_day is what the private ops page keeps: Cloudflare's free plan
+        # forgets a day after about a week, the state file does not.
         return {"days": days,
                 "requests": sum(g["sum"]["requests"] for g in groups),
-                "uniques": sum(g["uniq"]["uniques"] for g in groups)}
+                "uniques": sum(g["uniq"]["uniques"] for g in groups),
+                "by_day": {g["dimensions"]["date"]: {
+                    "requests": g["sum"]["requests"],
+                    "uniques": g["uniq"]["uniques"]} for g in groups
+                    if g.get("dimensions", {}).get("date")}}
     except Exception as exc:  # visits are decoration — never fail the check
         print(f"WARN: Cloudflare analytics failed: {exc}", file=sys.stderr)
         return None
@@ -305,7 +319,8 @@ def send_mail(subject, body, smtp=smtplib.SMTP) -> bool:
 
 def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
               mail=send_mail, visits_fetch=cf_visits, edits_fetch=osmcha_edits,
-              html_path=None, history_path=None, build_log_path=None):
+              html_path=None, history_path=None, build_log_path=None,
+              private_html_path=None):
     """Returns (anomalies, report). State is updated every run so the daily
     diff stays daily even when no mail goes out, and the ops page is
     rewritten every run from the same numbers. html_path="" skips the page."""
@@ -329,9 +344,14 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
 
     anomalies = find_anomalies(stats, counts, last_counts, now)
     weekly = now.weekday() == WEEKLY_DIGEST_WEEKDAY
-    visits = visits_fetch(now=now) if (anomalies or weekly) else None
+    # Visits every run, not just digest days: the private page's curve is
+    # built from per-day figures Cloudflare only keeps for about a week.
+    # The mail still carries them on digest days only.
+    visits = visits_fetch(now=now)
     edits = edits_fetch(now=now) if (anomalies or weekly) else None
-    report = render_report(counts, changes, history, anomalies, visits, edits)
+    report = render_report(counts, changes, history, anomalies,
+                           visits if (anomalies or weekly) else None, edits)
+    visits_history = merge_visits(state.get("visits") or {}, visits, now)
 
     if edits and not edits.get("error"):
         cached_edits = dict(edits, as_of=now.strftime("%Y-%m-%d"))
@@ -341,23 +361,45 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
         state = {"statuses": cur_statuses, "history": history[-HISTORY_DAYS:]}
         if cached_edits:
             state["edits"] = cached_edits
+        if visits_history:
+            state["visits"] = visits_history
         tmp = state_path.with_suffix(".tmp")
         tmp.write_text(json.dumps(state))
         tmp.replace(state_path)
 
     html_path = OPS_HTML_PATH if html_path is None else html_path
+    private_path = (OPS_PRIVATE_HTML_PATH if private_html_path is None
+                    else private_html_path)
+    ctx = dict(now=now, stats=stats, counts=counts, changes=changes,
+               history=history[-HISTORY_DAYS:], anomalies=anomalies,
+               edits=cached_edits,
+               history_path=history_path or OPS_HISTORY_PATH,
+               build_log_path=build_log_path or BUILD_LOG_PATH)
     if html_path:
-        write_ops_page(html_path, now=now, stats=stats, counts=counts,
-                       changes=changes, history=history[-HISTORY_DAYS:],
-                       anomalies=anomalies, edits=cached_edits,
-                       history_path=history_path or OPS_HISTORY_PATH,
-                       build_log_path=build_log_path or BUILD_LOG_PATH)
+        write_ops_page(html_path, **ctx)
+    if private_path:
+        write_ops_page(private_path, private=True, visits=visits_history, **ctx)
 
     if anomalies:
         mail("[papamap] ALERT: " + "; ".join(anomalies)[:120], report)
     elif weekly:
         mail("[papamap] weekly: all clear", report)
     return anomalies, report
+
+
+def merge_visits(kept: dict, visits: dict | None, now: datetime) -> dict:
+    """The per-day visit history, updated with what today's fetch returned.
+    Today is left out — at 05:30 it is a fifth of a day — and every earlier
+    day in the answer overwrites the stored one, so a partial figure stored
+    by a run that happened late in the day heals on the next. Capped, and
+    returned sorted by date so the page can draw it as it is."""
+    merged = dict(kept)
+    today = now.strftime("%Y-%m-%d")
+    for day, v in ((visits or {}).get("by_day") or {}).items():
+        if day < today and isinstance(v, dict):
+            merged[day] = {"requests": int(v.get("requests", 0)),
+                           "uniques": int(v.get("uniques", 0))}
+    return dict(sorted(merged.items())[-VISITS_HISTORY_DAYS:])
 
 
 def write_ops_page(path, *, history_path, build_log_path, **ctx) -> None:

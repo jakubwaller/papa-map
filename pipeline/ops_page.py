@@ -223,14 +223,58 @@ def _region_table(rows: list[dict], name_col: str) -> str:
     return "".join(parts)
 
 
+def _visitors(visits: dict | None) -> str:
+    """The private page's extra section: Cloudflare zone-level requests and
+    uniques per complete day, from the state's own history. Uniques are
+    Cloudflare's per-day figure, so a week's sum counts a daily reader seven
+    times — the table says so rather than pretending otherwise."""
+    days = sorted((visits or {}).items())
+    if not days:
+        return ('<h2>Visitors</h2>\n<p class="muted">No Cloudflare figures yet '
+                "— CF_ANALYTICS_TOKEN/CF_ZONE_TAG unset, or the first fetch is "
+                "still to come.</p>\n")
+    parts = ["<h2>Visitors</h2>\n"
+             '<p class="muted">Cloudflare zone-level totals per complete UTC day '
+             "— every request the edge saw, crawlers included. Uniques are "
+             "per day, so a window's sum counts a daily reader once per day."
+             "</p>\n"
+             '<div class="kpis">\n']
+    for n in (7, 30):
+        window = days[-n:]
+        req = sum(v["requests"] for _, v in window)
+        uni = sum(v["uniques"] for _, v in window)
+        parts.append(f'<div class="kpi"><b>{_n(uni)}</b>'
+                     f"<span>uniques, last {len(window)} days</span></div>\n"
+                     f'<div class="kpi"><b>{_n(req)}</b>'
+                     f"<span>requests, last {len(window)} days</span></div>\n")
+    parts.append("</div>\n")
+    uniques = [v["uniques"] for _, v in days]
+    if len(uniques) >= 2:
+        parts.append(f'<p class="muted">Daily uniques, {esc(days[0][0])} → '
+                     f"{esc(days[-1][0])}</p>\n")
+        parts.append(_sparkline(uniques, "--accent"))
+    recent = list(reversed(days[-30:]))
+    parts.append(f"<details>\n<summary>last {len(recent)} of {len(days)} days</summary>\n"
+                 '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
+                 "<th>uniques</th><th>requests</th></tr></thead>\n<tbody>\n")
+    for day, v in recent:
+        parts.append(f'<tr><td class="l">{esc(day)}</td><td>{_n(v["uniques"])}</td>'
+                     f'<td>{_n(v["requests"])}</td></tr>\n')
+    parts.append("</tbody>\n</table>\n</div>\n</details>\n")
+    return "".join(parts)
+
+
 def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                 changes: dict | None, history: list[dict],
                 anomalies: list[str], edits: dict | None = None,
                 regions: dict | None = None, build: dict | None = None,
-                site_url: str = "https://papamap.de") -> str:
+                site_url: str = "https://papamap.de",
+                private: bool = False, visits: dict | None = None) -> str:
     """The whole page. `history` is the ops state's daily list (oldest first,
     the entry for today already appended); `regions` is region_rows()'s
-    output; `build` is parse_build_log()'s; `edits` the cached OSMCha line."""
+    output; `build` is parse_build_log()'s; `edits` the cached OSMCha line.
+    `private` adds the Visitors section from `visits` ({date: {requests,
+    uniques}}); the public page ignores `visits` entirely, by design."""
     now = now.astimezone(timezone.utc)
     age = _age_hours(stats, now)
     local = (stats or {}).get("local") or {}
@@ -244,14 +288,14 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>PapaMap ops</title>
+<title>PapaMap ops{" (private)" if private else ""}</title>
 {ICON}
 <style>
 {STYLE}{OPS_STYLE}</style>
 </head>
 <body>
 <p class="back"><a href="/">← Map</a> · <a href="/wickeltische/leaderboard.html">Leaderboard</a> · <a href="/methods-en.html">Methods</a></p>
-<h1>PapaMap ops</h1>
+<h1>PapaMap ops{" <span class=\"muted\">private</span>" if private else ""}</h1>
 """]
     stamp = now.strftime("%Y-%m-%d %H:%M UTC")
     built = (stats or {}).get("generated_at")
@@ -335,6 +379,9 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                  f'({_n(acc_series[0])} → {_n(acc_series[-1])})</p>\n')
         p.append(_sparkline(acc_series, "--green"))
 
+    if private:
+        p.append(_visitors(visits))
+
     # Last build
     p.append("<h2>Last build</h2>\n")
     if build is None:
@@ -416,7 +463,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
         p.append("</tbody>\n</table>\n</div>\n</details>\n")
 
     p.append(f"""<footer>
-<p>Everything on this page is an aggregate of public OpenStreetMap data (ODbL) and of this site's own nightly build. No visitor data is collected, stored or shown — the site has no analytics.</p>
+<p>Everything on this page is an aggregate of public OpenStreetMap data (ODbL) and of this site's own nightly build. {"The Visitors block is Cloudflare's zone-level count of requests, kept per day; it identifies nobody." if private else "No visitor data is collected, stored or shown — the site has no analytics."}</p>
 <p>Sources: <a href="/data/stats.json">stats.json</a> · <a href="/data/history.json">history.json</a> · <a href="/data/changing_tables.geojson">changing_tables.geojson</a> · <a href="{esc(site_url)}/methods-en.html">how the classification works</a></p>
 </footer>
 </body>

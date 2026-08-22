@@ -201,6 +201,7 @@ mapping activity) plus a Monday all-clear digest with the week's
 grey→green transitions — see the "Ops mail" section in `docs/DEPLOY.md`.
 The same run rewrites a public ops page, `/ops.html`: the report plus last night's per-area
 build results, per-region counts and the daily history — aggregates only, no traffic numbers.
+A password-protected copy with Cloudflare's per-day request totals is opt-in, see there.
 
 ## Deploy
 Static files only — no API and no database. The site runs as a `caddy:2-alpine` container

@@ -1,0 +1,9 @@
+# Copy to deploy/private/ops-auth.caddy (git-ignored) on the server, then
+# `docker compose up -d papamap`. The hash comes from
+#   docker run --rm caddy:2-alpine caddy hash-password --plaintext 'the password'
+# Both directives are imported into `handle /private/*` in papamap.Caddyfile:
+# basic_auth gates, file_server serves web-data/private/ from /srv/private.
+basic_auth {
+	you $2a$14$replace-with-the-bcrypt-hash-from-caddy-hash-password
+}
+file_server

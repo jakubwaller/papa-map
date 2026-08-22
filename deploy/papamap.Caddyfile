@@ -10,6 +10,17 @@
 	# worth remembering. Rewrite, not redirect: a bookmark keeps the short URL.
 	rewrite /ops.html /data/ops.html
 
+	# The private ops page (the public one plus Cloudflare visit totals) lives
+	# under /srv/private, a separate mount of web-data/private. Nothing under
+	# /private/ is served unless deploy/private/*.caddy exists (git-ignored,
+	# server-only) and brings its own basic_auth + file_server — a checkout
+	# without it answers 404 there, never the page. docs/DEPLOY.md has the
+	# three-line snippet and how to hash the password.
+	handle /private/* {
+		import /etc/caddy/private/*.caddy
+		respond 404
+	}
+
 	# The data files are regenerated daily; the rest is versioned by URL — bar
 	# the Bundesland pages under /wickeltische/, which are also regenerated
 	# nightly but keep plain URLs (they are indexed). An hour of staleness on a
