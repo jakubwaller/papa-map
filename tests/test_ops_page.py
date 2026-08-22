@@ -188,6 +188,25 @@ def test_area_names_are_escaped():
 
 # ---- run_check writes it -----------------------------------------------------
 
+def test_page_and_history_default_next_to_stats(monkeypatch):
+    # An ops.env that overrides only the stats path (the documented minimum)
+    # must still find history.json and land the page in the served directory.
+    import importlib
+    monkeypatch.setenv("PAPAMAP_STATS_PATH", "/srv/out/stats.json")
+    monkeypatch.delenv("PAPAMAP_HISTORY_PATH", raising=False)
+    monkeypatch.delenv("PAPAMAP_OPS_HTML_PATH", raising=False)
+    from pipeline import config
+    importlib.reload(config)
+    mod = importlib.reload(ops)
+    try:
+        assert mod.OPS_HTML_PATH == "/srv/out/ops.html"
+        assert mod.OPS_HISTORY_PATH == "/srv/out/history.json"
+    finally:
+        monkeypatch.delenv("PAPAMAP_STATS_PATH")
+        importlib.reload(config)
+        importlib.reload(ops)
+
+
 def test_run_check_writes_the_page_and_caches_edits(tmp_path):
     gj = {"type": "FeatureCollection", "features": [
         {"type": "Feature", "geometry": None,

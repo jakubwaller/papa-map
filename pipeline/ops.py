@@ -32,7 +32,7 @@ from pathlib import Path
 import requests
 
 from . import ops_page
-from .config import GEOJSON_PATH, HISTORY_PATH, STATS_PATH
+from .config import GEOJSON_PATH, STATS_PATH
 from .export import PAPAMAP_THEME_URL, write_text_atomic
 
 STATE_PATH = os.environ.get("PAPAMAP_OPS_STATE_PATH", "ops-state.json")
@@ -43,6 +43,13 @@ STATE_PATH = os.environ.get("PAPAMAP_OPS_STATE_PATH", "ops-state.json")
 # disables it.
 OPS_HTML_PATH = os.environ.get(
     "PAPAMAP_OPS_HTML_PATH", str(Path(STATS_PATH).parent / "ops.html"))
+# history.json, the leaderboard's per-region counts. The build writes it next
+# to stats.json in every layout (Dockerfile, config defaults), so the sibling
+# is the right default here too — config.HISTORY_PATH's own default is the
+# checkout's web/data/, which an ops.env that only overrides the stats path
+# (the documented minimum) would miss.
+OPS_HISTORY_PATH = os.environ.get(
+    "PAPAMAP_HISTORY_PATH", str(Path(STATS_PATH).parent / "history.json"))
 # The build cron's log, `>> pipeline.log` in the repo directory where the ops
 # cron also runs; read for the "last build" section, optional.
 BUILD_LOG_PATH = os.environ.get("PAPAMAP_BUILD_LOG_PATH", "pipeline.log")
@@ -343,7 +350,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
         write_ops_page(html_path, now=now, stats=stats, counts=counts,
                        changes=changes, history=history[-HISTORY_DAYS:],
                        anomalies=anomalies, edits=cached_edits,
-                       history_path=history_path or HISTORY_PATH,
+                       history_path=history_path or OPS_HISTORY_PATH,
                        build_log_path=build_log_path or BUILD_LOG_PATH)
 
     if anomalies:
