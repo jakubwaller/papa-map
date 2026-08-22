@@ -147,9 +147,7 @@ alamstringina, sest <code>female_toilet</code> sisaldab sõna <code>male</code>.
   <li><span class="dot u"></span><strong>Hall:</strong> kõik muu. Asukohasilti pole, või on ainult
       vabatekst. Keegi pole ruumi märkinud. Hallid nõelad ongi see töö.</li>
 </ul>
-<p>Üks erand: objekte, millel on silt <code>centralkey</code> (muu väärtusega kui <code>no</code>),
-kaardil üldse ei näidata. Eurovõti ja sarnased keskvõtmesüsteemid väljastatakse ainult puude
-tõendamisel — ükskõik millises ruumis laud ka poleks, enamik isasid sellest uksest läbi ei saa.</p>
+<p><code>centralkey</code>-sildiga (muu kui <code>no</code>) objekt jääb kaardilt välja, kui võti lukustab kogu ukse: <code>access=centralkey</code>, laud invatualetis, või miski siltides ei ütle, et võti kehtib ainult ühe kabiini kohta. Avatud meeste- ja naistetualetiga ning lukustatud invakabiiniga kompleks (<code>wheelchair:access=centralkey</code>, või <code>male=yes</code> ja <code>female=yes</code>) jääb kaardile, hallina, kuni keegi ruumi kirja paneb. Eurovõtme saab ainult puude tõendamisel, nii et enamik isasid sellest uksest läbi ei saa.</p>
 
 <h2>Sinine rõngas: mänguala</h2>
 <p>Sinise rõngaga nõelal on lisaks ka mänguala &mdash; koht, kus last ei mähita lihtsalt ära, vaid
