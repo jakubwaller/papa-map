@@ -118,24 +118,23 @@
   &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
   &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a></p>
 <h1>PapaMap — Methoden &amp; Ehrlichkeit</h1>
-<p class="muted">Wickeltische, die ein Vater erreicht. Die weltweiten taginfo-Zahlen unten holt
+<p class="muted">Wickeltische, die ein Papa erreicht. Die weltweiten Zahlen auf dieser Seite holt
 der nächtliche Build. Die Stichprobe über acht Innenstädte ist vom 26.&nbsp;Juli&nbsp;2026 und
 bleibt so stehen.</p>
 
-<h2>Was diese Karte ist. Und was nicht.</h2>
-<p>PapaMap zeigt Orte in 44 europäischen Ländern &mdash; von Island bis Zypern, von Portugal
-bis in die Ukraine &mdash;, für die
-OpenStreetMap einen Wickeltisch kennt (<code>changing_table=yes</code> oder <code>limited</code>).
-Die Farbe sagt, ob ein Papa den Tisch erreicht. Die Karte liest nur OSM und schreibt nirgendwohin.
-Reparieren kannst du die Daten direkt auf OSM, über die Links an jedem Pin.</p>
-<p>Ein Ranking, welche Stadt die beste Toilettenversorgung hat, ist das hier nicht. Warum das aus
-offenen Daten nicht ehrlich geht, steht weiter unten.</p>
+<h2>Was diese Karte ist</h2>
+<p>PapaMap zeigt Orte in Europa, für die OpenStreetMap einen Wickeltisch kennt
+(<code>changing_table=yes</code> oder <code>limited</code>). Die Farbe sagt, ob ein Papa den Tisch
+erreicht. Die Karte liest nur OSM und schreibt nirgendwohin. Wenn was nicht stimmt, reparierst du
+es direkt auf OSM, über die Links an jedem Pin.</p>
+<p>Ein Ranking, welche Stadt die besten Toiletten hat, ist das nicht. Warum das aus offenen Daten
+nicht geht, steht weiter unten.</p>
 
-<h2>Was die Farben bedeuten (die exakte Regel)</h2>
-<p>Auf der Karte landen nur Objekte mit <code>changing_table=yes</code> oder
+<h2>Was die Farben bedeuten</h2>
+<p>Einen Pin bekommen nur Objekte mit <code>changing_table=yes</code> oder
 <code>limited</code> (<code>no</code> zählt nur in die Statistik). Die Farbe kommt aus
 <code>changing_table:location</code>. Der Wert wird an <code>;</code> getrennt, getrimmt,
-kleingeschrieben und als ganzes Token verglichen. Nie als Teilstring, denn
+kleingeschrieben und als ganzes Token verglichen, nie als Teilstring, denn
 <code>female_toilet</code> enthält <code>male</code>.</p>
 <ul>
   <li><span class="dot g"></span><strong>Grün:</strong> ein Token ist
@@ -145,89 +144,67 @@ kleingeschrieben und als ganzes Token verglichen. Nie als Teilstring, denn
   <li><span class="dot r"></span><strong>Rot:</strong> sonst, wenn ein Token
       <code>female_toilet</code> ist. Den Tisch gibt es, aber nur im Damen-WC.</li>
   <li><span class="dot u"></span><strong>Grau:</strong> alles andere. Kein Location-Tag oder nur
-      Freitext. Niemand hat den Raum erfasst. Die grauen Pins sind die Aufgabe.</li>
+      Freitext. Den Raum hat noch niemand eingetragen.</li>
 </ul>
-<p>Eine Ausnahme gibt es: Objekte mit einem <code>centralkey</code>-Tag (außer <code>no</code>)
-zeigt die Karte gar nicht. Den Euroschlüssel und ähnliche Zentralschlüssel bekommt man nur mit
-nachgewiesener Behinderung — egal in welchem Raum der Tisch hängt, die meisten Väter kommen durch
-diese Tür nicht durch.</p>
+<p>Objekte mit einem <code>centralkey</code>-Tag (außer <code>no</code>) bekommen keinen Pin.
+Den Euroschlüssel gibt es nur mit nachgewiesener Behinderung, die meisten Väter kommen durch
+diese Tür also nicht.</p>
 
 <h2>Der blaue Ring: Spielecke</h2>
-<p>Ein Pin mit blauem Ring hat außerdem eine Spielecke &mdash; ein Ort, an dem man nicht nur
-wickelt, sondern auch bleibt. Der Filter <em>Mit Spielecke</em> in der Chip-Leiste zeigt nur diese.
-Gezählt wird ein Ort, wenn eines davon in OSM steht:</p>
+<p>Ein Pin mit blauem Ring hat außerdem eine Spielecke. Der Chip <em>Mit Spielecke</em> zeigt nur
+diese. Ein Ort zählt, wenn eines dieser Tags in OSM steht:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> oder
-      <code>designated</code> &mdash; die im Wiki dokumentierte Art, &bdquo;drinnen&ldquo; zu
-      sagen.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> oder <code>designated</code></li>
   <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> oder
-      <code>designated</code> &mdash; die Spielecke im Café, im Restaurant, beim Bäcker. Das
-      meistbenutzte Tag, das aber offen lässt, ob drinnen oder draußen.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; ein Indoorspielplatz.</li>
+      <code>designated</code> (das häufigste Tag, es sagt nicht, ob drinnen oder draußen)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
   <li><span class="ring"></span><code>leisure=playground</code> zusammen mit
-      <code>indoor=yes</code> &mdash; dasselbe, andersherum getaggt.</li>
+      <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> zählt nicht: der Sandkasten im Biergarten ist nicht das, was der Ring
-verspricht. <code>no</code> zählt nicht und <code>limited</code> auch nicht &mdash; das Wiki
-definiert es als &bdquo;Spielzeug vorhanden, aber keine eigene Fläche&ldquo;. Steht irgendwo
-ausdrücklich <code>kids_area:indoor=no</code>, gewinnt das gegen ein bloßes
+<p><code>outdoor</code>, <code>no</code> und <code>limited</code> zählen nicht. Ein
+ausdrückliches <code>kids_area:indoor=no</code> gewinnt gegen ein bloßes
 <code>kids_area=yes</code>.</p>
-<p>Das ist ein Abzeichen, kein vierter Status. Ein Ort ohne diese Tags hat nicht &bdquo;keine
-Spielecke&ldquo; &mdash; über ihn steht in OSM einfach nichts. Deshalb gibt es hier kein Grau und
-keine Aufgabe: bei <code>changing_table:location</code> ist das Schweigen aussagekräftig, weil der
-Tisch nachweislich existiert. Hier schweigen fast alle Objekte, und das heißt nichts. Wer eine
-Spielecke kennt, trägt sie trotzdem gern ein &mdash; im OSM-Editor, mit
-<code>kids_area=yes</code>.</p>
-
-<h2>Die leeren blauen Ringe: Spielorte ohne Antwort</h2>
-<p>Dieselbe Regel trifft auf viel mehr Orte zu, als die Karte Pins hat. Nur
-<span data-stat="play_tables">111</span> von ihnen haben überhaupt ein
+<p>Der Ring ist ein Abzeichen, keine vierte Farbe. Ein Ort ohne diese Tags hat nicht &bdquo;keine
+Spielecke&ldquo;, in OSM steht dazu einfach nichts, und das gilt für fast alle Orte. Deshalb gibt
+es hier kein Grau.</p>
+<p>Auf viel mehr Orte trifft die Regel zu, als Pins haben. Nur
+<span data-stat="play_tables">111</span> davon haben überhaupt ein
 <code>changing_table</code>-Tag. Bei <span data-stat="play_places">701</span> weiteren hat niemand
-die erste Frage beantwortet: Gibt es hier einen Wickeltisch? Ja, nein, weiß keiner &mdash; in OSM
-steht dazu gar nichts.</p>
-<p>Diese <span data-stat="play_places">701</span> kann die Karte nicht einfärben, denn es gibt
-nichts einzufärben. Sie sind auch nicht grau: Grau heißt &bdquo;der Tisch existiert, der Raum
-fehlt&ldquo;, und das gilt hier nicht. Sie bekommen deshalb einen eigenen Chip, <em>Nur
-Spielecke</em>, der standardmäßig aus ist, und einen leeren blauen Ring statt eines gefüllten
-Pins.</p>
-<p>Es sind die aussichtsreichsten offenen Fragen der ganzen Karte. Ein Indoorspielplatz, ein Café
-mit Bällebad, ein Restaurant mit Spielzimmer &mdash; ein Vater mit Kleinkind geht dort ohnehin hin,
-und wenn er da ist, weiß er die Antwort. Ein Klick auf den Ring öffnet MapComplete direkt auf dieser
-einen Frage. Wird sie beantwortet, verschwindet der Ring beim nächsten nächtlichen Update und ein
-richtiger Pin steht an seiner Stelle.</p>
+die erste Frage beantwortet: Gibt es hier einen Wickeltisch? Die kann die Karte nicht einfärben,
+also bekommen sie einen leeren blauen Ring und einen eigenen Chip, <em>Nur Spielecke</em>, der
+standardmäßig aus ist. Wer mit Kind sowieso dort hingeht, kennt die Antwort. Ein Klick auf den
+Ring öffnet MapComplete genau bei dieser Frage.</p>
 
 <h2>Wie du einen grauen Pin reparierst</h2>
-<p>Grau heißt: eine Antwort fehlt. Wo ist der Wickeltisch? Beantworten kann das jeder mit einem
-kostenlosen OSM-Konto, vor Ort, in unter einer Minute:</p>
+<p>Grau heißt, eine Antwort fehlt: Wo ist der Tisch? Das kann jeder mit einem kostenlosen
+OSM-Konto vor Ort in unter einer Minute beantworten.</p>
 <ul>
   <li><strong>MapComplete (jedes Handy, im Browser):</strong> &bdquo;Auf MapComplete
-      beantworten&ldquo; am grauen Pin öffnet dasselbe Objekt im eigenen PapaMap-Thema von
-      MapComplete &mdash; bei jedem Pin, damit die Edits als von hier kommend erkennbar sind.
-      MapComplete warnt dabei
-      einmal vor einem inoffiziellen Thema, das ist okay. Mit dem OSM-Konto einloggen und die
-      Wickeltisch-Fragen beantworten, auch die nach dem Raum. Die Antwort geht direkt in
-      OpenStreetMap und ist nach dem nächsten nächtlichen Update hier zu sehen.</li>
+      beantworten&ldquo; am grauen Pin öffnet dasselbe Objekt im PapaMap-Thema von MapComplete.
+      MapComplete warnt einmal vor einem inoffiziellen Thema, das ist okay. Mit dem OSM-Konto
+      einloggen und die Wickeltisch-Fragen beantworten, auch die nach dem Raum. Die Antwort geht
+      direkt in OpenStreetMap und ist nach dem nächsten nächtlichen Update hier zu sehen.</li>
   <li><strong>StreetComplete (Android):</strong> hat eine Wickeltisch-Quest, die standardmäßig aus
       ist. Unter <em>Einstellungen &rarr; Aufgabenauswahl und -reihenfolge</em> nach
-      &bdquo;Wickeltisch&ldquo; suchen und anhaken. Sie fragt nur ja/nein. Für die Raum-Frage an
-      einem grauen Pin nimmst du MapComplete.</li>
+      &bdquo;Wickeltisch&ldquo; suchen und anhaken. Sie fragt nur ja/nein. Für die Raum-Frage
+      nimmst du MapComplete.</li>
 </ul>
-<p class="muted">Die Edits laufen unter deinem OSM-Konto und gehören allen. Sie überleben diese
-Website und nützen jeder App, die OpenStreetMap liest.</p>
+<p class="muted">Die Edits laufen unter deinem OSM-Konto und nützen jeder App, die OpenStreetMap
+liest, nicht nur dieser.</p>
 
 <h2 id="contribute">Wie du einen fehlenden Ort hinzufügst</h2>
-<p>PapaMap speichert selbst nichts. Einen Ort hinzufügen heißt darum immer: OpenStreetMap
-editieren. Der Knopf <em>+ Ort hinzufügen</em> auf der Karte öffnet den passenden Editor am
-aktuellen Ausschnitt.</p>
+<p>PapaMap speichert selbst nichts. Einen Ort hinzufügen heißt also OpenStreetMap editieren. Der
+Knopf <em>+ Ort hinzufügen</em> auf der Karte öffnet den passenden Editor am aktuellen
+Ausschnitt.</p>
 
 <h3>Eine öffentliche Toilette fehlt komplett</h3>
 <p>Das <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMap-Thema
 von MapComplete</a> nehmen (der erste Link im Dialog). Einloggen, auf die Karte tippen, wo die
-Toilette ist, &bdquo;eine öffentliche Toilette&ldquo; wählen, Fragen beantworten. Auch die nach
-Wickeltisch und Raum.</p>
+Toilette ist, &bdquo;eine öffentliche Toilette&ldquo; wählen und die Fragen beantworten, auch die
+nach Wickeltisch und Raum.</p>
 
 <h3>Ein Café, Laden oder Restaurant hat einen Tisch, den niemand erfasst hat</h3>
-<p>Den Ort gibt es in OSM fast sicher schon. Es fehlt nur das <code>changing_table</code>-Tag.
+<p>Den Ort gibt es in OSM fast sicher schon, es fehlt nur das <code>changing_table</code>-Tag.
 Im OSM-Editor (iD) dauert das etwa zwei Minuten:</p>
 <ol>
   <li>Auf <a href="https://www.openstreetmap.org">openstreetmap.org</a> ein kostenloses Konto
@@ -250,16 +227,15 @@ Im OSM-Editor (iD) dauert das etwa zwei Minuten:</p>
       (&bdquo;Wickeltisch-Raum ergänzt&ldquo;), hochladen. Nach einer Minute live auf OSM, nach
       dem nächsten nächtlichen Update auf PapaMap.</li>
 </ol>
-<p class="muted">Bitte nur taggen, was du selbst gesehen hast. OSM verzeichnet, was ist, nicht was
-sein sollte. Kennst du den Raum nicht, ist <code>changing_table=yes</code> allein trotzdem
-nützlich: der Ort wird ein grauer Pin, und der nächste Papa beantwortet die Raumfrage.</p>
+<p class="muted">Bitte nur taggen, was du selbst gesehen hast. Kennst du den Raum nicht, ist
+<code>changing_table=yes</code> allein trotzdem nützlich: Der Ort wird ein grauer Pin, und der
+nächste Papa beantwortet die Raumfrage.</p>
 
-<h2>Warum ein Versorgungsindex aus OSM nicht geht</h2>
-<p>Das naheliegende größere Projekt wäre ein Verhältnis der Toilettenversorgung Männer zu Frauen
-pro Stadt. Die Zahl, um die es bei &bdquo;Potty Parity&ldquo; eigentlich geht. Aus OpenStreetMap
-lässt sie sich nicht berechnen. Wir haben es vor dem Bau geprüft, mit einer Stichprobe über acht
-Innenstädte (Berlin, London, Paris, New York, Tokio&nbsp;23&nbsp;Bezirke, Amsterdam, Wien,
-Melbourne; 26.&nbsp;Juli&nbsp;2026):</p>
+<h2>Warum es kein Städte-Ranking gibt</h2>
+<p>Das naheliegende größere Projekt wäre das Verhältnis von Männer- zu Frauentoiletten pro Stadt,
+die Zahl, um die es bei &bdquo;Potty Parity&ldquo; geht. Ich habe vor dem Bau geprüft, ob OSM
+diese Zahl hergibt. Tut es nicht. Eine Stichprobe über acht Innenstädte vom
+26.&nbsp;Juli&nbsp;2026:</p>
 <table>
   <tr><th>Stadt</th><th>Erfasste Toiletten</th><th>Irgendein Geschlechter-Tag</th><th>Beide M&nbsp;+&nbsp;F</th></tr>
   <tr><td>Berlin</td><td>1.173</td><td>660</td><td>119</td></tr>
@@ -272,41 +248,25 @@ Melbourne; 26.&nbsp;Juli&nbsp;2026):</p>
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Alle</strong></td><td><strong>9.674</strong></td><td><strong>2.888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Nur 29,9% der erfassten Toiletten haben überhaupt ein Geschlechter-Tag. Beides
-      (male und female) haben 8,5%.</li>
-  <li>Die Tags sind reine Ja/Nein-Angaben, keine Zählwerte. Kabinenzahlen pro Geschlecht: in allen
-      acht Städten null. Der einzige Kapazitätsschlüssel <code>toilets:num_chambers</code>
-      (~27k Verwendungen) ist geschlechtslos und stammt fast komplett aus einem alten Import.
-      Seine Varianten <code>:female</code> / <code>:male</code> haben je 2 Verwendungen weltweit.</li>
-  <li>Hamburg, am selben Tag geprüft: 443 erfasste Toiletten, keine mit einem
-      <code>toilets:num_chambers*</code>-Tag. Die Leiste auf der <a href="./">Startseite</a>
-      rechnet diese Zahlen jede Nacht neu.</li>
-  <li>Und: Tagging-Quoten messen die Mapper-Community, nicht die Städte. Einzelkabinen bleiben
-      korrekt ohne Geschlechter-Tag. Ein Städtevergleich würde OSM-Beitragende benoten, nicht
-      Toilettengerechtigkeit.</li>
-</ul>
-<p>Ehrlich ist also nur: die Versorgung selbst kann man aus offenen Daten heute nicht messen.
-Diese Website misst, was messbar ist, und macht aus den Lücken Beiträge.</p>
+<p>Nur 29,9% der erfassten Toiletten haben überhaupt ein Geschlechter-Tag, 8,5% haben beide. Die
+Tags sind Ja/Nein-Angaben, keine Zählwerte, und Kabinenzahlen pro Geschlecht gibt es in allen acht
+Städten keine. Und eine Tagging-Quote misst die Mapper-Community, nicht die Stadt. Ein Ranking
+würde OSM-Beitragende benoten, nicht Toiletten. Deshalb bleibt die Seite bei dem, was sich messen
+lässt.</p>
 
-<h2>Der eine berechenbare Fakt: wo die Tische sind</h2>
-<p><code>changing_table:location</code> ist unseres Wissens das einzige offene Vokabular, das
-festhält, in welchem Raum ein Wickeltisch steht. Es ist dünn besetzt:
+<h2>Wo die Tische sind</h2>
+<p><code>changing_table:location</code> ist das einzige offene Vokabular, das ich kenne, das
+festhält, in welchem Raum ein Wickeltisch steht. Es ist selten:
 <span data-stat="location_total">3.659</span> von <span data-stat="ct_total">77.000</span>
-<code>changing_table</code>-Objekten weltweit, <span data-stat="share">4,8&nbsp;%</span>. Aber wo
-es existiert, ist es einseitig (taginfo, <span data-stat="date">26.&nbsp;Juli&nbsp;2026</span>):</p>
-<ul>
-  <li>Tische nur im Damen-WC: <strong data-stat="female_only">485</strong>.</li>
-  <li>Tische nur im Herren-WC: <strong data-stat="male_only">71</strong>. Grob
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> sind in
-      beiden Räumen getaggt, <span data-stat="male_any">410</span> verzeichnen überhaupt einen
-      Herren-WC-Tisch. Weltweit.</li>
-</ul>
+<code>changing_table</code>-Objekten weltweit, <span data-stat="share">4,8&nbsp;%</span>. Wo es
+existiert, ist es einseitig (taginfo, <span data-stat="date">26.&nbsp;Juli&nbsp;2026</span>):
+<strong data-stat="female_only">485</strong> Tische nur im Damen-WC,
+<strong data-stat="male_only">71</strong> nur im Herren-WC, grob
+<span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> stehen in beiden
+Räumen.</p>
 <p>Die Stichprobe ist klein, und Mapper entscheiden, was sie erfassen. Das exakte Verhältnis also
-nicht überinterpretieren. Die Richtung passt aber zu dem, was längst dokumentiert ist:
-Wickeltische hängen standardmäßig im Damen-WC. Das sperrt Papas aus und unterstellt nebenbei, wer
-fürs Wickeln zuständig ist. Diese Karte macht die fehlenden Daten sichtbar. Und leicht
-reparierbar.</p>
+nicht überinterpretieren. Die Richtung ist dieselbe wie überall: Wickeltische hängen standardmäßig
+im Damen-WC. Diese Karte zeigt, wo die Daten fehlen, und jeder graue Pin hat einen Edit-Knopf.</p>
 
 <h2>Datenlizenz &amp; Attribution</h2>
 <p>Alle Kartendaten &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
@@ -317,18 +277,14 @@ Die globalen Tag-Statistiken kommen von <a href="https://taginfo.openstreetmap.o
 Der Code der Website ist MIT-lizenziert.</p>
 
 <h2>Datenschutz</h2>
-<p>Eine statische Website. Keine Konten, keine Cookies, keine Analytics, keine Tracking-Skripte.
-Die Seite speichert nichts über dich und hat keine Datenbank. Die Kartenkacheln kommen von den
-Tile-Servern von OpenStreetMap, für diese Anfragen gilt die
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">Datenschutzerklärung der OSMF</a>. Folgst
-du einem Link zu MapComplete, StreetComplete oder openstreetmap.org, bist du auf deren Seiten und
-editierst unter deinem eigenen OSM-Konto. Über uns läuft dabei nichts. Formales:
+<p>Eine statische Website. Sie setzt keine Cookies und hat keine Analytics. Die Kartenkacheln
+kommen von den Tile-Servern von OpenStreetMap, für diese Anfragen gilt die
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">Datenschutzerklärung der OSMF</a>. Links
+zu MapComplete, StreetComplete oder openstreetmap.org führen auf deren Seiten, dort editierst du
+unter deinem eigenen OSM-Konto. Formales:
 <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
 
-<p class="muted">Quellen: Overpass-Stichprobe über 8 Innenstädte (9.674 Toiletten) vom
-26.&nbsp;Juli&nbsp;2026 und die taginfo-Schlüsselstatistik mit dem oben genannten Stand. Die
-lokalen Zahlen kommen aus derselben nächtlichen Abfrage, die auch die Karte baut.</p>
 
 <h2>Wie die Seite entsteht</h2>
 <p>Beim Programmieren und beim Schreiben der Texte hilft mir KI. Drübergeguckt habe ich
