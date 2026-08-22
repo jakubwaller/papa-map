@@ -20,6 +20,11 @@
 		import /etc/caddy/private/*.caddy
 		respond 404
 	}
+	# web-data/private sits inside the /data mount as well, so the same file
+	# has a second address. That one is never served, snippet or not.
+	handle /data/private/* {
+		respond 404
+	}
 
 	# The data files are regenerated daily; the rest is versioned by URL — bar
 	# the Bundesland pages under /wickeltische/, which are also regenerated
