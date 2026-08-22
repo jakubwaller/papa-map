@@ -2,11 +2,11 @@
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=eu2";
+         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=eu3";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=eu2";
+         langUrl } from "./i18n.js?v=eu3";
 
-// ---- Language: German default, nine languages, picked not cycled. A shared
+// ---- Language: German default, thirty-one languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
 // preference list; choosing stores it and strips the param so it doesn't
 // override the next visit.

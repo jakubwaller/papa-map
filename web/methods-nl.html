@@ -6,9 +6,9 @@
 <title>PapaMap — Methoden &amp; eerlijkheid</title>
 <meta name="description" content="Hoe PapaMap verschoontafels (luiertafels) uit OpenStreetMap inkleurt, waarom je daaruit geen index van het toiletaanbod kunt bouwen en hoe je zelf een grijze pin repareert.">
 <!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
-     language versions were never actually linked to each other. Nine of them
-     since 2026-08-19; every page must list every other or the set is
-     unreciprocated and ignored. -->
+     language versions were never actually linked to each other. Thirty-one
+     of them since the Europe-complete sweep (2026-08-22); every page must
+     list every other or the set is unreciprocated and ignored. -->
 <link rel="canonical" href="https://papamap.de/methods-nl.html">
 <link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
 <link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
@@ -19,6 +19,28 @@
 <link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
 <link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
 <link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html">
+<link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html">
+<link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html">
+<link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html">
+<link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html">
+<link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html">
+<link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html">
+<link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html">
+<link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html">
+<link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html">
+<link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html">
+<link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html">
+<link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html">
+<link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html">
+<link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html">
+<link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html">
+<link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html">
+<link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html">
+<link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html">
+<link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html">
+<link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html">
+<link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html">
 <link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
 <style>
@@ -54,9 +76,9 @@
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
-  /* Nine languages, listed by their own names — "This page in X" nine times
-     would be a paragraph, and a reader who cannot read this page still
-     recognises "Čeština". The current one is <strong>, not a link. */
+  /* Thirty-one languages, listed by their own names — "This page in X" that
+     many times would be a page of its own, and a reader who cannot read this
+     page still recognises "Čeština". The current one is <strong>, not a link. */
   .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
   .back.langs strong { color: var(--fg); font-weight: 600; }
 </style>
@@ -72,7 +94,29 @@
   &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
   &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
   &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
-  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a></p>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a>
+  &middot; <a href="methods-bs.html" hreflang="bs" lang="bs">Bosanski</a>
+  &middot; <a href="methods-ca.html" hreflang="ca" lang="ca">Català</a>
+  &middot; <a href="methods-et.html" hreflang="et" lang="et">Eesti</a>
+  &middot; <a href="methods-es.html" hreflang="es" lang="es">Español</a>
+  &middot; <a href="methods-hr.html" hreflang="hr" lang="hr">Hrvatski</a>
+  &middot; <a href="methods-is.html" hreflang="is" lang="is">Íslenska</a>
+  &middot; <a href="methods-lv.html" hreflang="lv" lang="lv">Latviešu</a>
+  &middot; <a href="methods-lt.html" hreflang="lt" lang="lt">Lietuvių</a>
+  &middot; <a href="methods-hu.html" hreflang="hu" lang="hu">Magyar</a>
+  &middot; <a href="methods-no.html" hreflang="no" lang="no">Norsk</a>
+  &middot; <a href="methods-pt.html" hreflang="pt" lang="pt">Português</a>
+  &middot; <a href="methods-ro.html" hreflang="ro" lang="ro">Română</a>
+  &middot; <a href="methods-sq.html" hreflang="sq" lang="sq">Shqip</a>
+  &middot; <a href="methods-sk.html" hreflang="sk" lang="sk">Slovenčina</a>
+  &middot; <a href="methods-sl.html" hreflang="sl" lang="sl">Slovenščina</a>
+  &middot; <a href="methods-fi.html" hreflang="fi" lang="fi">Suomi</a>
+  &middot; <a href="methods-el.html" hreflang="el" lang="el">Ελληνικά</a>
+  &middot; <a href="methods-be.html" hreflang="be" lang="be">Беларуская</a>
+  &middot; <a href="methods-bg.html" hreflang="bg" lang="bg">Български</a>
+  &middot; <a href="methods-mk.html" hreflang="mk" lang="mk">Македонски</a>
+  &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
+  &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a></p>
 <h1>PapaMap — methoden &amp; eerlijkheid</h1>
 <p class="muted">Verschoontafels waar een papa bij kan. De wereldwijde taginfo-cijfers hieronder
 haalt de nachtelijke build op. De steekproef over acht binnensteden is van 26&nbsp;juli&nbsp;2026

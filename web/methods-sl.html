@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PapaMap — metode &amp; poštenost</title>
+<meta name="description" content="Kako PapaMap obarva previjalne mize iz OpenStreetMap, zakaj iz teh podatkov ni mogoče sestaviti ocene ponudbe in kako sam popraviš sivo bucko.">
+<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
+     language versions were never actually linked to each other. Thirty-one
+     of them since the Europe-complete sweep (2026-08-22); every page must
+     list every other or the set is unreciprocated and ignored. -->
+<link rel="canonical" href="https://papamap.de/methods-sl.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
+<link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html">
+<link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html">
+<link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html">
+<link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
+<link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
+<link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html">
+<link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html">
+<link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html">
+<link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html">
+<link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html">
+<link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html">
+<link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html">
+<link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html">
+<link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html">
+<link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html">
+<link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html">
+<link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html">
+<link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html">
+<link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html">
+<link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html">
+<link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html">
+<link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html">
+<link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html">
+<link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html">
+<link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html">
+<link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html">
+<link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
+    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
+      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
+    }
+  }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+         background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
+  table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
+  li { margin: 0.3rem 0; }
+  .back { font-size: 0.9rem; }
+  /* Thirty-one languages, listed by their own names — "This page in X" that
+     many times would be a page of its own, and a reader who cannot read this
+     page still recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">&larr; Nazaj na zemljevid</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a>
+  &middot; <a href="methods-bs.html" hreflang="bs" lang="bs">Bosanski</a>
+  &middot; <a href="methods-ca.html" hreflang="ca" lang="ca">Català</a>
+  &middot; <a href="methods-et.html" hreflang="et" lang="et">Eesti</a>
+  &middot; <a href="methods-es.html" hreflang="es" lang="es">Español</a>
+  &middot; <a href="methods-hr.html" hreflang="hr" lang="hr">Hrvatski</a>
+  &middot; <a href="methods-is.html" hreflang="is" lang="is">Íslenska</a>
+  &middot; <a href="methods-lv.html" hreflang="lv" lang="lv">Latviešu</a>
+  &middot; <a href="methods-lt.html" hreflang="lt" lang="lt">Lietuvių</a>
+  &middot; <a href="methods-hu.html" hreflang="hu" lang="hu">Magyar</a>
+  &middot; <a href="methods-no.html" hreflang="no" lang="no">Norsk</a>
+  &middot; <a href="methods-pt.html" hreflang="pt" lang="pt">Português</a>
+  &middot; <a href="methods-ro.html" hreflang="ro" lang="ro">Română</a>
+  &middot; <a href="methods-sq.html" hreflang="sq" lang="sq">Shqip</a>
+  &middot; <a href="methods-sk.html" hreflang="sk" lang="sk">Slovenčina</a>
+  &middot; <strong lang="sl">Slovenščina</strong>
+  &middot; <a href="methods-fi.html" hreflang="fi" lang="fi">Suomi</a>
+  &middot; <a href="methods-el.html" hreflang="el" lang="el">Ελληνικά</a>
+  &middot; <a href="methods-be.html" hreflang="be" lang="be">Беларуская</a>
+  &middot; <a href="methods-bg.html" hreflang="bg" lang="bg">Български</a>
+  &middot; <a href="methods-mk.html" hreflang="mk" lang="mk">Македонски</a>
+  &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
+  &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a></p>
+<h1>PapaMap — metode &amp; poštenost</h1>
+<p class="muted">Previjalne mize, ki jih doseže oče. Spodnje svetovne številke iz taginfo prihajajo iz
+nočne posodobitve. Vzorec iz osmih mestnih središč je z dne 26.&nbsp;jul.&nbsp;2026 in ostaja
+tak.</p>
+
+<h2>Kaj ta zemljevid je. In kaj ni.</h2>
+<p>PapaMap prikazuje kraje v 44 evropskih državah — od Islandije do Cipra, od Portugalske do
+Ukrajine —, kjer OpenStreetMap
+ve za previjalno mizo za dojenčke
+(<code>changing_table=yes</code> ali <code>limited</code>). Barva pove, ali oče do mize lahko
+pride. Zemljevid bere samo OSM in nič drugega, sam pa ne zapisuje nikamor. Popravljanje podatkov
+poteka na samem OSM, prek povezav pri vsaki bucki.</p>
+<p>Lestvica, katero mesto ima najboljšo ponudbo stranišč, to ni. Zakaj tega iz odprtih podatkov
+pošteno ni mogoče narediti, je pojasnjeno spodaj.</p>
+
+<h2>Kaj pomenijo barve (natančno pravilo)</h2>
+<p>Na zemljevid pridejo samo objekti s <code>changing_table=yes</code> ali <code>limited</code>
+(<code>no</code> se šteje samo v statistiki). Barva izhaja iz
+<code>changing_table:location</code>. Vrednost se razdeli pri <code>;</code>, obreže presledkov,
+pretvori v male črke in primerja kot cel token. Nikoli kot podniz, ker <code>female_toilet</code>
+vsebuje <code>male</code>.</p>
+<ul>
+  <li><span class="dot g"></span><strong>Zelena:</strong> en od tokenov je
+      <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
+      <code>room</code>, <code>wheelchair_toilet</code> ali <code>sales_area</code>.
+      Oče lahko pride do nje.</li>
+  <li><span class="dot r"></span><strong>Rdeča:</strong> sicer, če je en od tokenov
+      <code>female_toilet</code>. Miza obstaja, a samo v ženskem stranišču.</li>
+  <li><span class="dot u"></span><strong>Siva:</strong> vse drugo. Brez taga za lokacijo, ali
+      samo prosto besedilo. Nihče ni zabeležil prostora. Sive bucke so tista naloga.</li>
+</ul>
+<p>Ena izjema: objekti s tagom <code>centralkey</code> (drugačnim od <code>no</code>) se sploh ne
+prikažejo. Evro ključ in podobni sistemi centralnega ključa se izdajajo samo ob dokazilu o
+invalidnosti — ne glede na to, v katerem prostoru je miza, večina očetov skozi ta vrata ne
+pride.</p>
+
+<h2>Modri obroč: igralni kotiček</h2>
+<p>Bucka z modrim obročem ima poleg tega tudi igralni kotiček &mdash; kraj, kjer otroka ne samo
+previješ, ampak tudi malo ostaneš. Filter <em>Z igralnim kotičkom</em> zemljevid zoži samo na te
+kraje. Kraj šteje, če OSM zabeleži karkoli od tega:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> ali <code>designated</code>
+      &mdash; način, kako wiki dokumentira, da je nekaj notri.</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> ali
+      <code>designated</code> &mdash; igralni kotiček v kavarni, restavraciji, pekarni.
+      Najpogosteje uporabljen tag, čeprav pušča odprto, ali je notri ali zunaj.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; komercialno notranje
+      igrišče.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> skupaj z
+      <code>indoor=yes</code> &mdash; isto, samo otagano v obratnem vrstnem redu.</li>
+</ul>
+<p><code>outdoor</code> se ne šteje: peskovnik na vrtu pivnice ni to, kar obroč obljublja.
+Ne šteje se niti <code>no</code> niti <code>limited</code> — wiki slednjega definira kot
+&bdquo;igrače so na voljo, a brez določenega prostora&ldquo;. Kjer je izrecno naveden
+<code>kids_area:indoor=no</code>, ta zmaga nad golim <code>kids_area=yes</code>.</p>
+<p>To je značka, ne četrto stanje. Kraj brez teh tagov nima &bdquo;nič igralnega
+kotička&ldquo; &mdash; OSM o tem preprosto ne pove nič. Zato tu ni sive barve in ni poziva k
+dejanju: pri <code>changing_table:location</code> je molk pomenljiv, ker je znano, da miza
+obstaja. Tu molči skoraj vsak objekt, in to ne pomeni nič. Če igralni kotiček poznaš, ga vseeno
+lahko dodaš &mdash; v urejevalniku OSM, kot <code>kids_area=yes</code>.</p>
+
+<h2>Prazni modri obroči: kraji za igro brez odgovora</h2>
+<p>Isto pravilo ustreza veliko več krajem, kot jih ima zemljevid bucke. Samo
+<span data-stat="play_tables">111</span> od njih sploh ima kakšen tag <code>changing_table</code>.
+Pri še <span data-stat="play_places">701</span> ni nihče odgovoril na prvo vprašanje: je tu
+previjalna miza? Da, ne, nihče ne ve — v OSM o tem ni čisto nič.</p>
+<p>Teh <span data-stat="play_places">701</span> zemljevid ne more obarvati, ker ni česa barvati.
+Niso niti sivi: siva pomeni &bdquo;miza obstaja, prostor manjka&ldquo;, kar tu ne velja. Zato
+dobijo svoj filter, <em>Samo igralni kotiček</em>, ki je privzeto izklopljen, in namesto polne
+bucke prazen moder obroč.</p>
+<p>To so najbolj obetavna odprta vprašanja na celem zemljevidu. Notranje igrišče, kavarna z
+bazenom z žogicami, restavracija z igralnico &mdash; oče z malčkom bo tja šel tako ali tako, in
+ko je enkrat tam, odgovor pozna. Klik na obroč odpre MapComplete natanko pri tem enem vprašanju.
+Odgovoriš, in obroč izgine ob naslednji nočni posodobitvi, namesto njega pa se pojavi prava
+bucka.</p>
+
+<h2>Kako popraviti sivo bucko</h2>
+<p>Siva pomeni, da manjka en odgovor. Kje je previjalna miza? Nanj lahko kdorkoli z brezplačnim
+računom OSM odgovori kar na kraju samem, v manj kot minuti:</p>
+<ul>
+  <li><strong>MapComplete (kateri koli telefon, v brskalniku):</strong> &bdquo;Odgovori na
+      MapComplete&ldquo; pri sivi bucki odpre isti objekt v lastni MapComplete temi PapaMap
+      &mdash; pri vsaki bucki, da so popravki prepoznavni kot taki, ki prihajajo od tu.
+      MapComplete pri tem enkrat opozori na neuradno temo, to je v redu. Vprašanja teme so
+      trenutno na voljo samo v angleščini. Prijavi se s svojim računom OSM in odgovori na
+      vprašanja o previjalni mizi, tudi na tisto o prostoru. Odgovor gre naravnost v
+      OpenStreetMap in se tu pojavi po naslednji nočni posodobitvi.</li>
+  <li><strong>StreetComplete (Android):</strong> ima nalogo za previjalno mizo, ki je privzeto
+      izklopljena. Pojdi v <em>Nastavitve &rarr; Izbira nalog in vrstni red prikaza</em>, poišči
+      &bdquo;previjalna miza&ldquo; in jo obkljukaj. Vpraša samo da/ne. Za vprašanje o prostoru
+      pri obstoječi sivi bucki uporabi MapComplete.</li>
+</ul>
+<p class="muted">Popravki tečejo pod tvojim lastnim računom OSM in pripadajo vsem. Ta spletna
+stran jih preživi in pomagajo vsaki aplikaciji, ki bere OpenStreetMap.</p>
+
+<h2 id="contribute">Kako dodati manjkajoč kraj</h2>
+<p>PapaMap sam ne shranjuje ničesar. Dodajanje kraja zato vedno pomeni: urejanje OpenStreetMap.
+Gumb <em>+ Dodaj kraj</em> na zemljevidu odpre pravi urejevalnik na tvojem trenutnem pogledu.</p>
+
+<h3>Javnega stranišča sploh ni</h3>
+<p>Odpri <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">MapComplete
+temo PapaMap</a> (prva povezava v pogovornem oknu). Prijavi se, tapni zemljevid tam, kjer je
+stranišče, izberi &bdquo;javno stranišče&ldquo;, odgovori na vprašanja. Tudi na tista o
+previjalni mizi in prostoru.</p>
+
+<h3>Kavarna, trgovina ali restavracija ima mizo, ki je nihče ni vnesel</h3>
+<p>Kraj v OSM skoraj zagotovo že obstaja. Manjka samo tag <code>changing_table</code>. V lastnem
+urejevalniku OSM (iD) to traja približno dve minuti:</p>
+<ol>
+  <li>Ustvari brezplačen račun na <a href="https://www.openstreetmap.org">openstreetmap.org</a>
+      (dovolj je en e-poštni naslov) in se prijavi.</li>
+  <li>Poišči kraj in klikni <strong>Uredi</strong>. Kraj je točka ali oris stavbe. Klikni nanj,
+      njegovi tagi se pojavijo na levi.</li>
+  <li>Spodaj razširi <strong>Tagi</strong> in z <strong>+</strong> dodaj:
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = kje je, iz
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">dokumentiranega
+            seznama vrednosti</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> ali <code>sales_area</code>.
+            Če je v več prostorih: loči s podpičji
+            (<code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Pritisni <strong>Shrani</strong>, napiši kratek komentar (&bdquo;dodana lokacija
+      previjalne mize&ldquo;), naloži. Na OSM je vidno v minuti, na PapaMap po naslednji nočni
+      posodobitvi.</li>
+</ol>
+<p class="muted">Prosimo, označuj samo tisto, kar si videl na lastne oči. OSM beleži, kar je, ne
+kar bi moralo biti. Če prostora ne poznaš, je koristen že sam <code>changing_table=yes</code>:
+kraj postane siva bucka, naslednji oče pa odgovori na vprašanje o prostoru.</p>
+
+<h2>Zakaj ocena ponudbe iz OSM ne deluje</h2>
+<p>Očiten večji projekt bi bilo razmerje ponudbe moških in ženskih stranišč po mestih. Številka,
+za katero pri argumentu &bdquo;potty parity&ldquo; v resnici gre. Iz OpenStreetMap je ni mogoče
+izračunati. To smo preverili še pred gradnjo, z vzorcem iz osmih mestnih središč (Berlin, London,
+Pariz, New York, Tokio&nbsp;23&nbsp;okrožij, Amsterdam, Dunaj, Melbourne;
+26.&nbsp;jul.&nbsp;2026):</p>
+<table>
+  <tr><th>Mesto</th><th>Zabeležena stranišča</th><th>Katerikoli tag spola</th><th>Oboje M&nbsp;+&nbsp;F</th></tr>
+  <tr><td>Berlin</td><td>1,173</td><td>660</td><td>119</td></tr>
+  <tr><td>London</td><td>1,316</td><td>458</td><td>210</td></tr>
+  <tr><td>Pariz</td><td>1,414</td><td>579</td><td>101</td></tr>
+  <tr><td>New York</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Tokio (23 okrožij)</td><td>3,500</td><td>601</td><td>231</td></tr>
+  <tr><td>Amsterdam</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Dunaj</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
+  <tr><td><strong>Skupaj</strong></td><td><strong>9,674</strong></td><td><strong>2,888 (29.9%)</strong></td><td><strong>827 (8.5%)</strong></td></tr>
+</table>
+<ul>
+  <li>Le 29.9% zabeleženih stranišč ima katerikoli tag spola. Oboje (moško in žensko): 8.5%.</li>
+  <li>Tagi so čiste da/ne zastavice, nikoli števci. Število kabin po spolu: nič v vseh osmih
+      mestih. Edini ključ za zmogljivost, <code>toilets:num_chambers</code> (~27k uporab), ni
+      vezan na spol in izvira skoraj v celoti iz starega uvoza. Njegovi različici
+      <code>:female</code> / <code>:male</code> imata po vsem svetu vsaka po 2 uporabi.</li>
+  <li>Hamburg, preverjen isti dan: 443 zabeleženih stranišč, nobeno s tagom
+      <code>toilets:num_chambers*</code>. Trak na <a href="./">naslovni strani</a>
+      te številke znova izračuna vsako noč.</li>
+  <li>In še: delež taganja meri skupnost mapperjev, ne mest. Stranišča z eno kabino pravilno
+      ostanejo brez oznake spola. Lestvica mest bi ocenjevala prispevke v OSM, ne enakosti pri
+      straniščih.</li>
+</ul>
+<p>Edina poštena trditev je torej: same ponudbe danes iz odprtih podatkov ni mogoče izmeriti.
+Ta stran meri, kar je mogoče izmeriti, in iz vrzeli naredi prispevke.</p>
+
+<h2>Edino izračunljivo dejstvo: kje so mize</h2>
+<p><code>changing_table:location</code> je, kolikor vemo, edini odprt slovar, ki beleži, v
+katerem prostoru je previjalna miza. Je redek:
+<span data-stat="location_total">3,659</span> od <span data-stat="ct_total">77,000</span>
+objektov <code>changing_table</code> po svetu, <span data-stat="share">4.8%</span>. Tam, kjer
+obstaja, pa je enostranski (taginfo, <span data-stat="date">26.&nbsp;jul.&nbsp;2026</span>):</p>
+<ul>
+  <li>Mize samo v ženskem stranišču: <strong data-stat="female_only">485</strong>.</li>
+  <li>Mize samo v moškem stranišču: <strong data-stat="male_only">71</strong>. Približno
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> jih je
+      otaganih v obeh prostorih, <span data-stat="male_any">410</span> jih beleži kakršnokoli
+      mizo v moškem stranišču. Po svetu.</li>
+</ul>
+<p>Vzorec je majhen, mapperji pa sami izbirajo, kaj zabeležijo. Zato natančnega razmerja ne
+precenjuj. Smer pa se ujema s tem, kar je že dolgo dokumentirano drugje: previjalne mize
+privzeto visijo v ženskem stranišču. To očetom zapre vrata in tiho predpostavlja, kdo skrbi za
+previjanje. Ta zemljevid manjkajoče podatke naredi vidne. In lahko popravljive.</p>
+
+<h2>Licenca podatkov &amp; navedba vira</h2>
+<p>Vsi podatki zemljevida &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
+contributors</a>, na voljo pod licenco
+<a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
+Datoteke GeoJSON in statistike, ki jih ponuja ta stran, izhajajo iz OSM in so zato prav tako pod
+ODbL. Svetovna statistika tagov prihaja iz <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
+Lastna koda strani je pod licenco MIT.</p>
+
+<h2>Zasebnost</h2>
+<p>Statična stran. Brez računov, brez piškotkov, brez analitike, brez sledilnih skriptov. Stran
+o tebi ne shranjuje ničesar in nima baze podatkov. Ploščice zemljevida prihajajo s strežnikov
+OpenStreetMap; za te zahteve velja
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">politika zasebnosti OSMF</a>. Če slediš
+povezavi na MapComplete, StreetComplete ali openstreetmap.org, si na njihovi strani in urejaš pod
+svojim lastnim računom OSM. Prek nas ne gre nič. Uradne strani:
+<a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (v nemščini).</p>
+
+<p class="muted">Viri: vzorec Overpass iz 8 mestnih središč (9,674 stranišč) z dne
+26.&nbsp;jul.&nbsp;2026, in statistika ključev taginfo na dan, naveden zgoraj. Lokalne številke
+prihajajo iz istega nočnega poizvedovanja, ki gradi zemljevid.</p>
+
+<h2>Kako nastaja ta stran</h2>
+<p>Pri kodiranju in pisanju besedil si pomagam z umetno inteligenco. Vse pa gre skozi moje
+človeške oči.</p>
+
+<script>
+// The taginfo numbers above and the two play-area numbers are the same ones the
+// nightly build already writes to data/stats.json. Read them from there rather
+// than maintaining them by hand: copied numbers rot, and on this page of all
+// pages that is embarrassing.
+// The markup holds the last known value, so without JS — or if the fetch fails
+// — the page still reads correctly, just a little older.
+(function () {
+  var LOCALE = "sl-SI";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      s = s || {};
+      var vals = {};
+      // The play-area numbers live in s.local, the taginfo values in s.global.
+      // Read them separately so the taginfo check below cannot swallow them:
+      // since the eleven-country build of 19 Aug 2026 both change every night,
+      // independently of each other.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
+      }
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "short", year: "numeric"
+            });
+          }
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* the numbers in the markup stand */ });
+})();
+</script>
+
+</body>
+</html>

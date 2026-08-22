@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PapaMap — Metodika un godīgums</title>
+<meta name="description" content="Kā PapaMap iekrāso OpenStreetMap pārtinamos galdiņus, kāpēc no šiem datiem nevar izveidot nodrošinājuma reitingu un kā pašam izlabot pelēku atzīmi.">
+<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
+     language versions were never actually linked to each other. Thirty-one
+     of them since the Europe-complete sweep (2026-08-22); every page must
+     list every other or the set is unreciprocated and ignored. -->
+<link rel="canonical" href="https://papamap.de/methods-lv.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
+<link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html">
+<link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html">
+<link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html">
+<link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
+<link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
+<link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html">
+<link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html">
+<link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html">
+<link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html">
+<link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html">
+<link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html">
+<link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html">
+<link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html">
+<link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html">
+<link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html">
+<link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html">
+<link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html">
+<link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html">
+<link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html">
+<link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html">
+<link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html">
+<link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html">
+<link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html">
+<link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html">
+<link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html">
+<link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html">
+<link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
+    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
+      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
+    }
+  }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+         background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
+  table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
+  li { margin: 0.3rem 0; }
+  .back { font-size: 0.9rem; }
+  /* Thirty-one languages, listed by their own names — "This page in X" that
+     many times would be a page of its own, and a reader who cannot read this
+     page still recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">&larr; Atpakaļ uz karti</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a>
+  &middot; <a href="methods-bs.html" hreflang="bs" lang="bs">Bosanski</a>
+  &middot; <a href="methods-ca.html" hreflang="ca" lang="ca">Català</a>
+  &middot; <a href="methods-et.html" hreflang="et" lang="et">Eesti</a>
+  &middot; <a href="methods-es.html" hreflang="es" lang="es">Español</a>
+  &middot; <a href="methods-hr.html" hreflang="hr" lang="hr">Hrvatski</a>
+  &middot; <a href="methods-is.html" hreflang="is" lang="is">Íslenska</a>
+  &middot; <strong lang="lv">Latviešu</strong>
+  &middot; <a href="methods-lt.html" hreflang="lt" lang="lt">Lietuvių</a>
+  &middot; <a href="methods-hu.html" hreflang="hu" lang="hu">Magyar</a>
+  &middot; <a href="methods-no.html" hreflang="no" lang="no">Norsk</a>
+  &middot; <a href="methods-pt.html" hreflang="pt" lang="pt">Português</a>
+  &middot; <a href="methods-ro.html" hreflang="ro" lang="ro">Română</a>
+  &middot; <a href="methods-sq.html" hreflang="sq" lang="sq">Shqip</a>
+  &middot; <a href="methods-sk.html" hreflang="sk" lang="sk">Slovenčina</a>
+  &middot; <a href="methods-sl.html" hreflang="sl" lang="sl">Slovenščina</a>
+  &middot; <a href="methods-fi.html" hreflang="fi" lang="fi">Suomi</a>
+  &middot; <a href="methods-el.html" hreflang="el" lang="el">Ελληνικά</a>
+  &middot; <a href="methods-be.html" hreflang="be" lang="be">Беларуская</a>
+  &middot; <a href="methods-bg.html" hreflang="bg" lang="bg">Български</a>
+  &middot; <a href="methods-mk.html" hreflang="mk" lang="mk">Македонски</a>
+  &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
+  &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a></p>
+<h1>PapaMap — metodika un godīgums</h1>
+<p class="muted">Pārtinamie galdiņi, kuriem tēti var piekļūt. Zemāk redzamie pasaules taginfo skaitļi
+nāk no nakts būvējuma. Astoņu pilsētu centru izlase ir no 26.&nbsp;jūl.&nbsp;2026 un paliek
+nemainīga.</p>
+
+<h2>Kas šī karte ir. Un kas tā nav.</h2>
+<p>PapaMap rāda vietas 44 Eiropas valstīs — no Islandes līdz Kiprai, no Portugāles līdz Ukrainai —
+kur OpenStreetMap
+zina par pārtinamo
+galdiņu (<code>changing_table=yes</code> vai <code>limited</code>). Krāsa parāda, vai tētis var
+galdiņam piekļūt. Karte lasa tikai OSM un neko citu, un tā nekur neko neieraksta. Datu labošana
+notiek pašā OSM, izmantojot saites pie katras atzīmes.</p>
+<p>Tas nav vērtējums, kurai pilsētai ir vislabākais tualešu nodrošinājums. Kāpēc to no atklātiem
+datiem godīgi nevar izdarīt, paskaidrots tālāk.</p>
+
+<h2>Ko nozīmē krāsas (precīzs noteikums)</h2>
+<p>Kartē nonāk tikai objekti ar <code>changing_table=yes</code> vai <code>limited</code>
+(<code>no</code> tiek ieskaitīts tikai statistikā). Krāsa nāk no
+<code>changing_table:location</code>. Vērtība tiek sadalīta pēc <code>;</code>, atbrīvota no
+liekajām atstarpēm, pārveidota mazajos burtos un salīdzināta kā vesels tokens. Nekad kā apakšvirkne,
+jo <code>female_toilet</code> satur <code>male</code>.</p>
+<ul>
+  <li><span class="dot g"></span><strong>Zaļš:</strong> viens no tokeniem ir
+      <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
+      <code>room</code>, <code>wheelchair_toilet</code> vai <code>sales_area</code>.
+      Tētis tam var piekļūt.</li>
+  <li><span class="dot r"></span><strong>Sarkans:</strong> citādi, ja viens no tokeniem ir
+      <code>female_toilet</code>. Galdiņš eksistē, bet tikai sieviešu telpā.</li>
+  <li><span class="dot u"></span><strong>Pelēks:</strong> viss pārējais. Nav atrašanās vietas birkas,
+      vai ir tikai brīvs teksts. Neviens nav atzīmējis telpu. Pelēkās atzīmes ir šis darāmais
+      darbs.</li>
+</ul>
+<p>Viens izņēmums: objekti ar <code>centralkey</code> birku (izņemot <code>no</code>) kartē vispār
+netiek rādīti. Eiroatslēga un līdzīgas centrālās atslēgas sistēmas tiek izsniegtas tikai pret
+invaliditātes apliecinājumu — lai kurā telpā galdiņš arī būtu, lielākā daļa tēvu pa tām durvīm
+netiek.</p>
+
+<h2>Zilais gredzens: rotaļu stūrītis</h2>
+<p>Atzīmei ar zilu gredzenu papildus ir arī rotaļu stūrītis &mdash; vieta, kur bērnu ne tikai
+pārtin, bet kur var arī kādu brīdi palikt. Filtrs <em>Ar rotaļu stūrīti</em> sašaurina karti tikai
+līdz tām. Vieta tiek ieskaitīta, ja OSM ir atzīmēts kaut kas no šī:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> vai <code>designated</code>
+      &mdash; wiki dokumentētais veids, kā apzīmēt iekštelpas.</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> vai
+      <code>designated</code> &mdash; rotaļu stūrītis kafejnīcā, restorānā, maiznīcā. Visbiežāk
+      lietotā birka, kaut arī tā neprecizē, vai tas ir iekštelpās, vai ārā.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; komerciāls iekštelpu
+      rotaļu laukums.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> kopā ar
+      <code>indoor=yes</code> &mdash; tas pats, tikai otrādi atzīmēts.</li>
+</ul>
+<p><code>outdoor</code> neskaitās: alus dārza smilšu kaste nav tas, ko gredzens sola. Neskaitās arī
+<code>no</code>, ne <code>limited</code> — wiki to definē kā &bdquo;rotaļlietas ir pieejamas, bet
+nav īpaši norādītas vietas&ldquo;. Ja skaidri norādīts <code>kids_area:indoor=no</code>, tas ir
+svarīgāks par vienkāršu <code>kids_area=yes</code>.</p>
+<p>Šis ir nozīmīte, nevis ceturtais statuss. Vietai bez šīm birkām nav &bdquo;nekāda rotaļu
+stūrīša&ldquo; &mdash; OSM par to vienkārši neko nesaka. Tāpēc šeit nav ne pelēkas krāsas, ne
+aicinājuma kaut ko darīt: pie <code>changing_table:location</code> klusēšana ir nozīmīga, jo
+zināms, ka galdiņš eksistē. Šeit klusē gandrīz visi objekti, un tas nenozīmē neko. Ja tu zini par
+rotaļu stūrīti, to joprojām var pievienot &mdash; OSM redaktorā, kā <code>kids_area=yes</code>.</p>
+
+<h2>Tukšie zilie gredzeni: rotaļas vietas bez atbildes</h2>
+<p>Tas pats noteikums attiecas uz daudz vairāk vietām, nekā kartē ir atzīmju. Tikai
+<span data-stat="play_tables">111</span> no tām vispār ir kāda <code>changing_table</code> birka.
+Vēl <span data-stat="play_places">701</span> vietās neviens nav atbildējis uz pirmo jautājumu: vai
+šeit ir pārtinamais galdiņš? Jā, nē, neviens nezina — OSM par to nesaka pilnīgi neko.</p>
+<p>Šīs <span data-stat="play_places">701</span> vietas karte nevar iekrāsot, jo nav ko krāsot. Tās
+nav arī pelēkas: pelēks nozīmē &bdquo;galdiņš eksistē, trūkst telpas&ldquo;, un tas šeit neattiecas.
+Tāpēc tām ir savs filtrs, <em>Tikai rotaļu stūrītis</em>, pēc noklusējuma izslēgts, un pilnas
+atzīmes vietā — tukšs zils gredzens.</p>
+<p>Tie ir visdaudzsološākie atklātie jautājumi visā kartē. Iekštelpu rotaļu laukums, kafejnīca ar
+bumbiņu baseinu, restorāns ar spēļu istabu &mdash; tētis ar mazuli tik un tā tur dodas, un, kad
+viņš jau ir tur, viņš zina atbildi. Klikšķis uz gredzena atver MapComplete tieši uz šī viena
+jautājuma. Atbildi uz to, un pēc nākamās nakts atjaunināšanas gredzens pazūd, tā vietā parādās
+īsta atzīme.</p>
+
+<h2>Kā izlabot pelēku atzīmi</h2>
+<p>Pelēks nozīmē: trūkst vienas atbildes. Kur atrodas pārtinamais galdiņš? Uz to var atbildēt
+ikviens ar bezmaksas OSM kontu, uz vietas, mazāk nekā minūtē:</p>
+<ul>
+  <li><strong>MapComplete (jebkurš telefons, pārlūkprogrammā):</strong> &bdquo;Atbildēt vietnē
+      MapComplete&ldquo; pie pelēkas atzīmes atver to pašu objektu PapaMap paša MapComplete tēmā
+      &mdash; pie katras atzīmes, lai labojumus varētu atpazīt kā nākušus no šejienes. MapComplete
+      vienreiz brīdina par neoficiālu tēmu, tas ir normāli. Tēmas jautājumi pagaidām ir pieejami
+      tikai angļu valodā. Pieslēdzies ar savu OSM kontu un atbildi uz jautājumiem par pārtinamo
+      galdiņu, arī uz jautājumu par telpu. Atbilde nonāk tieši OpenStreetMap un šeit parādās pēc
+      nākamās nakts atjaunināšanas.</li>
+  <li><strong>StreetComplete (Android):</strong> ir uzdevums par pārtinamo galdiņu, pēc
+      noklusējuma izslēgts. Ej uz <em>Iestatījumi &rarr; Uzdevumu izvēle un secība</em>, meklē
+      &bdquo;pārtinamais&ldquo; un atzīmē to. Tas jautā tikai jā/nē. Jautājumam par telpu esošai
+      pelēkai atzīmei izmanto MapComplete.</li>
+</ul>
+<p class="muted">Labojumi notiek ar tavu paša OSM kontu un pieder visiem. Tie pārdzīvos šo
+mājaslapu un palīdz katrai lietotnei, kas lasa OpenStreetMap.</p>
+
+<h2 id="contribute">Kā pievienot trūkstošu vietu</h2>
+<p>PapaMap pati neko neuzglabā. Tāpēc vietas pievienošana vienmēr nozīmē: OpenStreetMap
+rediģēšanu. Poga <em>+ Pievienot vietu</em> kartē atver pareizo redaktoru tavā pašreizējā skatā.</p>
+
+<h3>Publiskās tualetes vispār trūkst</h3>
+<p>Atver <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMap
+MapComplete tēmu</a> (pirmā saite dialoglodziņā). Pieslēdzies, pieskaries kartei tur, kur ir
+tualete, izvēlies &bdquo;publiska tualete&ldquo;, atbildi uz jautājumiem. Arī uz tiem par
+pārtinamo galdiņu un telpu.</p>
+
+<h3>Kafejnīcai, veikalam vai restorānam ir galdiņš, ko neviens nav atzīmējis</h3>
+<p>Vieta OSM gandrīz noteikti jau eksistē. Trūkst tikai <code>changing_table</code> birkas. OSM
+pašā redaktorā (iD) tas aizņem apmēram divas minūtes:</p>
+<ol>
+  <li>Izveido bezmaksas kontu vietnē <a href="https://www.openstreetmap.org">openstreetmap.org</a>
+      (pietiek ar vienu e-pastu) un pieslēdzies.</li>
+  <li>Atrodi vietu un uzklikšķini <strong>Rediģēt</strong>. Vieta ir punkts vai ēkas kontūra.
+      Uzklikšķini uz tās, kreisajā pusē parādās tās birkas.</li>
+  <li>Apakšā izvērs <strong>Birkas</strong> un ar <strong>+</strong> pievieno:
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = kur tas atrodas, no
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">dokumentētā
+            vērtību saraksta</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> vai <code>sales_area</code>.
+            Ja vairākās telpās: atdali ar semikolu
+            (<code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Nospied <strong>Saglabāt</strong>, uzraksti īsu komentāru (&bdquo;pievienota pārtinamā
+      galdiņa atrašanās vieta&ldquo;), augšupielādē. OSM tas redzams jau minūtes laikā, PapaMap —
+      pēc nākamās nakts atjaunināšanas.</li>
+</ol>
+<p class="muted">Lūdzu, atzīmē tikai to, ko esi redzējis pats. OSM reģistrē to, kas ir, nevis to,
+kam vajadzētu būt. Ja telpu nezini, arī pats <code>changing_table=yes</code> ir noderīgs: vieta
+kļūst par pelēku atzīmi, un uz jautājumu par telpu atbildēs nākamais tētis.</p>
+
+<h2>Kāpēc no OSM nevar izveidot nodrošinājuma reitingu</h2>
+<p>Acīmredzamais lielākais projekts būtu vīriešu un sieviešu tualešu nodrošinājuma attiecība katrai
+pilsētai. Skaitlis, ap kuru patiesībā griežas &bdquo;potty parity&ldquo; arguments. No
+OpenStreetMap to aprēķināt nevar. Mēs to pārbaudījām, pirms sākām veidot karti, ar izlasi no
+astoņu pilsētu centriem (Berlīne, Londona, Parīze, Ņujorka, Tokija (23 rajoni), Amsterdama, Vīne,
+Melburna; 26.&nbsp;jūl.&nbsp;2026):</p>
+<table>
+  <tr><th>Pilsēta</th><th>Kartētās tualetes</th><th>Jebkāda dzimuma birka</th><th>Abas —
+      V&nbsp;+&nbsp;S</th></tr>
+  <tr><td>Berlīne</td><td>1,173</td><td>660</td><td>119</td></tr>
+  <tr><td>Londona</td><td>1,316</td><td>458</td><td>210</td></tr>
+  <tr><td>Parīze</td><td>1,414</td><td>579</td><td>101</td></tr>
+  <tr><td>Ņujorka</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Tokija (23 rajoni)</td><td>3,500</td><td>601</td><td>231</td></tr>
+  <tr><td>Amsterdama</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Vīne</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><td>Melburna</td><td>418</td><td>142</td><td>35</td></tr>
+  <tr><td><strong>Visas kopā</strong></td><td><strong>9,674</strong></td><td><strong>2,888
+      (29.9%)</strong></td><td><strong>827 (8.5%)</strong></td></tr>
+</table>
+<ul>
+  <li>Jebkāda dzimuma birka ir tikai 29.9% kartēto tualešu. Abas (vīriešu un sieviešu): 8.5%.</li>
+  <li>Birkas ir tīri jā/nē karodziņi, nekad skaitļi. Kabīņu skaits pa dzimumiem: nulle visās
+      astoņās pilsētās. Vienīgā kapacitātes atslēga, <code>toilets:num_chambers</code>
+      (~27k lietojumu), nav sadalīta pa dzimumiem un gandrīz pilnībā nāk no seniem importa datiem.
+      Tās variantiem <code>:female</code> / <code>:male</code> ir pa 2 lietojumiem visā
+      pasaulē.</li>
+  <li>Hamburga, pārbaudīta tajā pašā dienā: 443 kartētas tualetes, nevienai nav
+      <code>toilets:num_chambers*</code> birkas. Josla <a href="./">sākumlapā</a> šos skaitļus
+      pārrēķina katru nakti.</li>
+  <li>Un vēl: atzīmēšanas līmenis mēra kartētāju kopienu, nevis pilsētas. Vienvietīgas tualetes
+      pareizi paliek bez dzimuma birkas. Pilsētu reitings vērtētu OSM dalībniekus, nevis tualešu
+      taisnīgumu.</li>
+</ul>
+<p>Tātad vienīgais godīgais apgalvojums ir šāds: pašu nodrošinājumu šodien no atklātiem datiem
+izmērīt nevar. Šī lapa mēra to, ko var izmērīt, un pārvērš robus par ieguldījumiem.</p>
+
+<h2>Vienīgais aprēķināmais fakts: kur atrodas galdiņi</h2>
+<p><code>changing_table:location</code> ir, cik zināms, vienīgais atklātais vārdu krājums, kas
+reģistrē, kurā telpā atrodas pārtinamais galdiņš. Tas ir izmantots reti:
+<span data-stat="location_total">3,659</span> no <span data-stat="ct_total">77,000</span>
+<code>changing_table</code> objektiem visā pasaulē, <span data-stat="share">4.8%</span>. Bet, kur
+tas ir, tas ir vienpusīgs (taginfo, <span data-stat="date">26.&nbsp;jūl.&nbsp;2026</span>):</p>
+<ul>
+  <li>Galdiņi tikai sieviešu telpā: <strong data-stat="female_only">485</strong>.</li>
+  <li>Galdiņi tikai vīriešu telpā: <strong data-stat="male_only">71</strong>. Aptuveni
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> ir atzīmēti
+      abās telpās, <span data-stat="male_any">410</span> reģistrē vispār kādu galdiņu vīriešu
+      telpā. Visā pasaulē.</li>
+</ul>
+<p>Izlase ir maza, un kartētāji paši izvēlas, ko reģistrēt. Tāpēc precīzo attiecību nevērtē par
+augstu. Virziens gan sakrīt ar to, kas citur jau sen dokumentēts: pārtinamie galdiņi pēc
+noklusējuma karājas sieviešu telpā. Tas tēviem aizver durvis un klusībā pieņem, kurš ir atbildīgs
+par autiņu maiņu. Šī karte padara trūkstošos datus redzamus. Un viegli izlabojamus.</p>
+
+<h2>Datu licence un atsauce</h2>
+<p>Visi kartes dati &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
+līdzstrādnieki</a>, pieejami saskaņā ar
+<a href="https://opendatacommons.org/licenses/odbl/">Atvērto datubāzu licenci (ODbL)</a>.
+GeoJSON un statistikas faili, ko šī lapa apkalpo, ir atvasināti no OSM un tāpēc arī ir ODbL.
+Globālā birku statistika nāk no <a href="https://taginfo.openstreetmap.org/">taginfo</a>. Lapas
+pašas kods ir licencēts ar MIT licenci.</p>
+
+<h2>Privātums</h2>
+<p>Statiska lapa. Nav kontu, nav sīkdatņu, nav analītikas, nav izsekošanas skriptu. Lapa par tevi
+neko neuzglabā un tai nav datubāzes. Kartes flīzes nāk no OpenStreetMap flīžu serveriem; uz tiem
+pieprasījumiem attiecas <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privātuma
+politika</a>. Ja seko saitei uz MapComplete, StreetComplete vai openstreetmap.org, tu esi viņu
+lapās un rediģē ar savu OSM kontu. Nekas neiet caur mums. Formālās lapas:
+<a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (vāciski).</p>
+
+<p class="muted">Avoti: Overpass izlase no 8 pilsētu centriem (9,674 tualetes) no
+26.&nbsp;jūl.&nbsp;2026, un taginfo atslēgu statistika uz iepriekš norādīto datumu. Vietējie
+skaitļi nāk no tā paša nakts vaicājuma, kas veido karti.</p>
+
+<h2>Kā šī lapa top</h2>
+<p>Kodēšanā un tekstu rakstīšanā man palīdz mākslīgais intelekts. Bet viss iet caur manām paša
+acīm.</p>
+
+<script>
+// The taginfo numbers above and the two play-area numbers are the same ones the
+// nightly build already writes to data/stats.json. Read them from there rather
+// than maintaining them by hand: copied numbers rot, and on this page of all
+// pages that is embarrassing.
+// The markup holds the last known value, so without JS — or if the fetch fails
+// — the page still reads correctly, just a little older.
+(function () {
+  var LOCALE = "lv-LV";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      s = s || {};
+      var vals = {};
+      // The play-area numbers live in s.local, the taginfo values in s.global.
+      // Read them separately so the taginfo check below cannot swallow them:
+      // since the eleven-country build of 19 Aug 2026 both change every night,
+      // independently of each other.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
+      }
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "short", year: "numeric"
+            });
+          }
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* the numbers in the markup stand */ });
+})();
+</script>
+
+</body>
+</html>

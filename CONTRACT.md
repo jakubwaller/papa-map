@@ -29,10 +29,21 @@
 > France exclusion stands only because its allowlist predates this and its
 > removal would re-litigate v13 for no reader benefit.
 >
-> **UI languages stay the nine of v13.** Adding a country adds pins, never
-> pages: the `/wickeltische/` premise ("Wickeltisch Bayern" is searched in
-> German) does not survive translation, and the site's copy now counts the
-> set ("44 European countries") instead of naming it everywhere except the
+> **UI languages grow nine → 31**, keeping v13's rule that every swept
+> country gets at least one of its official languages: the 22 additions are
+> `bs ca et es hr is lv lt hu no pt ro sq sk sl fi el be bg mk sr uk` (sr in
+> Cyrillic; `no` is Bokmål, with `nb`/`nn` browser tags aliased to it in
+> `pickLang`). Skipped on the Romansh precedent — every speaker reads another
+> UI language: Luxembourgish, Maltese, Irish, Montenegrin, and Turkish for
+> Cyprus. Each language is a `STRINGS` block plus its own `methods-<code>.html`;
+> `index.html`'s hreflang block, `sitemap.xml` and the methods pages'
+> cross-links must list exactly the same 31 (the sitemap's two multilingual
+> clusters and every methods page's hreflang + language nav are generated
+> from one table, not hand-typed). The leaderboard stays a DE/EN pair — the
+> other 29 borrow the English page. Adding a country still adds pins, never
+> `/wickeltische/`-style pages: the "Wickeltisch Bayern" premise (searched in
+> German) does not survive translation, and the site's copy counts the set
+> ("44 European countries") instead of naming it everywhere except the
 > JSON-LD `spatialCoverage`, which enumerates for machines.
 
 > **v13 amendment (19 Aug 2026, the UK and France, and nine UI languages):**

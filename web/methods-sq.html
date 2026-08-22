@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PapaMap — Metodologjia &amp; ndershmëria</title>
+<meta name="description" content="Si PapaMap i ngjyros tavolinat e ndërrimit nga OpenStreetMap, pse nga këto të dhëna nuk mund të ndërtohet një tregues vlerësimi i ofertës, dhe si ta rregullosh vetë një shenjues gri.">
+<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
+     language versions were never actually linked to each other. Thirty-one
+     of them since the Europe-complete sweep (2026-08-22); every page must
+     list every other or the set is unreciprocated and ignored. -->
+<link rel="canonical" href="https://papamap.de/methods-sq.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
+<link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html">
+<link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html">
+<link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html">
+<link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
+<link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
+<link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html">
+<link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html">
+<link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html">
+<link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html">
+<link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html">
+<link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html">
+<link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html">
+<link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html">
+<link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html">
+<link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html">
+<link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html">
+<link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html">
+<link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html">
+<link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html">
+<link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html">
+<link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html">
+<link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html">
+<link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html">
+<link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html">
+<link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html">
+<link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html">
+<link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
+    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
+      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
+    }
+  }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+         background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
+  table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
+  li { margin: 0.3rem 0; }
+  .back { font-size: 0.9rem; }
+  /* Thirty-one languages, listed by their own names — "This page in X" that
+     many times would be a page of its own, and a reader who cannot read this
+     page still recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">&larr; Kthehu te harta</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a>
+  &middot; <a href="methods-bs.html" hreflang="bs" lang="bs">Bosanski</a>
+  &middot; <a href="methods-ca.html" hreflang="ca" lang="ca">Català</a>
+  &middot; <a href="methods-et.html" hreflang="et" lang="et">Eesti</a>
+  &middot; <a href="methods-es.html" hreflang="es" lang="es">Español</a>
+  &middot; <a href="methods-hr.html" hreflang="hr" lang="hr">Hrvatski</a>
+  &middot; <a href="methods-is.html" hreflang="is" lang="is">Íslenska</a>
+  &middot; <a href="methods-lv.html" hreflang="lv" lang="lv">Latviešu</a>
+  &middot; <a href="methods-lt.html" hreflang="lt" lang="lt">Lietuvių</a>
+  &middot; <a href="methods-hu.html" hreflang="hu" lang="hu">Magyar</a>
+  &middot; <a href="methods-no.html" hreflang="no" lang="no">Norsk</a>
+  &middot; <a href="methods-pt.html" hreflang="pt" lang="pt">Português</a>
+  &middot; <a href="methods-ro.html" hreflang="ro" lang="ro">Română</a>
+  &middot; <strong lang="sq">Shqip</strong>
+  &middot; <a href="methods-sk.html" hreflang="sk" lang="sk">Slovenčina</a>
+  &middot; <a href="methods-sl.html" hreflang="sl" lang="sl">Slovenščina</a>
+  &middot; <a href="methods-fi.html" hreflang="fi" lang="fi">Suomi</a>
+  &middot; <a href="methods-el.html" hreflang="el" lang="el">Ελληνικά</a>
+  &middot; <a href="methods-be.html" hreflang="be" lang="be">Беларуская</a>
+  &middot; <a href="methods-bg.html" hreflang="bg" lang="bg">Български</a>
+  &middot; <a href="methods-mk.html" hreflang="mk" lang="mk">Македонски</a>
+  &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
+  &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a></p>
+<h1>PapaMap — metodologjia &amp; ndershmëria</h1>
+<p class="muted">Tavolina ndërrimi që i arrin dot një baba. Shifrat botërore nga taginfo më poshtë
+vijnë nga ndërtimi i natës. Kampioni nga tetë qendra qytetesh është nga
+26&nbsp;korr&nbsp;2026 dhe mbetet i tillë.</p>
+
+<h2>Çfarë është kjo hartë. Dhe çfarë nuk është.</h2>
+<p>PapaMap tregon vendndodhjet në 44 vende evropiane — nga Islanda deri në Qipro, nga
+Portugalia deri në Ukrainë — për të cilat OpenStreetMap
+di se ka një tavolinë
+ndërrimi bebesh (<code>changing_table=yes</code> ose <code>limited</code>). Ngjyra tregon nëse
+një baba mund ta arrijë tavolinën. Harta lexon vetëm OSM dhe asgjë tjetër, dhe nuk shkruan
+askund. Rregullimi i të dhënave bëhet në vetë OSM-në, përmes lidhjeve te çdo shenjues.</p>
+<p>Një renditje qytetesh sipas ofertës më të mirë të tualeteve kjo nuk është. Pse kjo nuk mund
+të bëhet me ndershmëri nga të dhëna të hapura, shpjegohet më poshtë.</p>
+
+<h2>Çfarë kuptojnë ngjyrat (rregulli i saktë)</h2>
+<p>Në hartë futen vetëm objektet me <code>changing_table=yes</code> ose <code>limited</code>
+(<code>no</code> llogaritet vetëm në statistika). Ngjyra vjen nga
+<code>changing_table:location</code>. Vlera ndahet sipas <code>;</code>, pastrohet nga
+hapësirat anësore, kthehet në shkronja të vogla dhe krahasohet si njësi (token) e plotë. Kurrë
+si nënvarg, sepse <code>female_toilet</code> përmban <code>male</code>.</p>
+<ul>
+  <li><span class="dot g"></span><strong>E gjelbër:</strong> një nga njësitë është
+      <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
+      <code>room</code>, <code>wheelchair_toilet</code> ose <code>sales_area</code>.
+      Një baba mund ta arrijë.</li>
+  <li><span class="dot r"></span><strong>E kuqe:</strong> përndryshe, nëse një njësi është
+      <code>female_toilet</code>. Tavolina ekziston, por vetëm te tualeti i grave.</li>
+  <li><span class="dot u"></span><strong>Gri:</strong> gjithçka tjetër. Pa etiketë
+      vendndodhjeje, ose vetëm tekst i lirë. Askush nuk e ka regjistruar dhomën. Shenjuesit gri
+      janë puna që na mbetet.</li>
+</ul>
+<p>Një përjashtim: objektet me etiketën <code>centralkey</code> (të ndryshme nga <code>no</code>)
+nuk shfaqen fare. Çelësi Euro dhe sisteme të ngjashme çelësash qendrorë lëshohen vetëm me
+dëshmi aftësie të kufizuar — pavarësisht se në cilën dhomë ndodhet tavolina, shumica e baballarëve
+nuk kalojnë dot atë derë.</p>
+
+<h2>Rrethi blu: hapësirë lojërash</h2>
+<p>Një shenjues me rreth blu ka gjithashtu edhe një hapësirë lojërash &mdash; një vend ku nuk
+vetëm ndërron fëmijën, por rri edhe pak. Filtri <em>Me hapësirë lojërash</em> ngushton hartën
+vetëm te këto vende. Një vend numërohet nëse OSM regjistron qoftë edhe një nga këto:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> ose <code>designated</code>
+      &mdash; mënyra e dokumentuar në wiki për të thënë «brenda».</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> ose
+      <code>designated</code> &mdash; qoshja e lojërave në një kafene, restorant apo furrë buke.
+      Etiketa më e përdorur, edhe pse lë të hapur nëse është brenda apo jashtë.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; një fushë lojërash e
+      mbyllur, komerciale.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> së bashku me
+      <code>indoor=yes</code> &mdash; e njëjta gjë, e etiketuar në rend të kundërt.</li>
+</ul>
+<p><code>outdoor</code> nuk numërohet: kutia me rërë e një kopshti birre nuk është ajo çfarë
+premton rrethi. Nuk numërohet as <code>no</code>, as <code>limited</code> — këtë të fundit wiki
+e përkufizon si «lodra ka, por hapësirë e caktuar jo». Kur ka të pranishme një
+<code>kids_area:indoor=no</code> të shprehur qartë, ajo mbizotëron mbi një
+<code>kids_area=yes</code> të thjeshtë.</p>
+<p>Kjo është një distinktiv, jo një status i katërt. Një vend pa këto etiketa nuk «nuk ka
+hapësirë lojërash» &mdash; OSM thjesht nuk thotë asgjë për të. Prandaj këtu s'ka gri dhe s'ka
+thirrje për veprim: te <code>changing_table:location</code> heshtja ka kuptim, sepse dihet me
+siguri se tavolina ekziston. Këtu gati çdo objekt hesht, dhe kjo nuk do të thotë asgjë. Nëse njeh
+një hapësirë lojërash, je i mirëpritur ta shtosh &mdash; në editorin e OSM-së, si
+<code>kids_area=yes</code>.</p>
+
+<h2>Rrathët blu bosh: vende loje, pa përgjigje</h2>
+<p>I njëjti rregull përputhet me shumë më tepër vende sesa ka shenjues harta. Vetëm
+<span data-stat="play_tables">111</span> prej tyre kanë ndonjë etiketë <code>changing_table</code>
+fare. Në <span data-stat="play_places">701</span> vende të tjera, askush nuk i është përgjigjur
+pyetjes së parë: a ka këtu tavolinë ndërrimi? Po, jo, askush s'e di — OSM nuk thotë asgjë fare.</p>
+<p>Harta nuk mund t'i ngjyrosë ato <span data-stat="play_places">701</span>, sepse s'ka gjë për
+t'u ngjyrosur. Nuk janë as gri: gri do të thotë «tavolina ekziston, mungon dhoma», dhe kjo nuk
+vlen këtu. Prandaj marrin filtrin e vet, <em>Vetëm hapësirë lojërash</em>, i çaktivizuar si
+parazgjedhje, dhe një rreth blu bosh në vend të një shenjuesi të mbushur.</p>
+<p>Janë pyetjet e hapura më premtuese në të gjithë hartën. Një fushë lojërash e mbyllur, një
+kafene me pishinë topash, një restorant me dhomë lojërash &mdash; një baba me një fëmijë të vogël
+do të shkojë atje sido që të jetë, dhe kur të jetë atje, e di përgjigjen. Klikimi mbi rrethin hap
+MapComplete pikërisht te ajo pyetje e vetme. Përgjigju dhe rrethi zhduket në përditësimin e
+ardhshëm të natës, i zëvendësuar nga një shenjues i vërtetë.</p>
+
+<h2>Si të rregullosh një shenjues gri</h2>
+<p>Gri do të thotë se mungon një përgjigje. Ku ndodhet tavolina e ndërrimit? Kushdo me një
+llogari falas në OSM mund t'i përgjigjet kësaj, aty për aty, në më pak se një minutë:</p>
+<ul>
+  <li><strong>MapComplete (çdo telefon, në shfletues):</strong> «Përgjigju në
+      MapComplete» te një shenjues gri hap të njëjtin objekt në temën e vet të PapaMap-it për
+      MapComplete &mdash; për çdo shenjues, që ndryshimet të njihen si të ardhura që këtu.
+      MapComplete paralajmëron një herë për temën jozyrtare, kjo është normale. Pyetjet e temës
+      janë tani për tani vetëm në anglisht. Hyr me llogarinë tënde në OSM dhe përgjigju pyetjeve
+      për tavolinën e ndërrimit, përfshirë atë për dhomën. Përgjigjja shkon drejt e në
+      OpenStreetMap dhe shfaqet këtu pas përditësimit të radhës gjatë natës.</li>
+  <li><strong>StreetComplete (Android):</strong> ka një detyrë (quest) për tavolinën e
+      ndërrimit, e çaktivizuar si parazgjedhje. Shko te <em>Cilësimet &rarr; Zgjedhja e detyrave
+      dhe renditja e shfaqjes</em>, kërko «tavolinë ndërrimi» dhe shënoje. Pyet vetëm po/jo. Për
+      pyetjen e dhomës te një shenjues gri ekzistues, përdor MapComplete.</li>
+</ul>
+<p class="muted">Ndryshimet bëhen nën llogarinë tënde në OSM dhe u përkasin të gjithëve. Jetojnë
+më gjatë se ky sajt dhe ndihmojnë çdo aplikacion që lexon OpenStreetMap.</p>
+
+<h2 id="contribute">Si të shtosh një vend që mungon</h2>
+<p>PapaMap nuk ruan asgjë vetë. Shtimi i një vendi do të thotë gjithmonë: editimi i
+OpenStreetMap-it. Butoni <em>+ Shto një vend</em> në hartë hap editorin e duhur te pamja jote
+aktuale.</p>
+
+<h3>Mungon fare një tualet publik</h3>
+<p>Hap <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">temën
+e PapaMap-it për MapComplete</a> (lidhja e parë në dialog). Hyr, prek hartën aty ku ndodhet
+tualeti, zgjidh «një tualet publik», përgjigju pyetjeve. Përfshirë ato për tavolinën e
+ndërrimit dhe dhomën.</p>
+
+<h3>Një kafene, dyqan apo restorant ka një tavolinë që askush s'e ka hartëzuar</h3>
+<p>Vendi pothuajse me siguri ekziston tashmë në OSM. Mungon vetëm etiketa
+<code>changing_table</code>. Në editorin e vetë OSM-së (iD) kjo zgjat rreth dy minuta:</p>
+<ol>
+  <li>Krijo një llogari falas te <a href="https://www.openstreetmap.org">openstreetmap.org</a>
+      (mjafton një email) dhe hyr.</li>
+  <li>Gjej vendin dhe kliko <strong>Edito</strong>. Vendi është një pikë ose kontura e një
+      ndërtese. Kliko mbi të, etiketat e tij shfaqen në të majtë.</li>
+  <li>Hap <strong>Etiketat</strong> poshtë dhe shto me <strong>+</strong>:
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = ku ndodhet, nga
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">lista e
+            dokumentuar e vlerave</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> ose <code>sales_area</code>.
+            Në disa dhoma njëherësh: ndaji me pikëpresje
+            (<code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Shtyp <strong>Ruaj</strong>, shkruaj një koment të shkurtër («shto vendndodhjen e
+      tavolinës»), ngarko. Publikohet në OSM brenda një minute, në PapaMap pas përditësimit të
+      radhës gjatë natës.</li>
+</ol>
+<p class="muted">Të lutem, etiketo vetëm atë që ke parë vetë. OSM regjistron atë çfarë është, jo
+atë çfarë duhet të jetë. Nëse nuk e di dhomën, vetëm <code>changing_table=yes</code> është ende i
+dobishëm: vendi bëhet shenjues gri, dhe babai tjetër i përgjigjet pyetjes së dhomës.</p>
+
+<h2>Pse një tregues vlerësimi i ofertës nga OSM nuk funksionon</h2>
+<p>Projekti më i madh që bie në sy do të ishte një raport ofertë tualetesh burra-gra për çdo
+qytet. Numri mbi të cilin mbështetet vërtet argumenti i «paritetit të banjove». Nuk mund të
+llogaritet nga OpenStreetMap. E kontrolluam këtë përpara se ta ndërtonim hartën, me një kampion
+nga tetë qendra qytetesh (Berlin, Londër, Paris, Nju Jork, Tokio&nbsp;23&nbsp;lagje, Amsterdam,
+Vjenë, Melburn; 26&nbsp;korr&nbsp;2026):</p>
+<table>
+  <tr><th>Qyteti</th><th>Tualete të hartëzuara</th><th>Ndonjë etiketë gjinie</th><th>Të dyja
+      M&nbsp;+&nbsp;F</th></tr>
+  <tr><td>Berlini</td><td>1,173</td><td>660</td><td>119</td></tr>
+  <tr><td>Londra</td><td>1,316</td><td>458</td><td>210</td></tr>
+  <tr><td>Parisi</td><td>1,414</td><td>579</td><td>101</td></tr>
+  <tr><td>Nju Jorku</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Tokio (23 lagje)</td><td>3,500</td><td>601</td><td>231</td></tr>
+  <tr><td>Amsterdami</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Vjena</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><td>Melburni</td><td>418</td><td>142</td><td>35</td></tr>
+  <tr><td><strong>Të gjitha</strong></td><td><strong>9,674</strong></td><td><strong>2,888
+      (29.9%)</strong></td><td><strong>827 (8.5%)</strong></td></tr>
+</table>
+<ul>
+  <li>Vetëm 29.9% e tualeteve të hartëzuara kanë ndonjë etiketë gjinie fare. Të dyja (mashkull
+      dhe femër): 8.5%.</li>
+  <li>Etiketat janë thjesht shenja po/jo, kurrë numra. Numri i kabinave për gjini: zero në të
+      gjitha tetë qytetet. Çelësi i vetëm i kapacitetit, <code>toilets:num_chambers</code>
+      (~27k përdorime), nuk ka gjini të përcaktuar dhe vjen pothuajse tërësisht nga një import i
+      vjetër. Variantet e tij <code>:female</code> / <code>:male</code> kanë nga 2 përdorime
+      secili, në mbarë botën.</li>
+  <li>Hamburgu, kontrolluar të njëjtën ditë: 443 tualete të hartëzuara, asnjë me etiketë
+      <code>toilets:num_chambers*</code>. Shiriti në <a href="./">faqen kryesore</a> i rillogarit
+      këto shifra çdo natë.</li>
+  <li>Dhe: shkalla e etiketimit mat komunitetin e hartëzuesve, jo qytetet. Tualetet me një kabinë
+      të vetme mbeten me të drejtë pa gjini të përcaktuar. Një renditje qytetesh do të vlerësonte
+      kontribuesit e OSM-së, jo barazinë tualetesh.</li>
+</ul>
+<p>Pra, i vetmi pohim i ndershëm është: vetë oferta nuk mund të matet sot nga të dhëna të hapura.
+Ky sajt mat atë çfarë matet dot, dhe kthen boshllëqet në kontribute.</p>
+
+<h2>I vetmi fakt i llogaritshëm: ku ndodhen tavolinat</h2>
+<p>Për sa dimë, <code>changing_table:location</code> është fjalori i vetëm i hapur që regjistron
+në cilën dhomë ndodhet një tavolinë ndërrimi. Është i rrallë:
+<span data-stat="location_total">3,659</span> nga <span data-stat="ct_total">77,000</span>
+objekte <code>changing_table</code> në mbarë botën, <span data-stat="share">4.8%</span>. Por aty
+ku ekziston, është shumë i njëanshëm (taginfo, <span data-stat="date">26&nbsp;korr&nbsp;2026</span>):</p>
+<ul>
+  <li>Tavolina vetëm te tualeti i grave: <strong data-stat="female_only">485</strong>.</li>
+  <li>Tavolina vetëm te tualeti i burrave: <strong data-stat="male_only">71</strong>. Rreth
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> janë të
+      etiketuara në të dyja dhomat, <span data-stat="male_any">410</span> regjistrojnë çfarëdo
+      tavoline te tualeti i burrave. Në mbarë botën.</li>
+</ul>
+<p>Kampioni është i vogël, dhe hartëzuesit zgjedhin vetë çfarë regjistrojnë. Prandaj mos e lexo
+raportin e saktë si diçka absolute. Drejtimi përputhet me atë që është dokumentuar prej kohësh
+gjetiu: tavolinat e ndërrimit varen si parazgjedhje te tualeti i grave. Kjo ua mbyll derën
+baballarëve, dhe në heshtje supozon se kush merret me pelenat. Kjo hartë i bën të dukshme të
+dhënat që mungojnë. Dhe të lehta për t'u rregulluar.</p>
+
+<h2>Licenca e të dhënave &amp; burimi</h2>
+<p>Të gjitha të dhënat e hartës &copy; <a href="https://www.openstreetmap.org/copyright">kontribuesit
+e OpenStreetMap</a>, të disponueshme sipas
+<a href="https://opendatacommons.org/licenses/odbl/">Licencës së Bazës së Hapur të të Dhënave
+(ODbL)</a>. Skedarët GeoJSON dhe të statistikave që shërben ky sajt rrjedhin nga OSM dhe prandaj
+janë gjithashtu ODbL. Statistikat botërore të etiketave vijnë nga
+<a href="https://taginfo.openstreetmap.org/">taginfo</a>. Kodi i vetë sajtit është nën licencën
+MIT.</p>
+
+<h2>Privatësia</h2>
+<p>Një sajt statik. Pa llogari, pa cookie, pa analitikë, pa skripta ndjekjeje. Sajti nuk ruan
+asgjë për ty dhe nuk ka bazë të dhënash. Pllakëzat e hartës vijnë nga serverët e OpenStreetMap;
+ato kërkesa bien nën
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">politikën e privatësisë të OSMF-së</a>.
+Nëse ndjek një lidhje drejt MapComplete, StreetComplete ose openstreetmap.org, je në sajtet e
+tyre, duke editiuar nën llogarinë tënde në OSM. Asgjë nuk kalon nëpër ne. Faqet zyrtare:
+<a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (në gjermanisht).</p>
+
+<p class="muted">Burimet: kampion nga Overpass në 8 qendra qytetesh (9,674 tualete) nga
+26&nbsp;korr&nbsp;2026, si dhe statistikat e çelësave nga taginfo sipas datës së dhënë më lart.
+Shifrat vendore vijnë nga i njëjti kërkim nate që ndërton hartën.</p>
+
+<h2>Si është ndërtuar ky sajt</h2>
+<p>E përdor IA-në për të më ndihmuar me kodim dhe hartim tekstesh. Gjithsesi, gjithçka kalon nga
+sytë e mi njerëzorë.</p>
+
+<script>
+// The taginfo numbers above and the two play-area numbers are the same ones the
+// nightly build already writes to data/stats.json. Read them from there rather
+// than maintaining them by hand: copied numbers rot, and on this page of all
+// pages that is embarrassing.
+// The markup holds the last known value, so without JS — or if the fetch fails
+// — the page still reads correctly, just a little older.
+(function () {
+  var LOCALE = "sq-AL";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      s = s || {};
+      var vals = {};
+      // The play-area numbers live in s.local, the taginfo values in s.global.
+      // Read them separately so the taginfo check below cannot swallow them:
+      // since the eleven-country build of 19 Aug 2026 both change every night,
+      // independently of each other.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
+      }
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "short", year: "numeric"
+            });
+          }
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* the numbers in the markup stand */ });
+})();
+</script>
+
+</body>
+</html>

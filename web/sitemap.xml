@@ -11,8 +11,9 @@
   is the documented belt-and-braces — for the ?lang= views especially, the
   sitemap is the channel that does not depend on the crawler rendering JS.
 
-  Nine languages since 2026-08-19, so the two multilingual sections below are
-  9 x 10 lines of alternates each. Every language must list every other, or
+  31 languages since the Europe-complete sweep (2026-08-22), so the two
+  multilingual sections below are 31 x 32 lines of alternates each —
+  generated, not typed: scratchpad langweave.py rewrites them from one table. Every language must list every other, or
   Google treats the set as unreciprocated and ignores it. Keep in sync with
   i18n.js's LANGS and index.html's hreflang block; tests/test_pages.py already
   guards the Bundesland list further down.
@@ -31,6 +32,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
   </url>
   <url>
@@ -44,6 +67,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
   </url>
   <url>
@@ -57,6 +102,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
   </url>
   <url>
@@ -70,6 +137,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
   </url>
   <url>
@@ -83,6 +172,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
   </url>
   <url>
@@ -96,6 +207,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
   </url>
   <url>
@@ -109,6 +242,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
   </url>
   <url>
@@ -122,6 +277,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
   </url>
   <url>
@@ -135,6 +312,798 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=bs</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=ca</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=et</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=es</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=hr</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=is</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=lv</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=lt</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=hu</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=no</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=pt</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=ro</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=sq</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=sk</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=sl</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=fi</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=el</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=be</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=bg</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=mk</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=sr</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/?lang=uk</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/?lang=nl"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/?lang=cs"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/?lang=pl"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/?lang=sv"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/?lang=bs"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/?lang=ca"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/?lang=et"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/?lang=hr"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/?lang=is"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/?lang=lv"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/?lang=lt"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/?lang=hu"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/?lang=no"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/?lang=ro"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/?lang=sq"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/?lang=sk"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/?lang=sl"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/?lang=fi"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/?lang=el"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/?lang=be"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/?lang=bg"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/?lang=mk"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/?lang=sr"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/?lang=uk"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/"/>
   </url>
 
@@ -149,6 +1118,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
   </url>
   <url>
@@ -162,6 +1153,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
   </url>
   <url>
@@ -175,6 +1188,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
   </url>
   <url>
@@ -188,6 +1223,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
   </url>
   <url>
@@ -201,6 +1258,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
   </url>
   <url>
@@ -214,6 +1293,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
   </url>
   <url>
@@ -227,6 +1328,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
   </url>
   <url>
@@ -240,6 +1363,28 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
   </url>
   <url>
@@ -253,6 +1398,798 @@
     <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
     <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
     <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-bs.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-ca.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-et.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-es.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-hr.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-is.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-lv.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-lt.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-hu.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-no.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-pt.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-ro.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-sq.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-sk.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-sl.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-fi.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-el.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-be.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-bg.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-mk.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-sr.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/methods-uk.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/methods.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html"/>
+    <xhtml:link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html"/>
+    <xhtml:link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html"/>
+    <xhtml:link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html"/>
+    <xhtml:link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html"/>
+    <xhtml:link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html"/>
+    <xhtml:link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html"/>
+    <xhtml:link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html"/>
+    <xhtml:link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html"/>
+    <xhtml:link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html"/>
+    <xhtml:link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html"/>
+    <xhtml:link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html"/>
+    <xhtml:link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html"/>
   </url>
 

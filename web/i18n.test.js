@@ -71,8 +71,19 @@ test("pickLang: every language is auto-detected, not only Danish", () => {
   assert.equal(pickLang(null, null, "en-GB"), "en");
   assert.equal(pickLang(null, null, "de-AT"), "de");
   assert.equal(pickLang(null, null, "fr-CH"), "fr");
-  assert.equal(pickLang(null, null, "pt-BR"), DEFAULT_LANG);
+  // Brazilian Portuguese lands on the Portuguese UI — the tag names the
+  // language, and pt joined with the Europe-complete ring.
+  assert.equal(pickLang(null, null, "pt-BR"), "pt");
   assert.equal(pickLang(null, null, undefined), DEFAULT_LANG);
+});
+
+test("pickLang: Norwegian browser tags reach the Norwegian UI", () => {
+  // Browsers report Bokmål/Nynorsk as nb/nn, never the macrolanguage code the
+  // site uses. Without the alias, no Norwegian visitor would be detected.
+  assert.equal(pickLang(null, null, "nb"), "no");
+  assert.equal(pickLang(null, null, "nb-NO"), "no");
+  assert.equal(pickLang(null, null, "nn-NO"), "no");
+  assert.equal(pickLang(null, null, ["nn", "da"]), "no");
 });
 
 test("pickLang: reads the whole preference list, skipping what we don't speak", () => {

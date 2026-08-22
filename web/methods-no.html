@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PapaMap — metode &amp; ærlighet</title>
+<meta name="description" content="Hvordan PapaMap fargelegger stellebord fra OpenStreetMap, hvorfor et dekningsindeks ikke kan bygges ut fra de dataene, og hvordan du selv retter en grå nål.">
+<!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
+     language versions were never actually linked to each other. Thirty-one
+     of them since the Europe-complete sweep (2026-08-22); every page must
+     list every other or the set is unreciprocated and ignored. -->
+<link rel="canonical" href="https://papamap.de/methods-no.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/methods.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/methods-en.html">
+<link rel="alternate" hreflang="da" href="https://papamap.de/methods-da.html">
+<link rel="alternate" hreflang="nl" href="https://papamap.de/methods-nl.html">
+<link rel="alternate" hreflang="fr" href="https://papamap.de/methods-fr.html">
+<link rel="alternate" hreflang="it" href="https://papamap.de/methods-it.html">
+<link rel="alternate" hreflang="cs" href="https://papamap.de/methods-cs.html">
+<link rel="alternate" hreflang="pl" href="https://papamap.de/methods-pl.html">
+<link rel="alternate" hreflang="sv" href="https://papamap.de/methods-sv.html">
+<link rel="alternate" hreflang="bs" href="https://papamap.de/methods-bs.html">
+<link rel="alternate" hreflang="ca" href="https://papamap.de/methods-ca.html">
+<link rel="alternate" hreflang="et" href="https://papamap.de/methods-et.html">
+<link rel="alternate" hreflang="es" href="https://papamap.de/methods-es.html">
+<link rel="alternate" hreflang="hr" href="https://papamap.de/methods-hr.html">
+<link rel="alternate" hreflang="is" href="https://papamap.de/methods-is.html">
+<link rel="alternate" hreflang="lv" href="https://papamap.de/methods-lv.html">
+<link rel="alternate" hreflang="lt" href="https://papamap.de/methods-lt.html">
+<link rel="alternate" hreflang="hu" href="https://papamap.de/methods-hu.html">
+<link rel="alternate" hreflang="no" href="https://papamap.de/methods-no.html">
+<link rel="alternate" hreflang="pt" href="https://papamap.de/methods-pt.html">
+<link rel="alternate" hreflang="ro" href="https://papamap.de/methods-ro.html">
+<link rel="alternate" hreflang="sq" href="https://papamap.de/methods-sq.html">
+<link rel="alternate" hreflang="sk" href="https://papamap.de/methods-sk.html">
+<link rel="alternate" hreflang="sl" href="https://papamap.de/methods-sl.html">
+<link rel="alternate" hreflang="fi" href="https://papamap.de/methods-fi.html">
+<link rel="alternate" hreflang="el" href="https://papamap.de/methods-el.html">
+<link rel="alternate" hreflang="be" href="https://papamap.de/methods-be.html">
+<link rel="alternate" hreflang="bg" href="https://papamap.de/methods-bg.html">
+<link rel="alternate" hreflang="mk" href="https://papamap.de/methods-mk.html">
+<link rel="alternate" hreflang="sr" href="https://papamap.de/methods-sr.html">
+<link rel="alternate" hreflang="uk" href="https://papamap.de/methods-uk.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/methods.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
+    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --play: #0b6ea8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
+      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --play: #6ab0e8;
+    }
+  }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0.5rem 0 0; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+         background: rgba(128,128,128,0.15); padding: 0.1em 0.3em; border-radius: 3px; }
+  table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
+  li { margin: 0.3rem 0; }
+  .back { font-size: 0.9rem; }
+  /* Thirty-one languages, listed by their own names — "This page in X" that
+     many times would be a page of its own, and a reader who cannot read this
+     page still recognises "Čeština". The current one is <strong>, not a link. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">&larr; Tilbake til kartet</a></p>
+<p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
+  &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
+  &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
+  &middot; <a href="methods-nl.html" hreflang="nl" lang="nl">Nederlands</a>
+  &middot; <a href="methods-fr.html" hreflang="fr" lang="fr">Français</a>
+  &middot; <a href="methods-it.html" hreflang="it" lang="it">Italiano</a>
+  &middot; <a href="methods-cs.html" hreflang="cs" lang="cs">Čeština</a>
+  &middot; <a href="methods-pl.html" hreflang="pl" lang="pl">Polski</a>
+  &middot; <a href="methods-sv.html" hreflang="sv" lang="sv">Svenska</a>
+  &middot; <a href="methods-bs.html" hreflang="bs" lang="bs">Bosanski</a>
+  &middot; <a href="methods-ca.html" hreflang="ca" lang="ca">Català</a>
+  &middot; <a href="methods-et.html" hreflang="et" lang="et">Eesti</a>
+  &middot; <a href="methods-es.html" hreflang="es" lang="es">Español</a>
+  &middot; <a href="methods-hr.html" hreflang="hr" lang="hr">Hrvatski</a>
+  &middot; <a href="methods-is.html" hreflang="is" lang="is">Íslenska</a>
+  &middot; <a href="methods-lv.html" hreflang="lv" lang="lv">Latviešu</a>
+  &middot; <a href="methods-lt.html" hreflang="lt" lang="lt">Lietuvių</a>
+  &middot; <a href="methods-hu.html" hreflang="hu" lang="hu">Magyar</a>
+  &middot; <strong lang="no">Norsk</strong>
+  &middot; <a href="methods-pt.html" hreflang="pt" lang="pt">Português</a>
+  &middot; <a href="methods-ro.html" hreflang="ro" lang="ro">Română</a>
+  &middot; <a href="methods-sq.html" hreflang="sq" lang="sq">Shqip</a>
+  &middot; <a href="methods-sk.html" hreflang="sk" lang="sk">Slovenčina</a>
+  &middot; <a href="methods-sl.html" hreflang="sl" lang="sl">Slovenščina</a>
+  &middot; <a href="methods-fi.html" hreflang="fi" lang="fi">Suomi</a>
+  &middot; <a href="methods-el.html" hreflang="el" lang="el">Ελληνικά</a>
+  &middot; <a href="methods-be.html" hreflang="be" lang="be">Беларуская</a>
+  &middot; <a href="methods-bg.html" hreflang="bg" lang="bg">Български</a>
+  &middot; <a href="methods-mk.html" hreflang="mk" lang="mk">Македонски</a>
+  &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
+  &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a></p>
+<h1>PapaMap — metode &amp; ærlighet</h1>
+<p class="muted">Stellebord en pappa når. De verdensomspennende taginfo-tallene nedenfor kommer
+fra det nattlige bygget. Utvalget fra åtte bysentre er fra 26.&nbsp;juli&nbsp;2026 og blir stående.</p>
+
+<h2>Hva dette kartet er. Og hva det ikke er.</h2>
+<p>PapaMap viser steder i 44 europeiske land — fra Island til Kypros, fra Portugal til
+Ukraina — der OpenStreetMap
+kjenner til et stellebord
+(<code>changing_table=yes</code> eller <code>limited</code>). Fargen sier om en pappa kan nå
+bordet. Kartet leser bare OSM og ingenting annet, og det skriver ingen steder. Å rette dataene
+skjer på selve OSM, via lenkene på hver nål.</p>
+<p>En rangering av hvilken by som har det beste toalettilbudet er dette ikke. Hvorfor det ikke
+ærlig kan gjøres ut fra åpne data, forklares lenger nede.</p>
+
+<h2>Hva fargene betyr (den eksakte regelen)</h2>
+<p>Bare objekter med <code>changing_table=yes</code> eller <code>limited</code> havner på kartet
+(<code>no</code> telles bare med i statistikken). Fargen kommer fra
+<code>changing_table:location</code>. Verdien deles opp ved <code>;</code>, trimmes, gjøres om til
+små bokstaver og sammenlignes som et helt token. Aldri som en delstreng, for
+<code>female_toilet</code> inneholder <code>male</code>.</p>
+<ul>
+  <li><span class="dot g"></span><strong>Grønn:</strong> ett token er
+      <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
+      <code>room</code>, <code>wheelchair_toilet</code> eller <code>sales_area</code>.
+      En pappa kan komme til.</li>
+  <li><span class="dot r"></span><strong>Rød:</strong> ellers, hvis ett token er
+      <code>female_toilet</code>. Bordet finnes, men bare på dametoalettet.</li>
+  <li><span class="dot u"></span><strong>Grå:</strong> alt annet. Ingen location-tag, eller bare
+      fritekst. Ingen har registrert rommet. De grå nålene er oppgaven.</li>
+</ul>
+<p>Ett unntak: objekter med et <code>centralkey</code>-tag (annet enn <code>no</code>) vises ikke i
+det hele tatt. Euronøkkelen og lignende sentralnøkkelsystemer utstedes bare mot dokumentert
+funksjonsnedsettelse — uansett hvilket rom bordet står i, kommer de fleste pappaer ikke gjennom den
+døra.</p>
+
+<h2>Den blå ringen: lekeområde</h2>
+<p>En nål med en blå ring har også et lekeområde &mdash; et sted der du ikke bare steller barnet,
+men blir en stund. Filteret <em>Med lekeområde</em> viser bare disse. Et sted telles med hvis OSM
+registrerer en av disse:</p>
+<ul>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> eller <code>designated</code>
+      &mdash; wikiens dokumenterte måte å si innendørs på.</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> eller
+      <code>designated</code> &mdash; lekekroken på kafeen, restauranten, bakeriet. Det mest
+      brukte tagget, selv om det ikke sier om det er inne eller ute.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; en kommersiell innendørs
+      lekeplass.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> sammen med
+      <code>indoor=yes</code> &mdash; det samme, tagget motsatt vei.</li>
+</ul>
+<p><code>outdoor</code> teller ikke med: sandkassen i en ølhage er ikke det ringen lover. Det gjør
+heller ikke <code>no</code>, eller <code>limited</code> &mdash; wikien definerer den som «leker
+finnes, men ikke noe eget område». Der et eksplisitt <code>kids_area:indoor=no</code> finnes,
+vinner det over et rent <code>kids_area=yes</code>.</p>
+<p>Dette er et merke, ikke en fjerde status. Et sted uten disse taggene har ikke «ikke noe
+lekeområde» &mdash; OSM sier rett og slett ingenting om det. Derfor er det ingen grå her og ingen
+oppfordring til handling: ved <code>changing_table:location</code> betyr stillheten noe, fordi
+bordet er kjent for å finnes. Her tier nesten alle objekter, og det betyr ingenting. Kjenner du til
+et lekeområde, er det fortsatt velkomment å legge det til &mdash; i OSM-editoren, som
+<code>kids_area=yes</code>.</p>
+
+<h2>De tomme blå ringene: lekesteder uten svar</h2>
+<p>Den samme regelen treffer langt flere steder enn kartet har nåler. Bare
+<span data-stat="play_tables">111</span> av dem har i det hele tatt et <code>changing_table</code>-tag. På
+<span data-stat="play_places">701</span> flere har ingen svart på det første spørsmålet: er det et
+stellebord her? Ja, nei, ingen vet &mdash; OSM sier absolutt ingenting.</p>
+<p>Kartet kan ikke fargelegge disse <span data-stat="play_places">701</span>, for det er ingenting
+å fargelegge. De er heller ikke grå: grå betyr «bordet finnes, rommet mangler», og det gjelder ikke
+her. Derfor får de sin egen chip, <em>Bare lekeområde</em>, av som standard, og en tom blå ring i
+stedet for en fylt nål.</p>
+<p>De er de mest lovende åpne spørsmålene på hele kartet. En innendørs lekeplass, en kafé med
+ballbasseng, en restaurant med lekerom &mdash; en pappa med en smårolling drar dit uansett, og når
+han først er der, kjenner han svaret. Et klikk på ringen åpner MapComplete med akkurat det ene
+spørsmålet. Svar på det, så er ringen borte ved neste nattlige oppdatering, erstattet av en ekte
+nål.</p>
+
+<h2>Slik retter du en grå nål</h2>
+<p>Grå betyr at ett svar mangler. Hvor er stellebordet? Alle med en gratis OSM-konto kan svare på
+det, på stedet, på under et minutt:</p>
+<ul>
+  <li><strong>MapComplete (hvilken som helst telefon, i nettleseren):</strong> «Svar på
+      MapComplete» på en grå nål åpner det samme objektet i PapaMaps eget MapComplete-tema
+      &mdash; på hver nål, slik at endringene er gjenkjennelige som at de kommer herfra.
+      MapComplete advarer én gang om et uoffisielt tema, det er greit. Spørsmålene i temaet
+      finnes foreløpig bare på engelsk. Logg inn med OSM-kontoen din og svar på spørsmålene om
+      stellebordet, inkludert det om rommet. Svaret går rett inn i OpenStreetMap og dukker opp
+      her etter neste nattlige oppdatering.</li>
+  <li><strong>StreetComplete (Android):</strong> har et stellebord-oppdrag, som er av som
+      standard. Gå til <em>Innstillinger &rarr; Valg av oppdrag og visningsrekkefølge</em>, søk
+      etter «stellebord» og huk av. Den spør bare ja/nei. For spørsmålet om rommet på en
+      eksisterende grå nål bruker du MapComplete.</li>
+</ul>
+<p class="muted">Endringene skjer under din egen OSM-konto og tilhører alle. De overlever dette
+nettstedet og er til nytte for alle apper som leser OpenStreetMap.</p>
+
+<h2 id="contribute">Slik legger du til et sted som mangler</h2>
+<p>PapaMap lagrer ingenting selv. Å legge til et sted betyr derfor alltid: å redigere
+OpenStreetMap. Knappen <em>+ Legg til et sted</em> på kartet åpner riktig editor med din nåværende
+visning.</p>
+
+<h3>Et offentlig toalett mangler helt</h3>
+<p>Bruk <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMaps
+MapComplete-tema</a> (den første lenken i dialogen). Logg inn, trykk på kartet der toalettet er,
+velg «et offentlig toalett», svar på spørsmålene. Inkludert de om stellebordet og rommet.</p>
+
+<h3>En kafé, butikk eller restaurant har et bord ingen har kartlagt</h3>
+<p>Stedet finnes nesten helt sikkert allerede i OSM. Det er bare <code>changing_table</code>-tagget
+som mangler. I OSMs egen editor (iD) tar det omtrent to minutter:</p>
+<ol>
+  <li>Opprett en gratis konto på <a href="https://www.openstreetmap.org">openstreetmap.org</a> (én
+      e-postadresse er nok) og logg inn.</li>
+  <li>Finn stedet og klikk <strong>Rediger</strong>. Stedet er et punkt eller et bygningsomriss.
+      Klikk på det, så vises taggene til venstre.</li>
+  <li>Utvid <strong>Tags</strong> nederst og legg til med <strong>+</strong>:
+      <ul>
+        <li><code>changing_table</code> = <code>yes</code></li>
+        <li><code>changing_table:location</code> = hvor det er, fra den
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">dokumenterte
+            verdilisten</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+            <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
+            <code>dedicated_room</code>, <code>room</code> eller <code>sales_area</code>.
+            I flere rom: skill med semikolon
+            (<code>male_toilet;female_toilet</code>).</li>
+      </ul></li>
+  <li>Trykk <strong>Lagre</strong>, skriv en kort kommentar («la til plassering for
+      stellebord»), last opp. Live på OSM innen et minutt, på PapaMap etter neste nattlige
+      oppdatering.</li>
+</ol>
+<p class="muted">Tagg bare det du selv har sett. OSM registrerer det som er, ikke det som burde
+være. Vet du ikke rommet, er <code>changing_table=yes</code> alene fortsatt nyttig: stedet blir en
+grå nål, og neste pappa svarer på spørsmålet om rommet.</p>
+
+<h2>Hvorfor et dekningsindeks ikke kan lages ut fra OSM</h2>
+<p>Det opplagte, større prosjektet ville vært et forhold mellom toalettilbudet for menn og
+kvinner per by. Tallet som «potty parity»-argumentet egentlig dreier seg om. Det kan ikke beregnes
+ut fra OpenStreetMap. Vi sjekket dette før vi bygde, med et utvalg fra åtte bysentre (Berlin,
+London, Paris, New York, Tokyo&nbsp;23&nbsp;bydeler, Amsterdam, Wien, Melbourne;
+26.&nbsp;juli&nbsp;2026):</p>
+<table>
+  <tr><th>By</th><th>Kartlagte toaletter</th><th>Noe kjønnstag</th><th>Begge M&nbsp;+&nbsp;K</th></tr>
+  <tr><td>Berlin</td><td>1,173</td><td>660</td><td>119</td></tr>
+  <tr><td>London</td><td>1,316</td><td>458</td><td>210</td></tr>
+  <tr><td>Paris</td><td>1,414</td><td>579</td><td>101</td></tr>
+  <tr><td>New York</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Tokyo (23 bydeler)</td><td>3,500</td><td>601</td><td>231</td></tr>
+  <tr><td>Amsterdam</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Wien</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
+  <tr><td><strong>Alle</strong></td><td><strong>9,674</strong></td><td><strong>2,888 (29.9%)</strong></td><td><strong>827 (8.5%)</strong></td></tr>
+</table>
+<ul>
+  <li>Bare 29,9% av de kartlagte toalettene har noe kjønnstag i det hele tatt. Begge deler
+      (male og female): 8,5%.</li>
+  <li>Taggene er rene ja/nei-flagg, aldri antall. Antall båser per kjønn: null i alle åtte
+      byene. Den ene kapasitetsnøkkelen, <code>toilets:num_chambers</code> (~27k bruk), er
+      kjønnsnøytral og kommer nesten utelukkende fra en gammel import. Variantene
+      <code>:female</code> / <code>:male</code> har 2 bruk hver, på verdensbasis.</li>
+  <li>Hamburg, sjekket samme dag: 443 kartlagte toaletter, ingen med et
+      <code>toilets:num_chambers*</code>-tag. Linjen på <a href="./">forsiden</a> regner disse
+      tallene på nytt hver natt.</li>
+  <li>Og: taggingsandeler måler mapper-fellesskapet, ikke byene. Enkeltbåser forblir riktig nok
+      kjønnsnøytrale. En byrangering ville gitt karakter til OSM-bidragsytere, ikke
+      toalettlikestilling.</li>
+</ul>
+<p>Så det eneste ærlige å si er: selve tilbudet kan ikke måles ut fra åpne data i dag. Dette
+nettstedet måler det som er målbart, og gjør hullene om til bidrag.</p>
+
+<h2>Det ene beregnbare faktumet: hvor bordene står</h2>
+<p><code>changing_table:location</code> er, så vidt vi vet, det eneste åpne vokabularet som
+registrerer hvilket rom et stellebord står i. Det er tynt utbredt:
+<span data-stat="location_total">3,659</span> av <span data-stat="ct_total">77,000</span>
+<code>changing_table</code>-objekter på verdensbasis, <span data-stat="share">4.8%</span>. Men der
+det finnes, er det skjevt fordelt (taginfo, <span data-stat="date">26.&nbsp;juli&nbsp;2026</span>):</p>
+<ul>
+  <li>Bord bare på dametoalettet: <strong data-stat="female_only">485</strong>.</li>
+  <li>Bord bare på herretoalettet: <strong data-stat="male_only">71</strong>. Omtrent
+      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> er tagget
+      i begge rom, <span data-stat="male_any">410</span> registrerer i det hele tatt et bord på
+      et herretoalett. På verdensbasis.</li>
+</ul>
+<p>Utvalget er lite, og det er mapperne som velger hva de registrerer. Så ikke overtolk det
+eksakte forholdet. Retningen stemmer med det som lenge har vært dokumentert andre steder:
+stellebord henger som standard på dametoalettet. Det stenger pappaer ute, og forutsetter
+stilltiende hvem som har ansvaret for bleieskift. Dette kartet gjør de manglende dataene synlige.
+Og enkle å rette.</p>
+
+<h2>Datalisens &amp; kreditering</h2>
+<p>Alle kartdata &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
+contributors</a>, tilgjengelig under
+<a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
+GeoJSON- og statistikkfilene dette nettstedet serverer, er avledet fra OSM og dermed også ODbL.
+Global tag-statistikk kommer fra <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
+Nettstedets egen kode er MIT-lisensiert.</p>
+
+<h2>Personvern</h2>
+<p>Et statisk nettsted. Ingen kontoer, ingen informasjonskapsler, ingen analyseverktøy, ingen
+sporingsskript. Nettstedet lagrer ingenting om deg og har ingen database. Kartflisene kommer fra
+OpenStreetMaps kartserver; de forespørslene faller inn under
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMFs personvernerklæring</a>. Følger du
+en lenke til MapComplete, StreetComplete eller openstreetmap.org, er du på deres nettsteder og
+redigerer under din egen OSM-konto. Ingenting går gjennom oss. Formelle sider:
+<a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (tysk).</p>
+
+<p class="muted">Kilder: Overpass-utvalg fra 8 bysentre (9&nbsp;674 toaletter) fra
+26.&nbsp;juli&nbsp;2026, og taginfos nøkkelstatistikk per datoen oppgitt ovenfor. De lokale
+tallene kommer fra det samme nattlige søket som også bygger kartet.</p>
+
+<h2>Slik blir nettstedet til</h2>
+<p>Jeg bruker KI som hjelp med koding og til å utkaste tekster. Alt går likevel gjennom mine egne
+øyne.</p>
+
+<script>
+// The taginfo numbers above and the two play-area numbers are the same ones the
+// nightly build already writes to data/stats.json. Read them from there rather
+// than maintaining them by hand: copied numbers rot, and on this page of all
+// pages that is embarrassing.
+// The markup holds the last known value, so without JS — or if the fetch fails
+// — the page still reads correctly, just a little older.
+(function () {
+  var LOCALE = "nb-NO";
+  fetch("data/stats.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (s) {
+      s = s || {};
+      var vals = {};
+      // The play-area numbers live in s.local, the taginfo values in s.global.
+      // Read them separately so the taginfo check below cannot swallow them:
+      // since the eleven-country build of 19 Aug 2026 both change every night,
+      // independently of each other.
+      var l = s.local;
+      if (l) {
+        ["play_tables", "play_places"].forEach(function (k) {
+          if (typeof l[k] === "number") vals[k] = l[k].toLocaleString(LOCALE);
+        });
+      }
+      var g = s.global;
+      if (g && g.source === "taginfo" && g.location_total && g.ct_total) {
+        var raw = {
+          ct_total: g.ct_total,
+          location_total: g.location_total,
+          female_only: g.location_female_only,
+          male_only: g.location_male_only,
+          male_any: g.location_male_any,
+          male_and_female: g.location_male_and_female
+        };
+        Object.keys(raw).forEach(function (k) {
+          if (typeof raw[k] === "number") vals[k] = raw[k].toLocaleString(LOCALE);
+        });
+        if (raw.female_only && raw.male_only) {
+          vals.ratio = Math.round(raw.female_only / raw.male_only) + ":1";
+        }
+        vals.share = (100 * raw.location_total / raw.ct_total)
+          .toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + "%";
+        if (g.data_until) {
+          var d = new Date(g.data_until);
+          if (!isNaN(d)) {
+            vals.date = d.toLocaleDateString(LOCALE, {
+              day: "numeric", month: "short", year: "numeric"
+            });
+          }
+        }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-stat]"), function (el) {
+        var v = vals[el.getAttribute("data-stat")];
+        if (v) el.textContent = v;
+      });
+    })
+    .catch(function () { /* the numbers in the markup stand */ });
+})();
+</script>
+
+</body>
+</html>
