@@ -148,11 +148,7 @@ espaces, mise en minuscules et comparée comme un token entier. Jamais comme une
       ou seulement du texte libre. Personne n'a renseigné la pièce. Les marqueurs gris, voilà le
       travail.</li>
 </ul>
-<p>Une exception : les objets portant un tag <code>centralkey</code> (autre que <code>no</code>) ne
-sont pas affichés du tout. La clé européenne (« Euroschlüssel », « Eurokey » en Suisse) et les
-systèmes de clé centralisée du même genre ne sont délivrés que sur justificatif de handicap
-&mdash; quelle que soit la pièce où se trouve la table, la plupart des papas ne passent pas cette
-porte.</p>
+<p>Un objet avec un tag <code>centralkey</code> (autre que <code>no</code>) reste hors de la carte quand la clé ferme toute la porte : <code>access=centralkey</code>, une table dans le WC handicapé, ou rien dans les tags ne dit que la clé ne concerne qu'une cabine. Un bloc avec WC hommes et femmes ouverts et une cabine PMR fermée à clé (<code>wheelchair:access=centralkey</code>, ou <code>male=yes</code> et <code>female=yes</code>) reste sur la carte, gris jusqu'à ce que quelqu'un renseigne la pièce. La clé européenne ne se délivre que sur justificatif de handicap, la plupart des papas ne passent donc pas cette porte.</p>
 
 <h2>L'anneau bleu : le coin jeux</h2>
 <p>Un marqueur avec un anneau bleu a en plus un coin jeux &mdash; un endroit où l'on ne fait pas que

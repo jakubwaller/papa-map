@@ -37,7 +37,7 @@ dad-accessible — inverting the entire point of the map. `ACCESSIBLE_TOKENS`, `
 **`CONTRACT.md` is the pipeline↔frontend contract.** Classification lives only in Python; the
 frontend consumes the `status` property and never re-derives it. `STATUSES` in `web/datasource.js`
 is the stable key set the UI renders zero badges from. Changing the emitted shape means amending
-CONTRACT.md — it is versioned by amendment, currently v15.
+CONTRACT.md — it is versioned by amendment, currently v16.
 
 **Overpass lies in two directions.** An all-Germany area query dies at a ~60 s network idle cutoff,
 so Germany stays chunked per Bundesland — and **France per région**, for the same reason and

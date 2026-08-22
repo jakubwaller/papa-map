@@ -19,12 +19,41 @@ FEATURE_VALUES = {"yes", "limited"}
 PLAY_AREA_VALUES = {"yes", "indoor", "designated"}
 
 
-def centralkey_locked(centralkey: str | None) -> bool:
-    """True when the object sits behind a central key system (`centralkey`
-    tag present and not `no`). The Euro key and its siblings are issued only
-    against proof of disability, so whatever room the table is in, the map's
-    audience can't open the door."""
-    return bool(centralkey) and centralkey.strip().lower() not in ("", "no")
+def centralkey_locked(tags: dict, location: str | None = None) -> bool:
+    """True when a central key system (`centralkey` tag present and not `no`)
+    stands between the map's audience and the table. The Euro key, the UK's
+    RADAR/NKS key and their siblings are issued only against proof of
+    disability, so a door they gate is closed to most dads.
+
+    The key locks the table when any of these holds:
+
+      * `access=centralkey` — the key gates the whole object;
+      * `changing_table:location` names only `wheelchair_toilet` — the table
+        sits in the one cubicle such a key is for;
+      * nothing scopes the key to a sub-part. A toilet block with open male
+        and female sections plus a key-locked accessible cubicle is commonly
+        mapped as ONE object (UK practice, raised by Robert Whittaker,
+        22 Aug 2026); the tagging that says so is `wheelchair:access=centralkey`
+        or `male=yes` / `female=yes`. Without it the key is taken to cover the
+        object.
+
+    Everything else with a `centralkey` tag is an ordinary feature — grey when
+    nobody has recorded the room, which is the question the map then asks.
+
+    `location` overrides the dict's `changing_table:location`, for callers
+    that already hold the value separately (classify)."""
+    if _v(tags, "centralkey") in ("", "no"):
+        return False
+    if _v(tags, "access") == "centralkey":
+        return True
+    if location is None:
+        location = tags.get("changing_table:location")
+    toks = tokens(location)
+    if toks and all(t == "wheelchair_toilet" for t in toks):
+        return True
+    scoped = (_v(tags, "wheelchair:access") == "centralkey"
+              or _v(tags, "male") == "yes" or _v(tags, "female") == "yes")
+    return not scoped
 
 
 def tokens(location: str | None) -> list[str]:
@@ -71,15 +100,16 @@ def has_play_area(tags: dict) -> bool:
 
 
 def classify(changing_table: str | None, location: str | None,
-             centralkey: str | None = None) -> str | None:
+             tags: dict | None = None) -> str | None:
     """Status of one OSM object: 'accessible' | 'female_only' | 'unknown', or
     None when the object is not a feature at all (changing_table not
-    yes/limited, or locked behind a central key). Any accessible token wins;
+    yes/limited, or locked behind a central key — see centralkey_locked, which
+    reads the object's other tags, hence the optional dict). Any accessible token wins;
     else an exact female_toilet token means female_only; else (no tag, free
     text, unrecognized) -> unknown."""
     if (changing_table or "").strip() not in FEATURE_VALUES:
         return None
-    if centralkey_locked(centralkey):
+    if tags and centralkey_locked(tags, location):
         return None
     toks = tokens(location)
     if any(t in ACCESSIBLE_TOKENS for t in toks):

@@ -24,8 +24,12 @@ def test_centralkey_locked_element_never_becomes_a_pin(load_fixture):
                            "tags": {"changing_table": "yes",
                                     "changing_table:location": "wheelchair_toilet",
                                     "centralkey": "eurokey"}})
-    ids = [f["properties"]["osm_id"] for f in build_features(ct)]
-    assert 50 not in ids
+    ct["elements"].append({"type": "node", "id": 51, "lat": 53.56, "lon": 10.1,
+                           "tags": {"changing_table": "yes", "centralkey": "nks",
+                                    "access": "yes", "wheelchair:access": "centralkey"}})
+    feats = {f["properties"]["osm_id"]: f for f in build_features(ct)}
+    assert 50 not in feats
+    assert feats[51]["properties"]["status"] == "unknown"  # key scoped to the cubicle
 
 
 def test_way_and_relation_use_center_geometry(load_fixture):

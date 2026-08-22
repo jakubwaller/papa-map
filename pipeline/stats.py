@@ -47,7 +47,7 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
             continue
         if element_coords(el)[0] is None:
             continue  # build_features drops it, so we must not count it
-        if centralkey_locked(tags.get("centralkey")):
+        if centralkey_locked(tags):
             locked += 1  # would be a pin, but the door needs a Euro key
             continue
         if value == "yes":

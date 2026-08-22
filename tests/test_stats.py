@@ -65,11 +65,18 @@ def test_local_stats_counts_centralkey_locked_drops(load_fixture):
                            "tags": {"changing_table": "yes",
                                     "changing_table:location": "wheelchair_toilet",
                                     "centralkey": "eurokey"}})
+    # Same key, but scoped to the accessible cubicle of a block with open
+    # sections: stays a pin, and a grey one until someone names the room.
+    ct["elements"].append({"type": "node", "id": 51, "lat": 53.56, "lon": 10.1,
+                           "tags": {"changing_table": "yes", "centralkey": "nks",
+                                    "male": "yes", "female": "yes",
+                                    "wheelchair:access": "centralkey"}})
     local = stats.local_stats(ct, {"total": 3, "capacity_tagged": 1})
-    assert local["ct_objects"] == 10  # still a tagged object
-    assert local["centralkey_locked"] == 1
-    assert local["ct_yes"] == 6  # but never feature-facing
+    assert local["ct_objects"] == 11  # both still tagged objects
+    assert local["centralkey_locked"] == 1  # only the cubicle-bound one
+    assert local["ct_yes"] == 7
     assert local["accessible"] == 3  # the room doesn't matter behind the lock
+    assert local["unknown"] == 3  # the scoped one is a grey pin
 
 
 def _taginfo_fetch(load_fixture):

@@ -1,5 +1,25 @@
 # papa-map — build contract (v0)
 
+> **v16 amendment (22 Aug 2026, central key locks, scoped):** v5 dropped every
+> object carrying a `centralkey` tag other than `no`. That rule was written
+> for the German Euro key, where the locked object is normally the single
+> accessible cubicle; UK practice breaks it — a toilet block with open male
+> and female sections plus a RADAR-key (`centralkey=nks`) disabled cubicle is
+> commonly mapped as **one** object (`access=yes` +
+> `wheelchair:access=centralkey` + `centralkey=nks`), so the table is
+> reachable without the key unless it sits in that cubicle (raised by Robert
+> Whittaker, 22 Aug 2026; 28 UK objects were dropped, 13 of them of this
+> shape). From v16 the key locks the table only when **`access=centralkey`**
+> (the key gates the whole object), or **`changing_table:location` names only
+> `wheelchair_toilet`**, or **nothing scopes the key to a sub-part** — the
+> scoping tags are `wheelchair:access=centralkey` and `male=yes` /
+> `female=yes`. Every other `centralkey` object is an ordinary feature,
+> `unknown` until someone records the room. `classify()` therefore takes the
+> object's tag dict (third argument) instead of the bare `centralkey` value;
+> `centralkey_locked(tags, location=None)` is the single home of the rule and
+> `stats.centralkey_locked` keeps its meaning (key-locked drops that would
+> otherwise be pins). No change to the emitted shape.
+
 > **v15 amendment (22 Aug 2026, Europe complete):** papamap.de sweeps
 > **44 countries** — the eleven of v13 plus every remaining European
 > sovereign: `no fi is ie ee lv lt lu li ad mc sm mt es pt it gr cy si sk hu
