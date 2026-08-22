@@ -39,8 +39,11 @@
 > `index.html`'s hreflang block, `sitemap.xml` and the methods pages'
 > cross-links must list exactly the same 31 (the sitemap's two multilingual
 > clusters and every methods page's hreflang + language nav are generated
-> from one table, not hand-typed). The leaderboard stays a DE/EN pair — the
-> other 29 borrow the English page. Adding a country still adds pins, never
+> from one table, not hand-typed). The leaderboard renders one page per
+> language too (`pipeline/leaderboard_strings.py` is the translation table;
+> de/en keep `rangliste.html`/`leaderboard.html` so inbound links survive,
+> the rest are `leaderboard-<code>.html`). Adding a country still adds pins,
+> never
 > `/wickeltische/`-style pages: the "Wickeltisch Bayern" premise (searched in
 > German) does not survive translation, and the site's copy counts the set
 > ("44 European countries") instead of naming it everywhere except the

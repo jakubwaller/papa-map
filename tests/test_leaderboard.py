@@ -121,23 +121,36 @@ def test_render_german_page(tmp_path):
     assert pages.ICON in html  # or the browser 404s on /favicon.ico
 
 
-def test_both_pages_link_bundeslaender_and_switch_languages():
-    # The EN page shipped without the Bundesländer link the DE page had, and
-    # neither page showed which language it was in — 29 UI languages borrow
-    # the English page, so its switch has to be findable without reading it.
+def test_every_language_defines_the_same_keys():
+    # Same discipline web/i18n.test.js enforces for the frontend strings: a
+    # language with a missing key would KeyError mid-render, at night, in cron.
+    en_keys = set(leaderboard.L["en"])
+    for lang, tab in leaderboard.L.items():
+        assert set(tab) == en_keys, f"key mismatch in {lang}"
+        assert len(tab["months"]) == 12, lang
+        assert tab["file"].endswith(".html"), lang
+
+
+def test_every_page_links_bundeslaender_and_switches_languages():
+    # The EN page once shipped without the Bundesländer link the DE page had,
+    # and no page showed which language it was in. Now every language renders
+    # its own page with the methods pages' switcher: current language bold,
+    # every other an endonym link.
     history = {"v": 1, "days": [
         day("2026-08-07", regions={"Bayern": [1, 0, 9]}),
         day("2026-08-14", regions={"Bayern": [3, 0, 7]}),
     ]}
     data = leaderboard.leaderboard_data(history)
-    de = leaderboard.render_leaderboard("de", data)
-    en = leaderboard.render_leaderboard("en", data)
-    for html in (de, en):
-        assert '<a href="./">Bundesländer</a>' in html
-    assert '<strong lang="de">Deutsch</strong>' in de
-    assert '<a href="leaderboard.html" hreflang="en" lang="en">English</a>' in de
-    assert '<strong lang="en">English</strong>' in en
-    assert '<a href="rangliste.html" hreflang="de" lang="de">Deutsch</a>' in en
+    for lang, tab in leaderboard.L.items():
+        html = leaderboard.render_leaderboard(lang, data)
+        assert '<a href="./">Bundesländer</a>' in html, lang
+        assert f'<strong lang="{lang}">{tab["lang_name"]}</strong>' in html, lang
+        other = "de" if lang != "de" else "en"
+        assert (f'<a href="{leaderboard.L[other]["file"]}" hreflang="{other}" '
+                f'lang="{other}">' in html), lang
+        # Its own canonical, and one hreflang alternate per language.
+        assert f'wickeltische/{tab["file"]}">' in html, lang
+        assert html.count('rel="alternate" hreflang=') == len(leaderboard.L) + 1
 
 
 def test_french_regions_are_not_printed_as_whole_countries():
@@ -237,8 +250,9 @@ def test_write_leaderboard_pages(tmp_path):
     history = {"v": 1, "days": [day("2026-08-14",
                                     regions={"Bayern": [1, 0, 1]})]}
     written = leaderboard.write_leaderboard_pages(history, str(tmp_path))
-    assert sorted(p.rsplit("/", 1)[-1] for p in written) == [
-        "leaderboard.html", "rangliste.html"]
+    # One page per UI language, under each language's own filename.
+    assert sorted(p.rsplit("/", 1)[-1] for p in written) == sorted(
+        tab["file"] for tab in leaderboard.L.values())
     for p in written:
         assert "OpenStreetMap" in open(p, encoding="utf-8").read()
 

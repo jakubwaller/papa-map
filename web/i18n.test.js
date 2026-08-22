@@ -135,14 +135,16 @@ test("every language names itself, distinctly, for the picker", () => {
   assert.equal(STRINGS.en.langName, "English");
 });
 
-test("no language advertises a leaderboard page that is not built", () => {
-  // pipeline/leaderboard.py renders exactly two pages. Everything else has to
-  // borrow the English one — a boardHref pointing at rangliste-sv.html would
-  // be a 404 in the header of every Swedish page.
-  const built = new Set(["wickeltische/rangliste.html",
-                         "wickeltische/leaderboard.html"]);
+test("every language advertises its own generated leaderboard page", () => {
+  // pipeline/leaderboard.py renders one page per language: de and en keep
+  // their pre-2026-08-22 filenames (inbound links survive), everyone else is
+  // leaderboard-<code>.html. A boardHref that disagrees with that naming is a
+  // 404 in the header of every page in that language.
+  const built = (l) => l === "de" ? "wickeltische/rangliste.html"
+    : l === "en" ? "wickeltische/leaderboard.html"
+    : `wickeltische/leaderboard-${l}.html`;
   for (const lang of LANGS) {
-    assert.ok(built.has(STRINGS[lang].boardHref),
-      `${lang}.boardHref ${STRINGS[lang].boardHref} is not a generated page`);
+    assert.equal(STRINGS[lang].boardHref, built(lang),
+      `${lang}.boardHref must be its own generated page`);
   }
 });

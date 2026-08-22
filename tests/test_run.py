@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import pytest
 import requests
 
-from pipeline import config
+from pipeline import config, leaderboard
 from pipeline.config import BUNDESLAENDER, CITY_AREAS, sweep_areas
 from pipeline.run import run_pipeline
 
@@ -128,9 +128,10 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     # objects, so it cannot tell one area's copy from another's. Here that
     # means 17 identical fixture answers really do add to 17x3; in the real
     # sweep the areas are disjoint, so summing is the correct total.
+    # 16 Land pages + the index + one leaderboard per UI language.
     assert summary == {"features": 7, "play_places": 3, "ct_objects": 9,
                        "toilets_total": 51, "global_source": "taginfo",
-                       "pages": 19}
+                       "pages": 17 + len(leaderboard.L)}
     # Still two object queries per area, not three: the play half rides along
     # in the changing_table sweep instead of costing its own Overpass slot.
     assert fake_overpass.areas_seen == ([a for a in SWEEP for _ in (1, 2)]
@@ -337,10 +338,10 @@ def test_ring_build_files_each_neighbour_under_its_english_name(
     assert day["regions"]["Baden-Württemberg"] == [3, 2, 2]
     assert day["regions"]["Belgium"] == [0, 0, 0]
     assert day["regions"]["Sweden"] == [0, 0, 0]
-    # Still 16 Länder + index + the two leaderboard languages: a country that
-    # is not a Bundesland gets no page, whatever else was swept.
+    # Still 16 Länder + index + one leaderboard per UI language: a country
+    # that is not a Bundesland gets no page, whatever else was swept.
     written = sorted(p.name for p in (tmp_path / "pages").glob("*.html"))
-    assert summary["pages"] == len(written) == 19
+    assert summary["pages"] == len(written) == 17 + len(leaderboard.L)
     assert not [p for p in written if "belgi" in p or "sweden" in p]
 
 

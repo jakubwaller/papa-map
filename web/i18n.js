@@ -92,10 +92,9 @@ export const STRINGS = {
     addPlace: "+ Ort hinzufügen",
     methods: "Methoden",
     methodsHref: "methods.html",
-    // The leaderboard exists as a DE/EN pair only (pipeline/leaderboard.py
-    // renders those two); every other language borrows the English page, the
-    // way Danish already did — and "Rangliste" happens to be the Danish word
-    // for it too.
+    // Every language gets its own generated leaderboard page since the
+    // Europe-complete round (pipeline/leaderboard.py renders all of LANGS);
+    // de and en keep their pre-2026-08-22 filenames so inbound links survive.
     board: "Rangliste",
     boardHref: "wickeltische/rangliste.html",
     // The picker's own entry: every language names itself, so a reader who
@@ -273,7 +272,7 @@ export const STRINGS = {
     methods: "Metode",
     methodsHref: "methods-da.html",
     board: "Rangliste",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-da.html",
     langName: "Dansk",
     kofi: "☕ Kaffe",
 
@@ -356,7 +355,7 @@ export const STRINGS = {
     methods: "Methode",
     methodsHref: "methods-nl.html",
     board: "Ranglijst",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-nl.html",
     langName: "Nederlands",
     kofi: "☕ Koffie",
 
@@ -433,7 +432,7 @@ export const STRINGS = {
     methods: "Méthodes",
     methodsHref: "methods-fr.html",
     board: "Classement",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-fr.html",
     langName: "Français",
     kofi: "☕ Café",
 
@@ -510,7 +509,7 @@ export const STRINGS = {
     methods: "Metodo",
     methodsHref: "methods-it.html",
     board: "Classifica",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-it.html",
     langName: "Italiano",
     kofi: "☕ Caffè",
 
@@ -587,7 +586,7 @@ export const STRINGS = {
     methods: "Metody",
     methodsHref: "methods-cs.html",
     board: "Žebříček",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-cs.html",
     langName: "Čeština",
     kofi: "☕ Káva",
 
@@ -664,7 +663,7 @@ export const STRINGS = {
     methods: "Metody",
     methodsHref: "methods-pl.html",
     board: "Ranking",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-pl.html",
     langName: "Polski",
     kofi: "☕ Kawa",
 
@@ -741,7 +740,7 @@ export const STRINGS = {
     methods: "Metod",
     methodsHref: "methods-sv.html",
     board: "Topplista",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-sv.html",
     langName: "Svenska",
     kofi: "☕ Kaffe",
 
@@ -817,7 +816,7 @@ export const STRINGS = {
     methods: "Metode",
     methodsHref: "methods-bs.html",
     board: "Rang lista",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-bs.html",
     langName: "Bosanski",
     kofi: "☕ Kafa",
 
@@ -893,7 +892,7 @@ export const STRINGS = {
     methods: "Mètodes",
     methodsHref: "methods-ca.html",
     board: "Classificació",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-ca.html",
     langName: "Català",
     kofi: "☕ Cafè",
 
@@ -969,7 +968,7 @@ export const STRINGS = {
     methods: "Meetodid",
     methodsHref: "methods-et.html",
     board: "Edetabel",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-et.html",
     langName: "Eesti",
     kofi: "☕ Kohv",
 
@@ -1045,7 +1044,7 @@ export const STRINGS = {
     methods: "Métodos",
     methodsHref: "methods-es.html",
     board: "Clasificación",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-es.html",
     langName: "Español",
     kofi: "☕ Café",
 
@@ -1121,7 +1120,7 @@ export const STRINGS = {
     methods: "Metode",
     methodsHref: "methods-hr.html",
     board: "Ljestvica",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-hr.html",
     langName: "Hrvatski",
     kofi: "☕ Kava",
 
@@ -1197,7 +1196,7 @@ export const STRINGS = {
     methods: "Aðferð",
     methodsHref: "methods-is.html",
     board: "Topplisti",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-is.html",
     langName: "Íslenska",
     kofi: "☕ Kaffi",
 
@@ -1273,7 +1272,7 @@ export const STRINGS = {
     methods: "Metodika",
     methodsHref: "methods-lv.html",
     board: "Reitings",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-lv.html",
     langName: "Latviešu",
     kofi: "☕ Kafija",
 
@@ -1349,7 +1348,7 @@ export const STRINGS = {
     methods: "Metodai",
     methodsHref: "methods-lt.html",
     board: "Reitingas",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-lt.html",
     langName: "Lietuvių",
     kofi: "☕ Kava",
 
@@ -1425,7 +1424,7 @@ export const STRINGS = {
     methods: "Módszertan",
     methodsHref: "methods-hu.html",
     board: "Ranglista",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-hu.html",
     langName: "Magyar",
     kofi: "☕ Kávé",
 
@@ -1501,7 +1500,7 @@ export const STRINGS = {
     methods: "Metode",
     methodsHref: "methods-no.html",
     board: "Toppliste",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-no.html",
     langName: "Norsk",
     kofi: "☕ Kaffe",
 
@@ -1577,7 +1576,7 @@ export const STRINGS = {
     methods: "Métodos",
     methodsHref: "methods-pt.html",
     board: "Classificação",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-pt.html",
     langName: "Português",
     kofi: "☕ Café",
 
@@ -1653,7 +1652,7 @@ export const STRINGS = {
     methods: "Metode",
     methodsHref: "methods-ro.html",
     board: "Clasament",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-ro.html",
     langName: "Română",
     kofi: "☕ Cafea",
 
@@ -1729,7 +1728,7 @@ export const STRINGS = {
     methods: "Metodologjia",
     methodsHref: "methods-sq.html",
     board: "Renditja",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-sq.html",
     langName: "Shqip",
     kofi: "☕ Kafe",
 
@@ -1805,7 +1804,7 @@ export const STRINGS = {
     methods: "Metódy",
     methodsHref: "methods-sk.html",
     board: "Rebríček",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-sk.html",
     langName: "Slovenčina",
     kofi: "☕ Káva",
 
@@ -1881,7 +1880,7 @@ export const STRINGS = {
     methods: "Metode",
     methodsHref: "methods-sl.html",
     board: "Lestvica",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-sl.html",
     langName: "Slovenščina",
     kofi: "☕ Kava",
 
@@ -1932,7 +1931,7 @@ export const STRINGS = {
     popupUnnamed: "Neimenovan kraj",
 
     statsMissing: 'Statistika ni na voljo — manjka <code>data/stats.json</code>. <a href="{href}">Metode</a>',
-    statsLocal: '<b>{tables}</b> previjalnih miz v {area} — <b>{unknown}</b> v neznanem prostoru. <span class="cta-grey">Tapni sive bucike in popravi to.</span>',
+    statsLocal: '<b>{tables}</b> previjalnih miz v {area} — <b>{unknown}</b> v neznanem prostoru. <span class="cta-grey">Tapni sive bucke in popravi to.</span>',
     statsGlobal: "Po svetu, kjer je prostor označen ({total}): <b>{f}</b> samo v ženskem stranišču, <b>{m}</b> samo v moškem stranišču — {ratio}.",
     statsGlobalMissing: "Svetovna statistika prostorov trenutno ni na voljo.",
     statsHonesty: '{toilets} stranišč zabeleženih tu, {cap} z oznako zmogljivosti — ponudbe same ni mogoče izmeriti. <a href="{href}">Metode</a>{updated}',
@@ -1957,7 +1956,7 @@ export const STRINGS = {
     methods: "Menetelmät",
     methodsHref: "methods-fi.html",
     board: "Kärkisijat",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-fi.html",
     langName: "Suomi",
     kofi: "☕ Kahvi",
 
@@ -2033,7 +2032,7 @@ export const STRINGS = {
     methods: "Μέθοδος",
     methodsHref: "methods-el.html",
     board: "Κατάταξη",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-el.html",
     langName: "Ελληνικά",
     kofi: "☕ Καφές",
 
@@ -2109,7 +2108,7 @@ export const STRINGS = {
     methods: "Метады",
     methodsHref: "methods-be.html",
     board: "Рэйтынг",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-be.html",
     langName: "Беларуская",
     kofi: "☕ Кава",
 
@@ -2185,7 +2184,7 @@ export const STRINGS = {
     methods: "Методи",
     methodsHref: "methods-bg.html",
     board: "Класация",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-bg.html",
     langName: "Български",
     kofi: "☕ Кафе",
 
@@ -2261,7 +2260,7 @@ export const STRINGS = {
     methods: "Методи",
     methodsHref: "methods-mk.html",
     board: "Ранг-листа",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-mk.html",
     langName: "Македонски",
     kofi: "☕ Кафе",
 
@@ -2337,7 +2336,7 @@ export const STRINGS = {
     methods: "Методе",
     methodsHref: "methods-sr.html",
     board: "Ранглиста",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-sr.html",
     langName: "Српски",
     kofi: "☕ Кафа",
 
@@ -2413,7 +2412,7 @@ export const STRINGS = {
     methods: "Методи",
     methodsHref: "methods-uk.html",
     board: "Рейтинг",
-    boardHref: "wickeltische/leaderboard.html",
+    boardHref: "wickeltische/leaderboard-uk.html",
     langName: "Українська",
     kofi: "☕ Кава",
 

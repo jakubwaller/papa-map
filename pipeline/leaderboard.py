@@ -7,7 +7,8 @@ from pathlib import Path
 from .config import (BUNDESLAENDER, FRANCE_REGIONS, chunked_area_names, HISTORY_MAX_DAYS, PAGES_BASE_PATH,
                      SITE_BASE_URL)
 from .export import write_text_atomic
-from .pages import FOOTER, ICON, STYLE, UP, de_date, de_num, esc, sort_key
+from .leaderboard_strings import DE_FILE, EN_FILE, L
+from .pages import ICON, STYLE, UP, esc, sort_key
 
 # Per-region history and the leaderboard pages built from it.
 #
@@ -27,12 +28,6 @@ from .pages import FOOTER, ICON, STYLE, UP, de_date, de_num, esc, sort_key
 
 STATUS_IDX = ("accessible", "female_only", "unknown")
 WINDOW_DAYS = 7
-
-DE_FILE = "rangliste.html"
-EN_FILE = "leaderboard.html"
-
-MONTHS_EN = ("January", "February", "March", "April", "May", "June", "July",
-             "August", "September", "October", "November", "December")
 
 
 # ---- History ---------------------------------------------------------------
@@ -153,18 +148,6 @@ def leaderboard_data(history: dict) -> dict | None:
 # Region names come from our own config, but they pass through esc() anyway —
 # uniform with every other interpolated string in the generated pages.
 
-FOOTER_EN = """\
-<h2>Data &amp; licence</h2>
-<p class="muted">All data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
-contributors</a>, under the <a href="https://opendatacommons.org/licenses/odbl/">ODbL</a>. This
-page is regenerated every night from an Overpass query and stores nothing about you.
-How things are counted and coloured: <a href="{up}methods-en.html">Methods</a> ·
-<a href="{up}impressum.html">Impressum</a> ·
-<a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap is free and ad-free.
-<a href="https://ko-fi.com/jakubwaller">&#9749; Buy me a coffee</a>.</p>
-"""
-
 SORT_STYLE = """\
   /* A sortable header must look exactly like the header text it replaced; the
      small arrow is the whole affordance. The button carries the cell's padding
@@ -184,6 +167,10 @@ SORT_STYLE = """\
   th[aria-sort="ascending"] .arr::after { content: "\\25B2"; opacity: 1; }
   th[aria-sort="descending"] .arr::after { content: "\\25BC"; opacity: 1; }
   p.hint { font-size: 0.8rem; margin-top: -0.7rem; }
+  /* The language switcher, styled like the methods pages': muted, roomy line
+     height for 31 entries, the current language bold instead of linked. */
+  .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
+  .back.langs strong { color: var(--fg); font-weight: 600; }
 """
 
 # Progressive enhancement, deliberately: the table arrives sorted by the column
@@ -256,174 +243,25 @@ SORT_JS = """\
 </script>
 """
 
-L = {
-    "de": {
-        "file": DE_FILE,
-        "title": "Wickeltisch-Rangliste — PapaMap",
-        "desc": ("Wo wurde zuletzt beantwortet, in welchem Raum der Wickeltisch "
-                 "hängt? Veränderung in Prozentpunkten, jede Nacht neu aus "
-                 "OpenStreetMap."),
-        # The language pair reads like the methods pages' switcher: the current
-        # language bold, the other a link. "Bundesländer" stays German in both
-        # languages, same as index.html — it points at German-only pages.
-        "back": ('<p class="back"><a href="{up}">&larr; Zur Karte</a> · '
-                 '<a href="./">Bundesländer</a> · '
-                 '<strong lang="de">Deutsch</strong> · '
-                 f'<a href="{EN_FILE}" hreflang="en" lang="en">English</a></p>\n'),
-        "h1": "Die Rangliste",
-        "stand": "Stand {date} · Daten aus OpenStreetMap",
-        "stand_base": ("Stand {date} · Veränderung gegenüber dem {base} · "
-                       "Daten aus OpenStreetMap"),
-        "intro1": (
-            "<p>Wer die meisten Wickeltische hat, steht hier absichtlich "
-            "nicht. Absolute Zahlen messen vor allem, wie gründlich irgendwo "
-            "gemappt wurde, nicht wie gut eine Stadt versorgt ist — eine "
-            "Rangliste daraus wäre irreführend (warum, steht in den "
-            '<a href="{up}methods.html">Methoden</a>). Ehrlich vergleichen '
-            "lässt sich die Veränderung: wo zuletzt beantwortet wurde, in "
-            "welchem Raum der Wickeltisch hängt. Genau das zählt diese Seite "
-            "— den Anteil der Orte mit beantworteter Raumfrage, und wer ihn "
-            "zuletzt am stärksten gesteigert hat.</p>\n"),
-        "intro2": (
-            "<p>Jede Antwort zählt, auch „nur im Damen-WC“ — die Karte lebt "
-            "von ehrlichen Antworten, nicht von grünen Pins. Beantworten "
-            "kannst du die Frage vor Ort in unter einer Minute: grauen Pin "
-            'auf der <a href="{up}">Karte</a> antippen und dem '
-            'MapComplete-Link folgen. <a href="{up}methods.html#contribute">'
-            "Schritt für Schritt</a>.</p>\n"),
-        "fresh": ("<p>Die Aufzeichnung hat am {date} begonnen. Sobald es "
-                  "einen Vergleichszeitpunkt gibt, steht hier, wer sich "
-                  "bewegt hat.</p>\n"),
-        "quiet": ("<p>Seit dem {base} hat sich nirgends etwas bewegt. Die "
-                  "grauen Pins warten.</p>\n"),
-        "cities_h2": "Städte",
-        "cities_note": ("<p>{n} große Städte, sortiert nach der Veränderung "
-                        "des beantworteten Anteils. Berlin, Hamburg und "
-                        "Bremen stehen auch unten bei den Ländern — hier "
-                        "zählt die Stadt.</p>\n"),
-        "regions_h2": "Bundesländer und Dänemark",
-        "regions_note": ("<p>Dieselbe Rechnung für die {n} Bundesländer und "
-                         "Dänemark als Ganzes.</p>\n"),
-        "regions_h2_regions": "Bundesländer, Régions und ganze Länder",
-        # Three groups now, and any of them can be absent (de,fr has no whole
-        # country at all), so the sentence is assembled from clauses rather
-        # than written out: a fixed template produces either "1 Länder", which
-        # is not German, or a dangling "und". Same problem regions_note_one
-        # below solves for the two-group case.
-        "regions_note_regions": "<p>Dieselbe Rechnung für {list}.</p>\n",
-        "cl_lands": "die {n} Bundesländer",
-        "cl_regions": "die {r} französischen Régions",
-        "cl_country_one": "{names} als Ganzes",
-        "cl_country_many": "{c} Länder als Ganzes ({names})",
-        "and_sep": " und ",
-        "regions_h2_many": "Bundesländer und ganze Länder",
-        "regions_note_many": ("<p>Dieselbe Rechnung für die {n} Bundesländer "
-                              "und für {c} Länder als Ganzes: {names}.</p>\n"),
-        "regions_h2_one": "Bundesländer und ein ganzes Land",
-        "regions_note_one": ("<p>Dieselbe Rechnung für die {n} Bundesländer "
-                             "und für {names} als Ganzes.</p>\n"),
-        "regions_h2_lands": "Bundesländer",
-        "regions_note_lands": ("<p>Dieselbe Rechnung für die {n} "
-                               "Bundesländer.</p>\n"),
-        "col_name_city": "Stadt", "col_name_region": "Region",
-        "col_delta": "Δ Punkte", "col_share": "beantwortet",
-        "col_total": "Orte", "col_acc": "+ erreichbar", "col_new": "+ Orte",
-        "sort_hint": ("Auf eine Spaltenüberschrift tippen, um danach zu "
-                      "sortieren — nochmal tippen dreht die Richtung um."),
-        "footer": FOOTER,
-    },
-    "en": {
-        "file": EN_FILE,
-        "title": "PapaMap Leaderboard",
-        "desc": ("Where did the room question — which room is the changing "
-                 "table in? — get answered lately? Change in percentage "
-                 "points, rebuilt nightly from OpenStreetMap."),
-        # Mirrors the German page's line item for item — the Bundesländer link
-        # was missing here for no reason, and 29 languages borrow this page,
-        # so its language switch has to be findable by readers of any of them.
-        "back": ('<p class="back"><a href="{up}">&larr; To the map</a> · '
-                 '<a href="./">Bundesländer</a> · '
-                 f'<a href="{DE_FILE}" hreflang="de" lang="de">Deutsch</a> · '
-                 '<strong lang="en">English</strong></p>\n'),
-        "h1": "The leaderboard",
-        "stand": "As of {date} · Data from OpenStreetMap",
-        "stand_base": ("As of {date} · Change since {base} · "
-                       "Data from OpenStreetMap"),
-        "intro1": (
-            "<p>Which city has the most changing tables is deliberately not "
-            "on this page. Absolute counts mostly measure how thoroughly a "
-            "place has been mapped, not how well it is equipped — ranking "
-            "them would mislead (the "
-            '<a href="{up}methods-en.html">methods page</a> explains why). '
-            "What can honestly be compared is change: where the room "
-            "question — which room is the changing table in? — got answered "
-            "lately. That is what this page counts — the share of places "
-            "with an answered room question, and who has raised it most.</p>\n"),
-        "intro2": (
-            "<p>Every answer counts, including “women's toilet only” — the "
-            "map runs on honest answers, not on green pins. Answering takes "
-            'under a minute on site: tap a grey pin on the <a href="{up}">'
-            "map</a> and follow its MapComplete link. "
-            '<a href="{up}methods-en.html#contribute">Step by step</a>.</p>\n'),
-        "fresh": ("<p>Recording started on {date}. As soon as there is a "
-                  "point of comparison, this page will show who moved.</p>\n"),
-        "quiet": ("<p>Nothing has moved anywhere since {base}. The grey "
-                  "pins are waiting.</p>\n"),
-        "cities_h2": "Cities",
-        "cities_note": ("<p>{n} big cities, sorted by the change of their "
-                        "answered share. Berlin, Hamburg and Bremen also "
-                        "appear under the states below — here the city "
-                        "counts.</p>\n"),
-        "regions_h2": "German states and Denmark",
-        "regions_note": ("<p>The same arithmetic for the {n} Bundesländer "
-                         "and Denmark as a whole.</p>\n"),
-        "regions_h2_regions": ("German states, French régions and whole "
-                               "countries"),
-        "regions_note_regions": "<p>The same arithmetic for {list}.</p>\n",
-        "cl_lands": "the {n} Bundesländer",
-        "cl_regions": "the {r} French régions",
-        "cl_country_one": "{names} as a whole",
-        "cl_country_many": "{c} countries as a whole ({names})",
-        "and_sep": " and ",
-        "regions_h2_many": "German states and whole countries",
-        "regions_note_many": ("<p>The same arithmetic for the {n} Bundesländer "
-                              "and for {c} countries as a whole: "
-                              "{names}.</p>\n"),
-        "regions_h2_one": "German states and one whole country",
-        "regions_note_one": ("<p>The same arithmetic for the {n} Bundesländer "
-                             "and for {names} as a whole.</p>\n"),
-        "regions_h2_lands": "German states",
-        "regions_note_lands": ("<p>The same arithmetic for the {n} "
-                               "Bundesländer.</p>\n"),
-        "col_name_city": "City", "col_name_region": "Region",
-        "col_delta": "Δ points", "col_share": "answered",
-        "col_total": "places", "col_acc": "+ reachable", "col_new": "+ places",
-        "sort_hint": ("Tap a column header to sort by it — tap again to "
-                      "reverse."),
-        "footer": FOOTER_EN,
-    },
-}
-
 
 def _fmt_date(iso: str, lang: str) -> str:
-    if lang == "de":
-        return de_date(iso)
+    # Month names and their arrangement come from the language's L entry, so a
+    # 31st language is a table row, not another branch here.
     try:
         y, m, d = int(iso[0:4]), int(iso[5:7]), int(iso[8:10])
-        return f"{d} {MONTHS_EN[m - 1]} {y}"
+        return L[lang]["date_fmt"].format(d=d, m=L[lang]["months"][m - 1], y=y)
     except (ValueError, IndexError, TypeError):
         return ""
 
 
 def _fmt_int(n: int, lang: str) -> str:
-    return de_num(n) if lang == "de" else f"{int(n):,}"
+    return f"{int(n):,}".replace(",", L[lang]["thousands"])
 
 
 def _fmt_share(share, lang: str) -> str:
     if share is None:
         return "–"
-    s = f"{share:.1f}"
-    return (s.replace(".", ",") if lang == "de" else s) + "&nbsp;%"
+    return f"{share:.1f}".replace(".", L[lang]["decimal"]) + "&nbsp;%"
 
 
 def _fmt_delta_pp(pp, lang: str) -> str:
@@ -431,8 +269,7 @@ def _fmt_delta_pp(pp, lang: str) -> str:
     zero — a column of "+0,0" would drown the rows that actually moved."""
     if pp is None or abs(round(pp, 1)) < 0.05:
         return "–"
-    s = f"{pp:+.1f}"
-    return s.replace(".", ",") if lang == "de" else s
+    return f"{pp:+.1f}".replace(".", L[lang]["decimal"])
 
 
 def _fmt_delta_int(n) -> str:
@@ -440,9 +277,13 @@ def _fmt_delta_int(n) -> str:
 
 
 def _head(lang: str, tab: dict, base_url: str, base_path: str) -> str:
-    de_url = f"{base_url}{base_path}{DE_FILE}"
-    en_url = f"{base_url}{base_path}{EN_FILE}"
-    canonical = de_url if lang == "de" else en_url
+    # Every language lists every other, or search engines treat the set as
+    # unreciprocated and ignore it — same rule the methods pages follow.
+    def url(code: str) -> str:
+        return f"{base_url}{base_path}{L[code]['file']}"
+    alternates = "\n".join(
+        f'<link rel="alternate" hreflang="{code}" href="{esc(url(code))}">'
+        for code in L)
     return f"""<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -450,16 +291,32 @@ def _head(lang: str, tab: dict, base_url: str, base_path: str) -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(tab["title"])}</title>
 <meta name="description" content="{esc(tab["desc"])}">
-<link rel="canonical" href="{esc(canonical)}">
-<link rel="alternate" hreflang="de" href="{esc(de_url)}">
-<link rel="alternate" hreflang="en" href="{esc(en_url)}">
-<link rel="alternate" hreflang="x-default" href="{esc(de_url)}">
+<link rel="canonical" href="{esc(url(lang))}">
+{alternates}
+<link rel="alternate" hreflang="x-default" href="{esc(url("de"))}">
 {ICON}
 <style>
 {STYLE}{SORT_STYLE}</style>
 </head>
 <body>
 """
+
+
+def _back(lang: str, tab: dict) -> str:
+    """The back row plus the language switcher, generated like the methods
+    pages': endonyms, the current language as <strong>, every language listed.
+    "Bundesländer" stays German in all of them — it points at German-only
+    pages, same as index.html's header link."""
+    entries = []
+    for code, t in L.items():
+        if code == lang:
+            entries.append(f'<strong lang="{code}">{t["lang_name"]}</strong>')
+        else:
+            entries.append(f'<a href="{t["file"]}" hreflang="{code}" '
+                           f'lang="{code}">{t["lang_name"]}</a>')
+    return (f'<p class="back"><a href="{UP}">{tab["back_map"]}</a> · '
+            f'<a href="./">Bundesländer</a></p>\n'
+            f'<p class="back langs">' + "\n  &middot; ".join(entries) + "</p>\n")
 
 
 def _num_attr(v) -> str | None:
@@ -564,7 +421,7 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         for r in data["cities"] + data["regions"])
 
     parts = [_head(lang, tab, base_url, base_path)]
-    parts.append(tab["back"].format(up=UP))
+    parts.append(_back(lang, tab))
     parts.append(f'<h1>{esc(tab["h1"])}</h1>\n')
     stand = (tab["stand_base"].format(date=esc(date), base=esc(base))
              if base else tab["stand"].format(date=esc(date)))
@@ -642,13 +499,13 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
 def write_leaderboard_pages(history: dict, out_dir: str,
                             base_url: str = SITE_BASE_URL,
                             base_path: str = PAGES_BASE_PATH) -> list:
-    """Both language versions, atomically each — same discipline as the Land
+    """Every language version, atomically each — same discipline as the Land
     pages. An empty history writes nothing (there is nothing to say yet)."""
     data = leaderboard_data(history)
     if data is None:
         return []
     written = []
-    for lang in ("de", "en"):
+    for lang in L:
         path = str(Path(out_dir) / L[lang]["file"])
         write_text_atomic(render_leaderboard(lang, data, base_url, base_path), path)
         written.append(path)

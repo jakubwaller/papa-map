@@ -205,7 +205,7 @@ def test_sitemap_lists_exactly_the_generated_pages():
     listed = set(re.findall(
         rf"<loc>https://papamap\.de{re.escape(PAGES_BASE_PATH)}([a-z-]+)\.html</loc>", xml))
     generated = ({pages.slugify(n) for n in BUNDESLAENDER}
-                 | {leaderboard.DE_FILE.removesuffix(".html"),
-                    leaderboard.EN_FILE.removesuffix(".html")})
+                 | {tab["file"].removesuffix(".html")
+                    for tab in leaderboard.L.values()})
     assert listed == generated
     assert f"<loc>https://papamap.de{PAGES_BASE_PATH}</loc>" in xml
