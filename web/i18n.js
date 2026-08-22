@@ -69,7 +69,7 @@ export const STRINGS = {
     // because that is the canonical page; app.js swaps it for the ?lang= views.
     // Counted, not listed, for the same reason as there: the eleven names add
     // ~135 characters to a snippet Google cuts at about 160.
-    metaDescription: "Eine Karte der Wickeltische in elf europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap.",
+    metaDescription: "Eine Karte der Wickeltische in 44 europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap.",
     tagline: "Wickeltische, die ein Vater erreicht",
     addPlace: "+ Ort hinzufügen",
     methods: "Methoden",
@@ -109,7 +109,7 @@ export const STRINGS = {
     // Static fallback for the wordmark: index.html paints it before
     // stats.json arrives, and keeps it if the fetch fails. Count-free,
     // because applyI18n() calls t() with no vars and "{n}" would show.
-    areaFallback: "elf europäische Länder",
+    areaFallback: "44 europäische Länder",
     areaCountries: "{n} Länder",
     areaCountriesIn: "{n} Ländern",
 
@@ -167,7 +167,7 @@ export const STRINGS = {
   },
   en: {
     title: "PapaMap — Changing tables dads can reach",
-    metaDescription: "A map of every changing table in eleven European countries, coloured by whether a dad can actually reach it. Data: OpenStreetMap.",
+    metaDescription: "A map of every changing table in 44 European countries, coloured by whether a dad can actually reach it. Data: OpenStreetMap.",
     tagline: "Changing tables dads can reach",
     addPlace: "+ Add a place",
     methods: "Methods",
@@ -196,7 +196,7 @@ export const STRINGS = {
     // Static fallback for the wordmark: index.html paints it before
     // stats.json arrives, and keeps it if the fetch fails. Count-free,
     // because applyI18n() calls t() with no vars and "{n}" would show.
-    areaFallback: "eleven European countries",
+    areaFallback: "44 European countries",
     areaCountries: "{n} countries",
     areaCountriesIn: "{n} countries",
 
@@ -249,7 +249,7 @@ export const STRINGS = {
   },
   da: {
     title: "PapaMap — pusleborde, en far kan nå",
-    metaDescription: "Et kort over alle pusleborde i elleve europæiske lande, farvelagt efter om en far rent faktisk kan nå dem. Data: OpenStreetMap.",
+    metaDescription: "Et kort over alle pusleborde i 44 europæiske lande, farvelagt efter om en far rent faktisk kan nå dem. Data: OpenStreetMap.",
     tagline: "Pusleborde, en far kan nå",
     addPlace: "+ Tilføj et sted",
     methods: "Metode",
@@ -277,7 +277,7 @@ export const STRINGS = {
     // Static fallback for the wordmark: index.html paints it before
     // stats.json arrives, and keeps it if the fetch fails. Count-free,
     // because applyI18n() calls t() with no vars and "{n}" would show.
-    areaFallback: "elleve europæiske lande",
+    areaFallback: "44 europæiske lande",
     areaCountries: "{n} lande",
     areaCountriesIn: "{n} lande",
 
@@ -332,7 +332,7 @@ export const STRINGS = {
   // Nederlands — added 19 Aug 2026 with the UK and France; the Netherlands and Flanders.
   nl: {
     title: "PapaMap — Verschoontafels waar een papa bij kan",
-    metaDescription: "Een kaart van de verschoontafels (luiertafels) in elf Europese landen, ingekleurd naar de vraag of een papa er echt bij kan. Data: OpenStreetMap.",
+    metaDescription: "Een kaart van de verschoontafels (luiertafels) in 44 Europese landen, ingekleurd naar de vraag of een papa er echt bij kan. Data: OpenStreetMap.",
     tagline: "Verschoontafels waar een papa bij kan",
     addPlace: "+ Plek toevoegen",
     methods: "Methode",
@@ -355,7 +355,7 @@ export const STRINGS = {
     areaDe: "Duitsland",
     areaDk: "Denemarken",
     areaDeDk: "Duitsland & Denemarken",
-    areaFallback: "elf Europese landen",
+    areaFallback: "44 Europese landen",
     areaCountries: "{n} landen",
     areaCountriesIn: "{n} landen",
 
@@ -409,7 +409,7 @@ export const STRINGS = {
   // Français — added 19 Aug 2026 with the UK and France; France, Wallonia and Romandy.
   fr: {
     title: "PapaMap — Des tables à langer accessibles aux papas",
-    metaDescription: "Une carte des tables à langer dans onze pays européens, colorée selon qu'un papa peut vraiment y accéder. Données : OpenStreetMap.",
+    metaDescription: "Une carte des tables à langer dans 44 pays européens, colorée selon qu'un papa peut vraiment y accéder. Données : OpenStreetMap.",
     tagline: "Des tables à langer accessibles aux papas",
     addPlace: "+ Ajouter un lieu",
     methods: "Méthodes",
@@ -432,7 +432,7 @@ export const STRINGS = {
     areaDe: "Allemagne",
     areaDk: "Danemark",
     areaDeDk: "Allemagne & Danemark",
-    areaFallback: "onze pays européens",
+    areaFallback: "44 pays européens",
     areaCountries: "{n} pays",
     areaCountriesIn: "{n} pays",
 
@@ -486,7 +486,7 @@ export const STRINGS = {
   // Italiano — added 19 Aug 2026 with the UK and France; Ticino and the Italian-speaking Grisons.
   it: {
     title: "PapaMap — Fasciatoi che un papà può raggiungere",
-    metaDescription: "Una mappa dei fasciatoi in undici paesi europei, colorati in base al fatto che un papà possa davvero raggiungerli. Dati: OpenStreetMap.",
+    metaDescription: "Una mappa dei fasciatoi in 44 paesi europei, colorati in base al fatto che un papà possa davvero raggiungerli. Dati: OpenStreetMap.",
     tagline: "Fasciatoi che un papà può raggiungere",
     addPlace: "+ Aggiungi luogo",
     methods: "Metodo",
@@ -509,7 +509,7 @@ export const STRINGS = {
     areaDe: "Germania",
     areaDk: "Danimarca",
     areaDeDk: "Germania & Danimarca",
-    areaFallback: "undici paesi europei",
+    areaFallback: "44 paesi europei",
     areaCountries: "{n} paesi",
     areaCountriesIn: "{n} paesi",
 
@@ -563,7 +563,7 @@ export const STRINGS = {
   // Čeština — added 19 Aug 2026 with the UK and France; Czechia.
   cs: {
     title: "PapaMap — přebalovací pulty, ke kterým se táta dostane",
-    metaDescription: "Mapa přebalovacích pultů v jedenácti evropských zemích, barevně odlišených podle toho, jestli se k nim táta opravdu dostane. Data: OpenStreetMap.",
+    metaDescription: "Mapa přebalovacích pultů ve 44 evropských zemích, barevně odlišených podle toho, jestli se k nim táta opravdu dostane. Data: OpenStreetMap.",
     tagline: "Přebalovací pulty, ke kterým se táta dostane",
     addPlace: "+ Přidat místo",
     methods: "Metody",
@@ -586,7 +586,7 @@ export const STRINGS = {
     areaDe: "Německo",
     areaDk: "Dánsko",
     areaDeDk: "Německo a Dánsko",
-    areaFallback: "jedenáct evropských zemí",
+    areaFallback: "44 evropských zemí",
     areaCountries: "{n} zemí",
     areaCountriesIn: "{n} zemích",
 
@@ -640,7 +640,7 @@ export const STRINGS = {
   // Polski — added 19 Aug 2026 with the UK and France; Poland.
   pl: {
     title: "PapaMap — przewijaki, do których dotrze tata",
-    metaDescription: "Mapa przewijaków w jedenastu krajach Europy — kolor mówi, czy tata faktycznie do nich dotrze. Dane: OpenStreetMap.",
+    metaDescription: "Mapa przewijaków w 44 krajach Europy — kolor mówi, czy tata faktycznie do nich dotrze. Dane: OpenStreetMap.",
     tagline: "Przewijaki, do których dotrze tata",
     addPlace: "+ Dodaj miejsce",
     methods: "Metody",
@@ -663,7 +663,7 @@ export const STRINGS = {
     areaDe: "Niemcy",
     areaDk: "Dania",
     areaDeDk: "Niemcy i Dania",
-    areaFallback: "jedenaście krajów Europy",
+    areaFallback: "44 kraje Europy",
     areaCountries: "{n} krajów",
     areaCountriesIn: "{n} krajach",
 
@@ -717,7 +717,7 @@ export const STRINGS = {
   // Svenska — added 19 Aug 2026 with the UK and France; Sweden.
   sv: {
     title: "PapaMap — skötbord som en pappa kommer åt",
-    metaDescription: "En karta över skötbord i elva europeiska länder, färglagda efter om en pappa faktiskt kommer åt dem. Data: OpenStreetMap.",
+    metaDescription: "En karta över skötbord i 44 europeiska länder, färglagda efter om en pappa faktiskt kommer åt dem. Data: OpenStreetMap.",
     tagline: "Skötbord som en pappa kommer åt",
     addPlace: "+ Ny plats",
     methods: "Metod",
@@ -740,7 +740,7 @@ export const STRINGS = {
     areaDe: "Tyskland",
     areaDk: "Danmark",
     areaDeDk: "Tyskland & Danmark",
-    areaFallback: "elva europeiska länder",
+    areaFallback: "44 europeiska länder",
     areaCountries: "{n} länder",
     areaCountriesIn: "{n} länder",
 

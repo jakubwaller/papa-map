@@ -109,6 +109,21 @@ const OSM_STYLE = {
 // render as empty space today. So this is the one line here that changes what
 // papamap.de does before the sweep is widened, and all it does is let a
 // visitor pan 5° further north over sea.
+// The Europe-complete sweep (2026-08-22) moved every edge — the third time
+// an expansion has hit this box — so each edge now carries the pin that
+// binds it, and the next country checks against this list instead of
+// rediscovering the trap the hard way:
+//   west  -32:  the Azores (-31.3°W). Portugal answers whole, islands and
+//               all — unlike France, whose overseas régions the allowlist
+//               excludes. Iceland (-24.5°W) also lived past the old -12.
+//   south  27:  the Canary Islands (27.6°N), same whole-country logic for
+//               Spain (Ceuta and Melilla ride along); the Mediterranean
+//               alone would only need ~34 (Crete 34.8, Malta 35.8).
+//   east   41:  Ukraine's eastern border (40.2°E); Cyprus (34.6°E) also sat
+//               past the old 32.
+//   north  71.5: mainland Norway at Nordkapp (71.2°N). If the swept data
+//               shows Svalbard pins (~78°N, the Norway relation may include
+//               it), this edge must follow the data, not this comment.
 // Rotate/pitch gestures are locked: on a phone an off-axis pinch rotates the
 // map instead of zooming, which reads as jank.
 const HOME_BOUNDS = [[5.5, 47.1], [15.4, 56.6]];
@@ -123,7 +138,7 @@ const VIEW_BOUNDS =
 const map = new maplibregl.Map({
   container: "map", style: OSM_STYLE,
   bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 },
-  maxBounds: [[-12, 41], [32, 70]],
+  maxBounds: [[-32, 27], [41, 71.5]],
   // 3.5, not the old 4.5: fitHome() re-fits under a topbar that eats a third
   // of a portrait phone (half of a landscape one), and the old floor clamped
   // that fit while Denmark — or, in landscape, Bavaria — was still off-screen.

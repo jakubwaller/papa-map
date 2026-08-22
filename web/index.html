@@ -5,14 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f2f5f3" />
   <title>PapaMap — Wickeltische, die ein Vater erreicht</title>
-  <!-- Eleven countries since the UK and France joined the sweep on 2026-08-19;
-       counted here, not listed — the eleven names add ~135 characters and
-       Google shows about 160, so the point of the sentence would fall outside
-       the snippet. The JSON-LD block below names all eleven, where length
-       costs nothing. -->
-  <meta name="description" content="Eine Karte der Wickeltische in elf europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
+  <!-- 44 countries since the Europe-complete sweep of 2026-08-22; counted
+       here, not listed — the names alone would run far past the ~160
+       characters Google shows, so the point of the sentence would fall
+       outside the snippet. The JSON-LD block below names all 44, where
+       length costs nothing. The numeral, not "vierundvierzig": the digit
+       survives the next expansion as a two-character diff, and it is what
+       the stats strip renders anyway. -->
+  <meta name="description" content="Eine Karte der Wickeltische in 44 europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
   <meta property="og:title" content="PapaMap — Wickeltische, die ein Vater erreicht" />
-  <meta property="og:description" content="Eine Karte der Wickeltische in elf europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
+  <meta property="og:description" content="Eine Karte der Wickeltische in 44 europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://papamap.de/" />
   <meta property="og:image" content="https://papamap.de/og-image.jpg" />
@@ -60,10 +62,10 @@
        index it as one. Deliberately free of table counts — the pipeline
        rewrites the data nightly and a hard-coded number would rot within a
        day; the country count only moves when the sweep itself grows.
-       spatialCoverage names all eleven instead of summarising them: a machine
-       reading "elf europäische Länder" learns nothing about which. Germany
-       and Denmark keep OSM's endonyms; the nine added since carry the plain
-       English names the pipeline selects them by, which is also what
+       spatialCoverage names all 44 instead of summarising them: a machine
+       reading "44 europäische Länder" learns nothing about which. Germany
+       and Denmark keep OSM's endonyms; every country added since carries the
+       plain English name the pipeline selects it by, which is also what
        stats.json and the leaderboard show. France is named as the country
        even though the sweep chunks it into 13 régions — the coverage claim is
        about territory, not about query shape. -->
@@ -71,8 +73,8 @@
   {
     "@context": "https://schema.org",
     "@type": "Dataset",
-    "name": "PapaMap — Wickeltische in elf europäischen Ländern",
-    "description": "Wickeltische in elf europäischen Ländern — Deutschland, Dänemark, Belgien, den Niederlanden, Österreich, der Schweiz, Tschechien, Polen, Schweden, dem Vereinigten Königreich und Frankreich — aus OpenStreetMap, klassifiziert danach, ob der Tisch für einen Vater erreichbar ist (Herren-/Unisex-WC oder eigener Wickelraum) oder nur im Damen-WC steht.",
+    "name": "PapaMap — Wickeltische in 44 europäischen Ländern",
+    "description": "Wickeltische in 44 europäischen Ländern — von Island bis Zypern, von Portugal bis zur Ukraine — aus OpenStreetMap, klassifiziert danach, ob der Tisch für einen Vater erreichbar ist (Herren-/Unisex-WC oder eigener Wickelraum) oder nur im Damen-WC steht.",
     "url": "https://papamap.de/",
     "inLanguage": ["de", "en", "da", "nl", "fr", "it", "cs", "pl", "sv"],
     "isAccessibleForFree": true,
@@ -91,7 +93,40 @@
       { "@type": "Country", "name": "Poland" },
       { "@type": "Country", "name": "Sweden" },
       { "@type": "Country", "name": "United Kingdom" },
-      { "@type": "Country", "name": "France" }
+      { "@type": "Country", "name": "France" },
+      { "@type": "Country", "name": "Norway" },
+      { "@type": "Country", "name": "Finland" },
+      { "@type": "Country", "name": "Iceland" },
+      { "@type": "Country", "name": "Ireland" },
+      { "@type": "Country", "name": "Estonia" },
+      { "@type": "Country", "name": "Latvia" },
+      { "@type": "Country", "name": "Lithuania" },
+      { "@type": "Country", "name": "Luxembourg" },
+      { "@type": "Country", "name": "Liechtenstein" },
+      { "@type": "Country", "name": "Andorra" },
+      { "@type": "Country", "name": "Monaco" },
+      { "@type": "Country", "name": "San Marino" },
+      { "@type": "Country", "name": "Malta" },
+      { "@type": "Country", "name": "Spain" },
+      { "@type": "Country", "name": "Portugal" },
+      { "@type": "Country", "name": "Italy" },
+      { "@type": "Country", "name": "Greece" },
+      { "@type": "Country", "name": "Cyprus" },
+      { "@type": "Country", "name": "Slovenia" },
+      { "@type": "Country", "name": "Slovakia" },
+      { "@type": "Country", "name": "Hungary" },
+      { "@type": "Country", "name": "Croatia" },
+      { "@type": "Country", "name": "Romania" },
+      { "@type": "Country", "name": "Bulgaria" },
+      { "@type": "Country", "name": "Serbia" },
+      { "@type": "Country", "name": "Bosnia and Herzegovina" },
+      { "@type": "Country", "name": "Montenegro" },
+      { "@type": "Country", "name": "Albania" },
+      { "@type": "Country", "name": "North Macedonia" },
+      { "@type": "Country", "name": "Kosovo" },
+      { "@type": "Country", "name": "Moldova" },
+      { "@type": "Country", "name": "Ukraine" },
+      { "@type": "Country", "name": "Belarus" }
     ],
     "distribution": {
       "@type": "DataDownload",
@@ -135,7 +170,7 @@
         <span class="wordmark">
           <span class="name">PapaMap</span>
           <!-- Replaced by app.js with the area the pipeline actually swept. -->
-          <span class="city" id="scope" data-i18n="areaFallback">elf europäische Länder</span>
+          <span class="city" id="scope" data-i18n="areaFallback">44 europäische Länder</span>
         </span>
       </a>
       <!-- Also the page's only <h1>: the map had no heading at all, so search

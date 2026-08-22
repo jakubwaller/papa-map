@@ -1,5 +1,40 @@
 # papa-map — build contract (v0)
 
+> **v14 amendment (22 Aug 2026, Europe complete):** papamap.de sweeps
+> **44 countries** — the eleven of v13 plus every remaining European
+> sovereign: `no fi is ie ee lv lt lu li ad mc sm mt es pt it gr cy si sk hu
+> hr ro bg rs ba me al mk xk md ua by` (ISO 3166-1 alpha-2; Kosovo is the
+> user-assigned `xk`). Each is **one whole `admin_level=2` area selected on
+> `name:en`**, extending v11's rule to the whole list — several would break
+> on `name` outright ("Ireland / Éire", "Україна"). Germany and France stay
+> the only chunked countries. Vatican City is deliberately absent: an area
+> with zero `changing_table` **and** zero `amenity=toilets` objects is
+> indistinguishable from a failed sweep (`run.py`'s zero-objects check), so
+> it cannot join under the current pipeline semantics.
+>
+> **The emitted shape does not change.** No new feature property, no new
+> `stats.json` field, no new file. `area_key` becomes `countries_44`, the
+> form v11 contracted and the frontend parses. Region keys in `history.json`
+> grow 38 → **71** (16 Länder + 13 régions + 42 whole countries); the set
+> stays open, as v13 already required.
+>
+> **Retraction — v13's implication that overseas territory stays out.**
+> France's five overseas régions are excluded by the `FRANCE_REGIONS`
+> allowlist, and v13 presented that as the pattern. It does not generalise:
+> Spain and Portugal answer **whole**, so the Canary Islands (27.6°N), Ceuta,
+> Melilla, Madeira and the Azores (−31.3°W) are *in* the dataset by the same
+> mechanism that keeps Guadeloupe out of it — the shape of the OSM relation,
+> not a papamap policy. The frontend's `maxBounds` widened to
+> `[[-32, 27], [41, 71.5]]` so every swept pin stays pannable-to; the
+> France exclusion stands only because its allowlist predates this and its
+> removal would re-litigate v13 for no reader benefit.
+>
+> **UI languages stay the nine of v13.** Adding a country adds pins, never
+> pages: the `/wickeltische/` premise ("Wickeltisch Bayern" is searched in
+> German) does not survive translation, and the site's copy now counts the
+> set ("44 European countries") instead of naming it everywhere except the
+> JSON-LD `spatialCoverage`, which enumerates for machines.
+
 > **v13 amendment (19 Aug 2026, the UK and France, and nine UI languages):**
 > papamap.de sweeps **eleven countries** — the nine of v12 plus **United
 > Kingdom** and **France** — because `docker-compose.yml` now sets

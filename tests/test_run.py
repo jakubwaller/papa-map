@@ -25,14 +25,26 @@ RING_SWEEP = SWEEP + [("Belgium", "2"), ("Netherlands", "2"), ("Austria", "2"),
                       ("Switzerland", "2"), ("Czechia", "2"), ("Poland", "2"),
                       ("Sweden", "2")]
 
-# What papamap.de actually sweeps (docker-compose.yml). The UK is one whole
+# The eleven-country set papamap.de swept 19–22 Aug 2026. The UK is one whole
 # area like the neighbours; France is the second CHUNKED country, 13
 # metropolitan régions at admin_level=4, because the country whole is an empty
-# reply at 60.14 s. Selecting either is not the default — see
+# reply at 60.14 s. Kept as its own name because the countries_11 label test
+# is about exactly this shape. Selecting it is not the default — see
 # test_default_sweep_is_still_germany_and_denmark.
-DEPLOYED = RING + ("gb", "fr")
-DEPLOYED_SWEEP = (RING_SWEEP + [("United Kingdom", "2")]
-                  + [(n, "4") for n in config.FRANCE_REGIONS])
+ELEVEN = RING + ("gb", "fr")
+ELEVEN_SWEEP = (RING_SWEEP + [("United Kingdom", "2")]
+                + [(n, "4") for n in config.FRANCE_REGIONS])
+
+# What papamap.de actually sweeps (docker-compose.yml) since the
+# Europe-complete expansion: the eleven above plus every remaining European
+# sovereign, each one whole admin_level=2 area selected on name:en.
+EUROPE_CODES = ("no", "fi", "is", "ie", "ee", "lv", "lt", "lu", "li", "ad",
+                "mc", "sm", "mt", "es", "pt", "it", "gr", "cy", "si", "sk",
+                "hu", "hr", "ro", "bg", "rs", "ba", "me", "al", "mk", "xk",
+                "md", "ua", "by")
+EUROPE = ELEVEN + EUROPE_CODES
+EUROPE_SWEEP = ELEVEN_SWEEP + [(config.COUNTRY_AREAS[c][0][0], "2")
+                               for c in EUROPE_CODES]
 
 
 def _fake_overpass(load_fixture):
@@ -411,10 +423,10 @@ def test_ring_subset_sweeps_each_neighbour_as_one_country_area(monkeypatch):
     assert all(lvl == "2" for name, lvl in areas if name not in BUNDESLAENDER)
 
 
-def test_deployed_set_chunks_france_and_sweeps_the_uk_whole(monkeypatch):
-    monkeypatch.setattr(config, "SWEEP_COUNTRIES", DEPLOYED)
+def test_eleven_country_set_chunks_france_and_sweeps_the_uk_whole(monkeypatch):
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", ELEVEN)
     areas = config.sweep_areas()
-    assert areas == DEPLOYED_SWEEP
+    assert areas == ELEVEN_SWEEP
     # 16 Bundesländer + 8 whole countries + the UK + 13 French régions.
     assert len(areas) == 38
     assert ("United Kingdom", "2") in areas
@@ -450,6 +462,25 @@ def test_united_kingdom_needs_no_name_en_and_stays_one_area():
     assert config.COUNTRY_AREAS["gb"] == (("United Kingdom", "2"),)
 
 
+def test_europe_complete_set_sweeps_every_new_country_whole(monkeypatch):
+    # Every country added 2026-08-22 is one admin_level=2 area selected on
+    # name:en; only Germany and France stay chunked. A name missing from
+    # NAME_EN_AREAS would be selected on `name`, resolve to zero objects for
+    # the multilingual ones, and read as a failed sweep — so the membership
+    # check here is load-bearing, not bookkeeping.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", EUROPE)
+    areas = config.sweep_areas()
+    assert areas == EUROPE_SWEEP
+    # 16 Bundesländer + Danmark + 7 neighbours + UK + 13 régions + 33 new.
+    assert len(areas) == 71
+    for code in EUROPE_CODES:
+        (name, lvl), = config.COUNTRY_AREAS[code]
+        assert lvl == "2", name
+        assert name in config.NAME_EN_AREAS, name
+        assert f'area["name:en"="{name}"]' in config.sweep_ql(name, "2")
+        assert name not in config.chunked_area_names(), name
+
+
 def test_every_country_code_has_a_label(monkeypatch):
     # display_area() indexes COUNTRY_LABELS with no .get(): a code present in
     # COUNTRY_AREAS but missing here is a bare KeyError at the top of the run.
@@ -474,11 +505,15 @@ def test_display_area_counts_the_set_past_two_countries(monkeypatch):
     assert key == "countries_9"
     assert name == ("Deutschland & Danmark & Belgium & Netherlands & Austria "
                     "& Switzerland & Czechia & Poland & Sweden")
-    # What the deployment actually publishes.
-    monkeypatch.setattr(config, "SWEEP_COUNTRIES", DEPLOYED)
+    # The eleven-country shape the live site published 19–22 Aug 2026.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", ELEVEN)
     name11, key11 = config.display_area()
     assert key11 == "countries_11"
     assert name11.endswith("& Sweden & United Kingdom & France")
+    # What the deployment publishes now.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", EUROPE)
+    _, key44 = config.display_area()
+    assert key44 == f"countries_{len(EUROPE)}"
     # Three countries is already past the point where naming the set scales.
     monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("de", "dk", "nl"))
     assert config.display_area() == ("Deutschland & Danmark & Netherlands",
