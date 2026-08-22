@@ -12,6 +12,12 @@ web/data/private/
 # generated pages, and /srv is read-only, so Docker cannot create it.
 web/wickeltische/*
 !web/wickeltische/.gitkeep
+# Same story: /srv is a read-only bind mount of web/, so every directory
+# mounted *inside* it must already exist in the repo — Docker cannot create
+# the mountpoint and the container refuses to start (22 Aug 2026, two
+# minutes of 502). web/private is the mountpoint for web-data/private.
+web/private/*
+!web/private/.gitkeep
 /web-data/
 *.sqlite
 pipeline.log
