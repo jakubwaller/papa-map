@@ -121,6 +121,25 @@ def test_render_german_page(tmp_path):
     assert pages.ICON in html  # or the browser 404s on /favicon.ico
 
 
+def test_both_pages_link_bundeslaender_and_switch_languages():
+    # The EN page shipped without the Bundesländer link the DE page had, and
+    # neither page showed which language it was in — 29 UI languages borrow
+    # the English page, so its switch has to be findable without reading it.
+    history = {"v": 1, "days": [
+        day("2026-08-07", regions={"Bayern": [1, 0, 9]}),
+        day("2026-08-14", regions={"Bayern": [3, 0, 7]}),
+    ]}
+    data = leaderboard.leaderboard_data(history)
+    de = leaderboard.render_leaderboard("de", data)
+    en = leaderboard.render_leaderboard("en", data)
+    for html in (de, en):
+        assert '<a href="./">Bundesländer</a>' in html
+    assert '<strong lang="de">Deutsch</strong>' in de
+    assert '<a href="leaderboard.html" hreflang="en" lang="en">English</a>' in de
+    assert '<strong lang="en">English</strong>' in en
+    assert '<a href="rangliste.html" hreflang="de" lang="de">Deutsch</a>' in en
+
+
 def test_french_regions_are_not_printed_as_whole_countries():
     # The regression this guards: "everything not a Bundesland is a country
     # swept whole" was true until France was chunked, and would have listed

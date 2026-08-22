@@ -263,9 +263,13 @@ L = {
         "desc": ("Wo wurde zuletzt beantwortet, in welchem Raum der Wickeltisch "
                  "hängt? Veränderung in Prozentpunkten, jede Nacht neu aus "
                  "OpenStreetMap."),
+        # The language pair reads like the methods pages' switcher: the current
+        # language bold, the other a link. "Bundesländer" stays German in both
+        # languages, same as index.html — it points at German-only pages.
         "back": ('<p class="back"><a href="{up}">&larr; Zur Karte</a> · '
                  '<a href="./">Bundesländer</a> · '
-                 f'<a href="{EN_FILE}">English</a></p>\n'),
+                 '<strong lang="de">Deutsch</strong> · '
+                 f'<a href="{EN_FILE}" hreflang="en" lang="en">English</a></p>\n'),
         "h1": "Die Rangliste",
         "stand": "Stand {date} · Daten aus OpenStreetMap",
         "stand_base": ("Stand {date} · Veränderung gegenüber dem {base} · "
@@ -334,8 +338,13 @@ L = {
         "desc": ("Where did the room question — which room is the changing "
                  "table in? — get answered lately? Change in percentage "
                  "points, rebuilt nightly from OpenStreetMap."),
+        # Mirrors the German page's line item for item — the Bundesländer link
+        # was missing here for no reason, and 29 languages borrow this page,
+        # so its language switch has to be findable by readers of any of them.
         "back": ('<p class="back"><a href="{up}">&larr; To the map</a> · '
-                 f'<a href="{DE_FILE}">Deutsch</a></p>\n'),
+                 '<a href="./">Bundesländer</a> · '
+                 f'<a href="{DE_FILE}" hreflang="de" lang="de">Deutsch</a> · '
+                 '<strong lang="en">English</strong></p>\n'),
         "h1": "The leaderboard",
         "stand": "As of {date} · Data from OpenStreetMap",
         "stand_base": ("As of {date} · Change since {base} · "
