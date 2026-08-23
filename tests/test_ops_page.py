@@ -69,6 +69,32 @@ def test_parse_empty_or_buildless_log_is_none():
     assert ops_page.parse_build_log("#0 docker noise\n") is None
 
 
+def test_group_warns_folds_repeats_and_drops_query_urls():
+    warns = (["WARN https://overpass.kumi.systems/api/interpreter: gave up after 3 attempts (HTTP 500)"] * 300
+             + ["WARN Poznań: 500 Server Error: Internal Server Error for url: https://x/api?data=%5Bout%3Ajson%5D",
+                "WARN Poznań: 500 Server Error: Internal Server Error for url: https://x/api?data=%5Bother",
+                "WARN Stockholm: 500 Server Error: Internal Server Error for url: https://x/api?data=%5Bq"]
+             + ["WARN: leaderboard skips Roma: gave up after 3 attempts"])
+    rows = ops_page.group_warns(warns)
+    assert rows[0] == (300, "WARN https://overpass.kumi.systems/api/interpreter: gave up after 3 attempts (HTTP 500)")
+    assert (2, "WARN Poznań: 500 Server Error: Internal Server Error") in rows
+    assert (1, "WARN Stockholm: 500 Server Error: Internal Server Error") in rows
+    assert len(rows) == 4
+    many = [f"WARN area{i}: failed" for i in range(50)]
+    rows = ops_page.group_warns(many, limit=40)
+    assert len(rows) == 41 and rows[-1] == (10, "… 10 more distinct warnings")
+
+
+def test_page_shows_warning_groups_not_every_line():
+    build = ops_page.parse_build_log(
+        "".join("  WARN https://m/api: gave up after 3 attempts (HTTP 500)\n" for _ in range(500))
+        + "{'features': 1}\n")
+    html = render(build=build)
+    assert "500 warnings, 1 distinct" in html
+    assert "500 × WARN https://m/api" in html
+    assert html.count("gave up after 3 attempts") == 1
+
+
 # ---- history.json ----------------------------------------------------------
 
 def test_region_rows_delta_against_a_week_ago():
