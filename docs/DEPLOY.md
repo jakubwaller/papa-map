@@ -166,22 +166,27 @@ Cloudflare plan forgets a day after about a week. `PAPAMAP_OPS_PRIVATE_HTML_PATH
 
 It is served at `https://papamap.de/private/ops.html` **only once you add the auth snippet** —
 `deploy/papamap.Caddyfile` answers 404 under `/private/` until `deploy/private/*.caddy`
-exists, so a checkout without it never exposes the page. One-time setup on the server:
+exists, so a checkout without it never exposes the page. Access is a token in the URL, the
+way Bürgerwecker's admin works: bookmark `…/private/ops.html?token=…`; the first visit also
+sets a cookie, so the plain URL works afterwards in that browser. One-time setup on the server:
 
 ```sh
 cd ~/papa-map
 mkdir -p web-data/private                      # before `up`: Docker would create it as root
-HASH=$(docker run --rm caddy:2-alpine caddy hash-password --plaintext 'the password')
-printf 'basic_auth {\n\t%s %s\n}\nfile_server\n' you "$HASH" > deploy/private/ops-auth.caddy
-docker compose up -d papamap                   # new mounts: recreate, a restart is not enough
-# (web/private/.gitkeep is the mountpoint inside the read-only /srv — it is tracked, and
-# without it the container refuses to start and the whole site answers 502.)
-curl -sI https://papamap.de/private/ops.html | head -1          # HTTP/2 401
-curl -sI -u you:'the password' https://papamap.de/private/ops.html | head -1   # 200
+T=$(openssl rand -base64 30 | tr -d '/+=')
+sed "s/REPLACE-WITH-THE-TOKEN/$T/g" deploy/private/ops-auth.caddy.example > deploy/private/ops-auth.caddy
+chmod 600 deploy/private/ops-auth.caddy
+docker compose up -d papamap                   # first time: new mounts, recreate; later: restart
+curl -sI https://papamap.de/private/ops.html | head -1                    # HTTP/2 404
+curl -sI "https://papamap.de/private/ops.html?token=$T" | head -1         # 200 + Set-Cookie
+echo "https://papamap.de/private/ops.html?token=$T"                       # bookmark this
 ```
 
-To change the password, regenerate the hash and rewrite the snippet, then
-`docker compose restart papamap` (the snippet is a bind mount — restart, not reload).
+(`web/private/.gitkeep` is the mountpoint inside the read-only `/srv` — it is tracked, and
+without it the container refuses to start and the whole site answers 502.)
+
+To rotate the token, regenerate the snippet and `docker compose restart papamap` (it is a
+bind mount — restart, not reload). Everyone's cookie stops working at the same moment.
 
 `ops.env` (git-ignored, `chmod 600`) holds the same `PAPAMAP_*` path overrides as the build cron
 (if any) plus:
