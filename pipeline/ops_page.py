@@ -33,8 +33,11 @@ RESULT_LINE = re.compile(r"^\{'features': .*\}\s*$")
 LOG_TAIL_LINES = 5000
 
 OPS_STYLE = """\
+  :root { --amber: #b7791f; }
+  @media (prefers-color-scheme: dark) { :root { --amber: #e0a943; } }
   .ok { color: var(--green); font-weight: 600; }
   .bad { color: var(--red); font-weight: 600; }
+  .warn { color: var(--amber); font-weight: 600; }
   ul.anomalies li { color: var(--red); }
   ul.warns { font-size: 0.85rem; font-family: ui-monospace, Menlo, monospace;
              padding-left: 1.2rem; }
@@ -328,13 +331,23 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
     p.append(f'<p class="muted">Report {stamp} · {built_txt}'
              + (f" · {esc(area)}" if area else "") + "</p>\n")
 
-    # Status
+    # Status. Three states, not two: the anomaly rules tolerate one missed
+    # night on purpose (48 h before the mail goes out), but a page that said
+    # "Healthy" over a build that never finished was read as exactly that on
+    # 23 Aug 2026. The build's own outcome gets its own colour.
     if anomalies:
         p.append('<p class="bad">Anomalies</p>\n<ul class="anomalies">\n')
         p.extend(f"<li>{esc(a)}</li>\n" for a in anomalies)
         p.append("</ul>\n")
+    elif build is not None and not build["finished"]:
+        what = ("failed" if build["error"] else
+                "had not finished when this report ran")
+        p.append(f'<p class="warn">Last build {what} — the site is serving the '
+                 f"previous dataset{f' ({age:.0f} h old)' if age is not None else ''}"
+                 ". Details under Last build.</p>\n")
     else:
-        p.append('<p class="ok">Healthy — fresh dataset, counts within bounds.</p>\n')
+        p.append('<p class="ok">Healthy — fresh dataset, counts within bounds, '
+                 "last build finished.</p>\n")
 
     # Dataset
     p.append("<h2>Dataset</h2>\n")
