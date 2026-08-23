@@ -51,6 +51,16 @@ OPS_PRIVATE_HTML_PATH = os.environ.get(
     "PAPAMAP_OPS_PRIVATE_HTML_PATH",
     str(Path(STATS_PATH).parent / "private" / "ops.html"))
 VISITS_HISTORY_DAYS = 400
+# How far back to ask Cloudflare for per-day figures. The free plan does NOT
+# forget a day after a week: measured 2026-08-23, `httpRequests1dGroups` served
+# every day back to this zone's first (2026-07-29, 26 rows). Fetch the whole
+# window on every run, so the private page's history is Cloudflare's own and
+# not just what this state file happened to catch. The `limit: 31` below is
+# the ceiling — 30 complete days plus today.
+CF_HISTORY_DAYS = 30
+# ...but the mail digest still quotes a week, which is the number Jakub reads
+# against last week's. Both come out of the same single request.
+CF_REPORT_DAYS = 7
 # history.json, the leaderboard's per-region counts. The build writes it next
 # to stats.json in every layout (Dockerfile, config defaults), so the sibling
 # is the right default here too — config.HISTORY_PATH's own default is the
@@ -209,14 +219,15 @@ def render_report(counts, changes, history, anomalies, visits=None,
         lines.append(
             f"edits via papamap theme (OSMCha, {edits['days']}d): "
             f"{edits['changesets']} changesets")
-    if visits:
+    if visits and visits["days"]:
         lines.append(
             f"visits (Cloudflare, {visits['days']}d): "
             f"{visits['requests']} requests, {visits['uniques']} uniques")
     return "\n".join(lines) or "no data at all — nothing to report on"
 
 
-def cf_visits(days=7, now=None, post=requests.post):
+def cf_visits(days=CF_HISTORY_DAYS, report_days=CF_REPORT_DAYS,
+              now=None, post=requests.post):
     """Zone-level request/unique totals — aggregate only, no visitor data.
     Optional: needs CF_ANALYTICS_TOKEN (Analytics:Read, papamap zone only) and
     CF_ZONE_TAG; absent or failing, the report just omits the block."""
@@ -237,15 +248,20 @@ def cf_visits(days=7, now=None, post=requests.post):
                  json={"query": query,
                        "variables": {"zone": zone, "since": since}})
         groups = r.json()["data"]["viewer"]["zones"][0]["httpRequests1dGroups"]
-        # by_day is what the private ops page keeps: Cloudflare's free plan
-        # forgets a day after about a week, the state file does not.
-        return {"days": days,
-                "requests": sum(g["sum"]["requests"] for g in groups),
-                "uniques": sum(g["uniq"]["uniques"] for g in groups),
-                "by_day": {g["dimensions"]["date"]: {
-                    "requests": g["sum"]["requests"],
-                    "uniques": g["uniq"]["uniques"]} for g in groups
-                    if g.get("dimensions", {}).get("date")}}
+        # by_day is the whole fetched window and feeds the private page's
+        # history; the totals are the mail's week. Today is excluded from the
+        # totals — at 05:30 it is a fifth of a day and would drag the week
+        # down — but kept out of by_day by merge_visits, not here.
+        by_day = {g["dimensions"]["date"]: {
+            "requests": g["sum"]["requests"],
+            "uniques": g["uniq"]["uniques"]} for g in groups
+            if g.get("dimensions", {}).get("date")}
+        today = now.strftime("%Y-%m-%d")
+        week = sorted(d for d in by_day if d < today)[-report_days:]
+        return {"days": len(week),
+                "requests": sum(by_day[d]["requests"] for d in week),
+                "uniques": sum(by_day[d]["uniques"] for d in week),
+                "by_day": by_day}
     except Exception as exc:  # visits are decoration — never fail the check
         print(f"WARN: Cloudflare analytics failed: {exc}", file=sys.stderr)
         return None
