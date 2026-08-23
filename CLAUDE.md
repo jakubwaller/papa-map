@@ -59,6 +59,11 @@ Netherlands at 41.7 s).
 MapComplete's format changes — it would just stop loading, silently, on every grey pin.
 `pipeline/theme_check.py` is the guard and runs in CI weekly; take a failure there seriously.
 
+**The pipeline container runs on the host network on purpose** (`network_mode: host`). The
+bridge networks are IPv4-only, and Overpass has banned this host's IPv4 address at the TCP
+level while still answering it over IPv6 (2026-08-23). Putting the service back on
+`web_proxy` makes the next ban look like a full Overpass outage again.
+
 **`web/data/` and `web/wickeltische/` are build output** and git-ignored. In the container they are
 bind-mounted back into the served tree because `web/` itself is read-only to the pipeline.
 

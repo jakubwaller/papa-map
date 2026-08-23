@@ -48,8 +48,13 @@ services:
       - PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se,gb,fr,no,fi,is,ie,ee,lv,lt,lu,li,ad,mc,sm,mt,es,pt,it,gr,cy,si,sk,hu,hr,ro,bg,rs,ba,me,al,mk,xk,md,ua,by
     volumes:
       - ./web-data:/out
-    networks:
-      - web_proxy
+    # Host network, not web_proxy. The job only makes outbound requests, and on
+    # the host it has IPv6; Docker's bridge networks here are IPv4-only. On
+    # 2026-08-23 overpass-api.de TCP-refused this host's IPv4 address on both
+    # of its backends for hours while answering the very same host over IPv6,
+    # and every query from this container died with "Network is unreachable"
+    # although nothing was wrong with the queries.
+    network_mode: host
 
 networks:
   web_proxy:
