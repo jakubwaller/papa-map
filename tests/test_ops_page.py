@@ -175,6 +175,25 @@ def test_healthy_page_carries_every_section():
     assert "no analytics" in html
 
 
+def test_unfinished_or_failed_build_is_never_healthy():
+    running = ops_page.parse_build_log(
+        FINISHED_BUILD + "  Bayern: ct=1 play=1 toilets=1\n")
+    html = render(build=running)
+    assert "Healthy" not in html
+    assert "Last build had not finished when this report ran" in html
+    assert "serving the previous dataset (3 h old)" in html
+    failed = ops_page.parse_build_log(
+        FINISHED_BUILD + "  Bayern: ct=1 play=1 toilets=1\nTraceback (most recent call last):\n"
+        "RuntimeError: boom\n")
+    html = render(build=failed)
+    assert "Healthy" not in html and "Last build failed" in html
+    # Anomalies still win over the build state.
+    html = render(build=running, anomalies=["stats.json is missing"])
+    assert "Anomalies" in html and "Last build had not" not in html
+    # No log at all is not a failed build.
+    assert "Healthy" in render(build=None)
+
+
 def test_anomalies_replace_the_healthy_line_and_escape():
     html = render(anomalies=["stats.json is missing <b>or</b> unreadable"])
     assert "Healthy" not in html
