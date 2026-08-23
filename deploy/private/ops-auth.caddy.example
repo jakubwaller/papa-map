@@ -1,9 +1,13 @@
-# Copy to deploy/private/ops-auth.caddy (git-ignored) on the server, then
-# `docker compose up -d papamap`. The hash comes from
-#   docker run --rm caddy:2-alpine caddy hash-password --plaintext 'the password'
-# Both directives are imported into `handle /private/*` in papamap.Caddyfile:
-# basic_auth gates, file_server serves web-data/private/ from /srv/private.
-basic_auth {
-	you $2a$14$replace-with-the-bcrypt-hash-from-caddy-hash-password
-}
-file_server
+# Copy to deploy/private/ops-auth.caddy (git-ignored) on the server with a
+# real token, then `docker compose restart papamap`. Imported into
+# `route /private/*` in papamap.Caddyfile, in this order: the request either
+# carries ?token=… (bookmark it — the cookie is set right there, so the plain
+# URL works afterwards in that browser) or the cookie; anything else falls
+# through to the route's 404. Token: `openssl rand -base64 30 | tr -d '/+='`.
+# No referrer leaves the page, so the token in the URL stays in the browser.
+@token query token=REPLACE-WITH-THE-TOKEN
+@cookie header_regexp Cookie "(^|; *)papamap_ops=REPLACE-WITH-THE-TOKEN(;|$)"
+header Referrer-Policy no-referrer
+header @token Set-Cookie "papamap_ops=REPLACE-WITH-THE-TOKEN; Path=/private/; Secure; HttpOnly; SameSite=Lax; Max-Age=31536000"
+file_server @token
+file_server @cookie
