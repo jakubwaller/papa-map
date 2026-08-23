@@ -105,6 +105,28 @@ def parse_build_log(text: str | None) -> dict | None:
     return build
 
 
+def group_warns(warns: list[str], limit: int = 40) -> list[tuple[int, str]]:
+    """WARN lines folded into (count, message) rows, most frequent first. A
+    bad night repeats the same three mirror messages a thousand times (1,126
+    lines on 23 Aug 2026); the count is the information, not the repetition.
+    Per-area failures differ only by the area and the query URL, so the URL
+    is dropped and the area kept — "Poznań: 500 Server Error" is one row per
+    area, which is what you want to read. Past `limit` rows the rest is one
+    summary row."""
+    counts: dict[str, int] = {}
+    for w in warns:
+        key = re.sub(r"\s+for url:.*$", "", w)
+        key = re.sub(r"\?data=\S*", "?data=…", key)
+        counts[key] = counts.get(key, 0) + 1
+    rows = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    out = [(n, msg) for msg, n in rows[:limit]]
+    rest = rows[limit:]
+    if rest:
+        out.append((sum(n for _, n in rest),
+                    f"… {len(rest)} more distinct warnings"))
+    return out
+
+
 # ---- history.json ----------------------------------------------------------
 
 def region_rows(history: dict | None, window_days: int = 7) -> dict:
@@ -407,9 +429,11 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
             p.append("<p>Retries: " + " · ".join(esc(x) for x in build["rounds"])
                      + "</p>\n")
         if build["warns"]:
-            p.append(f'<p class="bad">{len(build["warns"])} warnings</p>\n'
-                     '<ul class="warns">\n')
-            p.extend(f"<li>{esc(w)}</li>\n" for w in build["warns"])
+            groups = group_warns(build["warns"])
+            p.append(f'<p class="bad">{len(build["warns"]):,} warnings, '
+                     f'{len(groups)} distinct</p>\n<ul class="warns">\n')
+            p.extend(f"<li>{n:,} × {esc(msg)}</li>\n" if n > 1
+                     else f"<li>{esc(msg)}</li>\n" for n, msg in groups)
             p.append("</ul>\n")
         if build["areas"]:
             zero = sum(1 for a in build["areas"] if a["ct"] == 0)
