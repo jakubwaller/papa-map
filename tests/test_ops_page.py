@@ -334,12 +334,36 @@ def test_private_page_carries_visitors_and_public_never_does():
     assert "<title>PapaMap ops (private)</title>" in private
     assert "<h2>Visitors</h2>" in private
     assert "1,830" in private and "7,500" in private  # 3-day sums
-    assert "uniques, last 3 days" in private
+    # Three days of history is one window, not three: the 7-, 30- and
+    # whole-history tiles collapse to a single pair rather than repeating.
+    assert "uniques, all 3 days" in private
+    assert private.count("<span>uniques,") == 1
+    assert private.count("<span>requests,") == 1
     assert "2026-08-21" in private and "640" in private
     assert "identifies nobody" in private
     public = render(private=False, visits=VISITS)
     assert "Visitors" not in public and "7,500" not in public
     assert "no analytics" in public
+
+
+
+def test_visitor_windows_are_distinct_and_the_table_holds_every_day():
+    """The bug this pins: with a week of history, days[-7:] and days[-30:] are
+    the same seven days, so the page printed 'uniques, last 7 days' twice with
+    identical numbers. Only windows of different length may appear, and the
+    table shows the whole history rather than a 30-day tail."""
+    from datetime import date, timedelta
+    start = date(2026, 7, 1)
+    visits = {(start + timedelta(days=i)).isoformat():
+              {"requests": 100 + i, "uniques": 10 + i} for i in range(40)}
+    html = render(private=True, visits=visits)
+    for label in ("uniques, last 7 days", "uniques, last 30 days",
+                  "uniques, all 40 days"):
+        assert html.count(label) == 1, label
+    assert html.count("<span>uniques,") == 3
+    assert "all 40 days</summary>" in html
+    assert "2026-07-01" in html and "2026-08-09" in html   # first and last row
+    assert html.count("<tr><td class=\"l\">2026-0") >= 40
 
 
 def test_private_page_without_figures_says_so():
@@ -371,6 +395,59 @@ def test_cf_visits_returns_per_day_figures(monkeypatch):
     assert v["requests"] == 30 and v["uniques"] == 7
     assert v["by_day"] == {"2026-08-21": {"requests": 10, "uniques": 3},
                            "2026-08-22": {"requests": 20, "uniques": 4}}
+
+
+def test_cf_visits_fetches_a_month_but_reports_the_week(monkeypatch):
+    """One request serves both readers: the private page's history wants every
+    day Cloudflare still holds (the free plan keeps ~30, not the week the old
+    comment claimed), the mail wants the last seven complete days."""
+    monkeypatch.setenv("CF_ANALYTICS_TOKEN", "t")
+    monkeypatch.setenv("CF_ZONE_TAG", "z")
+    from datetime import date, timedelta
+    # 30 complete days ending yesterday, plus today's partial figure.
+    days = [(date(2026, 8, 23) - timedelta(days=n)) for n in range(30, -1, -1)]
+    groups = [{"dimensions": {"date": d.isoformat()},
+               "sum": {"requests": 100}, "uniq": {"uniques": 10}} for d in days]
+    groups[-1]["sum"]["requests"] = 7        # today, still running
+    groups[-1]["uniq"]["uniques"] = 1
+
+    class R:
+        def json(self):
+            return {"data": {"viewer": {"zones": [
+                {"httpRequests1dGroups": groups}]}}}
+
+    seen = {}
+
+    def post(url, **kw):
+        seen.update(kw["json"]["variables"])
+        return R()
+
+    v = ops.cf_visits(now=NOW, post=post)                 # NOW is 2026-08-23
+    assert seen["since"] == "2026-07-24"                  # a month back
+    assert len(v["by_day"]) == 31                         # everything fetched
+    assert v["days"] == 7                                 # but a week reported
+    assert v["requests"] == 700 and v["uniques"] == 70    # today's 7 excluded
+
+
+def test_cf_visits_reports_no_window_before_the_first_complete_day(monkeypatch):
+    """A zone whose only row is today has nothing to say about a week, and the
+    mail line is suppressed rather than printing a zero that reads as traffic
+    collapse. The partial day still reaches by_day, where merge_visits drops it."""
+    monkeypatch.setenv("CF_ANALYTICS_TOKEN", "t")
+    monkeypatch.setenv("CF_ZONE_TAG", "z")
+    groups = [{"dimensions": {"date": "2026-08-23"},
+               "sum": {"requests": 40}, "uniq": {"uniques": 9}}]
+
+    class R:
+        def json(self):
+            return {"data": {"viewer": {"zones": [
+                {"httpRequests1dGroups": groups}]}}}
+
+    v = ops.cf_visits(now=NOW, post=lambda url, **kw: R())
+    assert v["days"] == 0 and v["requests"] == 0 and v["uniques"] == 0
+    assert v["by_day"] == {"2026-08-23": {"requests": 40, "uniques": 9}}
+    assert "visits (Cloudflare" not in ops.render_report(
+        None, None, [], [], visits=v)
 
 
 def test_merge_visits_skips_today_overwrites_earlier_and_caps():

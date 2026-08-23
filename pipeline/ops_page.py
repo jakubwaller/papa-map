@@ -264,25 +264,36 @@ def _visitors(visits: dict | None) -> str:
              "per day, so a window's sum counts a daily reader once per day."
              "</p>\n"
              '<div class="kpis">\n']
-    for n in (7, 30):
+    # 7 and 30 days plus the whole history, but only the ones that are
+    # actually different: with a week of history all three windows are the
+    # same seven days, and three identical pairs of tiles read as a bug.
+    seen: set[int] = set()
+    for n in (7, 30, len(days)):
         window = days[-n:]
+        if len(window) in seen:
+            continue
+        seen.add(len(window))
+        span = ("all" if len(window) == len(days) else "last")
         req = sum(v["requests"] for _, v in window)
         uni = sum(v["uniques"] for _, v in window)
         parts.append(f'<div class="kpi"><b>{_n(uni)}</b>'
-                     f"<span>uniques, last {len(window)} days</span></div>\n"
+                     f"<span>uniques, {span} {len(window)} days</span></div>\n"
                      f'<div class="kpi"><b>{_n(req)}</b>'
-                     f"<span>requests, last {len(window)} days</span></div>\n")
+                     f"<span>requests, {span} {len(window)} days</span></div>\n")
     parts.append("</div>\n")
     uniques = [v["uniques"] for _, v in days]
     if len(uniques) >= 2:
         parts.append(f'<p class="muted">Daily uniques, {esc(days[0][0])} → '
                      f"{esc(days[-1][0])}</p>\n")
         parts.append(_sparkline(uniques, "--accent"))
-    recent = list(reversed(days[-30:]))
-    parts.append(f"<details>\n<summary>last {len(recent)} of {len(days)} days</summary>\n"
+    # The whole history, newest first — the state keeps up to
+    # ops.VISITS_HISTORY_DAYS of it and there is no reason for the page to
+    # show less than it holds. It is inside a <details> and a scroll box.
+    rows = list(reversed(days))
+    parts.append(f"<details>\n<summary>all {len(rows)} days</summary>\n"
                  '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
                  "<th>uniques</th><th>requests</th></tr></thead>\n<tbody>\n")
-    for day, v in recent:
+    for day, v in rows:
         parts.append(f'<tr><td class="l">{esc(day)}</td><td>{_n(v["uniques"])}</td>'
                      f'<td>{_n(v["requests"])}</td></tr>\n')
     parts.append("</tbody>\n</table>\n</div>\n</details>\n")

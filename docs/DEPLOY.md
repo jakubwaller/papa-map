@@ -166,11 +166,18 @@ render or write is a WARN in `ops.log`, never a failed check.
 ### The private ops page
 
 The same run also writes a **private copy** — the public page plus a Visitors block:
-Cloudflare's zone-level requests and uniques per complete UTC day, 7/30-day sums, a curve, a
-table. The per-day figures are fetched on every run now (the mail still quotes them on digest
-days only) and kept in `ops-state.json` under `visits`, capped at 400 days, because the free
-Cloudflare plan forgets a day after about a week. `PAPAMAP_OPS_PRIVATE_HTML_PATH` (default
-`private/ops.html` next to `stats.json`, i.e. `web-data/private/ops.html`; empty disables).
+Cloudflare's zone-level requests and uniques per complete UTC day, window sums, a curve, and a
+table of the whole history. The per-day figures are fetched on every run (the mail still quotes
+them on digest days only) and kept in `ops-state.json` under `visits`, capped at 400 days.
+`PAPAMAP_OPS_PRIVATE_HTML_PATH` (default `private/ops.html` next to `stats.json`, i.e.
+`web-data/private/ops.html`; empty disables).
+
+**Each run asks Cloudflare for 30 days, not the week the mail quotes.** Measured 2026-08-23:
+the free plan's `httpRequests1dGroups` served every day back to this zone's first
+(2026-07-29, 26 rows), so the earlier "it forgets a day after about a week" belief was wrong
+and the state was a week deep for no reason. One request feeds both readers — the page's
+history and the mail's seven-day total — so nothing costs more. It also means a fresh state
+file backfills a month on its first run rather than growing a day at a time.
 
 It is served at `https://papamap.de/private/ops.html` **only once you add the auth snippet** —
 `deploy/papamap.Caddyfile` answers 404 under `/private/` until `deploy/private/*.caddy`
