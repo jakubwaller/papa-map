@@ -278,7 +278,12 @@ COUNTRY_LABELS = {
 # Belgium and Switzerland are multilingual; each page is written in the
 # majority language (Dutch, German) rather than duplicated per language.
 # France's entry is the hub page over its 13 région pages, which are written
-# in French from FRANCE_REGION_FORMS in pages_l10n.py.
+# in French from FRANCE_REGION_FORMS in pages_l10n.py. The micro-states and
+# the countries whose language the site does not speak borrow a neighbour's
+# page language the same way: Ireland and Malta get English, Monaco and
+# Luxembourg French, Liechtenstein German, Andorra Catalan, San Marino
+# Italian, Moldova Romanian, Montenegro Serbian, Kosovo Albanian, Cyprus
+# Greek — the language its readers already get from the map UI.
 COUNTRY_PAGES = {
     "dk": ("da", "Danmark", "i Danmark", None),
     "be": ("nl", "België", "in België", None),
@@ -291,6 +296,70 @@ COUNTRY_PAGES = {
     "gb": ("en", "United Kingdom", "in the United Kingdom",
            "the United Kingdom"),
     "fr": ("fr", "France", "en France", "la France"),
+    # ------ the Europe-complete ring, pages added 2026-08-23 ------
+    "no": ("no", "Norge", "i Norge", None),
+    "fi": ("fi", "Suomi", "Suomessa", None),
+    "is": ("is", "Ísland", "á Íslandi", None),
+    "ie": ("en", "Ireland", "in Ireland", None),
+    "ee": ("et", "Eesti", "Eestis", None),
+    "lv": ("lv", "Latvija", "Latvijā", None),
+    "lt": ("lt", "Lietuva", "Lietuvoje", None),
+    "lu": ("fr", "Luxembourg", "au Luxembourg", "le Luxembourg"),
+    "li": ("de", "Liechtenstein", "in Liechtenstein", None),
+    "ad": ("ca", "Andorra", "a Andorra", None),
+    "mc": ("fr", "Monaco", "à Monaco", None),
+    "sm": ("it", "San Marino", "a San Marino", None),
+    "mt": ("en", "Malta", "in Malta", None),
+    "es": ("es", "España", "en España", None),
+    "pt": ("pt", "Portugal", "em Portugal", None),
+    "it": ("it", "Italia", "in Italia", "l'Italia"),
+    "gr": ("el", "Ελλάδα", "στην Ελλάδα", "την Ελλάδα"),
+    "cy": ("el", "Κύπρος", "στην Κύπρο", "την Κύπρο"),
+    "si": ("sl", "Slovenija", "v Sloveniji", None),
+    "sk": ("sk", "Slovensko", "na Slovensku", None),
+    "hu": ("hu", "Magyarország", "Magyarországon", None),
+    "hr": ("hr", "Hrvatska", "u Hrvatskoj", None),
+    "ro": ("ro", "România", "în România", None),
+    "bg": ("bg", "България", "в България", None),
+    "rs": ("sr", "Србија", "у Србији", "Србију"),
+    "ba": ("bs", "Bosna i Hercegovina", "u Bosni i Hercegovini", None),
+    "me": ("sr", "Црна Гора", "у Црној Гори", "Црну Гору"),
+    "al": ("sq", "Shqipëria", "në Shqipëri", "Shqipërinë"),
+    "mk": ("mk", "Северна Македонија", "во Северна Македонија", None),
+    "xk": ("sq", "Kosova", "në Kosovë", "Kosovën"),
+    "md": ("ro", "Moldova", "în Moldova", None),
+    "ua": ("uk", "Україна", "в Україні", None),
+    "by": ("be", "Беларусь", "у Беларусі", None),
+}
+
+# Slug overrides for pages.slugify, keyed by display name. Only the non-Latin
+# script names need one: slugify folds accents to base letters, but a Greek or
+# Cyrillic name folds to nothing at all. The override is the romanization the
+# country's own readers type; test_pages pins each one like every other slug.
+COUNTRY_SLUGS = {
+    "Ελλάδα": "ellada",
+    "Κύπρος": "kypros",
+    "България": "balgariya",
+    "Србија": "srbija",
+    "Црна Гора": "crna-gora",
+    "Северна Македонија": "severna-makedonija",
+    "Україна": "ukrayina",
+    "Беларусь": "bielarus",
+}
+
+# Primary country per page language — where a language's leaderboard sends its
+# readers "home". Most languages serve exactly one swept country; the ones that
+# serve several (de: DE/AT/CH/LI, en: GB/IE/MT, fr: FR/MC/LU, nl: NL/BE,
+# el: GR/CY, ro: RO/MD, sq: AL/XK, sr: RS/ME, it: IT/SM, ca: AD) name the
+# biggest — its page's country list reaches the rest. "de" is special-cased by
+# the consumer to the Bundesland hub at ./ rather than a country page.
+LANG_HOME_CC = {
+    "de": "de", "en": "gb", "da": "dk", "nl": "nl", "fr": "fr", "it": "it",
+    "cs": "cz", "pl": "pl", "sv": "se", "bs": "ba", "ca": "ad", "et": "ee",
+    "es": "es", "hr": "hr", "is": "is", "lv": "lv", "lt": "lt", "hu": "hu",
+    "no": "no", "pt": "pt", "ro": "ro", "sq": "al", "sk": "sk", "sl": "si",
+    "fi": "fi", "el": "gr", "be": "by", "bg": "bg", "mk": "mk", "sr": "rs",
+    "uk": "ua",
 }
 
 # Leaderboard city sweep: (display name, OSM area name, admin_level). Curated —

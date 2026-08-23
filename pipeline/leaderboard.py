@@ -4,11 +4,12 @@ import json
 from datetime import date as _date, timedelta
 from pathlib import Path
 
-from .config import (AREA_COUNTRY, BUNDESLAENDER, FRANCE_REGIONS, chunked_area_names,
+from .config import (AREA_COUNTRY, BUNDESLAENDER, COUNTRY_PAGES,
+                     FRANCE_REGIONS, LANG_HOME_CC, chunked_area_names,
                      HISTORY_MAX_DAYS, PAGES_BASE_PATH, SITE_BASE_URL)
 from .export import write_text_atomic
 from .leaderboard_strings import DE_FILE, EN_FILE, L
-from .pages import ICON, STYLE, UP, esc, sort_key
+from .pages import ICON, STYLE, UP, esc, slugify, sort_key
 
 # Per-region history and the leaderboard pages built from it.
 #
@@ -305,8 +306,18 @@ def _head(lang: str, tab: dict, base_url: str, base_path: str) -> str:
 def _back(lang: str, tab: dict) -> str:
     """The back row plus the language switcher, generated like the methods
     pages': endonyms, the current language as <strong>, every language listed.
-    "Bundesländer" stays German in all of them — it points at German-only
-    pages, same as index.html's header link."""
+
+    The second link goes to the reader's own country page — until 2026-08-23
+    every language linked the German Bundesland index here, a leftover from
+    when those were the only pages. German keeps that link (its home IS the
+    Bundesland hub); everyone else gets LANG_HOME_CC's country, labelled by
+    its endonym, whose own country list reaches the other 43."""
+    home_cc = LANG_HOME_CC[lang]
+    if home_cc == "de":
+        home_label, home_href = "Bundesländer", "./"
+    else:
+        home_label = COUNTRY_PAGES[home_cc][1]
+        home_href = f"{slugify(home_label)}.html"
     entries = []
     for code, t in L.items():
         if code == lang:
@@ -315,7 +326,7 @@ def _back(lang: str, tab: dict) -> str:
             entries.append(f'<a href="{t["file"]}" hreflang="{code}" '
                            f'lang="{code}">{t["lang_name"]}</a>')
     return (f'<p class="back"><a href="{UP}">{tab["back_map"]}</a> · '
-            f'<a href="./">Bundesländer</a></p>\n'
+            f'<a href="{esc(home_href)}">{esc(home_label)}</a></p>\n'
             f'<p class="back langs">' + "\n  &middot; ".join(entries) + "</p>\n")
 
 

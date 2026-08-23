@@ -131,11 +131,13 @@ def test_every_language_defines_the_same_keys():
         assert tab["file"].endswith(".html"), lang
 
 
-def test_every_page_links_bundeslaender_and_switches_languages():
-    # The EN page once shipped without the Bundesländer link the DE page had,
-    # and no page showed which language it was in. Now every language renders
-    # its own page with the methods pages' switcher: current language bold,
-    # every other an endonym link.
+def test_every_page_links_its_own_country_and_switches_languages():
+    # Until 2026-08-23 every language hardcoded the German Bundesland index
+    # here — a Czech reader's "home" was a German page. Now each language
+    # links LANG_HOME_CC's country page, labelled by its endonym; German keeps
+    # the Bundesland hub. The switcher stays: current language bold, every
+    # other an endonym link.
+    from pipeline.config import COUNTRY_PAGES, LANG_HOME_CC
     history = {"v": 1, "days": [
         day("2026-08-07", regions={"Bayern": [1, 0, 9]}),
         day("2026-08-14", regions={"Bayern": [3, 0, 7]}),
@@ -143,7 +145,13 @@ def test_every_page_links_bundeslaender_and_switches_languages():
     data = leaderboard.leaderboard_data(history)
     for lang, tab in leaderboard.L.items():
         html = leaderboard.render_leaderboard(lang, data)
-        assert '<a href="./">Bundesländer</a>' in html, lang
+        cc = LANG_HOME_CC[lang]
+        if cc == "de":
+            assert '<a href="./">Bundesländer</a>' in html, lang
+        else:
+            name = COUNTRY_PAGES[cc][1]
+            assert (f'<a href="{pages.slugify(name)}.html">'
+                    f'{pages.esc(name)}</a>' in html), lang
         assert f'<strong lang="{lang}">{tab["lang_name"]}</strong>' in html, lang
         other = "de" if lang != "de" else "en"
         assert (f'<a href="{leaderboard.L[other]["file"]}" hreflang="{other}" '
@@ -151,6 +159,16 @@ def test_every_page_links_bundeslaender_and_switches_languages():
         # Its own canonical, and one hreflang alternate per language.
         assert f'wickeltische/{tab["file"]}">' in html, lang
         assert html.count('rel="alternate" hreflang=') == len(leaderboard.L) + 1
+
+
+def test_lang_home_covers_every_language_and_points_at_real_pages():
+    # A leaderboard language without a home KeyErrors at render time; a home
+    # outside COUNTRY_PAGES links a 404. Both are config typos this pins.
+    from pipeline.config import COUNTRY_PAGES, LANG_HOME_CC
+    assert set(LANG_HOME_CC) == set(leaderboard.L)
+    for lang, cc in LANG_HOME_CC.items():
+        if cc != "de":
+            assert cc in COUNTRY_PAGES, (lang, cc)
 
 
 def test_french_regions_are_not_printed_as_whole_countries():

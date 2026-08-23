@@ -224,7 +224,17 @@ def test_country_and_region_slugs_are_pinned():
     from pipeline.config import COUNTRY_PAGES, FRANCE_REGIONS
     assert {pages.slugify(name) for _, name, _, _ in COUNTRY_PAGES.values()} == {
         "danmark", "belgie", "nederland", "oesterreich", "schweiz", "cesko",
-        "polska", "sverige", "united-kingdom", "france"}
+        "polska", "sverige", "united-kingdom", "france",
+        # The Europe-complete ring (23 Aug 2026). The non-Latin script names
+        # take their slug from config.COUNTRY_SLUGS — the romanization their
+        # own readers type, not an English exonym.
+        "norge", "suomi", "island", "ireland", "eesti", "latvija", "lietuva",
+        "luxembourg", "liechtenstein", "andorra", "monaco", "san-marino",
+        "malta", "espana", "portugal", "italia", "ellada", "kypros",
+        "slovenija", "slovensko", "magyarorszag", "hrvatska", "romania",
+        "balgariya", "srbija", "bosna-i-hercegovina", "crna-gora",
+        "shqiperia", "severna-makedonija", "kosova", "moldova", "ukrayina",
+        "bielarus"}
     assert [pages.slugify(r) for r in FRANCE_REGIONS] == [
         "auvergne-rhone-alpes", "bourgogne-franche-comte", "bretagne",
         "centre-val-de-loire", "corse", "grand-est", "hauts-de-france",
@@ -315,3 +325,71 @@ def test_write_all_pages_without_germany_writes_no_german_pages(tmp_path):
     da = (tmp_path / "danmark.html").read_text(encoding="utf-8")
     # Alone in the build, the page has no other countries to link.
     assert "PapaMap i andre lande" not in da
+
+# ---- 44 countries, 31 page languages (23 Aug 2026) --------------------------
+
+def test_every_page_language_defines_the_country_template_keys():
+    # The 28 keys a country page renders from — the "en" entry is the
+    # template. de and fr carry extra hub-only keys on top; nobody may carry
+    # fewer, or render_area KeyErrors at night in cron.
+    from pipeline.pages_l10n import AMENITY, BOARD_LABEL, L
+    en_keys = set(L["en"])
+    for lang, t in L.items():
+        assert en_keys <= set(t), f"missing keys in {lang}: {en_keys - set(t)}"
+        assert set(t["statuses"]) == {"accessible", "female_only", "unknown"}, lang
+        assert len(t["months"]) == 12, lang
+        assert t["methods"] == ("methods.html" if lang == "de"
+                                else f"methods-{lang}.html"), lang
+        assert set(AMENITY[lang]) == set(AMENITY["en"]), lang
+        assert lang in BOARD_LABEL, lang
+
+
+def test_every_country_page_renders_in_its_own_language(tmp_path):
+    # Renders every template of every language with real-shaped data — a bad
+    # placeholder in any of the 31 translations fails here, not in the night
+    # build. Also the empty state, which formats a different template.
+    from pipeline.config import COUNTRY_PAGES
+    from pipeline.pages_l10n import L
+    for cc, (lang, name, name_in, name_for) in COUNTRY_PAGES.items():
+        summary = pages.summarize(name, [
+            feat(1, "Legoland", "accessible", amenity="cafe"),
+            feat(2, None, "unknown"),
+        ], 7)
+        html = pages.render_area({
+            "lang": lang, "summary": summary,
+            "name_in": name_in, "name_for": name_for,
+            "back": [(L[lang]["back_map"], "../")],
+        }, GEN)
+        assert f'lang="{lang}"' in html, cc
+        assert "<h1>" in html and "Legoland" in html, cc
+        assert "{" not in html.split("<style>")[0], cc  # unformatted leftover
+        empty = pages.render_area({
+            "lang": lang, "summary": pages.summarize(name, [], 0),
+            "name_in": name_in, "name_for": name_for,
+            "back": [(L[lang]["back_map"], "../")],
+        }, GEN)
+        assert f'lang="{lang}"' in empty, cc
+
+
+def test_area_pages_link_their_own_leaderboard():
+    from pipeline.pages_l10n import BOARD_LABEL
+    summary = pages.summarize("Danmark", [feat(1)], 3)
+    da = pages.render_area({"lang": "da", "summary": summary,
+                            "name_in": "i Danmark", "name_for": None,
+                            "back": [("Til kortet", "../")]}, GEN)
+    assert f'<a href="leaderboard-da.html">{BOARD_LABEL["da"]}</a>' in da
+    land = pages.render_land(pages.summarize("Bremen", [feat(1)], 3), [], GEN)
+    assert '<a href="rangliste.html">Rangliste</a>' in land
+
+
+def test_help_and_nav_come_before_the_named_places_table():
+    # The named table runs to hundreds of rows in a big Land; everything
+    # after it was unreachable (flagged 2026-08-23). Order is content.
+    summary = pages.summarize("Bremen", [feat(1, "Legoland", "accessible")], 3)
+    html = pages.render_land(summary, [summary], GEN,
+                             countries=[{"label": "Danmark",
+                                         "href": "danmark.html", "tables": 9}])
+    help_pos = html.index("Wie du hier hilfst")
+    countries_pos = html.index("PapaMap in anderen Ländern")
+    table_pos = html.index("Orte mit Namen")
+    assert help_pos < countries_pos < table_pos
