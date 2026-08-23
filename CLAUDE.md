@@ -6,8 +6,9 @@ Guidance for coding agents working in this repository.
 
 A static map of places in 44 European countries with a baby changing table, coloured by whether a dad
 can reach it: green = accessible room, red = women's room only, grey = nobody has recorded the room.
-A Python pipeline queries Overpass and taginfo and writes GeoJSON + one static German page per
-Bundesland; a vanilla-JS frontend renders them; a `caddy:2-alpine` container serves `web/` behind the
+A Python pipeline queries Overpass and taginfo and writes GeoJSON + one static page per swept area
+(Bundesländer in German, every country in its own language, French régions) into `web/wickeltische/`;
+a vanilla-JS frontend renders them; a `caddy:2-alpine` container serves `web/` behind the
 shared host Caddy. OSM is the only data source and the only write destination — this repo owns no
 data and writes nothing to OSM itself.
 

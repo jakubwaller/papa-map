@@ -1,5 +1,20 @@
 # papa-map — build contract (v0)
 
+> **v17 amendment (23 Aug 2026, every swept country gets a page):** the HTML
+> surface catches up with v15's sweep: `COUNTRY_PAGES` covers all 43 non-German
+> countries, so `web/wickeltische/` gains 33 pages in 23 new page languages —
+> `pages_l10n.L` grows 8 → **31**, the same set the leaderboard and the map UI
+> already speak. Non-Latin-script names (Ελλάδα, Україна, България, Беларусь,
+> Северна Македонија, Србија, Црна Гора, Κύπρος) take an explicit slug from
+> `config.COUNTRY_SLUGS` — the romanization their readers type — because
+> `slugify` folds those scripts to nothing. Three navigation fixes ride along:
+> every generated page's back row links its language's leaderboard
+> (`pages_l10n.board_file`), every leaderboard's second link goes to
+> `LANG_HOME_CC`'s country page instead of the hardcoded German index, and the
+> area pages print help + sibling/country navigation ABOVE the named-places
+> table instead of below its hundreds of rows. **The emitted data shape does
+> not change** — this is HTML surface only, like v14.
+
 > **v16 amendment (22 Aug 2026, central key locks, scoped):** v5 dropped every
 > object carrying a `centralkey` tag other than `no`. That rule was written
 > for the German Euro key, where the locked object is normally the single

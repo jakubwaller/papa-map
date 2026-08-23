@@ -15,10 +15,10 @@ from __future__ import annotations
 #   decimal    — the decimal separator for shares and deltas
 #   thousands  — the grouping separator for whole counts
 #   back_map   — the "back to the map" link text
-# The Bundesländer link and the language switcher itself are generated in
-# leaderboard.py, not translated: "Bundesländer" stays German in every
-# language (it points at German-only pages, same as index.html), and endonyms
-# are per definition not translatable.
+# The home link and the language switcher itself are generated in
+# leaderboard.py, not translated: each language links its own country page
+# labelled by that country's endonym (config.LANG_HOME_CC; German keeps the
+# Bundesland hub), and endonyms are per definition not translatable.
 
 from .pages import FOOTER, GERMAN_MONTHS
 
