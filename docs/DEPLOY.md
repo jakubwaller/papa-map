@@ -71,6 +71,14 @@ joined: a build still writing when the digest reads is the one health signal the
 has reporting a half-finished dataset.) If the sweep grows again, move this line before
 adding the country, not after.
 
+**The pipeline container is on the host network** (`network_mode: host` in
+`docker-compose.yml`), so it has the host's IPv6 address. Overpass banned this host's IPv4
+address at the TCP level on 2026-08-23 while still answering it over IPv6, and the bridge
+networks are IPv4-only — every container query failed for six hours and the run looked
+like an outage. beer-map on the same host also queries Overpass from the same addresses;
+its jobs sit at 04:00 and Sunday 05:00, after this one. Keep the two apart: the ban arrived
+four minutes after both started at 02:00.
+
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.
 
