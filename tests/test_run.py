@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import pytest
 import requests
 
-from pipeline import config, leaderboard
+from pipeline import config, leaderboard, osm, run
 from pipeline.config import BUNDESLAENDER, CITY_AREAS, sweep_areas
 from pipeline.run import run_pipeline
 
@@ -624,3 +624,42 @@ def test_per_land_toilet_counts_reach_the_bundesland_pages(tmp_path, load_fixtur
                  history_path=str(tmp_path / "history.json"), now=NOW)
     page = (tmp_path / "pages" / "bayern.html").read_text(encoding="utf-8")
     assert "3 öffentliche Toiletten" in page
+
+
+def test_every_host_resting_fails_the_round_as_one(tmp_path, load_fixture, capsys):
+    calls = []
+
+    def resting(ql, **kwargs):
+        calls.append(ql)
+        raise osm.OverpassUnavailable("every Overpass host is resting")
+
+    with pytest.raises(RuntimeError, match="after 2 rounds"):
+        run_pipeline(geojson_path=str(tmp_path / "ct.geojson"),
+                     stats_path=str(tmp_path / "stats.json"),
+                     overpass_fetch=resting, taginfo_fetch=_fake_taginfo(load_fixture),
+                     now=NOW, sweep_rounds=2, sweep_pause_s=0)
+    # One query per round tells the story; the other 15 Länder and the
+    # cities are not even asked.
+    assert len(calls) == 2 * 2  # one area query + one city query per round
+    err = capsys.readouterr().err
+    assert err.count("more: every Overpass host is resting") == 4
+
+
+def test_round_pause_waits_for_the_first_host_to_come_back(tmp_path, load_fixture, monkeypatch):
+    seen_rounds = []
+
+    def flaky(ql, **kwargs):
+        if '"Saarland"' in ql and not seen_rounds:
+            seen_rounds.append(1)
+            raise requests.ConnectionError("refused")
+        return _fake_overpass(load_fixture)(ql, **kwargs)
+
+    slept = []
+    monkeypatch.setattr(run.time, "sleep", slept.append)
+    monkeypatch.setattr(run.osm, "breaker_wait_s", lambda urls=None, now=None: 600.0)
+    run_pipeline(geojson_path=str(tmp_path / "ct.geojson"),
+                 stats_path=str(tmp_path / "stats.json"),
+                 overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
+                 history_path=str(tmp_path / "history.json"),
+                 now=NOW, sweep_rounds=2, sweep_pause_s=120)
+    assert slept == [600.0]  # the breaker's wait, not the 120 s pause

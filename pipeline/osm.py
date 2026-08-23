@@ -11,7 +11,8 @@ from .classify import has_play_area
 from .config import (OVERPASS_BACKOFF_S, OVERPASS_HTTP_TIMEOUT,
                      OVERPASS_MAX_DATA_AGE_H, OVERPASS_RETRIES,
                      OVERPASS_SLOT_WAIT_MAX_S, OVERPASS_STATUS_HOSTS,
-                     OVERPASS_URLS, USER_AGENT)
+                     OVERPASS_TRIP_AFTER, OVERPASS_TRIP_COOLDOWN_S,
+                     OVERPASS_TRIP_MAX_S, OVERPASS_URLS, USER_AGENT)
 
 # Transient responses worth retrying: rate limiting (429), gateway/overload
 # (5xx), and the 406 the main balancer returns when its backends are saturated.
@@ -117,6 +118,80 @@ def check_fresh(data: dict, url: str, now: datetime | None = None,
         raise StaleMirror(f"{url}: database is {age.days} days old ({ts})")
 
 
+# --- Circuit breaker ---------------------------------------------------------
+# Per host: when it may be contacted again (time.monotonic()), how many
+# queries in a row exhausted their retries on it, and how many times in a row
+# it has been rested — the cool-down doubles with the latter. A host that is
+# resting is skipped without a single packet; when every configured host is
+# resting, fetch_overpass raises OverpassUnavailable at once and the caller
+# can wait breaker_wait_s() instead of failing area after area in
+# milliseconds. See config.OVERPASS_TRIP_* for the numbers and the night that
+# earned them.
+_breaker: dict[str, dict] = {}
+
+
+class OverpassUnavailable(requests.RequestException):
+    """Every configured host is resting after failures; nothing was contacted."""
+
+
+def _host(url: str) -> str:
+    return url.split("/")[2] if "//" in url else url
+
+
+def _state(url: str) -> dict:
+    return _breaker.setdefault(_host(url), {"until": 0.0, "strikes": 0, "trips": 0})
+
+
+def is_tripped(url: str, now: float | None = None) -> bool:
+    return (time.monotonic() if now is None else now) < _state(url)["until"]
+
+
+def breaker_wait_s(urls=None, now: float | None = None) -> float:
+    """Seconds until the first of `urls` may be contacted again — 0 when any
+    of them may be contacted now."""
+    now = time.monotonic() if now is None else now
+    waits = [max(0.0, _state(u)["until"] - now) for u in (urls or OVERPASS_URLS)]
+    return min(waits) if waits else 0.0
+
+
+def reset_breaker() -> None:
+    _breaker.clear()
+
+
+def _refused(exc: Exception) -> bool:
+    """A connection that never opened — refused, unreachable, no route. That is
+    what a firewall ban (or a dead host) looks like, as opposed to a reset
+    mid-transfer or a timeout, which a retry may well get past."""
+    if not isinstance(exc, requests.ConnectionError) or isinstance(exc, requests.Timeout):
+        return False
+    cause = exc.args[0] if exc.args else None
+    reason = getattr(cause, "reason", cause)
+    text = f"{type(reason).__name__} {reason}".lower()
+    return ("newconnectionerror" in text or "refused" in text
+            or "unreachable" in text or "no route" in text)
+
+
+def _trip(url: str, why: str, now: float | None = None) -> None:
+    st = _state(url)
+    st["trips"] += 1
+    st["strikes"] = 0
+    rest = min(OVERPASS_TRIP_COOLDOWN_S * 2 ** (st["trips"] - 1), OVERPASS_TRIP_MAX_S)
+    st["until"] = (time.monotonic() if now is None else now) + rest
+    print(f"  WARN {url}: resting it for {rest / 60:.0f} min ({why})", file=sys.stderr)
+
+
+def _strike(url: str, exc: Exception | None) -> None:
+    st = _state(url)
+    st["strikes"] += 1
+    if st["strikes"] >= OVERPASS_TRIP_AFTER:
+        _trip(url, f"{st['strikes']} queries in a row failed, last: {_short(exc)}")
+
+
+def _recover(url: str) -> None:
+    st = _state(url)
+    st["strikes"] = st["trips"] = 0
+
+
 def _fetch_once(url: str, ql: str) -> dict:
     resp = requests.get(url, params={"data": ql},
                         headers={"User-Agent": USER_AGENT}, timeout=OVERPASS_HTTP_TIMEOUT)
@@ -145,13 +220,17 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
     if not urls:
         raise ValueError("no Overpass URLs configured")
     last_exc: Exception | None = None
+    resting = 0
     for url in urls:
+        if is_tripped(url):
+            resting += 1
+            continue
         for attempt in range(retries):
             wait = slot_wait_s(url)
             if wait:
                 time.sleep(wait)
             try:
-                return _fetch_once(url, ql)
+                data = _fetch_once(url, ql)
             except requests.HTTPError as exc:
                 if exc.response is None or exc.response.status_code not in _RETRY_STATUS:
                     raise
@@ -162,6 +241,15 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
                 break  # a frozen database will not thaw in five seconds
             except requests.RequestException as exc:  # timeouts, resets, DNS, etc.
                 last_exc = exc
+                if _refused(exc):
+                    # A port that will not open will not open in five seconds
+                    # either, and knocking three more times is exactly what a
+                    # ban is meant to discourage. Rest the host at once.
+                    _trip(url, _short(exc))
+                    break
+            else:
+                _recover(url)
+                return data
             if attempt < retries - 1:
                 time.sleep(backoff * (2 ** attempt))
         else:
@@ -170,6 +258,11 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
             # stale fallback, and why the main instance had failed was lost.
             print(f"  WARN {url}: gave up after {retries} attempts "
                   f"({_short(last_exc)})", file=sys.stderr)
+            _strike(url, last_exc)
+    if resting == len(urls):
+        raise OverpassUnavailable(
+            "every Overpass host is resting after failures, next one back in "
+            f"{breaker_wait_s(urls) / 60:.0f} min")
     raise last_exc  # every mirror exhausted its retries
 
 
