@@ -49,6 +49,13 @@ overseas régions are `admin_level=4` too. The other 42 answer whole. And a mirr
 raises `StaleMirror`, which is skipped rather than retried on the same host. Never "simplify" any of
 these away.
 
+**`pipeline/osm.py` has a circuit breaker, and it is deliberately blunt.** A host whose port
+refuses the connection is rested on the spot with a doubling cool-down, three queries in a row
+exhausting their retries rest it too, and a round in which every host is resting fails as one.
+The night of 2026-08-23 (IPv4 banned, mirrors 500) the pipeline sent thousands of requests at
+hosts that had stopped talking to it; the breaker is what keeps a ban from being earned twice.
+Don't trade it for more retries.
+
 **Judge a new sweep area on the slower of its TWO queries.** Every area is fetched twice a night,
 by `sweep_ql` and by `toilets_counts_ql`, and the cheap-looking counting one can be the slower:
 the UK measured 41.9 s sweeping but **45.2 s counting**, which is 82 % of the `[timeout:55]` budget

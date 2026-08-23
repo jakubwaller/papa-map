@@ -41,6 +41,19 @@ OVERPASS_MAX_DATA_AGE_H = float(os.environ.get("PAPAMAP_OVERPASS_MAX_DATA_AGE_H"
 # Congested evenings 504 (or proxy-kill) for minutes at a stretch, not
 # seconds — 5s·2^n rides that out where the old 2s·2^n just burned attempts.
 OVERPASS_BACKOFF_S = float(os.environ.get("PAPAMAP_OVERPASS_BACKOFF_S", "5"))
+# Circuit breaker (osm.py). Retries and rounds ride out a flapping host; they
+# are the wrong tool for one that has stopped talking to us altogether —
+# 2026-08-23 overpass-api.de refused this host's IPv4 address at the TCP level
+# for six hours while both mirrors answered HTTP 500 to everything, and the
+# run kept knocking: 71 areas × 2 queries × 3 attempts × 3 hosts × 6 rounds.
+# Whatever had banned us was given every reason to keep it up. So a host
+# whose port will not even open (refused, unreachable) is rested on the spot;
+# one that keeps failing at the HTTP level is rested after TRIP_AFTER
+# consecutive queries that exhausted their retries. The rest doubles with each
+# consecutive trip up to TRIP_MAX_S; a successful answer clears the slate.
+OVERPASS_TRIP_AFTER = int(os.environ.get("PAPAMAP_OVERPASS_TRIP_AFTER", "3"))
+OVERPASS_TRIP_COOLDOWN_S = float(os.environ.get("PAPAMAP_OVERPASS_TRIP_COOLDOWN_S", "900"))
+OVERPASS_TRIP_MAX_S = float(os.environ.get("PAPAMAP_OVERPASS_TRIP_MAX_S", "7200"))
 
 # Germany-wide is ~13k changing_table + ~32k toilet objects (2026-07-30), but a
 # single all-Germany area query computes for >60 s before the first response

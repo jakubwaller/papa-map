@@ -347,3 +347,82 @@ def test_parse_counts_on_an_empty_answer_is_empty_not_zero():
     # toilets — run.py must be able to tell those apart.
     assert osm.parse_counts({"elements": []}) == []
     assert osm.parse_counts({}) == []
+
+
+# --- circuit breaker ---------------------------------------------------------
+
+def test_refused_connection_rests_the_host_without_retrying(monkeypatch, capsys):
+    # What a firewall ban looks like: the port never opens. Three more knocks
+    # five seconds apart are pointless and exactly what a ban punishes.
+    get, seen, _ = _fake_get([requests.ConnectionError("[Errno 111] Connection refused"), 200])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    assert fetch_overpass("out;", urls=["http://m1", "http://m2"],
+                          retries=3, backoff=0) == {"elements": []}
+    assert seen == ["http://m1", "http://m2"]  # one knock on m1, then straight to m2
+    assert osm.is_tripped("http://m1") and not osm.is_tripped("http://m2")
+    assert "WARN http://m1: resting it for 15 min" in capsys.readouterr().err
+
+
+def test_reset_mid_transfer_is_still_retried():
+    # A reset or a timeout is not a refusal; the next attempt may get through.
+    assert not osm._refused(requests.ConnectionError("Connection reset by peer"))
+    assert not osm._refused(requests.ConnectTimeout("slow"))
+    assert not osm._refused(requests.ReadTimeout("slow"))
+    assert osm._refused(requests.ConnectionError("[Errno 101] Network is unreachable"))
+    assert osm._refused(requests.ConnectionError(
+        "HTTPSConnectionPool(host='x'): Max retries exceeded with url: / "
+        "(Caused by NewConnectionError('Failed to establish a new connection'))"))
+
+
+def test_host_rests_after_three_queries_in_a_row_exhaust_their_retries(monkeypatch):
+    get, seen, _ = _fake_get([504, 504, 200, 504, 504, 200, 504, 504, 200, 200])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    urls = ["http://m1", "http://m2"]
+    for _ in range(3):
+        fetch_overpass("out;", urls=urls, retries=2, backoff=0)
+    assert not osm.is_tripped("http://m2")
+    assert osm.is_tripped("http://m1")
+    fetch_overpass("out;", urls=urls, retries=2, backoff=0)
+    assert seen[-1] == "http://m2" and seen.count("http://m1") == 6  # m1 not contacted again
+
+
+def test_a_successful_answer_clears_the_strikes(monkeypatch):
+    get, seen, _ = _fake_get([504, 504, 200, 504, 504, 200, 200, 504, 504, 200])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    urls = ["http://m1", "http://m2"]
+    for _ in range(4):
+        fetch_overpass("out;", urls=urls, retries=2, backoff=0)
+    assert not osm.is_tripped("http://m1")  # two strikes, a success, one strike
+
+
+def test_every_host_resting_raises_at_once_without_contact(monkeypatch):
+    refused = requests.ConnectionError("[Errno 111] Connection refused")
+    get, seen, _ = _fake_get([refused, refused])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    urls = ["http://m1", "http://m2"]
+    with pytest.raises(requests.ConnectionError):
+        fetch_overpass("out;", urls=urls, retries=3, backoff=0)
+    assert seen == ["http://m1", "http://m2"]
+    with pytest.raises(osm.OverpassUnavailable, match="next one back in 15 min"):
+        fetch_overpass("out;", urls=urls, retries=3, backoff=0)
+    assert seen == ["http://m1", "http://m2"]  # not a single further request
+    assert 0 < osm.breaker_wait_s(urls) <= osm.OVERPASS_TRIP_COOLDOWN_S
+
+
+def test_rest_doubles_with_each_consecutive_trip_and_caps(monkeypatch):
+    clock = [1000.0]
+    monkeypatch.setattr(osm.time, "monotonic", lambda: clock[0])
+    rests = []
+    for _ in range(5):
+        osm._trip("http://m1", "refused")
+        rests.append(osm._state("http://m1")["until"] - clock[0])
+        clock[0] = osm._state("http://m1")["until"] + 1  # let it expire
+    assert rests == [900, 1800, 3600, 7200, 7200]
+    assert not osm.is_tripped("http://m1")
+    osm._recover("http://m1")
+    osm._trip("http://m1", "refused")
+    assert osm._state("http://m1")["until"] - clock[0] == 900  # a success resets the ladder

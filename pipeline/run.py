@@ -74,9 +74,18 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                      + [display for display, _, _ in remaining_cities])
             print(f"  round {rnd + 1}: retrying {', '.join(names)}",
                   file=sys.stderr)
-            time.sleep(pause)
+            # When every host is resting (osm.py's breaker), a 120 s pause
+            # would only spend the round on instant failures — wait for the
+            # first host to come back instead. Each consecutive trip doubles
+            # that rest, so six rounds against a dead service stretch over
+            # hours with a handful of requests, not thousands.
+            rest = osm.breaker_wait_s()
+            if rest > pause:
+                print(f"  every Overpass host is resting — waiting "
+                      f"{rest / 60:.0f} min before round {rnd + 1}", file=sys.stderr)
+            time.sleep(max(pause, rest))
         failed = []
-        for area_name, admin_level in remaining:
+        for i, (area_name, admin_level) in enumerate(remaining):
             try:
                 sweep = overpass_fetch(sweep_ql(area_name, admin_level))
                 counts = osm.parse_counts(
@@ -106,6 +115,14 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                         f"area {area_name!r} resolved to zero objects on this "
                         "mirror (stale area database or typo'd "
                         "PAPAMAP_AREA_NAME?)")
+            except osm.OverpassUnavailable as exc:
+                # Nothing was contacted and nothing will be until the rest is
+                # over: the remaining areas fail as one, silently.
+                print(f"  WARN {area_name} and {len(remaining) - i - 1} more: {exc}",
+                      file=sys.stderr)
+                last_exc = exc
+                failed.extend(remaining[i:])
+                break
             except Exception as exc:
                 print(f"  WARN {area_name}: {exc}", file=sys.stderr)
                 last_exc = exc
@@ -124,7 +141,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             print(f"  {area_name}: ct={len(ct)} play={len(play)} "
                   f"toilets={toilets_total}", file=sys.stderr)
         failed_cities = []
-        for display, area_name, admin_level in remaining_cities:
+        for i, (display, area_name, admin_level) in enumerate(remaining_cities):
             try:
                 ids = overpass_fetch(changing_table_ids_ql(area_name, admin_level))
                 # Every listed city has changing tables in reality, so zero
@@ -134,6 +151,11 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                     raise RuntimeError(
                         f"city area {area_name!r} resolved to zero objects "
                         "on this mirror")
+            except osm.OverpassUnavailable as exc:
+                print(f"  WARN {display} and {len(remaining_cities) - i - 1} more: {exc}",
+                      file=sys.stderr)
+                failed_cities.extend(remaining_cities[i:])
+                break
             except Exception as exc:
                 print(f"  WARN {display}: {exc}", file=sys.stderr)
                 failed_cities.append((display, area_name, admin_level))
