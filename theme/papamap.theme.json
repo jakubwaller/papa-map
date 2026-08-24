@@ -74,7 +74,7 @@
                             "changing_table=limited"
                           ]
                         },
-                        "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                        "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?"
                       ]
                     },
                     "then": "#117733"
@@ -150,7 +150,7 @@
                       "changing_table=limited"
                     ]
                   },
-                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?"
                 ]
               },
               "then": {
@@ -311,6 +311,14 @@
                 "de": "Ein Wickeltisch ist im Verkaufsraum",
                 "da": "Et puslebord står i salgsområdet (f.eks. inde i butikken)"
               }
+            },
+            {
+              "if": "changing_table:location=outdoor",
+              "then": {
+                "en": "A changing table is outdoors, in the open air",
+                "de": "Ein Wickeltisch ist draußen unter freiem Himmel",
+                "da": "Et puslebord står udendørs i det fri"
+              }
             }
           ]
         },
@@ -456,7 +464,7 @@
                       "changing_table=limited"
                     ]
                   },
-                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?"
                 ]
               }
             },
@@ -475,7 +483,7 @@
                     ]
                   },
                   "changing_table:location~i~(.*;)? *female_toilet *(;.*)?",
-                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?"
                 ]
               }
             },
@@ -493,7 +501,7 @@
                       "changing_table=limited"
                     ]
                   },
-                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?",
+                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?",
                   "changing_table:location!~i~(.*;)? *female_toilet *(;.*)?"
                 ]
               }
@@ -561,7 +569,7 @@
                             "changing_table=limited"
                           ]
                         },
-                        "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                        "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?"
                       ]
                     },
                     "then": "#117733"
@@ -612,7 +620,7 @@
                       "changing_table=limited"
                     ]
                   },
-                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?"
                 ]
               },
               "then": {
@@ -772,6 +780,14 @@
                 "en": "A changing table is in the sales area (e.g. on the shop floor)",
                 "de": "Ein Wickeltisch ist im Verkaufsraum",
                 "da": "Et puslebord står i salgsområdet (f.eks. inde i butikken)"
+              }
+            },
+            {
+              "if": "changing_table:location=outdoor",
+              "then": {
+                "en": "A changing table is outdoors, in the open air",
+                "de": "Ein Wickeltisch ist draußen unter freiem Himmel",
+                "da": "Et puslebord står udendørs i det fri"
               }
             }
           ]
@@ -879,7 +895,7 @@
                       "changing_table=limited"
                     ]
                   },
-                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?"
                 ]
               }
             },
@@ -898,7 +914,7 @@
                     ]
                   },
                   "changing_table:location~i~(.*;)? *female_toilet *(;.*)?",
-                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?"
                 ]
               }
             },
@@ -916,7 +932,7 @@
                       "changing_table=limited"
                     ]
                   },
-                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?",
+                  "changing_table:location!~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?",
                   "changing_table:location!~i~(.*;)? *female_toilet *(;.*)?"
                 ]
               }
@@ -1012,7 +1028,7 @@
                       "changing_table=limited"
                     ]
                   },
-                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?"
+                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?"
                 ]
               },
               "then": {
@@ -1172,6 +1188,14 @@
                 "en": "A changing table is in the sales area (e.g. on the shop floor)",
                 "de": "Ein Wickeltisch ist im Verkaufsraum",
                 "da": "Et puslebord står i salgsområdet (f.eks. inde i butikken)"
+              }
+            },
+            {
+              "if": "changing_table:location=outdoor",
+              "then": {
+                "en": "A changing table is outdoors, in the open air",
+                "de": "Ein Wickeltisch ist draußen unter freiem Himmel",
+                "da": "Et puslebord står udendørs i det fri"
               }
             }
           ]

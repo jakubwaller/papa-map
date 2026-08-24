@@ -1,5 +1,16 @@
 # papa-map — build contract (v0)
 
+> **v18 amendment (24 Aug 2026, `outdoor` is a dad-accessible token):**
+> `ACCESSIBLE_TOKENS` gains `outdoor` — an open-air table has no room to be
+> locked out of, so it classifies `accessible`. The value earned its way in
+> the agreed order: papamap refused to invent tagging through its theme
+> (14 Aug), Metzor documented `outdoor` on `Key:changing_table:location`
+> (wiki, de/en/fr, 24 Aug), and only then did the token land here. The
+> MapComplete theme gains the matching answer option and its colour regexes
+> the alternation; all 31 methods pages list the new token. Worldwide usage
+> at adoption: ~5 objects, so no visible dataset shift. No change to the
+> emitted shape — the `status` vocabulary and every key are untouched.
+
 > **v17 amendment (23 Aug 2026, every swept country gets a page):** the HTML
 > surface catches up with v15's sweep: `COUNTRY_PAGES` covers all 43 non-German
 > countries, so `web/wickeltische/` gains 33 pages in 23 new page languages —
@@ -493,7 +504,7 @@ Input: `changing_table` value + `changing_table:location` value (may be null/fre
 Only objects with `changing_table` ∈ {yes, limited} are features; `no` counts only in stats.
 Split location on `;`, trim, lowercase → tokens. EXACT token matching (never substring —
 `female_toilet` contains `male`!):
-- ACCESSIBLE_TOKENS = {male_toilet, unisex_toilet, dedicated_room, room, wheelchair_toilet, sales_area}
+- ACCESSIBLE_TOKENS = {male_toilet, unisex_toilet, dedicated_room, room, wheelchair_toilet, sales_area, outdoor}
 - any token ∈ ACCESSIBLE_TOKENS → `accessible`
 - else if any token == female_toilet → `female_only`
 - else (no location tag, or only unrecognized/free-text tokens) → `unknown`

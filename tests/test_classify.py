@@ -8,6 +8,13 @@ def test_every_accessible_token_classifies_accessible(token):
     assert classify("yes", token) == "accessible"
 
 
+def test_outdoor_is_accessible():
+    # Open-air table, no room to be locked out of. On the wiki value list
+    # since 24 Aug 2026 — adopted here only after that documentation existed.
+    assert classify("yes", "outdoor") == "accessible"
+    assert classify("yes", "female_toilet;outdoor") == "accessible"
+
+
 def test_female_toilet_is_female_only_not_accessible():
     # "female_toilet" contains "male_toilet" as a substring — exact token
     # matching must keep it out of the accessible bucket.
