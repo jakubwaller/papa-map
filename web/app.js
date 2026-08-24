@@ -124,9 +124,16 @@ const OSM_STYLE = {
 //               alone would only need ~34 (Crete 34.8, Malta 35.8).
 //   east   41:  Ukraine's eastern border (40.2°E); Cyprus (34.6°E) also sat
 //               past the old 32.
-//   north  71.5: mainland Norway at Nordkapp (71.2°N). If the swept data
-//               shows Svalbard pins (~78°N, the Norway relation may include
-//               it), this edge must follow the data, not this comment.
+//   north  74.5: mainland Norway at Nordkapp (71.2°N) — but the margin is
+//               ~3°, not the ~0.5° the other edges get, because the topbar
+//               overlays the top of the canvas (#map is inset:0, #topbar sits
+//               on it) and only THIS edge is hidden behind it. maxBounds caps
+//               the canvas edge, so at minZoom 3.5 the topbar's ~140px covers
+//               up to ~3° of latitude: with the old 71.5 cap, everything
+//               north of Tromsø was stuck under the header at full zoom-out
+//               and only surfaced after zooming in. If the swept data shows
+//               Svalbard pins (~78°N, the Norway relation may include it),
+//               this edge must follow the data, not this comment.
 // Rotate/pitch gestures are locked: on a phone an off-axis pinch rotates the
 // map instead of zooming, which reads as jank.
 const HOME_BOUNDS = [[5.5, 47.1], [15.4, 56.6]];
@@ -141,7 +148,7 @@ const VIEW_BOUNDS =
 const map = new maplibregl.Map({
   container: "map", style: OSM_STYLE,
   bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 },
-  maxBounds: [[-32, 27], [41, 71.5]],
+  maxBounds: [[-32, 27], [41, 74.5]],
   // 3.5, not the old 4.5: fitHome() re-fits under a topbar that eats a third
   // of a portrait phone (half of a landscape one), and the old floor clamped
   // that fit while Denmark — or, in landscape, Bavaria — was still off-screen.
