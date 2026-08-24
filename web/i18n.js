@@ -22,8 +22,13 @@ export const LANGS = ["de", "en", "da", "nl", "fr", "it", "cs", "pl", "sv",
 export const DEFAULT_LANG = "de";
 
 // Thousands separators differ per language and the strip is full of counts.
+// Every region here is the language's European home: the site's English is
+// British ("colour", "26 July 2026"), and en-US was the one entry that said
+// otherwise. It makes no difference to a number — both group with "," — but
+// the methods pages format a date from the same tag, where en-US would write
+// "Jul 26, 2026" under British prose.
 export const NUMBER_LOCALE = {
-  de: "de-DE", en: "en-US", da: "da-DK", nl: "nl-NL", fr: "fr-FR",
+  de: "de-DE", en: "en-GB", da: "da-DK", nl: "nl-NL", fr: "fr-FR",
   it: "it-IT", cs: "cs-CZ", pl: "pl-PL", sv: "sv-SE",
   bs: "bs-BA", ca: "ca-AD", et: "et-EE", es: "es-ES", hr: "hr-HR",
   is: "is-IS", lv: "lv-LV", lt: "lt-LT", hu: "hu-HU", no: "nb-NO",

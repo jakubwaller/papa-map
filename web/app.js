@@ -414,7 +414,7 @@ function placesChip(count) {
 // Templates come from i18n.js (trusted constants); every value interpolated
 // into them is num()'d or esc()'d here first. lastStats feeds the re-render
 // when the language toggles.
-const num = (n) => Number(n ?? 0).toLocaleString(NUMBER_LOCALE[lang] ?? "en-US");
+const num = (n) => Number(n ?? 0).toLocaleString(NUMBER_LOCALE[lang] ?? "en-GB");
 let lastStats = null;
 
 // The pipeline names the swept area twice: area_key for the sets it knows

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { NUMBER_LOCALE, DEFAULT_LANG } from "./i18n.js";
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const PAGES = fs.readdirSync(DIR)
@@ -11,9 +12,15 @@ const PAGES = fs.readdirSync(DIR)
 
 const read = (f) => fs.readFileSync(path.join(DIR, f), "utf8");
 const localeOf = (src) => (src.match(/var LOCALE = "([^"]+)"/) || [])[1];
+// methods.html is the German original; every other page names its language in
+// the filename.
+const langOf = (f) => (f.match(/^methods-([a-z]+)\.html$/) || [null, DEFAULT_LANG])[1];
 // The numbers live between <body> and the <script> that overwrites some of
-// them; the script itself contains code, not prose.
-const bodyOf = (src) => src.slice(src.indexOf("<body>"), src.indexOf("<script>"));
+// them; the script itself contains code, not prose. The date fallback is cut
+// out: its year is not a count to be grouped (lt writes "2026 m. liepos 26 d."),
+// and it has a test of its own below.
+const bodyOf = (src) => src.slice(src.indexOf("<body>"), src.indexOf("<script>"))
+  .replace(/<span data-stat="date">[^<]*<\/span>/g, "");
 
 // A space-like group separator is written as &nbsp; in markup, so the number
 // never wraps across a line.
@@ -28,6 +35,45 @@ const decimalSep = (loc) => new Intl.NumberFormat(loc).formatToParts(1234567.8)
 test("every methods page declares a LOCALE", () => {
   assert.ok(PAGES.length >= 31, `found only ${PAGES.length} methods pages`);
   for (const f of PAGES) assert.ok(localeOf(read(f)), `${f} has no var LOCALE`);
+});
+
+test("a page's LOCALE is the one i18n.js uses for that language", () => {
+  // Two tables held the same fact and drifted: methods-en.html said en-GB while
+  // NUMBER_LOCALE said en-US, which formats the same numbers but writes the
+  // date as "Jul 26, 2026" under otherwise British prose.
+  for (const f of PAGES) {
+    const lang = langOf(f);
+    assert.equal(localeOf(read(f)), NUMBER_LOCALE[lang], `${f} (lang ${lang})`);
+  }
+});
+
+test("the date fallback is written in the page's own language", () => {
+  // The script replaces this span once stats.json loads; until then — and for
+  // every reader without JS — the markup is what stands. Pages added by copying
+  // the English source kept its "26 Jul 2026".
+  //
+  // The month name is taken from the formatted date, not from a standalone
+  // month lookup, because several languages inflect it there (cs "července",
+  // lt "liepos"). Either the short or the long form is accepted: hand-localised
+  // pages use both, and "26 юли 2026" is good Bulgarian even though CLDR's long
+  // form appends "г.". The comparison is case-sensitive on purpose — that is
+  // the whole difference between English "Jul" and Bosnian "jul".
+  const d = new Date("2026-07-26T00:00:00Z");
+  for (const f of PAGES) {
+    const src = read(f);
+    const loc = localeOf(src);
+    const names = ["short", "long"].map((month) =>
+      new Intl.DateTimeFormat(loc, { day: "numeric", month, year: "numeric", timeZone: "UTC" })
+        .formatToParts(d).find((p) => p.type === "month").value.replace(/\.$/, ""));
+    // &nbsp; back to a plain space: the markup uses it between every part so the
+    // date cannot wrap, but Intl hands back ordinary spaces (ca "de juliol").
+    const fallback = ((src.match(/data-stat="date">([^<]*)/) || [])[1] || "")
+      .replace(/&nbsp;|[   ]/g, " ");
+    assert.ok(
+      names.some((n) => /\p{L}/u.test(n) && fallback.includes(n)),
+      `${f} (${loc}) has "${fallback}", which is neither ${names.map((n) => `"${n}"`).join(" nor ")}`,
+    );
+  }
 });
 
 test("static numbers use the page's own thousands separator", () => {
