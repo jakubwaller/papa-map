@@ -85,7 +85,7 @@
 </head>
 <body>
 
-<p class="back"><a href="index.html">&larr; Back to the map</a></p>
+<p class="back"><a href="index.html">&larr; Volver al mapa</a></p>
 <p class="back langs"><a href="methods.html" hreflang="de" lang="de">Deutsch</a>
   &middot; <a href="methods-en.html" hreflang="en" lang="en">English</a>
   &middot; <a href="methods-da.html" hreflang="da" lang="da">Dansk</a>
@@ -117,210 +117,216 @@
   &middot; <a href="methods-mk.html" hreflang="mk" lang="mk">Македонски</a>
   &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
   &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a></p>
-<h1>PapaMap — methods &amp; honesty</h1>
-<p class="muted">Changing tables dads can reach. The worldwide taginfo numbers below come
-from the nightly build. The sample across eight city cores is from 26&nbsp;Jul&nbsp;2026 and stays
-that way.</p>
+<h1>PapaMap — métodos y honestidad</h1>
+<p class="muted">Cambiadores a los que un papá llega. Las cifras mundiales de taginfo de más abajo
+vienen de la actualización nocturna. La muestra de ocho centros urbanos es del
+26&nbsp;jul&nbsp;2026 y se queda así.</p>
 
-<h2>What this map is. And what it is not.</h2>
-<p>PapaMap shows places in 44 European countries — from Iceland to Cyprus, from Portugal to
-Ukraine — where OpenStreetMap
-knows about a baby changing
-table (<code>changing_table=yes</code> or <code>limited</code>). The color says whether a dad can
-reach the table. The map reads OSM and nothing else, and it writes nowhere. Fixing the data happens
-on OSM itself, through the links on each pin.</p>
-<p>A ranking of which city has the best toilet provision this is not. Why that can't honestly be
-done from open data is explained further down.</p>
+<h2>Qué es este mapa. Y qué no es.</h2>
+<p>PapaMap muestra lugares de 44 países europeos — de Islandia a Chipre, de Portugal a
+Ucrania — donde OpenStreetMap sabe que hay un cambiador de bebés
+(<code>changing_table=yes</code> o <code>limited</code>). El color dice si un papá llega al
+cambiador. El mapa lee OSM y nada más, y no escribe en ningún sitio. Los datos se arreglan en el
+propio OSM, con los enlaces de cada pin.</p>
+<p>Lo que no es: una clasificación de qué ciudad tiene la mejor oferta de aseos. Más abajo se
+explica por qué eso no se puede hacer con datos abiertos sin mentir.</p>
 
-<h2>What the colors mean (the exact rule)</h2>
-<p>Only objects with <code>changing_table=yes</code> or <code>limited</code> make it onto the map
-(<code>no</code> only counts in the stats). The color comes from
-<code>changing_table:location</code>. The value is split on <code>;</code>, trimmed, lowercased
-and compared as a whole token. Never as a substring, because <code>female_toilet</code> contains
-<code>male</code>.</p>
+<h2>Qué significan los colores (la regla exacta)</h2>
+<p>Solo los objetos con <code>changing_table=yes</code> o <code>limited</code> llegan al mapa
+(<code>no</code> cuenta solo en las estadísticas). El color sale de
+<code>changing_table:location</code>. El valor se parte por <code>;</code>, se le quitan los
+espacios, se pasa a minúsculas y se compara como token entero. Nunca como subcadena, porque
+<code>female_toilet</code> contiene <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Green:</strong> one token is
+  <li><span class="dot g"></span><strong>Verde:</strong> un token es
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
-      <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> or <code>outdoor</code>.
-      A dad can get to it.</li>
-  <li><span class="dot r"></span><strong>Red:</strong> otherwise, if one token is
-      <code>female_toilet</code>. The table exists, but only in the women's room.</li>
-  <li><span class="dot u"></span><strong>Grey:</strong> everything else. No location tag, or only
-      free text. Nobody has recorded the room. The grey pins are the job.</li>
+      <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> u <code>outdoor</code>.
+      Un papá llega.</li>
+  <li><span class="dot r"></span><strong>Rojo:</strong> si no, cuando un token es
+      <code>female_toilet</code>. El cambiador existe, pero solo en el baño de mujeres.</li>
+  <li><span class="dot u"></span><strong>Gris:</strong> todo lo demás. Sin etiqueta de sala, o solo
+      texto libre. Nadie ha registrado la sala. Los pines grises son la tarea.</li>
 </ul>
 <p>Un objeto con una etiqueta <code>centralkey</code> (distinta de <code>no</code>) queda fuera del mapa cuando la llave cierra toda la puerta: <code>access=centralkey</code>, un cambiador en el baño adaptado, o nada en las etiquetas dice que la llave es solo para una cabina. Un bloque con baños de hombres y mujeres abiertos y una cabina adaptada con llave (<code>wheelchair:access=centralkey</code>, o <code>male=yes</code> y <code>female=yes</code>) sigue en el mapa, gris hasta que alguien registre la sala. La llave Euro solo se da con certificado de discapacidad, así que la mayoría de los padres no pasan por esa puerta.</p>
 
-<h2>The blue ring: play area</h2>
-<p>A pin with a blue ring also has a play area &mdash; a place you don't just change the kid, you
-stay a while. The <em>With play area</em> chip filters the map down to those. A place counts if OSM
-records any one of these:</p>
+<h2>El anillo azul: zona de juegos</h2>
+<p>Un pin con anillo azul tiene además una zona de juegos &mdash; un sitio donde no solo cambias al
+niño, sino que te quedas un rato. El chip <em>Con zona de juegos</em> deja en el mapa solo esos. Un
+lugar cuenta si OSM registra cualquiera de estas:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> or <code>designated</code>
-      &mdash; the wiki's documented way of saying indoors.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> or
-      <code>designated</code> &mdash; the play corner in a café, a restaurant, a bakery. The
-      most-used tag, though it leaves indoor or outdoor open.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; a commercial indoor
-      playground.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> together with
-      <code>indoor=yes</code> &mdash; the same thing, tagged the other way round.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> o <code>designated</code>
+      &mdash; la forma documentada en la wiki de decir «bajo techo».</li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> o
+      <code>designated</code> &mdash; el rincón de juegos de una cafetería, un restaurante, una
+      panadería. La etiqueta más usada, aunque deja abierto si es dentro o fuera.</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; un parque de bolas
+      comercial.</li>
+  <li><span class="ring"></span><code>leisure=playground</code> junto con
+      <code>indoor=yes</code> &mdash; lo mismo, etiquetado al revés.</li>
 </ul>
-<p><code>outdoor</code> does not count: a beer garden's sandpit is not what the ring promises.
-Neither does <code>no</code>, nor <code>limited</code> — the wiki defines that one as "toys are
-available, but no designated area". Where an explicit <code>kids_area:indoor=no</code> is present,
-it beats a bare <code>kids_area=yes</code>.</p>
-<p>This is a badge, not a fourth status. A place without these tags does not "have no play area" —
-OSM simply says nothing about it. So there is no grey here and no call to action: with
-<code>changing_table:location</code> the silence is meaningful, because the table is known to
-exist. Here almost every object is silent, and that means nothing. If you know a play area, adding
-it is still welcome — in the OSM editor, as <code>kids_area=yes</code>.</p>
+<p><code>outdoor</code> no cuenta: el arenero de una terraza no es lo que promete el anillo.
+Tampoco <code>no</code>, ni <code>limited</code> — la wiki define ese como «hay juguetes, pero
+ninguna zona reservada». Cuando hay un <code>kids_area:indoor=no</code> explícito, gana sobre un
+<code>kids_area=yes</code> a secas.</p>
+<p>Esto es una insignia, no un cuarto estado. Un lugar sin estas etiquetas no «no tiene zona de
+juegos» — es que OSM no dice nada al respecto. Por eso aquí no hay gris ni llamada a la acción: con
+<code>changing_table:location</code> el silencio significa algo, porque se sabe que el cambiador
+existe. Aquí callan casi todos los objetos, y eso no significa nada. Si conoces una zona de juegos,
+añadirla sigue siendo bienvenido — en el editor de OSM, como <code>kids_area=yes</code>.</p>
 
-<h2>The empty blue rings: places to play, no answer</h2>
-<p>The same rule matches far more places than the map has pins. Only
-<span data-stat="play_tables">111</span> of them carry a <code>changing_table</code> tag at
-all. At <span data-stat="play_places">701</span> more, nobody has answered the first question: is
-there a changing table here? Yes, no, nobody knows — OSM says nothing whatsoever.</p>
-<p>The map cannot colour those <span data-stat="play_places">701</span>, because there is nothing to
-colour. They are not grey either: grey means "the table exists, the room is missing", and that does
-not apply here. So they get their own chip, <em>Play area only</em>, off by default, and an empty
-blue ring instead of a filled pin.</p>
-<p>They are the most promising open questions on the whole map. An indoor playground, a café with a
-ball pit, a restaurant with a play room — a father with a toddler is going there anyway, and once
-he is there, he knows the answer. Clicking a ring opens MapComplete on exactly that one question.
-Answer it and the ring is gone at the next nightly refresh, replaced by a real pin.</p>
+<h2>Los anillos azules vacíos: sitios para jugar, sin respuesta</h2>
+<p>La misma regla encaja con muchos más lugares de los que el mapa tiene pines. Solo
+<span data-stat="play_tables">111</span> de ellos llevan alguna etiqueta
+<code>changing_table</code>. En otros <span data-stat="play_places">701</span>, nadie ha respondido
+a la primera pregunta: ¿hay aquí un cambiador? Sí, no, nadie lo sabe — OSM no dice absolutamente
+nada.</p>
+<p>El mapa no puede colorear esos <span data-stat="play_places">701</span>, porque no hay nada que
+colorear. Tampoco son grises: gris significa «el cambiador existe, falta la sala», y eso aquí no
+vale. Así que tienen su propio chip, <em>Solo zona de juegos</em>, desactivado por defecto, y un
+anillo azul vacío en lugar de un pin relleno.</p>
+<p>Son las preguntas abiertas más prometedoras de todo el mapa. Un parque de bolas, una cafetería
+con piscina de bolas, un restaurante con sala de juegos — un padre con un niño pequeño va a ir de
+todas formas, y una vez allí sabe la respuesta. Al tocar un anillo se abre MapComplete con
+exactamente esa pregunta. Respóndela y el anillo desaparece en la siguiente actualización nocturna,
+sustituido por un pin de verdad.</p>
 
-<h2>How to fix a grey pin</h2>
-<p>Grey means one answer is missing. Where is the changing table? Anyone with a free OSM account
-can answer that, on site, in under a minute:</p>
+<h2>Cómo arreglar un pin gris</h2>
+<p>Gris significa que falta una respuesta. ¿Dónde está el cambiador? Cualquiera con una cuenta
+gratuita de OSM puede responderla, allí mismo, en menos de un minuto:</p>
 <ul>
-  <li><strong>MapComplete (any phone, in the browser):</strong> &ldquo;Answer on
-      MapComplete&rdquo; on a grey pin opens the same object in PapaMap's own MapComplete theme
-      &mdash; every pin, so the edits are recognizable as coming from here. MapComplete warns
-      once about an unofficial theme, that's fine. Log in with your OSM account and answer the
-      changing-table questions, including the one about the room. The answer goes straight into
-      OpenStreetMap and shows up here after the next nightly update.</li>
-  <li><strong>StreetComplete (Android):</strong> has a changing-table quest, off by default. Go to
-      <em>Settings &rarr; Quest selection and display order</em>, search for &ldquo;changing
-      table&rdquo; and tick it. It only asks yes/no. For the room question on an existing grey
-      pin, use MapComplete.</li>
+  <li><strong>MapComplete (cualquier móvil, en el navegador):</strong> &ldquo;Responder en
+      MapComplete&rdquo; en un pin gris abre el mismo objeto en el tema de MapComplete propio de
+      PapaMap &mdash; en todos los pines, para que las ediciones se reconozcan como venidas de
+      aquí. MapComplete avisa una vez de que el tema no es oficial, no pasa nada. Inicia sesión con
+      tu cuenta de OSM y responde a las preguntas sobre el cambiador, incluida la de la sala. La
+      respuesta va directa a OpenStreetMap y aparece aquí tras la siguiente actualización
+      nocturna.</li>
+  <li><strong>StreetComplete (Android):</strong> tiene una misión sobre cambiadores, desactivada
+      por defecto. Ve a <em>Ajustes &rarr; Selección de misiones y orden</em>, busca
+      &ldquo;changing table&rdquo; y márcala. Solo pregunta sí/no. Para la pregunta de la sala en
+      un pin gris que ya existe, usa MapComplete.</li>
 </ul>
-<p class="muted">The edits run under your own OSM account and belong to everyone. They outlive
-this website and help every app that reads OpenStreetMap.</p>
+<p class="muted">Las ediciones van con tu propia cuenta de OSM y son de todos. Sobreviven a esta
+web y ayudan a cualquier aplicación que lea OpenStreetMap.</p>
 
-<h2 id="contribute">How to add a missing place</h2>
-<p>PapaMap stores nothing itself. Adding a place therefore always means: editing OpenStreetMap.
-The <em>+ Add a place</em> button on the map opens the right editor at your current view.</p>
+<h2 id="contribute">Cómo añadir un lugar que falta</h2>
+<p>PapaMap no guarda nada por su cuenta. Añadir un lugar significa siempre: editar OpenStreetMap.
+El botón <em>+ Añadir un lugar</em> del mapa abre el editor adecuado en la vista actual.</p>
 
-<h3>A public toilet is missing entirely</h3>
-<p>Take <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMap's
-MapComplete theme</a> (the first link in the dialog). Log in, tap the map where the toilet is,
-pick &ldquo;a public toilet&rdquo;, answer the questions. Including the ones about the changing
-table and the room.</p>
+<h3>Falta un aseo público entero</h3>
+<p>Coge el <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">
+tema de MapComplete de PapaMap</a> (el primer enlace del diálogo). Inicia sesión, toca el mapa
+donde está el aseo, elige &ldquo;un aseo público&rdquo; y responde a las preguntas. También a las
+del cambiador y la sala.</p>
 
-<h3>A café, shop or restaurant has a table nobody mapped</h3>
-<p>The place almost certainly exists in OSM already. Only the <code>changing_table</code> tag is
-missing. In OSM's own editor (iD) that takes about two minutes:</p>
+<h3>Una cafetería, tienda o restaurante tiene un cambiador que nadie ha mapeado</h3>
+<p>El lugar casi seguro que ya existe en OSM. Solo falta la etiqueta <code>changing_table</code>.
+En el editor propio de OSM (iD) son unos dos minutos:</p>
 <ol>
-  <li>Create a free account on <a href="https://www.openstreetmap.org">openstreetmap.org</a> (one
-      email is enough) and log in.</li>
-  <li>Find the place and click <strong>Edit</strong>. The place is a point or a building outline.
-      Click it, its tags appear on the left.</li>
-  <li>Expand <strong>Tags</strong> at the bottom and add with <strong>+</strong>:
+  <li>Crea una cuenta gratuita en <a href="https://www.openstreetmap.org">openstreetmap.org</a>
+      (basta un correo) e inicia sesión.</li>
+  <li>Busca el lugar y pulsa <strong>Editar</strong>. El lugar es un punto o el contorno de un
+      edificio. Púlsalo y sus etiquetas salen a la izquierda.</li>
+  <li>Despliega <strong>Etiquetas</strong> abajo del todo y añade con <strong>+</strong>:
       <ul>
         <li><code>changing_table</code> = <code>yes</code></li>
-        <li><code>changing_table:location</code> = where it is, from the
-            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">documented
-            value list</a>: <code>male_toilet</code>, <code>female_toilet</code>,
+        <li><code>changing_table:location</code> = dónde está, de la
+            <a href="https://wiki.openstreetmap.org/wiki/Key:changing_table:location">lista de
+            valores documentada</a>: <code>male_toilet</code>, <code>female_toilet</code>,
             <code>unisex_toilet</code>, <code>wheelchair_toilet</code>,
-            <code>dedicated_room</code>, <code>room</code>, <code>sales_area</code> or <code>outdoor</code>.
-            In several rooms: separate with semicolons
+            <code>dedicated_room</code>, <code>room</code>, <code>sales_area</code> u <code>outdoor</code>.
+            Si está en varias salas: sepáralos con punto y coma
             (<code>male_toilet;female_toilet</code>).</li>
       </ul></li>
-  <li>Press <strong>Save</strong>, write a short comment (&ldquo;add changing table
-      location&rdquo;), upload. Live on OSM within a minute, on PapaMap after the next nightly
-      update.</li>
+  <li>Pulsa <strong>Guardar</strong>, escribe un comentario corto (&ldquo;añadir la sala del
+      cambiador&rdquo;) y súbelo. En OSM en un minuto, en PapaMap tras la siguiente actualización
+      nocturna.</li>
 </ol>
-<p class="muted">Please only tag what you have seen yourself. OSM records what is, not what should
-be. If you don't know the room, <code>changing_table=yes</code> alone is still useful: the place
-becomes a grey pin, and the next dad answers the room question.</p>
+<p class="muted">Etiqueta solo lo que hayas visto tú. OSM registra lo que hay, no lo que debería
+haber. Si no sabes la sala, <code>changing_table=yes</code> a secas ya sirve: el lugar se convierte
+en un pin gris y el siguiente papá responde a la pregunta de la sala.</p>
 
-<h2>Why a provision scorecard from OSM doesn't work</h2>
-<p>The obvious bigger project would be a male-to-female toilet provision ratio per city. The
-number the &ldquo;potty parity&rdquo; argument actually turns on. It cannot be computed from
-OpenStreetMap. We checked before building, with a sample across eight city cores (Berlin, London,
-Paris, New York, Tokyo&nbsp;23&nbsp;wards, Amsterdam, Vienna, Melbourne;
-26&nbsp;Jul&nbsp;2026):</p>
+<h2>Por qué no sale una tabla de oferta a partir de OSM</h2>
+<p>El proyecto grande y obvio sería la proporción de aseos de hombres frente a los de mujeres por
+ciudad. La cifra sobre la que gira de verdad el argumento de la &ldquo;potty parity&rdquo;. No se
+puede calcular con OpenStreetMap. Lo comprobamos antes de construir nada, con una muestra de ocho
+centros urbanos (Berlín, Londres, París, Nueva York, Tokio&nbsp;23&nbsp;barrios, Ámsterdam, Viena,
+Melbourne; 26&nbsp;jul&nbsp;2026):</p>
 <table>
-  <tr><th>City</th><th>Mapped toilets</th><th>Any gender tag</th><th>Both M&nbsp;+&nbsp;F</th></tr>
-  <tr><td>Berlin</td><td>1,173</td><td>660</td><td>119</td></tr>
-  <tr><td>London</td><td>1,316</td><td>458</td><td>210</td></tr>
-  <tr><td>Paris</td><td>1,414</td><td>579</td><td>101</td></tr>
-  <tr><td>New York</td><td>909</td><td>171</td><td>45</td></tr>
-  <tr><td>Tokyo (23 wards)</td><td>3,500</td><td>601</td><td>231</td></tr>
-  <tr><td>Amsterdam</td><td>151</td><td>59</td><td>28</td></tr>
-  <tr><td>Vienna</td><td>793</td><td>218</td><td>58</td></tr>
+  <tr><th>Ciudad</th><th>Aseos mapeados</th><th>Alguna etiqueta de género</th><th>Ambas H&nbsp;+&nbsp;M</th></tr>
+  <tr><td>Berlín</td><td>1.173</td><td>660</td><td>119</td></tr>
+  <tr><td>Londres</td><td>1.316</td><td>458</td><td>210</td></tr>
+  <tr><td>París</td><td>1.414</td><td>579</td><td>101</td></tr>
+  <tr><td>Nueva York</td><td>909</td><td>171</td><td>45</td></tr>
+  <tr><td>Tokio (23 barrios)</td><td>3.500</td><td>601</td><td>231</td></tr>
+  <tr><td>Ámsterdam</td><td>151</td><td>59</td><td>28</td></tr>
+  <tr><td>Viena</td><td>793</td><td>218</td><td>58</td></tr>
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
-  <tr><td><strong>All</strong></td><td><strong>9,674</strong></td><td><strong>2,888 (29.9%)</strong></td><td><strong>827 (8.5%)</strong></td></tr>
+  <tr><td><strong>Todas</strong></td><td><strong>9.674</strong></td><td><strong>2.888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
 <ul>
-  <li>Only 29.9% of mapped toilets carry any gender tag at all. Both (male and female): 8.5%.</li>
-  <li>The tags are pure yes/no flags, never counts. Cubicle counts per gender: zero in all eight
-      cities. The one capacity key, <code>toilets:num_chambers</code> (~27k uses), is ungendered
-      and comes almost entirely from an old import. Its variants <code>:female</code> /
-      <code>:male</code> have 2 uses each worldwide.</li>
-  <li>Hamburg, checked the same day: 443 mapped toilets, none with a
-      <code>toilets:num_chambers*</code> tag. The strip on the <a href="./">front page</a>
-      recomputes these numbers nightly.</li>
-  <li>And: tagging rates measure the mapper community, not the cities. Single-occupancy toilets
-      correctly stay ungendered. A city ranking would grade OSM contributors, not toilet
-      equity.</li>
+  <li>Solo el 29,9% de los aseos mapeados lleva alguna etiqueta de género. Ambas (hombres y
+      mujeres): 8,5%.</li>
+  <li>Las etiquetas son banderas sí/no, nunca recuentos. Cabinas por género: cero en las ocho
+      ciudades. La única clave de capacidad, <code>toilets:num_chambers</code> (~27k usos), no
+      distingue género y viene casi entera de una importación antigua. Sus variantes
+      <code>:female</code> / <code>:male</code> tienen 2 usos cada una en todo el mundo.</li>
+  <li>Hamburgo, comprobada el mismo día: 443 aseos mapeados, ninguno con una etiqueta
+      <code>toilets:num_chambers*</code>. La franja de la <a href="./">portada</a> recalcula estas
+      cifras cada noche.</li>
+  <li>Y además: las tasas de etiquetado miden a la comunidad de mapeadores, no a las ciudades. Los
+      aseos de una sola plaza se quedan sin género con razón. Una clasificación de ciudades
+      puntuaría a los colaboradores de OSM, no la equidad de los aseos.</li>
 </ul>
-<p>So the only honest statement is: provision itself cannot be measured from open data today.
-This site measures what is measurable and turns the gaps into contributions.</p>
+<p>Así que lo único honesto que se puede decir es: la oferta en sí no se puede medir hoy con datos
+abiertos. Esta web mide lo que se puede medir y convierte los huecos en contribuciones.</p>
 
-<h2>The one computable fact: where the tables are</h2>
-<p><code>changing_table:location</code> is, as far as we know, the only open vocabulary that
-records which room a changing table is in. It is sparse:
-<span data-stat="location_total">3,659</span> of <span data-stat="ct_total">77,000</span>
-<code>changing_table</code> objects worldwide, <span data-stat="share">4.8%</span>. But where it
-exists, it is lopsided (taginfo, <span data-stat="date">26&nbsp;Jul&nbsp;2026</span>):</p>
+<h2>El único dato calculable: dónde están los cambiadores</h2>
+<p><code>changing_table:location</code> es, que sepamos, el único vocabulario abierto que registra
+en qué sala está un cambiador. Es escaso:
+<span data-stat="location_total">3.659</span> de <span data-stat="ct_total">77.000</span>
+objetos <code>changing_table</code> en todo el mundo, un <span data-stat="share">4,8%</span>. Pero
+donde existe, está desequilibrado (taginfo, <span data-stat="date">26&nbsp;jul&nbsp;2026</span>):</p>
 <ul>
-  <li>Tables only in the women's room: <strong data-stat="female_only">485</strong>.</li>
-  <li>Tables only in the men's room: <strong data-stat="male_only">71</strong>. Roughly
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> are tagged
-      in both rooms, <span data-stat="male_any">410</span> record any men's-room table at all.
-      Worldwide.</li>
+  <li>Cambiadores solo en el baño de mujeres: <strong data-stat="female_only">485</strong>.</li>
+  <li>Cambiadores solo en el baño de hombres: <strong data-stat="male_only">71</strong>.
+      Aproximadamente <span data-stat="ratio">7:1</span>.
+      <span data-stat="male_and_female">289</span> están etiquetados en los dos baños,
+      <span data-stat="male_any">410</span> registran algún cambiador en el de hombres. En todo el
+      mundo.</li>
 </ul>
-<p>The sample is small, and mappers choose what they record. So don't over-read the exact ratio.
-The direction matches what has long been documented elsewhere: changing tables hang in the
-women's room by default. That locks dads out, and it quietly assumes who is in charge of
-diapers. This map makes the missing data visible. And easy to fix.</p>
+<p>La muestra es pequeña, y los mapeadores eligen qué registran. Así que no le des demasiada
+importancia a la proporción exacta. La dirección coincide con lo que hace tiempo está documentado
+en otros sitios: el cambiador va por defecto en el baño de mujeres. Eso deja fuera a los papás, y da
+por hecho sin decirlo quién se encarga de los pañales. Este mapa hace visibles los datos que faltan.
+Y fáciles de arreglar.</p>
 
-<h2>Data licence &amp; attribution</h2>
-<p>All map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
-contributors</a>, available under the
+<h2>Licencia de los datos y atribución</h2>
+<p>Todos los datos del mapa &copy; <a href="https://www.openstreetmap.org/copyright">colaboradores
+de OpenStreetMap</a>, disponibles bajo la
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
-The GeoJSON and stats files this site serves are derived from OSM and therefore also ODbL.
-Global tag statistics come from <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
-The site's own code is MIT-licensed.</p>
+Los archivos GeoJSON y de estadísticas que sirve esta web derivan de OSM y por tanto también son
+ODbL. Las estadísticas mundiales de etiquetas vienen de
+<a href="https://taginfo.openstreetmap.org/">taginfo</a>. El código propio de la web tiene licencia
+MIT.</p>
 
-<h2>Privacy</h2>
-<p>A static site. No accounts, no cookies, no analytics, no tracking scripts. The site stores
-nothing about you and has no database. The map tiles come from OpenStreetMap's tile servers;
-those requests fall under the
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privacy policy</a>. If you follow a
-link to MapComplete, StreetComplete or openstreetmap.org, you are on their sites, editing under
-your own OSM account. Nothing passes through us. Formal pages:
+<h2>Privacidad</h2>
+<p>Una web estática. Sin cuentas, sin cookies, sin analítica, sin scripts de seguimiento. La web no
+guarda nada sobre ti y no tiene base de datos. Las teselas del mapa vienen de los servidores de
+OpenStreetMap; esas peticiones caen bajo la
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">política de privacidad de la OSMF</a>. Si
+sigues un enlace a MapComplete, StreetComplete u openstreetmap.org, estás en sus webs, editando con
+tu propia cuenta de OSM. Por aquí no pasa nada. Páginas formales:
 <a href="impressum.html">Impressum</a> ·
-<a href="datenschutz.html">Datenschutzerklärung</a> (German).</p>
+<a href="datenschutz.html">Datenschutzerklärung</a> (en alemán).</p>
 
-<p class="muted">Sources: Overpass sample across 8 city cores (9,674 toilets) from
-26&nbsp;Jul&nbsp;2026, and taginfo key statistics as of the date given above. The local numbers
-come from the same nightly query that builds the map.</p>
+<p class="muted">Fuentes: muestra de Overpass en 8 centros urbanos (9.674 aseos) del
+26&nbsp;jul&nbsp;2026 y estadísticas de claves de taginfo a la fecha indicada arriba. Las cifras
+locales vienen de la misma consulta nocturna que construye el mapa.</p>
 
-<h2>How this site is made</h2>
-<p>I do use AI to help me with coding and drafting texts. Everything goes through my human
-eyes though.</p>
+<h2>Cómo está hecha esta web</h2>
+<p>Uso IA para ayudarme a programar y a escribir los textos. Aun así, todo pasa por mis propios
+ojos.</p>
 
 <script>
 // The taginfo numbers above and the two play-area numbers are the same ones the
@@ -330,7 +336,7 @@ eyes though.</p>
 // The markup holds the last known value, so without JS — or if the fetch fails
 // — the page still reads correctly, just a little older.
 (function () {
-  var LOCALE = "en-GB";
+  var LOCALE = "es-ES";
   fetch("data/stats.json", { cache: "no-cache" })
     .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
     .then(function (s) {
