@@ -2,9 +2,10 @@ from __future__ import annotations
 
 # Rooms a dad can reach the table in. Token matching is EXACT, never substring:
 # "female_toilet" *contains* "male_toilet", so a substring check would classify
-# every women's-room table as dad-accessible.
+# every women's-room table as dad-accessible. `outdoor` (open-air table, no
+# room at all) has been on the wiki value list since 24 Aug 2026.
 ACCESSIBLE_TOKENS = {"male_toilet", "unisex_toilet", "dedicated_room", "room",
-                     "wheelchair_toilet", "sales_area"}
+                     "wheelchair_toilet", "sales_area", "outdoor"}
 FEMALE_TOKEN = "female_toilet"
 
 # Only these changing_table values become map features; `no` (and junk like
