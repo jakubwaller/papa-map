@@ -139,6 +139,44 @@ def test_land_page_carries_one_h1_a_canonical_and_the_counts():
     assert pages.ICON in html
 
 
+def test_pages_carry_a_social_card_in_their_own_language():
+    """Until 2026-08-25 the generated pages had no og:* at all, so Mastodon and
+    Discourse fell back to title + description and unfurled a text-only card.
+    Everything but the picture is the page's own metadata; the picture is per
+    language because the app's chrome is baked into the screenshot."""
+    _, de = render_one([feat(1, "Café Mitte", "accessible", amenity="cafe")])
+    assert '<meta property="og:title" content="Wickeltische in Bremen — PapaMap">' in de
+    assert (f'<meta property="og:url" content="https://papamap.de'
+            f'{PAGES_BASE_PATH}bremen.html">') in de
+    assert '<meta property="og:image" content="https://papamap.de/og-image.jpg?v=' in de
+    assert '<meta name="twitter:card" content="summary_large_image">' in de
+
+    from pipeline.config import COUNTRY_PAGES
+    from pipeline.pages_l10n import L
+    lang, name, name_in, name_for = COUNTRY_PAGES["gb"]
+    en = pages.render_area({
+        "lang": lang, "summary": pages.summarize(name, [feat(1, "Legoland")], 7),
+        "name_in": name_in, "name_for": name_for,
+        "back": [(L[lang]["back_map"], "../")],
+    }, GEN)
+    # A German picture under an English page is the mismatch the apex already
+    # has, so every non-German language takes the English render instead.
+    assert '<meta property="og:image" content="https://papamap.de/og-image-en.jpg?v=' in en
+    assert "/og-image.jpg" not in en
+    assert f'<meta property="og:title" content="{pages.esc(L[lang]["title"].format(name_in=name_in))}">' in en
+
+
+def test_social_card_image_exists_for_every_page_language():
+    """A card that points at a missing file unfurls worse than no card: the
+    scraper shows a broken image rather than falling back to text."""
+    from pipeline.config import COUNTRY_PAGES
+    web = Path(__file__).resolve().parent.parent / "web"
+    langs = {lang for lang, *_ in COUNTRY_PAGES.values()} | {"de"}
+    wanted = {pages.OG_IMAGE.get(lang, pages.OG_IMAGE_FALLBACK) for lang in langs}
+    for f in sorted(wanted):
+        assert (web / f).is_file(), f
+
+
 def test_land_page_deep_links_into_the_map_at_its_own_extent():
     s, html = render_one([feat(1, lon=8.5, lat=53.0), feat(2, lon=8.9, lat=53.2)])
     m = re.search(r'href="\.\./\?bbox=([-\d.,]+)"', html)
