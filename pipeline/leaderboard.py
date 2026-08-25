@@ -9,7 +9,7 @@ from .config import (AREA_COUNTRY, BUNDESLAENDER, COUNTRY_PAGES,
                      HISTORY_MAX_DAYS, PAGES_BASE_PATH, SITE_BASE_URL)
 from .export import write_text_atomic
 from .leaderboard_strings import DE_FILE, EN_FILE, L
-from .pages import ICON, STYLE, UP, esc, slugify, sort_key
+from .pages import ICON, STYLE, UP, _og, esc, slugify, sort_key
 
 # Per-region history and the leaderboard pages built from it.
 #
@@ -293,6 +293,7 @@ def _head(lang: str, tab: dict, base_url: str, base_path: str) -> str:
 <title>{esc(tab["title"])}</title>
 <meta name="description" content="{esc(tab["desc"])}">
 <link rel="canonical" href="{esc(url(lang))}">
+{_og(tab["title"], tab["desc"], url(lang), lang, base_url)}
 {alternates}
 <link rel="alternate" hreflang="x-default" href="{esc(url("de"))}">
 {ICON}

@@ -288,7 +288,41 @@ STYLE = """\
 FOOTER = L["de"]["footer"]
 
 
-def _head(title: str, description: str, canonical: str, lang: str = "de") -> str:
+# The social card. Until 2026-08-25 the generated pages carried no og:* at
+# all, so Mastodon and Discourse fell back to <title> + description and
+# rendered a text-only card — which is why a post to a non-German audience is
+# better off linking the country page than the apex, whose og:* block is
+# German whatever the ?lang= (see index.html). Here the title and description
+# are already the page's own language, so the card only needed a picture.
+#
+# The screenshot has the app's chrome baked into it, so there is one per
+# language we have a render for and English for the rest: an English picture
+# under a Danish page reads better than a German one. Cloudflare holds the
+# image for four hours and the scrapers cache the card far longer, so a new
+# picture ships under a new ?v= or the edge keeps serving the old one.
+OG_IMAGE = {"de": "og-image.jpg"}
+OG_IMAGE_FALLBACK = "og-image-en.jpg"
+OG_IMAGE_VERSION = "eu44"
+OG_IMAGE_SIZE = (1200, 630)
+
+
+def _og(title: str, description: str, canonical: str, lang: str,
+        base_url: str) -> str:
+    image = f"{base_url}/{OG_IMAGE.get(lang, OG_IMAGE_FALLBACK)}"
+    w, h = OG_IMAGE_SIZE
+    return f"""<meta property="og:type" content="website">
+<meta property="og:site_name" content="PapaMap">
+<meta property="og:title" content="{esc(title)}">
+<meta property="og:description" content="{esc(description)}">
+<meta property="og:url" content="{esc(canonical)}">
+<meta property="og:image" content="{esc(image)}?v={OG_IMAGE_VERSION}">
+<meta property="og:image:width" content="{w}">
+<meta property="og:image:height" content="{h}">
+<meta name="twitter:card" content="summary_large_image">"""
+
+
+def _head(title: str, description: str, canonical: str, lang: str = "de",
+          base_url: str = SITE_BASE_URL) -> str:
     return f"""<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -297,6 +331,7 @@ def _head(title: str, description: str, canonical: str, lang: str = "de") -> str
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(description)}">
 <link rel="canonical" href="{esc(canonical)}">
+{_og(title, description, canonical, lang, base_url)}
 {ICON}
 <style>
 {STYLE}</style>
@@ -390,7 +425,7 @@ def render_area(page: dict, generated_at: str, base_url: str = SITE_BASE_URL,
     title = t["title"].format(**raw)
     desc = t["meta_desc"].format(**raw)
 
-    parts = [_head(title, desc, canonical, lang)]
+    parts = [_head(title, desc, canonical, lang, base_url)]
     # Breadcrumbs are the one bit of structured data that earns its place here:
     # they tell Google these are the leaves of one section, not loose pages.
     crumbs = [("PapaMap", f"{base_url}/")] + page.get("crumb_extra", [])
@@ -501,7 +536,8 @@ def render_index(summaries, generated_at: str, base_url: str = SITE_BASE_URL,
     desc = (f"Wickeltische in Deutschland nach Bundesland: {de_num(total)} Orte aus "
             f"OpenStreetMap, bei {de_num(unknown)} davon ist der Raum nicht erfasst.")
 
-    parts = [_head("Wickeltische nach Bundesland — PapaMap", desc, canonical)]
+    parts = [_head("Wickeltische nach Bundesland — PapaMap", desc, canonical,
+                   "de", base_url)]
     parts.append(f'<p class="back"><a href="{UP}">&larr; Zur Karte</a> · '
                  '<a href="rangliste.html">Rangliste</a></p>\n')
     parts.append("<h1>Wickeltische nach Bundesland</h1>\n")
@@ -548,7 +584,8 @@ def render_france_hub(region_summaries, generated_at: str,
     canonical = f"{base_url}{base_path}france.html"
     nums = {"total": fmt_num(total, "fr"), "unknown": fmt_num(unknown, "fr")}
 
-    parts = [_head(t["hub_title"], t["hub_desc"].format(**nums), canonical, "fr")]
+    parts = [_head(t["hub_title"], t["hub_desc"].format(**nums), canonical,
+                   "fr", base_url)]
     parts.append(f'<p class="back"><a href="{UP}">&larr; {esc(t["back_map"])}</a> · '
                  f'<a href="{board_file("fr")}">{esc(BOARD_LABEL["fr"])}</a></p>\n')
     parts.append(f'<h1>{esc(t["hub_h1"])}</h1>\n')
