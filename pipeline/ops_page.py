@@ -383,7 +383,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                            ("centralkey_locked", "dropped: locked behind a central key"),
                            ("play_places", "play places"),
                            ("play_tables", "play places with a changing table"),
-                           ("capacity_tagged_toilets", "toilets with changing_table:count")):
+                           ("capacity_tagged_toilets", "toilets with toilets:num_chambers*")):
             if key in local:
                 p.append(f"<tr><td class=\"l\">{label}</td><td>{_n(local[key])}</td></tr>\n")
         if glob.get("ct_total") is not None:
