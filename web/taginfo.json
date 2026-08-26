@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/taginfo/taginfo-projects/master/taginfo-project-schema.json",
+  "data_format": 1,
+  "data_url": "https://papamap.de/taginfo.json",
+  "project": {
+    "name": "PapaMap",
+    "description": "Map of baby changing tables in 44 European countries, coloured by whether a father can reach them.",
+    "project_url": "https://papamap.de/",
+    "doc_url": "https://papamap.de/methods-en.html",
+    "icon_url": "https://papamap.de/icon.svg",
+    "contact_name": "Jakub Waller",
+    "contact_email": "papamap@jakubwaller.eu"
+  },
+  "tags": [
+    {
+      "key": "changing_table",
+      "object_types": ["node", "way", "relation"],
+      "description": "Selects every object the map shows. An explicit changing_table=no is kept, so a surveyed negative is not asked again.",
+      "doc_url": "https://papamap.de/methods-en.html"
+    },
+    {
+      "key": "changing_table:location",
+      "object_types": ["node", "way", "relation"],
+      "description": "Decides the colour of the pin. male_toilet, unisex_toilet, dedicated_room and outdoor are reachable by a father (green), female_toilet alone is not (red), and a missing value is the grey pin the map asks visitors to answer.",
+      "doc_url": "https://papamap.de/methods-en.html"
+    },
+    {
+      "key": "changing_table:fee",
+      "object_types": ["node", "way", "relation"],
+      "description": "Shown in the popup for a place, falling back to fee when it is absent."
+    },
+    {
+      "key": "amenity",
+      "value": "toilets",
+      "object_types": ["node", "way", "relation"],
+      "description": "Counted for the coverage statistics (how many toilets carry a changing-table tag at all), and the layer the project's MapComplete theme lets people answer the question on."
+    },
+    {
+      "key": "centralkey",
+      "object_types": ["node", "way", "relation"],
+      "description": "A table behind a central key (RADAR in the UK) counts as unreachable only when the key locks the whole place or the cubicle the table is in — an open men's or women's section next to a locked accessible cubicle still counts."
+    },
+    {
+      "key": "access",
+      "value": "centralkey",
+      "object_types": ["node", "way", "relation"],
+      "description": "Same rule as centralkey, for objects that record the restriction on access instead."
+    },
+    {
+      "key": "kids_area",
+      "object_types": ["node", "way", "relation"],
+      "description": "Badges a place as having somewhere for the child to play. An explicit kids_area:indoor=no overrules it."
+    },
+    {
+      "key": "kids_area:indoor",
+      "object_types": ["node", "way", "relation"],
+      "description": "The documented way to say the play area is indoors; settles the badge outright."
+    },
+    {
+      "key": "leisure",
+      "value": "indoor_play",
+      "object_types": ["node", "way", "relation"],
+      "description": "A commercial indoor playground, badged like kids_area."
+    },
+    {
+      "key": "leisure",
+      "value": "playground",
+      "object_types": ["node", "way", "relation"],
+      "description": "Badged when combined with indoor=yes, which is the other way mappers record an indoor play area."
+    },
+    {
+      "key": "toilets:num_chambers:female",
+      "object_types": ["node", "way", "relation"],
+      "description": "Read for the capacity statistic on the methods page. Draft schema under discussion, and marked as a draft wherever the project asks for it."
+    },
+    {
+      "key": "toilets:num_chambers:male",
+      "object_types": ["node", "way", "relation"],
+      "description": "Read for the capacity statistic on the methods page. Draft schema under discussion, and marked as a draft wherever the project asks for it."
+    }
+  ]
+}
