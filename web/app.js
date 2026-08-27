@@ -2,9 +2,10 @@
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
-         mapCompleteAddUrl, osmEditUrl, parseBbox } from "./datasource.js?v=eu3";
+         mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
+         parseBbox } from "./datasource.js?v=eu4";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=eu3";
+         langUrl } from "./i18n.js?v=eu4";
 
 // ---- Language: German default, thirty-one languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -297,7 +298,8 @@ function popupHTML(f) {
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
   if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
   const links = [];
-  const mcUrl = safeUrl(f.mapcomplete_url), osmUrl = safeUrl(f.osm_url);
+  const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
+        osmUrl = safeUrl(f.osm_url);
   if (mcUrl)
     links.push(`<a class="btn primary" href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   if (osmUrl)
@@ -320,7 +322,8 @@ function placeHTML(p) {
   if (p.opening_hours)
     rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(p.opening_hours)}</div>`);
   const links = [];
-  const mcUrl = safeUrl(p.mapcomplete_url), osmUrl = safeUrl(p.osm_url);
+  const mcUrl = safeUrl(withMapCompleteLanguage(p.mapcomplete_url, lang)),
+        osmUrl = safeUrl(p.osm_url);
   if (mcUrl)
     links.push(`<a class="btn primary" href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   if (osmUrl)
@@ -561,15 +564,17 @@ document.getElementById("locate").addEventListener("click", () => {
   );
 });
 
-// ---- Add a place: deep links out to the editors, at the current view ----
+// ---- Add a place: deep links out to MapComplete, at the current view ----
 // The links are (re)built on every open so they always carry the map position
-// the user is actually looking at.
+// the user is actually looking at, and the language chosen on the site. Both
+// open the same theme; the venue one lands a zoom level inside the dad_venue
+// layer's minzoom so the untagged cafés are on screen straight away.
 const addDialog = document.getElementById("add-dialog");
 
 document.getElementById("add-place").addEventListener("click", () => {
   const c = map.getCenter(), z = map.getZoom();
-  document.getElementById("add-toilet-link").href = mapCompleteAddUrl(c.lng, c.lat, z);
-  document.getElementById("add-venue-link").href = osmEditUrl(c.lng, c.lat, z);
+  document.getElementById("add-toilet-link").href = mapCompleteAddUrl(c.lng, c.lat, z, lang);
+  document.getElementById("add-venue-link").href = mapCompleteVenueUrl(c.lng, c.lat, z, lang);
   addDialog.showModal();
 });
 document.getElementById("add-close").addEventListener("click", () => addDialog.close());

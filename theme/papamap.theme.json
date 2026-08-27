@@ -1278,6 +1278,345 @@
           ]
         }
       ]
+    },
+    {
+      "id": "dad_venue",
+      "name": {
+        "en": "Cafés, shops and other places, changing table unknown",
+        "de": "Cafés, Läden und andere Orte, Wickeltisch unbekannt",
+        "da": "Caféer, butikker og andre steder, puslebord ukendt"
+      },
+      "description": {
+        "en": "Cafés, restaurants, shops, libraries, museums, pools, stations and similar places a parent goes to anyway, with no changing_table tag at all. Shown from zoom 16 so a city centre stays readable.",
+        "de": "Cafés, Restaurants, Läden, Bibliotheken, Museen, Bäder, Bahnhöfe und ähnliche Orte, an die Eltern ohnehin gehen, ganz ohne changing_table-Tag. Ab Zoom 16 sichtbar, damit eine Innenstadt lesbar bleibt.",
+        "da": "Caféer, restauranter, butikker, biblioteker, museer, svømmehaller, stationer og lignende steder, forældre alligevel kommer, helt uden changing_table-tag. Vises fra zoom 16, så en bymidte forbliver læselig."
+      },
+      "source": {
+        "osmTags": {
+          "and": [
+            {
+              "or": [
+                "amenity~^(cafe|restaurant|fast_food|food_court|ice_cream|bar|pub|biergarten|library|community_centre|cinema|theatre|arts_centre|events_venue|pharmacy|doctors|clinic|hospital|dentist|fuel|childcare|kindergarten|social_facility|townhall|marketplace|public_bath)$",
+                "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store)$",
+                "tourism~^(museum|zoo|aquarium|theme_park|gallery|hotel)$",
+                "leisure~^(sports_centre|swimming_pool|water_park|fitness_centre|ice_rink|bowling_alley|amusement_arcade)$",
+                "railway=station",
+                "public_transport=station",
+                "aeroway=terminal"
+              ]
+            },
+            "changing_table!~*",
+            "amenity!=toilets",
+            "kids_area!~^(yes|indoor|designated)$",
+            "kids_area:indoor!~^(yes|indoor|designated)$",
+            "leisure!=indoor_play"
+          ]
+        }
+      },
+      "minzoom": 16,
+      "title": {
+        "render": {
+          "en": "Place",
+          "de": "Ort",
+          "da": "Sted"
+        },
+        "mappings": [
+          {
+            "if": "name~*",
+            "then": {
+              "en": "{name}",
+              "de": "{name}",
+              "da": "{name}"
+            }
+          }
+        ]
+      },
+      "pointRendering": [
+        {
+          "location": [
+            "point",
+            "centroid"
+          ],
+          "marker": [
+            {
+              "icon": "circle",
+              "color": "#e69f00"
+            },
+            {
+              "icon": "./assets/layers/cafe_pub/cafe.svg"
+            }
+          ]
+        }
+      ],
+      "lineRendering": [],
+      "tagRenderings": [
+        {
+          "id": "dad-status",
+          "render": {
+            "en": "<b style='color:#e69f00'>Nobody has recorded whether this place has a changing table.</b> You are standing in front of it: answer the question below.",
+            "de": "<b style='color:#e69f00'>Niemand hat eingetragen, ob es hier einen Wickeltisch gibt.</b> Du stehst davor: beantworte unten die Frage.",
+            "da": "<b style='color:#e69f00'>Ingen har registreret, om der er et puslebord her.</b> Du står foran det: besvar spørgsmålet nedenfor."
+          },
+          "mappings": [
+            {
+              "if": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?"
+                ]
+              },
+              "then": {
+                "en": "<b style='color:#117733'>A dad can reach this changing table.</b>",
+                "de": "<b style='color:#117733'>Ein Vater kann diesen Wickeltisch erreichen.</b>",
+                "da": "<b style='color:#117733'>En far kan nå dette puslebord.</b>"
+              }
+            },
+            {
+              "if": {
+                "and": [
+                  {
+                    "or": [
+                      "changing_table=yes",
+                      "changing_table=limited"
+                    ]
+                  },
+                  "changing_table:location~i~(.*;)? *female_toilet *(;.*)?"
+                ]
+              },
+              "then": {
+                "en": "<b style='color:#cc3311'>The changing table is in the women's room only — a dad cannot reach it.</b>",
+                "de": "<b style='color:#cc3311'>Der Wickeltisch ist nur in der Damentoilette — ein Vater kann ihn nicht erreichen.</b>",
+                "da": "<b style='color:#cc3311'>Puslebordet er kun på dametoilettet — en far kan ikke nå det.</b>"
+              }
+            },
+            {
+              "if": {
+                "or": [
+                  "changing_table=yes",
+                  "changing_table=limited"
+                ]
+              },
+              "then": {
+                "en": "<b style='color:#555555'>A changing table exists, but nobody has recorded which room it is in.</b> Answer the location question below to fix this.",
+                "de": "<b style='color:#555555'>Es gibt einen Wickeltisch, aber niemand hat eingetragen, in welchem Raum er ist.</b> Beantworte unten die Standort-Frage, um das zu ändern.",
+                "da": "<b style='color:#555555'>Der findes et puslebord, men ingen har registreret, hvilket rum det står i.</b> Besvar spørgsmålet om placeringen nedenfor for at rette det."
+              }
+            },
+            {
+              "if": "changing_table=no",
+              "then": {
+                "en": "No changing table here.",
+                "de": "Hier gibt es keinen Wickeltisch.",
+                "da": "Intet puslebord her."
+              }
+            }
+          ]
+        },
+        {
+          "id": "changing-table",
+          "question": {
+            "en": "Does this place have a baby changing table?",
+            "de": "Gibt es an diesem Ort einen Wickeltisch?",
+            "da": "Har dette sted et puslebord?"
+          },
+          "mappings": [
+            {
+              "if": "changing_table=yes",
+              "icon": "./assets/layers/toilet/baby.svg",
+              "then": {
+                "en": "A changing table is available",
+                "de": "Ein Wickeltisch ist vorhanden",
+                "da": "Et puslebord er tilgængeligt"
+              }
+            },
+            {
+              "if": "changing_table=no",
+              "then": {
+                "en": "No changing table is available",
+                "de": "Es ist kein Wickeltisch vorhanden",
+                "da": "Der er ikke noget puslebord"
+              }
+            },
+            {
+              "if": "changing_table=limited",
+              "hideInAnswer": true,
+              "then": {
+                "en": "A changing table is available with limitations (e.g. it must be asked for)",
+                "de": "Ein Wickeltisch ist mit Einschränkungen vorhanden (z. B. auf Nachfrage)",
+                "da": "Et puslebord er tilgængeligt med begrænsninger (man skal f.eks. bede om adgang)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "changing-table-location",
+          "question": {
+            "en": "Where is the changing table located?",
+            "de": "Wo befindet sich der Wickeltisch?",
+            "da": "Hvor er puslebordet placeret?"
+          },
+          "questionHint": {
+            "en": "This is the question that decides the pin color. Multiple answers are possible if there is more than one table.",
+            "de": "Diese Frage entscheidet über die Farbe des Pins. Mehrere Antworten sind möglich, wenn es mehr als einen Wickeltisch gibt.",
+            "da": "Det er dette spørgsmål, der afgør nålens farve. Flere svar er mulige, hvis der er mere end ét bord."
+          },
+          "condition": {
+            "or": [
+              "changing_table=yes",
+              "changing_table=limited"
+            ]
+          },
+          "multiAnswer": true,
+          "mappings": [
+            {
+              "if": "changing_table:location=female_toilet",
+              "then": {
+                "en": "A changing table is in the women's toilet",
+                "de": "Ein Wickeltisch ist in der Damentoilette",
+                "da": "Et puslebord står på dametoilettet"
+              }
+            },
+            {
+              "if": "changing_table:location=male_toilet",
+              "then": {
+                "en": "A changing table is in the men's toilet",
+                "de": "Ein Wickeltisch ist in der Herrentoilette",
+                "da": "Et puslebord står på herretoilettet"
+              }
+            },
+            {
+              "if": "changing_table:location=unisex_toilet",
+              "then": {
+                "en": "A changing table is in the unisex toilet",
+                "de": "Ein Wickeltisch ist in der Unisex-Toilette",
+                "da": "Et puslebord står på unisex-toilettet"
+              }
+            },
+            {
+              "if": "changing_table:location=wheelchair_toilet",
+              "then": {
+                "en": "A changing table is in the wheelchair-accessible toilet",
+                "de": "Ein Wickeltisch ist in der barrierefreien Toilette",
+                "da": "Et puslebord står på toilettet for kørestolsbrugere"
+              }
+            },
+            {
+              "if": "changing_table:location=dedicated_room",
+              "then": {
+                "en": "A changing table is in a dedicated room",
+                "de": "Ein Wickeltisch ist in einem eigenen Wickelraum",
+                "da": "Et puslebord står i et dertil indrettet rum"
+              }
+            },
+            {
+              "if": "changing_table:location=room",
+              "then": {
+                "en": "A changing table is in a general-purpose room (e.g. the hallway to the toilets)",
+                "de": "Ein Wickeltisch ist in einem Mehrzweckraum (z. B. im Flur zu den Toiletten)",
+                "da": "Et puslebord står i et almindeligt rum (f.eks. gangen til toiletterne)"
+              }
+            },
+            {
+              "if": "changing_table:location=sales_area",
+              "then": {
+                "en": "A changing table is in the sales area (e.g. on the shop floor)",
+                "de": "Ein Wickeltisch ist im Verkaufsraum",
+                "da": "Et puslebord står i salgsområdet (f.eks. inde i butikken)"
+              }
+            },
+            {
+              "if": "changing_table:location=outdoor",
+              "then": {
+                "en": "A changing table is outdoors, in the open air",
+                "de": "Ein Wickeltisch ist draußen unter freiem Himmel",
+                "da": "Et puslebord står udendørs i det fri"
+              }
+            }
+          ]
+        },
+        {
+          "id": "changing-table-fee",
+          "question": {
+            "en": "Does using the changing table cost a fee?",
+            "de": "Kostet die Nutzung des Wickeltischs eine Gebühr?",
+            "da": "Koster det noget at bruge puslebordet?"
+          },
+          "condition": {
+            "or": [
+              "changing_table=yes",
+              "changing_table=limited"
+            ]
+          },
+          "mappings": [
+            {
+              "if": "changing_table:fee=yes",
+              "then": {
+                "en": "Using the changing table costs a fee",
+                "de": "Die Nutzung des Wickeltischs ist gebührenpflichtig",
+                "da": "Det koster et gebyr at bruge puslebordet"
+              }
+            },
+            {
+              "if": "changing_table:fee=no",
+              "then": {
+                "en": "The changing table is free to use",
+                "de": "Die Nutzung des Wickeltischs ist kostenlos",
+                "da": "Puslebordet er gratis at bruge"
+              }
+            }
+          ]
+        },
+        {
+          "id": "kids-area",
+          "question": {
+            "en": "Is there an indoor area where children can play?",
+            "de": "Gibt es hier drinnen eine Spielecke für Kinder?",
+            "da": "Er der et indendørs område, hvor børn kan lege?"
+          },
+          "questionHint": {
+            "en": "A play corner, a ball pit, a play room — anything that keeps a toddler busy while the grown-ups sit down. On PapaMap this draws the blue ring.",
+            "de": "Eine Spielecke, ein Bällebad, ein Spielzimmer — alles, was ein Kleinkind beschäftigt, während die Erwachsenen sitzen. Auf PapaMap zeichnet das den blauen Ring.",
+            "da": "En legekrog, et boldbassin, et legerum — alt, der holder et lille barn beskæftiget, mens de voksne sidder ned. På PapaMap tegner det den blå ring."
+          },
+          "mappings": [
+            {
+              "if": "kids_area:indoor=yes",
+              "addExtraTags": [
+                "kids_area=yes"
+              ],
+              "then": {
+                "en": "Yes, there is an indoor play area",
+                "de": "Ja, es gibt drinnen eine Spielecke",
+                "da": "Ja, der er et indendørs legeområde"
+              }
+            },
+            {
+              "if": "kids_area=no",
+              "then": {
+                "en": "No, there is nowhere for children to play",
+                "de": "Nein, es gibt keine Spielmöglichkeit für Kinder",
+                "da": "Nej, der er ingen steder, hvor børn kan lege"
+              }
+            },
+            {
+              "if": "kids_area:indoor=no",
+              "addExtraTags": [
+                "kids_area=yes"
+              ],
+              "then": {
+                "en": "There is a play area, but it is outdoors only",
+                "de": "Es gibt eine Spielmöglichkeit, aber nur draußen",
+                "da": "Der er et legeområde, men kun udendørs"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }
