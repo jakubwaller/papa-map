@@ -10,6 +10,20 @@
 	# worth remembering. Rewrite, not redirect: a bookmark keeps the short URL.
 	rewrite /ops.html /data/ops.html
 
+	# /?lang=en is the same static app — the language switch runs in JS — so
+	# link unfurlers, which never run JS, carded the English URL with the
+	# apex's German og:* head (Mastodon/Discord, 2026-08-27). Serve the
+	# English-headed copy instead: web/index-en.html, generated from
+	# index.html by web/build-index-en.js and pinned by index-en.test.js.
+	# Rewrite, not redirect: the address being shared must stay /?lang=en.
+	# Matched to the apex path only — /wickeltische/* pages already carry
+	# their own language and must not be touched.
+	@apex_en {
+		path /
+		query lang=en
+	}
+	rewrite @apex_en /index-en.html
+
 	# The private ops page (the public one plus Cloudflare visit totals) lives
 	# under /srv/private, a separate mount of web-data/private. Nothing under
 	# /private/ is served unless deploy/private/*.caddy exists (git-ignored,

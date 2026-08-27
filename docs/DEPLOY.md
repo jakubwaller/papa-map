@@ -6,7 +6,10 @@ page per Bundesland into `web/wickeltische/`, and any web server serves `web/` a
 
 The live deployment runs the bundled `docker-compose.yml`: a `caddy:2-alpine` container that
 bind-mounts `web/`, which is why `git pull` is the whole deploy for a web-only change and no
-image rebuild is involved. Serving the directory with a static web server you already run works
+image rebuild is involved. The exception is `deploy/papamap.Caddyfile`: Caddy reads it once at
+container start, so a change there needs `docker compose restart papamap` after the pull —
+the restart re-mounts the file and picks up the new content. (Verify with
+`curl -s 'https://papamap.de/?lang=en' | grep og:title` — it must card in English.) Serving the directory with a static web server you already run works
 just as well — both paths are below.
 
 Works on any always-on Linux box. Substitute your own paths and domain; `DOMAIN` stands for

@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f2f5f3" />
-  <title>PapaMap — Wickeltische, die ein Vater erreicht</title>
+  <title>PapaMap — Changing tables dads can reach</title>
   <!-- 44 countries since the Europe-complete sweep of 2026-08-22; counted
        here, not listed — the names alone would run far past the ~160
        characters Google shows, so the point of the sentence would fall
@@ -12,16 +12,16 @@
        length costs nothing. The numeral, not "vierundvierzig": the digit
        survives the next expansion as a two-character diff, and it is what
        the stats strip renders anyway. -->
-  <meta name="description" content="Eine Karte der Wickeltische in 44 europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
-  <meta property="og:title" content="PapaMap — Wickeltische, die ein Vater erreicht" />
-  <meta property="og:description" content="Eine Karte der Wickeltische in 44 europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
+  <meta name="description" content="A map of every changing table in 44 European countries, coloured by whether a dad can actually reach it. Data: OpenStreetMap." />
+  <meta property="og:title" content="PapaMap — Changing tables dads can reach" />
+  <meta property="og:description" content="A map of every changing table in 44 European countries, coloured by whether a dad can actually reach it. Data: OpenStreetMap." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://papamap.de/" />
-  <meta property="og:image" content="https://papamap.de/og-image.jpg?v=eu44" />
+  <meta property="og:url" content="https://papamap.de/?lang=en" />
+  <meta property="og:image" content="https://papamap.de/og-image-en.jpg?v=eu44" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:locale" content="de_DE" />
-  <meta property="og:locale:alternate" content="en_GB" />
+  <meta property="og:locale" content="en_GB" />
+  <meta property="og:locale:alternate" content="de_DE" />
   <meta property="og:locale:alternate" content="da_DK" />
   <meta property="og:locale:alternate" content="nl_NL" />
   <meta property="og:locale:alternate" content="fr_FR" />
@@ -31,14 +31,9 @@
   <meta property="og:locale:alternate" content="sv_SE" />
   <meta name="twitter:card" content="summary_large_image" />
 
-  <!-- The og:* block above is German: link unfurlers don't run JS, so a shared
-       apex URL always cards with whatever language sits here, ?lang= or not —
-       which is how https://papamap.de/?lang=en unfurled in German on Mastodon
-       and Discord (2026-08-27). The English URL gets its own head instead:
-       the container Caddy rewrites /?lang=en to index-en.html
-       (deploy/papamap.Caddyfile), which build-index-en.js generates from this
-       file and index-en.test.js pins to it. Editing this head means
-       regenerating: `node web/build-index-en.js`. -->
+  <!-- GENERATED FILE — do not edit. Built from index.html by
+       build-index-en.js; the container Caddy serves it for /?lang=en so link
+       unfurlers see an English card. index-en.test.js pins it to its source. -->
 
   <!-- One URL serves all thirty-one languages (?lang= is honoured on load), so each
        language needs its own address before a search engine can index it —
@@ -47,7 +42,7 @@
        ?lang= views advertised here would all fold back into the German one.
        Absolute URLs: relative hreflang hrefs are ignored.
        Keep in sync with i18n.js's LANGS and with sitemap.xml. -->
-  <link rel="canonical" href="https://papamap.de/" />
+  <link rel="canonical" href="https://papamap.de/?lang=en" />
   <link rel="alternate" hreflang="de" href="https://papamap.de/" />
   <link rel="alternate" hreflang="en" href="https://papamap.de/?lang=en" />
   <link rel="alternate" hreflang="da" href="https://papamap.de/?lang=da" />
