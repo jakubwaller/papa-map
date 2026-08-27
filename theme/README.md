@@ -6,7 +6,7 @@ OSM questions that fix the data gaps.
 
 ## What's in it
 
-Three layers, all self-contained (no builtin-layer references, so the file has no hidden
+Four layers, all self-contained (no builtin-layer references, so the file has no hidden
 dependencies beyond bundled icon paths):
 
 - **`dad_toilet`** — all `amenity=toilets`. Pin color mirrors the CONTRACT.md
@@ -29,6 +29,19 @@ dependencies beyond bundled icon paths):
   first question is `changing_table` yes/no, which is the whole point: these are the
   places a father goes to anyway, so he is the one who can answer it. Same location/fee
   follow-ups as the other layers, then `kids-area`.
+
+- **`dad_venue`** — added v11 (27 Aug 2026): cafés, restaurants, fast food, bars, shops
+  that plausibly have a customer toilet (malls, supermarkets, baby goods, DIY…), libraries,
+  museums, cinemas, pools and sports centres, pharmacies, surgeries, stations and terminals —
+  everything a parent walks into anyway — that carry **no `changing_table` tag at all**.
+  Objects already in `dad_play_place` are excluded so nothing appears twice, and so is
+  `amenity=toilets`. `minzoom` 16, unlike the other three at 12: a city centre has hundreds
+  of these per square kilometre, and the layer is for the person standing in front of one,
+  not for surveying. Orange `#e69f00` circle under the bundled café pictogram. It exists
+  because the site's "a café / shop / restaurant has a table" button used to deep-link into
+  iD, which on a phone meant finding the object, opening the raw tag editor and typing two
+  keys; now the button opens this theme a zoom level inside the layer and the flow is tap →
+  `changing_table` yes/no → room → fee → `kids-area`, the same questions as the layers above.
 
 ### The `kids-area` question (v10)
 

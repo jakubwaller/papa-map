@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection,
-         placesToFeatureCollection, mapCompleteAddUrl, osmEditUrl,
+         placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
+         mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox } from "./datasource.js";
 
 const feat = (lon, lat, props) => ({
@@ -194,15 +195,36 @@ test("toFeatureCollection emits unknown last so grey pins draw on top", () => {
 });
 
 test("add-place URLs carry the view, rounded, with a floor on the zoom", () => {
+  const theme = "https://mapcomplete.org/theme.html?userlayout=" +
+    "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json";
   assert.equal(mapCompleteAddUrl(9.993712, 53.551085, 15.7),
-    "https://mapcomplete.org/theme.html?userlayout=" +
-    "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json" +
-    "&z=16&lat=53.55109&lon=9.99371");
-  assert.equal(osmEditUrl(9.993712, 53.551085, 18),
-    "https://www.openstreetmap.org/edit#map=18/53.55109/9.99371");
+    theme + "&z=16&lat=53.55109&lon=9.99371");
+  // The venue layer starts at zoom 16, so its link never lands outside it.
+  assert.equal(mapCompleteVenueUrl(9.993712, 53.551085, 15.7),
+    theme + "&z=17&lat=53.55109&lon=9.99371");
+  assert.equal(mapCompleteVenueUrl(9.993712, 53.551085, 18.2),
+    theme + "&z=18&lat=53.55109&lon=9.99371");
   // A Germany-level zoom must not produce a country-level editor link.
   assert.ok(mapCompleteAddUrl(10, 51, 5.6).includes("&z=14&"));
-  assert.ok(osmEditUrl(10, 51, 5.6).includes("#map=17/"));
+  assert.ok(mapCompleteVenueUrl(10, 51, 5.6).includes("&z=17&"));
+  // The site's language rides along where MapComplete has it, under its code.
+  assert.ok(mapCompleteAddUrl(10, 51, 14, "de").endsWith("&language=de"));
+  assert.ok(mapCompleteVenueUrl(10, 51, 17, "no").endsWith("&language=nb_NO"));
+  assert.ok(!mapCompleteAddUrl(10, 51, 14, "bs").includes("language="));
+});
+
+test("MapComplete language: only codes it has, and the fragment stays last", () => {
+  assert.equal(mapCompleteLanguage("da"), "da");
+  assert.equal(mapCompleteLanguage("no"), "nb_NO");
+  assert.equal(mapCompleteLanguage("lv"), null);
+  assert.equal(mapCompleteLanguage(undefined), null);
+  const deep = "https://mapcomplete.org/theme.html?userlayout=x&z=18&lat=1&lon=2#node/5";
+  assert.equal(withMapCompleteLanguage(deep, "fr"),
+    "https://mapcomplete.org/theme.html?userlayout=x&z=18&lat=1&lon=2&language=fr#node/5");
+  assert.equal(withMapCompleteLanguage(deep, "mk"), deep);
+  assert.equal(withMapCompleteLanguage("https://mapcomplete.org/theme.html?a=1", "en"),
+    "https://mapcomplete.org/theme.html?a=1&language=en");
+  assert.equal(withMapCompleteLanguage(null, "en"), null);
 });
 
 test("toFeatureCollection carries only {idx, status, play} and idx survives the reorder", () => {

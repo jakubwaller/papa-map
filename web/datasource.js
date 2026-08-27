@@ -126,14 +126,52 @@ export function parseBbox(value) {
 const PAPAMAP_THEME = "https://mapcomplete.org/theme.html?userlayout=" +
   "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json";
 
-export function mapCompleteAddUrl(lon, lat, zoom) {
-  const z = Math.max(14, Math.round(zoom));
-  return `${PAPAMAP_THEME}&z=${z}&lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}`;
+// MapComplete's own UI languages (its langs/ directory), keyed by the site's
+// codes. Only these get a language= parameter: MapComplete falls back to
+// English for an unknown code, which would be worse than its own detection
+// (OSM account language, then the browser). The parameter also disables the
+// in-app language switch, so it is passed only where the site's choice is a
+// deliberate one — and it steers MapComplete's chrome; the theme's own
+// questions exist in de/da/en and fall back to English elsewhere.
+const MAPCOMPLETE_LANG = {
+  ca: "ca", cs: "cs", da: "da", de: "de", el: "el", en: "en", es: "es", fi: "fi",
+  fr: "fr", hu: "hu", it: "it", nl: "nl", no: "nb_NO", pl: "pl", pt: "pt",
+  ro: "ro", sl: "sl", sv: "sv", uk: "uk",
+};
+
+export function mapCompleteLanguage(lang) {
+  return MAPCOMPLETE_LANG[lang] ?? null;
 }
 
-export function osmEditUrl(lon, lat, zoom) {
-  const z = Math.max(17, Math.round(zoom));
-  return `https://www.openstreetmap.org/edit#map=${z}/${lat.toFixed(5)}/${lon.toFixed(5)}`;
+// Append language= to a MapComplete URL (the pipeline's per-feature deep links
+// are language-neutral; the site knows the reader's language, the build does
+// not). Goes before the #fragment, which is the preselected object.
+export function withMapCompleteLanguage(url, lang) {
+  const code = mapCompleteLanguage(lang);
+  if (!code || typeof url !== "string") return url;
+  const hash = url.indexOf("#");
+  const base = hash < 0 ? url : url.slice(0, hash), frag = hash < 0 ? "" : url.slice(hash);
+  return `${base}&language=${code}${frag}`;
+}
+
+function mapCompleteViewUrl(lon, lat, zoom, minZoom, lang) {
+  const z = Math.max(minZoom, Math.round(zoom));
+  return withMapCompleteLanguage(
+    `${PAPAMAP_THEME}&z=${z}&lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}`, lang);
+}
+
+// "A public toilet is missing": the dad_toilet layer with its add preset.
+export function mapCompleteAddUrl(lon, lat, zoom, lang) {
+  return mapCompleteViewUrl(lon, lat, zoom, 14, lang);
+}
+
+// "A café / shop / restaurant has a table": the theme's dad_venue layer lists
+// such places without a changing_table tag from zoom 16, so the link lands one
+// zoom level inside that — tap the place, answer the question. Replaced the
+// iD deep link (2026-08-27): on a phone, iD meant finding the object, opening
+// the raw tag editor and typing two keys.
+export function mapCompleteVenueUrl(lon, lat, zoom, lang) {
+  return mapCompleteViewUrl(lon, lat, zoom, 17, lang);
 }
 
 // Rebuild a FeatureCollection for the map source. Properties carry only

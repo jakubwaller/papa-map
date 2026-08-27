@@ -186,7 +186,7 @@ export const STRINGS = {
     dlgToilet: "Eine öffentliche Toilette fehlt",
     dlgToiletHint: "Öffnet MapComplete am aktuellen Kartenausschnitt — Toilette hinzufügen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OSM-Login.",
     dlgVenue: "Ein Café / Laden / Restaurant hat einen Tisch",
-    dlgVenueHint: "Der Ort existiert auf OSM fast sicher schon — hier den Editor öffnen und die <code>changing_table</code>-Tags ergänzen. Schritt für Schritt: siehe Methoden.",
+    dlgVenueHint: "Öffnet MapComplete am aktuellen Kartenausschnitt — den Ort antippen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OSM-Login. Ort nicht dabei? Siehe Methoden.",
     dlgFoot: '<a href="{href}#contribute">Editieren, Schritt für Schritt</a>',
   },
   en: {
@@ -272,7 +272,7 @@ export const STRINGS = {
     dlgToilet: "A public toilet is missing",
     dlgToiletHint: "Opens MapComplete at this map view — add it and answer the changing-table questions. Needs a free OSM login.",
     dlgVenue: "A café / shop / restaurant has a table",
-    dlgVenueHint: "The place almost certainly exists on OSM already — open the editor here and add the <code>changing_table</code> tags. Step-by-step: see Methods.",
+    dlgVenueHint: "Opens MapComplete at this map view — tap the place and answer the changing-table questions. Needs a free OSM login. Place not shown? See Methods.",
     dlgFoot: '<a href="{href}#contribute">How to edit, step by step</a>',
   },
   da: {
@@ -355,7 +355,7 @@ export const STRINGS = {
     dlgToilet: "Et offentligt toilet mangler",
     dlgToiletHint: "Åbner MapComplete på dette kortudsnit — tilføj toilettet og besvar spørgsmålene om puslebord. Kræver et gratis OSM-login.",
     dlgVenue: "En café / butik / restaurant har et puslebord",
-    dlgVenueHint: "Stedet findes næsten helt sikkert i OSM allerede — åbn editoren her og tilføj <code>changing_table</code>-taggene. Trin for trin: se Metode.",
+    dlgVenueHint: "Åbner MapComplete på dette kortudsnit — tryk på stedet og besvar spørgsmålene om puslebord. Kræver et gratis OSM-login. Er stedet der ikke? Se Metode.",
     dlgFoot: '<a href="{href}#contribute">Sådan redigerer du, trin for trin</a>',
   },
 
@@ -436,7 +436,7 @@ export const STRINGS = {
     dlgToilet: "Er ontbreekt een openbaar toilet",
     dlgToiletHint: "Opent MapComplete op dit kaartbeeld — voeg het toilet toe en beantwoord de vragen over de verschoontafel. Vereist een gratis OSM-account.",
     dlgVenue: "Een café / winkel / restaurant heeft een tafel",
-    dlgVenueHint: "De plek bestaat vrijwel zeker al op OSM — open hier de editor en vul de <code>changing_table</code>-tags aan. Stap voor stap: zie Methode.",
+    dlgVenueHint: "Opent MapComplete op dit kaartbeeld — tik op de plek en beantwoord de vragen over de verschoontafel. Vereist een gratis OSM-account. Plek niet te zien? Zie Methode.",
     dlgFoot: "<a href=\"{href}#contribute\">Bewerken, stap voor stap</a>",
   },
   // Français — added 19 Aug 2026 with the UK and France; France, Wallonia and Romandy.
@@ -515,7 +515,7 @@ export const STRINGS = {
     dlgToilet: "Il manque des toilettes publiques",
     dlgToiletHint: "Ouvre MapComplete sur la vue actuelle — ajoute-les et réponds aux questions sur la table à langer. Nécessite un compte OSM gratuit.",
     dlgVenue: "Un café / magasin / restaurant a une table",
-    dlgVenueHint: "Le lieu existe presque certainement déjà sur OSM — ouvre l'éditeur ici et ajoute les tags <code>changing_table</code>. Pas à pas : voir Méthodes.",
+    dlgVenueHint: "Ouvre MapComplete sur la vue actuelle — touche le lieu et réponds aux questions sur la table à langer. Nécessite un compte OSM gratuit. Lieu absent ? Voir Méthodes.",
     dlgFoot: "<a href=\"{href}#contribute\">Éditer, pas à pas</a>",
   },
   // Italiano — added 19 Aug 2026 with the UK and France; Ticino and the Italian-speaking Grisons.
@@ -594,7 +594,7 @@ export const STRINGS = {
     dlgToilet: "Manca un bagno pubblico",
     dlgToiletHint: "Apre MapComplete su questa porzione di mappa — aggiungi il bagno e rispondi alle domande sul fasciatoio. Serve un account OSM gratuito.",
     dlgVenue: "Un bar / negozio / ristorante ha un fasciatoio",
-    dlgVenueHint: "Il luogo su OSM esiste quasi di sicuro già — apri qui l'editor e aggiungi i tag <code>changing_table</code>. Passo per passo: vedi Metodo.",
+    dlgVenueHint: "Apre MapComplete su questa porzione di mappa — tocca il luogo e rispondi alle domande sul fasciatoio. Serve un account OSM gratuito. Il luogo non c'è? Vedi Metodo.",
     dlgFoot: "<a href=\"{href}#contribute\">Come si modifica, passo per passo</a>",
   },
   // Čeština — added 19 Aug 2026 with the UK and France; Czechia.
@@ -673,7 +673,7 @@ export const STRINGS = {
     dlgToilet: "Chybí veřejné WC",
     dlgToiletHint: "Otevře MapComplete na aktuálním výřezu mapy — přidej WC a odpověz na otázky k přebalovacímu pultu. Je potřeba bezplatné přihlášení k OSM.",
     dlgVenue: "Kavárna / obchod / restaurace má pult",
-    dlgVenueHint: "To místo v OSM skoro jistě už je — otevři tady editor a doplň tagy <code>changing_table</code>. Krok za krokem: viz Metody.",
+    dlgVenueHint: "Otevře MapComplete na aktuálním výřezu mapy — klepni na místo a odpověz na otázky k přebalovacímu pultu. Je potřeba bezplatné přihlášení k OSM. Místo tam není? Viz Metody.",
     dlgFoot: "<a href=\"{href}#contribute\">Jak editovat, krok za krokem</a>",
   },
   // Polski — added 19 Aug 2026 with the UK and France; Poland.
@@ -752,7 +752,7 @@ export const STRINGS = {
     dlgToilet: "Brakuje toalety publicznej",
     dlgToiletHint: "Otwiera MapComplete na tym wycinku mapy — dodaj toaletę i odpowiedz na pytania o przewijak. Potrzebne darmowe konto OSM.",
     dlgVenue: "Kawiarnia / sklep / restauracja ma przewijak",
-    dlgVenueHint: "To miejsce prawie na pewno już jest w OSM — otwórz tu edytor i dodaj tagi <code>changing_table</code>. Krok po kroku: zobacz Metody.",
+    dlgVenueHint: "Otwiera MapComplete na tym wycinku mapy — stuknij miejsce i odpowiedz na pytania o przewijak. Potrzebne darmowe konto OSM. Nie ma tego miejsca? Zobacz Metody.",
     dlgFoot: "<a href=\"{href}#contribute\">Jak edytować, krok po kroku</a>",
   },
   // Svenska — added 19 Aug 2026 with the UK and France; Sweden.
@@ -831,7 +831,7 @@ export const STRINGS = {
     dlgToilet: "En offentlig toalett saknas",
     dlgToiletHint: "Öppnar MapComplete vid det här kartutsnittet — lägg till toaletten och svara på skötbordsfrågorna. Kräver en gratis OSM-inloggning.",
     dlgVenue: "Café / butik / restaurang har ett skötbord",
-    dlgVenueHint: "Platsen finns nästan säkert redan i OSM — öppna editorn här och lägg till <code>changing_table</code>-taggarna. Steg för steg: se Metod.",
+    dlgVenueHint: "Öppnar MapComplete vid det här kartutsnittet — tryck på platsen och svara på skötbordsfrågorna. Kräver en gratis OSM-inloggning. Syns inte platsen? Se Metod.",
     dlgFoot: "<a href=\"{href}#contribute\">Så redigerar du, steg för steg</a>",
   },
   bs: {
@@ -909,7 +909,7 @@ export const STRINGS = {
     dlgToilet: "Nedostaje javni WC",
     dlgToiletHint: "Otvara MapComplete na ovom dijelu karte — dodaj ga i odgovori na pitanja o stolu za previjanje. Potreban je besplatan OSM nalog.",
     dlgVenue: "Kafić / prodavnica / restoran ima sto za previjanje",
-    dlgVenueHint: "To mjesto vjerovatno već postoji na OSM-u — ovdje otvori uređivač i dodaj oznake <code>changing_table</code>. Korak po korak: pogledaj Metode.",
+    dlgVenueHint: "Otvara MapComplete na ovom dijelu karte — dodirni mjesto i odgovori na pitanja o stolu za previjanje. Potreban je besplatan OSM nalog. Mjesta nema? Pogledaj Metode.",
     dlgFoot: '<a href="{href}#contribute">Kako uređivati, korak po korak</a>',
   },
   ca: {
@@ -987,7 +987,7 @@ export const STRINGS = {
     dlgToilet: "Falta un lavabo públic",
     dlgToiletHint: "Obre MapComplete en aquesta vista del mapa — afegeix-lo i respon les preguntes sobre el canviador. Cal un compte gratuït d'OSM.",
     dlgVenue: "Un cafè / botiga / restaurant té un canviador",
-    dlgVenueHint: "El lloc gairebé segur que ja existeix a OSM — obre aquí l'editor i afegeix les etiquetes <code>changing_table</code>. Pas a pas: consulta els Mètodes.",
+    dlgVenueHint: "Obre MapComplete en aquesta vista del mapa — toca el lloc i respon les preguntes sobre el canviador. Cal un compte gratuït d'OSM. No hi surt el lloc? Consulta els Mètodes.",
     dlgFoot: '<a href="{href}#contribute">Com editar, pas a pas</a>',
   },
   et: {
@@ -1065,7 +1065,7 @@ export const STRINGS = {
     dlgToilet: "Avalik tualett puudub",
     dlgToiletHint: "Avab MapComplete'i praeguses kaardivaates — lisa tualett ja vasta mähkimislaua küsimustele. Vajalik on tasuta OSM-konto.",
     dlgVenue: "Kohvikus / poes / restoranis on mähkimislaud",
-    dlgVenueHint: "See koht on OSM-is peaaegu kindlasti juba olemas — ava siin redaktor ja lisa <code>changing_table</code> sildid. Samm-sammult: vaata Meetodid.",
+    dlgVenueHint: "Avab MapComplete'i praeguses kaardivaates — puuduta kohta ja vasta mähkimislaua küsimustele. Vajalik on tasuta OSM-konto. Kohta pole näha? Vaata Meetodid.",
     dlgFoot: '<a href="{href}#contribute">Kuidas redigeerida, samm-sammult</a>',
   },
   es: {
@@ -1143,7 +1143,7 @@ export const STRINGS = {
     dlgToilet: "Falta un aseo público",
     dlgToiletHint: "Abre MapComplete en esta vista del mapa — añade el aseo y responde a las preguntas sobre el cambiador. Requiere una cuenta de OSM gratuita.",
     dlgVenue: "Una cafetería, tienda o restaurante tiene un cambiador",
-    dlgVenueHint: "El lugar casi seguro que ya existe en OSM — abre aquí el editor y añade las etiquetas <code>changing_table</code>. Paso a paso: consulta Métodos.",
+    dlgVenueHint: "Abre MapComplete en esta vista del mapa — toca el lugar y responde a las preguntas sobre el cambiador. Requiere una cuenta de OSM gratuita. ¿No aparece el lugar? Consulta Métodos.",
     dlgFoot: '<a href="{href}#contribute">Cómo editar, paso a paso</a>',
   },
   hr: {
@@ -1221,7 +1221,7 @@ export const STRINGS = {
     dlgToilet: "Nedostaje javni WC",
     dlgToiletHint: "Otvara MapComplete na ovom dijelu karte — dodaj ga i odgovori na pitanja o stolu za previjanje. Potreban je besplatan OSM račun.",
     dlgVenue: "Kafić / trgovina / restoran ima stol",
-    dlgVenueHint: "Mjesto gotovo sigurno već postoji na OSM-u — ovdje otvori uređivač i dodaj oznake <code>changing_table</code>. Korak po korak: pogledaj Metode.",
+    dlgVenueHint: "Otvara MapComplete na ovom dijelu karte — dodirni mjesto i odgovori na pitanja o stolu za previjanje. Potreban je besplatan OSM račun. Mjesta nema? Pogledaj Metode.",
     dlgFoot: '<a href="{href}#contribute">Kako urediti, korak po korak</a>',
   },
   is: {
@@ -1299,7 +1299,7 @@ export const STRINGS = {
     dlgToilet: "Almenningssalerni vantar",
     dlgToiletHint: "Opnar MapComplete á þessu kortasvæði — bættu því við og svaraðu spurningunum um skiptiborðið. Krefst ókeypis OSM-innskráningar.",
     dlgVenue: "Kaffihús / verslun / veitingastaður er með skiptiborð",
-    dlgVenueHint: "Staðurinn er nánast örugglega þegar til í OSM — opnaðu ritilinn hér og bættu við merkingunum <code>changing_table</code>. Skref fyrir skref: sjá Aðferð.",
+    dlgVenueHint: "Opnar MapComplete á þessu kortasvæði — ýttu á staðinn og svaraðu spurningunum um skiptiborðið. Krefst ókeypis OSM-innskráningar. Sést staðurinn ekki? Sjá Aðferð.",
     dlgFoot: '<a href="{href}#contribute">Hvernig á að breyta, skref fyrir skref</a>',
   },
   lv: {
@@ -1377,7 +1377,7 @@ export const STRINGS = {
     dlgToilet: "Trūkst publiskās tualetes",
     dlgToiletHint: "Atver MapComplete šajā kartes skatā — pievieno to un atbildi uz jautājumiem par pārtinamo galdiņu. Nepieciešams bezmaksas OSM konts.",
     dlgVenue: "Kafejnīcā / veikalā / restorānā ir galdiņš",
-    dlgVenueHint: "Šī vieta OSM datos gandrīz noteikti jau ir — atver šeit redaktoru un pievieno <code>changing_table</code> birkas. Soli pa solim: skat. Metodika.",
+    dlgVenueHint: "Atver MapComplete šajā kartes skatā — pieskaries vietai un atbildi uz jautājumiem par pārtinamo galdiņu. Nepieciešams bezmaksas OSM konts. Vietas nav? Skat. Metodika.",
     dlgFoot: '<a href="{href}#contribute">Kā rediģēt, soli pa solim</a>',
   },
   lt: {
@@ -1455,7 +1455,7 @@ export const STRINGS = {
     dlgToilet: "Trūksta viešo tualeto",
     dlgToiletHint: "Atveria MapComplete šiame žemėlapio vaizde — pridėk jį ir atsakyk į klausimus apie pervystymo stalą. Reikia nemokamos OSM paskyros.",
     dlgVenue: "Kavinė / parduotuvė / restoranas turi stalą",
-    dlgVenueHint: "Ta vieta OSM tikriausiai jau pažymėta — atidaryk redaktorių čia ir pridėk <code>changing_table</code> žymas. Žingsnis po žingsnio: žr. Metodus.",
+    dlgVenueHint: "Atveria MapComplete šiame žemėlapio vaizde — paliesk vietą ir atsakyk į klausimus apie pervystymo stalą. Reikia nemokamos OSM paskyros. Vietos nėra? Žr. Metodus.",
     dlgFoot: '<a href="{href}#contribute">Kaip redaguoti, žingsnis po žingsnio</a>',
   },
   hu: {
@@ -1533,7 +1533,7 @@ export const STRINGS = {
     dlgToilet: "Hiányzik egy nyilvános mosdó",
     dlgToiletHint: "Megnyitja a MapCompletet ennél a térképnézetnél — add hozzá, és válaszolj a pelenkázóasztalra vonatkozó kérdésekre. Ingyenes OSM-bejelentkezés szükséges hozzá.",
     dlgVenue: "Egy kávézónak / boltnak / étteremnek van pelenkázóasztala",
-    dlgVenueHint: "A hely szinte biztosan már létezik az OSM-ben — nyisd meg itt a szerkesztőt, és add hozzá a <code>changing_table</code> címkéket. Lépésről lépésre: lásd a Módszertant.",
+    dlgVenueHint: "Megnyitja a MapCompletet ennél a térképnézetnél — koppints a helyre, és válaszolj a pelenkázóasztalra vonatkozó kérdésekre. Ingyenes OSM-bejelentkezés szükséges hozzá. Nem látszik a hely? Lásd a Módszertant.",
     dlgFoot: '<a href="{href}#contribute">Szerkesztés lépésről lépésre</a>',
   },
   no: {
@@ -1611,7 +1611,7 @@ export const STRINGS = {
     dlgToilet: "Et offentlig toalett mangler",
     dlgToiletHint: "Åpner MapComplete på dette kartutsnittet — legg til toalettet og svar på spørsmålene om stellebordet. Krever en gratis OSM-innlogging.",
     dlgVenue: "En kafé / butikk / restaurant har et bord",
-    dlgVenueHint: "Stedet finnes nesten helt sikkert allerede i OSM — åpne editoren her og legg til <code>changing_table</code>-taggene. Steg for steg: se Metode.",
+    dlgVenueHint: "Åpner MapComplete på dette kartutsnittet — trykk på stedet og svar på spørsmålene om stellebordet. Krever en gratis OSM-innlogging. Vises ikke stedet? Se Metode.",
     dlgFoot: '<a href="{href}#contribute">Slik redigerer du, steg for steg</a>',
   },
   pt: {
@@ -1689,7 +1689,7 @@ export const STRINGS = {
     dlgToilet: "Falta uma casa de banho pública",
     dlgToiletHint: "Abre o MapComplete nesta vista do mapa — adiciona-a e responde às perguntas sobre o fraldário. É preciso um login gratuito no OSM.",
     dlgVenue: "Um café / loja / restaurante tem um fraldário",
-    dlgVenueHint: "O local quase de certeza já existe no OSM — abre aqui o editor e adiciona as tags <code>changing_table</code>. Passo a passo: ver Métodos.",
+    dlgVenueHint: "Abre o MapComplete nesta vista do mapa — toca no local e responde às perguntas sobre o fraldário. É preciso um login gratuito no OSM. O local não aparece? Ver Métodos.",
     dlgFoot: '<a href="{href}#contribute">Como editar, passo a passo</a>',
   },
   ro: {
@@ -1767,7 +1767,7 @@ export const STRINGS = {
     dlgToilet: "Lipsește o toaletă publică",
     dlgToiletHint: "Deschide MapComplete la această zonă a hărții — adaugă toaleta și răspunde la întrebările despre masa de înfășat. Necesită un cont OSM gratuit.",
     dlgVenue: "O cafenea / un magazin / un restaurant are o masă",
-    dlgVenueHint: "Locul aproape sigur există deja pe OSM — deschide editorul aici și adaugă tag-urile <code>changing_table</code>. Pas cu pas: vezi Metode.",
+    dlgVenueHint: "Deschide MapComplete la această zonă a hărții — atinge locul și răspunde la întrebările despre masa de înfășat. Necesită un cont OSM gratuit. Locul nu apare? Vezi Metode.",
     dlgFoot: '<a href="{href}#contribute">Cum editezi, pas cu pas</a>',
   },
   sq: {
@@ -1845,7 +1845,7 @@ export const STRINGS = {
     dlgToilet: "Mungon një tualet publik",
     dlgToiletHint: "Hap MapComplete te kjo pamje e hartës — shtoje dhe përgjigju pyetjeve për tavolinën e ndërrimit. Nevojitet një llogari falas në OSM.",
     dlgVenue: "Një kafene / dyqan / restorant ka tavolinë ndërrimi",
-    dlgVenueHint: "Vendi pothuajse me siguri ekziston tashmë në OSM — hap editorin këtu dhe shto etiketat <code>changing_table</code>. Hap pas hapi: shih Metodologjinë.",
+    dlgVenueHint: "Hap MapComplete te kjo pamje e hartës — prek vendin dhe përgjigju pyetjeve për tavolinën e ndërrimit. Nevojitet një llogari falas në OSM. Vendi nuk shfaqet? Shih Metodologjinë.",
     dlgFoot: '<a href="{href}#contribute">Si të editosh, hap pas hapi</a>',
   },
   sk: {
@@ -1923,7 +1923,7 @@ export const STRINGS = {
     dlgToilet: "Chýba verejné WC",
     dlgToiletHint: "Otvorí MapComplete na aktuálnom výreze mapy — pridaj WC a odpovedz na otázky o prebaľovacom pulte. Treba bezplatné prihlásenie na OSM.",
     dlgVenue: "Kaviareň / obchod / reštaurácia má pult",
-    dlgVenueHint: "To miesto v OSM skoro určite už je — otvor tu editor a doplň tagy <code>changing_table</code>. Krok za krokom: pozri Metódy.",
+    dlgVenueHint: "Otvorí MapComplete na aktuálnom výreze mapy — ťukni na miesto a odpovedz na otázky o prebaľovacom pulte. Treba bezplatné prihlásenie na OSM. Miesto tam nie je? Pozri Metódy.",
     dlgFoot: '<a href="{href}#contribute">Ako editovať, krok za krokom</a>',
   },
   sl: {
@@ -2001,7 +2001,7 @@ export const STRINGS = {
     dlgToilet: "Manjka javno stranišče",
     dlgToiletHint: "Odpre MapComplete na tem izseku zemljevida — dodaj stranišče in odgovori na vprašanja o previjalni mizi. Potrebuješ brezplačen račun OSM.",
     dlgVenue: "Kavarna / trgovina / restavracija ima mizo",
-    dlgVenueHint: "Kraj skoraj zagotovo že obstaja na OSM — tu odpri urejevalnik in dodaj oznake <code>changing_table</code>. Korak za korakom: glej Metode.",
+    dlgVenueHint: "Odpre MapComplete na tem izseku zemljevida — tapni kraj in odgovori na vprašanja o previjalni mizi. Potrebuješ brezplačen račun OSM. Kraja ni? Glej Metode.",
     dlgFoot: '<a href="{href}#contribute">Kako urejati, korak za korakom</a>',
   },
   fi: {
@@ -2079,7 +2079,7 @@ export const STRINGS = {
     dlgToilet: "Julkinen WC puuttuu",
     dlgToiletHint: "Avaa MapCompleten nykyiseen karttanäkymään — lisää WC ja vastaa hoitopöytäkysymyksiin. Vaatii ilmaisen OSM-tunnuksen.",
     dlgVenue: "Kahvilalla / kaupalla / ravintolalla on hoitopöytä",
-    dlgVenueHint: "Paikka on lähes varmasti jo olemassa OSM:ssä — avaa editori tästä ja lisää <code>changing_table</code>-tagit. Vaihe vaiheelta: katso Menetelmät.",
+    dlgVenueHint: "Avaa MapCompleten nykyiseen karttanäkymään — napauta paikkaa ja vastaa hoitopöytäkysymyksiin. Vaatii ilmaisen OSM-tunnuksen. Paikkaa ei näy? Katso Menetelmät.",
     dlgFoot: '<a href="{href}#contribute">Näin muokkaat, vaihe vaiheelta</a>',
   },
   el: {
@@ -2157,7 +2157,7 @@ export const STRINGS = {
     dlgToilet: "Λείπει μια δημόσια τουαλέτα",
     dlgToiletHint: "Ανοίγει το MapComplete σε αυτή την προβολή του χάρτη — πρόσθεσέ την και απάντησε στις ερωτήσεις για την αλλαξιέρα. Χρειάζεται δωρεάν σύνδεση OSM.",
     dlgVenue: "Μια καφετέρια / ένα κατάστημα / εστιατόριο έχει αλλαξιέρα",
-    dlgVenueHint: "Το μέρος σχεδόν σίγουρα υπάρχει ήδη στο OSM — άνοιξε εδώ τον επεξεργαστή και πρόσθεσε τις ετικέτες <code>changing_table</code>. Βήμα-βήμα: δες τη Μέθοδο.",
+    dlgVenueHint: "Ανοίγει το MapComplete σε αυτή την προβολή του χάρτη — πάτησε το μέρος και απάντησε στις ερωτήσεις για την αλλαξιέρα. Χρειάζεται δωρεάν σύνδεση OSM. Δεν φαίνεται το μέρος; Δες τη Μέθοδο.",
     dlgFoot: '<a href="{href}#contribute">Πώς να επεξεργαστείς, βήμα-βήμα</a>',
   },
   be: {
@@ -2235,7 +2235,7 @@ export const STRINGS = {
     dlgToilet: "Не хапае грамадскага туалета",
     dlgToiletHint: "Адкрывае MapComplete на бягучым выглядзе карты — дадай яго і адкажы на пытанні пра стол для спавівання. Патрабуецца бясплатны ўваход праз OSM.",
     dlgVenue: "У кафэ / краме / рэстаране ёсць стол",
-    dlgVenueHint: "Гэтае месца амаль напэўна ўжо ёсць у OSM — адкрый тут рэдактар і дадай тэгі <code>changing_table</code>. Крок за крокам: гл. Метады.",
+    dlgVenueHint: "Адкрывае MapComplete на бягучым выглядзе карты — націсні на месца і адкажы на пытанні пра стол для спавівання. Патрабуецца бясплатны ўваход праз OSM. Месца няма? Гл. Метады.",
     dlgFoot: '<a href="{href}#contribute">Як рэдагаваць, крок за крокам</a>',
   },
   bg: {
@@ -2313,7 +2313,7 @@ export const STRINGS = {
     dlgToilet: "Липсва обществена тоалетна",
     dlgToiletHint: "Отваря MapComplete на текущия изглед на картата — добави я и отговори на въпросите за масата за повиване. Изисква безплатен OSM акаунт.",
     dlgVenue: "Кафене / магазин / ресторант има маса",
-    dlgVenueHint: "Мястото почти сигурно вече съществува в OSM — отвори редактора тук и добави таговете <code>changing_table</code>. Стъпка по стъпка: виж Методи.",
+    dlgVenueHint: "Отваря MapComplete на текущия изглед на картата — докосни мястото и отговори на въпросите за масата за повиване. Изисква безплатен OSM акаунт. Мястото не се вижда? Виж Методи.",
     dlgFoot: '<a href="{href}#contribute">Как да редактираш, стъпка по стъпка</a>',
   },
   mk: {
@@ -2391,7 +2391,7 @@ export const STRINGS = {
     dlgToilet: "Недостасува јавен тоалет",
     dlgToiletHint: "Го отвора MapComplete на овој преглед на мапата — додади го и одговори на прашањата за масата за пеленање. Потребна е бесплатна OSM-сметка.",
     dlgVenue: "Кафуле / продавница / ресторан има маса",
-    dlgVenueHint: "Местото речиси сигурно веќе постои на OSM — отвори го уредувачот тука и додади ги ознаките <code>changing_table</code>. Чекор по чекор: погледни Методи.",
+    dlgVenueHint: "Го отвора MapComplete на овој преглед на мапата — допри го местото и одговори на прашањата за масата за пеленање. Потребна е бесплатна OSM-сметка. Местото го нема? Погледни Методи.",
     dlgFoot: '<a href="{href}#contribute">Како да уредуваш, чекор по чекор</a>',
   },
   sr: {
@@ -2469,7 +2469,7 @@ export const STRINGS = {
     dlgToilet: "Недостаје јавни тоалет",
     dlgToiletHint: "Отвара MapComplete на овом делу мапе — додај тоалет и одговори на питања о столу за превијање. Потребна је бесплатна OSM пријава.",
     dlgVenue: "Кафић / продавница / ресторан има сто",
-    dlgVenueHint: "Место скоро сигурно већ постоји на OSM-у — овде отвори едитор и додај <code>changing_table</code> ознаке. Корак по корак: погледај Методе.",
+    dlgVenueHint: "Отвара MapComplete на овом делу мапе — додирни место и одговори на питања о столу за превијање. Потребна је бесплатна OSM пријава. Места нема? Погледај Методе.",
     dlgFoot: '<a href="{href}#contribute">Како уредити, корак по корак</a>',
   },
   uk: {
@@ -2547,7 +2547,7 @@ export const STRINGS = {
     dlgToilet: "Бракує громадського туалету",
     dlgToiletHint: "Відкриває MapComplete з поточним видом карти — додай його і дай відповіді на запитання про пеленальний столик. Потрібен безкоштовний обліковий запис OSM.",
     dlgVenue: "Кафе / магазин / ресторан має столик",
-    dlgVenueHint: "Це місце майже напевно вже є в OSM — відкрий тут редактор і додай теги <code>changing_table</code>. Крок за кроком: дивись Методи.",
+    dlgVenueHint: "Відкриває MapComplete з поточним видом карти — торкнись місця і дай відповіді на запитання про пеленальний столик. Потрібен безкоштовний обліковий запис OSM. Місця немає? Дивись Методи.",
     dlgFoot: '<a href="{href}#contribute">Як редагувати, крок за кроком</a>',
   },
 };
