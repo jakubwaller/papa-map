@@ -148,13 +148,71 @@ def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
         return R()
 
     edits = ops.osmcha_edits(now=NOW, get=fake_get)
-    assert edits == {"days": 7, "changesets": 3}
+    assert edits["days"] == 7 and edits["changesets"] == 3
     assert seen["url"] == ops.OSMCHA_URL
     assert seen["headers"]["Authorization"] == "Token token"
     # the changeset theme tag is the theme URL, not the id (MapComplete
     # stamps remote themes with forcedId = link)
     assert seen["params"]["metadata"] == f"theme={ops.PAPAMAP_THEME_URL}"
     assert seen["params"]["date__gte"] == "2026-07-27"  # NOW minus 7 days
+
+
+def test_osmcha_edits_groups_by_complete_day(monkeypatch):
+    """The chart's series: one count per complete day the window covers —
+    a day without a changeset is a 0, not a hole, and today (partial at
+    05:30) is left for tomorrow's window to report whole."""
+    monkeypatch.setenv("OSMCHA_TOKEN", "token")
+    features = [{"properties": {"date": d}} for d in
+                ("2026-08-02T09:15:00Z", "2026-08-02T18:00:00Z",
+                 "2026-07-29T12:00:00Z", "2026-08-03T04:00:00Z")]  # last=today
+
+    def fake_get(url, timeout, headers, params):
+        class R:
+            def json(self):
+                return {"count": 4, "features": features}
+        return R()
+
+    edits = ops.osmcha_edits(now=NOW, get=fake_get)   # NOW is 2026-08-03
+    assert edits["changesets"] == 4                   # the dated total is whole
+    assert edits["by_day"] == {"2026-07-27": 0, "2026-07-28": 0,
+                               "2026-07-29": 1, "2026-07-30": 0,
+                               "2026-07-31": 0, "2026-08-01": 0,
+                               "2026-08-02": 2}       # today's edit excluded
+
+
+def test_osmcha_truncated_page_keeps_the_count_but_not_the_days(monkeypatch,
+                                                                capsys):
+    """More changesets than one page: a partial grouping would silently
+    under-draw days, and following pagination repeats OSMCha's expensive
+    scan — so by_day is dropped for the run and the count stays exact."""
+    monkeypatch.setenv("OSMCHA_TOKEN", "token")
+
+    def fake_get(url, timeout, headers, params):
+        class R:
+            def json(self):
+                return {"count": 250, "next": "https://osmcha.org/?page=2",
+                        "features": [{"properties": {"date": "2026-08-02T09:00:00Z"}}]}
+        return R()
+
+    edits = ops.osmcha_edits(now=NOW, get=fake_get)
+    assert edits["changesets"] == 250
+    assert "by_day" not in edits
+    assert "exceeds one page" in capsys.readouterr().err
+
+
+def test_merge_edits_overwrites_fetched_days_and_caps():
+    kept = {"2026-07-27": 1, "2026-08-01": 5}
+    merged = ops.merge_edits(kept, {"by_day": {"2026-08-01": 2,
+                                               "2026-08-02": 3}})
+    assert merged == {"2026-07-27": 1, "2026-08-01": 2, "2026-08-02": 3}
+    assert ops.merge_edits(kept, None) == dict(sorted(kept.items()))
+    assert ops.merge_edits(kept, {"days": 7, "error": "timed out"}) == \
+        dict(sorted(kept.items()))
+    from datetime import date, timedelta
+    many = {(date(2024, 1, 1) + timedelta(days=i)).isoformat(): 1
+            for i in range(500)}
+    assert len(ops.merge_edits(many, {"by_day": {"2026-08-02": 1}})) == \
+        ops.EDITS_HISTORY_DAYS
 
 
 def test_osmcha_edits_failure_reports_itself_rather_than_reading_as_zero(
@@ -196,11 +254,11 @@ def test_osmcha_edits_passes_the_configured_timeout(monkeypatch):
 
         class R:
             def json(self):
-                return {"count": 0}
+                return {"count": 0, "features": []}
         return R()
 
-    assert ops.osmcha_edits(now=NOW, get=fake_get) == {"days": 7,
-                                                       "changesets": 0}
+    edits = ops.osmcha_edits(now=NOW, get=fake_get)
+    assert edits["days"] == 7 and edits["changesets"] == 0
     assert seen["timeout"] == ops.OSMCHA_TIMEOUT_S
 
 

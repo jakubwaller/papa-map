@@ -146,6 +146,11 @@ on 2026-08-13, over 150 s on 2026-08-18 and 0.5 s on 2026-08-19 — so `OSMCHA_T
 to 300 s, well above any measurement, and overridable with `PAPAMAP_OSMCHA_TIMEOUT_S`. If the
 line says UNKNOWN, re-run the check before believing anything about that week.
 
+The OSMCha window is fetched on **every** run, not just digest days: the ops page draws a
+per-day chart of theme changesets, and that series only exists in `ops-state.json`
+(`edits_days`), built a run at a time the way the visits history is. The mail still quotes
+the count on digest days only.
+
 ```cron
 30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1
 ```
@@ -153,7 +158,8 @@ line says UNKNOWN, re-run the check before believing anything about that week.
 The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
 the report as a page plus what the mail has no room for: per-area results and warnings from
 last night's `pipeline.log`, per-region counts with a week's delta from `history.json`, the
-daily run history, the last OSMCha count dated. Everything on it is aggregate; the one number
+daily run history, the last OSMCha count dated, and two per-day movement charts — status
+transitions, and changesets through the site's theme. Everything on it is aggregate; the one number
 it deliberately omits is the Cloudflare request total, because `methods.html` promises
 "keine Analytics" and a traffic figure on a public page reads as exactly that.
 
