@@ -540,23 +540,28 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
         else:
             p.append(f'<p class="muted">No changesets through the theme in '
                      f"the {len(edits_days)} recorded days.</p>\n")
-    elif edits:
+    elif edits and not edits.get("error"):
         # The line above is a 7-day total; without this sentence its lack of
         # a per-day breakdown reads as the chart being broken rather than
-        # young (asked about on day one).
+        # young (asked about on day one). Not under the error line, where a
+        # promise about successes would contradict it — and worded around the
+        # one success that records no split: a week beyond one OSMCha page
+        # (~100 changesets) is counted whole, never split per day.
         p.append('<p class="muted">A per-day chart of these appears here once '
-                 "the first daily OSMCha fetch succeeds — the check asks "
-                 "every run, and each success records a week.</p>\n")
+                 "a daily OSMCha fetch records the split — the check asks "
+                 "every run; a success covers a week, though a week beyond "
+                 "~100 changesets is counted whole rather than split.</p>\n")
 
     acc_series = [e.get("counts", {}).get("accessible") for e in history]
-    if len(acc_series) >= 2:
+    spark = _sparkline(acc_series, "--green")
+    if spark:
         first_d = str(history[0].get("date") or "")
         last_d = str(history[-1].get("date") or "")
         p.append('<p class="muted">Accessible pins in total, one point per '
                  f"nightly run: {_n(acc_series[0])} on {esc(first_d)} → "
                  f"{_n(acc_series[-1])} on {esc(last_d)}. The line every "
                  "green bar above pushes upward.</p>\n")
-        p.append(_sparkline(acc_series, "--green"))
+        p.append(spark)
         p.append(_axis(first_d, last_d))
 
     if private:

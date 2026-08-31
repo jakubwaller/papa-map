@@ -183,15 +183,30 @@ def test_healthy_page_carries_every_section():
 
 
 def test_young_edit_history_is_explained_not_silent():
-    """The OSMCha line is a 7-day total; until the first successful daily
-    fetch there is no per-day series, and saying so beats a chart that looks
-    broken (asked about on day one)."""
+    """The OSMCha line is a 7-day total; until a daily fetch records the
+    per-day split there is no series, and saying so beats a chart that looks
+    broken (asked about on day one). The sentence allows for the one success
+    that records no split — a week beyond one OSMCha page is counted whole —
+    and never renders under the failure line, which it would contradict."""
     html = render(edits_days=None)
-    assert "appears here once the first daily OSMCha fetch succeeds" in html
+    assert "appears here once a daily OSMCha fetch records the split" in html
     html = render(edits_days={"2026-08-22": 3})
     assert "appears here once" not in html
     html = render(edits=None, edits_days=None)
     assert "appears here once" not in html  # no OSMCha at all, no promise
+    html = render(edits={"days": 7, "error": "Read timed out."},
+                  edits_days=None)
+    assert "Not zero." in html and "appears here once" not in html
+
+
+def test_no_orphan_axis_when_the_sparkline_draws_nothing():
+    """A history whose entries carry no counts gives _sparkline nothing to
+    draw; the caption and date axis must vanish with it rather than label an
+    empty space (reviewer finding on PR #78)."""
+    html = render(history=[{"date": "2026-08-21"}, {"date": "2026-08-22"}])
+    assert "Accessible pins in total" not in html
+    # only the two bar charts' axes remain
+    assert html.count('class="bar-axis"') == html.count('class="bars"')
 
 
 def test_unfinished_or_failed_build_is_never_healthy():
