@@ -280,13 +280,21 @@ def _day_bars(rows: list[tuple], fill_var: str = "--green") -> str:
             bar = '<div class="bar empty"></div>'
         cols.append(f'<div class="bar-col" title="{esc(tip)}">{bar}</div>')
     return ('<div class="bars">' + "".join(cols) + "</div>\n"
-            f'<div class="bar-axis"><span>{esc(rows[0][0])}</span>'
-            f"<span>{esc(rows[-1][0])}</span></div>\n")
+            + _axis(rows[0][0], rows[-1][0]))
+
+
+def _axis(first, last) -> str:
+    """The one axis any of the charts gets: the date range, first and last
+    under the ends of the drawing. Values live in captions and tooltips."""
+    return (f'<div class="bar-axis"><span>{esc(first)}</span>'
+            f"<span>{esc(last)}</span></div>\n")
 
 
 def _sparkline(values: list[int], color_var: str) -> str:
-    """One polyline, no axes: the shape is the information, the table below
-    has the numbers. Two points minimum, or there is no line to draw."""
+    """One polyline, no axes of its own: the caller says what the line is and
+    puts _axis() under it — SVG text is off the table because the viewBox is
+    stretched non-uniformly (preserveAspectRatio="none"), which would warp
+    glyphs. Two points minimum, or there is no line to draw."""
     pts = [v for v in values if isinstance(v, (int, float))]
     if len(pts) < 2:
         return ""
@@ -380,6 +388,7 @@ def _visitors(visits: dict | None) -> str:
         parts.append(f'<p class="muted">Daily uniques, {esc(days[0][0])} → '
                      f"{esc(days[-1][0])}</p>\n")
         parts.append(_sparkline(uniques, "--accent"))
+        parts.append(_axis(days[0][0], days[-1][0]))
     # The whole history, newest first — the state keeps up to
     # ops.VISITS_HISTORY_DAYS of it and there is no reason for the page to
     # show less than it holds. It is inside a <details> and a scroll box.
@@ -531,12 +540,24 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
         else:
             p.append(f'<p class="muted">No changesets through the theme in '
                      f"the {len(edits_days)} recorded days.</p>\n")
+    elif edits:
+        # The line above is a 7-day total; without this sentence its lack of
+        # a per-day breakdown reads as the chart being broken rather than
+        # young (asked about on day one).
+        p.append('<p class="muted">A per-day chart of these appears here once '
+                 "the first daily OSMCha fetch succeeds — the check asks "
+                 "every run, and each success records a week.</p>\n")
 
     acc_series = [e.get("counts", {}).get("accessible") for e in history]
     if len(acc_series) >= 2:
-        p.append(f'<p class="muted">Accessible, last {len(history)} runs '
-                 f'({_n(acc_series[0])} → {_n(acc_series[-1])})</p>\n')
+        first_d = str(history[0].get("date") or "")
+        last_d = str(history[-1].get("date") or "")
+        p.append('<p class="muted">Accessible pins in total, one point per '
+                 f"nightly run: {_n(acc_series[0])} on {esc(first_d)} → "
+                 f"{_n(acc_series[-1])} on {esc(last_d)}. The line every "
+                 "green bar above pushes upward.</p>\n")
         p.append(_sparkline(acc_series, "--green"))
+        p.append(_axis(first_d, last_d))
 
     if private:
         p.append(_visitors(visits))

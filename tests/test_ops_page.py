@@ -174,7 +174,24 @@ def test_healthy_page_carries_every_section():
     assert "Bayern" in html and "Berlin" in html
     assert "2026-08-21" in html and 'class="spark"' in html
     assert html.count('class="bars"') == 2  # transitions + theme edits
+    # Every drawing carries a date axis: two bar charts plus the sparkline.
+    assert html.count('class="bar-axis"') == 3
+    # The sparkline's caption says what the line is, in dates and numbers.
+    assert ("Accessible pins in total, one point per nightly run: 1,810 on "
+            "2026-08-21 → 1,821 on 2026-08-23") in html
     assert "no analytics" in html
+
+
+def test_young_edit_history_is_explained_not_silent():
+    """The OSMCha line is a 7-day total; until the first successful daily
+    fetch there is no per-day series, and saying so beats a chart that looks
+    broken (asked about on day one)."""
+    html = render(edits_days=None)
+    assert "appears here once the first daily OSMCha fetch succeeds" in html
+    html = render(edits_days={"2026-08-22": 3})
+    assert "appears here once" not in html
+    html = render(edits=None, edits_days=None)
+    assert "appears here once" not in html  # no OSMCha at all, no promise
 
 
 def test_unfinished_or_failed_build_is_never_healthy():
