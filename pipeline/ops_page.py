@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import ast
 import re
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from .pages import ICON, STYLE, esc
 
@@ -48,6 +48,20 @@ OPS_STYLE = """\
   .kpi span { color: var(--muted); font-size: 0.85rem; }
   details > summary { cursor: pointer; font-weight: 600; margin-top: 1.4rem; }
   svg.spark { width: 100%; height: 4rem; display: block; margin: 0.4rem 0; }
+  /* Column charts, one flex column per calendar day — the Bürgerwecker admin
+     pattern: no library, the exact numbers live in each column's title. */
+  .bars { display: flex; align-items: flex-end; gap: 2px; height: 110px;
+          margin: 0.4rem 0 0.15rem; }
+  .bar-col { flex: 1 1 0; min-width: 0; height: 100%; display: flex;
+             flex-direction: column; justify-content: flex-end; }
+  .bar-col .bar { border-radius: 2px 2px 0 0; background: var(--line);
+                  display: flex; flex-direction: column;
+                  justify-content: flex-end; overflow: hidden; }
+  .bar-col .bar-fill { width: 100%; }
+  .bar-col:hover .bar { filter: brightness(1.12); }
+  .bar-col .bar.empty { min-height: 2px; opacity: 0.45; }
+  .bar-axis { display: flex; justify-content: space-between; font-size: 0.72rem;
+              color: var(--muted); margin-bottom: 0.8rem; }
   td.pos { color: var(--green); } td.neg { color: var(--red); }
   footer { margin-top: 3rem; font-size: 0.85rem; color: var(--muted);
            border-top: 1px solid var(--line); padding-top: 0.8rem; }
@@ -190,6 +204,86 @@ def _pct(part, whole) -> str:
     return f"{100 * part / whole:.1f} %" if whole else "–"
 
 
+# One flex column per calendar day: at 60 the columns are still individually
+# hoverable on a phone, and the table/tooltips carry anything older.
+CHART_DAYS = 60
+
+
+def _day_range(first: str, last: str, cap: int = CHART_DAYS) -> list[str]:
+    """Every calendar day from `first` to `last` inclusive, at most the `cap`
+    newest — the continuous axis is what makes a missed night visible as a
+    gap instead of silently stitching its neighbours together."""
+    try:
+        d1 = date.fromisoformat(last)
+        d0 = max(date.fromisoformat(first), d1 - timedelta(days=cap - 1))
+    except ValueError:
+        return []
+    return [(d0 + timedelta(days=i)).isoformat()
+            for i in range((d1 - d0).days + 1)]
+
+
+def transition_rows(history: list[dict]) -> list[tuple]:
+    """(day, tooltip, transitions, to_accessible) per calendar day for the
+    movement chart. Bar height counts status transitions only: new/gone swing
+    by the thousands when an area fails or comes back, and would flatten the
+    real signal — they stay in the tooltip. None = no run that day."""
+    by_date = {e["date"]: e for e in history
+               if isinstance(e.get("date"), str)}
+    days = sorted(by_date)
+    rows = []
+    for d in _day_range(days[0], days[-1]) if days else []:
+        e = by_date.get(d)
+        if e is None:
+            rows.append((d, f"{d} · no run", None, 0))
+            continue
+        ch = e.get("changes") or {}
+        ta = ch.get("to_accessible", 0)
+        tf, tu = ch.get("to_female_only", 0), ch.get("to_unknown", 0)
+        tip = (f"{d} · {ta} → accessible, {tf} → female-only, {tu} → unknown"
+               f" · +{ch.get('new', 0)} new, -{ch.get('gone', 0)} gone")
+        rows.append((d, tip, ta + tf + tu, ta))
+    return rows
+
+
+def edits_rows(edits_days: dict | None) -> list[tuple]:
+    """(day, tooltip, changesets, changesets) per calendar day for the
+    theme-edits chart. A day the state holds a 0 for is a real zero; a day it
+    never fetched (OSMCha down, token unset) is None, not a claimed quiet."""
+    days = sorted(edits_days or {})
+    rows = []
+    for d in _day_range(days[0], days[-1]) if days else []:
+        n = (edits_days or {}).get(d)
+        if n is None:
+            rows.append((d, f"{d} · not fetched", None, 0))
+        else:
+            rows.append((d, f"{d} · {n} changeset{'' if n == 1 else 's'}",
+                         n, n))
+    return rows
+
+
+def _day_bars(rows: list[tuple], fill_var: str = "--green") -> str:
+    """The column chart itself: bar height from the shared max, the coloured
+    fill the named share of it, exact numbers in each column's title. Empty
+    string when no day has anything above zero — a flat row of stubs reads as
+    a rendering bug, and the callers say 'nothing yet' in words instead."""
+    top = max((v for _, _, v, _ in rows if v), default=0)
+    if not top:
+        return ""
+    cols = []
+    for d, tip, value, fill in rows:
+        if value:
+            inner = (f'<div class="bar-fill" style="height:{100 * fill / value:.1f}%;'
+                     f'background:var({fill_var})"></div>' if fill else "")
+            bar = (f'<div class="bar" style="height:{100 * value / top:.1f}%">'
+                   f"{inner}</div>")
+        else:
+            bar = '<div class="bar empty"></div>'
+        cols.append(f'<div class="bar-col" title="{esc(tip)}">{bar}</div>')
+    return ('<div class="bars">' + "".join(cols) + "</div>\n"
+            f'<div class="bar-axis"><span>{esc(rows[0][0])}</span>'
+            f"<span>{esc(rows[-1][0])}</span></div>\n")
+
+
 def _sparkline(values: list[int], color_var: str) -> str:
     """One polyline, no axes: the shape is the information, the table below
     has the numbers. Two points minimum, or there is no line to draw."""
@@ -303,14 +397,16 @@ def _visitors(visits: dict | None) -> str:
 def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                 changes: dict | None, history: list[dict],
                 anomalies: list[str], edits: dict | None = None,
+                edits_days: dict | None = None,
                 regions: dict | None = None, build: dict | None = None,
                 site_url: str = "https://papamap.de",
                 private: bool = False, visits: dict | None = None) -> str:
     """The whole page. `history` is the ops state's daily list (oldest first,
     the entry for today already appended); `regions` is region_rows()'s
-    output; `build` is parse_build_log()'s; `edits` the cached OSMCha line.
-    `private` adds the Visitors section from `visits` ({date: {requests,
-    uniques}}); the public page ignores `visits` entirely, by design."""
+    output; `build` is parse_build_log()'s; `edits` the cached OSMCha line,
+    `edits_days` its per-day history ({date: changesets}). `private` adds the
+    Visitors section from `visits` ({date: {requests, uniques}}); the public
+    page ignores `visits` entirely, by design."""
     now = now.astimezone(timezone.utc)
     age = _age_hours(stats, now)
     local = (stats or {}).get("local") or {}
@@ -410,6 +506,13 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                               _sum_changes(window) if window else None))
     p.append("</tbody>\n</table>\n</div>\n")
 
+    chart = _day_bars(transition_rows(history))
+    if chart:
+        p.append('<p class="muted">Status transitions per day — green is '
+                 "→ accessible, the grey rest the other transitions. Hover a "
+                 "day for its numbers, new/gone included.</p>\n")
+        p.append(chart)
+
     if edits and edits.get("error"):
         p.append(f'<p>Edits through the PapaMap theme (OSMCha, {edits.get("days", 7)} d): '
                  f'<span class="bad">unknown</span> — query failed '
@@ -418,6 +521,16 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
         as_of = f' as of {esc(edits["as_of"])}' if edits.get("as_of") else ""
         p.append(f'<p>Edits through the PapaMap theme (OSMCha, {edits.get("days", 7)} d'
                  f'{as_of}): <b>{_n(edits.get("changesets"))}</b> changesets.</p>\n')
+
+    if edits_days:
+        chart = _day_bars(edits_rows(edits_days), "--accent")
+        if chart:
+            p.append('<p class="muted">Changesets through the PapaMap theme '
+                     "per day.</p>\n")
+            p.append(chart)
+        else:
+            p.append(f'<p class="muted">No changesets through the theme in '
+                     f"the {len(edits_days)} recorded days.</p>\n")
 
     acc_series = [e.get("counts", {}).get("accessible") for e in history]
     if len(acc_series) >= 2:

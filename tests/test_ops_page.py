@@ -150,6 +150,7 @@ def render(**kw):
                              to_accessible=2, to_unknown=1)],
                 anomalies=[], edits={"days": 7, "changesets": 4,
                                      "as_of": "2026-08-17"},
+                edits_days={"2026-08-21": 1, "2026-08-22": 3},
                 regions=ops_page.region_rows(history_json([
                     ("2026-08-22", {"Bayern": [110, 20, 495]},
                      {"Berlin": [13, 1, 298]})])),
@@ -172,6 +173,7 @@ def test_healthy_page_carries_every_section():
     assert "Baden-Württemberg" in html
     assert "Bayern" in html and "Berlin" in html
     assert "2026-08-21" in html and 'class="spark"' in html
+    assert html.count('class="bars"') == 2  # transitions + theme edits
     assert "no analytics" in html
 
 
@@ -209,7 +211,7 @@ def test_cloudflare_visits_never_reach_the_page():
 
 def test_page_survives_missing_everything():
     html = render(stats=None, counts=None, changes=None, history=[],
-                  edits=None, regions=None, build=None)
+                  edits=None, edits_days=None, regions=None, build=None)
     assert "no dataset" in html
     assert "changing_tables.geojson is missing" in html
     assert "No build found" in html
@@ -229,6 +231,66 @@ def test_area_names_are_escaped():
     html = render(build=ops_page.parse_build_log(
         "  <script>alert(1)</script>: ct=1 play=1 toilets=1\n{'features': 1}\n"))
     assert "<script>alert" not in html and "&lt;script&gt;" in html
+
+
+# ---- The movement charts -----------------------------------------------------
+
+def test_transition_rows_keep_the_axis_continuous():
+    """A missed night is a visible gap, not two days silently stitched
+    together — and bar height counts transitions only, because new/gone swing
+    by the thousands when an area fails or comes back."""
+    rows = ops_page.transition_rows([
+        day("2026-08-20", 1, 1, 1, to_accessible=4, to_female_only=1,
+            new=2000, gone=3),
+        day("2026-08-22", 1, 1, 1, to_accessible=2, new=3, gone=1),
+    ])
+    assert [r[0] for r in rows] == ["2026-08-20", "2026-08-21", "2026-08-22"]
+    assert rows[0][2] == 5 and rows[0][3] == 4       # new/gone not in the bar
+    assert "+2000 new" in rows[0][1]                 # but in the tooltip
+    assert rows[1] == ("2026-08-21", "2026-08-21 · no run", None, 0)
+    assert rows[2][1] == ("2026-08-22 · 2 → accessible, 0 → female-only, "
+                          "0 → unknown · +3 new, -1 gone")
+
+
+def test_transition_rows_show_at_most_chart_days():
+    from datetime import date, timedelta
+    hist = [day((date(2026, 1, 1) + timedelta(days=i)).isoformat(), 1, 1, 1,
+                to_accessible=1) for i in range(200)]
+    rows = ops_page.transition_rows(hist)
+    assert len(rows) == ops_page.CHART_DAYS
+    assert rows[-1][0] == "2026-07-19"               # the newest day survives
+
+
+def test_edits_rows_tell_zero_from_not_fetched():
+    rows = ops_page.edits_rows({"2026-08-20": 2, "2026-08-22": 0})
+    assert rows[0] == ("2026-08-20", "2026-08-20 · 2 changesets", 2, 2)
+    assert rows[1] == ("2026-08-21", "2026-08-21 · not fetched", None, 0)
+    assert rows[2] == ("2026-08-22", "2026-08-22 · 0 changesets", 0, 0)
+
+
+def test_charts_scale_bars_and_carry_the_numbers_in_tooltips():
+    html = render()
+    assert "Status transitions per day" in html
+    assert "Changesets through the PapaMap theme per day" in html
+    # 2026-08-22 is the tallest movement day (9 transitions, all accessible);
+    # 2026-08-23 is a third of it. The exact split rides in the title.
+    assert 'title="2026-08-22 · 9 → accessible, 0 → female-only, 0 → unknown · +5 new, -0 gone"' in html
+    assert '<div class="bar" style="height:100.0%">' in html
+    assert '<div class="bar" style="height:33.3%">' in html
+    assert 'title="2026-08-22 · 3 changesets"' in html
+    assert "background:var(--green)" in html and "background:var(--accent)" in html
+    # 2026-08-21 had zero transitions and one changeset: an empty stub in the
+    # first chart, a real bar in the second.
+    assert '<div class="bar empty">' in html
+
+
+def test_all_zero_edit_history_is_words_not_stub_bars():
+    html = render(edits_days={"2026-08-21": 0, "2026-08-22": 0})
+    assert "No changesets through the theme in the 2 recorded days" in html
+    assert html.count('class="bars"') == 1           # the movement chart stays
+    html = render(edits_days=None)
+    assert "No changesets through the theme" not in html
+    assert html.count('class="bars"') == 1
 
 
 # ---- run_check writes it -----------------------------------------------------
@@ -277,21 +339,36 @@ def test_run_check_writes_the_page_and_caches_edits(tmp_path):
             build_log_path=str(tmp_path / "pipeline.log"),
             private_html_path=str(tmp_path / "out" / "private" / "ops.html"))
 
-    run(NOW, {"days": 7, "changesets": 9})  # Sunday: no digest, no fetch
+    # Fetched every run, Sunday included — the per-day chart is built run by
+    # run, the way the visits history is.
+    run(NOW, {"days": 7, "changesets": 9,
+              "by_day": {"2026-08-21": 1, "2026-08-22": 8}})
     html = html_path.read_text()
     assert "PapaMap ops" in html and "Bayern" in html and "finished" in html
-    assert "changesets" not in html  # nothing fetched yet, nothing cached
+    assert "<b>9</b> changesets" in html and "as of 2026-08-23" in html
+    state = json.loads(state_path.read_text())
+    # by_day lives in edits_days, not inside the cached line
+    assert state["edits"] == {"days": 7, "changesets": 9, "as_of": "2026-08-23"}
+    assert state["edits_days"] == {"2026-08-21": 1, "2026-08-22": 8}
 
-    run(monday, {"days": 7, "changesets": 9})
+    run(monday, {"days": 7, "changesets": 9,
+                 "by_day": {"2026-08-22": 8, "2026-08-23": 2}})
     state = json.loads(state_path.read_text())
     assert state["edits"] == {"days": 7, "changesets": 9, "as_of": "2026-08-24"}
-    assert "<b>9</b> changesets" in html_path.read_text()
+    assert state["edits_days"] == {"2026-08-21": 1, "2026-08-22": 8,
+                                   "2026-08-23": 2}
+    html = html_path.read_text()
+    assert "<b>9</b> changesets" in html
+    assert "Changesets through the PapaMap theme per day" in html
 
-    # A failed fetch keeps the last good number, dated.
+    # A failed fetch keeps the last good number, dated, and the day history.
     run(datetime(2026, 8, 31, 5, 30, tzinfo=timezone.utc),
         {"days": 7, "error": "timed out"})
     html = html_path.read_text()
     assert "<b>9</b> changesets" in html and "as of 2026-08-24" in html
+    state = json.loads(state_path.read_text())
+    assert state["edits_days"] == {"2026-08-21": 1, "2026-08-22": 8,
+                                   "2026-08-23": 2}
 
 
 def test_run_check_with_empty_html_path_writes_nothing(tmp_path):

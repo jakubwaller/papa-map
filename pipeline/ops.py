@@ -25,7 +25,7 @@ import os
 import re
 import smtplib
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -51,6 +51,10 @@ OPS_PRIVATE_HTML_PATH = os.environ.get(
     "PAPAMAP_OPS_PRIVATE_HTML_PATH",
     str(Path(STATS_PATH).parent / "private" / "ops.html"))
 VISITS_HISTORY_DAYS = 400
+# The per-day theme-changeset history, same idea as the visits history: kept
+# far longer than any chart shows, because the state file is the only place
+# the series exists at all.
+EDITS_HISTORY_DAYS = 400
 # How far back to ask Cloudflare for per-day figures. The free plan does NOT
 # forget a day after a week: measured 2026-08-23, `httpRequests1dGroups` served
 # every day back to this zone's first (2026-07-29, 26 rows). Fetch the whole
@@ -275,7 +279,9 @@ def osmcha_edits(days=7, now=None, get=requests.get):
     OSMCha's metadata filter matches case-insensitive substrings. Optional:
     needs OSMCHA_TOKEN (free account on osmcha.org, token under account
     settings); absent or failing, the report just omits the line. The count
-    is aggregate — no mapper data is read or stored."""
+    is aggregate — no mapper data is read or stored: the changesets come back
+    as features, but only their dates are counted (by_day, the chart's
+    series) and the rest is dropped on the floor."""
     token = os.environ.get("OSMCHA_TOKEN")
     if not token:
         return None
@@ -286,14 +292,58 @@ def osmcha_edits(days=7, now=None, get=requests.get):
         r = get(OSMCHA_URL, timeout=OSMCHA_TIMEOUT_S,
                 headers={"Authorization": f"Token {token}"},
                 params={"metadata": f"theme={PAPAMAP_THEME_URL}",
-                        "date__gte": since, "page_size": "1"})
-        return {"days": days, "changesets": r.json()["count"]}
+                        "date__gte": since, "page_size": "100"})
+        data = r.json()
+        out = {"days": days, "changesets": data["count"]}
+        by_day = edits_by_day(data, since, now)
+        if by_day is not None:
+            out["by_day"] = by_day
+        return out
     except Exception as exc:  # like visits: decoration, never fail the check
         # Reported, not swallowed. A dropped line and a genuine zero both read
         # as "nobody edited through the site this week", and that is the one
         # number the digest exists to carry — so the failure says so out loud.
         print(f"WARN: OSMCha query failed: {exc}", file=sys.stderr)
         return {"days": days, "error": _short_exc(exc)}
+
+
+def edits_by_day(data, since: str, now: datetime) -> dict | None:
+    """{date: changesets} for every complete day the window covers, from one
+    OSMCha page. Days without a changeset are 0, not absent — the chart has
+    to tell 'zero edits' from 'never fetched'. Today is excluded (a partial
+    day; tomorrow's window covers it whole). None when the answer is bigger
+    than the page: a truncated grouping would under-draw days silently, and
+    following pagination would repeat OSMCha's expensive JSONB scan — the
+    dated total is still exact, only the per-day split waits."""
+    if data.get("next"):
+        print("WARN: OSMCha window exceeds one page; per-day counts "
+              "skipped this run", file=sys.stderr)
+        return None
+    today = now.strftime("%Y-%m-%d")
+    try:
+        d = date.fromisoformat(since)
+    except ValueError:
+        return None
+    counts: dict[str, int] = {}
+    while d.isoformat() < today:
+        counts[d.isoformat()] = 0
+        d += timedelta(days=1)
+    for f in data.get("features") or []:
+        day = str((f.get("properties") or {}).get("date") or "")[:10]
+        if day in counts:
+            counts[day] += 1
+    return counts
+
+
+def merge_edits(kept: dict, edits: dict | None) -> dict:
+    """merge_visits' sibling for the per-day theme-changeset counts: every
+    complete day today's fetch covered overwrites the stored one (the fetch
+    is OSMCha's fresher answer), capped and sorted. A fetch without by_day —
+    failed, truncated, or token unset — changes nothing."""
+    merged = dict(kept)
+    for day, n in ((edits or {}).get("by_day") or {}).items():
+        merged[day] = int(n)
+    return dict(sorted(merged.items())[-EDITS_HISTORY_DAYS:])
 
 
 def _short_exc(exc: Exception) -> str:
@@ -347,8 +397,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
 
     state = load_json(state_path) or {"statuses": {}, "history": []}
     prev_statuses, history = state["statuses"], state["history"]
-    # The OSMCha count is only fetched on digest days (see below), so the
-    # page shows the last one it got, dated — a number without its date
+    # The last OSMCha count that actually arrived, dated — the fetch can fail
+    # for days (their metadata scan times out), and a number without its date
     # would read as today's.
     cached_edits = state.get("edits")
     last_counts = history[-1]["counts"] if history else None
@@ -360,23 +410,30 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
 
     anomalies = find_anomalies(stats, counts, last_counts, now)
     weekly = now.weekday() == WEEKLY_DIGEST_WEEKDAY
-    # Visits every run, not just digest days: the private page's curve is
-    # built from per-day figures Cloudflare only keeps for about a week.
-    # The mail still carries them on digest days only.
+    # Visits and edits every run, not just digest days: the page's per-day
+    # charts are built run by run — the visits curve from figures Cloudflare
+    # keeps for about a month, the theme-edits bars from a window OSMCha is
+    # asked for daily. The mail still carries both on digest days only.
     visits = visits_fetch(now=now)
-    edits = edits_fetch(now=now) if (anomalies or weekly) else None
+    edits = edits_fetch(now=now)
     report = render_report(counts, changes, history, anomalies,
                            visits if (anomalies or weekly) else None, edits)
     visits_history = merge_visits(state.get("visits") or {}, visits, now)
+    edits_days = merge_edits(state.get("edits_days") or {}, edits)
 
     if edits and not edits.get("error"):
-        cached_edits = dict(edits, as_of=now.strftime("%Y-%m-%d"))
+        # by_day stays out of the cached line: the merged history above is
+        # its home, and the line is just "N changesets (7 d, dated)".
+        cached_edits = {"days": edits["days"], "changesets": edits["changesets"],
+                        "as_of": now.strftime("%Y-%m-%d")}
     if cur_statuses is not None:
         history.append({"date": now.strftime("%Y-%m-%d"), "counts": counts,
                         "changes": changes or diff_statuses({}, {})})
         state = {"statuses": cur_statuses, "history": history[-HISTORY_DAYS:]}
         if cached_edits:
             state["edits"] = cached_edits
+        if edits_days:
+            state["edits_days"] = edits_days
         if visits_history:
             state["visits"] = visits_history
         tmp = state_path.with_suffix(".tmp")
@@ -388,7 +445,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
                     else private_html_path)
     ctx = dict(now=now, stats=stats, counts=counts, changes=changes,
                history=history[-HISTORY_DAYS:], anomalies=anomalies,
-               edits=cached_edits,
+               edits=cached_edits, edits_days=edits_days,
                history_path=history_path or OPS_HISTORY_PATH,
                build_log_path=build_log_path or BUILD_LOG_PATH)
     if html_path:
