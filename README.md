@@ -17,6 +17,8 @@ table is in — globally ~485 places record a women's-room-only table vs ~71 men
 this site measures what is measurable and turns the gaps into edits. The honest full story,
 including the exact classification rule: [`web/methods.html`](web/methods.html).
 
+The idea came from reading [*Invisible Women*](https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men) by Caroline Criado Perez.
+
 ## Setup
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
