@@ -3,9 +3,9 @@
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox } from "./datasource.js?v=eu4";
+         parseBbox } from "./datasource.js?v=w46";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=eu4";
+         langUrl } from "./i18n.js?v=w46";
 
 // ---- Language: German default, thirty-one languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -95,46 +95,20 @@ const OSM_STYLE = {
 // Germany, opened a little wider so Denmark shows at the top rather than
 // filling half the screen: Germany stays the subject, and the north edge at
 // 56.6°N reaches past Copenhagen and Aarhus so Danish pins are visible from
-// the start. Aalborg and Skagen sit above it — maxBounds leaves them a pan
-// away, and the locate button lands a Dane on their own city directly.
-// maxBounds leaves margin so edge cities aren't pinned to the screen border —
-// and has to be roomy enough not to bind on either axis. A landscape window
-// can only zoom out until maxBounds' WIDTH fills it (the old 28°-wide box hit
-// that stop with Denmark still off-screen), and its NORTH edge caps how far
-// fitHome() can push the map down under the topbar — on a portrait phone that
-// header is ~4.6° of latitude at home zoom, so the box clears the home view by
-// more than that, and far enough that Skagen stays reachable by panning.
-// The north edge is 70°N, not the 65° Denmark alone needed: a build that
-// sweeps the neighbours includes Sweden, whose northernmost pin sits at
-// 68.43°N (the country reaches 69.06°N at Treriksröset), and a pin outside
-// maxBounds cannot be panned to at all. HOME_BOUNDS is deliberately left
-// alone: it is the box the map fits, not the extent it shows, and on any real
-// viewport the fit spills well past it — which is why the neighbours already
-// render as empty space today. So this is the one line here that changes what
-// papamap.de does before the sweep is widened, and all it does is let a
-// visitor pan 5° further north over sea.
-// The Europe-complete sweep (2026-08-22) moved every edge — the third time
-// an expansion has hit this box — so each edge now carries the pin that
-// binds it, and the next country checks against this list instead of
-// rediscovering the trap the hard way:
-//   west  -32:  the Azores (-31.3°W). Portugal answers whole, islands and
-//               all — unlike France, whose overseas régions the allowlist
-//               excludes. Iceland (-24.5°W) also lived past the old -12.
-//   south  27:  the Canary Islands (27.6°N), same whole-country logic for
-//               Spain (Ceuta and Melilla ride along); the Mediterranean
-//               alone would only need ~34 (Crete 34.8, Malta 35.8).
-//   east   41:  Ukraine's eastern border (40.2°E); Cyprus (34.6°E) also sat
-//               past the old 32.
-//   north  74.5: mainland Norway at Nordkapp (71.2°N) — but the margin is
-//               ~3°, not the ~0.5° the other edges get, because the topbar
-//               overlays the top of the canvas (#map is inset:0, #topbar sits
-//               on it) and only THIS edge is hidden behind it. maxBounds caps
-//               the canvas edge, so at minZoom 3.5 the topbar's ~140px covers
-//               up to ~3° of latitude: with the old 71.5 cap, everything
-//               north of Tromsø was stuck under the header at full zoom-out
-//               and only surfaced after zooming in. If the swept data shows
-//               Svalbard pins (~78°N, the Norway relation may include it),
-//               this edge must follow the data, not this comment.
+// the start. Aalborg and Skagen sit above it, a pan away, and the locate
+// button lands a Dane on their own city directly. HOME_BOUNDS is the box the
+// map fits, not the extent it shows: on any real viewport the fit spills well
+// past it, and fitHome() re-fits it under the topbar once that has a height.
+// There is no maxBounds any more. The box was Europe's ([[-32, 27], [41,
+// 74.5]] — Azores, Canaries, Ukraine's east, Nordkapp plus ~3° so the topbar
+// does not hide Tromsø at full zoom-out), and every expansion moved an edge;
+// the fourth, Australia and New Zealand (2026-09-04), is on the other side of
+// the planet, and a box holding both hemispheres constrains nothing. Without
+// it a desktop can zoom out to minZoom over the whole dataset — one WebGL
+// circle layer, which is fine at 20k pins — and the data decides where a pin
+// can be, not this file. A country page's "open on the map" link carries its
+// own ?bbox=, and the locate button lands a visitor on their own country, so
+// the home view can stay Germany.
 // Rotate/pitch gestures are locked: on a phone an off-axis pinch rotates the
 // map instead of zooming, which reads as jank.
 const HOME_BOUNDS = [[5.5, 47.1], [15.4, 56.6]];
@@ -149,12 +123,10 @@ const VIEW_BOUNDS =
 const map = new maplibregl.Map({
   container: "map", style: OSM_STYLE,
   bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 },
-  maxBounds: [[-32, 27], [41, 74.5]],
   // 3.5, not the old 4.5: fitHome() re-fits under a topbar that eats a third
   // of a portrait phone (half of a landscape one), and the old floor clamped
   // that fit while Denmark — or, in landscape, Bavaria — was still off-screen.
-  // Only narrow viewports ever reach it; on a desktop maxBounds' width stops
-  // the zoom-out long before.
+  // With no maxBounds this floor is now the only stop on the way out.
   minZoom: 3.5, maxZoom: 18, attributionControl: false,
   pitchWithRotate: false, touchPitch: false,
 });
@@ -572,7 +544,9 @@ document.getElementById("locate").addEventListener("click", () => {
 const addDialog = document.getElementById("add-dialog");
 
 document.getElementById("add-place").addEventListener("click", () => {
-  const c = map.getCenter(), z = map.getZoom();
+  // wrap(): with no maxBounds a pan past the antimeridian leaves lng at 182,
+  // which MapComplete reads as somewhere else entirely.
+  const c = map.getCenter().wrap(), z = map.getZoom();
   document.getElementById("add-toilet-link").href = mapCompleteAddUrl(c.lng, c.lat, z, lang);
   document.getElementById("add-venue-link").href = mapCompleteVenueUrl(c.lng, c.lat, z, lang);
   addDialog.showModal();

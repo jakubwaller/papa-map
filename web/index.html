@@ -5,16 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f2f5f3" />
   <title>PapaMap — Wickeltische, die ein Vater erreicht</title>
-  <!-- 44 countries since the Europe-complete sweep of 2026-08-22; counted
+  <!-- 46 countries: the 44 of the Europe-complete sweep (2026-08-22) plus
+       Australia and New Zealand (2026-09-04); counted
        here, not listed — the names alone would run far past the ~160
        characters Google shows, so the point of the sentence would fall
-       outside the snippet. The JSON-LD block below names all 44, where
+       outside the snippet. The JSON-LD block below names all 46, where
        length costs nothing. The numeral, not "vierundvierzig": the digit
        survives the next expansion as a two-character diff, and it is what
        the stats strip renders anyway. -->
-  <meta name="description" content="Eine Karte der Wickeltische in 44 europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
+  <meta name="description" content="Eine Karte der Wickeltische in 46 Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
   <meta property="og:title" content="PapaMap — Wickeltische, die ein Vater erreicht" />
-  <meta property="og:description" content="Eine Karte der Wickeltische in 44 europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
+  <meta property="og:description" content="Eine Karte der Wickeltische in 46 Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://papamap.de/" />
   <meta property="og:image" content="https://papamap.de/og-image.jpg?v=eu44" />
@@ -89,8 +90,8 @@
        index it as one. Deliberately free of table counts — the pipeline
        rewrites the data nightly and a hard-coded number would rot within a
        day; the country count only moves when the sweep itself grows.
-       spatialCoverage names all 44 instead of summarising them: a machine
-       reading "44 europäische Länder" learns nothing about which. Germany
+       spatialCoverage names all 46 instead of summarising them: a machine
+       reading "46 Länder" learns nothing about which. Germany
        and Denmark keep OSM's endonyms; every country added since carries the
        plain English name the pipeline selects it by, which is also what
        stats.json and the leaderboard show. France is named as the country
@@ -100,8 +101,8 @@
   {
     "@context": "https://schema.org",
     "@type": "Dataset",
-    "name": "PapaMap — Wickeltische in 44 europäischen Ländern",
-    "description": "Wickeltische in 44 europäischen Ländern — von Island bis Zypern, von Portugal bis zur Ukraine — aus OpenStreetMap, klassifiziert danach, ob der Tisch für einen Vater erreichbar ist (Herren-/Unisex-WC oder eigener Wickelraum) oder nur im Damen-WC steht.",
+    "name": "PapaMap — Wickeltische in 46 Ländern",
+    "description": "Wickeltische in 46 Ländern — von Island bis Zypern, von Portugal bis zur Ukraine, dazu Australien und Neuseeland — aus OpenStreetMap, klassifiziert danach, ob der Tisch für einen Vater erreichbar ist (Herren-/Unisex-WC oder eigener Wickelraum) oder nur im Damen-WC steht.",
     "url": "https://papamap.de/",
     "inLanguage": ["de", "en", "da", "nl", "fr", "it", "cs", "pl", "sv",
                    "bs", "ca", "et", "es", "hr", "is", "lv", "lt", "hu",
@@ -156,7 +157,9 @@
       { "@type": "Country", "name": "Kosovo" },
       { "@type": "Country", "name": "Moldova" },
       { "@type": "Country", "name": "Ukraine" },
-      { "@type": "Country", "name": "Belarus" }
+      { "@type": "Country", "name": "Belarus" },
+      { "@type": "Country", "name": "Australia" },
+      { "@type": "Country", "name": "New Zealand" }
     ],
     "distribution": {
       "@type": "DataDownload",
@@ -168,7 +171,7 @@
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=eu4" />
+  <link rel="stylesheet" href="style.css?v=w46" />
 </head>
 <body>
   <div id="map"></div>
@@ -200,7 +203,7 @@
         <span class="wordmark">
           <span class="name">PapaMap</span>
           <!-- Replaced by app.js with the area the pipeline actually swept. -->
-          <span class="city" id="scope" data-i18n="areaFallback">44 europäische Länder</span>
+          <span class="city" id="scope" data-i18n="areaFallback">46 Länder</span>
         </span>
       </a>
       <!-- Also the page's only <h1>: the map had no heading at all, so search
@@ -272,6 +275,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=eu4"></script>
+  <script type="module" src="app.js?v=w46"></script>
 </body>
 </html>

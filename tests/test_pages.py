@@ -105,6 +105,17 @@ def test_summarize_handles_a_land_with_no_features():
     assert "keinen einzigen" in html
 
 
+def test_bbox_refuses_to_span_the_antimeridian():
+    # New Zealand's relation reaches the Chatham Islands at 176°W. A plain
+    # min/max over such features is a box the wrong way round the planet,
+    # which parseBbox accepts and fitBounds renders as the whole world; the
+    # page must rather have no map link at all.
+    nz = [feat(1, "Wellington", "accessible", lon=174.78, lat=-41.29),
+          feat(2, "Waitangi", "unknown", lon=-176.56, lat=-43.95)]
+    assert pages._bbox(nz) is None
+    assert pages._bbox(nz[:1]) is not None
+
+
 def test_bbox_pads_and_never_collapses_to_a_point():
     single = pages.summarize("Bremen", [feat(1, lon=8.8, lat=53.1)], 0)
     west, south, east, north = single["bbox"]
@@ -272,7 +283,9 @@ def test_country_and_region_slugs_are_pinned():
         "slovenija", "slovensko", "magyarorszag", "hrvatska", "romania",
         "balgariya", "srbija", "bosna-i-hercegovina", "crna-gora",
         "shqiperia", "severna-makedonija", "kosova", "moldova", "ukrayina",
-        "bielarus"}
+        "bielarus",
+        # The first non-European wave (2026-09-04), English pages.
+        "australia", "new-zealand"}
     assert [pages.slugify(r) for r in FRANCE_REGIONS] == [
         "auvergne-rhone-alpes", "bourgogne-franche-comte", "bretagne",
         "centre-val-de-loire", "corse", "grand-est", "hauts-de-france",
