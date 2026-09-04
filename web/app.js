@@ -95,21 +95,10 @@ const OSM_STYLE = {
 // Germany, opened a little wider so Denmark shows at the top rather than
 // filling half the screen: Germany stays the subject, and the north edge at
 // 56.6°N reaches past Copenhagen and Aarhus so Danish pins are visible from
-// the start. Aalborg and Skagen sit above it — maxBounds leaves them a pan
-// away, and the locate button lands a Dane on their own city directly.
-// maxBounds leaves margin so edge cities aren't pinned to the screen border —
-// and has to be roomy enough not to bind on either axis. A landscape window
-// can only zoom out until maxBounds' WIDTH fills it (the old 28°-wide box hit
-// that stop with Denmark still off-screen), and its NORTH edge caps how far
-// fitHome() can push the map down under the topbar — on a portrait phone that
-// header is ~4.6° of latitude at home zoom, so the box clears the home view by
-// more than that, and far enough that Skagen stays reachable by panning.
-// The north edge is 70°N, not the 65° Denmark alone needed: a build that
-// sweeps the neighbours includes Sweden, whose northernmost pin sits at
-// 68.43°N (the country reaches 69.06°N at Treriksröset), and a pin outside
-// maxBounds cannot be panned to at all. HOME_BOUNDS is deliberately left
-// alone: it is the box the map fits, not the extent it shows, and on any real
-// viewport the fit spills well past it.
+// the start. Aalborg and Skagen sit above it, a pan away, and the locate
+// button lands a Dane on their own city directly. HOME_BOUNDS is the box the
+// map fits, not the extent it shows: on any real viewport the fit spills well
+// past it, and fitHome() re-fits it under the topbar once that has a height.
 // There is no maxBounds any more. The box was Europe's ([[-32, 27], [41,
 // 74.5]] — Azores, Canaries, Ukraine's east, Nordkapp plus ~3° so the topbar
 // does not hide Tromsø at full zoom-out), and every expansion moved an edge;
@@ -555,7 +544,9 @@ document.getElementById("locate").addEventListener("click", () => {
 const addDialog = document.getElementById("add-dialog");
 
 document.getElementById("add-place").addEventListener("click", () => {
-  const c = map.getCenter(), z = map.getZoom();
+  // wrap(): with no maxBounds a pan past the antimeridian leaves lng at 182,
+  // which MapComplete reads as somewhere else entirely.
+  const c = map.getCenter().wrap(), z = map.getZoom();
   document.getElementById("add-toilet-link").href = mapCompleteAddUrl(c.lng, c.lat, z, lang);
   document.getElementById("add-venue-link").href = mapCompleteVenueUrl(c.lng, c.lat, z, lang);
   addDialog.showModal();

@@ -263,7 +263,7 @@ prose rather than an error:
 
 ```bash
 curl -s https://DOMAIN/data/stats.json | grep -o '"area_key": *"[^"]*"'   # want countries_46
-curl -s https://DOMAIN/ | grep -c '46 Länder'                             # want 1
+curl -s https://DOMAIN/ | grep -c 'areaFallback">46 Länder'              # want 1
 ```
 
 Both or neither. If `area_key` still counts the old set, the build has not run under the new

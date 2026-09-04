@@ -462,8 +462,8 @@ def test_french_regions_are_selected_by_name_not_name_en(monkeypatch):
 def test_france_overseas_regions_are_excluded_by_name_not_by_level():
     # The five DROM are admin_level=4 as well, so the level does not filter
     # them — only the hard-coded allowlist does. Sweeping them would put pins
-    # in the Caribbean, outside the frontend's maxBounds where nothing can be
-    # panned to.
+    # in the Caribbean and the Indian Ocean, thousands of kilometres from the
+    # France its page is about.
     for drom in ("Guadeloupe", "Martinique", "Guyane", "La Réunion", "Mayotte"):
         assert drom not in config.FRANCE_REGIONS
     assert len(config.FRANCE_REGIONS) == 13

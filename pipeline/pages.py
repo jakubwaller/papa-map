@@ -153,7 +153,13 @@ def _bbox(features) -> list | None:
     hard-coded box: the features come out of that area's own Overpass query, so
     their extent is inside it by construction and never needs maintaining. The
     minimum span keeps an area with a single place from producing a zero-width
-    box that fitBounds turns into a maximum-zoom view of one pin."""
+    box that fitBounds turns into a maximum-zoom view of one pin.
+
+    Plain min/max, so an area straddling the antimeridian would produce a
+    box the wrong way round the planet. New Zealand's relation does (the
+    Chatham Islands sit at 176°W); as of 2026-09-04 no changing_table is
+    mapped there, so the box is fine — if one appears, wrap the negative
+    longitudes by +360 here and let parseBbox accept an east past 180."""
     if not features:
         return None
     lons = [f["geometry"]["coordinates"][0] for f in features]

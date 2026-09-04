@@ -43,20 +43,21 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   fresh checkout and the test suite build Germany + Denmark, and that stays
   that way on purpose, so neither depends on a 46-country sweep.
   **The deployment sets the variable instead:** `docker-compose.yml` carries
-  the full `PAPAMAP_COUNTRIES` list, so papamap.de sweeps 46 countries —
+  the full `PAPAMAP_COUNTRIES` list, so papamap.de sweeps 46 countries:
   every European sovereign from Iceland to Cyprus except
   Vatican City (too small to survive the zero-objects check) and the
-  transcontinental states.
+  transcontinental states, plus Australia and New Zealand — the first two
+  outside Europe, picked by a per-country count of the whole planet
+  (CONTRACT v19 has the rule and the ranking).
   Codes are ISO 3166-1 alpha-2, so the UK is **`gb`**, not `uk`, and Kosovo
   is the user-assigned **`xk`**. All but two of them
   are one `admin_level=2` area each, the way Denmark is. `fr` is 13 areas, one
   per metropolitan région, and `de` is the 16 Bundesländer — the only two
   chunked countries. So `PAPAMAP_COUNTRIES=dk` builds Denmark alone and
   `de,dk,at,ch` adds the German-speaking neighbours; an unknown code aborts
-  rather than silently sweeping less. (The map's `maxBounds` is
-  `[[-32,27],[41,71.5]]`, each edge set by a real pin — the Azores west,
-  the Canary Islands south, Ukraine east, Nordkapp north; `web/app.js`
-  documents all four. Check it *with* any expansion, not after.)
+  rather than silently sweeping less. (The map has had no `maxBounds` since
+  Australia and New Zealand joined on 2026-09-04; until then every expansion
+  had to widen a Europe-only box first, and `web/app.js` keeps the history.)
 - Every country since the 2026-08-18 ring is matched on `name:en`, because a country's own `name`
   can be several languages at once — Belgium is "België / Belgique / Belgien",
   Switzerland "Schweiz/Suisse/Svizzera/Svizra" — and a `name=` miss resolves to
@@ -68,8 +69,9 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   `name:en` would actively break: it is `Bourgogne – Franche-Comté` with an en
   dash, `Ile-de-France` with the accent dropped, and translated for four of the
   thirteen. The 13 are an allowlist, not a subdivision — the five overseas
-  régions are `admin_level=4` too, and sweeping them would put pins in the
-  Caribbean, outside `maxBounds` where nothing can be panned to.
+  régions are `admin_level=4` too, and sweeping them would put ~170 pins in
+  the Caribbean, the Indian Ocean and South America, thousands of kilometres
+  from the France its page and leaderboard row are about.
 - A build of three or more countries names itself by count rather than by name:
   `stats.json`'s `area_key` becomes `countries_<n>` (`countries_46` for all
   46), since the joined labels overflow the stats strip. One and two

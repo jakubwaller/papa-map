@@ -80,8 +80,8 @@ BUNDESLAENDER = (
 # Mayotte — are ALSO admin_level=4 and also carry ISO3166-2 FR-*, so the level
 # does not exclude them; only these thirteen names do. Sweeping France whole
 # instead would drop ~170 pins into the Caribbean, the Indian Ocean and South
-# America, every one of them outside the frontend's maxBounds, where a pin
-# cannot be panned to at all.
+# America, thousands of kilometres from the France its page and leaderboard
+# row are about — and the country whole is an empty reply at 60 s anyway.
 #
 # Selected on `name`, never name:en — the opposite of the countries in
 # NAME_EN_AREAS below. Every French région has a single unambiguous `name`,

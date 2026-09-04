@@ -1487,7 +1487,7 @@ export const STRINGS = {
     areaDeDk: "Németország és Dánia",
     areaFallback: "46 ország",
     areaCountries: "{n} ország",
-    areaCountriesIn: "{n} európai országban",
+    areaCountriesIn: "{n} országban",
 
     stAccessible: "Apák számára elérhető",
     stFemaleOnly: "Csak női mosdó",
@@ -2423,7 +2423,7 @@ export const STRINGS = {
     areaDeDk: "Немачка и Данска",
     areaFallback: "46 земаља",
     areaCountries: "{n} земаља",
-    areaCountriesIn: "{n} земље",
+    areaCountriesIn: "{n} земаља",
 
     stAccessible: "Тате могу до њега",
     stFemaleOnly: "Само женски тоалет",
