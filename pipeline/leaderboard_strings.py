@@ -515,7 +515,7 @@ pagina viene rigenerata ogni notte da una query Overpass e non salva nulla su di
 Come si conta e si colora: <a href="{up}methods-it.html">Metodo</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">Creato da un papà che trovava sempre il fasciatoio nel bagno delle donne. PapaMap è gratuita e senza pubblicità.
+<p class="muted">Creata da un papà che trovava sempre il fasciatoio nel bagno delle donne. PapaMap è gratuita e senza pubblicità.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Offrimi un caffè</a>.</p>
 """),
     },
@@ -678,7 +678,7 @@ strona jest odtwarzana co noc z zapytania Overpass i nie zapisuje o tobie niczeg
 Jak liczymy i kolorujemy: <a href="{up}methods-pl.html">Metody</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">Stworzone przez tatę, który przewijak wciąż znajdował w damskiej toalecie. PapaMap jest darmowy i bez reklam.
+<p class="muted">Stworzony przez tatę, który przewijak wciąż znajdował w damskiej toalecie. PapaMap jest darmowy i bez reklam.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Postaw mi kawę</a>.</p>
 """),
     },
@@ -2337,7 +2337,7 @@ contributors</a>, под <a href="https://opendatacommons.org/licenses/odbl/">OD
 Как се брои и оцветява: <a href="{up}methods-bg.html">Методи</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">Създадено от татко, който все намираше масата за повиване в дамската тоалетна. PapaMap е безплатен и без реклами.
+<p class="muted">Създаден от татко, който все намираше масата за повиване в дамската тоалетна. PapaMap е безплатен и без реклами.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Почерпи ме с кафе</a>.</p>
 """),
     },
@@ -2419,7 +2419,7 @@ OpenStreetMap</a>, под лиценцата <a href="https://opendatacommons.or
 Како се брои и обојува: <a href="{up}methods-mk.html">Методи</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">Направено од татко кој масата за повивање постојано ја наоѓаше во женскиот тоалет. PapaMap е бесплатен и без реклами.
+<p class="muted">Направен од татко кој масата за повивање постојано ја наоѓаше во женскиот тоалет. PapaMap е бесплатен и без реклами.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Почерпи ме со кафе</a>.</p>
 """),
     },
