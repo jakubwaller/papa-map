@@ -272,7 +272,9 @@ def test_country_and_region_slugs_are_pinned():
         "slovenija", "slovensko", "magyarorszag", "hrvatska", "romania",
         "balgariya", "srbija", "bosna-i-hercegovina", "crna-gora",
         "shqiperia", "severna-makedonija", "kosova", "moldova", "ukrayina",
-        "bielarus"}
+        "bielarus",
+        # The first non-European wave (2026-09-04), English pages.
+        "australia", "new-zealand"}
     assert [pages.slugify(r) for r in FRANCE_REGIONS] == [
         "auvergne-rhone-alpes", "bourgogne-franche-comte", "bretagne",
         "centre-val-de-loire", "corse", "grand-est", "hauts-de-france",

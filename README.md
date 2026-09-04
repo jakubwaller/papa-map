@@ -2,8 +2,8 @@
 
 **PapaMap — Wickeltische, die ein Vater erreicht.**
 
-A static map of places across 44 European countries — from Iceland to Cyprus, from Portugal
-to Ukraine — with a baby changing table, colored by whether a
+A static map of places across 46 countries — 44 in Europe, from Iceland to Cyprus, from
+Portugal to Ukraine, plus Australia and New Zealand — with a baby changing table, colored by whether a
 dad can actually reach it: **green** = accessible room (men's/unisex/dedicated/wheelchair),
 **red** = women's room only, **grey** = table exists but nobody has recorded which room —
 the call to action. Every grey pin deep-links to the same object on MapComplete so the
@@ -41,10 +41,10 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
 
 - `PAPAMAP_COUNTRIES` picks the countries. **The code default is `de,dk`** — a
   fresh checkout and the test suite build Germany + Denmark, and that stays
-  that way on purpose, so neither depends on a 44-country sweep.
+  that way on purpose, so neither depends on a 46-country sweep.
   **The deployment sets the variable instead:** `docker-compose.yml` carries
-  the full `PAPAMAP_COUNTRIES` list, so papamap.de sweeps 44 European
-  countries — every European sovereign from Iceland to Cyprus except
+  the full `PAPAMAP_COUNTRIES` list, so papamap.de sweeps 46 countries —
+  every European sovereign from Iceland to Cyprus except
   Vatican City (too small to survive the zero-objects check) and the
   transcontinental states.
   Codes are ISO 3166-1 alpha-2, so the UK is **`gb`**, not `uk`, and Kosovo
@@ -71,8 +71,8 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   régions are `admin_level=4` too, and sweeping them would put pins in the
   Caribbean, outside `maxBounds` where nothing can be panned to.
 - A build of three or more countries names itself by count rather than by name:
-  `stats.json`'s `area_key` becomes `countries_<n>` (`countries_44` for all
-  44), since the joined labels overflow the stats strip. One and two
+  `stats.json`'s `area_key` becomes `countries_<n>` (`countries_46` for all
+  46), since the joined labels overflow the stats strip. One and two
   countries keep `de` / `dk` / `de_dk`.
 - `PAPAMAP_AREA_NAME` + `PAPAMAP_AREA_ADMIN_LEVEL` select a single area instead
   (e.g. `Hamburg` / `4`), and `PAPAMAP_DISPLAY_AREA` names the dataset in the
@@ -129,7 +129,7 @@ chip therefore starts **off** and subtracts, while the three status chips start
 on. Costs no extra Overpass query: the sweep already returns every tag on these
 objects. Measured on the DE+DK build of 17 Aug 2026: 828 objects pass the rule
 and 111 of them are already pins (48 accessible / 13 female_only / 50 unknown).
-Those are DE+DK figures and the 44-country sweep is larger, so the served
+Those are DE+DK figures and the 46-country sweep is larger, so the served
 numbers come from `stats.json` (`local.play_tables`, `local.play_places`) —
 the methods pages read them from there rather than repeating a number that
 moves every night.
@@ -192,7 +192,8 @@ node --test web/*.test.js  # frontend pure functions (needs Node.js)
 ```cron
 0 2 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
 ```
-(02:00 since the 44-country sweep — projected ~105 min, and the ops mail is at 05:30.)
+(02:00 since the 44-country sweep — projected ~105 min, ~108 with Australia and New
+Zealand, and the ops mail is at 05:30.)
 (Matches the deploy in [`docs/DEPLOY.md`](docs/DEPLOY.md) — adjust if your clone lives
 elsewhere. Running the pipeline outside Docker works too; the venv variant is in the same
 file.)

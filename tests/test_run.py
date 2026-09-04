@@ -43,6 +43,13 @@ EUROPE_CODES = ("no", "fi", "is", "ie", "ee", "lv", "lt", "lu", "li", "ad",
                 "hu", "hr", "ro", "bg", "rs", "ba", "me", "al", "mk", "xk",
                 "md", "ua", "by")
 EUROPE = ELEVEN + EUROPE_CODES
+
+# The first non-European wave (2026-09-04): the two of the world's top-six
+# countries by pins that answer whole inside the budget. Picked by a
+# per-country count of every changing_table object on the planet, joined
+# above 250 pins; the US, Canada and Japan outrank them and need chunking.
+WAVE1_CODES = ("au", "nz")
+WORLD = EUROPE + WAVE1_CODES
 EUROPE_SWEEP = ELEVEN_SWEEP + [(config.COUNTRY_AREAS[c][0][0], "2")
                                for c in EUROPE_CODES]
 
@@ -485,6 +492,27 @@ def test_europe_complete_set_sweeps_every_new_country_whole(monkeypatch):
         assert name in config.NAME_EN_AREAS, name
         assert f'area["name:en"="{name}"]' in config.sweep_ql(name, "2")
         assert name not in config.chunked_area_names(), name
+
+
+def test_first_non_european_wave_sweeps_whole_on_name_en(monkeypatch):
+    # Australia and New Zealand join like the ring: one admin_level=2 area
+    # each, selected on name:en — New Zealand's `name` is the bilingual
+    # "New Zealand / Aotearoa", which resolves to nothing. Nothing about
+    # Europe changes: same 71 areas, in the same order, then these two.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", WORLD)
+    areas = config.sweep_areas()
+    assert areas[:71] == EUROPE_SWEEP
+    assert areas[71:] == [("Australia", "2"), ("New Zealand", "2")]
+    assert len(areas) == 73
+    for code in WAVE1_CODES:
+        (name, lvl), = config.COUNTRY_AREAS[code]
+        assert lvl == "2", name
+        assert name in config.NAME_EN_AREAS, name
+        assert f'area["name:en"="{name}"]' in config.sweep_ql(name, "2")
+        assert name not in config.chunked_area_names(), name
+        assert config.COUNTRY_PAGES[code][0] == "en", name
+    _, key = config.display_area()
+    assert key == "countries_46"
 
 
 def test_every_country_code_has_a_label(monkeypatch):

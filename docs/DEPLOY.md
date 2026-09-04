@@ -65,9 +65,10 @@ If Caddy runs in a container, bind-mount the site into it first (add
 Outside Docker the equivalent line is
 `0 2 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
 
-**02:00, not 03:30, since the Europe-complete sweep (2026-08-22).** 44 countries are
-71 sweep areas and 170 Overpass queries, projected ~105 minutes against the
-eleven-country 64 — and the ops mail below runs at 05:30, so the earlier start keeps
+**02:00, not 03:30, since the Europe-complete sweep (2026-08-22).** 46 countries are
+73 sweep areas and 174 Overpass queries, projected ~108 minutes against the
+eleven-country 64 (Australia and New Zealand, 2026-09-04, answer whole and add about
+two minutes) — and the ops mail below runs at 05:30, so the earlier start keeps
 almost two hours of congestion headroom between the projected finish and the digest
 reading `stats.json`. (The 03:30 slot was itself the same move when the UK and France
 joined: a build still writing when the digest reads is the one health signal the site
@@ -261,8 +262,8 @@ dataset only changes on the next build — so the two can disagree, and the fail
 prose rather than an error:
 
 ```bash
-curl -s https://DOMAIN/data/stats.json | grep -o '"area_key": *"[^"]*"'   # want countries_44
-curl -s https://DOMAIN/ | grep -c '44 europäische Länder'                 # want 1
+curl -s https://DOMAIN/data/stats.json | grep -o '"area_key": *"[^"]*"'   # want countries_46
+curl -s https://DOMAIN/ | grep -c '46 Länder'                             # want 1
 ```
 
 Both or neither. If `area_key` still counts the old set, the build has not run under the new

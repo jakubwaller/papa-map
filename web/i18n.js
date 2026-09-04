@@ -92,7 +92,7 @@ export const STRINGS = {
     // because that is the canonical page; app.js swaps it for the ?lang= views.
     // Counted, not listed, for the same reason as there: the eleven names add
     // ~135 characters to a snippet Google cuts at about 160.
-    metaDescription: "Eine Karte der Wickeltische in 44 europäischen Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap.",
+    metaDescription: "Eine Karte der Wickeltische in 46 Ländern, eingefärbt danach, ob ein Papa sie tatsächlich erreicht. Daten: OpenStreetMap.",
     tagline: "Wickeltische, die ein Vater erreicht",
     addPlace: "+ Ort hinzufügen",
     methods: "Methoden",
@@ -133,7 +133,7 @@ export const STRINGS = {
     // Static fallback for the wordmark: index.html paints it before
     // stats.json arrives, and keeps it if the fetch fails. Count-free,
     // because applyI18n() calls t() with no vars and "{n}" would show.
-    areaFallback: "44 europäische Länder",
+    areaFallback: "46 Länder",
     areaCountries: "{n} Länder",
     areaCountriesIn: "{n} Ländern",
 
@@ -191,7 +191,7 @@ export const STRINGS = {
   },
   en: {
     title: "PapaMap — Changing tables dads can reach",
-    metaDescription: "A map of every changing table in 44 European countries, coloured by whether a dad can actually reach it. Data: OpenStreetMap.",
+    metaDescription: "A map of every changing table in 46 countries, coloured by whether a dad can actually reach it. Data: OpenStreetMap.",
     tagline: "Changing tables dads can reach",
     addPlace: "+ Add a place",
     methods: "Methods",
@@ -224,7 +224,7 @@ export const STRINGS = {
     // Static fallback for the wordmark: index.html paints it before
     // stats.json arrives, and keeps it if the fetch fails. Count-free,
     // because applyI18n() calls t() with no vars and "{n}" would show.
-    areaFallback: "44 European countries",
+    areaFallback: "46 countries",
     areaCountries: "{n} countries",
     areaCountriesIn: "{n} countries",
 
@@ -277,7 +277,7 @@ export const STRINGS = {
   },
   da: {
     title: "PapaMap — pusleborde, en far kan nå",
-    metaDescription: "Et kort over alle pusleborde i 44 europæiske lande, farvelagt efter om en far rent faktisk kan nå dem. Data: OpenStreetMap.",
+    metaDescription: "Et kort over alle pusleborde i 46 lande, farvelagt efter om en far rent faktisk kan nå dem. Data: OpenStreetMap.",
     tagline: "Pusleborde, en far kan nå",
     addPlace: "+ Tilføj et sted",
     methods: "Metode",
@@ -307,7 +307,7 @@ export const STRINGS = {
     // Static fallback for the wordmark: index.html paints it before
     // stats.json arrives, and keeps it if the fetch fails. Count-free,
     // because applyI18n() calls t() with no vars and "{n}" would show.
-    areaFallback: "44 europæiske lande",
+    areaFallback: "46 lande",
     areaCountries: "{n} lande",
     areaCountriesIn: "{n} lande",
 
@@ -362,7 +362,7 @@ export const STRINGS = {
   // Nederlands — added 19 Aug 2026 with the UK and France; the Netherlands and Flanders.
   nl: {
     title: "PapaMap — Verschoontafels waar een papa bij kan",
-    metaDescription: "Een kaart van de verschoontafels (luiertafels) in 44 Europese landen, ingekleurd naar de vraag of een papa er echt bij kan. Data: OpenStreetMap.",
+    metaDescription: "Een kaart van de verschoontafels (luiertafels) in 46 landen, ingekleurd naar de vraag of een papa er echt bij kan. Data: OpenStreetMap.",
     tagline: "Verschoontafels waar een papa bij kan",
     addPlace: "+ Plek toevoegen",
     methods: "Methode",
@@ -388,7 +388,7 @@ export const STRINGS = {
     areaDe: "Duitsland",
     areaDk: "Denemarken",
     areaDeDk: "Duitsland & Denemarken",
-    areaFallback: "44 Europese landen",
+    areaFallback: "46 landen",
     areaCountries: "{n} landen",
     areaCountriesIn: "{n} landen",
 
@@ -442,7 +442,7 @@ export const STRINGS = {
   // Français — added 19 Aug 2026 with the UK and France; France, Wallonia and Romandy.
   fr: {
     title: "PapaMap — Des tables à langer accessibles aux papas",
-    metaDescription: "Une carte des tables à langer dans 44 pays européens, colorée selon qu'un papa peut vraiment y accéder. Données : OpenStreetMap.",
+    metaDescription: "Une carte des tables à langer dans 46 pays, colorée selon qu'un papa peut vraiment y accéder. Données : OpenStreetMap.",
     tagline: "Des tables à langer accessibles aux papas",
     addPlace: "+ Ajouter un lieu",
     methods: "Méthodes",
@@ -467,7 +467,7 @@ export const STRINGS = {
     areaDe: "Allemagne",
     areaDk: "Danemark",
     areaDeDk: "Allemagne & Danemark",
-    areaFallback: "44 pays européens",
+    areaFallback: "46 pays",
     areaCountries: "{n} pays",
     areaCountriesIn: "{n} pays",
 
@@ -521,7 +521,7 @@ export const STRINGS = {
   // Italiano — added 19 Aug 2026 with the UK and France; Ticino and the Italian-speaking Grisons.
   it: {
     title: "PapaMap — Fasciatoi che un papà può raggiungere",
-    metaDescription: "Una mappa dei fasciatoi in 44 paesi europei, colorati in base al fatto che un papà possa davvero raggiungerli. Dati: OpenStreetMap.",
+    metaDescription: "Una mappa dei fasciatoi in 46 paesi, colorati in base al fatto che un papà possa davvero raggiungerli. Dati: OpenStreetMap.",
     tagline: "Fasciatoi che un papà può raggiungere",
     addPlace: "+ Aggiungi luogo",
     methods: "Metodo",
@@ -546,7 +546,7 @@ export const STRINGS = {
     areaDe: "Germania",
     areaDk: "Danimarca",
     areaDeDk: "Germania & Danimarca",
-    areaFallback: "44 paesi europei",
+    areaFallback: "46 paesi",
     areaCountries: "{n} paesi",
     areaCountriesIn: "{n} paesi",
 
@@ -600,7 +600,7 @@ export const STRINGS = {
   // Čeština — added 19 Aug 2026 with the UK and France; Czechia.
   cs: {
     title: "PapaMap — přebalovací pulty, ke kterým se táta dostane",
-    metaDescription: "Mapa přebalovacích pultů ve 44 evropských zemích, barevně odlišených podle toho, jestli se k nim táta opravdu dostane. Data: OpenStreetMap.",
+    metaDescription: "Mapa přebalovacích pultů ve 46 zemích, barevně odlišených podle toho, jestli se k nim táta opravdu dostane. Data: OpenStreetMap.",
     tagline: "Přebalovací pulty, ke kterým se táta dostane",
     addPlace: "+ Přidat místo",
     methods: "Metody",
@@ -625,7 +625,7 @@ export const STRINGS = {
     areaDe: "Německo",
     areaDk: "Dánsko",
     areaDeDk: "Německo a Dánsko",
-    areaFallback: "44 evropských zemí",
+    areaFallback: "46 zemí",
     areaCountries: "{n} zemí",
     areaCountriesIn: "{n} zemích",
 
@@ -679,7 +679,7 @@ export const STRINGS = {
   // Polski — added 19 Aug 2026 with the UK and France; Poland.
   pl: {
     title: "PapaMap — przewijaki, do których dotrze tata",
-    metaDescription: "Mapa przewijaków w 44 krajach Europy — kolor mówi, czy tata faktycznie do nich dotrze. Dane: OpenStreetMap.",
+    metaDescription: "Mapa przewijaków w 46 krajach — kolor mówi, czy tata faktycznie do nich dotrze. Dane: OpenStreetMap.",
     tagline: "Przewijaki, do których dotrze tata",
     addPlace: "+ Dodaj miejsce",
     methods: "Metody",
@@ -704,7 +704,7 @@ export const STRINGS = {
     areaDe: "Niemcy",
     areaDk: "Dania",
     areaDeDk: "Niemcy i Dania",
-    areaFallback: "44 kraje Europy",
+    areaFallback: "46 krajów",
     areaCountries: "{n} krajów",
     areaCountriesIn: "{n} krajach",
 
@@ -758,7 +758,7 @@ export const STRINGS = {
   // Svenska — added 19 Aug 2026 with the UK and France; Sweden.
   sv: {
     title: "PapaMap — skötbord som en pappa kommer åt",
-    metaDescription: "En karta över skötbord i 44 europeiska länder, färglagda efter om en pappa faktiskt kommer åt dem. Data: OpenStreetMap.",
+    metaDescription: "En karta över skötbord i 46 länder, färglagda efter om en pappa faktiskt kommer åt dem. Data: OpenStreetMap.",
     tagline: "Skötbord som en pappa kommer åt",
     addPlace: "+ Ny plats",
     methods: "Metod",
@@ -783,7 +783,7 @@ export const STRINGS = {
     areaDe: "Tyskland",
     areaDk: "Danmark",
     areaDeDk: "Tyskland & Danmark",
-    areaFallback: "44 europeiska länder",
+    areaFallback: "46 länder",
     areaCountries: "{n} länder",
     areaCountriesIn: "{n} länder",
 
@@ -836,7 +836,7 @@ export const STRINGS = {
   },
   bs: {
     title: "PapaMap — Stolovi za previjanje do kojih tata može doći",
-    metaDescription: "Karta svakog stola za previjanje u 44 evropske zemlje, obojenog prema tome da li tata zaista može doći do njega. Podaci: OpenStreetMap.",
+    metaDescription: "Karta svakog stola za previjanje u 46 zemalja, obojenog prema tome da li tata zaista može doći do njega. Podaci: OpenStreetMap.",
     tagline: "Stolovi za previjanje do kojih tata može doći",
     addPlace: "+ Dodaj mjesto",
     methods: "Metode",
@@ -861,8 +861,8 @@ export const STRINGS = {
     areaDe: "Njemačka",
     areaDk: "Danska",
     areaDeDk: "Njemačka i Danska",
-    areaFallback: "44 evropske zemlje",
-    areaCountries: "{n} zemlje",
+    areaFallback: "46 zemalja",
+    areaCountries: "{n} zemalja",
     areaCountriesIn: "{n} zemljama",
 
     stAccessible: "Dostupno tati",
@@ -914,7 +914,7 @@ export const STRINGS = {
   },
   ca: {
     title: "PapaMap — Canviadors a l'abast d'un pare",
-    metaDescription: "Un mapa de tots els canviadors a 44 països europeus, acolorits segons si un pare hi pot arribar de debò. Dades: OpenStreetMap.",
+    metaDescription: "Un mapa de tots els canviadors a 46 països, acolorits segons si un pare hi pot arribar de debò. Dades: OpenStreetMap.",
     tagline: "Canviadors a l'abast d'un pare",
     addPlace: "+ Afegeix un lloc",
     methods: "Mètodes",
@@ -939,7 +939,7 @@ export const STRINGS = {
     areaDe: "Alemanya",
     areaDk: "Dinamarca",
     areaDeDk: "Alemanya i Dinamarca",
-    areaFallback: "44 països europeus",
+    areaFallback: "46 països",
     areaCountries: "{n} països",
     areaCountriesIn: "{n} països",
 
@@ -992,7 +992,7 @@ export const STRINGS = {
   },
   et: {
     title: "PapaMap — mähkimislauad, kuhu isa jõuab",
-    metaDescription: "Kaart kõigist mähkimislaudadest 44 Euroopa riigis, värvitud selle järgi, kas isa selleni tegelikult jõuab. Andmed: OpenStreetMap.",
+    metaDescription: "Kaart kõigist mähkimislaudadest 46 riigis, värvitud selle järgi, kas isa selleni tegelikult jõuab. Andmed: OpenStreetMap.",
     tagline: "Mähkimislauad, kuhu isa jõuab",
     addPlace: "+ Lisa koht",
     methods: "Meetodid",
@@ -1017,9 +1017,9 @@ export const STRINGS = {
     areaDe: "Saksamaa",
     areaDk: "Taani",
     areaDeDk: "Saksamaa ja Taani",
-    areaFallback: "44 Euroopa riiki",
+    areaFallback: "46 riiki",
     areaCountries: "{n} riiki",
-    areaCountriesIn: "{n} Euroopa riigis",
+    areaCountriesIn: "{n} riigis",
 
     stAccessible: "Isa jõuab",
     stFemaleOnly: "Ainult naiste WC",
@@ -1070,7 +1070,7 @@ export const STRINGS = {
   },
   es: {
     title: "PapaMap — Cambiadores a los que un papá llega",
-    metaDescription: "Un mapa de los cambiadores de bebés en 44 países europeos, coloreado según si un papá puede llegar realmente a ellos. Datos: OpenStreetMap.",
+    metaDescription: "Un mapa de los cambiadores de bebés en 46 países, coloreado según si un papá puede llegar realmente a ellos. Datos: OpenStreetMap.",
     tagline: "Cambiadores a los que un papá llega",
     addPlace: "+ Añadir un lugar",
     methods: "Métodos",
@@ -1095,7 +1095,7 @@ export const STRINGS = {
     areaDe: "Alemania",
     areaDk: "Dinamarca",
     areaDeDk: "Alemania y Dinamarca",
-    areaFallback: "44 países europeos",
+    areaFallback: "46 países",
     areaCountries: "{n} países",
     areaCountriesIn: "{n} países",
 
@@ -1148,7 +1148,7 @@ export const STRINGS = {
   },
   hr: {
     title: "PapaMap — stolovi za previjanje dostupni tati",
-    metaDescription: "Karta stolova za previjanje u 44 europske zemlje, obojenih ovisno o tome može li tata zaista doći do njih. Podaci: OpenStreetMap.",
+    metaDescription: "Karta stolova za previjanje u 46 zemalja, obojenih ovisno o tome može li tata zaista doći do njih. Podaci: OpenStreetMap.",
     tagline: "Stolovi za previjanje dostupni tati",
     addPlace: "+ Dodaj mjesto",
     methods: "Metode",
@@ -1173,8 +1173,8 @@ export const STRINGS = {
     areaDe: "Njemačka",
     areaDk: "Danska",
     areaDeDk: "Njemačka i Danska",
-    areaFallback: "44 europske zemlje",
-    areaCountries: "{n} zemlje",
+    areaFallback: "46 zemalja",
+    areaCountries: "{n} zemalja",
     areaCountriesIn: "{n} zemljama",
 
     stAccessible: "Dostupno tati",
@@ -1226,7 +1226,7 @@ export const STRINGS = {
   },
   is: {
     title: "PapaMap — Skiptiborð sem pabbar komast að",
-    metaDescription: "Kort yfir öll skiptiborð í 44 Evrópulöndum, lituð eftir því hvort pabbi kemst raunverulega að þeim. Gögn: OpenStreetMap.",
+    metaDescription: "Kort yfir öll skiptiborð í 46 löndum, lituð eftir því hvort pabbi kemst raunverulega að þeim. Gögn: OpenStreetMap.",
     tagline: "Skiptiborð sem pabbar komast að",
     addPlace: "+ Bæta við stað",
     methods: "Aðferð",
@@ -1251,7 +1251,7 @@ export const STRINGS = {
     areaDe: "Þýskaland",
     areaDk: "Danmörk",
     areaDeDk: "Þýskaland & Danmörk",
-    areaFallback: "44 Evrópulönd",
+    areaFallback: "46 lönd",
     areaCountries: "{n} lönd",
     areaCountriesIn: "{n} löndum",
 
@@ -1304,7 +1304,7 @@ export const STRINGS = {
   },
   lv: {
     title: "PapaMap — Pārtinamie galdiņi, kuriem tēti var piekļūt",
-    metaDescription: "Karte ar visiem pārtinamajiem galdiņiem 44 Eiropas valstīs, iekrāsota pēc tā, vai tētis tiem patiešām var piekļūt. Dati: OpenStreetMap.",
+    metaDescription: "Karte ar visiem pārtinamajiem galdiņiem 46 valstīs, iekrāsota pēc tā, vai tētis tiem patiešām var piekļūt. Dati: OpenStreetMap.",
     tagline: "Pārtinamie galdiņi, kuriem tēti var piekļūt",
     addPlace: "+ Pievienot vietu",
     methods: "Metodika",
@@ -1329,7 +1329,7 @@ export const STRINGS = {
     areaDe: "Vācija",
     areaDk: "Dānija",
     areaDeDk: "Vācija un Dānija",
-    areaFallback: "44 Eiropas valstis",
+    areaFallback: "46 valstis",
     areaCountries: "{n} valstis",
     areaCountriesIn: "{n} valstīs",
 
@@ -1382,7 +1382,7 @@ export const STRINGS = {
   },
   lt: {
     title: "PapaMap — pervystymo stalai, kuriuos tėtis gali pasiekti",
-    metaDescription: "Žemėlapis, kuriame pažymėti pervystymo stalai 44 Europos šalyse — spalva rodo, ar tėtis iš tiesų gali juos pasiekti. Duomenys: OpenStreetMap.",
+    metaDescription: "Žemėlapis, kuriame pažymėti pervystymo stalai 46 šalyse — spalva rodo, ar tėtis iš tiesų gali juos pasiekti. Duomenys: OpenStreetMap.",
     tagline: "Pervystymo stalai, kuriuos tėtis gali pasiekti",
     addPlace: "+ Pridėti vietą",
     methods: "Metodai",
@@ -1407,7 +1407,7 @@ export const STRINGS = {
     areaDe: "Vokietija",
     areaDk: "Danija",
     areaDeDk: "Vokietija ir Danija",
-    areaFallback: "44 Europos šalys",
+    areaFallback: "46 šalys",
     areaCountries: "{n} šalys",
     areaCountriesIn: "{n} šalyse",
 
@@ -1460,7 +1460,7 @@ export const STRINGS = {
   },
   hu: {
     title: "PapaMap — Pelenkázóasztalok, amikhez egy apa is hozzáfér",
-    metaDescription: "Térkép 44 európai ország pelenkázóasztalairól, aszerint színezve, hogy egy apa ténylegesen hozzáfér-e hozzájuk. Adatok: OpenStreetMap.",
+    metaDescription: "Térkép 46 ország pelenkázóasztalairól, aszerint színezve, hogy egy apa ténylegesen hozzáfér-e hozzájuk. Adatok: OpenStreetMap.",
     tagline: "Pelenkázóasztalok, amikhez egy apa is hozzáfér",
     addPlace: "+ Hely hozzáadása",
     methods: "Módszertan",
@@ -1485,8 +1485,8 @@ export const STRINGS = {
     areaDe: "Németország",
     areaDk: "Dánia",
     areaDeDk: "Németország és Dánia",
-    areaFallback: "44 európai ország",
-    areaCountries: "{n} európai ország",
+    areaFallback: "46 ország",
+    areaCountries: "{n} ország",
     areaCountriesIn: "{n} európai országban",
 
     stAccessible: "Apák számára elérhető",
@@ -1538,7 +1538,7 @@ export const STRINGS = {
   },
   no: {
     title: "PapaMap — stellebord som en pappa når",
-    metaDescription: "Et kart over stellebord i 44 europeiske land, fargelagt etter om en pappa faktisk når dem. Data: OpenStreetMap.",
+    metaDescription: "Et kart over stellebord i 46 land, fargelagt etter om en pappa faktisk når dem. Data: OpenStreetMap.",
     tagline: "Stellebord som en pappa når",
     addPlace: "+ Legg til et sted",
     methods: "Metode",
@@ -1563,7 +1563,7 @@ export const STRINGS = {
     areaDe: "Tyskland",
     areaDk: "Danmark",
     areaDeDk: "Tyskland & Danmark",
-    areaFallback: "44 europeiske land",
+    areaFallback: "46 land",
     areaCountries: "{n} land",
     areaCountriesIn: "{n} land",
 
@@ -1616,7 +1616,7 @@ export const STRINGS = {
   },
   pt: {
     title: "PapaMap — Fraldários a que um pai consegue chegar",
-    metaDescription: "Um mapa de todos os fraldários em 44 países europeus, coloridos consoante um pai consiga mesmo lá chegar. Dados: OpenStreetMap.",
+    metaDescription: "Um mapa de todos os fraldários em 46 países, coloridos consoante um pai consiga mesmo lá chegar. Dados: OpenStreetMap.",
     tagline: "Fraldários a que um pai consegue chegar",
     addPlace: "+ Adicionar um local",
     methods: "Métodos",
@@ -1641,7 +1641,7 @@ export const STRINGS = {
     areaDe: "Alemanha",
     areaDk: "Dinamarca",
     areaDeDk: "Alemanha & Dinamarca",
-    areaFallback: "44 países europeus",
+    areaFallback: "46 países",
     areaCountries: "{n} países",
     areaCountriesIn: "{n} países",
 
@@ -1694,7 +1694,7 @@ export const STRINGS = {
   },
   ro: {
     title: "PapaMap — Mese de înfășat la care ajunge un tată",
-    metaDescription: "O hartă cu toate mesele de înfășat din 44 de țări europene, colorate în funcție de faptul dacă un tată poate ajunge cu adevărat la ele. Date: OpenStreetMap.",
+    metaDescription: "O hartă cu toate mesele de înfășat din 46 de țări, colorate în funcție de faptul dacă un tată poate ajunge cu adevărat la ele. Date: OpenStreetMap.",
     tagline: "Mese de înfășat la care ajunge un tată",
     addPlace: "+ Adaugă un loc",
     methods: "Metode",
@@ -1719,7 +1719,7 @@ export const STRINGS = {
     areaDe: "Germania",
     areaDk: "Danemarca",
     areaDeDk: "Germania și Danemarca",
-    areaFallback: "44 de țări europene",
+    areaFallback: "46 de țări",
     areaCountries: "{n} de țări",
     areaCountriesIn: "{n} de țări",
 
@@ -1772,7 +1772,7 @@ export const STRINGS = {
   },
   sq: {
     title: "PapaMap — Tavolina ndërrimi që i arrin dot një baba",
-    metaDescription: "Një hartë e të gjitha tavolinave të ndërrimit në 44 vende evropiane. Ngjyra tregon nëse një baba mund ta arrijë vërtet apo jo. Të dhënat: OpenStreetMap.",
+    metaDescription: "Një hartë e të gjitha tavolinave të ndërrimit në 46 vende. Ngjyra tregon nëse një baba mund ta arrijë vërtet apo jo. Të dhënat: OpenStreetMap.",
     tagline: "Tavolina ndërrimi që i arrin dot një baba",
     addPlace: "+ Shto një vend",
     methods: "Metodologjia",
@@ -1797,7 +1797,7 @@ export const STRINGS = {
     areaDe: "Gjermania",
     areaDk: "Danimarka",
     areaDeDk: "Gjermania dhe Danimarka",
-    areaFallback: "44 vende evropiane",
+    areaFallback: "46 vende",
     areaCountries: "{n} vende",
     areaCountriesIn: "{n} vende",
 
@@ -1850,7 +1850,7 @@ export const STRINGS = {
   },
   sk: {
     title: "PapaMap — Prebaľovacie pulty, ku ktorým sa otec dostane",
-    metaDescription: "Mapa prebaľovacích pultov vo 44 európskych krajinách, farebne odlíšených podľa toho, či sa k nim otec naozaj dostane. Dáta: OpenStreetMap.",
+    metaDescription: "Mapa prebaľovacích pultov vo 46 krajinách, farebne odlíšených podľa toho, či sa k nim otec naozaj dostane. Dáta: OpenStreetMap.",
     tagline: "Prebaľovacie pulty, ku ktorým sa otec dostane",
     addPlace: "+ Pridať miesto",
     methods: "Metódy",
@@ -1875,7 +1875,7 @@ export const STRINGS = {
     areaDe: "Nemecko",
     areaDk: "Dánsko",
     areaDeDk: "Nemecko a Dánsko",
-    areaFallback: "44 európskych krajín",
+    areaFallback: "46 krajín",
     areaCountries: "{n} krajín",
     areaCountriesIn: "{n} krajinách",
 
@@ -1928,7 +1928,7 @@ export const STRINGS = {
   },
   sl: {
     title: "PapaMap — previjalne mize, ki jih doseže oče",
-    metaDescription: "Zemljevid previjalnih miz v 44 evropskih državah, obarvan glede na to, ali jih res lahko doseže oče. Podatki: OpenStreetMap.",
+    metaDescription: "Zemljevid previjalnih miz v 46 državah, obarvan glede na to, ali jih res lahko doseže oče. Podatki: OpenStreetMap.",
     tagline: "Previjalne mize, ki jih doseže oče",
     addPlace: "+ Dodaj kraj",
     methods: "Metode",
@@ -1953,7 +1953,7 @@ export const STRINGS = {
     areaDe: "Nemčija",
     areaDk: "Danska",
     areaDeDk: "Nemčija in Danska",
-    areaFallback: "44 evropskih držav",
+    areaFallback: "46 držav",
     areaCountries: "{n} držav",
     areaCountriesIn: "{n} državah",
 
@@ -2006,7 +2006,7 @@ export const STRINGS = {
   },
   fi: {
     title: "PapaMap — hoitopöydät, joille isä pääsee",
-    metaDescription: "44 Euroopan maata kattava kartta hoitopöydistä — väri kertoo, pääseekö isä niille oikeasti. Data: OpenStreetMap.",
+    metaDescription: "46 maata kattava kartta hoitopöydistä — väri kertoo, pääseekö isä niille oikeasti. Data: OpenStreetMap.",
     tagline: "Hoitopöydät, joille isä pääsee",
     addPlace: "+ Lisää paikka",
     methods: "Menetelmät",
@@ -2031,9 +2031,9 @@ export const STRINGS = {
     areaDe: "Saksa",
     areaDk: "Tanska",
     areaDeDk: "Saksa ja Tanska",
-    areaFallback: "44 Euroopan maata",
-    areaCountries: "{n} Euroopan maata",
-    areaCountriesIn: "{n} Euroopan maassa",
+    areaFallback: "46 maata",
+    areaCountries: "{n} maata",
+    areaCountriesIn: "{n} maassa",
 
     stAccessible: "Isä pääsee",
     stFemaleOnly: "Vain naisten WC",
@@ -2084,7 +2084,7 @@ export const STRINGS = {
   },
   el: {
     title: "PapaMap — Αλλαξιέρες που φτάνει ένας μπαμπάς",
-    metaDescription: "Ένας χάρτης με όλες τις αλλαξιέρες σε 44 ευρωπαϊκές χώρες, χρωματισμένος ανάλογα με το αν ένας μπαμπάς μπορεί πράγματι να φτάσει σε αυτήν. Δεδομένα: OpenStreetMap.",
+    metaDescription: "Ένας χάρτης με όλες τις αλλαξιέρες σε 46 χώρες, χρωματισμένος ανάλογα με το αν ένας μπαμπάς μπορεί πράγματι να φτάσει σε αυτήν. Δεδομένα: OpenStreetMap.",
     tagline: "Αλλαξιέρες που φτάνει ένας μπαμπάς",
     addPlace: "+ Προσθήκη μέρους",
     methods: "Μέθοδος",
@@ -2109,7 +2109,7 @@ export const STRINGS = {
     areaDe: "Γερμανία",
     areaDk: "Δανία",
     areaDeDk: "Γερμανία και Δανία",
-    areaFallback: "44 ευρωπαϊκές χώρες",
+    areaFallback: "46 χώρες",
     areaCountries: "{n} χώρες",
     areaCountriesIn: "{n} χώρες",
 
@@ -2162,7 +2162,7 @@ export const STRINGS = {
   },
   be: {
     title: "PapaMap — сталы для спавівання, да якіх можа дабрацца тата",
-    metaDescription: "Карта кожнага стала для спавівання ў 44 еўрапейскіх краінах, размаляваная паводле таго, ці можа тата сапраўды да яго дабрацца. Дадзеныя: OpenStreetMap.",
+    metaDescription: "Карта кожнага стала для спавівання ў 46 краінах, размаляваная паводле таго, ці можа тата сапраўды да яго дабрацца. Дадзеныя: OpenStreetMap.",
     tagline: "Сталы для спавівання, да якіх можа дабрацца тата",
     addPlace: "+ Дадаць месца",
     methods: "Метады",
@@ -2187,8 +2187,8 @@ export const STRINGS = {
     areaDe: "Германія",
     areaDk: "Данія",
     areaDeDk: "Германія і Данія",
-    areaFallback: "44 еўрапейскія краіны",
-    areaCountries: "{n} краіны",
+    areaFallback: "46 краін",
+    areaCountries: "{n} краін",
     areaCountriesIn: "{n} краінах",
 
     stAccessible: "Даступна тату",
@@ -2240,7 +2240,7 @@ export const STRINGS = {
   },
   bg: {
     title: "PapaMap — маси за повиване, до които татко може да стигне",
-    metaDescription: "Карта на всички маси за повиване в 44 европейски държави, оцветени според това дали татко наистина може да стигне до тях. Данни: OpenStreetMap.",
+    metaDescription: "Карта на всички маси за повиване в 46 държави, оцветени според това дали татко наистина може да стигне до тях. Данни: OpenStreetMap.",
     tagline: "Маси за повиване, до които татко може да стигне",
     addPlace: "+ Добави място",
     methods: "Методи",
@@ -2265,7 +2265,7 @@ export const STRINGS = {
     areaDe: "Германия",
     areaDk: "Дания",
     areaDeDk: "Германия и Дания",
-    areaFallback: "44 европейски държави",
+    areaFallback: "46 държави",
     areaCountries: "{n} държави",
     areaCountriesIn: "{n} държави",
 
@@ -2318,7 +2318,7 @@ export const STRINGS = {
   },
   mk: {
     title: "PapaMap — Маси за пеленање до кои татковците можат да стигнат",
-    metaDescription: "Мапа на сите маси за пеленање во 44 европски земји, обоени според тоа дали татко навистина може да стигне до нив. Извор на податоци: OpenStreetMap.",
+    metaDescription: "Мапа на сите маси за пеленање во 46 земји, обоени според тоа дали татко навистина може да стигне до нив. Извор на податоци: OpenStreetMap.",
     tagline: "Маси за пеленање до кои татковците можат да стигнат",
     addPlace: "+ Додади место",
     methods: "Методи",
@@ -2343,7 +2343,7 @@ export const STRINGS = {
     areaDe: "Германија",
     areaDk: "Данска",
     areaDeDk: "Германија и Данска",
-    areaFallback: "44 европски земји",
+    areaFallback: "46 земји",
     areaCountries: "{n} земји",
     areaCountriesIn: "{n} земји",
 
@@ -2396,7 +2396,7 @@ export const STRINGS = {
   },
   sr: {
     title: "PapaMap — Столови за превијање доступни татама",
-    metaDescription: "Мапа свих столова за превијање у 44 европске земље, обојена према томе да ли тата заиста може да дође до њих. Подаци: OpenStreetMap.",
+    metaDescription: "Мапа свих столова за превијање у 46 земаља, обојена према томе да ли тата заиста може да дође до њих. Подаци: OpenStreetMap.",
     tagline: "Столови за превијање доступни татама",
     addPlace: "+ Додај место",
     methods: "Методе",
@@ -2421,8 +2421,8 @@ export const STRINGS = {
     areaDe: "Немачка",
     areaDk: "Данска",
     areaDeDk: "Немачка и Данска",
-    areaFallback: "44 европске земље",
-    areaCountries: "{n} земље",
+    areaFallback: "46 земаља",
+    areaCountries: "{n} земаља",
     areaCountriesIn: "{n} земље",
 
     stAccessible: "Тате могу до њега",
@@ -2474,7 +2474,7 @@ export const STRINGS = {
   },
   uk: {
     title: "PapaMap — пеленальні столики, до яких дістанеться тато",
-    metaDescription: "Карта пеленальних столиків, що охоплює 44 країни Європи, — кольором показано, чи тато справді може дістатися до кожного столика. Дані: OpenStreetMap.",
+    metaDescription: "Карта пеленальних столиків, що охоплює 46 країн, — кольором показано, чи тато справді може дістатися до кожного столика. Дані: OpenStreetMap.",
     tagline: "Пеленальні столики, до яких дістанеться тато",
     addPlace: "+ Додати місце",
     methods: "Методи",
@@ -2499,7 +2499,7 @@ export const STRINGS = {
     areaDe: "Німеччина",
     areaDk: "Данія",
     areaDeDk: "Німеччина та Данія",
-    areaFallback: "44 європейські країни",
+    areaFallback: "46 країн",
     areaCountries: "{n} країн",
     areaCountriesIn: "{n} країнах",
 

@@ -141,6 +141,11 @@ NAME_EN_AREAS = frozenset({
     "Serbia", "Bosnia and Herzegovina", "Montenegro", "Albania",
     "North Macedonia", "Kosovo",
     "Moldova", "Ukraine", "Belarus",
+    # The first non-European wave (2026-09-04). New Zealand's `name` is the
+    # bilingual "New Zealand / Aotearoa", so name:en is not optional there;
+    # Australia rides the one rule. Both verified to resolve on name:en the
+    # same day: 3,373 and 770 changing_table objects.
+    "Australia", "New Zealand",
 })
 
 # Sweep areas per country. Germany needs the 16-Land chunking above; every
@@ -238,6 +243,20 @@ COUNTRY_AREAS = {
     "md": (("Moldova", "2"),),
     "ua": (("Ukraine", "2"),),
     "by": (("Belarus", "2"),),
+    # ------ the first non-European wave, added 2026-09-04 ------
+    # Picked by count, not by size: a per-country tally of every
+    # changing_table object on the planet (QLever over osm-planet, one query
+    # per admin_level=2 relation) ranks the world outside Europe as
+    # US 3,298 pins / AU 1,393 / JP 1,170 / CA 700 / CN 306 / NZ 284, where a
+    # pin is an object whose value is not `no`. A country joins above 250.
+    # Australia and New Zealand are the two of those that answer WHOLE inside
+    # the [timeout:55] budget on both nightly queries (AU 19.0 s sweep /
+    # 29.1 s counting, NZ 14.7 / 23.3, measured 2026-09-04); the US dies at
+    # the 60 s cutoff on both, Canada's count times out, and Japan counts in
+    # 49.7 s — past the UK's 45.2 s, the tightest area shipped. Those three
+    # need chunking like Germany and France and are their own waves.
+    "au": (("Australia", "2"),),
+    "nz": (("New Zealand", "2"),),
 }
 
 # Fallback display name per country. Germany and Denmark are named in their own
@@ -263,6 +282,7 @@ COUNTRY_LABELS = {
     "ba": "Bosnia and Herzegovina", "me": "Montenegro", "al": "Albania",
     "mk": "North Macedonia", "xk": "Kosovo", "md": "Moldova",
     "ua": "Ukraine", "by": "Belarus",
+    "au": "Australia", "nz": "New Zealand",
 }
 
 # One static page per country beyond Germany (pipeline/pages.py), each in the
@@ -330,6 +350,9 @@ COUNTRY_PAGES = {
     "md": ("ro", "Moldova", "în Moldova", None),
     "ua": ("uk", "Україна", "в Україні", None),
     "by": ("be", "Беларусь", "у Беларусі", None),
+    # ------ the first non-European wave, pages added 2026-09-04 ------
+    "au": ("en", "Australia", "in Australia", None),
+    "nz": ("en", "New Zealand", "in New Zealand", None),
 }
 
 # Slug overrides for pages.slugify, keyed by display name. Only the non-Latin

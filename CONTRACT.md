@@ -1,5 +1,23 @@
 # papa-map — build contract (v0)
 
+> **v19 amendment (4 Sep 2026, the first non-European wave):** papamap.de
+> sweeps **46 countries** — v15's 44 plus `au nz`, each **one whole
+> `admin_level=2` area selected on `name:en`** like the ring (New Zealand's
+> `name` is "New Zealand / Aotearoa"). Both get English `COUNTRY_PAGES`
+> entries (`australia.html`, `new-zealand.html`). The rule that let them in
+> and keeps the rest out: a country joins above **250 pins** (objects whose
+> `changing_table` is not `no`) by a per-country count of the whole planet
+> taken before any sweep, and only if both nightly queries answer inside the
+> budget whole or chunked. The count ranks the world outside Europe US 3,298
+> / AU 1,393 / JP 1,170 / CA 700 / CN 306 / NZ 284, and the timings say the
+> US dies whole on both queries, Canada's count times out and Japan counts in
+> 49.7 s — so those three wait for chunking and are not part of this
+> amendment. The frontend drops its Europe-only `maxBounds` (a box holding
+> both hemispheres constrains nothing); the site's copy counts 46 and says
+> "plus Australia and New Zealand" where it used to say "44 European". No
+> change to the emitted shape: `area_key` becomes `countries_46`, every key
+> and the `status` vocabulary are untouched.
+
 > **v18 amendment (24 Aug 2026, `outdoor` is a dad-accessible token):**
 > `ACCESSIBLE_TOKENS` gains `outdoor` — an open-air table has no room to be
 > locked out of, so it classifies `accessible`. The value earned its way in
