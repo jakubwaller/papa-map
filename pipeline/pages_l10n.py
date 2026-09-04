@@ -563,7 +563,7 @@ Seite wird jede Nacht aus einer Overpass-Abfrage neu erzeugt und speichert nicht
 Wie gezählt und eingefärbt wird: <a href="{up}methods.html">Methoden</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap ist kostenlos und werbefrei.
+<p class="muted">Gebaut von einem Papa, der den Wickeltisch immer wieder in der Damentoilette fand. PapaMap ist kostenlos und werbefrei.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Kaffee spendieren</a>.</p>
 """,
     },
@@ -634,7 +634,7 @@ page is regenerated every night from an Overpass query and stores nothing about 
 How things are counted and coloured: <a href="{up}methods-en.html">Methods</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap is free and ad-free.
+<p class="muted">Built by a dad who kept finding the changing table in the women's toilet. PapaMap is free and ad-free.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Buy me a coffee</a>.</p>
 """,
     },
@@ -702,7 +702,7 @@ nat fra en Overpass-forespørgsel og gemmer intet om dig.
 Sådan tælles og farvelægges der: <a href="{up}methods-da.html">Metode</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap er gratis og reklamefrit.
+<p class="muted">Bygget af en far, der blev ved med at finde puslebordet på dametoilettet. PapaMap er gratis og reklamefrit.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Giv en kop kaffe</a>.</p>
 """,
     },
@@ -774,7 +774,7 @@ nacht opnieuw opgebouwd uit een Overpass-query en slaat niets over jou op.
 Hoe er geteld en gekleurd wordt: <a href="{up}methods-nl.html">Methoden</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap is gratis en reclamevrij.
+<p class="muted">Gebouwd door een vader die de verschoontafel steeds weer op het damestoilet aantrof. PapaMap is gratis en reclamevrij.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Trakteer op koffie</a>.</p>
 """,
     },
@@ -851,7 +851,7 @@ Cette page est régénérée chaque nuit à partir d'une requête Overpass et n'
 Comment on compte et colore&nbsp;: <a href="{up}methods-fr.html">Méthodes</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap est gratuit et sans pub.
+<p class="muted">Créé par un papa qui trouvait toujours la table à langer dans les toilettes des femmes. PapaMap est gratuit et sans pub.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Offrir un café</a>.</p>
 """,
         # france.html is the hub the 13 région pages hang off, the way
@@ -942,7 +942,7 @@ Tahle stránka se každou noc znovu generuje z dotazu na Overpass a nic si o tob
 Jak se počítá a barví: <a href="{up}methods-cs.html">Metody</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap je zdarma a bez reklam.
+<p class="muted">Vytvořil táta, který přebalovací pult pořád nacházel na dámských záchodech. PapaMap je zdarma a bez reklam.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Kup mi kafe</a>.</p>
 """,
     },
@@ -1014,7 +1014,7 @@ Ta strona jest co noc generowana od nowa z zapytania Overpass i nic o tobie nie 
 Jak liczymy i kolorujemy: <a href="{up}methods-pl.html">Metody</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap jest darmowa i bez reklam.
+<p class="muted">Stworzona przez tatę, który przewijak wciąż znajdował w damskiej toalecie. PapaMap jest darmowa i bez reklam.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Postaw kawę</a>.</p>
 """,
     },
@@ -1083,7 +1083,7 @@ sidan byggs om varje natt ur en Overpass-fråga och sparar inget om dig.
 Hur det räknas och färgläggs: <a href="{up}methods-sv.html">Metod</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap är gratis och reklamfritt.
+<p class="muted">Byggt av en pappa som hela tiden hittade skötbordet på damtoaletten. PapaMap är gratis och reklamfritt.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Bjud på en kaffe</a>.</p>
 """,
     },
@@ -1151,7 +1151,7 @@ siden bygges på nytt hver natt fra en Overpass-spørring og lagrer ingenting om
 Slik telles og fargelegges det: <a href="{up}methods-no.html">Metode</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap er gratis og reklamefritt.
+<p class="muted">Laget av en pappa som stadig fant stellebordet på dametoalettet. PapaMap er gratis og reklamefritt.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Spander en kaffe på meg</a>.</p>
 """,
     },
@@ -1222,7 +1222,7 @@ sivu luodaan joka yö uudelleen Overpass-kyselystä eikä se tallenna sinusta mi
 Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap on ilmainen eikä siinä ole mainoksia.
+<p class="muted">Tehnyt isä, joka löysi hoitopöydän yhä uudelleen naisten vessasta. PapaMap on ilmainen eikä siinä ole mainoksia.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Tarjoa minulle kahvia</a>.</p>
 """,
     },
@@ -1295,7 +1295,7 @@ OpenStreetMap</a>, undir <a href="https://opendatacommons.org/licenses/odbl/">OD
 Hvernig talið er og litað: <a href="{up}methods-is.html">Aðferð</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap er ókeypis og auglýsingalaust.
+<p class="muted">Smíðað af pabba sem fann skiptiborðið sífellt á kvennaklósettinu. PapaMap er ókeypis og auglýsingalaust.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Bjóða mér upp á kaffi</a>.</p>
 """,
     },
@@ -1366,7 +1366,7 @@ ehitatakse iga öö uuesti Overpassi päringu põhjal ega salvesta sinu kohta mi
 Kuidas kohti loetakse ja värvitakse: <a href="{up}methods-et.html">Meetodid</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap on tasuta ja reklaamivaba.
+<p class="muted">Loonud isa, kes leidis mähkimislaua ikka ja jälle naiste tualetist. PapaMap on tasuta ja reklaamivaba.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Osta mulle kohv</a>.</p>
 """,
     },
@@ -1439,7 +1439,7 @@ lapa katru nakti tiek no jauna izveidota no Overpass vaicājuma un par tevi neko
 Kā tiek skaitīts un iekrāsots: <a href="{up}methods-lv.html">Metodika</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap ir bezmaksas un bez reklāmām.
+<p class="muted">Izveidoja tētis, kurš pārtinamo galdu atkal un atkal atrada sieviešu tualetē. PapaMap ir bezmaksas un bez reklāmām.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Nopērc man kafiju</a>.</p>
 """,
     },
@@ -1513,7 +1513,7 @@ puslapis kas naktį perkuriamas iš Overpass užklausos ir apie tave nesaugo nie
 Kaip skaičiuojama ir spalvinama: <a href="{up}methods-lt.html">Metodai</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap yra nemokamas ir be reklamos.
+<p class="muted">Sukūrė tėtis, kuris vystymo stalą vis rasdavo moterų tualete. PapaMap yra nemokamas ir be reklamos.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Pavaišink mane kava</a>.</p>
 """,
     },
@@ -1585,7 +1585,7 @@ página se regenera cada noche a partir de una consulta a Overpass y no guarda n
 Cómo se cuenta y se colorea: <a href="{up}methods-es.html">Métodos</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap es gratis y sin publicidad.
+<p class="muted">Creado por un padre que siempre encontraba el cambiador en el baño de mujeres. PapaMap es gratis y sin publicidad.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Invítame a un café</a>.</p>
 """,
     },
@@ -1657,7 +1657,7 @@ página é gerada de novo todas as noites a partir de uma consulta Overpass e n�
 Como se conta e colore: <a href="{up}methods-pt.html">Métodos</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">O PapaMap é gratuito e sem anúncios.
+<p class="muted">Criado por um pai que encontrava sempre o fraldário na casa de banho das senhoras. O PapaMap é gratuito e sem anúncios.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Oferece-me um café</a>.</p>
 """,
     },
@@ -1731,7 +1731,7 @@ pagina viene rigenerata ogni notte da una query Overpass e non salva nulla su di
 Come si conta e si colora: <a href="{up}methods-it.html">Metodo</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap è gratuita e senza pubblicità.
+<p class="muted">Creata da un papà che trovava sempre il fasciatoio nel bagno delle donne. PapaMap è gratuita e senza pubblicità.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Offrimi un caffè</a>.</p>
 """,
     },
@@ -1805,7 +1805,7 @@ Come si conta e si colora: <a href="{up}methods-it.html">Metodo</a> ·
 Πώς μετριούνται και χρωματίζονται τα δεδομένα: <a href="{up}methods-el.html">Μέθοδος</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">Το PapaMap είναι δωρεάν και χωρίς διαφημίσεις.
+<p class="muted">Φτιαγμένο από έναν μπαμπά που έβρισκε συνέχεια την αλλαξιέρα στην τουαλέτα των γυναικών. Το PapaMap είναι δωρεάν και χωρίς διαφημίσεις.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Κέρασέ με έναν καφέ</a>.</p>
 """,
     },
@@ -1880,7 +1880,7 @@ stran se vsako noč znova zgradi iz poizvedbe Overpass in o tebi ne shranjuje ni
 Kako se šteje in barva: <a href="{up}methods-sl.html">Metode</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap je brezplačen in brez oglasov.
+<p class="muted">Ustvaril očka, ki je previjalno mizo vedno znova našel v ženskem stranišču. PapaMap je brezplačen in brez oglasov.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Povabi me na kavo</a>.</p>
 """,
     },
@@ -1952,7 +1952,7 @@ Táto stránka sa každú noc znova generuje z dopytu na Overpass a nič si o te
 Ako sa počíta a farbí: <a href="{up}methods-sk.html">Metódy</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap je zadarmo a bez reklám.
+<p class="muted">Vytvoril otec, ktorý prebaľovací pult stále nachádzal na dámskych toaletách. PapaMap je zadarmo a bez reklám.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Pozvi ma na kávu</a>.</p>
 """,
     },
@@ -2027,7 +2027,7 @@ az oldal minden éjjel újraépül egy Overpass-lekérdezésből, és semmit sem
 Hogyan számolunk és színezünk: <a href="{up}methods-hu.html">Módszertan</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">A PapaMap ingyenes és reklámmentes.
+<p class="muted">Egy apa készítette, aki a pelenkázót újra és újra a női mosdóban találta. A PapaMap ingyenes és reklámmentes.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Hívj meg egy kávéra</a>.</p>
 """,
     },
@@ -2097,7 +2097,7 @@ stranica se svake noći iznova generira iz Overpass upita i o tebi ništa ne poh
 Kako se broji i boji: <a href="{up}methods-hr.html">Metode</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap je besplatan i bez oglasa.
+<p class="muted">Izradio tata koji je stol za previjanje stalno nalazio u ženskom WC-u. PapaMap je besplatan i bez oglasa.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Časti me kavom</a>.</p>
 """,
     },
@@ -2170,7 +2170,7 @@ pagină este regenerată în fiecare noapte dintr-o interogare Overpass și nu s
 Cum se numără și se colorează: <a href="{up}methods-ro.html">Metode</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap este gratuit și fără reclame.
+<p class="muted">Creat de un tată care găsea mereu masa de înfășat în toaleta femeilor. PapaMap este gratuit și fără reclame.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Oferă-mi o cafea</a>.</p>
 """,
     },
@@ -2241,7 +2241,7 @@ contributors</a>, под <a href="https://opendatacommons.org/licenses/odbl/">OD
 Как се брои и оцветява: <a href="{up}methods-bg.html">Методи</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap е безплатен и без реклами.
+<p class="muted">Създаден от татко, който все намираше масата за повиване в дамската тоалетна. PapaMap е безплатен и без реклами.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Почерпи ме с кафе</a>.</p>
 """,
     },
@@ -2315,7 +2315,7 @@ OpenStreetMap-а</a>, под лиценцом <a href="https://opendatacommons.o
 Како се броји и боји: <a href="{up}methods-sr.html">Методе</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap је бесплатан и без реклама.
+<p class="muted">Направио тата који је сто за повијање стално налазио у женском тоалету. PapaMap је бесплатан и без реклама.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Части ме кафом</a>.</p>
 """,
     },
@@ -2385,7 +2385,7 @@ stranica se svake noći iznova generiše iz Overpass upita i ne čuva ništa o t
 Kako se broji i boji: <a href="{up}methods-bs.html">Metode</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap je besplatan i bez reklama.
+<p class="muted">Napravio tata koji je sto za previjanje stalno nalazio u ženskom toaletu. PapaMap je besplatan i bez reklama.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Časti me kafom</a>.</p>
 """,
     },
@@ -2457,7 +2457,7 @@ faqe rigjenerohet çdo natë nga një kërkesë Overpass dhe nuk ruan asgjë pë
 Si numërohet dhe ngjyroset: <a href="{up}methods-sq.html">Metodologjia</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap është falas dhe pa reklama.
+<p class="muted">Ndërtuar nga një baba që tavolinën e ndërrimit e gjente gjithnjë në tualetin e grave. PapaMap është falas dhe pa reklama.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Blimë një kafe</a>.</p>
 """,
     },
@@ -2529,7 +2529,7 @@ OpenStreetMap</a>, под лиценцата <a href="https://opendatacommons.or
 Како се брои и обојува: <a href="{up}methods-mk.html">Методи</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap е бесплатен и без реклами.
+<p class="muted">Направен од татко кој масата за повивање постојано ја наоѓаше во женскиот тоалет. PapaMap е бесплатен и без реклами.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Почерпи ме со кафе</a>.</p>
 """,
     },
@@ -2604,7 +2604,7 @@ OpenStreetMap</a>, за ліцензією <a href="https://opendatacommons.org/
 Як усе рахується й фарбується: <a href="{up}methods-uk.html">Методи</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap безкоштовний і без реклами.
+<p class="muted">Зробив тато, який раз у раз знаходив пеленальний столик у жіночому туалеті. PapaMap безкоштовний і без реклами.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Пригости мене кавою</a>.</p>
 """,
     },
@@ -2676,7 +2676,7 @@ OpenStreetMap</a>, паводле <a href="https://opendatacommons.org/licenses/
 Як усё лічыцца і афарбоўваецца: <a href="{up}methods-be.html">Метады</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap бясплатны і без рэкламы.
+<p class="muted">Зрабіў тата, які раз за разам знаходзіў пеленальны столік у жаночай прыбіральні. PapaMap бясплатны і без рэкламы.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Пачастуй мяне кавай</a>.</p>
 """,
     },
@@ -2747,7 +2747,7 @@ pàgina es regenera cada nit a partir d'una consulta a Overpass i no desa res so
 Com es compta i s'acoloreix: <a href="{up}methods-ca.html">Mètodes</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap és gratuït i sense publicitat.
+<p class="muted">Creat per un pare que sempre trobava el canviador al lavabo de dones. PapaMap és gratuït i sense publicitat.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Convida'm a un cafè</a>.</p>
 """,
     },
