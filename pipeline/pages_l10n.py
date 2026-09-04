@@ -563,7 +563,7 @@ Seite wird jede Nacht aus einer Overpass-Abfrage neu erzeugt und speichert nicht
 Wie gezählt und eingefärbt wird: <a href="{up}methods.html">Methoden</a> ·
 <a href="{up}impressum.html">Impressum</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
-<p class="muted">PapaMap ist kostenlos und werbefrei.
+<p class="muted">Gebaut von einem Papa, der den Wickeltisch immer wieder in der Damentoilette fand. PapaMap ist kostenlos und werbefrei.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Kaffee spendieren</a>.</p>
 """,
     },
