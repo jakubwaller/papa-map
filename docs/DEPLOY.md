@@ -66,7 +66,7 @@ Outside Docker the equivalent line is
 `0 2 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
 
 **02:00, not 03:30, since the Europe-complete sweep (2026-08-22).** 46 countries are
-73 sweep areas and 174 Overpass queries, projected ~108 minutes against the
+73 sweep areas and 208 Overpass queries (62 of them leaderboard cities), projected ~108 minutes against the
 eleven-country 64 (Australia and New Zealand, 2026-09-04, answer whole and add about
 two minutes) — and the ops mail below runs at 05:30, so the earlier start keeps
 almost two hours of congestion headroom between the projected finish and the digest

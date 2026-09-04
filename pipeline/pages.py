@@ -158,13 +158,18 @@ def _bbox(features) -> list | None:
     Plain min/max, so an area straddling the antimeridian would produce a
     box the wrong way round the planet. New Zealand's relation does (the
     Chatham Islands sit at 176°W); as of 2026-09-04 no changing_table is
-    mapped there, so the box is fine — if one appears, wrap the negative
-    longitudes by +360 here and let parseBbox accept an east past 180."""
+    mapped there. The day one appears, the page drops its map link rather
+    than shipping a box the wrong way round the planet — a missing CTA is
+    visible, a whole-world view behind a "New Zealand" button is not. The
+    real fix then is to wrap the negative longitudes by +360 here and let
+    parseBbox accept an east past 180."""
     if not features:
         return None
     lons = [f["geometry"]["coordinates"][0] for f in features]
     lats = [f["geometry"]["coordinates"][1] for f in features]
     min_lon, max_lon, min_lat, max_lat = min(lons), max(lons), min(lats), max(lats)
+    if max_lon - min_lon > 180:
+        return None
     pad_lon = max((max_lon - min_lon) * 0.04, 0.05)
     pad_lat = max((max_lat - min_lat) * 0.04, 0.03)
     return [round(min_lon - pad_lon, 4), round(min_lat - pad_lat, 4),

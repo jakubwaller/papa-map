@@ -863,7 +863,7 @@ export const STRINGS = {
     areaDeDk: "Njemačka i Danska",
     areaFallback: "46 zemalja",
     areaCountries: "{n} zemalja",
-    areaCountriesIn: "{n} zemljama",
+    areaCountriesIn: "{n} zemalja",
 
     stAccessible: "Dostupno tati",
     stFemaleOnly: "Samo žensko WC",
@@ -1175,7 +1175,7 @@ export const STRINGS = {
     areaDeDk: "Njemačka i Danska",
     areaFallback: "46 zemalja",
     areaCountries: "{n} zemalja",
-    areaCountriesIn: "{n} zemljama",
+    areaCountriesIn: "{n} zemalja",
 
     stAccessible: "Dostupno tati",
     stFemaleOnly: "Samo žensko WC",
