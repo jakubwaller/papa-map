@@ -45,17 +45,19 @@ def snapshot(date_iso: str, areas=None, cities=CITY_AREAS,
         # Northwest Territories are exactly that (2026-09-05) — so an empty
         # answer costs one more attic query, for the toilet count, before it
         # is believed. Only empty answers pay it.
-        if not data.get("elements"):
+        elements = data.get("elements", [])
+        if not elements:
             counts = osm.parse_counts(
                 fetch(toilets_counts_ql(name, lvl, date=attic)))
-            if not (counts and counts[0]):
+            # Two counts or nothing, as in run.py: one count is a truncated
+            # answer, and a truncated answer must not vouch for an empty day.
+            if len(counts) != 2 or not counts[0]:
                 raise RuntimeError(
                     f"area {name!r} resolved to zero objects at {attic}")
-        ct_elements.extend(data.get("elements", []))
-        for el in data["elements"]:
+        ct_elements.extend(elements)
+        for el in elements:
             ct_area.setdefault((el.get("type"), el.get("id")), name)
-        print(f"  {date_iso} {name}: ct={len(data['elements'])}",
-              file=sys.stderr)
+        print(f"  {date_iso} {name}: ct={len(elements)}", file=sys.stderr)
         sleep(pause_s)
     features = export.build_features(
         {"elements": osm.dedup_elements(ct_elements)})

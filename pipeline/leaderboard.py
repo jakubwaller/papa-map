@@ -5,8 +5,8 @@ from datetime import date as _date, timedelta
 from pathlib import Path
 
 from .config import (AREA_COUNTRY, BUNDESLAENDER, CANADA_PROVINCES,
-                     COUNTRY_PAGES, FRANCE_REGIONS, LANG_HOME_CC, US_STATES,
-                     chunked_area_names,
+                     COUNTRY_PAGES, FRANCE_REGIONS, JAPAN_PREFECTURES,
+                     LANG_HOME_CC, US_STATES, chunked_area_names,
                      HISTORY_MAX_DAYS, PAGES_BASE_PATH, SITE_BASE_URL)
 from .export import write_text_atomic
 from .leaderboard_strings import DE_FILE, EN_FILE, L
@@ -436,8 +436,8 @@ def _table(rows, name_col: str, tab: dict, lang: str) -> str:
 
 def _region_kinds(rows) -> tuple[int, dict, list[str]]:
     """(Bundesland rows, {"fr": région rows, "us": state rows, "ca": province
-    rows}, names of the whole-country rows), read off the rows about to be
-    printed.
+    rows, "jp": prefecture rows}, names of the whole-country rows), read off
+    the rows about to be printed.
 
     The regions table shows whatever the sweep produced, and since 18 Aug 2026
     that is a list the operator can extend: PAPAMAP_COUNTRIES=de,dk,be,… puts
@@ -459,9 +459,11 @@ def _region_kinds(rows) -> tuple[int, dict, list[str]]:
     lands = sum(1 for n in names if n in BUNDESLAENDER)
     states = {n for n, _ in US_STATES} - {"District of Columbia"}
     provinces = {n for n, _ in CANADA_PROVINCES}
+    prefectures = {n for n, _ in JAPAN_PREFECTURES}
     kinds = {"fr": sum(1 for n in names if n in FRANCE_REGIONS),
              "us": sum(1 for n in names if n in states),
-             "ca": sum(1 for n in names if n in provinces)}
+             "ca": sum(1 for n in names if n in provinces),
+             "jp": sum(1 for n in names if n in prefectures)}
     countries = [n for n in names if n not in chunks]
     return lands, kinds, sorted(countries, key=sort_key)
 
@@ -528,7 +530,7 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         else:
             kind = "_lands"
         parts.append(f'<h2>{esc(tab["regions_h2" + kind])}</h2>\n')
-        names = esc(", ".join(countries))
+        names = esc(tab["list_sep"].join(countries))
         # Only the _regions sentence is assembled; the other three spell
         # themselves out and ignore {list}.
         clauses = []
@@ -540,12 +542,18 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
             clauses.append(tab["cl_states"].format(s=kinds["us"]))
         if kinds["ca"]:
             clauses.append(tab["cl_provinces"].format(p=kinds["ca"]))
+        if kinds["jp"]:
+            clauses.append(tab["cl_prefectures"].format(j=kinds["jp"]))
         if len(countries) == 1:
             clauses.append(tab["cl_country_one"].format(names=names))
         elif countries:
             clauses.append(tab["cl_country_many"].format(
                 c=len(countries), names=names))
-        listed = (tab["and_sep"].join((", ".join(clauses[:-1]), clauses[-1]))
+        # The list separator is the language's too: Japanese joins with the
+        # ideographic 、 where English has ", " — the first language where
+        # the two differ, and a mixed sentence reads as a typo.
+        sep = tab["list_sep"]
+        listed = (tab["and_sep"].join((sep.join(clauses[:-1]), clauses[-1]))
                   if len(clauses) > 1 else (clauses[0] if clauses else ""))
         parts.append(tab["regions_note" + kind].format(
             n=lands, r=fr_regions, c=len(countries), names=names, list=listed))

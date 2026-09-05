@@ -4,8 +4,8 @@ Guidance for coding agents working in this repository.
 
 ## What this is
 
-A static map of places in 48 countries (44 European, plus Australia, New Zealand, the United
-States and Canada) with a baby changing table, coloured by whether a dad
+A static map of places in 49 countries (44 European, plus Australia, New Zealand, the United
+States, Canada and Japan) with a baby changing table, coloured by whether a dad
 can reach it: green = accessible room, red = women's room only, grey = nobody has recorded the room.
 A Python pipeline queries Overpass and taginfo and writes GeoJSON + one static page per swept area
 (Bundesländer in German, every country in its own language, French régions) into `web/wickeltische/`;
@@ -39,17 +39,18 @@ dad-accessible — inverting the entire point of the map. `ACCESSIBLE_TOKENS`, `
 **`CONTRACT.md` is the pipeline↔frontend contract.** Classification lives only in Python; the
 frontend consumes the `status` property and never re-derives it. `STATUSES` in `web/datasource.js`
 is the stable key set the UI renders zero badges from. Changing the emitted shape means amending
-CONTRACT.md — it is versioned by amendment, currently v21.
+CONTRACT.md — it is versioned by amendment, currently v22.
 
 **Overpass lies in two directions.** An all-Germany area query dies at a ~60 s network idle cutoff,
 so Germany stays chunked per Bundesland — and **France per région**, for the same reason and
 measured the same way (empty reply at 60.14 s for the country whole, 19 Aug 2026) — and the
-**US per state and Canada per province** since 2026-09-05, both dead whole on 2026-09-04. Four
-chunked countries, so a 13-entry `COUNTRY_AREAS["fr"]` is not redundant; collapsing it to one
-`admin_level=2` area brings back the failure and adds pins in the Caribbean, because the five
-overseas régions are `admin_level=4` too. The US and Canadian chunks are selected by
-`ISO3166-2` code (`AREA_SELECTORS`), never by name: a level-4 "Florida" is also a department
-of Uruguay. The other 44 answer whole. And a mirror can return HTTP
+**US per state, Canada per province and Japan per prefecture** since 2026-09-05 (the first two
+dead whole, Japan's count at 49.7 s whole). Five chunked countries, so a 13-entry
+`COUNTRY_AREAS["fr"]` is not redundant; collapsing it to one `admin_level=2` area brings back
+the failure and adds pins in the Caribbean, because the five overseas régions are
+`admin_level=4` too. The US, Canadian and Japanese chunks are selected by `ISO3166-2` code
+(`AREA_SELECTORS`), never by name: a level-4 "Florida" is also a department of Uruguay. The
+other 44 answer whole. And a mirror can return HTTP
 200 from a database months out of date — `pipeline/osm.py` reads `osm3s.timestamp_osm_base` and
 raises `StaleMirror`, which is skipped rather than retried on the same host. Never "simplify" any of
 these away.

@@ -4,7 +4,7 @@
   "data_url": "https://papamap.de/taginfo.json",
   "project": {
     "name": "PapaMap",
-    "description": "Map of baby changing tables in 44 European countries plus Australia, New Zealand, the United States and Canada, coloured by whether a father can reach them.",
+    "description": "Map of baby changing tables in 44 European countries plus Australia, New Zealand, the United States, Canada and Japan, coloured by whether a father can reach them.",
     "project_url": "https://papamap.de/",
     "doc_url": "https://papamap.de/methods-en.html",
     "icon_url": "https://papamap.de/icon.svg",

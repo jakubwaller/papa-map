@@ -86,9 +86,11 @@ L = {
         "cl_regions": "die {r} französischen Régions",
         "cl_states": "die {s} US-Bundesstaaten und DC",
         "cl_provinces": "die {p} kanadischen Provinzen und Territorien",
+        "cl_prefectures": "die {j} japanischen Präfekturen",
         "cl_country_one": "{names} als Ganzes",
         "cl_country_many": "{c} Länder als Ganzes ({names})",
         "and_sep": " und ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer und ganze Länder",
         "regions_note_many": ("<p>Dieselbe Rechnung für die {n} Bundesländer "
                               "und für {c} Länder als Ganzes: {names}.</p>\n"),
@@ -156,9 +158,11 @@ L = {
         "cl_regions": "the {r} French régions",
         "cl_states": "the {s} US states and DC",
         "cl_provinces": "the {p} Canadian provinces and territories",
+        "cl_prefectures": "the {j} Japanese prefectures",
         "cl_country_one": "{names} as a whole",
         "cl_country_many": "{c} countries as a whole ({names})",
         "and_sep": " and ",
+        "list_sep": ", ",
         "regions_h2_many": "German states and whole countries",
         "regions_note_many": ("<p>The same arithmetic for the {n} Bundesländer "
                               "and for {c} countries as a whole: "
@@ -240,9 +244,11 @@ How things are counted and coloured: <a href="{up}methods-en.html">Methods</a> �
         "cl_regions": "de {r} franske régions",
         "cl_states": "de {s} amerikanske delstater og DC",
         "cl_provinces": "de {p} canadiske provinser og territorier",
+        "cl_prefectures": "de {j} japanske præfekturer",
         "cl_country_one": "{names} som helhed",
         "cl_country_many": "{c} lande som helhed ({names})",
         "and_sep": " og ",
+        "list_sep": ", ",
         "regions_h2_many": "Tyske delstater og hele lande",
         "regions_note_many": ("<p>Samme regnestykke for de {n} Bundesländer "
                               "og for {c} lande som helhed: {names}.</p>\n"),
@@ -326,9 +332,11 @@ Sådan tælles og farvelægges der: <a href="{up}methods-da.html">Metode</a> ·
         "cl_regions": "de {r} Franse régions",
         "cl_states": "de {s} Amerikaanse staten en DC",
         "cl_provinces": "de {p} Canadese provincies en territoria",
+        "cl_prefectures": "de {j} Japanse prefecturen",
         "cl_country_one": "{names} als geheel",
         "cl_country_many": "{c} landen als geheel ({names})",
         "and_sep": " en ",
+        "list_sep": ", ",
         "regions_h2_many": "Duitse deelstaten en hele landen",
         "regions_note_many": ("<p>Dezelfde rekensom voor de {n} "
                               "Bundesländer en voor {c} landen als "
@@ -414,9 +422,11 @@ Hoe geteld en gekleurd wordt: <a href="{up}methods-nl.html">Methode</a> ·
         "cl_regions": "les {r} régions françaises",
         "cl_states": "les {s} États américains et DC",
         "cl_provinces": "les {p} provinces et territoires canadiens",
+        "cl_prefectures": "les {j} préfectures japonaises",
         "cl_country_one": "{names} dans son ensemble",
         "cl_country_many": "{c} pays dans leur ensemble ({names})",
         "and_sep": " et ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer et pays entiers",
         "regions_note_many": ("<p>Le même calcul pour les {n} Bundesländer "
                               "et pour {c} pays dans leur ensemble : "
@@ -499,9 +509,11 @@ Comment le comptage et les couleurs fonctionnent : <a href="{up}methods-fr.html"
         "cl_regions": "le {r} régions francesi",
         "cl_states": "i {s} stati USA e DC",
         "cl_provinces": "le {p} province e i territori del Canada",
+        "cl_prefectures": "le {j} prefetture giapponesi",
         "cl_country_one": "{names} nel suo complesso",
         "cl_country_many": "{c} paesi nel loro complesso ({names})",
         "and_sep": " e ",
+        "list_sep": ", ",
         "regions_h2_many": "Länder tedeschi e interi paesi",
         "regions_note_many": ("<p>Lo stesso calcolo per i {n} Bundesländer "
                               "e per {c} paesi nel loro complesso: "
@@ -583,9 +595,11 @@ Come si conta e si colora: <a href="{up}methods-it.html">Metodo</a> ·
         "cl_regions": "{r} francouzských régions",
         "cl_states": "{s} států USA a DC",
         "cl_provinces": "{p} kanadských provincií a teritorií",
+        "cl_prefectures": "{j} japonských prefektur",
         "cl_country_one": "{names} jako celek",
         "cl_country_many": "{c} zemí jako celek ({names})",
         "and_sep": " a ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer a celé země",
         "regions_note_many": ("<p>Stejný výpočet pro {n} Bundesländer a pro "
                               "{c} zemí jako celek: {names}.</p>\n"),
@@ -666,9 +680,11 @@ Jak se tu počítá a barví: <a href="{up}methods-cs.html">Metody</a> ·
         "cl_regions": "{r} francuskich regionów",
         "cl_states": "{s} stanów USA i DC",
         "cl_provinces": "{p} kanadyjskich prowincji i terytoriów",
+        "cl_prefectures": "{j} japońskich prefektur",
         "cl_country_one": "{names} jako całości",
         "cl_country_many": "{c} krajów jako całości ({names})",
         "and_sep": " i ",
+        "list_sep": ", ",
         "regions_h2_many": "Niemieckie kraje związkowe i całe kraje",
         "regions_note_many": ("<p>Ten sam rachunek dla {n} Bundesländer i "
                               "dla {c} krajów jako całości: {names}.</p>\n"),
@@ -748,9 +764,11 @@ Jak liczymy i kolorujemy: <a href="{up}methods-pl.html">Metody</a> ·
         "cl_regions": "de {r} franska régions",
         "cl_states": "de {s} amerikanska delstaterna och DC",
         "cl_provinces": "de {p} kanadensiska provinserna och territorierna",
+        "cl_prefectures": "de {j} japanska prefekturerna",
         "cl_country_one": "{names} som helhet",
         "cl_country_many": "{c} länder som helhet ({names})",
         "and_sep": " och ",
+        "list_sep": ", ",
         "regions_h2_many": "Tyska delstater och hela länder",
         "regions_note_many": ("<p>Samma räkning för de {n} Bundesländer "
                               "och för {c} länder som helhet: {names}.</p>\n"),
@@ -833,9 +851,11 @@ Hur saker räknas och färgläggs: <a href="{up}methods-sv.html">Metod</a> ·
         "cl_regions": "{r} francuskih régions",
         "cl_states": "{s} američkih saveznih država i DC",
         "cl_provinces": "{p} kanadskih provincija i teritorija",
+        "cl_prefectures": "{j} japanskih prefektura",
         "cl_country_one": "{names} u cjelini",
         "cl_country_many": "{c} zemlje u cjelini ({names})",
         "and_sep": " i ",
+        "list_sep": ", ",
         "regions_h2_many": "Njemačke pokrajine i cijele zemlje",
         "regions_note_many": ("<p>Ista računica za {n} Bundesländer i za "
                               "{c} zemlje u cjelini: {names}.</p>\n"),
@@ -916,9 +936,11 @@ Kako se broji i boji: <a href="{up}methods-bs.html">Metode</a> ·
         "cl_regions": "les {r} régions franceses",
         "cl_states": "els {s} estats dels EUA i DC",
         "cl_provinces": "les {p} províncies i territoris del Canadà",
+        "cl_prefectures": "les {j} prefectures japoneses",
         "cl_country_one": "{names} en conjunt",
         "cl_country_many": "{c} països en conjunt ({names})",
         "and_sep": " i ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer i països sencers",
         "regions_note_many": ("<p>El mateix càlcul per als {n} Bundesländer "
                               "i per a {c} països en conjunt: {names}.</p>\n"),
@@ -999,9 +1021,11 @@ Com es compta i s'acoloreix: <a href="{up}methods-ca.html">Mètodes</a> ·
         "cl_regions": "{r} Prantsuse régions",
         "cl_states": "{s} USA osariiki ja DC",
         "cl_provinces": "{p} Kanada provintsi ja territooriumi",
+        "cl_prefectures": "{j} Jaapani prefektuuri",
         "cl_country_one": "{names} tervikuna",
         "cl_country_many": "{c} riiki tervikuna ({names})",
         "and_sep": " ja ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer ja terved riigid",
         "regions_note_many": ("<p>Sama arvutus: {n} Bundesländer ja {c} "
                               "riiki tervikuna ({names}).</p>\n"),
@@ -1081,9 +1105,11 @@ Kuidas kohti loetakse ja värvitakse: <a href="{up}methods-et.html">Meetodid</a>
         "cl_regions": "las {r} régions francesas",
         "cl_states": "los {s} estados de EE. UU. y DC",
         "cl_provinces": "las {p} provincias y territorios de Canadá",
+        "cl_prefectures": "las {j} prefecturas japonesas",
         "cl_country_one": "{names} en su conjunto",
         "cl_country_many": "{c} países en su conjunto ({names})",
         "and_sep": " y ",
+        "list_sep": ", ",
         "regions_h2_many": "Estados alemanes y países enteros",
         "regions_note_many": ("<p>El mismo cálculo para los {n} Bundesländer "
                               "y para {c} países en su conjunto: {names}.</p>\n"),
@@ -1166,9 +1192,11 @@ Cómo se cuenta y se colorea: <a href="{up}methods-es.html">Métodos</a> ·
         "cl_regions": "{r} francuskih regija",
         "cl_states": "{s} američkih saveznih država i DC",
         "cl_provinces": "{p} kanadskih pokrajina i teritorija",
+        "cl_prefectures": "{j} japanskih prefektura",
         "cl_country_one": "{names} u cjelini",
         "cl_country_many": "{c} zemlje u cjelini ({names})",
         "and_sep": " i ",
+        "list_sep": ", ",
         "regions_h2_many": "Njemačke pokrajine i cijele zemlje",
         "regions_note_many": ("<p>Isti izračun za {n} Bundesländer i za {c} "
                               "zemlje u cjelini: {names}.</p>\n"),
@@ -1249,9 +1277,11 @@ Kako se broji i boji: <a href="{up}methods-hr.html">Metode</a> ·
         "cl_regions": "þau {r} frönsku héruð",
         "cl_states": "þau {s} bandarísku fylki og DC",
         "cl_provinces": "þau {p} kanadísku fylki og landsvæði",
+        "cl_prefectures": "þau {j} japönsku héruð",
         "cl_country_one": "{names} í heild",
         "cl_country_many": "{c} lönd í heild ({names})",
         "and_sep": " og ",
+        "list_sep": ", ",
         "regions_h2_many": "Þýsk sambandslönd og heil lönd",
         "regions_note_many": ("<p>Sami útreikningur fyrir þau {n} "
                               "Bundesländer og fyrir {c} lönd í heild: "
@@ -1334,9 +1364,11 @@ Hvernig talið er og litað: <a href="{up}methods-is.html">Aðferð</a> ·
         "cl_regions": "{r} Francijas reģioni",
         "cl_states": "{s} ASV štati un DC",
         "cl_provinces": "{p} Kanādas provinces un teritorijas",
+        "cl_prefectures": "{j} Japānas prefektūras",
         "cl_country_one": "{names} kopumā",
         "cl_country_many": "{c} valstis kopumā ({names})",
         "and_sep": " un ",
+        "list_sep": ", ",
         "regions_h2_many": "Vācijas federālās zemes un veselas valstis",
         "regions_note_many": ("<p>Tas pats aprēķins: {n} Bundesländer un "
                               "{c} valstis kopumā — {names}.</p>\n"),
@@ -1421,9 +1453,11 @@ Kā tiek skaitīts un iekrāsots: <a href="{up}methods-lv.html">Metodika</a> ·
         "cl_regions": "{r} Prancūzijos regionai",
         "cl_states": "{s} JAV valstijų ir DC",
         "cl_provinces": "{p} Kanados provincijų ir teritorijų",
+        "cl_prefectures": "{j} Japonijos prefektūrų",
         "cl_country_one": "{names} kaip visa šalis",
         "cl_country_many": "{c} ištisos šalys ({names})",
         "and_sep": " ir ",
+        "list_sep": ", ",
         "regions_h2_many": "Vokietijos žemės ir ištisos šalys",
         "regions_note_many": ("<p>Tas pats skaičiavimas — {n} Bundesländer "
                               "ir {c} ištisos šalys: {names}.</p>\n"),
@@ -1510,9 +1544,11 @@ Kaip skaičiuojama ir spalvinama: <a href="{up}methods-lt.html">Metodai</a> ·
         "cl_regions": "a {r} francia régió",
         "cl_states": "az {s} amerikai állam és DC",
         "cl_provinces": "a {p} kanadai tartomány és terület",
+        "cl_prefectures": "a {j} japán prefektúra",
         "cl_country_one": "{names} egésze",
         "cl_country_many": "{c} ország egésze ({names})",
         "and_sep": " és ",
+        "list_sep": ", ",
         "regions_h2_many": "Német tartományok és egész országok",
         "regions_note_many": ("<p>Ugyanaz a számítás a {n} Bundesländer "
                               "esetén, valamint {c} ország egésze esetén: "
@@ -1594,9 +1630,11 @@ Hogyan számolunk és színezünk: <a href="{up}methods-hu.html">Módszertan</a>
         "cl_regions": "de {r} franske régions",
         "cl_states": "de {s} amerikanske delstatene og DC",
         "cl_provinces": "de {p} kanadiske provinsene og territoriene",
+        "cl_prefectures": "de {j} japanske prefekturene",
         "cl_country_one": "{names} som helhet",
         "cl_country_many": "{c} land som helhet ({names})",
         "and_sep": " og ",
+        "list_sep": ", ",
         "regions_h2_many": "Tyske delstater og hele land",
         "regions_note_many": ("<p>Samme regnestykke for de {n} Bundesländer "
                               "og for {c} land som helhet: {names}.</p>\n"),
@@ -1678,9 +1716,11 @@ Slik telles og fargelegges det: <a href="{up}methods-no.html">Metode</a> ·
         "cl_regions": "as {r} régions francesas",
         "cl_states": "os {s} estados dos EUA e DC",
         "cl_provinces": "as {p} províncias e territórios do Canadá",
+        "cl_prefectures": "as {j} prefeituras japonesas",
         "cl_country_one": "{names} como um todo",
         "cl_country_many": "{c} países como um todo ({names})",
         "and_sep": " e ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer e países inteiros",
         "regions_note_many": ("<p>A mesma conta para os {n} Bundesländer e "
                               "para {c} países como um todo: {names}.</p>\n"),
@@ -1765,9 +1805,11 @@ Como se conta e colore: <a href="{up}methods-pt.html">Métodos</a> ·
         "cl_regions": "cele {r} régions franceze",
         "cl_states": "cele {s} de state americane și DC",
         "cl_provinces": "cele {p} provincii și teritorii canadiene",
+        "cl_prefectures": "cele {j} de prefecturi japoneze",
         "cl_country_one": "{names} ca întreg",
         "cl_country_many": "{c} de țări ca întreg ({names})",
         "and_sep": " și ",
+        "list_sep": ", ",
         "regions_h2_many": "Landurile germane și țări întregi",
         "regions_note_many": ("<p>Același calcul pentru cele {n} "
                               "Bundesländer și pentru {c} de țări ca întreg: "
@@ -1850,9 +1892,11 @@ Cum se numără și se colorează: <a href="{up}methods-ro.html">Metode</a> ·
         "cl_regions": "{r} régions franceze",
         "cl_states": "{s} shtete amerikane dhe DC",
         "cl_provinces": "{p} provinca dhe territore kanadeze",
+        "cl_prefectures": "{j} prefektura japoneze",
         "cl_country_one": "{names} si e tërë",
         "cl_country_many": "{c} vende si e tërë ({names})",
         "and_sep": " dhe ",
+        "list_sep": ", ",
         "regions_h2_many": "Shtetet federale gjermane dhe vende të tëra",
         "regions_note_many": ("<p>E njëjta llogaritje për {n} Bundesländer "
                               "dhe për {c} vende si e tërë: {names}.</p>\n"),
@@ -1935,9 +1979,11 @@ Si numërohet dhe ngjyroset: <a href="{up}methods-sq.html">Metodologjia</a> ·
         "cl_regions": "{r} francúzskych regiónov",
         "cl_states": "{s} štátov USA a DC",
         "cl_provinces": "{p} kanadských provincií a teritórií",
+        "cl_prefectures": "{j} japonských prefektúr",
         "cl_country_one": "{names} ako celok",
         "cl_country_many": "{c} krajín ako celok ({names})",
         "and_sep": " a ",
+        "list_sep": ", ",
         "regions_h2_many": "Nemecké spolkové krajiny a celé krajiny",
         "regions_note_many": ("<p>Rovnaký výpočet pre {n} Bundesländer a "
                               "pre {c} krajín ako celok: {names}.</p>\n"),
@@ -2021,9 +2067,11 @@ Ako sa počíta a farbí: <a href="{up}methods-sk.html">Metódy</a> ·
         "cl_regions": "{r} francoskih regij",
         "cl_states": "{s} zveznih držav ZDA in DC",
         "cl_provinces": "{p} kanadskih provinc in ozemelj",
+        "cl_prefectures": "{j} japonskih prefektur",
         "cl_country_one": "{names} v celoti",
         "cl_country_many": "{c} držav v celoti ({names})",
         "and_sep": " in ",
+        "list_sep": ", ",
         "regions_h2_many": "Nemške dežele in cele države",
         "regions_note_many": ("<p>Enak izračun za {n} Bundesländer in za {c} "
                               "držav v celoti: {names}.</p>\n"),
@@ -2105,9 +2153,11 @@ Kako se šteje in barva: <a href="{up}methods-sl.html">Metode</a> ·
         "cl_regions": "{r} Ranskan régions",
         "cl_states": "{s} Yhdysvaltain osavaltiota ja DC",
         "cl_provinces": "{p} Kanadan provinssia ja territoriota",
+        "cl_prefectures": "{j} Japanin prefektuuria",
         "cl_country_one": "{names} kokonaisuutena",
         "cl_country_many": "{c} maata kokonaisuutena ({names})",
         "and_sep": " ja ",
+        "list_sep": ", ",
         "regions_h2_many": "Saksan osavaltiot ja kokonaiset maat",
         "regions_note_many": ("<p>Sama laskutapa: {n} Bundesländer ja {c} "
                               "maata kokonaisuutena — {names}.</p>\n"),
@@ -2187,9 +2237,11 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
         "cl_regions": "τις {r} γαλλικές régions",
         "cl_states": "τις {s} πολιτείες των ΗΠΑ και την DC",
         "cl_provinces": "τις {p} καναδικές επαρχίες και εδάφη",
+        "cl_prefectures": "τις {j} ιαπωνικές νομαρχίες",
         "cl_country_one": "{names} ως σύνολο",
         "cl_country_many": "{c} χώρες ως σύνολο ({names})",
         "and_sep": " και ",
+        "list_sep": ", ",
         "regions_h2_many": "Γερμανικά κρατίδια και ολόκληρες χώρες",
         "regions_note_many": ("<p>Ο ίδιος υπολογισμός για τα {n} Bundesländer "
                               "και για {c} χώρες ως σύνολο: {names}.</p>\n"),
@@ -2274,9 +2326,11 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
         "cl_regions": "{r} французскіх рэгіёнаў",
         "cl_states": "{s} штатаў ЗША і DC",
         "cl_provinces": "{p} канадскіх правінцый і тэрыторый",
+        "cl_prefectures": "{j} японскіх прэфектур",
         "cl_country_one": "{names} цалкам",
         "cl_country_many": "{c} краін цалкам ({names})",
         "and_sep": " і ",
+        "list_sep": ", ",
         "regions_h2_many": "Нямецкія землі і цэлыя краіны",
         "regions_note_many": ("<p>Тыя ж падлікі для {n} Bundesländer і для "
                               "{c} краін цалкам: {names}.</p>\n"),
@@ -2357,9 +2411,11 @@ OpenStreetMap</a>, паводле <a href="https://opendatacommons.org/licenses/
         "cl_regions": "{r}-те френски региона",
         "cl_states": "{s}-те щата на САЩ и DC",
         "cl_provinces": "{p}-те канадски провинции и територии",
+        "cl_prefectures": "{j}-те японски префектури",
         "cl_country_one": "{names} като цяло",
         "cl_country_many": "{c} държави като цяло ({names})",
         "and_sep": " и ",
+        "list_sep": ", ",
         "regions_h2_many": "Германски провинции и цели държави",
         "regions_note_many": ("<p>Същото изчисление за {n}-те Bundesländer "
                               "и за {c} държави като цяло: {names}.</p>\n"),
@@ -2441,9 +2497,11 @@ contributors</a>, под <a href="https://opendatacommons.org/licenses/odbl/">OD
         "cl_regions": "{r}-те француски региони",
         "cl_states": "{s}-те американски сојузни држави и DC",
         "cl_provinces": "{p}-те канадски провинции и територии",
+        "cl_prefectures": "{j}-те јапонски префектури",
         "cl_country_one": "{names} како целина",
         "cl_country_many": "{c} земји како целина ({names})",
         "and_sep": " и ",
+        "list_sep": ", ",
         "regions_h2_many": "Германски покраини и цели земји",
         "regions_note_many": ("<p>Истата сметка за {n}-те Bundesländer и за "
                               "{c} земји како целина: {names}.</p>\n"),
@@ -2526,9 +2584,11 @@ OpenStreetMap</a>, под лиценцата <a href="https://opendatacommons.or
         "cl_regions": "{r} француских региона",
         "cl_states": "{s} америчких савезних држава и DC",
         "cl_provinces": "{p} канадских покрајина и територија",
+        "cl_prefectures": "{j} јапанских префектура",
         "cl_country_one": "{names} у целини",
         "cl_country_many": "{c} земље у целини ({names})",
         "and_sep": " и ",
+        "list_sep": ", ",
         "regions_h2_many": "Немачке покрајине и целе земље",
         "regions_note_many": ("<p>Исти рачун за {n} Bundesländer и за {c} "
                               "земље у целини: {names}.</p>\n"),
@@ -2608,9 +2668,11 @@ OpenStreetMap-а</a>, под лиценцом <a href="https://opendatacommons.o
         "cl_regions": "{r} французьких régions",
         "cl_states": "{s} штатів США і DC",
         "cl_provinces": "{p} канадських провінцій і територій",
+        "cl_prefectures": "{j} японських префектур",
         "cl_country_one": "{names} в цілому",
         "cl_country_many": "{c} країн в цілому ({names})",
         "and_sep": " і ",
+        "list_sep": ", ",
         "regions_h2_many": "Німецькі землі та цілі країни",
         "regions_note_many": ("<p>Той самий підрахунок для {n} Bundesländer "
                               "і для {c} країн в цілому: {names}.</p>\n"),
@@ -2637,5 +2699,79 @@ OpenStreetMap</a>, за ліцензією <a href="https://opendatacommons.org/
 <p class="muted">Зробив тато, який раз у раз знаходив пеленальний столик у жіночому туалеті. PapaMap безкоштовний і без реклами.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Пригости мене кавою</a>.</p>
 """),
+    },
+    "ja": {
+        "lang_name": "日本語",
+        "file": "leaderboard-ja.html",
+        "months": ("1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月",
+                   "10月", "11月", "12月"),
+        "date_fmt": "{y}年{m}{d}日",
+        "decimal": ".",
+        "thousands": ",",
+        "back_map": "&larr; 地図へ",
+        "title": "PapaMap ランキング",
+        "desc": ("「おむつ交換台はどの部屋にあるか」という質問に、最近どこで答えが"
+                 "付いたか。ポイント差で示し、OpenStreetMapから毎晩再構築します。"),
+        "h1": "ランキング",
+        "stand": "{date}時点 · データ: OpenStreetMap",
+        "stand_base": "{date}時点 · {base}からの変化 · データ: OpenStreetMap",
+        "intro1": ("<p>どの都市におむつ交換台が最も多いかは、意図的にこのページには"
+                   "載せていません。絶対数は主に、その場所がどれだけ丹念にマッピング"
+                   "されたかを測るもので、設備の充実度ではありません。順位を付けると"
+                   '誤解を招きます（理由は<a href="{up}methods-ja.html">方法のページ</a>'
+                   "に）。正直に比べられるのは変化です: 「交換台はどの部屋にあるか」"
+                   "という質問に、最近どこで答えが付いたか。このページが数えるのは"
+                   "それ — 部屋の質問に答えのある場所の割合と、それを最も伸ばしたのは"
+                   "誰か — です。</p>\n"),
+        "intro2": ("<p>どの答えも数に入ります。「女性トイレのみ」も含めて — この地図は"
+                   "緑のピンではなく、正直な答えで動いています。答えるのはその場で"
+                   '1分以内: <a href="{up}">地図</a>で灰色のピンをタップし、MapComplete'
+                   'のリンクを開くだけです。<a href="{up}methods-ja.html#contribute">'
+                   "手順はこちら</a>。</p>\n"),
+        "fresh": ("<p>記録は{date}に始まりました。比較の基準ができ次第、このページに"
+                  "誰が動いたかが表示されます。</p>\n"),
+        "quiet": "<p>{base}以降、どこも動いていません。灰色のピンが待っています。</p>\n",
+        "cities_h2": "都市",
+        "cities_note": ("<p>大都市{n}都市を、回答済みの割合の変化順に並べています。"
+                        "ベルリン、ハンブルク、ブレーメンは下の州の表にもありますが、"
+                        "ここでは都市として数えています。</p>\n"),
+        "regions_h2": "ドイツの州とデンマーク",
+        "regions_note": "<p>ドイツの{n}州とデンマーク全体について、同じ計算です。</p>\n",
+        "regions_h2_regions": "ドイツの州、地域、国全体",
+        "regions_note_regions": "<p>{list}について、同じ計算です。</p>\n",
+        "cl_lands": "ドイツの{n}州",
+        "cl_regions": "フランスの{r}地域圏",
+        "cl_states": "米国の{s}州とDC",
+        "cl_provinces": "カナダの{p}州・準州",
+        "cl_prefectures": "日本の{j}都道府県",
+        "cl_country_one": "{names}全体",
+        "cl_country_many": "{c}か国全体（{names}）",
+        "and_sep": "、",
+        "list_sep": "、",
+        "regions_h2_many": "ドイツの州と国全体",
+        "regions_note_many": ("<p>ドイツの{n}州と、{c}か国全体（{names}）について、"
+                              "同じ計算です。</p>\n"),
+        "regions_h2_one": "ドイツの州と1か国全体",
+        "regions_note_one": "<p>ドイツの{n}州と{names}全体について、同じ計算です。</p>\n",
+        "regions_h2_lands": "ドイツの州",
+        "regions_note_lands": "<p>ドイツの{n}州について、同じ計算です。</p>\n",
+        "col_name_city": "都市", "col_name_region": "地域",
+        "col_country": "国",
+        "col_delta": "Δ ポイント",
+        "col_share": "回答済み",
+        "col_total": "場所",
+        "col_acc": "+ 使える",
+        "col_new": "+ 場所",
+        "sort_hint": "列の見出しをタップすると並べ替え、もう一度タップすると逆順になります。",
+        "footer": """<h2>データとライセンス</h2>
+<p class="muted">すべてのデータは &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
+contributors</a>、<a href="https://opendatacommons.org/licenses/odbl/">ODbL</a>ライセンスの下で提供されています。
+このページはOverpassクエリから毎晩再生成され、あなたについて何も保存しません。
+数え方と色分けの方法: <a href="{up}methods-ja.html">方法</a> ·
+<a href="{up}impressum.html">Impressum</a> ·
+<a href="{up}datenschutz.html">Datenschutz</a></p>
+<p class="muted">おむつ交換台が女性トイレにばかりあるのを見てきた一人のパパが作りました。PapaMapは無料で広告もありません。
+<a href="https://ko-fi.com/jakubwaller">&#9749; コーヒーをおごる</a>。</p>
+""",
     },
 }
