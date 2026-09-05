@@ -6,9 +6,12 @@
 > no longer fetched every night. Each area is recounted **one night a week**,
 > staggered by a hash of its name so about a seventh of the areas is due on
 > any night, and the last count is kept in **`web/data/toilets_counts.json`**
-> (`{"areas": {name: {total, capacity, date}}}`) — state next to
-> `history.json`, written only after the dataset it served is on disk, never
-> read by the frontend. So those numbers are a sum of per-area counts each at
+> (`{"areas": {name: {total, capacity, level, query, date}}}` — `level` the
+> admin_level and `query` a 12-hex-digit hash of the count query, both of
+> which must match tonight's or the entry is recounted; an entry without
+> them is simply recounted) — state next to `history.json`, written last,
+> after the pages and the history, never read by the frontend, and never
+> allowed to fail a build (a cache that cannot be written is a WARN). So those numbers are a sum of per-area counts each at
 > most seven days old; the object sweep, and every count the frontend renders
 > from the GeoJSON, stay nightly. Two guarantees carry over unchanged: an area
 > whose sweep answers with no elements is always recounted that night, so

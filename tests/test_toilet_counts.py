@@ -270,3 +270,46 @@ def test_the_cache_is_written_after_the_pages(tmp_path, load_fixture, monkeypatc
     run_pipeline(**_kwargs(tmp_path, load_fixture,
                            overpass_fetch=_fake_overpass(load_fixture)))
     assert order == ["pages", "cache"]
+
+
+def test_the_query_hash_ignores_the_timeout_knob():
+    a = config.toilets_counts_ql("Bremen", "4")
+    b = a.replace("[timeout:55]", "[timeout:300]")
+    assert "[timeout:300]" in b
+    assert toilet_counts.query_hash(a) == toilet_counts.query_hash(b)
+    assert toilet_counts.query_hash(a) != toilet_counts.query_hash(
+        config.toilets_counts_ql("Bremen", "6"))
+
+
+def test_prune_drops_only_entries_no_build_has_touched_in_four_periods():
+    cache = {"Bremen": _entry(TODAY - timedelta(days=27)),
+             "Gone": _entry(TODAY - timedelta(days=29)),
+             "Future": _entry(TODAY + timedelta(days=2)),
+             "Broken": {"total": 3}}
+    assert set(toilet_counts.prune(cache, TODAY, 7)) == {"Bremen"}
+
+
+def test_a_cache_that_cannot_be_written_is_a_warning_not_a_failure(
+        tmp_path, load_fixture, capsys):
+    kw = _kwargs(tmp_path, load_fixture, overpass_fetch=_fake_overpass(load_fixture),
+                 counts_path=str(tmp_path / "ro" / "toilets_counts.json"))
+    (tmp_path / "ro").mkdir()
+    (tmp_path / "ro").chmod(0o500)
+    try:
+        summary = run_pipeline(**kw)
+    finally:
+        (tmp_path / "ro").chmod(0o700)
+    assert summary["features"] == 7  # the build finished and published
+    assert "WARN toilet counts not saved" in capsys.readouterr().err
+    assert not (tmp_path / "ro" / "toilets_counts.json").exists()
+
+
+def test_cache_dates_match_the_history_date(tmp_path, load_fixture):
+    from datetime import datetime, timezone
+    late = datetime(2026, 7, 26, 23, 59, 30, tzinfo=timezone.utc)
+    run_pipeline(**_kwargs(tmp_path, load_fixture,
+                           overpass_fetch=_fake_overpass(load_fixture), now=late))
+    cache = json.loads((tmp_path / "toilets_counts.json").read_text(encoding="utf-8"))
+    history = json.loads((tmp_path / "history.json").read_text(encoding="utf-8"))
+    assert {e["date"] for e in cache["areas"].values()} == {"2026-07-26"}
+    assert [d["date"] for d in history["days"]] == ["2026-07-26"]

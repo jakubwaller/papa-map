@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import zlib
 from datetime import date
 from pathlib import Path
@@ -26,12 +27,29 @@ from pathlib import Path
 from .export import write_json_atomic
 
 
+_TIMEOUT_RE = re.compile(r"\[timeout:\d+\]")
+
+
 def query_hash(ql: str) -> str:
     """Twelve hex digits of the count query that produced an entry. The
     query embeds the area selector, the admin level and the capacity-key
     regex; if any of them changes, the cached number was made under another
-    definition and must not be summed with tonight's."""
-    return hashlib.sha1(ql.encode("utf-8")).hexdigest()[:12]
+    definition and must not be summed with tonight's. The [timeout:N] header
+    is stripped first: it is a tuning knob, not a definition, and a changed
+    PAPAMAP_OVERPASS_QL_TIMEOUT must not buy a full night of recounts."""
+    return hashlib.sha1(_TIMEOUT_RE.sub("", ql).encode("utf-8")).hexdigest()[:12]
+
+
+def prune(cache: dict, today: date, period_days: int) -> dict:
+    """Drop entries no build has refreshed in four periods — an area removed
+    from PAPAMAP_COUNTRIES, or renamed upstream. A partial build must not
+    prune the areas it did not sweep, so age is the only criterion."""
+    keep = {}
+    for name, entry in cache.items():
+        age = age_days(entry, today) if isinstance(entry, dict) else None
+        if age is not None and 0 <= age <= 4 * max(period_days, 1):
+            keep[name] = entry
+    return keep
 
 
 def load(path: str) -> dict:

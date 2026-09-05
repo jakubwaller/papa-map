@@ -51,7 +51,11 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     counts_path = TOILETS_COUNTS_PATH if counts_path is None else counts_path
     counts_period = (TOILETS_COUNTS_PERIOD_DAYS if counts_period_days is None
                      else counts_period_days)
-    today = (now or datetime.now(timezone.utc)).date()
+    # One clock read for the whole build: the rota dates its entries and the
+    # leaderboard its history from the same instant, so a build that crosses
+    # UTC midnight cannot date its counts a day before the history it shipped.
+    build_time = now or datetime.now(timezone.utc)
+    today = build_time.date()
     counts_cache = toilet_counts.load(counts_path)
     counts_fresh: dict[str, tuple[int, int, str, str]] = {}  # recounted tonight
     counts_reused = 0
@@ -237,7 +241,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         global_block = stats.previous_global(stats_path)
         global_source = "previous" if global_block else None
 
-    generated_at = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
+    generated_at = build_time.isoformat(timespec="seconds")
     exported = export.export_geojson(features, geojson_path)
     exported_play = export.export_geojson(play_features, play_geojson_path)
     export.export_stats({
@@ -293,7 +297,12 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             counts_cache[name] = {"total": total, "capacity": capacity,
                                   "level": level, "query": key,
                                   "date": today.isoformat()}
-        toilet_counts.save(counts_path, counts_cache)
+        try:
+            toilet_counts.save(
+                counts_path, toilet_counts.prune(counts_cache, today, counts_period))
+        except OSError as exc:
+            print(f"  WARN toilet counts not saved to {counts_path}: {exc} — "
+                  "every area is recounted tomorrow", file=sys.stderr)
 
     return {"features": exported, "play_places": exported_play,
             "ct_objects": local["ct_objects"],
