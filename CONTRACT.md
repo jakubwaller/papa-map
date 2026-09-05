@@ -1,5 +1,25 @@
 # papa-map — build contract (v0)
 
+> **v20 amendment (5 Sep 2026, the toilets-count rota):** the two per-area
+> `amenity=toilets` counts behind `stats.local.toilets_total` and
+> `capacity_tagged_toilets` (and the toilets column on every area page) are
+> no longer fetched every night. Each area is recounted **one night a week**,
+> staggered by a hash of its name so about a seventh of the areas is due on
+> any night, and the last count is kept in **`web/data/toilets_counts.json`**
+> (`{"areas": {name: {total, capacity, date}}}`) — state next to
+> `history.json`, written only after the dataset it served is on disk, never
+> read by the frontend. So those numbers are a sum of per-area counts each at
+> most seven days old; the object sweep, and every count the frontend renders
+> from the GeoJSON, stay nightly. Two guarantees carry over unchanged: an area
+> whose sweep answers with no elements is always recounted from the same
+> mirror, so the v15 zero-objects check still compares two fresh answers; and
+> a count query answering one number instead of two still fails the area.
+> `PAPAMAP_TOILETS_COUNTS_PERIOD_DAYS=1` restores the every-night behaviour.
+> **The emitted shape does not change.** The reason: the count is the slower
+> of an area's two queries in the big areas (UK 45.2 s, Japan 49.7 s) and the
+> number that moves least, and halving the nightly query count is what makes
+> room for the chunked US and Canada sweeps of the next wave.
+
 > **v19 amendment (4 Sep 2026, the first non-European wave):** papamap.de
 > sweeps **46 countries** — v15's 44 plus `au nz`, each **one whole
 > `admin_level=2` area selected on `name:en`** like the ring (New Zealand's

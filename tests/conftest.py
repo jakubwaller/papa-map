@@ -26,3 +26,13 @@ def _fresh_breaker():
     osm.reset_breaker()
     yield
     osm.reset_breaker()
+
+
+@pytest.fixture(autouse=True)
+def _isolated_toilet_counts(tmp_path, monkeypatch):
+    """The toilets-count cache is state under web/data/; every run_pipeline
+    call in the suite must read and write its own temp copy, never the
+    checkout's. run_pipeline resolves the default at call time for this."""
+    from pipeline import run
+    monkeypatch.setattr(run, "TOILETS_COUNTS_PATH",
+                        str(tmp_path / "toilets_counts.json"))

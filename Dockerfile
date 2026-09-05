@@ -13,5 +13,6 @@ ENV PAPAMAP_GEOJSON_PATH=/out/changing_tables.geojson \
     PAPAMAP_PLAY_GEOJSON_PATH=/out/play_places.geojson \
     PAPAMAP_STATS_PATH=/out/stats.json \
     PAPAMAP_PAGES_DIR=/out/wickeltische \
-    PAPAMAP_HISTORY_PATH=/out/history.json
+    PAPAMAP_HISTORY_PATH=/out/history.json \
+    PAPAMAP_TOILETS_COUNTS_PATH=/out/toilets_counts.json
 CMD ["python", "-m", "pipeline.run"]

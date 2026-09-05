@@ -60,20 +60,23 @@ If Caddy runs in a container, bind-mount the site into it first (add
 
 `crontab -e`, matching the live schedule:
 ```cron
-0 2 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
+0 1 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
 ```
 Outside Docker the equivalent line is
-`0 2 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
+`0 1 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
 
-**02:00, not 03:30, since the Europe-complete sweep (2026-08-22).** 46 countries are
-73 sweep areas and 208 Overpass queries (62 of them leaderboard cities), projected ~108 minutes against the
-eleven-country 64 (Australia and New Zealand, 2026-09-04, answer whole and add about
-two minutes) — and the ops mail below runs at 05:30, so the earlier start keeps
-almost two hours of congestion headroom between the projected finish and the digest
-reading `stats.json`. (The 03:30 slot was itself the same move when the UK and France
-joined: a build still writing when the digest reads is the one health signal the site
-has reporting a half-finished dataset.) If the sweep grows again, move this line before
-adding the country, not after.
+**01:00 since 2026-09-05, moved ahead of the chunked US and Canada sweeps.** The
+46-country build (73 areas, 208 queries, 62 of them leaderboard cities) measured 80
+minutes from 02:00 on 2026-09-05. Wave 2 adds about 63 areas, and the ops mail below runs
+at 05:30; the hour of headroom is bought before the countries join, not after — a build
+still writing when the digest reads `stats.json` is the one health signal the site has
+reporting a half-finished dataset. (02:00 was the same move for Europe-complete on
+2026-08-22, 03:30 for the UK and France before that.) What keeps the build from growing
+with the areas is the toilets-count rota: each area's `amenity=toilets` count is
+refreshed one night a week rather than every night, so a night costs one query per area
+plus a seventh of the counts. beer-map on the same host runs at 04:00 and Sunday 05:00 —
+keep the two apart, the 2026-08-23 ban arrived four minutes after both started in the
+same minute.
 
 **The pipeline container is on the host network** (`network_mode: host` in
 `docker-compose.yml`), so it has the host's IPv6 address. Overpass banned this host's IPv4
@@ -108,6 +111,13 @@ docker logs -f papamap-backfill      # one line per region; ~1 h per date
 It writes into the same mounted `history.json` and never overwrites a day that exists,
 so it is safe to run next to (or after) the nightly build. Re-render the pages afterwards
 with a build, or wait for the next one.
+
+`toilets_counts.json` in the same directory is state too — the per-area
+`amenity=toilets` counts with the date each was last counted, which is what lets the
+build recount every area one night a week instead of every night. Deleting it costs
+exactly one night of counting (every area is recounted, as before the rota) and
+nothing else; `PAPAMAP_TOILETS_COUNTS_PERIOD_DAYS=1` on a manual run recounts
+everything regardless.
 
 Under Docker the pages need a writable mount like the JSON does. The image sets
 `PAPAMAP_PAGES_DIR=/out/wickeltische` and compose mounts `./web-data/wickeltische` back into
