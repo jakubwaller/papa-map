@@ -51,9 +51,11 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     counts_path = TOILETS_COUNTS_PATH if counts_path is None else counts_path
     counts_period = (TOILETS_COUNTS_PERIOD_DAYS if counts_period_days is None
                      else counts_period_days)
-    # One clock read for the whole build: the rota dates its entries and the
-    # leaderboard its history from the same instant, so a build that crosses
-    # UTC midnight cannot date its counts a day before the history it shipped.
+    # One clock read for the whole build, taken at its START: the rota dates
+    # its entries and the leaderboard its history from the same instant, so a
+    # build that crosses UTC midnight cannot date its counts a day before the
+    # history it shipped. generated_at was read at the end of the build until
+    # 2026-09-05; the start is what the runbook's cron argument counts on.
     build_time = now or datetime.now(timezone.utc)
     today = build_time.date()
     counts_cache = toilet_counts.load(counts_path)
@@ -130,12 +132,15 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                             f"area {area_name!r}: toilets query answered 1 "
                             "count, expected 2")
                     toilets_total, capacity_total = counts or (0, 0)
-                    # Only a real two-count answer is worth remembering. The
-                    # empty body a mirror without an area database returns
-                    # reads as (0, 0) tonight, as it always did — but before
-                    # the rota the next night healed it, and a cached zero
-                    # would stand for a week.
-                    remember = len(counts) == 2
+                    # Only a real, non-zero two-count answer is worth
+                    # remembering. The empty body a mirror without an area
+                    # database returns reads as (0, 0) tonight, as it always
+                    # did — and so does a mirror whose area database has the
+                    # area but nothing in it (two zero counts). Before the
+                    # rota the next night healed either; a cached zero would
+                    # stand for a week. Every swept area has mapped toilets,
+                    # so a zero total is never worth a week.
+                    remember = len(counts) == 2 and toilets_total > 0
                 else:
                     cached = counts_cache[area_name]
                     toilets_total, capacity_total = cached["total"], cached["capacity"]

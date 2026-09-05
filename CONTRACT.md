@@ -11,7 +11,14 @@
 > which must match tonight's or the entry is recounted; an entry without
 > them is simply recounted) — state next to `history.json`, written last,
 > after the pages and the history, never read by the frontend, and never
-> allowed to fail a build (a cache that cannot be written is a WARN). So those numbers are a sum of per-area counts each at
+> allowed to fail a build (a cache that cannot be written is a WARN). It is
+> served like `history.json` is, at `/data/toilets_counts.json`: public ODbL
+> aggregates and a query hash, nothing else. Two smaller changes ride along:
+> a zero toilets total is never cached (every swept area has mapped toilets,
+> so a zero is a mirror without the area, healed the next night as before);
+> and `generated_at` — and with it every page's date and the history's day —
+> is read once at the **start** of the build rather than its end, so the
+> rota's entry dates and the history's day come from one clock read. So those numbers are a sum of per-area counts each at
 > most seven days old; the object sweep, and every count the frontend renders
 > from the GeoJSON, stay nightly. Two guarantees carry over unchanged: an area
 > whose sweep answers with no elements is always recounted that night, so

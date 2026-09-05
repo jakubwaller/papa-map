@@ -313,3 +313,21 @@ def test_cache_dates_match_the_history_date(tmp_path, load_fixture):
     history = json.loads((tmp_path / "history.json").read_text(encoding="utf-8"))
     assert {e["date"] for e in cache["areas"].values()} == {"2026-07-26"}
     assert [d["date"] for d in history["days"]] == ["2026-07-26"]
+
+
+def test_a_two_zero_count_answer_is_not_remembered(tmp_path, load_fixture):
+    # A mirror whose area database has the area but nothing in it answers
+    # two zero counts — a real two-count answer, and still not evidence
+    # about the toilets of an area that has changing tables. Used tonight,
+    # not kept.
+    inner = _fake_overpass(load_fixture)
+
+    def zero_counts(ql, **kwargs):
+        if '"amenity"="toilets"' in ql:
+            return _count_answer(0, 0)
+        return inner(ql, **kwargs)
+
+    summary = run_pipeline(**_kwargs(tmp_path, load_fixture,
+                                     overpass_fetch=zero_counts))
+    assert summary["toilets_total"] == 0
+    assert not (tmp_path / "toilets_counts.json").exists()
