@@ -182,7 +182,7 @@ def test_french_regions_are_not_printed_as_whole_countries():
              "Danmark", "Sweden", "United Kingdom"]]
     lands, kinds, countries = leaderboard._region_kinds(rows)
     assert lands == 2
-    assert kinds == {"fr": 3, "us": 0, "ca": 0}
+    assert kinds == {"fr": 3, "us": 0, "ca": 0, "jp": 0}
     assert countries == ["Danmark", "Sweden", "United Kingdom"]
 
 
@@ -192,10 +192,10 @@ def test_us_states_and_canadian_provinces_are_their_own_kinds():
     # so it is not counted among them — the clause names it on its own.
     rows = [{"name": n} for n in
             ["Bayern", "Florida", "Texas", "District of Columbia", "Quebec",
-             "Yukon", "Australia"]]
+             "Yukon", "東京都", "沖縄県", "Australia"]]
     lands, kinds, countries = leaderboard._region_kinds(rows)
     assert lands == 1
-    assert kinds == {"fr": 0, "us": 2, "ca": 2}
+    assert kinds == {"fr": 0, "us": 2, "ca": 2, "jp": 2}
     assert countries == ["Australia"]
 
 
@@ -253,6 +253,19 @@ def test_regions_note_counts_states_and_provinces(tmp_path):
     for lang in leaderboard.L:
         html = leaderboard.render_leaderboard(lang, data)
         assert "{s}" not in html and "{p}" not in html, lang
+    # Japan's prefectures are the fourth chunk kind, in every language.
+    jp = leaderboard.leaderboard_data({"v": 1, "days": [
+        day("2026-09-01", regions={"Bayern": [1, 0, 9], "東京都": [1, 0, 9],
+                                   "大阪府": [1, 0, 9]}),
+        day("2026-09-08", regions={"Bayern": [3, 0, 7], "東京都": [2, 0, 8],
+                                   "大阪府": [1, 0, 9]}),
+    ]})
+    en = leaderboard.render_leaderboard("en", jp)
+    assert "the 1 Bundesländer and the 2 Japanese prefectures" in en
+    ja = leaderboard.render_leaderboard("ja", jp)
+    assert "ドイツの1州、日本の2都道府県" in ja and 'lang="ja"' in ja
+    for lang in leaderboard.L:
+        assert "{j}" not in leaderboard.render_leaderboard(lang, jp), lang
 
 
 def test_render_quiet_and_fresh_notes():
@@ -421,6 +434,21 @@ def test_backfill_still_refuses_an_area_with_nothing_at_all(tmp_path, load_fixtu
         backfill.backfill(["2026-07-24"], history_path=str(tmp_path / "h.json"),
                           areas=[("Northwest Territories", "4")], cities=[],
                           fetch=fake_fetch, pause_s=0, sleep=lambda s: None)
+
+
+def test_backfill_refuses_a_one_count_answer_and_a_reply_without_elements(tmp_path):
+    # A truncated count (one number where two are due) must not vouch for an
+    # empty sweep, and a reply without an `elements` key is the zero-objects
+    # error, not a KeyError — same rules as the nightly build.
+    def one_count(ql):
+        if '"amenity"="toilets"' in ql:
+            return {"elements": [{"type": "count", "id": 0, "tags": {"total": "59"}}]}
+        return {}  # no elements key at all
+
+    with pytest.raises(RuntimeError, match="zero objects"):
+        backfill.backfill(["2026-07-24"], history_path=str(tmp_path / "h.json"),
+                          areas=[("Northwest Territories", "4")], cities=[],
+                          fetch=one_count, pause_s=0, sleep=lambda s: None)
 
 
 def test_backfill_scopes_city_rows_to_their_country(tmp_path, load_fixture):

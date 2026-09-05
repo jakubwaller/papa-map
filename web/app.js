@@ -3,9 +3,9 @@
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox } from "./datasource.js?v=w48";
+         parseBbox } from "./datasource.js?v=w49";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=w48";
+         langUrl } from "./i18n.js?v=w49";
 
 // ---- Language: German default, thirty-one languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own

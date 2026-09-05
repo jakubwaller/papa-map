@@ -7,8 +7,9 @@ import sys
 import unicodedata
 from pathlib import Path
 
-from .config import (BUNDESLAENDER, CHUNK_HUBS, COUNTRY_AREAS, COUNTRY_PAGES,
-                     COUNTRY_SLUGS, PAGES_BASE_PATH, SITE_BASE_URL)
+from .config import (BUNDESLAENDER, CHUNK_HUBS, CHUNK_HUBS_IN_CONFIG_ORDER,
+                     COUNTRY_AREAS, COUNTRY_PAGES, COUNTRY_SLUGS,
+                     PAGES_BASE_PATH, SITE_BASE_URL)
 from .export import write_text_atomic
 from .pages_l10n import AMENITY, BOARD_LABEL, CHUNK_FORMS, HUB, L, board_file
 
@@ -703,7 +704,8 @@ def write_all_pages(areas, features, area_by_key, toilets_by_area,
                 "summary": summarize(r, by_area.get(r, []),
                                      toilets_by_area.get(r, 0)),
             })
-        entries.sort(key=lambda x: sort_key(x["summary"]["name"]))
+        if cc not in CHUNK_HUBS_IN_CONFIG_ORDER:
+            entries.sort(key=lambda x: sort_key(x["summary"]["name"]))
         region_entries[cc] = entries
 
     countries_nav = [{"label": e["summary"]["name"],

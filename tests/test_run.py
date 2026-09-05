@@ -57,6 +57,10 @@ WORLD = EUROPE + WAVE1_CODES
 # unique on the planet (Florida is also a department of Uruguay).
 WAVE2_CODES = ("us", "ca")
 WORLD2 = WORLD + WAVE2_CODES
+
+# Wave 3 (2026-09-05): Japan, whose count query is too slow whole (49.7 s),
+# chunked into its 47 prefectures — Japanese display names, Japanese pages.
+WORLD3 = WORLD2 + ("jp",)
 EUROPE_SWEEP = ELEVEN_SWEEP + [(config.COUNTRY_AREAS[c][0][0], "2")
                                for c in EUROPE_CODES]
 
@@ -739,7 +743,7 @@ def test_wave_two_chunks_the_us_and_canada_by_iso_code(monkeypatch):
                       "United States Virgin Islands", "Northern Mariana Islands"):
         assert territory not in config.AREA_SELECTORS
     assert config.COUNTRY_PAGES["us"][0] == config.COUNTRY_PAGES["ca"][0] == "en"
-    assert set(config.CHUNK_HUBS) == {"fr", "us", "ca"}
+    assert set(config.CHUNK_HUBS) == {"fr", "us", "ca", "jp"}
     _, key = config.display_area()
     assert key == "countries_48"
 
@@ -771,3 +775,50 @@ def test_wave_two_build_files_states_and_provinces_under_their_countries(
             "district-of-columbia.html", "quebec.html", "nunavut.html"} <= names
     for name in ("Florida", "Quebec"):
         assert config.AREA_COUNTRY[name] == ("us" if name == "Florida" else "ca")
+
+
+def test_wave_three_chunks_japan_by_prefecture_in_japanese(monkeypatch):
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", WORLD3)
+    areas = config.sweep_areas()
+    assert len(areas) == 73 + 64 + 47
+    jp = [n for n, lvl in areas[137:]]
+    assert jp[0] == "北海道" and jp[12] == "東京都" and jp[-1] == "沖縄県"
+    assert all(lvl == "4" for _, lvl in areas[137:])
+    for name in jp:
+        key, code = config.AREA_SELECTORS[(name, "4")]
+        assert key == "ISO3166-2" and code.startswith("JP-")
+        assert f'area["ISO3166-2"="{code}"]' in config.sweep_ql(name, "4")
+        assert name in config.chunked_area_names()
+        assert name in config.COUNTRY_SLUGS  # kanji fold to nothing, so every slug is declared
+    assert config.COUNTRY_PAGES["jp"] == ("ja", "日本", "日本", None)
+    assert config.LANG_HOME_CC["ja"] == "jp"
+    assert "jp" in config.CHUNK_HUBS_IN_CONFIG_ORDER
+    _, key = config.display_area()
+    assert key == "countries_49"
+
+
+def test_japan_build_writes_japanese_hub_and_prefecture_pages(tmp_path, load_fixture,
+                                                             monkeypatch):
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("jp",))
+    fake = _fake_overpass(load_fixture)
+    stats = tmp_path / "stats.json"
+    summary = run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
+        play_geojson_path=str(tmp_path / "play.geojson"),
+        overpass_fetch=fake, taginfo_fetch=_fake_taginfo(load_fixture),
+        pages_dir=str(tmp_path / "pages"),
+        history_path=str(tmp_path / "history.json"), now=NOW)
+    assert summary["pages"] == 1 + 47
+    assert json.loads(stats.read_text(encoding="utf-8"))["area_key"] == "jp"
+    names = {p.name for p in (tmp_path / "pages").iterdir()}
+    assert {"nihon.html", "tokyo.html", "hokkaido.html", "okinawa.html"} <= names
+    hub = (tmp_path / "pages" / "nihon.html").read_text(encoding="utf-8")
+    assert 'lang="ja"' in hub and "都道府県別" in hub
+    # Config order, not sorted: Hokkaido first, Okinawa last.
+    order = [m for m in re.findall(r'href="([a-z-]+)\.html">', hub)
+             if m in {config.COUNTRY_SLUGS[n] for n, _ in config.JAPAN_PREFECTURES}]
+    assert order[0] == "hokkaido" and order[-1] == "okinawa"
+    tokyo = (tmp_path / "pages" / "tokyo.html").read_text(encoding="utf-8")
+    assert "<h1>東京都のおむつ交換台</h1>" in tokyo
+    assert 'href="nihon.html"' in tokyo and "<h2>他の都道府県</h2>" in tokyo
+    assert "2026年7月26日" in tokyo

@@ -90,7 +90,7 @@ test("pickLang: reads the whole preference list, skipping what we don't speak", 
   // navigator.languages is ordered by preference. An unsupported first entry
   // must fall through to the next, not end the search at the German default.
   assert.equal(pickLang(null, null, ["ga", "cs-CZ", "en"]), "cs");
-  assert.equal(pickLang(null, null, ["ja", "ko"]), DEFAULT_LANG);
+  assert.equal(pickLang(null, null, ["ko", "zh"]), DEFAULT_LANG);
   assert.equal(pickLang(null, null, []), DEFAULT_LANG);
   assert.equal(pickLang(null, null, ["sv"]), "sv");
 });

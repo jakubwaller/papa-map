@@ -66,8 +66,13 @@ CANADA_PROVINCE_FORMS = _english_forms(
     the=("Northwest Territories",))
 
 # One forms table per hub country (config.CHUNK_HUBS), keyed the same way.
+# Japanese inflects nothing and puts the name before の, so both forms are
+# the bare name: "東京都のおむつ交換台", "東京都を地図で開く".
+JAPAN_PREFECTURE_FORMS = {name: (name, None)
+                          for name, _ in config.JAPAN_PREFECTURES}
+
 CHUNK_FORMS = {"fr": FRANCE_REGION_FORMS, "us": US_STATE_FORMS,
-               "ca": CANADA_PROVINCE_FORMS}
+               "ca": CANADA_PROVINCE_FORMS, "jp": JAPAN_PREFECTURE_FORMS}
 
 # The hub page over a chunked country's per-area pages, and the three strings
 # those area pages need to point back at it. Keyed by country, not language:
@@ -153,6 +158,30 @@ HUB = {
                      "record, with or without a changing table. What compares "
                      'honestly is movement — it is on the <a href="'
                      'leaderboard.html">leaderboard</a>.'),
+    },
+    "jp": {
+        "back_hub": "日本全体",
+        "crumb_hub": "日本のおむつ交換台",
+        "siblings_h2": "他の都道府県",
+        "hub_title": "日本のおむつ交換台、都道府県別 — PapaMap",
+        "hub_desc": ("日本のおむつ交換台を都道府県ごとに: OpenStreetMapによる"
+                     "{total}か所。そのうち{unknown}か所は、交換台がどの部屋に"
+                     "あるか記録されていません。"),
+        "hub_h1": "日本のおむつ交換台、都道府県別",
+        "hub_intro": ("OpenStreetMapは日本でおむつ交換台のある場所を"
+                      "<strong>{total}</strong>か所知っています。そのうち"
+                      "<strong>{unknown}</strong>か所は、交換台がどの部屋にあるか"
+                      " — つまりパパが実際に使えるか — 誰も記録していません。"
+                      "都道府県別に、北から南へ:"),
+        "hub_col": "都道府県",
+        "hub_toilets": "トイレ",
+        "hub_note": ("北から南への都道府県コード順で、順位ではありません。順位を"
+                     "付けると誤解を招きます: この数字は主に、その都道府県がどれだけ"
+                     "丹念にマッピングされているかを測るもので、実際の設備を測る"
+                     "ものではありません。<em>トイレ</em>の列は、おむつ交換台の有無に"
+                     "かかわらず記録されている公衆トイレの数です。正直に比べられる"
+                     'のは変化で、それは<a href="leaderboard-ja.html">ランキング</a>'
+                     "にあります。"),
     },
 }
 
@@ -517,6 +546,18 @@ AMENITY = {
         "cinema": "Cinema", "theatre": "Teatre", "hospital": "Hospital",
         "marketplace": "Mercat", "kindergarten": "Escola bressol",
     },
+    "ja": {
+        "toilets": "公衆トイレ", "restaurant": "レストラン",
+        "cafe": "カフェ", "fast_food": "ファストフード",
+        "community_centre": "コミュニティセンター", "library": "図書館",
+        "fuel": "ガソリンスタンド", "pub": "パブ",
+        "biergarten": "ビアガーデン", "ice_cream": "アイスクリーム店",
+        "social_facility": "福祉施設", "townhall": "市役所・町村役場",
+        "doctors": "診療所", "pharmacy": "薬局",
+        "place_of_worship": "宗教施設", "cinema": "映画館",
+        "theatre": "劇場", "hospital": "病院",
+        "marketplace": "市場", "kindergarten": "幼稚園・保育園",
+    },
 }
 
 # Czech and Polish month names are genitive because they follow a day number
@@ -601,6 +642,8 @@ _MONTHS = {
            "снежня"),
     "ca": ("gener", "febrer", "març", "abril", "maig", "juny", "juliol",
            "agost", "setembre", "octubre", "novembre", "desembre"),
+    "ja": ("1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月",
+           "10月", "11月", "12月"),
 }
 
 L = {
@@ -2834,6 +2877,73 @@ Com es compta i s'acoloreix: <a href="{up}methods-ca.html">Mètodes</a> ·
 <a href="https://ko-fi.com/jakubwaller">&#9749; Convida'm a un cafè</a>.</p>
 """,
     },
+    "ja": {
+        "months": _MONTHS["ja"],
+        "date_fmt": "{y}年{m}{d}日",
+        "num_sep": ",",
+        "methods": "methods-ja.html",
+        "title": "{name_in}のおむつ交換台 — PapaMap",
+        "h1": "{name_in}のおむつ交換台",
+        "meta_desc": ("OpenStreetMapによる、{name_in}でおむつ交換台のある場所"
+                      "{tables}か所。そのうち{unknown}か所は、交換台がどの部屋に"
+                      "あるか誰も記録していません — そこがまさに直せるところです。"),
+        "stand": "{date}時点 · データ: OpenStreetMap",
+        "back_map": "地図へ",
+        "empty": ("OpenStreetMapには現在、{name_in}でおむつ交換台のある場所が"
+                  "1か所も登録されていません。ほぼ確実に、まだ誰も記録していない"
+                  "ということです。"),
+        "intro": ("OpenStreetMapは{name_in}でおむつ交換台のある場所を"
+                  "<strong>{tables}</strong>か所知っています。そのうち"
+                  "<strong>{accessible}</strong>か所では、パパが実際にたどり着ける"
+                  "こと — 男性トイレ、男女共用トイレ、専用のおむつ交換室 — が"
+                  "記録されています。<strong>{female_only}</strong>か所は女性トイレ"
+                  "にしかありません。そして{tables}か所のうち"
+                  "<strong>{unknown}</strong>か所（{pct}%）は、交換台がどの部屋に"
+                  "あるか誰も記録していません。それが地図上の灰色のピンで、本当の"
+                  "課題です。その場で答えるのに1分もかかりません。"),
+        "map_cta": "{name_for}を地図で開く",
+        "numbers_h2": "{name_for}の数字",
+        "th_things": "おむつ交換台",
+        "th_places": "場所",
+        "total": "合計",
+        "statuses": {"accessible": "パパが使える",
+                     "female_only": "女性トイレのみ",
+                     "unknown": "部屋が不明"},
+        "toilets_note": ("{In}ではさらに、OpenStreetMapに公衆トイレが{toilets}か所"
+                         "記録されています — その大半には、おむつ交換台についての"
+                         "情報がまったくありません。そこから設備の充実度ランキングを"
+                         "正直に作ることはできません。理由は"
+                         "<a href=\"{up}{methods}\">方法のページ</a>にあります。"),
+        "named_h2": "名前のある場所",
+        "named_intro": ("{tables}か所のうち{named_places}か所はOpenStreetMapに名前が"
+                        "あり、異なる名前は全部で{named}件です。残りの{unnamed}か所は"
+                        "ほとんどが名前のない公衆トイレで、地図にはありますが、ここに"
+                        "一覧にする意味のある方法がありません。チェーン店の各店舗は"
+                        "1行にまとめています。"),
+        "th_place": "場所",
+        "th_kind": "種類",
+        "th_count": "件数",
+        "help_h2": "ここでできること",
+        "help": ("灰色のピンは、おむつ交換台はあるけれど、どの部屋にあるか誰も"
+                 "記録していないという意味です。その答えこそ、パパたちに欠けている"
+                 "ものです。無料のOpenStreetMapアカウントがあれば誰でも、その場で"
+                 "1分以内に答えられます。ピンのリンクを開くと、MapCompleteが該当する"
+                 "対象をそのまま表示します。答えはOpenStreetMapに保存され、みんなの"
+                 "ものになり、次の夜間更新のあとここに表示されます。"
+                 "<a href=\"{up}{methods}#contribute\">手順はこちら</a>。"),
+        "countries_h2": "他の国のPapaMap",
+        "places_unit": "か所",
+        "footer": """<h2>データとライセンス</h2>
+<p class="muted">すべてのデータは &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
+contributors</a>、<a href="https://opendatacommons.org/licenses/odbl/">ODbL</a>ライセンスの下で提供されています。
+このページはOverpassクエリから毎晩再生成され、あなたについて何も保存しません。
+数え方と色分けの方法: <a href="{up}methods-ja.html">方法</a> ·
+<a href="{up}impressum.html">Impressum</a> ·
+<a href="{up}datenschutz.html">Datenschutz</a></p>
+<p class="muted">おむつ交換台が女性トイレにばかりあるのを見てきた一人のパパが作りました。PapaMapは無料で広告もありません。
+<a href="https://ko-fi.com/jakubwaller">&#9749; コーヒーをおごる</a>。</p>
+""",
+    },
 }
 
 # ---- The leaderboard link the generated pages carry --------------------------
@@ -2851,7 +2961,7 @@ BOARD_LABEL = {
     "sq": "Renditja", "sk": "Rebríček", "sl": "Lestvica",
     "fi": "Kärkisijat", "el": "Κατάταξη", "be": "Рэйтынг",
     "bg": "Класация", "mk": "Ранг-листа", "sr": "Ранглиста",
-    "uk": "Рейтинг",
+    "uk": "Рейтинг", "ja": "ランキング",
 }
 
 

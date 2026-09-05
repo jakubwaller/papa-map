@@ -185,13 +185,72 @@ CANADA_PROVINCES = (
     ("Yukon", "CA-YT"),
 )
 
+# Japan's 47 prefectures — the fifth chunked country (2026-09-05). The
+# country whole sweeps in 39.6 s but counts in 49.7 s, 90 % of the budget
+# and past the UK's 45.2 s (CONTRACT v19), so it is chunked like the US;
+# every prefecture answers both queries in under 23 s. Display names are the
+# Japanese `name` (東京都, 京都府, 北海道) — the page language is Japanese and
+# the row labels endonyms, as for Ελλάδα or Україна; the slugs are the
+# romanizations in COUNTRY_SLUGS. In JIS X 0401 code order (north to south),
+# which is how every Japanese list of prefectures reads — and the order the
+# hub keeps, since kanji have no alphabet to sort by (CHUNK_HUBS_IN_CONFIG_ORDER).
+JAPAN_PREFECTURES = (
+    ("北海道", "JP-01"),
+    ("青森県", "JP-02"),
+    ("岩手県", "JP-03"),
+    ("宮城県", "JP-04"),
+    ("秋田県", "JP-05"),
+    ("山形県", "JP-06"),
+    ("福島県", "JP-07"),
+    ("茨城県", "JP-08"),
+    ("栃木県", "JP-09"),
+    ("群馬県", "JP-10"),
+    ("埼玉県", "JP-11"),
+    ("千葉県", "JP-12"),
+    ("東京都", "JP-13"),
+    ("神奈川県", "JP-14"),
+    ("新潟県", "JP-15"),
+    ("富山県", "JP-16"),
+    ("石川県", "JP-17"),
+    ("福井県", "JP-18"),
+    ("山梨県", "JP-19"),
+    ("長野県", "JP-20"),
+    ("岐阜県", "JP-21"),
+    ("静岡県", "JP-22"),
+    ("愛知県", "JP-23"),
+    ("三重県", "JP-24"),
+    ("滋賀県", "JP-25"),
+    ("京都府", "JP-26"),
+    ("大阪府", "JP-27"),
+    ("兵庫県", "JP-28"),
+    ("奈良県", "JP-29"),
+    ("和歌山県", "JP-30"),
+    ("鳥取県", "JP-31"),
+    ("島根県", "JP-32"),
+    ("岡山県", "JP-33"),
+    ("広島県", "JP-34"),
+    ("山口県", "JP-35"),
+    ("徳島県", "JP-36"),
+    ("香川県", "JP-37"),
+    ("愛媛県", "JP-38"),
+    ("高知県", "JP-39"),
+    ("福岡県", "JP-40"),
+    ("佐賀県", "JP-41"),
+    ("長崎県", "JP-42"),
+    ("熊本県", "JP-43"),
+    ("大分県", "JP-44"),
+    ("宮崎県", "JP-45"),
+    ("鹿児島県", "JP-46"),
+    ("沖縄県", "JP-47"),
+)
+
 # Areas selected by a tag other than their name: {(display name, admin
 # level): (key, value)}. _area_ql consults this first; everything else is
 # selected by name or name:en (area_name_key below). Keyed by level too, so
 # a leaderboard city that happens to be called "New York" or "Washington"
 # at level 8 is not rewritten into a state selector that matches nothing.
 AREA_SELECTORS = {(name, "4"): ("ISO3166-2", code)
-                  for name, code in US_STATES + CANADA_PROVINCES}
+                  for name, code in US_STATES + CANADA_PROVINCES + JAPAN_PREFECTURES}
 
 # Areas whose Overpass selector is name:en instead of name. A country's `name`
 # is whatever its own mappers write, and for two of the neighbours that is
@@ -352,6 +411,8 @@ COUNTRY_AREAS = {
     # ------ wave 2 (2026-09-05): the two that die whole, chunked ------
     "us": tuple((name, "4") for name, _ in US_STATES),
     "ca": tuple((name, "4") for name, _ in CANADA_PROVINCES),
+    # ------ wave 3 (2026-09-05): Japan, whose count query is too slow whole ------
+    "jp": tuple((name, "4") for name, _ in JAPAN_PREFECTURES),
 }
 
 # Fallback display name per country. Germany and Denmark are named in their own
@@ -378,7 +439,7 @@ COUNTRY_LABELS = {
     "mk": "North Macedonia", "xk": "Kosovo", "md": "Moldova",
     "ua": "Ukraine", "by": "Belarus",
     "au": "Australia", "nz": "New Zealand",
-    "us": "United States", "ca": "Canada",
+    "us": "United States", "ca": "Canada", "jp": "Japan",
 }
 
 # One static page per country beyond Germany (pipeline/pages.py), each in the
@@ -452,6 +513,10 @@ COUNTRY_PAGES = {
     # ------ wave 2, pages added 2026-09-05: two more hubs, in English ------
     "us": ("en", "United States", "in the United States", "the United States"),
     "ca": ("en", "Canada", "in Canada", None),
+    # ------ wave 3, 2026-09-05: Japanese, the 32nd page language ------
+    # Japanese puts the place before the noun with の, so the "in X" slot
+    # takes the bare name: "日本のおむつ交換台".
+    "jp": ("ja", "日本", "日本", None),
 }
 
 # The chunked countries that get a hub page over their per-area pages, the
@@ -463,7 +528,13 @@ CHUNK_HUBS = {
     "fr": FRANCE_REGIONS,
     "us": tuple(name for name, _ in US_STATES),
     "ca": tuple(name for name, _ in CANADA_PROVINCES),
+    "jp": tuple(name for name, _ in JAPAN_PREFECTURES),
 }
+
+# Hubs whose chunk pages keep the config order instead of sorting by name:
+# kanji have no alphabetical order a reader expects, and the prefectures are
+# listed north to south by JIS code, the order every Japanese list uses.
+CHUNK_HUBS_IN_CONFIG_ORDER = frozenset({"jp"})
 
 # Slug overrides for pages.slugify, keyed by display name. Only the non-Latin
 # script names need one: slugify folds accents to base letters, but a Greek or
@@ -478,6 +549,56 @@ COUNTRY_SLUGS = {
     "Северна Македонија": "severna-makedonija",
     "Україна": "ukrayina",
     "Беларусь": "bielarus",
+    # Japan and its 47 prefectures (2026-09-05): Hepburn without macrons, the
+    # spelling road signs and readers use.
+    "日本": "nihon",
+    "北海道": "hokkaido",
+    "青森県": "aomori",
+    "岩手県": "iwate",
+    "宮城県": "miyagi",
+    "秋田県": "akita",
+    "山形県": "yamagata",
+    "福島県": "fukushima",
+    "茨城県": "ibaraki",
+    "栃木県": "tochigi",
+    "群馬県": "gunma",
+    "埼玉県": "saitama",
+    "千葉県": "chiba",
+    "東京都": "tokyo",
+    "神奈川県": "kanagawa",
+    "新潟県": "niigata",
+    "富山県": "toyama",
+    "石川県": "ishikawa",
+    "福井県": "fukui",
+    "山梨県": "yamanashi",
+    "長野県": "nagano",
+    "岐阜県": "gifu",
+    "静岡県": "shizuoka",
+    "愛知県": "aichi",
+    "三重県": "mie",
+    "滋賀県": "shiga",
+    "京都府": "kyoto",
+    "大阪府": "osaka",
+    "兵庫県": "hyogo",
+    "奈良県": "nara",
+    "和歌山県": "wakayama",
+    "鳥取県": "tottori",
+    "島根県": "shimane",
+    "岡山県": "okayama",
+    "広島県": "hiroshima",
+    "山口県": "yamaguchi",
+    "徳島県": "tokushima",
+    "香川県": "kagawa",
+    "愛媛県": "ehime",
+    "高知県": "kochi",
+    "福岡県": "fukuoka",
+    "佐賀県": "saga",
+    "長崎県": "nagasaki",
+    "熊本県": "kumamoto",
+    "大分県": "oita",
+    "宮崎県": "miyazaki",
+    "鹿児島県": "kagoshima",
+    "沖縄県": "okinawa",
 }
 
 # Primary country per page language — where a language's leaderboard sends its
@@ -492,7 +613,7 @@ LANG_HOME_CC = {
     "es": "es", "hr": "hr", "is": "is", "lv": "lv", "lt": "lt", "hu": "hu",
     "no": "no", "pt": "pt", "ro": "ro", "sq": "al", "sk": "sk", "sl": "si",
     "fi": "fi", "el": "gr", "be": "by", "bg": "bg", "mk": "mk", "sr": "rs",
-    "uk": "ua",
+    "uk": "ua", "ja": "jp",
 }
 
 # Leaderboard city sweep: (display name, OSM area name, admin_level). Curated —

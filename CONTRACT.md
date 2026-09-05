@@ -1,5 +1,46 @@
 # papa-map — build contract (v0)
 
+> **v22 amendment (5 Sep 2026, wave 3 — Japan, and Japanese as the 32nd page
+> language):** papamap.de sweeps **49 countries** — v21's 48 plus `jp`, the
+> last of the world's top six by pins. Japan sweeps whole in 39.6 s but counts
+> its toilets in 49.7 s (v19), 90 % of the budget and past the UK's 45.2 s,
+> so it is chunked into its **47 prefectures** like the US into states, every
+> one selected by `ISO3166-2` code (`JP-01` … `JP-47`, v21's mechanism).
+> Measured 2026-09-05 from the Mac: no prefecture above 22.1 s on either
+> query (Hiroshima's sweep; Tokyo 9.0 s / 12.4 s with 576 objects and 4,460
+> toilets), 293 s of sweep and 144 s of count time over the 47; their 2,225
+> objects and 31,948 toilets match the whole-country numbers of 2026-09-04 to
+> within a day's edits, so the chunks cover the country. Three prefectures
+> hold a single changing_table object (Kochi, Tokushima, Toyama).
+>
+> **Display names are the Japanese `name`** (北海道, 東京都, 京都府 …): the row
+> labels are endonyms as for Ελλάδα or Україна, the history keys are these
+> strings, and every slug is declared in `COUNTRY_SLUGS` (Hepburn without
+> macrons — `tokyo`, `osaka`, `hokkaido`; kanji fold to nothing in
+> `slugify`). The country page is `nihon.html`, a hub over the 47 prefecture
+> pages, **in JIS X 0401 code order, north to south** — the one hub whose
+> chunk pages are not sorted by name (`CHUNK_HUBS_IN_CONFIG_ORDER`), because
+> kanji have no alphabet a reader expects.
+>
+> **Japanese is the 32nd page language:** a `STRINGS.ja` block and `ja-JP`
+> locale in `web/i18n.js`, `methods-ja.html`, `L["ja"]` in `pages_l10n` (with
+> `AMENITY`, months "1月"…"12月" and the date form `{y}年{m}{d}日`) and in
+> `leaderboard_strings` (`leaderboard-ja.html`), `LANG_HOME_CC["ja"] = "jp"`.
+> Japanese inflects nothing and puts the place before の, so both name forms
+> are the bare name ("東京都のおむつ交換台", "東京都を地図で開く"). Per v16's
+> rule every multilingual cluster lists all 32: `index.html`'s hreflang
+> block, the 31 existing methods pages' hreflang + language nav, and the
+> sitemap's three clusters (index, methods, leaderboards) gain `ja`. The
+> leaderboard sentence gains a fourth chunk clause, `cl_prefectures` ("the
+> {j} Japanese prefectures"), in all 32 languages; 32 methods pages name
+> Japan in the coverage sentence.
+>
+> **No change to the emitted shape:** `area_key` becomes `countries_49`,
+> `history.json` region keys grow 137 → 184, and the `status` vocabulary is
+> untouched. Nightly cost: 184 sweeps + a seventh of 184 counts + 62 cities
+> ≈ 270 queries, about a third above the pre-rota night; the 02:00 cron
+> keeps roughly an hour and three quarters before the ops mail.
+
 > **v21 amendment (5 Sep 2026, wave 2 — the United States and Canada, chunked):**
 > papamap.de sweeps **48 countries** — v19's 46 plus `us ca`, the two of the
 > world's top six by pins that die whole (v19's timings: the US on both

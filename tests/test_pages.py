@@ -291,7 +291,9 @@ def test_country_and_region_slugs_are_pinned():
         # The first non-European wave (2026-09-04), English pages.
         "australia", "new-zealand",
         # Wave 2 (2026-09-05): two more hubs, over states and provinces.
-        "united-states", "canada"}
+        "united-states", "canada",
+        # Wave 3 (2026-09-05): Japan, romanised like the Greek and Cyrillic ones.
+        "nihon"}
     assert [pages.slugify(r) for r in FRANCE_REGIONS] == [
         "auvergne-rhone-alpes", "bourgogne-franche-comte", "bretagne",
         "centre-val-de-loire", "corse", "grand-est", "hauts-de-france",
@@ -306,6 +308,12 @@ def test_country_and_region_slugs_are_pinned():
     ca = {pages.slugify(n) for n, _ in CANADA_PROVINCES}
     assert {"quebec", "new-brunswick", "prince-edward-island",
             "northwest-territories", "yukon"} <= ca and len(ca) == 13
+    # Kanji fold to nothing in slugify, so every prefecture has a declared
+    # Hepburn slug, no macrons: 東京都 → tokyo, 大阪府 → osaka, 北海道 → hokkaido.
+    from pipeline.config import JAPAN_PREFECTURES
+    jp = [pages.slugify(n) for n, _ in JAPAN_PREFECTURES]
+    assert jp[:2] == ["hokkaido", "aomori"] and jp[12] == "tokyo" and jp[-1] == "okinawa"
+    assert len(set(jp)) == 47 and all(re.fullmatch(r"[a-z]+", x) for x in jp)
     # No collision with the Bundesland slugs or each other — "Georgia" and
     # "Washington" would collide with a country or a city page one day, so
     # this is the guard that says so first.

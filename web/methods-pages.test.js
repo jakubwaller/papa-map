@@ -69,9 +69,15 @@ test("the date fallback is written in the page's own language", () => {
     // date cannot wrap, but Intl hands back ordinary spaces (ca "de juliol").
     const fallback = ((src.match(/data-stat="date">([^<]*)/) || [])[1] || "")
       .replace(/&nbsp;|[   ]/g, " ");
+    // Japanese (ja-JP) has no month *name*: Intl's month part is the bare
+    // digit and the 月 is a literal, so the whole formatted date is the thing
+    // to look for there — "2026年7月26日".
+    const whole = new Intl.DateTimeFormat(loc, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
+      .format(d);
     assert.ok(
-      names.some((n) => /\p{L}/u.test(n) && fallback.includes(n)),
-      `${f} (${loc}) has "${fallback}", which is neither ${names.map((n) => `"${n}"`).join(" nor ")}`,
+      names.some((n) => /\p{L}/u.test(n) && fallback.includes(n))
+        || (!names.some((n) => /\p{L}/u.test(n)) && fallback.includes(whole)),
+      `${f} (${loc}) has "${fallback}", which is neither ${names.map((n) => `"${n}"`).join(" nor ")} nor "${whole}"`,
     );
   }
 });
