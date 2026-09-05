@@ -25,8 +25,12 @@ from .pages import ICON, STYLE, esc
 # What `python -m pipeline.run` prints, line by line (pipeline/run.py). The
 # result dict is the one line a finished build always ends on, so it is the
 # marker that separates one night from the next in an append-only log.
+# The toilets figure may carry " (counted N d ago)" since the weekly rota
+# (pipeline/toilet_counts.py): an area reused last week's count says so on
+# its line, and the parser must still see it as an area line — otherwise a
+# night that recounts a seventh of the areas shows a seventh of them swept.
 AREA_LINE = re.compile(r"^\s+(?P<area>.+?): ct=(?P<ct>\d+) play=(?P<play>\d+) "
-                       r"toilets=(?P<toilets>\d+)\s*$")
+                       r"toilets=(?P<toilets>\d+)(?: \(counted \d+ d ago\))?\s*$")
 WARN_LINE = re.compile(r"^\s*WARN\b(?P<text>.*)$")
 ROUND_LINE = re.compile(r"^\s+round (?P<n>\d+): retrying (?P<names>.+)$")
 RESULT_LINE = re.compile(r"^\{'features': .*\}\s*$")

@@ -37,12 +37,12 @@ services:
     # suite keep their conservative default while papamap.de builds Europe.
     # Overridable per run: `docker compose run -e PAPAMAP_COUNTRIES=dk ...`.
     #
-    # 46 countries = 73 sweep areas = 208 Overpass queries a night (146 area
-    # queries + 62 leaderboard cities), projected ~108 min against the
-    # eleven-country ~64 — Australia and New Zealand (2026-09-04) answer
-    # whole and add four queries, about two minutes. That is why the cron moved 03:30 -> 02:00
-    # (docs/DEPLOY.md): the 05:30 ops mail must not read a half-written
-    # stats.json. de and fr are chunked (16 Länder, 13 régions); every other
+    # 46 countries = 73 sweep areas = about 145 Overpass queries a night since
+    # the toilets-count rota of 2026-09-05 (73 sweeps + roughly a seventh of
+    # the 73 counts + 62 leaderboard cities; it was 208 before, measured at
+    # 80 min). The cron sits at 01:00 (docs/DEPLOY.md): the 05:30 ops mail
+    # must not read a half-written stats.json, and the next wave chunks the
+    # US and Canada. de and fr are chunked (16 Länder, 13 régions); every other
     # country answers whole as one admin_level=2 area (pipeline/config.py
     # holds the per-country measurements, and why the US, Canada and Japan
     # are not on this list yet).

@@ -66,17 +66,15 @@ Outside Docker the equivalent line is
 `0 1 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
 
 **01:00 since 2026-09-05, moved ahead of the chunked US and Canada sweeps.** The
-46-country build (73 areas, 208 queries, 62 of them leaderboard cities) measured 80
-minutes from 02:00 on 2026-09-05. Wave 2 adds about 63 areas, and the ops mail below runs
-at 05:30; the hour of headroom is bought before the countries join, not after — a build
-still writing when the digest reads `stats.json` is the one health signal the site has
-reporting a half-finished dataset. (02:00 was the same move for Europe-complete on
-2026-08-22, 03:30 for the UK and France before that.) What keeps the build from growing
-with the areas is the toilets-count rota: each area's `amenity=toilets` count is
-refreshed one night a week rather than every night, so a night costs one query per area
-plus a seventh of the counts. beer-map on the same host runs at 04:00 and Sunday 05:00 —
-keep the two apart, the 2026-08-23 ban arrived four minutes after both started in the
-same minute.
+46-country build measured 80 minutes from 02:00 on 2026-09-05, when it was still 208
+queries (73 sweeps, 73 counts, 62 leaderboard cities). Wave 2 adds about 63 areas, and
+the ops mail below runs at 05:30; the hour of headroom is bought before the countries
+join, not after — a build still writing when the digest reads `stats.json` is the one
+health signal the site has reporting a half-finished dataset. (02:00 was the same move
+for Europe-complete on 2026-08-22, 03:30 for the UK and France before that.) What keeps
+the build from growing with the areas is the toilets-count rota: each area's
+`amenity=toilets` count is refreshed one night a week rather than every night, so a night
+costs one query per area plus a seventh of the counts — about 145 for the 46 countries.
 
 **The pipeline container is on the host network** (`network_mode: host` in
 `docker-compose.yml`), so it has the host's IPv6 address. Overpass banned this host's IPv4
@@ -84,7 +82,7 @@ address at the TCP level on 2026-08-23 while still answering it over IPv6, and t
 networks are IPv4-only — every container query failed for six hours and the run looked
 like an outage. beer-map on the same host also queries Overpass from the same addresses;
 its jobs sit at 04:00 and Sunday 05:00, after this one. Keep the two apart: the ban arrived
-four minutes after both started at 02:00.
+four minutes after both started in the same minute (02:00 at the time).
 
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.

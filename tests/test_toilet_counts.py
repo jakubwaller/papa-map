@@ -29,8 +29,14 @@ def _kwargs(tmp_path, load_fixture, **over):
 
 def _seed(path, areas, day, total=3, capacity=1):
     toilet_counts.save(str(path), {
-        name: {"total": total, "capacity": capacity, "date": day.isoformat()}
-        for name, _ in areas})
+        name: {"total": total, "capacity": capacity, "level": level,
+               "date": day.isoformat()}
+        for name, level in areas})
+
+
+def _entry(day, total=3, capacity=1, level="4"):
+    return {"total": total, "capacity": capacity, "level": level,
+            "date": day.isoformat()}
 
 
 def _count_queries(fetch, area):
@@ -43,26 +49,29 @@ def _count_queries(fetch, area):
 # ---- is_due, the rule itself
 
 def test_missing_or_broken_entries_are_always_due():
-    assert toilet_counts.is_due({}, "Bremen", TODAY, 7)
-    assert toilet_counts.is_due({"Bremen": {"total": "3", "capacity": 1,
-                                            "date": "2026-07-20"}}, "Bremen", TODAY, 7)
-    assert toilet_counts.is_due({"Bremen": {"total": True, "capacity": 1,
-                                            "date": "2026-07-20"}}, "Bremen", TODAY, 7)
-    assert toilet_counts.is_due({"Bremen": {"total": 3, "capacity": 1,
-                                            "date": "not a date"}}, "Bremen", TODAY, 7)
+    week_ago = TODAY - timedelta(days=6)
+    assert toilet_counts.is_due({}, "Bremen", "4", TODAY, 7)
+    for bad in ({**_entry(week_ago), "total": "3"},
+                {**_entry(week_ago), "total": True},
+                {**_entry(week_ago), "date": "not a date"},
+                {**_entry(week_ago), "level": "6"}):
+        assert toilet_counts.is_due({"Bremen": bad}, "Bremen", "4", TODAY, 7), bad
+    # The same entry with nothing wrong is not due on an ordinary night.
+    entry = _entry(TODAY - timedelta(days=1))
+    if TODAY.toordinal() % 7 != toilet_counts.slot("Bremen", 7):
+        assert not toilet_counts.is_due({"Bremen": entry}, "Bremen", "4", TODAY, 7)
 
 
 def test_an_entry_from_the_future_is_due():
     # A clock that went backwards must not park an area for a week.
-    cache = {"Bremen": {"total": 3, "capacity": 1,
-                        "date": (TODAY + timedelta(days=1)).isoformat()}}
-    assert toilet_counts.is_due(cache, "Bremen", TODAY, 7)
+    cache = {"Bremen": _entry(TODAY + timedelta(days=1))}
+    assert toilet_counts.is_due(cache, "Bremen", "4", TODAY, 7)
 
 
 def test_a_period_of_one_night_recounts_every_night():
-    cache = {"Bremen": {"total": 3, "capacity": 1, "date": TODAY.isoformat()}}
-    assert toilet_counts.is_due(cache, "Bremen", TODAY, 1)
-    assert toilet_counts.is_due(cache, "Bremen", TODAY, 0)
+    cache = {"Bremen": _entry(TODAY)}
+    assert toilet_counts.is_due(cache, "Bremen", "4", TODAY, 1)
+    assert toilet_counts.is_due(cache, "Bremen", "4", TODAY, 0)
 
 
 def test_the_rota_recounts_each_area_once_a_week_on_its_own_night():
@@ -70,18 +79,18 @@ def test_the_rota_recounts_each_area_once_a_week_on_its_own_night():
     # exactly once, on the night that is its slot — and never on night 0
     # itself, which would charge a manual re-run a second count.
     period = 7
-    cache = {"Bremen": {"total": 3, "capacity": 1, "date": TODAY.isoformat()}}
+    cache = {"Bremen": _entry(TODAY)}
     due_nights = [n for n in range(period)
-                  if toilet_counts.is_due(cache, "Bremen", TODAY + timedelta(days=n), period)]
+                  if toilet_counts.is_due(cache, "Bremen", "4",
+                                          TODAY + timedelta(days=n), period)]
     assert len(due_nights) == 1 and due_nights[0] >= 1
     assert (TODAY + timedelta(days=due_nights[0])).toordinal() % period == \
         toilet_counts.slot("Bremen", period)
 
 
 def test_an_entry_older_than_a_period_is_due_whatever_the_slot():
-    cache = {"Bremen": {"total": 3, "capacity": 1,
-                        "date": (TODAY - timedelta(days=7)).isoformat()}}
-    assert toilet_counts.is_due(cache, "Bremen", TODAY, 7)
+    cache = {"Bremen": _entry(TODAY - timedelta(days=7))}
+    assert toilet_counts.is_due(cache, "Bremen", "4", TODAY, 7)
 
 
 def test_slots_spread_the_sweep_areas_over_the_week():
@@ -110,7 +119,7 @@ def test_first_build_counts_everything_and_remembers_it(tmp_path, load_fixture):
     cache = json.loads((tmp_path / "toilets_counts.json").read_text(encoding="utf-8"))
     assert set(cache["areas"]) == {name for name, _ in SWEEP}
     assert cache["areas"]["Bremen"] == {"total": 3, "capacity": 1,
-                                        "date": "2026-07-26"}
+                                        "level": "4", "date": "2026-07-26"}
 
 
 def test_a_same_day_rerun_reuses_every_count(tmp_path, load_fixture):
@@ -128,10 +137,10 @@ def test_only_the_areas_whose_night_it_is_are_recounted(tmp_path, load_fixture):
           total=100, capacity=9)
     fake = _fake_overpass(load_fixture)
     summary = run_pipeline(**_kwargs(tmp_path, load_fixture, overpass_fetch=fake))
-    due = {name for name, _ in SWEEP
-           if toilet_counts.is_due({name: {"total": 100, "capacity": 9,
-                                           "date": (TODAY - timedelta(days=3)).isoformat()}},
-                                   name, TODAY, 7)}
+    due = {name for name, level in SWEEP
+           if toilet_counts.is_due(
+               {name: _entry(TODAY - timedelta(days=3), 100, 9, level)},
+               name, level, TODAY, 7)}
     for area in SWEEP:
         assert _count_queries(fake, area) == (2 if area[0] in due else 1), area
     # Cached areas contribute their cached number; recounted ones the fresh 3.
@@ -199,3 +208,14 @@ def test_the_rota_is_reported_in_the_build_log(tmp_path, load_fixture, capsys):
     err = capsys.readouterr().err
     assert "(counted 3 d ago)" in err
     assert "toilet counts:" in err and "recounted tonight" in err
+
+
+def test_the_reused_count_suffix_still_parses_as_an_area_line():
+    # The ops page reads the build log; an area line that reused last week's
+    # count must still count as swept, or a rota night shows a seventh of
+    # the areas and a half-done build can pass for a finished one.
+    from pipeline.ops_page import AREA_LINE
+    m = AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3 (counted 3 d ago)")
+    assert m and m.group("area") == "Bremen" and m.group("toilets") == "3"
+    assert AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3")
+    assert not AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3 nonsense")

@@ -53,7 +53,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                      else counts_period_days)
     today = (now or datetime.now(timezone.utc)).date()
     counts_cache = toilet_counts.load(counts_path)
-    counts_fresh: dict[str, tuple[int, int]] = {}  # recounted tonight
+    counts_fresh: dict[str, tuple[int, int, str]] = {}  # recounted tonight
     ct_elements, play_elements = [], []
     # Toilets arrive as two server-side counts per area, not objects
     # (config.toilets_counts_ql). Keyed by area and *assigned*, never added to
@@ -104,7 +104,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 # needs a count from the mirror that just answered, and a
                 # cached number would vouch for an area database it never saw.
                 recount = (not sweep.get("elements") or toilet_counts.is_due(
-                    counts_cache, area_name, today, counts_period))
+                    counts_cache, area_name, admin_level, today, counts_period))
                 if recount:
                     counts = osm.parse_counts(
                         overpass_fetch(toilets_counts_ql(area_name, admin_level)))
@@ -159,7 +159,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             toilets_by_area[area_name] = toilets_total
             toilets_capacity_by_area[area_name] = capacity_total
             if recount:
-                counts_fresh[area_name] = (toilets_total, capacity_total)
+                counts_fresh[area_name] = (toilets_total, capacity_total, admin_level)
             for el in ct:
                 ct_area.setdefault((el.get("type"), el.get("id")), area_name)
             counted = ("" if recount else
@@ -238,9 +238,9 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # disk: a build that died between the sweep and the export must recount
     # tomorrow, not trust numbers it never published.
     if counts_fresh:
-        for name, (total, capacity) in counts_fresh.items():
+        for name, (total, capacity, level) in counts_fresh.items():
             counts_cache[name] = {"total": total, "capacity": capacity,
-                                  "date": today.isoformat()}
+                                  "level": level, "date": today.isoformat()}
         toilet_counts.save(counts_path, counts_cache)
     print(f"  toilet counts: {len(counts_fresh)} area(s) recounted tonight, "
           f"{len(toilets_by_area) - len(counts_fresh)} reused from "
