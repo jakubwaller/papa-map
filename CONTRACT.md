@@ -1,5 +1,48 @@
 # papa-map — build contract (v0)
 
+> **v21 amendment (5 Sep 2026, wave 2 — the United States and Canada, chunked):**
+> papamap.de sweeps **48 countries** — v19's 46 plus `us ca`, the two of the
+> world's top six by pins that die whole (v19's timings: the US on both
+> queries at the ~60 s cutoff, Canada's count at the 56 s timeout). They join
+> the way Germany and France did, as `admin_level=4` chunks: the US as its
+> **50 states plus the District of Columbia** (51 areas), Canada as its
+> **10 provinces and 3 territories** (13). The five US territories (Puerto
+> Rico, Guam, the US Virgin Islands, American Samoa, the Northern Mariana
+> Islands) are level 4 too and deliberately absent, like France's overseas
+> régions — an allowlist, not a subdivision.
+>
+> **A third way to select an area.** Every chunk is selected by its
+> **`ISO3166-2` code** (`config.AREA_SELECTORS`, consulted by `_area_ql`
+> before the `name` / `name:en` rule of v11), never by name: a level-4
+> "Florida" is also a department of Uruguay, and a name sweep would have put
+> Uruguayan pins on the Florida page; Quebec, New Brunswick and Nunavut would
+> have needed `name:en` on top ("Québec", "New Brunswick / Nouveau-Brunswick",
+> "ᓄᓇᕗᑦ Nunavut"). The display name — the history key, the row label, the
+> page slug — is the English name, as for the ring.
+>
+> **Measured 2026-09-05 from the Mac, slot waits separated out:** every one
+> of the 64 areas answers both queries inside the budget, the slowest being
+> Maryland's sweep at 26.5 s and Colorado's count at 23.3 s; California is
+> 20.9 s on both (1,338 objects, 11,723 toilets). The 64 sweeps sum to 656 s
+> of query time, the 64 counts to 419 s. The Northwest Territories hold **no
+> changing_table object at all** (59 toilets) — the first swept area with an
+> empty object sweep; the v15 zero-objects check passes on its toilet count,
+> and the v20 rota recounts an empty sweep every night by design.
+>
+> **HTML surface:** `united-states.html` and `canada.html` are English hubs
+> over 51 state and 13 province pages, the shape `france.html` has over its
+> régions (`render_hub` over `pages_l10n.HUB` and `CHUNK_FORMS`, keyed by
+> country code). The leaderboard's regions table gains 64 rows; its sentence
+> gains two clauses in 31 languages ("the {s} US states and DC", s counted
+> without the District, and "the {p} Canadian provinces and territories") and
+> its heading for the chunked case becomes generic ("German states, regions
+> and whole countries"). The site's copy counts 48; 31 methods pages name
+> the two countries; the JSON-LD lists them; the sitemap grows by 66 URLs.
+> **No change to the emitted shape:** `area_key` becomes `countries_48`,
+> `history.json` region keys grow 73 → 137, and the `status` vocabulary is
+> untouched. Nightly cost: 137 sweeps + a seventh of 137 counts + 62 cities
+> ≈ 220 queries, the pre-rota level of the 46-country night (80 min).
+
 > **v20 amendment (5 Sep 2026, the toilets-count rota):** the two per-area
 > `amenity=toilets` counts behind `stats.local.toilets_total` and
 > `capacity_tagged_toilets` (and the toilets column on every area page) are
