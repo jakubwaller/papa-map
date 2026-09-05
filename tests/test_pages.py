@@ -479,7 +479,7 @@ def test_every_page_language_defines_the_country_template_keys():
 
 def test_every_country_page_renders_in_its_own_language(tmp_path):
     # Renders every template of every language with real-shaped data — a bad
-    # placeholder in any of the 31 translations fails here, not in the night
+    # placeholder in any of the 32 translations fails here, not in the night
     # build. Also the empty state, which formats a different template.
     from pipeline.config import COUNTRY_PAGES
     from pipeline.pages_l10n import L

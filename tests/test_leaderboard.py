@@ -463,10 +463,20 @@ def test_backfill_refuses_a_one_count_answer_and_a_reply_without_elements(tmp_pa
             return {"elements": [{"type": "count", "id": 0, "tags": {"total": "59"}}]}
         return {}  # no elements key at all
 
-    with pytest.raises(RuntimeError, match="zero objects"):
+    with pytest.raises(RuntimeError, match="1 count, expected 2"):
         backfill.backfill(["2026-07-24"], history_path=str(tmp_path / "h.json"),
                           areas=[("Northwest Territories", "4")], cities=[],
                           fetch=one_count, pause_s=0, sleep=lambda s: None)
+
+    def no_elements(ql):
+        if '"amenity"="toilets"' in ql:
+            return {"elements": []}
+        return {}
+
+    with pytest.raises(RuntimeError, match="zero objects"):
+        backfill.backfill(["2026-07-24"], history_path=str(tmp_path / "h.json"),
+                          areas=[("Northwest Territories", "4")], cities=[],
+                          fetch=no_elements, pause_s=0, sleep=lambda s: None)
 
 
 def test_backfill_scopes_city_rows_to_their_country(tmp_path, load_fixture):

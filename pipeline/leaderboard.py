@@ -193,7 +193,7 @@ SORT_STYLE = """\
   th[aria-sort="descending"] .arr::after { content: "\\25BC"; opacity: 1; }
   p.hint { font-size: 0.8rem; margin-top: -0.7rem; }
   /* The language switcher, styled like the methods pages': muted, roomy line
-     height for 31 entries, the current language bold instead of linked. */
+     height for 32 entries, the current language bold instead of linked. */
   .back.langs { margin-top: -0.7rem; color: var(--muted); line-height: 1.9; }
   .back.langs strong { color: var(--fg); font-weight: 600; }
 """
