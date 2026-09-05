@@ -8,9 +8,11 @@ number on the site that moves by a few dozen a week — nobody maps toilets at
 the pace they answer the changing-table room question. So the counts live
 here, in a small JSON file next to history.json, and each area is recounted
 on one night a week, staggered so a seventh of the areas is due every night
-rather than all of them on Sunday. The 46-country build drops from 208
+rather than all of them on Sunday. The 46-country build dropped from 208
 queries to about 145 a night, which is the room the chunked US and Canada
-sweeps need (wave 2, ~63 areas) without the build growing past the ops mail.
+sweeps took the same day (wave 2, 64 areas): 137 sweeps + a seventh of 137
+counts + 62 cities ≈ 220, the pre-rota level, without the build growing
+past the ops mail.
 
 The cache is state, not output: the frontend never reads it. A missing or
 unreadable file costs one full night of counts and nothing else.

@@ -276,13 +276,9 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # The history append replaces a same-date entry, so a manual re-run after
     # the nightly cron updates today rather than fabricating a second day.
     if cities:
-        city_by_key = {}
-        # Config order, so an object inside two city areas would land in the
-        # same city every night — cities don't overlap today, but the
-        # first-wins rule matches how ct_area handles Länder boundaries.
-        for display, _, _ in cities:
-            for key in city_ids.get(display, ()):
-                city_by_key.setdefault(key, display)
+        # Scoped to the city's country: a level-8 "Birmingham" is also a
+        # town in Alabama, and since the US is swept its ids would match.
+        city_by_key = leaderboard.city_membership(cities, city_ids, ct_area)
         region_counts, city_counts = leaderboard.counts_from_features(
             features, ct_area, city_by_key,
             region_names=[name for name, _ in areas],

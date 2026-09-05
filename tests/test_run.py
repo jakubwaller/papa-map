@@ -50,8 +50,18 @@ EUROPE = ELEVEN + EUROPE_CODES
 # above 250 pins; the US, Canada and Japan outrank them and need chunking.
 WAVE1_CODES = ("au", "nz")
 WORLD = EUROPE + WAVE1_CODES
+
+# Wave 2 (2026-09-05): the two of the top six that die whole, chunked — the
+# US into its 50 states and DC, Canada into 10 provinces and 3 territories,
+# every one selected by ISO 3166-2 code because a level-4 name is not
+# unique on the planet (Florida is also a department of Uruguay).
+WAVE2_CODES = ("us", "ca")
+WORLD2 = WORLD + WAVE2_CODES
 EUROPE_SWEEP = ELEVEN_SWEEP + [(config.COUNTRY_AREAS[c][0][0], "2")
                                for c in EUROPE_CODES]
+
+
+BY_CODE = {code: name for (name, _), (_, code) in config.AREA_SELECTORS.items()}
 
 
 def _fake_overpass(load_fixture):
@@ -67,11 +77,16 @@ def _fake_overpass(load_fixture):
 
     def fetch(ql, **kwargs):
         # name:en for the countries whose own `name` is multilingual
-        # (config.NAME_EN_AREAS) — an area is an area to the sweep either way,
-        # so the recorder must not care which tag selected it.
-        m = re.search(r'area\["name(?::en)?"="([^"]+)"\]\["admin_level"="(\d+)"\]', ql)
+        # (config.NAME_EN_AREAS), ISO 3166-2 for the US states and Canadian
+        # provinces (config.AREA_SELECTORS) — an area is an area to the sweep
+        # either way, so the recorder must not care which tag selected it,
+        # and records the display name a code stands for.
+        m = re.search(r'area\["(name(?::en)?|ISO3166-2)"="([^"]+)"\]\["admin_level"="(\d+)"\]', ql)
         assert m, f"no area clause in {ql!r}"
-        areas_seen.append((m.group(1), m.group(2)))
+        value = m.group(2)
+        if m.group(1) == "ISO3166-2":
+            value = BY_CODE[value]
+        areas_seen.append((value, m.group(3)))
         if '"kids_area"' in ql:
             return {"elements":
                     load_fixture("overpass_changing_tables.json")["elements"]
@@ -691,3 +706,68 @@ def test_round_pause_waits_for_the_first_host_to_come_back(tmp_path, load_fixtur
                  history_path=str(tmp_path / "history.json"),
                  now=NOW, sweep_rounds=2, sweep_pause_s=120)
     assert slept == [600.0]  # the breaker's wait, not the 120 s pause
+
+
+def test_wave_two_chunks_the_us_and_canada_by_iso_code(monkeypatch):
+    # Both die whole (CONTRACT v19's timings), so they join the way Germany
+    # and France did — chunked into level-4 areas — but selected by ISO
+    # 3166-2 code, not name: "Florida" at admin_level 4 is also a department
+    # of Uruguay, and a name sweep would put its pins on the Florida page.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", WORLD2)
+    areas = config.sweep_areas()
+    assert areas[:73] == EUROPE_SWEEP + [("Australia", "2"), ("New Zealand", "2")]
+    assert len(areas) == 73 + 51 + 13
+    us = [n for n, lvl in areas[73:73 + 51]]
+    ca = [n for n, lvl in areas[73 + 51:]]
+    assert "District of Columbia" in us and "Florida" in us and len(us) == 51
+    assert {"Quebec", "Nunavut", "New Brunswick", "Yukon"} <= set(ca) and len(ca) == 13
+    for name in us + ca:
+        assert config.area_name_key(name) == "name"  # no name:en detour…
+        key, code = config.AREA_SELECTORS[(name, "4")]  # …the code selects
+        assert key == "ISO3166-2" and code[:3] in ("US-", "CA-")
+        assert f'area["ISO3166-2"="{code}"]["admin_level"="4"]' in config.sweep_ql(name, "4")
+        assert f'area["ISO3166-2"="{code}"]' in config.toilets_counts_ql(name, "4")
+        assert name in config.chunked_area_names(), name
+    assert config.sweep_ql("Florida", "4").count('area[') == 1
+    assert 'name"="Florida' not in config.sweep_ql("Florida", "4")
+    # The selector is the state's, not any area that shares its name: a
+    # level-8 city called Washington keeps its name selector.
+    assert 'area["name"="Washington"]["admin_level"="8"]' in \
+        config.changing_table_ids_ql("Washington", "8")
+    # No US territory rides along: Puerto Rico and Guam are level 4 too.
+    for territory in ("Puerto Rico", "Guam", "American Samoa",
+                      "United States Virgin Islands", "Northern Mariana Islands"):
+        assert territory not in config.AREA_SELECTORS
+    assert config.COUNTRY_PAGES["us"][0] == config.COUNTRY_PAGES["ca"][0] == "en"
+    assert set(config.CHUNK_HUBS) == {"fr", "us", "ca"}
+    _, key = config.display_area()
+    assert key == "countries_48"
+
+
+def test_wave_two_build_files_states_and_provinces_under_their_countries(
+        tmp_path, load_fixture, monkeypatch):
+    # A US + Canada build end to end: 64 chunk sweeps, each recorded under
+    # the display name its ISO code stands for, two hubs and 64 chunk pages
+    # in English, and every chunk a leaderboard region under its country.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", WAVE2_CODES)
+    fake = _fake_overpass(load_fixture)
+    stats = tmp_path / "stats.json"
+    summary = run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
+        play_geojson_path=str(tmp_path / "play.geojson"),
+        overpass_fetch=fake, taginfo_fetch=_fake_taginfo(load_fixture),
+        pages_dir=str(tmp_path / "pages"),
+        history_path=str(tmp_path / "history.json"), now=NOW)
+    expected = [(n, "4") for n, _ in config.US_STATES] + [(n, "4") for n, _ in config.CANADA_PROVINCES]
+    assert fake.areas_seen == [a for a in expected for _ in (1, 2)]  # no cities: partial build
+    # united-states.html + canada.html + 51 + 13; no German index, no
+    # leaderboard (the city sweep only runs on the full build).
+    assert summary["pages"] == 2 + 51 + 13
+    payload = json.loads(stats.read_text(encoding="utf-8"))
+    assert payload["area_key"] == "us_ca"
+    assert payload["area_name"] == "United States & Canada"
+    names = {p.name for p in (tmp_path / "pages").iterdir()}
+    assert {"united-states.html", "canada.html", "florida.html",
+            "district-of-columbia.html", "quebec.html", "nunavut.html"} <= names
+    for name in ("Florida", "Quebec"):
+        assert config.AREA_COUNTRY[name] == ("us" if name == "Florida" else "ca")

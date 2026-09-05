@@ -2,8 +2,9 @@
 
 **PapaMap — Wickeltische, die ein Vater erreicht.**
 
-A static map of places across 46 countries — 44 in Europe, from Iceland to Cyprus, from
-Portugal to Ukraine, plus Australia and New Zealand — with a baby changing table, colored by whether a
+A static map of places across 48 countries — 44 in Europe, from Iceland to Cyprus, from
+Portugal to Ukraine, plus Australia, New Zealand, the United States and Canada — with a baby
+changing table, colored by whether a
 dad can actually reach it: **green** = accessible room (men's/unisex/dedicated/wheelchair),
 **red** = women's room only, **grey** = table exists but nobody has recorded which room —
 the call to action. Every grey pin deep-links to the same object on MapComplete so the
@@ -41,19 +42,24 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
 
 - `PAPAMAP_COUNTRIES` picks the countries. **The code default is `de,dk`** — a
   fresh checkout and the test suite build Germany + Denmark, and that stays
-  that way on purpose, so neither depends on a 46-country sweep.
+  that way on purpose, so neither depends on a 48-country sweep.
   **The deployment sets the variable instead:** `docker-compose.yml` carries
-  the full `PAPAMAP_COUNTRIES` list, so papamap.de sweeps 46 countries:
+  the full `PAPAMAP_COUNTRIES` list, so papamap.de sweeps 48 countries:
   every European sovereign from Iceland to Cyprus except
   Vatican City (too small to survive the zero-objects check) and the
-  transcontinental states, plus Australia and New Zealand — the first two
-  outside Europe, picked by a per-country count of the whole planet
-  (CONTRACT v19 has the rule and the ranking).
+  transcontinental states, plus Australia, New Zealand, the United States
+  and Canada — the four outside Europe, picked by a per-country count of the
+  whole planet (CONTRACT v19 has the rule and the ranking, v21 the second
+  wave).
   Codes are ISO 3166-1 alpha-2, so the UK is **`gb`**, not `uk`, and Kosovo
-  is the user-assigned **`xk`**. All but two of them
+  is the user-assigned **`xk`**. All but four of them
   are one `admin_level=2` area each, the way Denmark is. `fr` is 13 areas, one
-  per metropolitan région, and `de` is the 16 Bundesländer — the only two
-  chunked countries. So `PAPAMAP_COUNTRIES=dk` builds Denmark alone and
+  per metropolitan région, `de` the 16 Bundesländer, `us` the 50 states plus
+  the District of Columbia and `ca` the 10 provinces and 3 territories — the
+  four chunked countries, each because the country whole dies at the ~60 s
+  cutoff. The US and Canadian areas are selected by `ISO3166-2` code, not
+  name: a level-4 "Florida" is also a department of Uruguay
+  (`config.AREA_SELECTORS`). So `PAPAMAP_COUNTRIES=dk` builds Denmark alone and
   `de,dk,at,ch` adds the German-speaking neighbours; an unknown code aborts
   rather than silently sweeping less. (The map has had no `maxBounds` since
   Australia and New Zealand joined on 2026-09-04; until then every expansion
@@ -73,8 +79,8 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   the Caribbean, the Indian Ocean and South America, thousands of kilometres
   from the France its page and leaderboard row are about.
 - A build of three or more countries names itself by count rather than by name:
-  `stats.json`'s `area_key` becomes `countries_<n>` (`countries_46` for all
-  46), since the joined labels overflow the stats strip. One and two
+  `stats.json`'s `area_key` becomes `countries_<n>` (`countries_48` for all
+  48), since the joined labels overflow the stats strip. One and two
   countries keep `de` / `dk` / `de_dk`.
 - `PAPAMAP_AREA_NAME` + `PAPAMAP_AREA_ADMIN_LEVEL` select a single area instead
   (e.g. `Hamburg` / `4`), and `PAPAMAP_DISPLAY_AREA` names the dataset in the
@@ -104,7 +110,9 @@ Each page is written in the language its readers search in, which is the whole
 point of their existing: German for the 16 Bundesländer (plus their index at
 `web/wickeltische/index.html`) and for Austria and Switzerland, Danish for
 `danmark.html`, English for `united-kingdom.html`, French for `france.html` —
-a hub over 13 per-région pages — and so on. The routing (including the
+a hub over 13 per-région pages — English again for `united-states.html` and
+`canada.html`, hubs over 51 state and 13 province pages, and so on. The
+routing (including the
 inflected name forms prose needs: "in der Schweiz", "w Polsce") lives in
 `config.COUNTRY_PAGES` and `pipeline/pages_l10n.py`; slugs are the local
 names (`belgie.html`, `cesko.html`, `oesterreich.html`). The map's footer

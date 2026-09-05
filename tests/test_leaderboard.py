@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from pipeline import backfill, leaderboard, pages
 from pipeline.config import changing_table_ids_ql
 
@@ -178,10 +180,23 @@ def test_french_regions_are_not_printed_as_whole_countries():
     rows = [{"name": n} for n in
             ["Bayern", "Berlin", "Bretagne", "Corse", "Île-de-France",
              "Danmark", "Sweden", "United Kingdom"]]
-    lands, fr_regions, countries = leaderboard._region_kinds(rows)
+    lands, kinds, countries = leaderboard._region_kinds(rows)
     assert lands == 2
-    assert fr_regions == 3
+    assert kinds == {"fr": 3, "us": 0, "ca": 0}
     assert countries == ["Danmark", "Sweden", "United Kingdom"]
+
+
+def test_us_states_and_canadian_provinces_are_their_own_kinds():
+    # Same regression, two chunked countries later: Florida is not a
+    # sovereign state either, and the District of Columbia is not a state,
+    # so it is not counted among them — the clause names it on its own.
+    rows = [{"name": n} for n in
+            ["Bayern", "Florida", "Texas", "District of Columbia", "Quebec",
+             "Yukon", "Australia"]]
+    lands, kinds, countries = leaderboard._region_kinds(rows)
+    assert lands == 1
+    assert kinds == {"fr": 0, "us": 2, "ca": 2}
+    assert countries == ["Australia"]
 
 
 def test_regions_heading_names_regions_when_france_is_swept(tmp_path):
@@ -193,8 +208,8 @@ def test_regions_heading_names_regions_when_france_is_swept(tmp_path):
     ]}
     data = leaderboard.leaderboard_data(history)
     for lang, heading, claim in (
-            ("de", "Bundesländer, Régions und ganze Länder", "französischen Régions"),
-            ("en", "German states, French régions and whole countries",
+            ("de", "Bundesländer, Regionen und ganze Länder", "französischen Régions"),
+            ("en", "German states, regions and whole countries",
              "French régions")):
         html = leaderboard.render_leaderboard(lang, data)
         assert heading in html, lang
@@ -209,6 +224,35 @@ def test_regions_heading_names_regions_when_france_is_swept(tmp_path):
     en = leaderboard.render_leaderboard("en", data)
     assert "French régions and United Kingdom as a whole" in en
     assert "1 countries" not in en
+
+
+def test_regions_note_counts_states_and_provinces(tmp_path):
+    history = {"v": 1, "days": [
+        day("2026-09-01", regions={"Bayern": [1, 0, 9], "Florida": [1, 0, 9],
+                                   "District of Columbia": [1, 0, 9],
+                                   "Quebec": [1, 0, 9], "Australia": [1, 0, 9]}),
+        day("2026-09-08", regions={"Bayern": [3, 0, 7], "Florida": [2, 0, 8],
+                                   "District of Columbia": [1, 0, 9],
+                                   "Quebec": [2, 0, 8], "Australia": [2, 0, 8]}),
+    ]}
+    data = leaderboard.leaderboard_data(history)
+    en = leaderboard.render_leaderboard("en", data)
+    assert "German states, regions and whole countries" in en
+    assert ("the 1 Bundesländer, the 1 US states and DC, the 1 Canadian "
+            "provinces and territories and Australia as a whole") in en
+    assert "French régions" not in en
+    de = leaderboard.render_leaderboard("de", data)
+    assert ("die 1 Bundesländer, die 1 US-Bundesstaaten und DC, die 1 "
+            "kanadischen Provinzen und Territorien und Australia als Ganzes") in de
+    # Florida is a row, never a country in the sentence.
+    for html in (en, de):
+        assert "Florida" not in html.split("<table")[0]
+        assert "<td" in html and "Florida" in html
+    # Every language has the two new clauses and formats them without a
+    # stray placeholder.
+    for lang in leaderboard.L:
+        html = leaderboard.render_leaderboard(lang, data)
+        assert "{s}" not in html and "{p}" not in html, lang
 
 
 def test_render_quiet_and_fresh_notes():
@@ -333,6 +377,75 @@ def test_backfill_seeds_history_through_the_build_path(tmp_path, load_fixture):
     assert all('[date:"' in q for q in calls)
 
 
+def test_backfill_tolerates_an_area_with_toilets_but_no_tables(tmp_path, load_fixture):
+    # The Northwest Territories have no changing_table object at all. The
+    # attic sweep answers empty; before believing that, the backfill asks
+    # for the toilet count as of the same moment, and a positive count
+    # means the area resolved — an empty row, not a failed day.
+    history_path = tmp_path / "history.json"
+    calls = []
+
+    def fake_fetch(ql):
+        calls.append(ql)
+        if '"amenity"="toilets"' in ql:
+            return {"elements": [
+                {"type": "count", "id": 0, "tags": {"total": "59"}},
+                {"type": "count", "id": 0, "tags": {"total": "0"}}]}
+        if "CA-NT" in ql:
+            return {"elements": []}
+        if "out ids" in ql:
+            return {"elements": [{"type": "node", "id": 1}]}
+        return load_fixture("overpass_changing_tables.json")
+
+    added = backfill.backfill(
+        ["2026-07-24"], history_path=str(history_path),
+        areas=[("Hamburg", "4"), ("Northwest Territories", "4")],
+        cities=[("Berlin", "Berlin", "4")],
+        fetch=fake_fetch, pause_s=0, sleep=lambda s: None)
+    assert added == ["2026-07-24"]
+    day0 = json.loads(history_path.read_text(encoding="utf-8"))["days"][0]
+    assert day0["regions"]["Northwest Territories"] == [0, 0, 0]
+    # Exactly one count query, for the one empty area, and attic like the rest.
+    counts = [q for q in calls if '"amenity"="toilets"' in q]
+    assert len(counts) == 1 and '[date:"2026-07-24T00:00:00Z"]' in counts[0]
+    assert 'ISO3166-2"="CA-NT"' in counts[0]
+
+
+def test_backfill_still_refuses_an_area_with_nothing_at_all(tmp_path, load_fixture):
+    def fake_fetch(ql):
+        if '"amenity"="toilets"' in ql or "CA-NT" in ql:
+            return {"elements": []}
+        return load_fixture("overpass_changing_tables.json")
+
+    with pytest.raises(RuntimeError, match="zero objects"):
+        backfill.backfill(["2026-07-24"], history_path=str(tmp_path / "h.json"),
+                          areas=[("Northwest Territories", "4")], cities=[],
+                          fetch=fake_fetch, pause_s=0, sleep=lambda s: None)
+
+
+def test_backfill_scopes_city_rows_to_their_country(tmp_path, load_fixture):
+    # Birmingham's level-8 area query answers Alabama's tables too; the
+    # backfill files them under Alabama, never under the GB row.
+    history_path = tmp_path / "history.json"
+
+    def fake_fetch(ql):
+        if "out ids" in ql:
+            return {"elements": [{"type": "node", "id": 1}, {"type": "node", "id": 777}]}
+        if "US-AL" in ql:
+            return {"elements": [{"type": "node", "id": 777, "lat": 33.5, "lon": -86.8,
+                                  "tags": {"changing_table": "yes",
+                                           "changing_table:location": "male_toilet"}}]}
+        return load_fixture("overpass_changing_tables.json")
+
+    backfill.backfill(["2026-07-24"], history_path=str(history_path),
+                      areas=[("United Kingdom", "2"), ("Alabama", "4")],
+                      cities=[("Birmingham", "Birmingham", "8")],
+                      fetch=fake_fetch, pause_s=0, sleep=lambda s: None)
+    day0 = json.loads(history_path.read_text(encoding="utf-8"))["days"][0]
+    assert day0["cities"]["Birmingham"] == [1, 0, 0]  # node/1 only
+    assert day0["regions"]["Alabama"] == [1, 0, 0]
+
+
 def test_backfill_never_overwrites_an_existing_day(tmp_path):
     history_path = tmp_path / "history.json"
     sentinel = day("2026-07-24", regions={"Bayern": [9, 9, 9]})
@@ -349,3 +462,16 @@ def test_backfill_never_overwrites_an_existing_day(tmp_path):
     assert added == []
     unchanged = json.loads(history_path.read_text(encoding="utf-8"))
     assert unchanged["days"] == [sentinel]
+
+
+def test_city_membership_is_scoped_to_the_citys_country():
+    # The level-8 "Birmingham" area query also answers Birmingham, Alabama.
+    # Its ids join the GB row only if the sweep filed them under a British
+    # area; an id the sweep put in Alabama stays out of the British row.
+    cities = [("Birmingham", "Birmingham", "8"), ("Berlin", "Berlin", "4")]
+    city_ids = {"Birmingham": {("node", 1), ("node", 2), ("node", 3)},
+                "Berlin": {("node", 4)}}
+    region_by_key = {("node", 1): "United Kingdom", ("node", 2): "Alabama",
+                     ("node", 4): "Berlin"}          # node 3: not swept at all
+    assert leaderboard.city_membership(cities, city_ids, region_by_key) == {
+        ("node", 1): "Birmingham", ("node", 4): "Berlin"}
