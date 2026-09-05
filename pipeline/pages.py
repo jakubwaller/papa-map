@@ -313,7 +313,7 @@ FOOTER = L["de"]["footer"]
 # picture ships under a new ?v= or the edge keeps serving the old one.
 OG_IMAGE = {"de": "og-image.jpg"}
 OG_IMAGE_FALLBACK = "og-image-en.jpg"
-OG_IMAGE_VERSION = "eu44"
+OG_IMAGE_VERSION = "w46"
 OG_IMAGE_SIZE = (1200, 630)
 
 
