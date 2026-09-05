@@ -61,7 +61,7 @@ EUROPE_SWEEP = ELEVEN_SWEEP + [(config.COUNTRY_AREAS[c][0][0], "2")
                                for c in EUROPE_CODES]
 
 
-BY_CODE = {code: name for name, (_, code) in config.AREA_SELECTORS.items()}
+BY_CODE = {code: name for (name, _), (_, code) in config.AREA_SELECTORS.items()}
 
 
 def _fake_overpass(load_fixture):
@@ -723,13 +723,17 @@ def test_wave_two_chunks_the_us_and_canada_by_iso_code(monkeypatch):
     assert {"Quebec", "Nunavut", "New Brunswick", "Yukon"} <= set(ca) and len(ca) == 13
     for name in us + ca:
         assert config.area_name_key(name) == "name"  # no name:en detour…
-        key, code = config.AREA_SELECTORS[name]         # …the code selects
+        key, code = config.AREA_SELECTORS[(name, "4")]  # …the code selects
         assert key == "ISO3166-2" and code[:3] in ("US-", "CA-")
         assert f'area["ISO3166-2"="{code}"]["admin_level"="4"]' in config.sweep_ql(name, "4")
         assert f'area["ISO3166-2"="{code}"]' in config.toilets_counts_ql(name, "4")
         assert name in config.chunked_area_names(), name
     assert config.sweep_ql("Florida", "4").count('area[') == 1
     assert 'name"="Florida' not in config.sweep_ql("Florida", "4")
+    # The selector is the state's, not any area that shares its name: a
+    # level-8 city called Washington keeps its name selector.
+    assert 'area["name"="Washington"]["admin_level"="8"]' in \
+        config.changing_table_ids_ql("Washington", "8")
     # No US territory rides along: Puerto Rico and Guam are level 4 too.
     for territory in ("Puerto Rico", "Guam", "American Samoa",
                       "United States Virgin Islands", "Northern Mariana Islands"):

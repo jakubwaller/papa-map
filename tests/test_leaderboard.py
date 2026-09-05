@@ -391,3 +391,16 @@ def test_backfill_never_overwrites_an_existing_day(tmp_path):
     assert added == []
     unchanged = json.loads(history_path.read_text(encoding="utf-8"))
     assert unchanged["days"] == [sentinel]
+
+
+def test_city_membership_is_scoped_to_the_citys_country():
+    # The level-8 "Birmingham" area query also answers Birmingham, Alabama.
+    # Its ids join the GB row only if the sweep filed them under a British
+    # area; an id the sweep put in Alabama stays out of the British row.
+    cities = [("Birmingham", "Birmingham", "8"), ("Berlin", "Berlin", "4")]
+    city_ids = {"Birmingham": {("node", 1), ("node", 2), ("node", 3)},
+                "Berlin": {("node", 4)}}
+    region_by_key = {("node", 1): "United Kingdom", ("node", 2): "Alabama",
+                     ("node", 4): "Berlin"}          # node 3: not swept at all
+    assert leaderboard.city_membership(cities, city_ids, region_by_key) == {
+        ("node", 1): "Birmingham", ("node", 4): "Berlin"}

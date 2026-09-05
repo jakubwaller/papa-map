@@ -42,7 +42,7 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
 
 - `PAPAMAP_COUNTRIES` picks the countries. **The code default is `de,dk`** — a
   fresh checkout and the test suite build Germany + Denmark, and that stays
-  that way on purpose, so neither depends on a 46-country sweep.
+  that way on purpose, so neither depends on a 48-country sweep.
   **The deployment sets the variable instead:** `docker-compose.yml` carries
   the full `PAPAMAP_COUNTRIES` list, so papamap.de sweeps 48 countries:
   every European sovereign from Iceland to Cyprus except

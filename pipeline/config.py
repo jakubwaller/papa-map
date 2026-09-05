@@ -185,10 +185,12 @@ CANADA_PROVINCES = (
     ("Yukon", "CA-YT"),
 )
 
-# Areas selected by a tag other than their name: {display name: (key, value)}.
-# _area_ql consults this first; everything else is selected by name or
-# name:en (area_name_key below).
-AREA_SELECTORS = {name: ("ISO3166-2", code)
+# Areas selected by a tag other than their name: {(display name, admin
+# level): (key, value)}. _area_ql consults this first; everything else is
+# selected by name or name:en (area_name_key below). Keyed by level too, so
+# a leaderboard city that happens to be called "New York" or "Washington"
+# at level 8 is not rewritten into a state selector that matches nothing.
+AREA_SELECTORS = {(name, "4"): ("ISO3166-2", code)
                   for name, code in US_STATES + CANADA_PROVINCES}
 
 # Areas whose Overpass selector is name:en instead of name. A country's `name`
@@ -515,10 +517,12 @@ LANG_HOME_CC = {
 # département in one level-6 relation.
 #
 # Some name+level pairs also match namesake areas abroad (Manchester,
-# Birmingham, Bern, Lyon and Amsterdam at level 8 are each also small US
-# towns). Harmless by construction: city membership is a join against the
-# features the country sweep produced, and an id from Kansas never matches
-# one — the namesakes only pad the ids-only payload by a few objects.
+# Birmingham, Bern, Lyon and Amsterdam at level 8 are each also US towns —
+# Birmingham, Alabama has 200,000 people). That was harmless while no US
+# object was ever swept; since the US joined (2026-09-05) their ids DO match
+# features, so leaderboard.city_membership joins an id to a city only when
+# the sweep filed it under an area of the city's own country. The namesakes
+# still pad the ids-only payload by a few objects, nothing more.
 #
 # Each city costs one ids-only query — one ~40 s Overpass slot — per night;
 # these 34 add ~23 min, which the 03:30 cron absorbs while still finishing
@@ -778,7 +782,8 @@ def _area_ql(area_name: str, admin_level: str, date: str | None = None) -> str:
     # themselves are derived from *current* boundaries — acceptable, Länder and
     # city limits move on a scale of decades, our history on a scale of weeks.
     attic = f'[date:"{date}"]' if date else ""
-    key, value = AREA_SELECTORS.get(area_name) or (area_name_key(area_name), area_name)
+    key, value = (AREA_SELECTORS.get((area_name, admin_level))
+                  or (area_name_key(area_name), area_name))
     return (f'[out:json][timeout:{OVERPASS_QL_TIMEOUT}]{attic};'
             f'area["{key}"="{value}"]["admin_level"="{admin_level}"]->.a;')
 

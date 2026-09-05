@@ -47,6 +47,29 @@ def load_history(path) -> dict:
     return data
 
 
+def city_membership(cities, city_ids, region_by_key) -> dict:
+    """{(osm_type, osm_id): city display name} for the leaderboard's city
+    rows, from the ids each city's area query returned — restricted to the
+    objects the SWEEP filed under an area of the city's own country.
+
+    The city areas are selected by bare name and level, and a level-8
+    "Birmingham" or "Manchester" is also a town in Alabama or New Hampshire.
+    Until 2026-09-05 that was harmless: an id from Kansas never matched a
+    swept feature. The day the US joined it would have, silently — the
+    Birmingham row, labelled GB, would have counted Alabama's tables. So an
+    id only joins a city if the sweep put it in that city's country.
+    Config order: an object inside two city areas lands in the first, the
+    same first-wins rule region_by_key applies at Länder boundaries."""
+    out = {}
+    for display, _, _ in cities:
+        cc = AREA_COUNTRY.get(display)
+        for key in city_ids.get(display, ()):
+            if AREA_COUNTRY.get(region_by_key.get(key)) != cc:
+                continue
+            out.setdefault(key, display)
+    return out
+
+
 def counts_from_features(features, region_by_key, city_by_key,
                          region_names=(), city_names=()) -> tuple[dict, dict]:
     """Per-region and per-city [accessible, female_only, unknown] triples.
