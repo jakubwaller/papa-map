@@ -38,7 +38,7 @@ dad-accessible — inverting the entire point of the map. `ACCESSIBLE_TOKENS`, `
 **`CONTRACT.md` is the pipeline↔frontend contract.** Classification lives only in Python; the
 frontend consumes the `status` property and never re-derives it. `STATUSES` in `web/datasource.js`
 is the stable key set the UI renders zero badges from. Changing the emitted shape means amending
-CONTRACT.md — it is versioned by amendment, currently v19.
+CONTRACT.md — it is versioned by amendment, currently v20.
 
 **Overpass lies in two directions.** An all-Germany area query dies at a ~60 s network idle cutoff,
 so Germany stays chunked per Bundesland — and **France per région**, for the same reason and
@@ -57,8 +57,9 @@ The night of 2026-08-23 (IPv4 banned, mirrors 500) the pipeline sent thousands o
 hosts that had stopped talking to it; the breaker is what keeps a ban from being earned twice.
 Don't trade it for more retries.
 
-**Judge a new sweep area on the slower of its TWO queries.** Every area is fetched twice a night,
-by `sweep_ql` and by `toilets_counts_ql`, and the cheap-looking counting one can be the slower:
+**Judge a new sweep area on the slower of its TWO queries.** Every area has two, `sweep_ql`
+nightly and `toilets_counts_ql` on one night a week (the rota in `pipeline/toilet_counts.py`,
+since 2026-09-05), and the cheap-looking counting one can be the slower:
 the UK measured 41.9 s sweeping but **45.2 s counting**, which is 82 % of the `[timeout:55]` budget
 and the tightest area in the project. The line is ~45 s (the slowest area otherwise shipped is the
 Netherlands at 41.7 s).

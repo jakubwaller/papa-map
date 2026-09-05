@@ -4,10 +4,11 @@ import sys
 import time
 from datetime import datetime, timezone
 
-from . import export, leaderboard, osm, pages, stats
+from . import export, leaderboard, osm, pages, stats, toilet_counts
 from .config import (BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTORY_PATH,
                      PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_PAUSE_S,
-                     SWEEP_ROUNDS, changing_table_ids_ql,
+                     SWEEP_ROUNDS, TOILETS_COUNTS_PATH,
+                     TOILETS_COUNTS_PERIOD_DAYS, changing_table_ids_ql,
                      display_area as configured_area, sweep_areas, sweep_ql,
                      toilets_counts_ql)
 
@@ -17,7 +18,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                  taginfo_fetch=stats.fetch_taginfo, now=None,
                  sweep_rounds=None, sweep_pause_s=None, pages_dir=PAGES_DIR,
                  cities=None, history_path=HISTORY_PATH,
-                 play_geojson_path=PLAY_GEOJSON_PATH):
+                 play_geojson_path=PLAY_GEOJSON_PATH,
+                 counts_path=None, counts_period_days=None):
     """One idempotent build: Overpass (per sweep area) -> classify -> GeoJSON +
     play_places.geojson + stats.json + the per-Bundesland pages, plus (on a
     full build) the per-region history and the leaderboard pages rendered from
@@ -44,6 +46,21 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         area_key = configured_key if area_key is None else area_key
     rounds = SWEEP_ROUNDS if sweep_rounds is None else sweep_rounds
     pause = SWEEP_PAUSE_S if sweep_pause_s is None else sweep_pause_s
+    # Resolved at call time, not in the signature, so a test can point the
+    # module at a temp file and never touch the checkout's web/data.
+    counts_path = TOILETS_COUNTS_PATH if counts_path is None else counts_path
+    counts_period = (TOILETS_COUNTS_PERIOD_DAYS if counts_period_days is None
+                     else counts_period_days)
+    # One clock read for the whole build, taken at its START: the rota dates
+    # its entries and the leaderboard its history from the same instant, so a
+    # build that crosses UTC midnight cannot date its counts a day before the
+    # history it shipped. generated_at was read at the end of the build until
+    # 2026-09-05; the start is what the runbook's cron argument counts on.
+    build_time = now or datetime.now(timezone.utc)
+    today = build_time.date()
+    counts_cache = toilet_counts.load(counts_path)
+    counts_fresh: dict[str, tuple[int, int, str, str]] = {}  # recounted tonight
+    counts_reused = 0
     ct_elements, play_elements = [], []
     # Toilets arrive as two server-side counts per area, not objects
     # (config.toilets_counts_ql). Keyed by area and *assigned*, never added to
@@ -88,21 +105,45 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         for i, (area_name, admin_level) in enumerate(remaining):
             try:
                 sweep = overpass_fetch(sweep_ql(area_name, admin_level))
-                counts = osm.parse_counts(
-                    overpass_fetch(toilets_counts_ql(area_name, admin_level)))
-                # A real answer carries one count per `out count;` statement,
-                # two zeros included when the area resolved to nothing — so
-                # *no* counts at all is not "no toilets", it is a response
-                # that was never a count answer (the empty body a mirror with
-                # no area database returns), and the zero-objects check below
-                # names that properly. Exactly one count is the genuinely
-                # broken case: reading the missing one as zero would publish
-                # "no capacity tags anywhere" as though it were a fact.
-                if len(counts) == 1:
-                    raise RuntimeError(
-                        f"area {area_name!r}: toilets query answered 1 count, "
-                        "expected 2")
-                toilets_total, capacity_total = counts or (0, 0)
+                # The toilets are recounted on the area's night of the rota
+                # (toilet_counts.is_due) — and whenever the sweep came back
+                # empty, whatever the rota says: the zero-objects check below
+                # needs a count fetched tonight, and a cached number would
+                # vouch for an area database it never saw.
+                count_ql = toilets_counts_ql(area_name, admin_level)
+                count_key = toilet_counts.query_hash(count_ql)
+                recount = (not sweep.get("elements") or toilet_counts.is_due(
+                    counts_cache, area_name, admin_level, today, counts_period,
+                    query=count_key))
+                remember = False
+                if recount:
+                    counts = osm.parse_counts(overpass_fetch(count_ql))
+                    # A real answer carries one count per `out count;`
+                    # statement, two zeros included when the area resolved to
+                    # nothing — so *no* counts at all is not "no toilets", it
+                    # is a response that was never a count answer (the empty
+                    # body a mirror with no area database returns), and the
+                    # zero-objects check below names that properly. Exactly
+                    # one count is the genuinely broken case: reading the
+                    # missing one as zero would publish "no capacity tags
+                    # anywhere" as though it were a fact.
+                    if len(counts) == 1:
+                        raise RuntimeError(
+                            f"area {area_name!r}: toilets query answered 1 "
+                            "count, expected 2")
+                    toilets_total, capacity_total = counts or (0, 0)
+                    # Only a real, non-zero two-count answer is worth
+                    # remembering. The empty body a mirror without an area
+                    # database returns reads as (0, 0) tonight, as it always
+                    # did — and so does a mirror whose area database has the
+                    # area but nothing in it (two zero counts). Before the
+                    # rota the next night healed either; a cached zero would
+                    # stand for a week. Every swept area has mapped toilets,
+                    # so a zero total is never worth a week.
+                    remember = len(counts) == 2 and toilets_total > 0
+                else:
+                    cached = counts_cache[area_name]
+                    toilets_total, capacity_total = cached["total"], cached["capacity"]
                 # Every sweep area has at least one amenity=toilets or
                 # changing_table object. Both empty means the *area* didn't
                 # resolve — a fallback mirror whose area database is stale/
@@ -136,10 +177,17 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             play_elements.extend(play)
             toilets_by_area[area_name] = toilets_total
             toilets_capacity_by_area[area_name] = capacity_total
+            if remember:
+                counts_fresh[area_name] = (toilets_total, capacity_total,
+                                           admin_level, count_key)
+            elif not recount:
+                counts_reused += 1
             for el in ct:
                 ct_area.setdefault((el.get("type"), el.get("id")), area_name)
+            counted = ("" if recount else
+                       f" (counted {toilet_counts.age_days(counts_cache[area_name], today)} d ago)")
             print(f"  {area_name}: ct={len(ct)} play={len(play)} "
-                  f"toilets={toilets_total}", file=sys.stderr)
+                  f"toilets={toilets_total}{counted}", file=sys.stderr)
         failed_cities = []
         for i, (display, area_name, admin_level) in enumerate(remaining_cities):
             try:
@@ -198,7 +246,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         global_block = stats.previous_global(stats_path)
         global_source = "previous" if global_block else None
 
-    generated_at = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
+    generated_at = build_time.isoformat(timespec="seconds")
     exported = export.export_geojson(features, geojson_path)
     exported_play = export.export_geojson(play_features, play_geojson_path)
     export.export_stats({
@@ -208,6 +256,9 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         "local": local,
         "global": global_block,
     }, stats_path)
+    print(f"  toilet counts: {len(toilets_by_area) - counts_reused} area(s) "
+          f"counted tonight, {counts_reused} reused from {counts_path}",
+          file=sys.stderr)
 
     # The area pages, written last: they are derived from the same features
     # the map just got, and the map data is the artifact that must never be
@@ -241,6 +292,22 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                                region_counts, city_counts)
         export.write_json_atomic(history, history_path)
         written += leaderboard.write_leaderboard_pages(history, pages_dir)
+
+    # The recounts are remembered last, once everything they served is on
+    # disk: a build that died anywhere before this line must recount
+    # tomorrow rather than trust numbers it never published — and a cache
+    # that cannot be written (a read-only mount) must not stop the pages.
+    if counts_fresh:
+        for name, (total, capacity, level, key) in counts_fresh.items():
+            counts_cache[name] = {"total": total, "capacity": capacity,
+                                  "level": level, "query": key,
+                                  "date": today.isoformat()}
+        try:
+            toilet_counts.save(
+                counts_path, toilet_counts.prune(counts_cache, today, counts_period))
+        except OSError as exc:
+            print(f"  WARN toilet counts not saved to {counts_path}: {exc} — "
+                  "every area is recounted tomorrow", file=sys.stderr)
 
     return {"features": exported, "play_places": exported_play,
             "ct_objects": local["ct_objects"],

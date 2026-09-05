@@ -539,6 +539,14 @@ AREA_COUNTRY.update({display: c for c, cities in CITY_AREAS_BY_COUNTRY.items()
 HISTORY_PATH = os.environ.get("PAPAMAP_HISTORY_PATH", "web/data/history.json")
 HISTORY_MAX_DAYS = int(os.environ.get("PAPAMAP_HISTORY_MAX_DAYS", "400"))
 
+# The per-area amenity=toilets counts, recounted on a weekly rota instead of
+# every night (pipeline/toilet_counts.py has the reasoning). State like
+# history.json: same directory, same mount, and deleting it costs one night
+# of counts. PERIOD_DAYS=1 is the old behaviour — every area, every night.
+TOILETS_COUNTS_PATH = os.environ.get("PAPAMAP_TOILETS_COUNTS_PATH",
+                                     "web/data/toilets_counts.json")
+TOILETS_COUNTS_PERIOD_DAYS = int(os.environ.get("PAPAMAP_TOILETS_COUNTS_PERIOD_DAYS", "7"))
+
 # Comma-separated subset for a cheaper build (PAPAMAP_COUNTRIES=dk builds
 # Denmark alone in ~30 s instead of sweeping all 17 areas).
 # Named, not inlined into the os.environ.get() below, so a test can assert the

@@ -79,6 +79,16 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
 - `PAPAMAP_AREA_NAME` + `PAPAMAP_AREA_ADMIN_LEVEL` select a single area instead
   (e.g. `Hamburg` / `4`), and `PAPAMAP_DISPLAY_AREA` names the dataset in the
   stats strip.
+- Each area costs one Overpass query a night, not two. The object sweep runs
+  nightly; the `amenity=toilets` count behind "N toilets mapped here" is
+  recounted on a weekly rota — every area on its own night, a seventh of them
+  each night — and kept in `web/data/toilets_counts.json` between builds
+  (state, like `history.json`; deleting it costs one night of counts). The
+  count is the slower query in the big areas and the number that moves least,
+  so this is where the wall clock for the next countries comes from.
+  `PAPAMAP_TOILETS_COUNTS_PERIOD_DAYS=1` recounts every area every night. An
+  area whose sweep comes back empty is always recounted, whatever the rota:
+  the stale-mirror check needs a number fetched tonight, not a cached one.
 
 ## Area pages
 
@@ -194,8 +204,9 @@ node --test web/*.test.js  # frontend pure functions (needs Node.js)
 ```cron
 0 2 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
 ```
-(02:00 since the 44-country sweep — projected ~105 min, ~108 with Australia and New
-Zealand, and the ops mail is at 05:30.)
+(02:00 since the 44-country sweep; the 46-country build measured 80 min, the ops mail is
+at 05:30, and the toilets-count rota is what keeps the next countries from pushing the
+finish later. Not earlier: 01:00 CEST is the previous UTC day, see `docs/DEPLOY.md`.)
 (Matches the deploy in [`docs/DEPLOY.md`](docs/DEPLOY.md) — adjust if your clone lives
 elsewhere. Running the pipeline outside Docker works too; the venv variant is in the same
 file.)
