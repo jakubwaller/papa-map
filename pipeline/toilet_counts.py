@@ -17,6 +17,7 @@ unreadable file costs one full night of counts and nothing else.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import zlib
 from datetime import date
@@ -25,9 +26,17 @@ from pathlib import Path
 from .export import write_json_atomic
 
 
+def query_hash(ql: str) -> str:
+    """Twelve hex digits of the count query that produced an entry. The
+    query embeds the area selector, the admin level and the capacity-key
+    regex; if any of them changes, the cached number was made under another
+    definition and must not be summed with tonight's."""
+    return hashlib.sha1(ql.encode("utf-8")).hexdigest()[:12]
+
+
 def load(path: str) -> dict:
     """{area_name: {"total": int, "capacity": int, "level": "4",
-    "date": "YYYY-MM-DD"}},
+    "query": "<query_hash>", "date": "YYYY-MM-DD"}},
     or {} when the file is missing or not what we wrote — a corrupt cache is
     a full recount, never a crash."""
     try:
@@ -57,15 +66,18 @@ def age_days(entry, today: date) -> int | None:
 
 
 def is_due(cache: dict, area_name: str, admin_level: str, today: date,
-           period_days: int) -> bool:
+           period_days: int, query: str | None = None) -> bool:
     """Whether tonight's build recounts this area: yes when the period is a
     night or less (the old every-night behaviour, PAPAMAP_TOILETS_COUNTS_
     PERIOD_DAYS=1), when there is no usable entry, when the entry was counted
     at another admin_level (a PAPAMAP_AREA_NAME=Hamburg level-6 debug run
-    must not lend the city's count to the Land for a week), when the entry
-    is older than a period (a missed night — the build failed, or the area
-    was added to the rota mid-week), or when tonight is the area's slot and
-    it was not already counted today (a manual re-run must not pay twice)."""
+    must not lend the city's count to the Land for a week) or by another
+    query (`query` is tonight's query_hash; a widened capacity regex or a
+    changed selector must not be summed with last week's definition), when
+    the entry is older than a period (a missed night — the build failed, or
+    the area was added to the rota mid-week), or when tonight is the area's
+    slot and it was not already counted today (a manual re-run must not pay
+    twice)."""
     if period_days <= 1:
         return True
     entry = cache.get(area_name)
@@ -74,6 +86,8 @@ def is_due(cache: dict, area_name: str, admin_level: str, today: date,
             for k in ("total", "capacity")):
         return True
     if entry.get("level") != admin_level:
+        return True
+    if query is not None and entry.get("query") != query:
         return True
     age = age_days(entry, today)
     if age is None or age < 0 or age >= period_days:

@@ -60,21 +60,25 @@ If Caddy runs in a container, bind-mount the site into it first (add
 
 `crontab -e`, matching the live schedule:
 ```cron
-0 1 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
+0 2 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
 ```
 Outside Docker the equivalent line is
-`0 1 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
+`0 2 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
 
-**01:00 since 2026-09-05, moved ahead of the chunked US and Canada sweeps.** The
-46-country build measured 80 minutes from 02:00 on 2026-09-05, when it was still 208
-queries (73 sweeps, 73 counts, 62 leaderboard cities). Wave 2 adds about 63 areas, and
-the ops mail below runs at 05:30; the hour of headroom is bought before the countries
-join, not after — a build still writing when the digest reads `stats.json` is the one
-health signal the site has reporting a half-finished dataset. (02:00 was the same move
-for Europe-complete on 2026-08-22, 03:30 for the UK and France before that.) What keeps
-the build from growing with the areas is the toilets-count rota: each area's
-`amenity=toilets` count is refreshed one night a week rather than every night, so a night
-costs one query per area plus a seventh of the counts — about 145 for the 46 countries.
+**02:00, and it stays there — do not move it earlier.** The 46-country build measured 80
+minutes from 02:00 on 2026-09-05, when it was still 208 queries (73 sweeps, 73 counts, 62
+leaderboard cities); the ops mail below runs at 05:30, and a build still writing when the
+digest reads `stats.json` is the one health signal the site has reporting a half-finished
+dataset. (02:00 was the move for Europe-complete on 2026-08-22, 03:30 for the UK and
+France before that.) What keeps the build from growing with the areas is the toilets-count
+rota (2026-09-05): each area's `amenity=toilets` count is refreshed one night a week rather
+than every night, so a night costs one query per area plus a seventh of the counts — about
+145 for the 46 countries, which is the room the chunked US and Canada sweeps take. **Earlier
+than 02:00 is not an option on this host:** the VPS runs Europe/Berlin, and 01:00 CEST is
+23:00 UTC of the *previous* day. The rota dates its entries and the leaderboard its history
+in UTC, so on the night of the spring clock change two builds would share one UTC date —
+the leaderboard's same-date rule would drop a day of history. 02:00 local is 00:00 UTC at
+the earliest, on the right side of midnight all year.
 
 **The pipeline container is on the host network** (`network_mode: host` in
 `docker-compose.yml`), so it has the host's IPv6 address. Overpass banned this host's IPv4

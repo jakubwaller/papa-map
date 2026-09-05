@@ -53,7 +53,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                      else counts_period_days)
     today = (now or datetime.now(timezone.utc)).date()
     counts_cache = toilet_counts.load(counts_path)
-    counts_fresh: dict[str, tuple[int, int, str]] = {}  # recounted tonight
+    counts_fresh: dict[str, tuple[int, int, str, str]] = {}  # recounted tonight
+    counts_reused = 0
     ct_elements, play_elements = [], []
     # Toilets arrive as two server-side counts per area, not objects
     # (config.toilets_counts_ql). Keyed by area and *assigned*, never added to
@@ -103,11 +104,14 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 # empty, whatever the rota says: the zero-objects check below
                 # needs a count fetched tonight, and a cached number would
                 # vouch for an area database it never saw.
+                count_ql = toilets_counts_ql(area_name, admin_level)
+                count_key = toilet_counts.query_hash(count_ql)
                 recount = (not sweep.get("elements") or toilet_counts.is_due(
-                    counts_cache, area_name, admin_level, today, counts_period))
+                    counts_cache, area_name, admin_level, today, counts_period,
+                    query=count_key))
+                remember = False
                 if recount:
-                    counts = osm.parse_counts(
-                        overpass_fetch(toilets_counts_ql(area_name, admin_level)))
+                    counts = osm.parse_counts(overpass_fetch(count_ql))
                     # A real answer carries one count per `out count;`
                     # statement, two zeros included when the area resolved to
                     # nothing — so *no* counts at all is not "no toilets", it
@@ -164,8 +168,11 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             play_elements.extend(play)
             toilets_by_area[area_name] = toilets_total
             toilets_capacity_by_area[area_name] = capacity_total
-            if recount and remember:
-                counts_fresh[area_name] = (toilets_total, capacity_total, admin_level)
+            if remember:
+                counts_fresh[area_name] = (toilets_total, capacity_total,
+                                           admin_level, count_key)
+            elif not recount:
+                counts_reused += 1
             for el in ct:
                 ct_area.setdefault((el.get("type"), el.get("id")), area_name)
             counted = ("" if recount else
@@ -240,17 +247,9 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         "local": local,
         "global": global_block,
     }, stats_path)
-    # The recounts are remembered only once the dataset they served is on
-    # disk: a build that died between the sweep and the export must recount
-    # tomorrow, not trust numbers it never published.
-    if counts_fresh:
-        for name, (total, capacity, level) in counts_fresh.items():
-            counts_cache[name] = {"total": total, "capacity": capacity,
-                                  "level": level, "date": today.isoformat()}
-        toilet_counts.save(counts_path, counts_cache)
-    print(f"  toilet counts: {len(counts_fresh)} area(s) recounted tonight, "
-          f"{len(toilets_by_area) - len(counts_fresh)} reused from "
-          f"{counts_path}", file=sys.stderr)
+    print(f"  toilet counts: {len(toilets_by_area) - counts_reused} area(s) "
+          f"counted tonight, {counts_reused} reused from {counts_path}",
+          file=sys.stderr)
 
     # The area pages, written last: they are derived from the same features
     # the map just got, and the map data is the artifact that must never be
@@ -284,6 +283,17 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                                region_counts, city_counts)
         export.write_json_atomic(history, history_path)
         written += leaderboard.write_leaderboard_pages(history, pages_dir)
+
+    # The recounts are remembered last, once everything they served is on
+    # disk: a build that died anywhere before this line must recount
+    # tomorrow rather than trust numbers it never published — and a cache
+    # that cannot be written (a read-only mount) must not stop the pages.
+    if counts_fresh:
+        for name, (total, capacity, level, key) in counts_fresh.items():
+            counts_cache[name] = {"total": total, "capacity": capacity,
+                                  "level": level, "query": key,
+                                  "date": today.isoformat()}
+        toilet_counts.save(counts_path, counts_cache)
 
     return {"features": exported, "play_places": exported_play,
             "ct_objects": local["ct_objects"],

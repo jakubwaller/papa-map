@@ -6,7 +6,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from pipeline import toilet_counts
+from pipeline import config, toilet_counts
 from pipeline.run import run_pipeline
 
 from test_run import (CITY_SWEEP, NOW, SWEEP, _count_answer, _fake_overpass,
@@ -27,16 +27,20 @@ def _kwargs(tmp_path, load_fixture, **over):
     return kw
 
 
+def _qh(name, level="4"):
+    return toilet_counts.query_hash(config.toilets_counts_ql(name, level))
+
+
 def _seed(path, areas, day, total=3, capacity=1):
     toilet_counts.save(str(path), {
         name: {"total": total, "capacity": capacity, "level": level,
-               "date": day.isoformat()}
+               "query": _qh(name, level), "date": day.isoformat()}
         for name, level in areas})
 
 
-def _entry(day, total=3, capacity=1, level="4"):
+def _entry(day, total=3, capacity=1, level="4", name="Bremen"):
     return {"total": total, "capacity": capacity, "level": level,
-            "date": day.isoformat()}
+            "query": _qh(name, level), "date": day.isoformat()}
 
 
 def _count_queries(fetch, area):
@@ -56,6 +60,13 @@ def test_missing_or_broken_entries_are_always_due():
                 {**_entry(week_ago), "date": "not a date"},
                 {**_entry(week_ago), "level": "6"}):
         assert toilet_counts.is_due({"Bremen": bad}, "Bremen", "4", TODAY, 7), bad
+    # A count made by another query — a widened capacity regex, another
+    # selector — is another definition, and is not summed with tonight's.
+    assert toilet_counts.is_due({"Bremen": _entry(week_ago)}, "Bremen", "4",
+                                TODAY, 7, query="000000000000")
+    assert not toilet_counts.is_due({"Bremen": _entry(week_ago)}, "Bremen", "4",
+                                    TODAY, 7, query=_qh("Bremen")) or \
+        TODAY.toordinal() % 7 == toilet_counts.slot("Bremen", 7)
     # The same entry with nothing wrong is not due on an ordinary night.
     entry = _entry(TODAY - timedelta(days=1))
     if TODAY.toordinal() % 7 != toilet_counts.slot("Bremen", 7):
@@ -119,7 +130,8 @@ def test_first_build_counts_everything_and_remembers_it(tmp_path, load_fixture):
     cache = json.loads((tmp_path / "toilets_counts.json").read_text(encoding="utf-8"))
     assert set(cache["areas"]) == {name for name, _ in SWEEP}
     assert cache["areas"]["Bremen"] == {"total": 3, "capacity": 1,
-                                        "level": "4", "date": "2026-07-26"}
+                                        "level": "4", "query": _qh("Bremen"),
+                                        "date": "2026-07-26"}
 
 
 def test_a_same_day_rerun_reuses_every_count(tmp_path, load_fixture):
@@ -139,7 +151,7 @@ def test_only_the_areas_whose_night_it_is_are_recounted(tmp_path, load_fixture):
     summary = run_pipeline(**_kwargs(tmp_path, load_fixture, overpass_fetch=fake))
     due = {name for name, level in SWEEP
            if toilet_counts.is_due(
-               {name: _entry(TODAY - timedelta(days=3), 100, 9, level)},
+               {name: _entry(TODAY - timedelta(days=3), 100, 9, level, name)},
                name, level, TODAY, 7)}
     for area in SWEEP:
         assert _count_queries(fake, area) == (2 if area[0] in due else 1), area
@@ -207,7 +219,7 @@ def test_the_rota_is_reported_in_the_build_log(tmp_path, load_fixture, capsys):
                            overpass_fetch=_fake_overpass(load_fixture)))
     err = capsys.readouterr().err
     assert "(counted 3 d ago)" in err
-    assert "toilet counts:" in err and "recounted tonight" in err
+    assert "toilet counts:" in err and "counted tonight" in err
 
 
 def test_the_reused_count_suffix_still_parses_as_an_area_line():
@@ -236,3 +248,25 @@ def test_an_empty_count_body_is_not_remembered(tmp_path, load_fixture):
                                      overpass_fetch=empty_counts))
     assert summary["toilets_total"] == 0
     assert not (tmp_path / "toilets_counts.json").exists()
+
+
+def test_the_cache_is_written_after_the_pages(tmp_path, load_fixture, monkeypatch):
+    # The cache is the last thing a build writes: a save that fails (a
+    # read-only mount) must find the pages already on disk, and a build that
+    # dies earlier must leave no entry to trust tomorrow.
+    order = []
+    real_save = toilet_counts.save
+    real_pages = pages_mod = __import__("pipeline.pages", fromlist=["x"])
+    real_write_all = pages_mod.write_all_pages
+
+    def spy_save(path, cache):
+        order.append("cache"); real_save(path, cache)
+
+    def spy_pages(*a, **k):
+        order.append("pages"); return real_write_all(*a, **k)
+
+    monkeypatch.setattr(toilet_counts, "save", spy_save)
+    monkeypatch.setattr(pages_mod, "write_all_pages", spy_pages)
+    run_pipeline(**_kwargs(tmp_path, load_fixture,
+                           overpass_fetch=_fake_overpass(load_fixture)))
+    assert order == ["pages", "cache"]
