@@ -105,15 +105,19 @@ def test_summarize_handles_a_land_with_no_features():
     assert "keinen einzigen" in html
 
 
-def test_bbox_refuses_to_span_the_antimeridian():
+def test_bbox_refuses_to_span_the_antimeridian(capsys):
     # New Zealand's relation reaches the Chatham Islands at 176°W. A plain
     # min/max over such features is a box the wrong way round the planet,
     # which parseBbox accepts and fitBounds renders as the whole world; the
-    # page must rather have no map link at all.
+    # page must rather have no map link at all — and say so in the build
+    # log, because a page that quietly lost its button looks intentional.
     nz = [feat(1, "Wellington", "accessible", lon=174.78, lat=-41.29),
           feat(2, "Waitangi", "unknown", lon=-176.56, lat=-43.95)]
-    assert pages._bbox(nz) is None
+    assert pages.summarize("New Zealand", nz, 0)["bbox"] is None
+    err = capsys.readouterr().err
+    assert "WARN New Zealand" in err and "antimeridian" in err
     assert pages._bbox(nz[:1]) is not None
+    assert capsys.readouterr().err == ""
 
 
 def test_bbox_pads_and_never_collapses_to_a_point():

@@ -3,6 +3,7 @@ from __future__ import annotations
 import html
 import json
 import re
+import sys
 import unicodedata
 from pathlib import Path
 
@@ -148,7 +149,7 @@ def group_by_area(features, area_by_key) -> dict:
     return out
 
 
-def _bbox(features) -> list | None:
+def _bbox(features, name: str = "") -> list | None:
     """Feature bbox, padded, for the map deep link. Data-driven rather than a
     hard-coded box: the features come out of that area's own Overpass query, so
     their extent is inside it by construction and never needs maintaining. The
@@ -162,13 +163,19 @@ def _bbox(features) -> list | None:
     than shipping a box the wrong way round the planet — a missing CTA is
     visible, a whole-world view behind a "New Zealand" button is not. The
     real fix then is to wrap the negative longitudes by +360 here and let
-    parseBbox accept an east past 180."""
+    parseBbox accept an east past 180. The drop is announced as a WARN line
+    so it shows up in pipeline.log and on the ops page, and does not go
+    unnoticed for the months a missing button can pass for a design choice."""
     if not features:
         return None
     lons = [f["geometry"]["coordinates"][0] for f in features]
     lats = [f["geometry"]["coordinates"][1] for f in features]
     min_lon, max_lon, min_lat, max_lat = min(lons), max(lons), min(lats), max(lats)
     if max_lon - min_lon > 180:
+        print(f"  WARN {name or 'area'}: features span the antimeridian "
+              f"(lon {min_lon:.2f}..{max_lon:.2f}), page ships without a map "
+              "link — wrap the west longitudes by +360 in _bbox()",
+              file=sys.stderr)
         return None
     pad_lon = max((max_lon - min_lon) * 0.04, 0.05)
     pad_lat = max((max_lat - min_lat) * 0.04, 0.03)
@@ -220,7 +227,7 @@ def summarize(name: str, features, toilets_total: int) -> dict:
         "named": named,
         "named_places": len(features) - unnamed,
         "unnamed": unnamed,
-        "bbox": _bbox(features),
+        "bbox": _bbox(features, name),
     }
 
 
