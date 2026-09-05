@@ -219,3 +219,20 @@ def test_the_reused_count_suffix_still_parses_as_an_area_line():
     assert m and m.group("area") == "Bremen" and m.group("toilets") == "3"
     assert AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3")
     assert not AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3 nonsense")
+
+
+def test_an_empty_count_body_is_not_remembered(tmp_path, load_fixture):
+    # A mirror without an area database answers the count with no elements.
+    # Tonight that reads as 0 toilets, as it always did; but the rota must
+    # not keep that zero for a week — the next night recounts.
+    inner = _fake_overpass(load_fixture)
+
+    def empty_counts(ql, **kwargs):
+        if '"amenity"="toilets"' in ql:
+            return {"elements": []}
+        return inner(ql, **kwargs)
+
+    summary = run_pipeline(**_kwargs(tmp_path, load_fixture,
+                                     overpass_fetch=empty_counts))
+    assert summary["toilets_total"] == 0
+    assert not (tmp_path / "toilets_counts.json").exists()

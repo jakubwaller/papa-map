@@ -101,8 +101,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 # The toilets are recounted on the area's night of the rota
                 # (toilet_counts.is_due) — and whenever the sweep came back
                 # empty, whatever the rota says: the zero-objects check below
-                # needs a count from the mirror that just answered, and a
-                # cached number would vouch for an area database it never saw.
+                # needs a count fetched tonight, and a cached number would
+                # vouch for an area database it never saw.
                 recount = (not sweep.get("elements") or toilet_counts.is_due(
                     counts_cache, area_name, admin_level, today, counts_period))
                 if recount:
@@ -122,6 +122,12 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                             f"area {area_name!r}: toilets query answered 1 "
                             "count, expected 2")
                     toilets_total, capacity_total = counts or (0, 0)
+                    # Only a real two-count answer is worth remembering. The
+                    # empty body a mirror without an area database returns
+                    # reads as (0, 0) tonight, as it always did — but before
+                    # the rota the next night healed it, and a cached zero
+                    # would stand for a week.
+                    remember = len(counts) == 2
                 else:
                     cached = counts_cache[area_name]
                     toilets_total, capacity_total = cached["total"], cached["capacity"]
@@ -158,7 +164,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             play_elements.extend(play)
             toilets_by_area[area_name] = toilets_total
             toilets_capacity_by_area[area_name] = capacity_total
-            if recount:
+            if recount and remember:
                 counts_fresh[area_name] = (toilets_total, capacity_total, admin_level)
             for el in ct:
                 ct_area.setdefault((el.get("type"), el.get("id")), area_name)

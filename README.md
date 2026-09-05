@@ -88,7 +88,7 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   so this is where the wall clock for the next countries comes from.
   `PAPAMAP_TOILETS_COUNTS_PERIOD_DAYS=1` recounts every area every night. An
   area whose sweep comes back empty is always recounted, whatever the rota:
-  the stale-mirror check needs a number from the mirror that just answered.
+  the stale-mirror check needs a number fetched tonight, not a cached one.
 
 ## Area pages
 

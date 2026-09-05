@@ -11,9 +11,12 @@
 > read by the frontend. So those numbers are a sum of per-area counts each at
 > most seven days old; the object sweep, and every count the frontend renders
 > from the GeoJSON, stay nightly. Two guarantees carry over unchanged: an area
-> whose sweep answers with no elements is always recounted from the same
-> mirror, so the v15 zero-objects check still compares two fresh answers; and
-> a count query answering one number instead of two still fails the area.
+> whose sweep answers with no elements is always recounted that night, so
+> the v15 zero-objects check still compares two answers fetched tonight, never
+> a cached number; and a count query answering one number instead of two
+> still fails the area. Only a two-count answer is written to the cache — the
+> empty body a mirror without an area database returns is (0, 0) for tonight,
+> as before, but is not remembered.
 > `PAPAMAP_TOILETS_COUNTS_PERIOD_DAYS=1` restores the every-night behaviour.
 > **The emitted shape does not change.** The reason: the count is the slower
 > of an area's two queries in the big areas (UK 45.2 s, Japan 49.7 s) and the
