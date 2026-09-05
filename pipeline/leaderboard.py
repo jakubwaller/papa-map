@@ -530,7 +530,7 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         else:
             kind = "_lands"
         parts.append(f'<h2>{esc(tab["regions_h2" + kind])}</h2>\n')
-        names = esc(", ".join(countries))
+        names = esc(tab["list_sep"].join(countries))
         # Only the _regions sentence is assembled; the other three spell
         # themselves out and ignore {list}.
         clauses = []
@@ -549,7 +549,11 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         elif countries:
             clauses.append(tab["cl_country_many"].format(
                 c=len(countries), names=names))
-        listed = (tab["and_sep"].join((", ".join(clauses[:-1]), clauses[-1]))
+        # The list separator is the language's too: Japanese joins with the
+        # ideographic 、 where English has ", " — the first language where
+        # the two differ, and a mixed sentence reads as a typo.
+        sep = tab["list_sep"]
+        listed = (tab["and_sep"].join((sep.join(clauses[:-1]), clauses[-1]))
                   if len(clauses) > 1 else (clauses[0] if clauses else ""))
         parts.append(tab["regions_note" + kind].format(
             n=lands, r=fr_regions, c=len(countries), names=names, list=listed))

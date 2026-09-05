@@ -47,7 +47,7 @@ const LANG_ALIASES = { nb: "no", nn: "no" };
 //
 // Every language is auto-detected now, not just Danish. The old rule existed
 // because the site spoke three languages and two of them were wrong for most
-// visitors; with thirty-one, a Czech reader arriving on a German page is the
+// visitors; with thirty-two, a Czech reader arriving on a German page is the
 // worse default. The cost is real and was the reason for the old rule: a German
 // reader running an English browser now lands on English. They can switch,
 // and the choice is remembered — `stored` is checked before the browser, so

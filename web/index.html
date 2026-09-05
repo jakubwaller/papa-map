@@ -42,7 +42,7 @@
        file and index-en.test.js pins to it. Editing this head means
        regenerating: `node web/build-index-en.js`. -->
 
-  <!-- One URL serves all thirty-one languages (?lang= is honoured on load), so each
+  <!-- One URL serves all thirty-two languages (?lang= is honoured on load), so each
        language needs its own address before a search engine can index it —
        until 2026-08-04 Google only ever saw the German view. app.js rewrites
        the canonical below to match the language it renders, otherwise the
@@ -109,7 +109,7 @@
     "inLanguage": ["de", "en", "da", "nl", "fr", "it", "cs", "pl", "sv",
                    "bs", "ca", "et", "es", "hr", "is", "lv", "lt", "hu",
                    "no", "pt", "ro", "sq", "sk", "sl", "fi", "el", "be",
-                   "bg", "mk", "sr", "uk"],
+                   "bg", "mk", "sr", "uk", "ja"],
     "isAccessibleForFree": true,
     "keywords": ["Wickeltisch", "changing table", "puslebord", "table à langer", "verschoontafel", "luiertafel", "Wickelraum", "OpenStreetMap", "Barrierefreiheit"],
     "license": "https://opendatacommons.org/licenses/odbl/1-0/",
@@ -225,7 +225,7 @@
         <a id="regions-link" href="wickeltische/" data-i18n="regions">Bundesländer</a>
         <a id="board-link" href="wickeltische/rangliste.html" data-i18n="board">Rangliste</a>
         <a id="methods-link" href="methods.html" data-i18n="methods">Methoden</a>
-        <!-- A picker, not the old DE → EN → DA cycle button: thirty-one languages
+        <!-- A picker, not the old DE → EN → DA cycle button: thirty-two languages
              cannot be reached by cycling, and the native control is keyboard-
              and screen-reader-accessible for free. app.js fills the options
              from i18n.js's LANGS, each written in its own language; German is

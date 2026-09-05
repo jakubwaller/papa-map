@@ -264,6 +264,24 @@ def test_regions_note_counts_states_and_provinces(tmp_path):
     assert "the 1 Bundesländer and the 2 Japanese prefectures" in en
     ja = leaderboard.render_leaderboard("ja", jp)
     assert "ドイツの1州、日本の2都道府県" in ja and 'lang="ja"' in ja
+    # Four clauses and two whole countries: every join in the Japanese
+    # sentence is the ideographic comma, never the ASCII ", ".
+    four = leaderboard.leaderboard_data({"v": 1, "days": [
+        day("2026-09-01", regions={"Bayern": [1, 0, 9], "Bretagne": [1, 0, 9],
+                                   "Florida": [1, 0, 9], "Quebec": [1, 0, 9],
+                                   "東京都": [1, 0, 9], "Danmark": [1, 0, 9],
+                                   "Australia": [1, 0, 9]}),
+        day("2026-09-08", regions={"Bayern": [2, 0, 8], "Bretagne": [1, 0, 9],
+                                   "Florida": [1, 0, 9], "Quebec": [1, 0, 9],
+                                   "東京都": [1, 0, 9], "Danmark": [1, 0, 9],
+                                   "Australia": [1, 0, 9]}),
+    ]})
+    ja4 = leaderboard.render_leaderboard("ja", four)
+    sentence = ja4.split("について、同じ計算です")[0].rsplit("<p>", 1)[1]
+    assert ", " not in sentence, sentence
+    assert "米国の1州とDC、カナダの1州・準州、日本の1都道府県、2か国全体（Australia、Danmark）" in sentence
+    en4 = leaderboard.render_leaderboard("en", four)
+    assert "the 1 Bundesländer, the 1 French régions, the 1 US states and DC" in en4
     for lang in leaderboard.L:
         assert "{j}" not in leaderboard.render_leaderboard(lang, jp), lang
 

@@ -90,6 +90,7 @@ L = {
         "cl_country_one": "{names} als Ganzes",
         "cl_country_many": "{c} Länder als Ganzes ({names})",
         "and_sep": " und ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer und ganze Länder",
         "regions_note_many": ("<p>Dieselbe Rechnung für die {n} Bundesländer "
                               "und für {c} Länder als Ganzes: {names}.</p>\n"),
@@ -161,6 +162,7 @@ L = {
         "cl_country_one": "{names} as a whole",
         "cl_country_many": "{c} countries as a whole ({names})",
         "and_sep": " and ",
+        "list_sep": ", ",
         "regions_h2_many": "German states and whole countries",
         "regions_note_many": ("<p>The same arithmetic for the {n} Bundesländer "
                               "and for {c} countries as a whole: "
@@ -246,6 +248,7 @@ How things are counted and coloured: <a href="{up}methods-en.html">Methods</a> �
         "cl_country_one": "{names} som helhed",
         "cl_country_many": "{c} lande som helhed ({names})",
         "and_sep": " og ",
+        "list_sep": ", ",
         "regions_h2_many": "Tyske delstater og hele lande",
         "regions_note_many": ("<p>Samme regnestykke for de {n} Bundesländer "
                               "og for {c} lande som helhed: {names}.</p>\n"),
@@ -333,6 +336,7 @@ Sådan tælles og farvelægges der: <a href="{up}methods-da.html">Metode</a> ·
         "cl_country_one": "{names} als geheel",
         "cl_country_many": "{c} landen als geheel ({names})",
         "and_sep": " en ",
+        "list_sep": ", ",
         "regions_h2_many": "Duitse deelstaten en hele landen",
         "regions_note_many": ("<p>Dezelfde rekensom voor de {n} "
                               "Bundesländer en voor {c} landen als "
@@ -422,6 +426,7 @@ Hoe geteld en gekleurd wordt: <a href="{up}methods-nl.html">Methode</a> ·
         "cl_country_one": "{names} dans son ensemble",
         "cl_country_many": "{c} pays dans leur ensemble ({names})",
         "and_sep": " et ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer et pays entiers",
         "regions_note_many": ("<p>Le même calcul pour les {n} Bundesländer "
                               "et pour {c} pays dans leur ensemble : "
@@ -508,6 +513,7 @@ Comment le comptage et les couleurs fonctionnent : <a href="{up}methods-fr.html"
         "cl_country_one": "{names} nel suo complesso",
         "cl_country_many": "{c} paesi nel loro complesso ({names})",
         "and_sep": " e ",
+        "list_sep": ", ",
         "regions_h2_many": "Länder tedeschi e interi paesi",
         "regions_note_many": ("<p>Lo stesso calcolo per i {n} Bundesländer "
                               "e per {c} paesi nel loro complesso: "
@@ -593,6 +599,7 @@ Come si conta e si colora: <a href="{up}methods-it.html">Metodo</a> ·
         "cl_country_one": "{names} jako celek",
         "cl_country_many": "{c} zemí jako celek ({names})",
         "and_sep": " a ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer a celé země",
         "regions_note_many": ("<p>Stejný výpočet pro {n} Bundesländer a pro "
                               "{c} zemí jako celek: {names}.</p>\n"),
@@ -677,6 +684,7 @@ Jak se tu počítá a barví: <a href="{up}methods-cs.html">Metody</a> ·
         "cl_country_one": "{names} jako całości",
         "cl_country_many": "{c} krajów jako całości ({names})",
         "and_sep": " i ",
+        "list_sep": ", ",
         "regions_h2_many": "Niemieckie kraje związkowe i całe kraje",
         "regions_note_many": ("<p>Ten sam rachunek dla {n} Bundesländer i "
                               "dla {c} krajów jako całości: {names}.</p>\n"),
@@ -760,6 +768,7 @@ Jak liczymy i kolorujemy: <a href="{up}methods-pl.html">Metody</a> ·
         "cl_country_one": "{names} som helhet",
         "cl_country_many": "{c} länder som helhet ({names})",
         "and_sep": " och ",
+        "list_sep": ", ",
         "regions_h2_many": "Tyska delstater och hela länder",
         "regions_note_many": ("<p>Samma räkning för de {n} Bundesländer "
                               "och för {c} länder som helhet: {names}.</p>\n"),
@@ -846,6 +855,7 @@ Hur saker räknas och färgläggs: <a href="{up}methods-sv.html">Metod</a> ·
         "cl_country_one": "{names} u cjelini",
         "cl_country_many": "{c} zemlje u cjelini ({names})",
         "and_sep": " i ",
+        "list_sep": ", ",
         "regions_h2_many": "Njemačke pokrajine i cijele zemlje",
         "regions_note_many": ("<p>Ista računica za {n} Bundesländer i za "
                               "{c} zemlje u cjelini: {names}.</p>\n"),
@@ -930,6 +940,7 @@ Kako se broji i boji: <a href="{up}methods-bs.html">Metode</a> ·
         "cl_country_one": "{names} en conjunt",
         "cl_country_many": "{c} països en conjunt ({names})",
         "and_sep": " i ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer i països sencers",
         "regions_note_many": ("<p>El mateix càlcul per als {n} Bundesländer "
                               "i per a {c} països en conjunt: {names}.</p>\n"),
@@ -1014,6 +1025,7 @@ Com es compta i s'acoloreix: <a href="{up}methods-ca.html">Mètodes</a> ·
         "cl_country_one": "{names} tervikuna",
         "cl_country_many": "{c} riiki tervikuna ({names})",
         "and_sep": " ja ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer ja terved riigid",
         "regions_note_many": ("<p>Sama arvutus: {n} Bundesländer ja {c} "
                               "riiki tervikuna ({names}).</p>\n"),
@@ -1097,6 +1109,7 @@ Kuidas kohti loetakse ja värvitakse: <a href="{up}methods-et.html">Meetodid</a>
         "cl_country_one": "{names} en su conjunto",
         "cl_country_many": "{c} países en su conjunto ({names})",
         "and_sep": " y ",
+        "list_sep": ", ",
         "regions_h2_many": "Estados alemanes y países enteros",
         "regions_note_many": ("<p>El mismo cálculo para los {n} Bundesländer "
                               "y para {c} países en su conjunto: {names}.</p>\n"),
@@ -1183,6 +1196,7 @@ Cómo se cuenta y se colorea: <a href="{up}methods-es.html">Métodos</a> ·
         "cl_country_one": "{names} u cjelini",
         "cl_country_many": "{c} zemlje u cjelini ({names})",
         "and_sep": " i ",
+        "list_sep": ", ",
         "regions_h2_many": "Njemačke pokrajine i cijele zemlje",
         "regions_note_many": ("<p>Isti izračun za {n} Bundesländer i za {c} "
                               "zemlje u cjelini: {names}.</p>\n"),
@@ -1267,6 +1281,7 @@ Kako se broji i boji: <a href="{up}methods-hr.html">Metode</a> ·
         "cl_country_one": "{names} í heild",
         "cl_country_many": "{c} lönd í heild ({names})",
         "and_sep": " og ",
+        "list_sep": ", ",
         "regions_h2_many": "Þýsk sambandslönd og heil lönd",
         "regions_note_many": ("<p>Sami útreikningur fyrir þau {n} "
                               "Bundesländer og fyrir {c} lönd í heild: "
@@ -1353,6 +1368,7 @@ Hvernig talið er og litað: <a href="{up}methods-is.html">Aðferð</a> ·
         "cl_country_one": "{names} kopumā",
         "cl_country_many": "{c} valstis kopumā ({names})",
         "and_sep": " un ",
+        "list_sep": ", ",
         "regions_h2_many": "Vācijas federālās zemes un veselas valstis",
         "regions_note_many": ("<p>Tas pats aprēķins: {n} Bundesländer un "
                               "{c} valstis kopumā — {names}.</p>\n"),
@@ -1441,6 +1457,7 @@ Kā tiek skaitīts un iekrāsots: <a href="{up}methods-lv.html">Metodika</a> ·
         "cl_country_one": "{names} kaip visa šalis",
         "cl_country_many": "{c} ištisos šalys ({names})",
         "and_sep": " ir ",
+        "list_sep": ", ",
         "regions_h2_many": "Vokietijos žemės ir ištisos šalys",
         "regions_note_many": ("<p>Tas pats skaičiavimas — {n} Bundesländer "
                               "ir {c} ištisos šalys: {names}.</p>\n"),
@@ -1531,6 +1548,7 @@ Kaip skaičiuojama ir spalvinama: <a href="{up}methods-lt.html">Metodai</a> ·
         "cl_country_one": "{names} egésze",
         "cl_country_many": "{c} ország egésze ({names})",
         "and_sep": " és ",
+        "list_sep": ", ",
         "regions_h2_many": "Német tartományok és egész országok",
         "regions_note_many": ("<p>Ugyanaz a számítás a {n} Bundesländer "
                               "esetén, valamint {c} ország egésze esetén: "
@@ -1616,6 +1634,7 @@ Hogyan számolunk és színezünk: <a href="{up}methods-hu.html">Módszertan</a>
         "cl_country_one": "{names} som helhet",
         "cl_country_many": "{c} land som helhet ({names})",
         "and_sep": " og ",
+        "list_sep": ", ",
         "regions_h2_many": "Tyske delstater og hele land",
         "regions_note_many": ("<p>Samme regnestykke for de {n} Bundesländer "
                               "og for {c} land som helhet: {names}.</p>\n"),
@@ -1701,6 +1720,7 @@ Slik telles og fargelegges det: <a href="{up}methods-no.html">Metode</a> ·
         "cl_country_one": "{names} como um todo",
         "cl_country_many": "{c} países como um todo ({names})",
         "and_sep": " e ",
+        "list_sep": ", ",
         "regions_h2_many": "Bundesländer e países inteiros",
         "regions_note_many": ("<p>A mesma conta para os {n} Bundesländer e "
                               "para {c} países como um todo: {names}.</p>\n"),
@@ -1789,6 +1809,7 @@ Como se conta e colore: <a href="{up}methods-pt.html">Métodos</a> ·
         "cl_country_one": "{names} ca întreg",
         "cl_country_many": "{c} de țări ca întreg ({names})",
         "and_sep": " și ",
+        "list_sep": ", ",
         "regions_h2_many": "Landurile germane și țări întregi",
         "regions_note_many": ("<p>Același calcul pentru cele {n} "
                               "Bundesländer și pentru {c} de țări ca întreg: "
@@ -1875,6 +1896,7 @@ Cum se numără și se colorează: <a href="{up}methods-ro.html">Metode</a> ·
         "cl_country_one": "{names} si e tërë",
         "cl_country_many": "{c} vende si e tërë ({names})",
         "and_sep": " dhe ",
+        "list_sep": ", ",
         "regions_h2_many": "Shtetet federale gjermane dhe vende të tëra",
         "regions_note_many": ("<p>E njëjta llogaritje për {n} Bundesländer "
                               "dhe për {c} vende si e tërë: {names}.</p>\n"),
@@ -1961,6 +1983,7 @@ Si numërohet dhe ngjyroset: <a href="{up}methods-sq.html">Metodologjia</a> ·
         "cl_country_one": "{names} ako celok",
         "cl_country_many": "{c} krajín ako celok ({names})",
         "and_sep": " a ",
+        "list_sep": ", ",
         "regions_h2_many": "Nemecké spolkové krajiny a celé krajiny",
         "regions_note_many": ("<p>Rovnaký výpočet pre {n} Bundesländer a "
                               "pre {c} krajín ako celok: {names}.</p>\n"),
@@ -2048,6 +2071,7 @@ Ako sa počíta a farbí: <a href="{up}methods-sk.html">Metódy</a> ·
         "cl_country_one": "{names} v celoti",
         "cl_country_many": "{c} držav v celoti ({names})",
         "and_sep": " in ",
+        "list_sep": ", ",
         "regions_h2_many": "Nemške dežele in cele države",
         "regions_note_many": ("<p>Enak izračun za {n} Bundesländer in za {c} "
                               "držav v celoti: {names}.</p>\n"),
@@ -2133,6 +2157,7 @@ Kako se šteje in barva: <a href="{up}methods-sl.html">Metode</a> ·
         "cl_country_one": "{names} kokonaisuutena",
         "cl_country_many": "{c} maata kokonaisuutena ({names})",
         "and_sep": " ja ",
+        "list_sep": ", ",
         "regions_h2_many": "Saksan osavaltiot ja kokonaiset maat",
         "regions_note_many": ("<p>Sama laskutapa: {n} Bundesländer ja {c} "
                               "maata kokonaisuutena — {names}.</p>\n"),
@@ -2216,6 +2241,7 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
         "cl_country_one": "{names} ως σύνολο",
         "cl_country_many": "{c} χώρες ως σύνολο ({names})",
         "and_sep": " και ",
+        "list_sep": ", ",
         "regions_h2_many": "Γερμανικά κρατίδια και ολόκληρες χώρες",
         "regions_note_many": ("<p>Ο ίδιος υπολογισμός για τα {n} Bundesländer "
                               "και για {c} χώρες ως σύνολο: {names}.</p>\n"),
@@ -2304,6 +2330,7 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
         "cl_country_one": "{names} цалкам",
         "cl_country_many": "{c} краін цалкам ({names})",
         "and_sep": " і ",
+        "list_sep": ", ",
         "regions_h2_many": "Нямецкія землі і цэлыя краіны",
         "regions_note_many": ("<p>Тыя ж падлікі для {n} Bundesländer і для "
                               "{c} краін цалкам: {names}.</p>\n"),
@@ -2388,6 +2415,7 @@ OpenStreetMap</a>, паводле <a href="https://opendatacommons.org/licenses/
         "cl_country_one": "{names} като цяло",
         "cl_country_many": "{c} държави като цяло ({names})",
         "and_sep": " и ",
+        "list_sep": ", ",
         "regions_h2_many": "Германски провинции и цели държави",
         "regions_note_many": ("<p>Същото изчисление за {n}-те Bundesländer "
                               "и за {c} държави като цяло: {names}.</p>\n"),
@@ -2473,6 +2501,7 @@ contributors</a>, под <a href="https://opendatacommons.org/licenses/odbl/">OD
         "cl_country_one": "{names} како целина",
         "cl_country_many": "{c} земји како целина ({names})",
         "and_sep": " и ",
+        "list_sep": ", ",
         "regions_h2_many": "Германски покраини и цели земји",
         "regions_note_many": ("<p>Истата сметка за {n}-те Bundesländer и за "
                               "{c} земји како целина: {names}.</p>\n"),
@@ -2559,6 +2588,7 @@ OpenStreetMap</a>, под лиценцата <a href="https://opendatacommons.or
         "cl_country_one": "{names} у целини",
         "cl_country_many": "{c} земље у целини ({names})",
         "and_sep": " и ",
+        "list_sep": ", ",
         "regions_h2_many": "Немачке покрајине и целе земље",
         "regions_note_many": ("<p>Исти рачун за {n} Bundesländer и за {c} "
                               "земље у целини: {names}.</p>\n"),
@@ -2642,6 +2672,7 @@ OpenStreetMap-а</a>, под лиценцом <a href="https://opendatacommons.o
         "cl_country_one": "{names} в цілому",
         "cl_country_many": "{c} країн в цілому ({names})",
         "and_sep": " і ",
+        "list_sep": ", ",
         "regions_h2_many": "Німецькі землі та цілі країни",
         "regions_note_many": ("<p>Той самий підрахунок для {n} Bundesländer "
                               "і для {c} країн в цілому: {names}.</p>\n"),
@@ -2716,6 +2747,7 @@ OpenStreetMap</a>, за ліцензією <a href="https://opendatacommons.org/
         "cl_country_one": "{names}全体",
         "cl_country_many": "{c}か国全体（{names}）",
         "and_sep": "、",
+        "list_sep": "、",
         "regions_h2_many": "ドイツの州と国全体",
         "regions_note_many": ("<p>ドイツの{n}州と、{c}か国全体（{names}）について、"
                               "同じ計算です。</p>\n"),

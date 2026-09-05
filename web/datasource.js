@@ -136,7 +136,7 @@ const PAPAMAP_THEME = "https://mapcomplete.org/theme.html?userlayout=" +
 const MAPCOMPLETE_LANG = {
   ca: "ca", cs: "cs", da: "da", de: "de", el: "el", en: "en", es: "es", fi: "fi",
   fr: "fr", hu: "hu", it: "it", nl: "nl", no: "nb_NO", pl: "pl", pt: "pt",
-  ro: "ro", sl: "sl", sv: "sv", uk: "uk",
+  ro: "ro", sl: "sl", sv: "sv", uk: "uk", ja: "ja",
 };
 
 export function mapCompleteLanguage(lang) {
