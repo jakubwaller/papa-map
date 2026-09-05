@@ -258,10 +258,10 @@ def test_sitemap_lists_exactly_the_generated_pages():
         encoding="utf-8")
     listed = set(re.findall(
         rf"<loc>https://papamap\.de{re.escape(PAGES_BASE_PATH)}([a-z-]+)\.html</loc>", xml))
-    from pipeline.config import COUNTRY_PAGES, FRANCE_REGIONS
+    from pipeline.config import CHUNK_HUBS, COUNTRY_PAGES
     generated = ({pages.slugify(n) for n in BUNDESLAENDER}
                  | {pages.slugify(n) for _, n, _, _ in COUNTRY_PAGES.values()}
-                 | {pages.slugify(r) for r in FRANCE_REGIONS}
+                 | {pages.slugify(r) for names in CHUNK_HUBS.values() for r in names}
                  | {tab["file"].removesuffix(".html")
                     for tab in leaderboard.L.values()})
     assert listed == generated
@@ -289,24 +289,47 @@ def test_country_and_region_slugs_are_pinned():
         "shqiperia", "severna-makedonija", "kosova", "moldova", "ukrayina",
         "bielarus",
         # The first non-European wave (2026-09-04), English pages.
-        "australia", "new-zealand"}
+        "australia", "new-zealand",
+        # Wave 2 (2026-09-05): two more hubs, over states and provinces.
+        "united-states", "canada"}
     assert [pages.slugify(r) for r in FRANCE_REGIONS] == [
         "auvergne-rhone-alpes", "bourgogne-franche-comte", "bretagne",
         "centre-val-de-loire", "corse", "grand-est", "hauts-de-france",
         "ile-de-france", "normandie", "nouvelle-aquitaine", "occitanie",
         "pays-de-la-loire", "provence-alpes-cote-d-azur"]
-    # No collision with the Bundesland slugs or each other.
+    # The state and province slugs: ASCII already, so slugify only lowers
+    # and hyphenates — pinned where a reader would type them.
+    from pipeline.config import CANADA_PROVINCES, CHUNK_HUBS, US_STATES
+    us = {pages.slugify(n) for n, _ in US_STATES}
+    assert {"new-york", "district-of-columbia", "north-carolina",
+            "hawaii", "washington"} <= us and len(us) == 51
+    ca = {pages.slugify(n) for n, _ in CANADA_PROVINCES}
+    assert {"quebec", "new-brunswick", "prince-edward-island",
+            "northwest-territories", "yukon"} <= ca and len(ca) == 13
+    # No collision with the Bundesland slugs or each other — "Georgia" and
+    # "Washington" would collide with a country or a city page one day, so
+    # this is the guard that says so first.
     from pipeline.config import BUNDESLAENDER as BL
     all_slugs = ([pages.slugify(n) for n in BL]
                  + [pages.slugify(n) for _, n, _, _ in COUNTRY_PAGES.values()]
-                 + [pages.slugify(r) for r in FRANCE_REGIONS])
+                 + [pages.slugify(r) for names in CHUNK_HUBS.values() for r in names])
     assert len(all_slugs) == len(set(all_slugs))
 
 
-def test_french_region_forms_cover_exactly_the_regions():
-    from pipeline.config import FRANCE_REGIONS
-    from pipeline.pages_l10n import FRANCE_REGION_FORMS
-    assert set(FRANCE_REGION_FORMS) == set(FRANCE_REGIONS)
+def test_chunk_forms_and_hub_copy_cover_exactly_the_hub_countries():
+    from pipeline.config import CHUNK_HUBS, COUNTRY_PAGES
+    from pipeline.pages_l10n import CHUNK_FORMS, HUB
+    assert set(CHUNK_FORMS) == set(HUB) == set(CHUNK_HUBS)
+    for cc, names in CHUNK_HUBS.items():
+        assert set(CHUNK_FORMS[cc]) == set(names), cc
+        assert cc in COUNTRY_PAGES, cc
+        assert set(HUB[cc]) == set(HUB["fr"]), cc  # same keys, every hub
+    # English inflects nothing but the article.
+    assert CHUNK_FORMS["us"]["Florida"] == ("in Florida", None)
+    assert CHUNK_FORMS["us"]["District of Columbia"] == (
+        "in the District of Columbia", "the District of Columbia")
+    assert CHUNK_FORMS["ca"]["Northwest Territories"] == (
+        "in the Northwest Territories", "the Northwest Territories")
 
 
 def test_write_all_pages_writes_each_country_in_its_own_language(tmp_path):
@@ -380,6 +403,53 @@ def test_write_all_pages_without_germany_writes_no_german_pages(tmp_path):
     da = (tmp_path / "danmark.html").read_text(encoding="utf-8")
     # Alone in the build, the page has no other countries to link.
     assert "PapaMap i andre lande" not in da
+
+
+def test_write_all_pages_gives_the_us_and_canada_english_hubs(tmp_path):
+    from pipeline.config import CANADA_PROVINCES, US_STATES
+    areas = ([(n, "4") for n, _ in US_STATES] + [(n, "4") for n, _ in CANADA_PROVINCES]
+             + [("Australia", "2")])
+    features = [feat(1, "Target", "accessible", amenity="department_store",
+                     lon=-82.4, lat=28.0),
+                feat(2, "Tim Hortons", "unknown", amenity="cafe", lon=-73.6, lat=45.5),
+                feat(3, None, "unknown", lon=-77.0, lat=38.9)]
+    area_by_key = {("node", 1): "Florida", ("node", 2): "Quebec",
+                   ("node", 3): "District of Columbia"}
+    toilets = {name: 5 for name, _ in areas}
+    written = pages.write_all_pages(areas, features, area_by_key, toilets,
+                                    str(tmp_path), GEN)
+    names = sorted(Path(p).name for p in written)
+    # 3 country pages (two of them hubs) + 51 states + 13 provinces; no
+    # German index without the Länder.
+    assert len(names) == len(set(names)) == 3 + 51 + 13
+    assert "index.html" not in names
+
+    hub = (tmp_path / "united-states.html").read_text(encoding="utf-8")
+    assert 'lang="en"' in hub
+    assert "<h1>Changing tables in the United States, by state</h1>" in hub
+    for n, _ in US_STATES:
+        assert f'href="{pages.slugify(n)}.html"' in hub, n
+    assert 'href="canada.html"' in hub and 'href="australia.html"' in hub
+    assert "<strong>2</strong> places" in hub  # Florida + DC; Quebec is Canada's
+    fl = (tmp_path / "florida.html").read_text(encoding="utf-8")
+    assert "<h1>Changing tables in Florida</h1>" in fl
+    assert "The numbers for Florida" in fl and "Target" in fl
+    assert 'href="united-states.html"' in fl                  # back to the hub
+    assert "<h2>Other states</h2>" in fl and 'href="texas.html"' in fl
+    assert 'href="florida.html"' not in fl.split("<h2>Other states</h2>")[1].split("</ul>")[0]
+    dc = (tmp_path / "district-of-columbia.html").read_text(encoding="utf-8")
+    assert "<h1>Changing tables in the District of Columbia</h1>" in dc
+    assert "The numbers for the District of Columbia" in dc
+
+    ca = (tmp_path / "canada.html").read_text(encoding="utf-8")
+    assert "by province and territory</h1>" in ca
+    assert 'href="quebec.html"' in ca and 'href="nunavut.html"' in ca
+    qc = (tmp_path / "quebec.html").read_text(encoding="utf-8")
+    assert "<h1>Changing tables in Quebec</h1>" in qc and "Tim Hortons" in qc
+    assert "<h2>Other provinces and territories</h2>" in qc
+    assert 'href="canada.html"' in qc
+    # Every hub and chunk page links its own language's leaderboard.
+    assert 'href="leaderboard.html"' in hub and 'href="leaderboard.html"' in qc
 
 # ---- 44 countries, 31 page languages (23 Aug 2026) --------------------------
 

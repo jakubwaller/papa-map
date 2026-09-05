@@ -37,17 +37,18 @@ services:
     # suite keep their conservative default while papamap.de builds Europe.
     # Overridable per run: `docker compose run -e PAPAMAP_COUNTRIES=dk ...`.
     #
-    # 46 countries = 73 sweep areas = about 145 Overpass queries a night since
-    # the toilets-count rota of 2026-09-05 (73 sweeps + roughly a seventh of
-    # the 73 counts + 62 leaderboard cities; it was 208 before, measured at
-    # 80 min). The cron sits at 02:00 (docs/DEPLOY.md, and why not earlier):
-    # the 05:30 ops mail must not read a half-written stats.json, and the
-    # next wave chunks the US and Canada. de and fr are chunked (16 Länder, 13 régions); every other
-    # country answers whole as one admin_level=2 area (pipeline/config.py
-    # holds the per-country measurements, and why the US, Canada and Japan
-    # are not on this list yet).
+    # 48 countries = 137 sweep areas = about 220 Overpass queries a night
+    # (137 sweeps + roughly a seventh of the 137 toilets counts, on the rota
+    # of 2026-09-05 + 62 leaderboard cities; the 46-country night was 208
+    # before the rota, measured at 80 min). The cron sits at 02:00
+    # (docs/DEPLOY.md, and why not earlier): the 05:30 ops mail must not
+    # read a half-written stats.json. de, fr, us and ca are chunked (16
+    # Länder, 13 régions, 50 states + DC, 13 provinces and territories);
+    # every other country answers whole as one admin_level=2 area
+    # (pipeline/config.py holds the per-country measurements, and why Japan
+    # is not on this list yet).
     environment:
-      - PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se,gb,fr,no,fi,is,ie,ee,lv,lt,lu,li,ad,mc,sm,mt,es,pt,it,gr,cy,si,sk,hu,hr,ro,bg,rs,ba,me,al,mk,xk,md,ua,by,au,nz
+      - PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se,gb,fr,no,fi,is,ie,ee,lv,lt,lu,li,ad,mc,sm,mt,es,pt,it,gr,cy,si,sk,hu,hr,ro,bg,rs,ba,me,al,mk,xk,md,ua,by,au,nz,us,ca
     volumes:
       - ./web-data:/out
     # Host network, not web_proxy. The job only makes outbound requests, and on

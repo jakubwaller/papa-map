@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from . import config
+
 # Every string the generated area pages need, in the language of the people
 # who search for them. The German Bundesland pages exist because "Wickeltisch
 # Bayern" is searched in German — and by the same argument "puslebord Danmark"
@@ -45,6 +47,113 @@ FRANCE_REGION_FORMS = {
     "Pays de la Loire": ("dans les Pays de la Loire", "les Pays de la Loire"),
     "Provence-Alpes-Côte d'Azur": ("en Provence-Alpes-Côte d'Azur",
                                    "la Provence-Alpes-Côte d'Azur"),
+}
+
+# The per-area name forms of the other two chunked countries, in English:
+# (name_in, name_for) exactly like FRANCE_REGION_FORMS. English inflects
+# nothing, so the only work is the definite article — "in the District of
+# Columbia", "in the Northwest Territories" — and name_for is None wherever
+# the bare name reads right after "The numbers for …".
+def _english_forms(names, the=()):
+    return {n: (f"in the {n}", f"the {n}") if n in the else (f"in {n}", None)
+            for n in names}
+
+
+US_STATE_FORMS = _english_forms(
+    tuple(name for name, _ in config.US_STATES), the=("District of Columbia",))
+CANADA_PROVINCE_FORMS = _english_forms(
+    tuple(name for name, _ in config.CANADA_PROVINCES),
+    the=("Northwest Territories",))
+
+# One forms table per hub country (config.CHUNK_HUBS), keyed the same way.
+CHUNK_FORMS = {"fr": FRANCE_REGION_FORMS, "us": US_STATE_FORMS,
+               "ca": CANADA_PROVINCE_FORMS}
+
+# The hub page over a chunked country's per-area pages, and the three strings
+# those area pages need to point back at it. Keyed by country, not language:
+# the copy names the country and its kind of subdivision ("par région", "by
+# state"), so it is the country's, even where two hubs share a language.
+# The rest of a hub page — table headers, statuses, help, footer — comes from
+# L[lang] like every other page.
+HUB = {
+    "fr": {
+        "back_hub": "Toute la France",
+        "crumb_hub": "Tables à langer en France",
+        "siblings_h2": "Autres régions",
+    # france.html is the hub the 13 région pages hang off, the way
+    # /wickeltische/ is for the 16 Länder.
+    "hub_title": "Tables à langer en France, par région — PapaMap",
+    "hub_desc": ("Tables à langer en France, région par région : "
+                 "{total} lieux d'après OpenStreetMap ; pour {unknown} "
+                 "d'entre eux, la pièce n'est pas renseignée."),
+    "hub_h1": "Tables à langer en France, par région",
+    "hub_intro": ("OpenStreetMap connaît en France "
+                  "<strong>{total}</strong> lieux avec table à langer. "
+                  "Pour <strong>{unknown}</strong> d'entre eux, personne "
+                  "n'a noté dans quelle pièce se trouve la table — donc "
+                  "si un papa peut vraiment l'atteindre. Région par "
+                  "région :"),
+    "hub_col": "Région",
+    "hub_toilets": "Toilettes",
+    "hub_note": ("Par ordre alphabétique, pas par nombre. Un classement "
+                 "serait trompeur : ces chiffres mesurent surtout à quel "
+                 "point une région a été cartographiée, pas son "
+                 "équipement réel. La colonne <em>Toilettes</em> compte "
+                 "toutes les toilettes publiques recensées, avec ou sans "
+                 "table à langer. Ce qui se compare honnêtement, c'est "
+                 'le mouvement — il est sur le <a href="leaderboard.html">'
+                 "classement (en anglais)</a>."),
+    },
+    "us": {
+        "back_hub": "All of the United States",
+        "crumb_hub": "Changing tables in the United States",
+        "siblings_h2": "Other states",
+        "hub_title": "Changing tables in the United States, by state — PapaMap",
+        "hub_desc": ("Changing tables in the United States, state by state: "
+                     "{total} places according to OpenStreetMap; for {unknown} "
+                     "of them nobody has recorded the room."),
+        "hub_h1": "Changing tables in the United States, by state",
+        "hub_intro": ("OpenStreetMap knows <strong>{total}</strong> places "
+                      "with a baby changing table in the United States. For "
+                      "<strong>{unknown}</strong> of them nobody has recorded "
+                      "which room the table is in — so whether a dad can "
+                      "actually reach it. State by state (the District of "
+                      "Columbia has its own row):"),
+        "hub_col": "State",
+        "hub_toilets": "Toilets",
+        "hub_note": ("Alphabetical, not ranked. A ranking would mislead: "
+                     "these numbers mostly measure how thoroughly a state has "
+                     "been mapped, not what it actually provides. The "
+                     "<em>Toilets</em> column counts every public toilet on "
+                     "record, with or without a changing table. What compares "
+                     'honestly is movement — it is on the <a href="'
+                     'leaderboard.html">leaderboard</a>.'),
+    },
+    "ca": {
+        "back_hub": "All of Canada",
+        "crumb_hub": "Changing tables in Canada",
+        "siblings_h2": "Other provinces and territories",
+        "hub_title": "Changing tables in Canada, by province — PapaMap",
+        "hub_desc": ("Changing tables in Canada, province by province: "
+                     "{total} places according to OpenStreetMap; for {unknown} "
+                     "of them nobody has recorded the room."),
+        "hub_h1": "Changing tables in Canada, by province and territory",
+        "hub_intro": ("OpenStreetMap knows <strong>{total}</strong> places "
+                      "with a baby changing table in Canada. For "
+                      "<strong>{unknown}</strong> of them nobody has recorded "
+                      "which room the table is in — so whether a dad can "
+                      "actually reach it. Province by province, the three "
+                      "territories included:"),
+        "hub_col": "Province / territory",
+        "hub_toilets": "Toilets",
+        "hub_note": ("Alphabetical, not ranked. A ranking would mislead: "
+                     "these numbers mostly measure how thoroughly a province "
+                     "has been mapped, not what it actually provides. The "
+                     "<em>Toilets</em> column counts every public toilet on "
+                     "record, with or without a changing table. What compares "
+                     'honestly is movement — it is on the <a href="'
+                     'leaderboard.html">leaderboard</a>.'),
+    },
 }
 
 # The amenity tag is a controlled OSM vocabulary; these 20 values cover 99% of
@@ -791,8 +900,6 @@ Hoe er geteld en gekleurd wordt: <a href="{up}methods-nl.html">Methoden</a> ·
                       "c'est exactement ce qui se répare."),
         "stand": "Au {date} · Données OpenStreetMap",
         "back_map": "Vers la carte",
-        "back_hub": "Toute la France",
-        "crumb_hub": "Tables à langer en France",
         "empty": ("OpenStreetMap ne connaît actuellement aucun lieu avec "
                   "table à langer {name_in}. Cela veut presque sûrement "
                   "dire : personne ne l'a encore notée."),
@@ -840,7 +947,6 @@ Hoe er geteld en gekleurd wordt: <a href="{up}methods-nl.html">Methoden</a> ·
                  "le monde et apparaît ici après la prochaine mise à jour "
                  'nocturne. <a href="{up}{methods}#contribute">Pas à '
                  "pas</a>."),
-        "siblings_h2": "Autres régions",
         "countries_h2": "PapaMap dans les autres pays",
         "places_unit": "lieux",
         "footer": """\
@@ -854,29 +960,6 @@ Comment on compte et colore&nbsp;: <a href="{up}methods-fr.html">Méthodes</a> �
 <p class="muted">Créé par un papa qui trouvait toujours la table à langer dans les toilettes des femmes. PapaMap est gratuit et sans pub.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Offrir un café</a>.</p>
 """,
-        # france.html is the hub the 13 région pages hang off, the way
-        # /wickeltische/ is for the 16 Länder.
-        "hub_title": "Tables à langer en France, par région — PapaMap",
-        "hub_desc": ("Tables à langer en France, région par région : "
-                     "{total} lieux d'après OpenStreetMap ; pour {unknown} "
-                     "d'entre eux, la pièce n'est pas renseignée."),
-        "hub_h1": "Tables à langer en France, par région",
-        "hub_intro": ("OpenStreetMap connaît en France "
-                      "<strong>{total}</strong> lieux avec table à langer. "
-                      "Pour <strong>{unknown}</strong> d'entre eux, personne "
-                      "n'a noté dans quelle pièce se trouve la table — donc "
-                      "si un papa peut vraiment l'atteindre. Région par "
-                      "région :"),
-        "hub_col": "Région",
-        "hub_toilets": "Toilettes",
-        "hub_note": ("Par ordre alphabétique, pas par nombre. Un classement "
-                     "serait trompeur : ces chiffres mesurent surtout à quel "
-                     "point une région a été cartographiée, pas son "
-                     "équipement réel. La colonne <em>Toilettes</em> compte "
-                     "toutes les toilettes publiques recensées, avec ou sans "
-                     "table à langer. Ce qui se compare honnêtement, c'est "
-                     'le mouvement — il est sur le <a href="leaderboard.html">'
-                     "classement (en anglais)</a>."),
     },
     "cs": {
         "months": _MONTHS["cs"],

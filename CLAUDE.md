@@ -4,7 +4,8 @@ Guidance for coding agents working in this repository.
 
 ## What this is
 
-A static map of places in 46 countries (44 European, plus Australia and New Zealand) with a baby changing table, coloured by whether a dad
+A static map of places in 48 countries (44 European, plus Australia, New Zealand, the United
+States and Canada) with a baby changing table, coloured by whether a dad
 can reach it: green = accessible room, red = women's room only, grey = nobody has recorded the room.
 A Python pipeline queries Overpass and taginfo and writes GeoJSON + one static page per swept area
 (Bundesländer in German, every country in its own language, French régions) into `web/wickeltische/`;
@@ -42,10 +43,13 @@ CONTRACT.md — it is versioned by amendment, currently v20.
 
 **Overpass lies in two directions.** An all-Germany area query dies at a ~60 s network idle cutoff,
 so Germany stays chunked per Bundesland — and **France per région**, for the same reason and
-measured the same way (empty reply at 60.14 s for the country whole, 19 Aug 2026). Two chunked
-countries now, so a 13-entry `COUNTRY_AREAS["fr"]` is not redundant; collapsing it to one
+measured the same way (empty reply at 60.14 s for the country whole, 19 Aug 2026) — and the
+**US per state and Canada per province** since 2026-09-05, both dead whole on 2026-09-04. Four
+chunked countries, so a 13-entry `COUNTRY_AREAS["fr"]` is not redundant; collapsing it to one
 `admin_level=2` area brings back the failure and adds pins in the Caribbean, because the five
-overseas régions are `admin_level=4` too. The other 44 answer whole. And a mirror can return HTTP
+overseas régions are `admin_level=4` too. The US and Canadian chunks are selected by
+`ISO3166-2` code (`AREA_SELECTORS`), never by name: a level-4 "Florida" is also a department
+of Uruguay. The other 44 answer whole. And a mirror can return HTTP
 200 from a database months out of date — `pipeline/osm.py` reads `osm3s.timestamp_osm_base` and
 raises `StaleMirror`, which is skipped rather than retried on the same host. Never "simplify" any of
 these away.

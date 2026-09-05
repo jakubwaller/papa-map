@@ -101,6 +101,96 @@ FRANCE_REGIONS = (
     "Pays de la Loire", "Provence-Alpes-Côte d'Azur",
 )
 
+# The 50 US states plus the District of Columbia, and Canada's ten provinces
+# and three territories — the third and fourth chunked countries (2026-09-05).
+# Both die whole: the US on both queries at the ~60 s cutoff, Canada on the
+# count (56 s timeout) — measured 2026-09-04 and recorded in CONTRACT v19.
+# (display name, ISO 3166-2 code). The name is the history key, the row label
+# and the page slug, exactly as a Bundesland or a région; the CODE is what
+# selects the area (AREA_SELECTORS below), because a level-4 name is not
+# unique on the planet: "Florida" is also a department of Uruguay, and an
+# area["name"="Florida"] sweep would put Uruguayan pins on the Florida page.
+# Canada's three bilingual names are the name:en form (`name` is "New
+# Brunswick / Nouveau-Brunswick", "ᓄᓇᕗᑦ Nunavut", "Québec"), the way the
+# neighbours are named. The five US territories (Puerto Rico, Guam, the US
+# Virgin Islands, American Samoa, the Northern Mariana Islands) are level 4
+# too and are deliberately absent, like France's overseas régions: the list
+# is an allowlist, not a subdivision.
+US_STATES = (
+    ("Alabama", "US-AL"),
+    ("Alaska", "US-AK"),
+    ("Arizona", "US-AZ"),
+    ("Arkansas", "US-AR"),
+    ("California", "US-CA"),
+    ("Colorado", "US-CO"),
+    ("Connecticut", "US-CT"),
+    ("Delaware", "US-DE"),
+    ("District of Columbia", "US-DC"),
+    ("Florida", "US-FL"),
+    ("Georgia", "US-GA"),
+    ("Hawaii", "US-HI"),
+    ("Idaho", "US-ID"),
+    ("Illinois", "US-IL"),
+    ("Indiana", "US-IN"),
+    ("Iowa", "US-IA"),
+    ("Kansas", "US-KS"),
+    ("Kentucky", "US-KY"),
+    ("Louisiana", "US-LA"),
+    ("Maine", "US-ME"),
+    ("Maryland", "US-MD"),
+    ("Massachusetts", "US-MA"),
+    ("Michigan", "US-MI"),
+    ("Minnesota", "US-MN"),
+    ("Mississippi", "US-MS"),
+    ("Missouri", "US-MO"),
+    ("Montana", "US-MT"),
+    ("Nebraska", "US-NE"),
+    ("Nevada", "US-NV"),
+    ("New Hampshire", "US-NH"),
+    ("New Jersey", "US-NJ"),
+    ("New Mexico", "US-NM"),
+    ("New York", "US-NY"),
+    ("North Carolina", "US-NC"),
+    ("North Dakota", "US-ND"),
+    ("Ohio", "US-OH"),
+    ("Oklahoma", "US-OK"),
+    ("Oregon", "US-OR"),
+    ("Pennsylvania", "US-PA"),
+    ("Rhode Island", "US-RI"),
+    ("South Carolina", "US-SC"),
+    ("South Dakota", "US-SD"),
+    ("Tennessee", "US-TN"),
+    ("Texas", "US-TX"),
+    ("Utah", "US-UT"),
+    ("Vermont", "US-VT"),
+    ("Virginia", "US-VA"),
+    ("Washington", "US-WA"),
+    ("West Virginia", "US-WV"),
+    ("Wisconsin", "US-WI"),
+    ("Wyoming", "US-WY"),
+)
+CANADA_PROVINCES = (
+    ("Alberta", "CA-AB"),
+    ("British Columbia", "CA-BC"),
+    ("Manitoba", "CA-MB"),
+    ("New Brunswick", "CA-NB"),
+    ("Newfoundland and Labrador", "CA-NL"),
+    ("Northwest Territories", "CA-NT"),
+    ("Nova Scotia", "CA-NS"),
+    ("Nunavut", "CA-NU"),
+    ("Ontario", "CA-ON"),
+    ("Prince Edward Island", "CA-PE"),
+    ("Quebec", "CA-QC"),
+    ("Saskatchewan", "CA-SK"),
+    ("Yukon", "CA-YT"),
+)
+
+# Areas selected by a tag other than their name: {display name: (key, value)}.
+# _area_ql consults this first; everything else is selected by name or
+# name:en (area_name_key below).
+AREA_SELECTORS = {name: ("ISO3166-2", code)
+                  for name, code in US_STATES + CANADA_PROVINCES}
+
 # Areas whose Overpass selector is name:en instead of name. A country's `name`
 # is whatever its own mappers write, and for two of the neighbours that is
 # several languages at once: Belgium is "België / Belgique / Belgien" and
@@ -257,6 +347,9 @@ COUNTRY_AREAS = {
     # need chunking like Germany and France and are their own waves.
     "au": (("Australia", "2"),),
     "nz": (("New Zealand", "2"),),
+    # ------ wave 2 (2026-09-05): the two that die whole, chunked ------
+    "us": tuple((name, "4") for name, _ in US_STATES),
+    "ca": tuple((name, "4") for name, _ in CANADA_PROVINCES),
 }
 
 # Fallback display name per country. Germany and Denmark are named in their own
@@ -283,6 +376,7 @@ COUNTRY_LABELS = {
     "mk": "North Macedonia", "xk": "Kosovo", "md": "Moldova",
     "ua": "Ukraine", "by": "Belarus",
     "au": "Australia", "nz": "New Zealand",
+    "us": "United States", "ca": "Canada",
 }
 
 # One static page per country beyond Germany (pipeline/pages.py), each in the
@@ -353,6 +447,20 @@ COUNTRY_PAGES = {
     # ------ the first non-European wave, pages added 2026-09-04 ------
     "au": ("en", "Australia", "in Australia", None),
     "nz": ("en", "New Zealand", "in New Zealand", None),
+    # ------ wave 2, pages added 2026-09-05: two more hubs, in English ------
+    "us": ("en", "United States", "in the United States", "the United States"),
+    "ca": ("en", "Canada", "in Canada", None),
+}
+
+# The chunked countries that get a hub page over their per-area pages, the
+# way france.html hangs over the 13 région pages and /wickeltische/ over the
+# 16 Länder: {country code: the area names in sweep order}. Germany is not
+# here — its hub is the German index, rendered by its own function. The
+# per-area name forms and the hub copy live in pages_l10n (CHUNK_FORMS, HUB).
+CHUNK_HUBS = {
+    "fr": FRANCE_REGIONS,
+    "us": tuple(name for name, _ in US_STATES),
+    "ca": tuple(name for name, _ in CANADA_PROVINCES),
 }
 
 # Slug overrides for pages.slugify, keyed by display name. Only the non-Latin
@@ -670,9 +778,9 @@ def _area_ql(area_name: str, admin_level: str, date: str | None = None) -> str:
     # themselves are derived from *current* boundaries — acceptable, Länder and
     # city limits move on a scale of decades, our history on a scale of weeks.
     attic = f'[date:"{date}"]' if date else ""
-    key = area_name_key(area_name)
+    key, value = AREA_SELECTORS.get(area_name) or (area_name_key(area_name), area_name)
     return (f'[out:json][timeout:{OVERPASS_QL_TIMEOUT}]{attic};'
-            f'area["{key}"="{area_name}"]["admin_level"="{admin_level}"]->.a;')
+            f'area["{key}"="{value}"]["admin_level"="{admin_level}"]->.a;')
 
 
 def changing_table_ql(area_name: str = "Deutschland", admin_level: str = "2",

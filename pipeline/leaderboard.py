@@ -4,8 +4,9 @@ import json
 from datetime import date as _date, timedelta
 from pathlib import Path
 
-from .config import (AREA_COUNTRY, BUNDESLAENDER, COUNTRY_PAGES,
-                     FRANCE_REGIONS, LANG_HOME_CC, chunked_area_names,
+from .config import (AREA_COUNTRY, BUNDESLAENDER, CANADA_PROVINCES,
+                     COUNTRY_PAGES, FRANCE_REGIONS, LANG_HOME_CC, US_STATES,
+                     chunked_area_names,
                      HISTORY_MAX_DAYS, PAGES_BASE_PATH, SITE_BASE_URL)
 from .export import write_text_atomic
 from .leaderboard_strings import DE_FILE, EN_FILE, L
@@ -410,9 +411,10 @@ def _table(rows, name_col: str, tab: dict, lang: str) -> str:
     return "".join(parts)
 
 
-def _region_kinds(rows) -> tuple[int, int, list[str]]:
-    """(Bundesland rows, French-région rows, names of the whole-country rows),
-    read off the rows about to be printed.
+def _region_kinds(rows) -> tuple[int, dict, list[str]]:
+    """(Bundesland rows, {"fr": région rows, "us": state rows, "ca": province
+    rows}, names of the whole-country rows), read off the rows about to be
+    printed.
 
     The regions table shows whatever the sweep produced, and since 18 Aug 2026
     that is a list the operator can extend: PAPAMAP_COUNTRIES=de,dk,be,… puts
@@ -423,14 +425,22 @@ def _region_kinds(rows) -> tuple[int, int, list[str]]:
     "Everything not a Bundesland is a country swept whole" was true until
     France, and would now print Bretagne and Corse as sovereign states. The
     whole-country list is therefore filtered against every chunk name in
-    config.COUNTRY_AREAS, not just the German ones — so a third chunked
-    country is at worst missing from the sentence, never miscounted in it.
-    Country names sort like every other name column."""
+    config.COUNTRY_AREAS, not just the German ones — so a chunked country
+    this function does not know is at worst missing from the sentence, never
+    miscounted in it. The US and Canada joined the chunked set on
+    2026-09-05; the US count is the states alone, the District of Columbia
+    being named on its own by the clause. Country names sort like every other
+    name column."""
     chunks = chunked_area_names()
-    lands = sum(1 for r in rows if r["name"] in BUNDESLAENDER)
-    regions = sum(1 for r in rows if r["name"] in FRANCE_REGIONS)
-    countries = [r["name"] for r in rows if r["name"] not in chunks]
-    return lands, regions, sorted(countries, key=sort_key)
+    names = [r["name"] for r in rows]
+    lands = sum(1 for n in names if n in BUNDESLAENDER)
+    states = {n for n, _ in US_STATES} - {"District of Columbia"}
+    provinces = {n for n, _ in CANADA_PROVINCES}
+    kinds = {"fr": sum(1 for n in names if n in FRANCE_REGIONS),
+             "us": sum(1 for n in names if n in states),
+             "ca": sum(1 for n in names if n in provinces)}
+    countries = [n for n in names if n not in chunks]
+    return lands, kinds, sorted(countries, key=sort_key)
 
 
 def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
@@ -461,7 +471,8 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         parts.append(tab["cities_note"].format(n=len(data["cities"])))
         parts.append(_table(data["cities"], tab["col_name_city"], tab, lang))
     if data["regions"]:
-        lands, fr_regions, countries = _region_kinds(data["regions"])
+        lands, kinds, countries = _region_kinds(data["regions"])
+        fr_regions = kinds["fr"]
         # Which sentence fits is a question about *which* countries are in the
         # table, never about how many. The default build's one country is
         # Denmark and the German page has always named it outright, so that
@@ -474,12 +485,13 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
         # them all without becoming a list, so the copy counts them and then
         # names them once — a reader who meets "Czechia" between two
         # Bundesländer can find out what it is.
-        if fr_regions:
-            # A second chunked country is in the table, so the two-way split
+        if any(kinds.values()):
+            # Another chunked country is in the table, so the two-way split
             # the sentences below assume no longer describes it: France
-            # contributes régions, which are neither Bundesländer nor whole
-            # countries. Named rather than counted-and-listed, because 13 more
-            # names would turn the sentence into a directory.
+            # contributes régions, the US states, Canada provinces — none of
+            # them Bundesländer or whole countries. Named rather than
+            # counted-and-listed, because 13 (or 51) more names would turn
+            # the sentence into a directory.
             kind = "_regions"
         elif countries == ["Danmark"]:
             kind = ""
@@ -501,6 +513,10 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
             clauses.append(tab["cl_lands"].format(n=lands))
         if fr_regions:
             clauses.append(tab["cl_regions"].format(r=fr_regions))
+        if kinds["us"]:
+            clauses.append(tab["cl_states"].format(s=kinds["us"]))
+        if kinds["ca"]:
+            clauses.append(tab["cl_provinces"].format(p=kinds["ca"]))
         if len(countries) == 1:
             clauses.append(tab["cl_country_one"].format(names=names))
         elif countries:

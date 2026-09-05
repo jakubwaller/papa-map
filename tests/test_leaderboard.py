@@ -178,10 +178,23 @@ def test_french_regions_are_not_printed_as_whole_countries():
     rows = [{"name": n} for n in
             ["Bayern", "Berlin", "Bretagne", "Corse", "Île-de-France",
              "Danmark", "Sweden", "United Kingdom"]]
-    lands, fr_regions, countries = leaderboard._region_kinds(rows)
+    lands, kinds, countries = leaderboard._region_kinds(rows)
     assert lands == 2
-    assert fr_regions == 3
+    assert kinds == {"fr": 3, "us": 0, "ca": 0}
     assert countries == ["Danmark", "Sweden", "United Kingdom"]
+
+
+def test_us_states_and_canadian_provinces_are_their_own_kinds():
+    # Same regression, two chunked countries later: Florida is not a
+    # sovereign state either, and the District of Columbia is not a state,
+    # so it is not counted among them — the clause names it on its own.
+    rows = [{"name": n} for n in
+            ["Bayern", "Florida", "Texas", "District of Columbia", "Quebec",
+             "Yukon", "Australia"]]
+    lands, kinds, countries = leaderboard._region_kinds(rows)
+    assert lands == 1
+    assert kinds == {"fr": 0, "us": 2, "ca": 2}
+    assert countries == ["Australia"]
 
 
 def test_regions_heading_names_regions_when_france_is_swept(tmp_path):
@@ -193,8 +206,8 @@ def test_regions_heading_names_regions_when_france_is_swept(tmp_path):
     ]}
     data = leaderboard.leaderboard_data(history)
     for lang, heading, claim in (
-            ("de", "Bundesländer, Régions und ganze Länder", "französischen Régions"),
-            ("en", "German states, French régions and whole countries",
+            ("de", "Bundesländer, Regionen und ganze Länder", "französischen Régions"),
+            ("en", "German states, regions and whole countries",
              "French régions")):
         html = leaderboard.render_leaderboard(lang, data)
         assert heading in html, lang
@@ -209,6 +222,35 @@ def test_regions_heading_names_regions_when_france_is_swept(tmp_path):
     en = leaderboard.render_leaderboard("en", data)
     assert "French régions and United Kingdom as a whole" in en
     assert "1 countries" not in en
+
+
+def test_regions_note_counts_states_and_provinces(tmp_path):
+    history = {"v": 1, "days": [
+        day("2026-09-01", regions={"Bayern": [1, 0, 9], "Florida": [1, 0, 9],
+                                   "District of Columbia": [1, 0, 9],
+                                   "Quebec": [1, 0, 9], "Australia": [1, 0, 9]}),
+        day("2026-09-08", regions={"Bayern": [3, 0, 7], "Florida": [2, 0, 8],
+                                   "District of Columbia": [1, 0, 9],
+                                   "Quebec": [2, 0, 8], "Australia": [2, 0, 8]}),
+    ]}
+    data = leaderboard.leaderboard_data(history)
+    en = leaderboard.render_leaderboard("en", data)
+    assert "German states, regions and whole countries" in en
+    assert ("the 1 Bundesländer, the 1 US states and DC, the 1 Canadian "
+            "provinces and territories and Australia as a whole") in en
+    assert "French régions" not in en
+    de = leaderboard.render_leaderboard("de", data)
+    assert ("die 1 Bundesländer, die 1 US-Bundesstaaten und DC, die 1 "
+            "kanadischen Provinzen und Territorien und Australia als Ganzes") in de
+    # Florida is a row, never a country in the sentence.
+    for html in (en, de):
+        assert "Florida" not in html.split("<table")[0]
+        assert "<td" in html and "Florida" in html
+    # Every language has the two new clauses and formats them without a
+    # stray placeholder.
+    for lang in leaderboard.L:
+        html = leaderboard.render_leaderboard(lang, data)
+        assert "{s}" not in html and "{p}" not in html, lang
 
 
 def test_render_quiet_and_fresh_notes():

@@ -72,13 +72,14 @@ digest reads `stats.json` is the one health signal the site has reporting a half
 dataset. (02:00 was the move for Europe-complete on 2026-08-22, 03:30 for the UK and
 France before that.) What keeps the build from growing with the areas is the toilets-count
 rota (2026-09-05): each area's `amenity=toilets` count is refreshed one night a week rather
-than every night, so a night costs one query per area plus a seventh of the counts — about
-145 for the 46 countries, which is the room the chunked US and Canada sweeps take. **Earlier
-than 02:00 is not an option on this host:** the VPS runs Europe/Berlin, and 01:00 CEST is
-23:00 UTC of the *previous* day. The rota dates its entries and the leaderboard its history
-in UTC, so on the night of the spring clock change two builds would share one UTC date —
-the leaderboard's same-date rule would drop a day of history. 02:00 local is 00:00 UTC at
-the earliest, on the right side of midnight all year.
+than every night, so a night costs one query per area plus a seventh of the counts — which
+is the room wave 2 took the same day: the US per state and Canada per province add 64
+areas, for about 220 queries a night (137 areas + 62 cities), back at the pre-rota level.
+**Earlier than 02:00 is not an option on this host:** the VPS runs Europe/Berlin, and 01:00
+CEST is 23:00 UTC of the *previous* day. The rota dates its entries and the leaderboard its
+history in UTC, so on the night of the spring clock change two builds would share one UTC
+date — the leaderboard's same-date rule would drop a day of history. 02:00 local is 00:00
+UTC at the earliest, on the right side of midnight all year.
 
 **The pipeline container is on the host network** (`network_mode: host` in
 `docker-compose.yml`), so it has the host's IPv6 address. Overpass banned this host's IPv4
@@ -275,8 +276,8 @@ dataset only changes on the next build — so the two can disagree, and the fail
 prose rather than an error:
 
 ```bash
-curl -s https://DOMAIN/data/stats.json | grep -o '"area_key": *"[^"]*"'   # want countries_46
-curl -s https://DOMAIN/ | grep -c 'areaFallback">46 Länder'              # want 1
+curl -s https://DOMAIN/data/stats.json | grep -o '"area_key": *"[^"]*"'   # want countries_48
+curl -s https://DOMAIN/ | grep -c 'areaFallback">48 Länder'              # want 1
 ```
 
 Both or neither. If `area_key` still counts the old set, the build has not run under the new
