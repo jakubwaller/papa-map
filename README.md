@@ -79,8 +79,8 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   the Caribbean, the Indian Ocean and South America, thousands of kilometres
   from the France its page and leaderboard row are about.
 - A build of three or more countries names itself by count rather than by name:
-  `stats.json`'s `area_key` becomes `countries_<n>` (`countries_46` for all
-  46), since the joined labels overflow the stats strip. One and two
+  `stats.json`'s `area_key` becomes `countries_<n>` (`countries_48` for all
+  48), since the joined labels overflow the stats strip. One and two
   countries keep `de` / `dk` / `de_dk`.
 - `PAPAMAP_AREA_NAME` + `PAPAMAP_AREA_ADMIN_LEVEL` select a single area instead
   (e.g. `Hamburg` / `4`), and `PAPAMAP_DISPLAY_AREA` names the dataset in the

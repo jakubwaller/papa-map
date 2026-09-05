@@ -101,8 +101,8 @@ HUB = {
                  "équipement réel. La colonne <em>Toilettes</em> compte "
                  "toutes les toilettes publiques recensées, avec ou sans "
                  "table à langer. Ce qui se compare honnêtement, c'est "
-                 'le mouvement — il est sur le <a href="leaderboard.html">'
-                 "classement (en anglais)</a>."),
+                 'le mouvement — il est sur le <a href="leaderboard-fr.html">'
+                 "classement</a>."),
     },
     "us": {
         "back_hub": "All of the United States",

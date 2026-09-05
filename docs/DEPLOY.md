@@ -93,10 +93,12 @@ The pipeline writes atomically (temp file + rename), so the server never serves 
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.
 
 The same run rewrites `web/wickeltische/` — the per-area pages (16 Bundesländer + index,
-one page per other swept country in its own language, france.html + 13 région pages).
-They are build output, not repo content, so **a fresh clone serves 404s there until the
-first build runs**: the sitemap lists all 73 of those URLs unconditionally. Run the
-pipeline once after deploying rather than waiting for the nightly cron.
+one page per other swept country in its own language, and three hubs over chunk pages:
+france.html + 13 régions, united-states.html + 50 states and DC, canada.html + 13
+provinces and territories), plus the 31 leaderboard pages. They are build output, not repo
+content, so **a fresh clone serves 404s there until the first build runs**: the sitemap
+lists all 172 of those URLs unconditionally. Run the pipeline once after deploying rather
+than waiting for the nightly cron.
 
 A full build also maintains `history.json` next to the other generated JSON (the
 per-region daily counts behind `wickeltische/rangliste.html`) — same directory, same

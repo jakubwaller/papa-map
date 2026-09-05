@@ -21,7 +21,7 @@ from datetime import date as _date
 
 from . import export, leaderboard, osm
 from .config import (CITY_AREAS, HISTORY_PATH, changing_table_ids_ql,
-                     changing_table_ql, sweep_areas)
+                     changing_table_ql, sweep_areas, toilets_counts_ql)
 
 QUERY_PAUSE_S = 3.0
 
@@ -40,11 +40,18 @@ def snapshot(date_iso: str, areas=None, cities=CITY_AREAS,
         data = fetch(changing_table_ql(name, lvl, date=attic))
         # Same trap as the live sweep: an area resolving to zero objects is a
         # stale mirror or a typo, and writing it through would poison every
-        # delta computed against this day.
+        # delta computed against this day. Same escape hatch too: an area
+        # with no changing table but with toilets did resolve — the
+        # Northwest Territories are exactly that (2026-09-05) — so an empty
+        # answer costs one more attic query, for the toilet count, before it
+        # is believed. Only empty answers pay it.
         if not data.get("elements"):
-            raise RuntimeError(
-                f"area {name!r} resolved to zero objects at {attic}")
-        ct_elements.extend(data["elements"])
+            counts = osm.parse_counts(
+                fetch(toilets_counts_ql(name, lvl, date=attic)))
+            if not (counts and counts[0]):
+                raise RuntimeError(
+                    f"area {name!r} resolved to zero objects at {attic}")
+        ct_elements.extend(data.get("elements", []))
         for el in data["elements"]:
             ct_area.setdefault((el.get("type"), el.get("id")), name)
         print(f"  {date_iso} {name}: ct={len(data['elements'])}",
@@ -61,10 +68,9 @@ def snapshot(date_iso: str, areas=None, cities=CITY_AREAS,
         city_ids[display] = {(el.get("type"), el.get("id"))
                              for el in data["elements"]}
         sleep(pause_s)
-    city_by_key: dict[tuple, str] = {}
-    for display, _, _ in cities:
-        for key in city_ids.get(display, ()):
-            city_by_key.setdefault(key, display)
+    # Scoped to the city's country, exactly as the nightly build does it:
+    # the level-8 "Birmingham" area query also answers Alabama's.
+    city_by_key = leaderboard.city_membership(cities, city_ids, ct_area)
     return leaderboard.counts_from_features(
         features, ct_area, city_by_key,
         region_names=[n for n, _ in areas], city_names=list(city_ids))

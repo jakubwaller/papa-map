@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from pipeline import backfill, leaderboard, pages
 from pipeline.config import changing_table_ids_ql
 
@@ -373,6 +375,75 @@ def test_backfill_seeds_history_through_the_build_path(tmp_path, load_fixture):
     assert first["regions"] == {"Hamburg": [3, 2, 2], "Danmark": [0, 0, 0]}
     assert first["cities"] == {"Berlin": [1, 0, 0]}  # node/1 is accessible
     assert all('[date:"' in q for q in calls)
+
+
+def test_backfill_tolerates_an_area_with_toilets_but_no_tables(tmp_path, load_fixture):
+    # The Northwest Territories have no changing_table object at all. The
+    # attic sweep answers empty; before believing that, the backfill asks
+    # for the toilet count as of the same moment, and a positive count
+    # means the area resolved — an empty row, not a failed day.
+    history_path = tmp_path / "history.json"
+    calls = []
+
+    def fake_fetch(ql):
+        calls.append(ql)
+        if '"amenity"="toilets"' in ql:
+            return {"elements": [
+                {"type": "count", "id": 0, "tags": {"total": "59"}},
+                {"type": "count", "id": 0, "tags": {"total": "0"}}]}
+        if "CA-NT" in ql:
+            return {"elements": []}
+        if "out ids" in ql:
+            return {"elements": [{"type": "node", "id": 1}]}
+        return load_fixture("overpass_changing_tables.json")
+
+    added = backfill.backfill(
+        ["2026-07-24"], history_path=str(history_path),
+        areas=[("Hamburg", "4"), ("Northwest Territories", "4")],
+        cities=[("Berlin", "Berlin", "4")],
+        fetch=fake_fetch, pause_s=0, sleep=lambda s: None)
+    assert added == ["2026-07-24"]
+    day0 = json.loads(history_path.read_text(encoding="utf-8"))["days"][0]
+    assert day0["regions"]["Northwest Territories"] == [0, 0, 0]
+    # Exactly one count query, for the one empty area, and attic like the rest.
+    counts = [q for q in calls if '"amenity"="toilets"' in q]
+    assert len(counts) == 1 and '[date:"2026-07-24T00:00:00Z"]' in counts[0]
+    assert 'ISO3166-2"="CA-NT"' in counts[0]
+
+
+def test_backfill_still_refuses_an_area_with_nothing_at_all(tmp_path, load_fixture):
+    def fake_fetch(ql):
+        if '"amenity"="toilets"' in ql or "CA-NT" in ql:
+            return {"elements": []}
+        return load_fixture("overpass_changing_tables.json")
+
+    with pytest.raises(RuntimeError, match="zero objects"):
+        backfill.backfill(["2026-07-24"], history_path=str(tmp_path / "h.json"),
+                          areas=[("Northwest Territories", "4")], cities=[],
+                          fetch=fake_fetch, pause_s=0, sleep=lambda s: None)
+
+
+def test_backfill_scopes_city_rows_to_their_country(tmp_path, load_fixture):
+    # Birmingham's level-8 area query answers Alabama's tables too; the
+    # backfill files them under Alabama, never under the GB row.
+    history_path = tmp_path / "history.json"
+
+    def fake_fetch(ql):
+        if "out ids" in ql:
+            return {"elements": [{"type": "node", "id": 1}, {"type": "node", "id": 777}]}
+        if "US-AL" in ql:
+            return {"elements": [{"type": "node", "id": 777, "lat": 33.5, "lon": -86.8,
+                                  "tags": {"changing_table": "yes",
+                                           "changing_table:location": "male_toilet"}}]}
+        return load_fixture("overpass_changing_tables.json")
+
+    backfill.backfill(["2026-07-24"], history_path=str(history_path),
+                      areas=[("United Kingdom", "2"), ("Alabama", "4")],
+                      cities=[("Birmingham", "Birmingham", "8")],
+                      fetch=fake_fetch, pause_s=0, sleep=lambda s: None)
+    day0 = json.loads(history_path.read_text(encoding="utf-8"))["days"][0]
+    assert day0["cities"]["Birmingham"] == [1, 0, 0]  # node/1 only
+    assert day0["regions"]["Alabama"] == [1, 0, 0]
 
 
 def test_backfill_never_overwrites_an_existing_day(tmp_path):
