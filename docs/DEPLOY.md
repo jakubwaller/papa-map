@@ -118,7 +118,12 @@ with a build, or wait for the next one.
 `toilets_counts.json` in the same directory is state too — the per-area
 `amenity=toilets` counts with the date each was last counted, which is what lets the
 build recount every area one night a week instead of every night. Like `history.json`
-it is served, at `/data/toilets_counts.json` (public aggregates, nothing else). Deleting it costs
+it is served, at `/data/toilets_counts.json` (public aggregates, nothing else). Unlike
+`history.json`, it is read at the start of a build and written whole at the end, so a manual
+`docker compose run` that overlaps the nightly build writes back the snapshot it loaded and
+drops the entries the other build committed in between — those areas recount the next night,
+a one-night cost and nothing worse, but do not run two builds at once expecting both to keep
+their counts. Deleting it costs
 exactly one night of counting (every area is recounted, as before the rota) and
 nothing else; `PAPAMAP_TOILETS_COUNTS_PERIOD_DAYS=1` on a manual run recounts
 everything regardless.
