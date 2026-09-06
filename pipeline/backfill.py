@@ -53,9 +53,11 @@ def snapshot(date_iso: str, areas=None, cities=CITY_AREAS,
             # answer, and a truncated answer must not vouch for an empty day —
             # and is named as such, so an operator watching an hour-long
             # attended run is not sent hunting a stale area database.
-            if len(counts) == 1:
+            if len(counts) not in (0, 2):
+                n = len(counts)
                 raise RuntimeError(
-                    f"area {name!r}: toilets query answered 1 count, expected 2")
+                    f"area {name!r}: toilets query answered {n} "
+                    f"count{'' if n == 1 else 's'}, expected 2")
             if not (counts and counts[0]):
                 raise RuntimeError(
                     f"area {name!r} resolved to zero objects at {attic}")

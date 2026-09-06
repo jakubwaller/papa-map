@@ -11,8 +11,9 @@
   is the documented belt-and-braces — for the ?lang= views especially, the
   sitemap is the channel that does not depend on the crawler rendering JS.
 
-  31 languages since the Europe-complete sweep (2026-08-22), so the two
-  multilingual sections below are 31 x 32 lines of alternates each —
+  32 languages since the Japan wave (2026-09-05), so the three multilingual
+  sections below (index ?lang= views, methods pages, leaderboards) are 32
+  <url> blocks of 33 alternate lines each —
   generated, not typed: scratchpad langweave.py rewrites them from one table. Every language must list every other, or
   Google treats the set as unreciprocated and ignores it. Keep in sync with
   i18n.js's LANGS and index.html's hreflang block; tests/test_pages.py already

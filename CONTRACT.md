@@ -2,8 +2,8 @@
 
 > **v22 amendment (5 Sep 2026, wave 3 — Japan, and Japanese as the 32nd page
 > language):** papamap.de sweeps **49 countries** — v21's 48 plus `jp`, the
-> last of the world's top six by pins that is *in*. The sixth, China (306
-> pins), clears v19's 250-pin threshold and is parked by decision
+> last of the world's top six by pins that is *in*. The one left out, China
+> (306 pins), clears v19's 250-pin threshold and is parked by decision
 > (2026-09-04): 74 % of its tags say `no`, so a page would be nearly all
 > red and grey, and the threshold admits a country, it does not compel one.
 > Russia (241) is under it. Japan sweeps whole in 39.6 s but counts
