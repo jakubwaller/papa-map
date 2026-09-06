@@ -2,7 +2,11 @@
 
 > **v22 amendment (5 Sep 2026, wave 3 — Japan, and Japanese as the 32nd page
 > language):** papamap.de sweeps **49 countries** — v21's 48 plus `jp`, the
-> last of the world's top six by pins. Japan sweeps whole in 39.6 s but counts
+> last of the world's top six by pins that is *in*. The one left out, China
+> (306 pins), clears v19's 250-pin threshold and is parked by decision
+> (2026-09-04): 74 % of its tags say `no`, so a page would be nearly all
+> red and grey, and the threshold admits a country, it does not compel one.
+> Russia (241) is under it. Japan sweeps whole in 39.6 s but counts
 > its toilets in 49.7 s (v19), 90 % of the budget and past the UK's 45.2 s,
 > so it is chunked into its **47 prefectures** like the US into states, every
 > one selected by `ISO3166-2` code (`JP-01` … `JP-47`, v21's mechanism).

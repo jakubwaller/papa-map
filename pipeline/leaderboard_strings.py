@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 # The leaderboard's translations — one entry per UI language, same set as
-# web/i18n.js's LANGS. Split out of leaderboard.py because 31 entries of
+# web/i18n.js's LANGS. Split out of leaderboard.py because 32 entries of
 # ~40 keys each would bury the rendering logic under a kilometre of prose.
 #
 # Every entry defines exactly the same keys as "en" (tests/test_leaderboard.py
