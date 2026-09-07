@@ -123,11 +123,19 @@ const VIEW_BOUNDS =
 const map = new maplibregl.Map({
   container: "map", style: OSM_STYLE,
   bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 },
-  // 3.5, not the old 4.5: fitHome() re-fits under a topbar that eats a third
-  // of a portrait phone (half of a landscape one), and the old floor clamped
-  // that fit while Denmark — or, in landscape, Bavaria — was still off-screen.
-  // With no maxBounds this floor is now the only stop on the way out.
-  minZoom: 3.5, maxZoom: 18, attributionControl: false,
+  // With no maxBounds this floor is the only stop on the way out, and 1 puts
+  // one whole world in 1024 px: a desktop sees every pin from Alaska to New
+  // Zealand on one screen, the way Google Maps does. The old 3.5 (itself down
+  // from 4.5 so fitHome() could fit Denmark under the topbar on a phone)
+  // framed ~90° of longitude — Europe's width — and once the sweep crossed the
+  // Pacific (2026-09-04) it hid most of the dataset from anyone who did not
+  // already know where to pan. Not 0: MapLibre refuses to zoom out past the
+  // point where the ±85° world stops filling the viewport HEIGHT (~0.8 on a
+  // desktop window), so 0 buys nothing there and on a phone only shrinks
+  // Europe into a smaller blob. Below zoom 5 the pins hold their 2 px size —
+  // pinRadius clamps to its first stop — which is what makes the world view
+  // read as a density map rather than empty ocean.
+  minZoom: 1, maxZoom: 18, attributionControl: false,
   pitchWithRotate: false, touchPitch: false,
 });
 map.dragRotate.disable();
