@@ -192,6 +192,22 @@ def test_social_card_image_exists_for_every_page_language():
         assert (web / f).is_file(), f
 
 
+def test_apex_and_generated_pages_share_one_social_card_cache_key():
+    """The apex types its og:image ?v= into index.html by hand and the
+    generated pages take theirs from OG_IMAGE_VERSION, and the edge and the
+    scrapers key the picture on that string. Nothing tied the two together:
+    the 49-country cards (#88) bumped both in one commit, but a re-shoot that
+    bumps one side ships half the site on the old card with no red test."""
+    web = Path(__file__).resolve().parent.parent / "web"
+    for name, image in (("index.html", "og-image.jpg"),
+                        ("index-en.html", "og-image-en.jpg")):
+        html = (web / name).read_text(encoding="utf-8")
+        m = re.search(r'property="og:image" content="https://papamap\.de/'
+                      + re.escape(image) + r'\?v=([^"]+)"', html)
+        assert m, f"{name} has no og:image"
+        assert m.group(1) == pages.OG_IMAGE_VERSION, name
+
+
 def test_land_page_deep_links_into_the_map_at_its_own_extent():
     s, html = render_one([feat(1, lon=8.5, lat=53.0), feat(2, lon=8.9, lat=53.2)])
     m = re.search(r'href="\.\./\?bbox=([-\d.,]+)"', html)
