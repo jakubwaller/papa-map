@@ -26,6 +26,7 @@ import os
 import re
 import smtplib
 import sys
+import zlib
 from datetime import date, datetime, timedelta, timezone
 from email.message import EmailMessage
 from pathlib import Path
@@ -300,40 +301,63 @@ def app_taps(log_dir=None) -> dict | None:
     d = Path(log_dir or APP_LOG_DIR)
     if not d.is_dir():
         return None
+    files = sorted(d.glob("app*.log*"))
+    # Caddy rolls by renaming app.log to app-<stamp>.log, then gzips that in
+    # place and deletes the plain file. A run that lands inside that window
+    # sees both, so the complete plain file wins and its half-written .gz
+    # is skipped; the next run reads the finished .gz alone.
+    names = {f.name for f in files}
     by_day: dict[str, dict[str, int]] = {}
-    for f in sorted(d.glob("app*.log*")):
+    undated = 0
+    for f in files:
+        if f.suffix == ".gz" and f.name[:-3] in names:
+            continue
         opener = gzip.open if f.suffix == ".gz" else open
         try:
             with opener(f, "rt", errors="replace") as fh:
                 for line in fh:
-                    _count_tap_line(line, by_day)
-        except OSError as exc:
+                    undated += _count_tap_line(line, by_day)
+        # A truncated .gz raises EOFError, a corrupt one zlib.error — neither
+        # is an OSError, and this is decoration on the check, not the check:
+        # the other optional inputs degrade rather than take the run down.
+        except (OSError, EOFError, zlib.error) as exc:
             print(f"WARN: app log {f} unreadable: {exc}", file=sys.stderr)
+    if undated:
+        # Said out loud, because the silent version reads as "nobody visits
+        # the page" when it means "the parser stopped understanding the log"
+        # — a time_format change in the Caddyfile would do exactly that.
+        print(f"WARN: {undated} app-log lines had no unix-seconds ts and "
+              "were not counted", file=sys.stderr)
     return {"by_day": dict(sorted(by_day.items()))}
 
 
-def _count_tap_line(line: str, by_day: dict) -> None:
+def _count_tap_line(line: str, by_day: dict) -> int:
+    """Counts the line into by_day; returns 1 for a line about the app page
+    whose timestamp could not be read (the caller warns), else 0."""
     try:
         entry = json.loads(line)
     except ValueError:
-        return
+        return 0
     req = entry.get("request") if isinstance(entry, dict) else None
     if not isinstance(req, dict):
-        return
-    path = str(req.get("uri") or "").split("?", 1)[0]
+        return 0
+    # Lower-cased like Caddy's path matcher, which answers /APP/JA/IPHONE
+    # with 204 too — what the server calls counted, the parser counts.
+    path = str(req.get("uri") or "").split("?", 1)[0].lower()
     method, status = str(req.get("method") or ""), entry.get("status")
     if method == "POST" and path in APP_TAP_PATHS and status == 204:
         key = APP_TAP_PATHS[path]
     elif method == "GET" and path in APP_PAGE_PATHS and status in (200, 304):
         key = "views"
     else:
-        return
+        return 0
     try:  # Caddy's default ts is unix seconds as a float
         day = datetime.fromtimestamp(float(entry.get("ts")),
                                      tz=timezone.utc).strftime("%Y-%m-%d")
     except (TypeError, ValueError, OverflowError, OSError):
-        return
+        return 1
     by_day.setdefault(day, {"iphone": 0, "android": 0, "views": 0})[key] += 1
+    return 0
 
 
 def merge_taps(kept: dict, taps: dict | None) -> dict:
@@ -356,7 +380,8 @@ def taps_totals(days: dict, now: datetime, window: int = 7) -> dict | None:
     when it means a page that is not deployed."""
     if not days:
         return None
-    since = (now - timedelta(days=window)).strftime("%Y-%m-%d")
+    # window calendar days ending today, the private page's window too
+    since = (now - timedelta(days=window - 1)).strftime("%Y-%m-%d")
     tot = {"iphone": 0, "android": 0, "views": 0, "recent": 0, "days": window}
     for day, v in days.items():
         for k in ("iphone", "android", "views"):

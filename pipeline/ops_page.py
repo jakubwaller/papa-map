@@ -407,11 +407,13 @@ def _visitors(visits: dict | None) -> str:
     return "".join(parts)
 
 
-def _app_taps(taps: dict | None) -> str:
+def _app_taps(taps: dict | None, now: datetime) -> str:
     """The private page's other extra section: the app page's two buttons,
     counted per UTC day from the container's stripped access log (see the
     Caddyfile). Requests for the page are counted too, crawlers included,
-    so taps per hundred requests is a floor, not a conversion rate."""
+    so taps per hundred requests is a rough ratio, not a conversion rate.
+    The week is the calendar window the mail's line uses: seven days ending
+    today, whether or not each of them has a row."""
     days = sorted((taps or {}).items())
     if not days:
         return ('<h2>App page</h2>\n<p class="muted">No taps counted yet — '
@@ -420,20 +422,21 @@ def _app_taps(taps: dict | None) -> str:
     android = sum(int(v.get("android", 0)) for _, v in days)
     views = sum(int(v.get("views", 0)) for _, v in days)
     taps_all = iphone + android
-    week = days[-7:]
+    since = (now - timedelta(days=6)).strftime("%Y-%m-%d")
     taps_week = sum(int(v.get("iphone", 0)) + int(v.get("android", 0))
-                    for _, v in week)
+                    for d, v in days if d >= since)
     parts = ["<h2>App page</h2>\n"
              '<p class="muted">Taps on the two buttons of /app.html, per UTC '
              "day, from the container's access log for that page alone — no "
-             "address, no user agent in it. Requests are every GET of the "
-             "page, crawlers included, so taps per 100 requests is a floor."
-             "</p>\n"
+             "address, no user agent in it. Requests are the GETs of the page "
+             "that reached the container, crawlers included and repeat visits "
+             "within the hour's cache excluded, so taps per request is a rough "
+             "ratio, not a conversion rate.</p>\n"
              '<div class="kpis">\n'
              f'<div class="kpi"><b>{_n(taps_all)}</b>'
              f"<span>taps, all {len(days)} days</span></div>\n"
              f'<div class="kpi"><b>{_n(taps_week)}</b>'
-             f"<span>taps, last {len(week)} days</span></div>\n"
+             "<span>taps, last 7 days</span></div>\n"
              f'<div class="kpi"><b>{_n(iphone)}</b><span>iPhone</span></div>\n'
              f'<div class="kpi"><b>{_n(android)}</b><span>Android</span></div>\n'
              f'<div class="kpi"><b>{_n(views)}</b>'
@@ -619,7 +622,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
 
     if private:
         p.append(_visitors(visits))
-        p.append(_app_taps(taps))
+        p.append(_app_taps(taps, now))
 
     # Last build
     p.append("<h2>Last build</h2>\n")

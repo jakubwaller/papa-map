@@ -57,10 +57,12 @@
 
 	# That count is this container's only access log, and it is scoped to the
 	# question: log_skip drops every request outside the app page before it
-	# is written, and the filter deletes the client address and every
-	# request header (User-Agent, Referer, cookies) from the lines that
-	# remain — a line is a timestamp, a method, a path and a status, and
-	# identifies nobody. Written to ./caddy-logs on the host (a mount in
+	# is written, and the filter deletes the client address, every request
+	# header (User-Agent, Referer, cookies), the host, the protocol, the
+	# sizes and the duration from the lines that remain, and cuts any query
+	# string off the path — a line is a timestamp, a method, a path and a
+	# status, which is what datenschutz.html says it is, and identifies
+	# nobody. Written to ./caddy-logs on the host (a mount in
 	# docker-compose.yml, created by the deploying user, docs/DEPLOY.md);
 	# pipeline.ops reads it into the private ops page and the Monday mail.
 	# mode 0644 because Caddy runs as root in the image and the ops cron
@@ -83,7 +85,14 @@
 				request>client_ip delete
 				request>headers delete
 				request>tls delete
+				request>host delete
+				request>proto delete
+				request>uri regexp "[?].*$" ""
 				resp_headers delete
+				bytes_read delete
+				size delete
+				duration delete
+				user_id delete
 			}
 		}
 	}

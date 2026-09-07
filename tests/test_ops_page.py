@@ -366,6 +366,7 @@ def test_run_check_writes_the_page_and_caches_edits(tmp_path):
             stats_path=str(tmp_path / "stats.json"),
             geojson_path=str(tmp_path / "gj.json"),
             mail=lambda *a: None, visits_fetch=lambda **kw: None,
+            taps_read=lambda **kw: None,
             edits_fetch=lambda **kw: edits,
             html_path=str(html_path), history_path=str(tmp_path / "history.json"),
             build_log_path=str(tmp_path / "pipeline.log"),
@@ -410,6 +411,7 @@ def test_run_check_with_empty_html_path_writes_nothing(tmp_path):
                   stats_path=str(tmp_path / "stats.json"),
                   geojson_path=str(tmp_path / "absent.json"),
                   mail=lambda *a: None, visits_fetch=lambda **kw: None,
+                  taps_read=lambda **kw: None,
                   edits_fetch=lambda **kw: None, html_path="",
                   private_html_path="")
     assert not list(tmp_path.glob("**/*.html"))
@@ -425,6 +427,7 @@ def test_unwritable_page_does_not_fail_the_check(tmp_path, capsys):
         stats_path=str(tmp_path / "stats.json"),
         geojson_path=str(tmp_path / "absent.json"),
         mail=lambda *a: None, visits_fetch=lambda **kw: None,
+        taps_read=lambda **kw: None,
         edits_fetch=lambda **kw: None, html_path=str(blocker / "ops.html"),
         private_html_path="")
     assert "ops page not written" in capsys.readouterr().err
@@ -627,7 +630,7 @@ def test_private_page_counts_app_taps_and_public_never_does():
     private = render(private=True, visits=VISITS, taps=TAPS)
     assert "<h2>App page</h2>" in private
     assert "<b>7</b><span>taps, all 2 days</span>" in private
-    assert "<b>7</b><span>taps, last 2 days</span>" in private
+    assert "<b>7</b><span>taps, last 7 days</span>" in private
     assert "<b>5</b><span>iPhone</span>" in private
     assert "<b>2</b><span>Android</span>" in private
     assert "<b>50</b><span>page requests, all 2 days</span>" in private

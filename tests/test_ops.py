@@ -282,6 +282,7 @@ def test_digest_carries_edits_line(tmp_path):
                            geojson([("node", 1, "unknown")])),
         mail=lambda subject, body: sent.append((subject, body)),
         visits_fetch=lambda **kw: None,
+        taps_read=lambda **kw: None,
         edits_fetch=lambda **kw: {"days": 7, "changesets": 2},
         html_path="", private_html_path="")
     assert "edits via papamap theme (OSMCha, 7d): 2 changesets" in sent[0][1]
@@ -446,4 +447,49 @@ def test_report_carries_the_tap_line_every_day_and_state_keeps_the_days(tmp_path
 def test_report_has_no_tap_line_without_any_history(tmp_path):
     _, report, _, _ = run(tmp_path, stats=fresh_stats(), gj=geojson([]))
     assert "app page" not in report
+
+
+def test_app_taps_survives_a_half_written_rolled_gz_and_skips_its_twin(tmp_path, capsys):
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    good = _line("2026-09-07T12:00:00", "POST", "/app/ja/iphone", 204)
+    # Caddy mid-roll: the finished plain file and its half-written .gz twin.
+    (d / "app-2026-09-06T05-30-00.000.log").write_text(good + "\n")
+    (d / "app-2026-09-06T05-30-00.000.log.gz").write_bytes(b"\x1f\x8b\x08\x00trunc")
+    # A corrupt .gz without a twin: warned about, not fatal.
+    (d / "app-2026-09-01T05-30-00.000.log.gz").write_bytes(
+        b"\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03garbage")
+    (d / "app.log").write_text(good + "\n")
+    out = ops.app_taps(str(d))
+    assert out == {"by_day": {"2026-09-07": {"iphone": 2, "android": 0, "views": 0}}}
+    err = capsys.readouterr().err
+    assert "app-2026-09-01T05-30-00.000.log.gz unreadable" in err
+    assert "app-2026-09-06" not in err  # the twin was skipped, not read
+
+
+def test_app_taps_warns_when_the_timestamp_format_changes(tmp_path, capsys):
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    (d / "app.log").write_text(json.dumps({
+        "ts": "2026-09-07T12:00:00Z",
+        "request": {"method": "POST", "uri": "/app/ja/iphone"}, "status": 204}) + "\n")
+    assert ops.app_taps(str(d)) == {"by_day": {}}
+    assert "1 app-log lines had no unix-seconds ts" in capsys.readouterr().err
+
+
+def test_app_taps_counts_upper_case_paths_like_caddy_answers_them(tmp_path):
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    (d / "app.log").write_text(
+        _line("2026-09-07T12:00:00", "POST", "/APP/JA/ANDROID", 204) + "\n")
+    assert ops.app_taps(str(d))["by_day"] == {
+        "2026-09-07": {"iphone": 0, "android": 1, "views": 0}}
+
+
+def test_taps_totals_week_is_seven_calendar_days_ending_today():
+    now = datetime(2026, 9, 8, 5, 30, tzinfo=timezone.utc)
+    days = {"2026-09-01": {"iphone": 1, "android": 0, "views": 1},   # 8th day back: out
+            "2026-09-02": {"iphone": 1, "android": 0, "views": 1},   # 7th: in
+            "2026-09-08": {"iphone": 1, "android": 0, "views": 1}}   # today: in
+    assert ops.taps_totals(days, now)["recent"] == 2
 
