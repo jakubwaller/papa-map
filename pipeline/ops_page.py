@@ -407,13 +407,62 @@ def _visitors(visits: dict | None) -> str:
     return "".join(parts)
 
 
+def _app_taps(taps: dict | None) -> str:
+    """The private page's other extra section: the app page's two buttons,
+    counted per UTC day from the container's stripped access log (see the
+    Caddyfile). Requests for the page are counted too, crawlers included,
+    so taps per hundred requests is a floor, not a conversion rate."""
+    days = sorted((taps or {}).items())
+    if not days:
+        return ('<h2>App page</h2>\n<p class="muted">No taps counted yet — '
+                "the app page is not deployed, or caddy-logs/ is empty.</p>\n")
+    iphone = sum(int(v.get("iphone", 0)) for _, v in days)
+    android = sum(int(v.get("android", 0)) for _, v in days)
+    views = sum(int(v.get("views", 0)) for _, v in days)
+    taps_all = iphone + android
+    week = days[-7:]
+    taps_week = sum(int(v.get("iphone", 0)) + int(v.get("android", 0))
+                    for _, v in week)
+    parts = ["<h2>App page</h2>\n"
+             '<p class="muted">Taps on the two buttons of /app.html, per UTC '
+             "day, from the container's access log for that page alone — no "
+             "address, no user agent in it. Requests are every GET of the "
+             "page, crawlers included, so taps per 100 requests is a floor."
+             "</p>\n"
+             '<div class="kpis">\n'
+             f'<div class="kpi"><b>{_n(taps_all)}</b>'
+             f"<span>taps, all {len(days)} days</span></div>\n"
+             f'<div class="kpi"><b>{_n(taps_week)}</b>'
+             f"<span>taps, last {len(week)} days</span></div>\n"
+             f'<div class="kpi"><b>{_n(iphone)}</b><span>iPhone</span></div>\n'
+             f'<div class="kpi"><b>{_n(android)}</b><span>Android</span></div>\n'
+             f'<div class="kpi"><b>{_n(views)}</b>'
+             f"<span>page requests, all {len(days)} days</span></div>\n"
+             f'<div class="kpi"><b>{_pct(taps_all, views)}</b>'
+             "<span>taps per request</span></div>\n"
+             "</div>\n"]
+    rows = list(reversed(days))
+    parts.append(f"<details>\n<summary>all {len(rows)} days</summary>\n"
+                 '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
+                 "<th>iPhone</th><th>Android</th><th>requests</th></tr></thead>\n"
+                 "<tbody>\n")
+    for day, v in rows:
+        parts.append(f'<tr><td class="l">{esc(day)}</td>'
+                     f'<td>{_n(v.get("iphone", 0))}</td>'
+                     f'<td>{_n(v.get("android", 0))}</td>'
+                     f'<td>{_n(v.get("views", 0))}</td></tr>\n')
+    parts.append("</tbody>\n</table>\n</div>\n</details>\n")
+    return "".join(parts)
+
+
 def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                 changes: dict | None, history: list[dict],
                 anomalies: list[str], edits: dict | None = None,
                 edits_days: dict | None = None,
                 regions: dict | None = None, build: dict | None = None,
                 site_url: str = "https://papamap.de",
-                private: bool = False, visits: dict | None = None) -> str:
+                private: bool = False, visits: dict | None = None,
+                taps: dict | None = None) -> str:
     """The whole page. `history` is the ops state's daily list (oldest first,
     the entry for today already appended); `regions` is region_rows()'s
     output; `build` is parse_build_log()'s; `edits` the cached OSMCha line,
@@ -570,6 +619,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
 
     if private:
         p.append(_visitors(visits))
+        p.append(_app_taps(taps))
 
     # Last build
     p.append("<h2>Last build</h2>\n")
@@ -654,7 +704,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
         p.append("</tbody>\n</table>\n</div>\n</details>\n")
 
     p.append(f"""<footer>
-<p>Everything on this page is an aggregate of public OpenStreetMap data (ODbL) and of this site's own nightly build. {"The Visitors block is Cloudflare's zone-level count of requests, kept per day; it identifies nobody." if private else "No visitor data is collected, stored or shown — the site has no analytics."}</p>
+<p>Everything on this page is an aggregate of public OpenStreetMap data (ODbL) and of this site's own nightly build. {"The Visitors block is Cloudflare's zone-level count of requests, kept per day, and the App page block counts taps on two buttons from a log with no addresses in it; each identifies nobody." if private else "No visitor data is collected, stored or shown — the site has no analytics."}</p>
 <p>Sources: <a href="/data/stats.json">stats.json</a> · <a href="/data/history.json">history.json</a> · <a href="/data/changing_tables.geojson">changing_tables.geojson</a> · <a href="{esc(site_url)}/methods-en.html">how the classification works</a></p>
 </footer>
 </body>

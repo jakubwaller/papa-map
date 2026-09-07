@@ -218,6 +218,14 @@
            lets it stay on the wordmark's row on a phone while the four links
            take the next one, which is what keeps the header three rows tall. -->
       <button id="add-place" type="button" class="add-btn" data-i18n="addPlace">+ Ort hinzufügen</button>
+      <!-- The app page, as a pill on the button's row rather than a fifth
+           link in the nav: on a 375px phone the four nav items already use
+           about 337 of the 347 available pixels, and a fifth wraps the header
+           into a fourth row. Next to the button it fits (about 310px with the
+           brand) and sits on the row people look at. app.js sets the href per
+           language: German reads app.html, every other language app-en.html. -->
+      <a id="app-link" class="app-btn" href="app.html" data-i18n="app"
+         data-i18n-aria="ariaApp" aria-label="PapaMap als App — willst du sie?">App</a>
       <nav class="header-actions">
         <!-- "Bundesländer" stays German in every language, same as Impressum and
              Datenschutz: it points at German-only pages. Both links sat in the

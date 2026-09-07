@@ -50,6 +50,8 @@ function applyI18n() {
   // Each language's footer leads to the area page its readers search
   // for — the Danish UI to danmark.html, the French one to france.html.
   document.getElementById("regions-link").href = t("regionsHref");
+  // German reads its own app page, every other language the English one.
+  document.getElementById("app-link").href = t("appHref");
   // Boot may have resolved a language the markup does not show (a stored
   // choice, or a Czech browser): the control has to agree with the page.
   const sel = document.getElementById("lang-select");

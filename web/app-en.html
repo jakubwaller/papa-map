@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f2f5f3">
+<title>PapaMap as an app — do you want it?</title>
+<meta name="description" content="Two buttons, one counter: whether PapaMap becomes an app depends on how many people tap here. Offline, the nearest changing table, dad or mum, answers in two taps.">
+<link rel="canonical" href="https://papamap.de/app-en.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/app.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/app-en.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/app.html">
+<meta property="og:title" content="PapaMap as an app — do you want it?">
+<meta property="og:description" content="Two buttons, one counter: whether PapaMap becomes an app depends on how many people tap here.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://papamap.de/app-en.html">
+<meta property="og:image" content="https://papamap.de/og-image-en.jpg?v=w49">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_GB">
+<meta property="og:locale:alternate" content="de_DE">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  /* The map's palette (style.css), on a reading page: the two buttons are the
+     add button's colour, so the page and the header pill read as one thing. */
+  :root {
+    --bg: #fbfdfc; --ink: #1c2b26; --muted: #64716b; --line: #d8ded9;
+    --green: #009e73; --green-strong: #00775a; --green-soft: #e9f6f0;
+    --link: #00775a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161b19; --ink: #e8ede9; --muted: #9aa8a1; --line: #33403a;
+      --green: #009e73; --green-strong: #00775a; --green-soft: #1b2924;
+      --link: #5fd3ab;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; max-width: 40rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--ink);
+    font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  a { color: var(--link); }
+  h1 { font-size: 1.85rem; line-height: 1.2; margin: 0.6rem 0 0.6rem; text-wrap: balance; }
+  h2 { font-size: 1.2rem; margin: 2rem 0 0.6rem; }
+  .lead { font-size: 1.12rem; color: var(--muted); margin: 0 0 1.4rem; }
+  .back { font-size: 0.9rem; margin: 0 0 0.4rem; }
+  .back.langs { color: var(--muted); }
+  .back.langs strong { color: var(--ink); font-weight: 600; }
+
+  .ask {
+    margin: 1.2rem 0 1.6rem; padding: 1.1rem 1.2rem 1rem;
+    border: 1px solid var(--line); border-radius: 14px; background: var(--green-soft);
+  }
+  .ask h2 { margin: 0 0 0.8rem; font-size: 1.15rem; }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btns button {
+    flex: 1 1 12rem; padding: 0.85rem 1rem;
+    border: 1px solid var(--green); border-radius: 999px;
+    background: var(--green); color: #fff;
+    font: inherit; font-weight: 600; font-size: 1.02rem; cursor: pointer;
+  }
+  .btns button:hover { background: var(--green-strong); border-color: var(--green-strong); }
+  .btns button:focus-visible { outline: 2px solid var(--green-strong); outline-offset: 2px; }
+  .btns button:disabled { opacity: 0.6; cursor: default; }
+  .fine { color: var(--muted); font-size: 0.85rem; margin: 0.9rem 0 0; }
+  #done p { margin: 0.5rem 0; }
+
+  ul.adds { padding-left: 1.2rem; margin: 0.6rem 0; }
+  ul.adds li { margin: 0.55rem 0; }
+  ul.adds b { color: var(--ink); }
+  p.foot { color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="./?lang=en">&larr; Back to the map</a></p>
+<p class="back langs"><a href="app.html" hreflang="de" lang="de">Deutsch</a> &middot; <strong lang="en">English</strong></p>
+
+<h1>PapaMap as an app — do you want it?</h1>
+<p class="lead">It does not exist yet. Whether it will is decided on this page: two buttons, one counter.</p>
+
+<section id="ask" class="ask" aria-labelledby="ask-h">
+  <h2 id="ask-h">Would you install it?</h2>
+  <div class="btns">
+    <button type="button" data-tap="iphone">Yes, on my iPhone</button>
+    <button type="button" data-tap="android">Yes, on Android</button>
+  </div>
+  <p class="fine">The tap is only counted: time and button, nothing else. No account, no cookie, no IP address.</p>
+</section>
+
+<section id="done" class="ask" role="status" hidden>
+  <h2>Thanks — counted.</h2>
+  <p>One vote for <b id="done-which">iPhone</b>. That is all it takes; the number decides.</p>
+  <p>If you want to try the test version as soon as there is one,
+     <a id="mail-link" href="mailto:papamap@jakubwaller.eu?subject=PapaMap%20test%20version">a short email</a> is enough.
+     The address is used for that and nothing else.</p>
+</section>
+
+<h2>What the app could do</h2>
+<ul class="adds">
+  <li><b>Offline.</b> The changing tables of your area live on the phone — in the car park, on the train and in the supermarket basement, where there is no signal.</li>
+  <li><b>The nearest table, one tap.</b> The app shows the nearest changing table you can actually reach, with the walk to it.</li>
+  <li><b>Dad or mum.</b> Set once. As a dad, the map keeps colouring tables by whether you can get to them; as a mum, every table counts.</li>
+  <li><b>Grey pin? Two taps.</b> “Which room is the table in?” — your answer goes straight to OpenStreetMap, with no detour through another site.</li>
+  <li><b>Add a table where you stand.</b> A missing changing table is in within a minute — for everyone who comes after you.</li>
+</ul>
+<p>Free, like the map. The data stays OpenStreetMap; the app would have none of its own and collect none.</p>
+
+<h2>No date, no promise</h2>
+<p>An app in the store costs time and a yearly fee. Both are only worth it if enough people want it — which is why there is no date here, only a counter. If it is many, it comes: first as a test version, then for everyone. If it is few, it does not, and the map stays as it is.</p>
+<p class="foot">Questions, ideas, a table that is missing? <a href="methods-en.html#contribute">Editing, step by step</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
+
+<script>
+// A tap is one POST to a counting path that Caddy answers 204 and logs as
+// this server's only access-log line — no address, no user agent
+// (deploy/papamap.Caddyfile). The tap is remembered in local storage like
+// the language, so the page does not ask twice; that is all it knows.
+(function () {
+  var KEY = "papamap-app";
+  var ask = document.getElementById("ask");
+  var done = document.getElementById("done");
+  var NAMES = { iphone: "iPhone", android: "Android" };
+  function show(which) {
+    ask.hidden = true;
+    done.hidden = false;
+    document.getElementById("done-which").textContent = NAMES[which];
+    document.getElementById("mail-link").href =
+      "mailto:papamap@jakubwaller.eu?subject=" +
+      encodeURIComponent("PapaMap test version " + NAMES[which]);
+  }
+  var stored = null;
+  try { stored = localStorage.getItem(KEY); } catch (e) { /* private mode */ }
+  if (NAMES[stored]) show(stored);
+  Array.prototype.forEach.call(document.querySelectorAll("button[data-tap]"), function (b) {
+    b.addEventListener("click", function () {
+      var which = b.getAttribute("data-tap");
+      if (!NAMES[which]) return;
+      b.disabled = true;
+      try { localStorage.setItem(KEY, which); } catch (e) { /* then the page asks again next time */ }
+      // keepalive: the request survives the view swap below.
+      fetch("/app/ja/" + which, { method: "POST", keepalive: true, credentials: "omit" })
+        .catch(function () { /* not counted — still: thanks, to the reader */ });
+      show(which);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

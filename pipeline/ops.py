@@ -20,6 +20,7 @@ healthy/anomalous, so the check is useful before any mail is wired up.
 """
 from __future__ import annotations
 
+import gzip
 import json
 import os
 import re
@@ -75,6 +76,16 @@ OPS_HISTORY_PATH = os.environ.get(
 # The build cron's log, `>> pipeline.log` in the repo directory where the ops
 # cron also runs; read for the "last build" section, optional.
 BUILD_LOG_PATH = os.environ.get("PAPAMAP_BUILD_LOG_PATH", "pipeline.log")
+# The app page's tap log: the papamap container's only access log, scoped
+# to /app.html and /app/* and stripped of addresses and headers by the
+# Caddyfile's filter (deploy/papamap.Caddyfile), mounted to ./caddy-logs on
+# the host (docker-compose.yml) — the directory the ops cron runs in, like
+# pipeline.log. Absent (a checkout without Docker), the block is simply not
+# there. The paths are the Caddyfile's; tests/test_ops.py pins them to it.
+APP_LOG_DIR = os.environ.get("PAPAMAP_APP_LOG_DIR", "caddy-logs")
+APP_TAP_PATHS = {"/app/ja/iphone": "iphone", "/app/ja/android": "android"}
+APP_PAGE_PATHS = ("/app.html", "/app-en.html")
+TAPS_HISTORY_DAYS = 400
 STALE_AFTER_H = float(os.environ.get("PAPAMAP_OPS_STALE_H", "48"))
 DROP_ALERT_PCT = float(os.environ.get("PAPAMAP_OPS_DROP_PCT", "20"))
 # The mirror image of DROP_ALERT_PCT, and it exists because the drop check on
@@ -190,7 +201,7 @@ def find_anomalies(stats, counts, last_counts, now) -> list[str]:
 
 
 def render_report(counts, changes, history, anomalies, visits=None,
-                  edits=None) -> str:
+                  edits=None, taps=None) -> str:
     lines = []
     if anomalies:
         lines.append("ANOMALIES:")
@@ -227,6 +238,11 @@ def render_report(counts, changes, history, anomalies, visits=None,
         lines.append(
             f"visits (Cloudflare, {visits['days']}d): "
             f"{visits['requests']} requests, {visits['uniques']} uniques")
+    if taps:
+        lines.append(
+            f"app page: {taps['iphone']} iPhone + {taps['android']} Android "
+            f"taps in all ({taps['recent']} in the last {taps['days']}d), "
+            f"{taps['views']} page requests")
     return "\n".join(lines) or "no data at all — nothing to report on"
 
 
@@ -269,6 +285,85 @@ def cf_visits(days=CF_HISTORY_DAYS, report_days=CF_REPORT_DAYS,
     except Exception as exc:  # visits are decoration — never fail the check
         print(f"WARN: Cloudflare analytics failed: {exc}", file=sys.stderr)
         return None
+
+
+def app_taps(log_dir=None) -> dict | None:
+    """{'by_day': {date: {'iphone': n, 'android': n, 'views': n}}} from every
+    app*.log (rolled and gzipped ones included) in the directory, per UTC
+    day. A tap is a POST to one of APP_TAP_PATHS answered 204; a view is a
+    GET of one of APP_PAGE_PATHS answered 200 or 304 — a cached reload is
+    still a reader, and crawlers are in there too, so views are a floor for
+    the ratio, not a conversion rate. Lines that are not JSON or not about
+    those paths are skipped. The Caddyfile's filter has already removed
+    everything that could identify anyone; nothing here needs to. None when
+    the directory does not exist — a checkout without the container."""
+    d = Path(log_dir or APP_LOG_DIR)
+    if not d.is_dir():
+        return None
+    by_day: dict[str, dict[str, int]] = {}
+    for f in sorted(d.glob("app*.log*")):
+        opener = gzip.open if f.suffix == ".gz" else open
+        try:
+            with opener(f, "rt", errors="replace") as fh:
+                for line in fh:
+                    _count_tap_line(line, by_day)
+        except OSError as exc:
+            print(f"WARN: app log {f} unreadable: {exc}", file=sys.stderr)
+    return {"by_day": dict(sorted(by_day.items()))}
+
+
+def _count_tap_line(line: str, by_day: dict) -> None:
+    try:
+        entry = json.loads(line)
+    except ValueError:
+        return
+    req = entry.get("request") if isinstance(entry, dict) else None
+    if not isinstance(req, dict):
+        return
+    path = str(req.get("uri") or "").split("?", 1)[0]
+    method, status = str(req.get("method") or ""), entry.get("status")
+    if method == "POST" and path in APP_TAP_PATHS and status == 204:
+        key = APP_TAP_PATHS[path]
+    elif method == "GET" and path in APP_PAGE_PATHS and status in (200, 304):
+        key = "views"
+    else:
+        return
+    try:  # Caddy's default ts is unix seconds as a float
+        day = datetime.fromtimestamp(float(entry.get("ts")),
+                                     tz=timezone.utc).strftime("%Y-%m-%d")
+    except (TypeError, ValueError, OverflowError, OSError):
+        return
+    by_day.setdefault(day, {"iphone": 0, "android": 0, "views": 0})[key] += 1
+
+
+def merge_taps(kept: dict, taps: dict | None) -> dict:
+    """The per-day tap history. The log is re-read whole on every run, so
+    every day it still covers overwrites the stored one — today's partial
+    figure included, healed tomorrow — and the days Caddy has rolled away
+    stay as they were. Capped and sorted like the other histories."""
+    merged = dict(kept)
+    for day, v in ((taps or {}).get("by_day") or {}).items():
+        if isinstance(v, dict):
+            merged[day] = {k: int(v.get(k, 0))
+                           for k in ("iphone", "android", "views")}
+    return dict(sorted(merged.items())[-TAPS_HISTORY_DAYS:])
+
+
+def taps_totals(days: dict, now: datetime, window: int = 7) -> dict | None:
+    """All-time totals plus the taps of the last `window` days, for the
+    report line. None without any history — the line is then not printed
+    rather than printed as zeros, which would read as a page nobody visits
+    when it means a page that is not deployed."""
+    if not days:
+        return None
+    since = (now - timedelta(days=window)).strftime("%Y-%m-%d")
+    tot = {"iphone": 0, "android": 0, "views": 0, "recent": 0, "days": window}
+    for day, v in days.items():
+        for k in ("iphone", "android", "views"):
+            tot[k] += int(v.get(k, 0))
+        if day >= since:
+            tot["recent"] += int(v.get("iphone", 0)) + int(v.get("android", 0))
+    return tot
 
 
 def osmcha_edits(days=7, now=None, get=requests.get):
@@ -386,7 +481,7 @@ def send_mail(subject, body, smtp=smtplib.SMTP) -> bool:
 def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
               mail=send_mail, visits_fetch=cf_visits, edits_fetch=osmcha_edits,
               html_path=None, history_path=None, build_log_path=None,
-              private_html_path=None):
+              private_html_path=None, taps_read=app_taps, app_log_dir=None):
     """Returns (anomalies, report). State is updated every run so the daily
     diff stays daily even when no mail goes out, and the ops page is
     rewritten every run from the same numbers. html_path="" skips the page."""
@@ -416,8 +511,15 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     # asked for daily. The mail still carries both on digest days only.
     visits = visits_fetch(now=now)
     edits = edits_fetch(now=now)
+    # The app page's taps, from the container's log — every run, like the
+    # two above, and on the report every run: the line is one number Jakub
+    # reads daily in ops.log while the question is open (September 2026),
+    # and it identifies nobody.
+    taps_days = merge_taps(state.get("app_taps") or {},
+                           taps_read(log_dir=app_log_dir))
     report = render_report(counts, changes, history, anomalies,
-                           visits if (anomalies or weekly) else None, edits)
+                           visits if (anomalies or weekly) else None, edits,
+                           taps_totals(taps_days, now))
     visits_history = merge_visits(state.get("visits") or {}, visits, now)
     edits_days = merge_edits(state.get("edits_days") or {}, edits)
 
@@ -436,6 +538,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
             state["edits_days"] = edits_days
         if visits_history:
             state["visits"] = visits_history
+        if taps_days:
+            state["app_taps"] = taps_days
         tmp = state_path.with_suffix(".tmp")
         tmp.write_text(json.dumps(state))
         tmp.replace(state_path)
@@ -451,7 +555,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     if html_path:
         write_ops_page(html_path, **ctx)
     if private_path:
-        write_ops_page(private_path, private=True, visits=visits_history, **ctx)
+        write_ops_page(private_path, private=True, visits=visits_history,
+                       taps=taps_days, **ctx)
 
     if anomalies:
         mail("[papamap] ALERT: " + "; ".join(anomalies)[:120], report)

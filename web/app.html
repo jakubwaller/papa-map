@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f2f5f3">
+<title>PapaMap als App — willst du sie?</title>
+<meta name="description" content="Zwei Knöpfe, ein Zähler: Ob PapaMap eine App wird, entscheidet, wie viele hier tippen. Offline, der nächste Wickeltisch, Papa oder Mama, Antworten in zwei Tipps.">
+<link rel="canonical" href="https://papamap.de/app.html">
+<link rel="alternate" hreflang="de" href="https://papamap.de/app.html">
+<link rel="alternate" hreflang="en" href="https://papamap.de/app-en.html">
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/app.html">
+<meta property="og:title" content="PapaMap als App — willst du sie?">
+<meta property="og:description" content="Zwei Knöpfe, ein Zähler: Ob PapaMap eine App wird, entscheidet, wie viele hier tippen.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://papamap.de/app.html">
+<meta property="og:image" content="https://papamap.de/og-image.jpg?v=w49">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="de_DE">
+<meta property="og:locale:alternate" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  /* The map's palette (style.css), on a reading page: the two buttons are the
+     add button's colour, so the page and the header pill read as one thing. */
+  :root {
+    --bg: #fbfdfc; --ink: #1c2b26; --muted: #64716b; --line: #d8ded9;
+    --green: #009e73; --green-strong: #00775a; --green-soft: #e9f6f0;
+    --link: #00775a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161b19; --ink: #e8ede9; --muted: #9aa8a1; --line: #33403a;
+      --green: #009e73; --green-strong: #00775a; --green-soft: #1b2924;
+      --link: #5fd3ab;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; max-width: 40rem; padding: 1.5rem 1rem 4rem;
+    background: var(--bg); color: var(--ink);
+    font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  a { color: var(--link); }
+  h1 { font-size: 1.85rem; line-height: 1.2; margin: 0.6rem 0 0.6rem; text-wrap: balance; }
+  h2 { font-size: 1.2rem; margin: 2rem 0 0.6rem; }
+  .lead { font-size: 1.12rem; color: var(--muted); margin: 0 0 1.4rem; }
+  .back { font-size: 0.9rem; margin: 0 0 0.4rem; }
+  .back.langs { color: var(--muted); }
+  .back.langs strong { color: var(--ink); font-weight: 600; }
+
+  .ask {
+    margin: 1.2rem 0 1.6rem; padding: 1.1rem 1.2rem 1rem;
+    border: 1px solid var(--line); border-radius: 14px; background: var(--green-soft);
+  }
+  .ask h2 { margin: 0 0 0.8rem; font-size: 1.15rem; }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btns button {
+    flex: 1 1 12rem; padding: 0.85rem 1rem;
+    border: 1px solid var(--green); border-radius: 999px;
+    background: var(--green); color: #fff;
+    font: inherit; font-weight: 600; font-size: 1.02rem; cursor: pointer;
+  }
+  .btns button:hover { background: var(--green-strong); border-color: var(--green-strong); }
+  .btns button:focus-visible { outline: 2px solid var(--green-strong); outline-offset: 2px; }
+  .btns button:disabled { opacity: 0.6; cursor: default; }
+  .fine { color: var(--muted); font-size: 0.85rem; margin: 0.9rem 0 0; }
+  #done p { margin: 0.5rem 0; }
+
+  ul.adds { padding-left: 1.2rem; margin: 0.6rem 0; }
+  ul.adds li { margin: 0.55rem 0; }
+  ul.adds b { color: var(--ink); }
+  p.foot { color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="./">&larr; Zurück zur Karte</a></p>
+<p class="back langs"><strong lang="de">Deutsch</strong> &middot; <a href="app-en.html" hreflang="en" lang="en">English</a></p>
+
+<h1>PapaMap als App — willst du sie?</h1>
+<p class="lead">Es gibt sie noch nicht. Ob sie kommt, entscheidet diese Seite: zwei Knöpfe, ein Zähler.</p>
+
+<section id="ask" class="ask" aria-labelledby="ask-h">
+  <h2 id="ask-h">Würdest du sie installieren?</h2>
+  <div class="btns">
+    <button type="button" data-tap="iphone">Ja, auf dem iPhone</button>
+    <button type="button" data-tap="android">Ja, auf Android</button>
+  </div>
+  <p class="fine">Der Tipp wird nur gezählt: Zeitpunkt und Knopf, sonst nichts. Kein Konto, kein Cookie, keine IP-Adresse.</p>
+</section>
+
+<section id="done" class="ask" role="status" hidden>
+  <h2>Danke — gezählt.</h2>
+  <p>Eine Stimme für <b id="done-which">iPhone</b>. Mehr braucht es nicht; die Zahl entscheidet.</p>
+  <p>Wer die Testversion ausprobieren will, sobald es eine gibt:
+     <a id="mail-link" href="mailto:papamap@jakubwaller.eu?subject=PapaMap%20Testversion">eine kurze Mail</a> genügt.
+     Die Adresse wird nur dafür benutzt.</p>
+</section>
+
+<h2>Was die App könnte</h2>
+<ul class="adds">
+  <li><b>Offline.</b> Die Wickeltische deiner Gegend liegen auf dem Handy — auch im Parkhaus, in der S-Bahn und im Untergeschoss vom Supermarkt, wo kein Netz ist.</li>
+  <li><b>Der nächste Tisch, ein Tipp.</b> Die App zeigt den nächsten Wickeltisch, den du auch erreichst, mit Fußweg.</li>
+  <li><b>Papa oder Mama.</b> Einmal einstellen. Als Papa färbt die Karte die Tische danach ein, ob du an sie herankommst; als Mama zählt jeder Tisch.</li>
+  <li><b>Grauer Pin? Zwei Tipps.</b> „In welchem Raum steht der Tisch?“ — deine Antwort geht direkt nach OpenStreetMap, ohne Umweg über eine andere Seite.</li>
+  <li><b>Tisch eintragen, wo du stehst.</b> Ein fehlender Wickeltisch ist in einer Minute drin — für alle, die nach dir kommen.</li>
+</ul>
+<p>Kostenlos, wie die Karte. Die Daten bleiben OpenStreetMap; die App hätte keine eigenen und sammelt keine.</p>
+
+<h2>Kein Datum, kein Versprechen</h2>
+<p>Eine App im Store kostet Zeit und eine Jahresgebühr. Beides lohnt sich nur, wenn genug Leute sie wollen — deshalb steht hier kein Termin, sondern ein Zähler. Sind es viele, kommt sie: zuerst als Testversion, dann für alle. Sind es wenige, kommt sie nicht, und die Karte bleibt, wie sie ist.</p>
+<p class="foot">Fragen, Ideen, ein Wickeltisch, der fehlt? <a href="methods.html#contribute">Editieren, Schritt für Schritt</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
+
+<script>
+// Ein Tipp = ein POST an einen Zählpfad, den Caddy mit 204 beantwortet und
+// als einzige Zeile dieses Servers protokolliert — ohne Adresse, ohne
+// Browserkennung (deploy/papamap.Caddyfile). Der Tipp wird im Local Storage
+// gemerkt wie die Sprache, damit die Seite beim nächsten Besuch nicht noch
+// einmal fragt; mehr weiß sie nicht.
+(function () {
+  var KEY = "papamap-app";
+  var ask = document.getElementById("ask");
+  var done = document.getElementById("done");
+  var NAMES = { iphone: "iPhone", android: "Android" };
+  function show(which) {
+    ask.hidden = true;
+    done.hidden = false;
+    document.getElementById("done-which").textContent = NAMES[which];
+    document.getElementById("mail-link").href =
+      "mailto:papamap@jakubwaller.eu?subject=" +
+      encodeURIComponent("PapaMap Testversion " + NAMES[which]);
+  }
+  var stored = null;
+  try { stored = localStorage.getItem(KEY); } catch (e) { /* privater Modus */ }
+  if (NAMES[stored]) show(stored);
+  Array.prototype.forEach.call(document.querySelectorAll("button[data-tap]"), function (b) {
+    b.addEventListener("click", function () {
+      var which = b.getAttribute("data-tap");
+      if (!NAMES[which]) return;
+      b.disabled = true;
+      try { localStorage.setItem(KEY, which); } catch (e) { /* dann fragt die Seite nächstes Mal wieder */ }
+      // keepalive: der Request überlebt den Wechsel der Ansicht darunter.
+      fetch("/app/ja/" + which, { method: "POST", keepalive: true, credentials: "omit" })
+        .catch(function () { /* nicht gezählt — dem Leser gegenüber trotzdem: danke */ });
+      show(which);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

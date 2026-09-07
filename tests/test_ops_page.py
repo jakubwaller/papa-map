@@ -617,3 +617,30 @@ def test_run_check_fetches_visits_daily_and_writes_the_private_page(tmp_path):
     assert any("visits (Cloudflare, 7d): 2500 requests" in b for b in sent)
     state = json.loads(state_path.read_text())
     assert list(state["visits"]) == ["2026-08-22", "2026-08-23"]
+
+
+TAPS = {"2026-09-07": {"iphone": 4, "android": 2, "views": 30},
+        "2026-09-08": {"iphone": 1, "android": 0, "views": 20}}
+
+
+def test_private_page_counts_app_taps_and_public_never_does():
+    private = render(private=True, visits=VISITS, taps=TAPS)
+    assert "<h2>App page</h2>" in private
+    assert "<b>7</b><span>taps, all 2 days</span>" in private
+    assert "<b>7</b><span>taps, last 2 days</span>" in private
+    assert "<b>5</b><span>iPhone</span>" in private
+    assert "<b>2</b><span>Android</span>" in private
+    assert "<b>50</b><span>page requests, all 2 days</span>" in private
+    assert "<b>14.0 %</b><span>taps per request</span>" in private
+    # newest day first in the table
+    assert private.index("2026-09-08</td>") < private.index("2026-09-07</td>")
+    assert "no addresses in it" in private
+    public = render(private=False, visits=VISITS, taps=TAPS)
+    assert "App page" not in public and "taps" not in public
+
+
+def test_private_page_says_when_no_tap_was_counted_yet():
+    private = render(private=True, visits=VISITS, taps=None)
+    assert "<h2>App page</h2>" in private
+    assert "No taps counted yet" in private
+
