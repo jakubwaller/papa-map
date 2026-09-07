@@ -600,6 +600,7 @@ def test_run_check_fetches_visits_daily_and_writes_the_private_page(tmp_path):
                                        {"days": 7, "requests": sum(v["requests"] for v in by_day.values()),
                                         "uniques": 1, "by_day": by_day}),
             edits_fetch=lambda **kw: None,
+            taps_read=lambda **kw: None,
             html_path=str(public_path), private_html_path=str(private_path),
             history_path=str(tmp_path / "none.json"),
             build_log_path=str(tmp_path / "none.log"))
