@@ -477,8 +477,9 @@ def test_app_taps_counts_upper_case_paths_like_caddy_answers_them(tmp_path):
     d = tmp_path / "caddy-logs"
     d.mkdir()
     (d / "app.log").write_text(
-        _line("2026-09-07T12:00:00", "POST", "/APP/JA/ANDROID", 204) + "\n")
-    assert ops.app_taps(str(d))["by_day"] == {"2026-09-07": {"iphone": 0, "android": 1}}
+        _line("2026-09-07T12:00:00", "POST", "/APP/JA/ANDROID", 204) + "\n"
+        + _line("2026-09-07T12:00:01", "POST", "/app/ja/iph%6Fne", 204) + "\n")
+    assert ops.app_taps(str(d))["by_day"] == {"2026-09-07": {"iphone": 1, "android": 1}}
 
 
 def test_refused_taps_outnumbering_counted_ones_is_a_warn(tmp_path, capsys):
@@ -487,21 +488,54 @@ def test_refused_taps_outnumbering_counted_ones_is_a_warn(tmp_path, capsys):
     read as no interest — the run has to say so instead."""
     d = tmp_path / "caddy-logs"
     d.mkdir()
+    now = datetime(2026, 9, 8, 5, 30, tzinfo=timezone.utc)
     (d / "app.log").write_text("\n".join([
         _line("2026-09-07T12:00:00", "POST", "/app/ja/iphone", 404),
         _line("2026-09-07T12:00:01", "POST", "/app/ja/android", 404),
+        _line("2026-09-08T04:00:00", "POST", "/app/ja/iphone", 404),
         _line("2026-09-07T12:00:02", "POST", "/app/ja/iphone", 204),
     ]) + "\n")
-    out = ops.app_taps(str(d))
-    assert out["rejected"] == 2 and out["by_day"] == {"2026-09-07": {"iphone": 1, "android": 0}}
-    assert "2 tap POSTs were refused (not 204) against 1 counted" in capsys.readouterr().err
-    # The other way round — a stray curl or two — is not worth a line.
+    out = ops.app_taps(str(d), now=now)
+    assert out["rejected"] == 3 and out["by_day"] == {"2026-09-07": {"iphone": 1, "android": 0}}
+    assert ("3 tap POSTs were refused (not 204) against 1 counted in the last 7 days"
+            in capsys.readouterr().err)
+    # The other way round — a stray curl or two — is not worth a line, and
+    # neither are two with nothing counted yet: the deploy's own verify-curl
+    # is one of them.
+    (d / "app.log").write_text("\n".join([
+        _line("2026-09-07T12:00:00", "POST", "/app/ja/iphone", 404),
+        _line("2026-09-07T12:00:01", "POST", "/app/ja/iphone", 404),
+    ]) + "\n")
+    ops.app_taps(str(d), now=now)
+    assert "refused" not in capsys.readouterr().err
     (d / "app.log").write_text("\n".join([
         _line("2026-09-07T12:00:00", "POST", "/app/ja/iphone", 404),
         _line("2026-09-07T12:00:02", "POST", "/app/ja/iphone", 204),
         _line("2026-09-07T12:00:03", "POST", "/app/ja/iphone", 204),
     ]) + "\n")
-    ops.app_taps(str(d))
+    ops.app_taps(str(d), now=now)
+    assert "refused" not in capsys.readouterr().err
+
+
+def test_refused_taps_are_judged_against_recent_days_not_all_time(tmp_path, capsys):
+    """A page that worked for a month and then broke has hundreds of counted
+    taps behind it; the week in which every tap is refused must still warn.
+    And refusals older than the window are history, not a warning."""
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    now = datetime(2026, 10, 8, 5, 30, tzinfo=timezone.utc)
+    good_month = [_line(f"2026-09-{day:02d}T12:00:00", "POST", "/app/ja/iphone", 204)
+                  for day in range(1, 31) for _ in range(10)]
+    broken_week = [_line(f"2026-10-0{day}T12:00:00", "POST", "/app/ja/android", 404)
+                   for day in range(2, 8)]
+    (d / "app.log").write_text("\n".join(good_month + broken_week) + "\n")
+    out = ops.app_taps(str(d), now=now)
+    assert out["rejected"] == 6 and sum(v["iphone"] for v in out["by_day"].values()) == 300
+    assert "6 tap POSTs were refused (not 204) against 0 counted" in capsys.readouterr().err
+    # The same refusals seen a fortnight later, with taps flowing again
+    (d / "app.log").write_text("\n".join(
+        broken_week + [_line("2026-10-20T12:00:00", "POST", "/app/ja/iphone", 204)]) + "\n")
+    ops.app_taps(str(d), now=datetime(2026, 10, 22, tzinfo=timezone.utc))
     assert "refused" not in capsys.readouterr().err
 
 

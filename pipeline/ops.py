@@ -30,6 +30,7 @@ import zlib
 from datetime import date, datetime, timedelta, timezone
 from email.message import EmailMessage
 from pathlib import Path
+from urllib.parse import unquote
 
 import requests
 
@@ -87,6 +88,11 @@ BUILD_LOG_PATH = os.environ.get("PAPAMAP_BUILD_LOG_PATH", "pipeline.log")
 # there. The paths are the Caddyfile's; tests/test_ops.py pins them to it.
 APP_LOG_DIR = os.environ.get("PAPAMAP_APP_LOG_DIR", "caddy-logs")
 APP_TAP_PATHS = {"/app/ja/iphone": "iphone", "/app/ja/android": "android"}
+# The refused-tap warning looks at the last REFUSED_WARN_WINDOW calendar days
+# (the report line's window) and needs at least REFUSED_WARN_FLOOR refusals
+# in them: a stray curl or scanner gives one or two, the page failing its
+# own Origin gate gives every tap.
+REFUSED_WARN_WINDOW, REFUSED_WARN_FLOOR = 7, 3
 TAP_KEYS = ("iphone", "android")
 TAPS_HISTORY_DAYS = 400
 STALE_AFTER_H = float(os.environ.get("PAPAMAP_OPS_STALE_H", "48"))
@@ -289,7 +295,7 @@ def cf_visits(days=CF_HISTORY_DAYS, report_days=CF_REPORT_DAYS,
         return None
 
 
-def app_taps(log_dir=None) -> dict | None:
+def app_taps(log_dir=None, now=None) -> dict | None:
     """{'by_day': {date: {'iphone': n, 'android': n}}} from every app*.log
     (rolled and gzipped ones included) in the directory, per UTC day. A tap
     is a POST to one of APP_TAP_PATHS answered 204; nothing else is in the
@@ -316,7 +322,8 @@ def app_taps(log_dir=None) -> dict | None:
     # is skipped; the next run reads the finished .gz alone.
     names = {f.name for f in files}
     by_day: dict[str, dict[str, int]] = {}
-    undated = rejected = 0
+    refused: dict[str, int] = {}
+    undated = 0
     for f in files:
         if f.suffix == ".gz" and f.name[:-3] in names:
             continue
@@ -324,9 +331,7 @@ def app_taps(log_dir=None) -> dict | None:
         try:
             with opener(f, "rt", errors="replace") as fh:
                 for line in fh:
-                    kind = _count_tap_line(line, by_day)
-                    undated += kind == UNDATED
-                    rejected += kind == REJECTED
+                    undated += _count_tap_line(line, by_day, refused) == UNDATED
         # A truncated .gz raises EOFError, a corrupt one zlib.error — neither
         # is an OSError, and this is decoration on the check, not the check:
         # the other optional inputs degrade rather than take the run down.
@@ -338,27 +343,35 @@ def app_taps(log_dir=None) -> dict | None:
         # — a time_format change in the Caddyfile would do exactly that.
         print(f"WARN: {undated} app-log lines had no unix-seconds ts and "
               "were not counted", file=sys.stderr)
-    accepted = sum(sum(v.values()) for v in by_day.values())
-    if rejected and rejected >= accepted:
-        # A POST to a tap path that was not answered 204 is the Origin gate
-        # refusing it. From the page itself that never happens; if it starts
-        # to (a Referrer-Policy at the host, a different hostname), every
-        # tap 404s, the page still says "gezählt", and zero taps reads as
-        # "nobody wants the app" — the one conclusion this must not fake.
-        print(f"WARN: {rejected} tap POSTs were refused (not 204) against "
-              f"{accepted} counted — is the Origin gate refusing the page "
-              "itself?", file=sys.stderr)
-    return {"by_day": dict(sorted(by_day.items())), "rejected": rejected}
+    # A POST to a tap path that was not answered 204 is the Origin gate
+    # refusing it. From the page itself that never happens; if it starts to
+    # (a Referrer-Policy at the host, a different hostname), every tap 404s,
+    # the page still says "gezählt", and zero taps reads as "nobody wants
+    # the app" — the one conclusion this must not fake. Judged over the
+    # last few days only: against all-time totals a page that broke after
+    # a good month would stay silent for another month.
+    now = now or datetime.now(timezone.utc)
+    since = (now - timedelta(days=REFUSED_WARN_WINDOW - 1)).strftime("%Y-%m-%d")
+    recent_refused = sum(n for day, n in refused.items() if day >= since)
+    recent = sum(sum(v.values()) for day, v in by_day.items() if day >= since)
+    if recent_refused >= max(REFUSED_WARN_FLOOR, recent):
+        print(f"WARN: {recent_refused} tap POSTs were refused (not 204) "
+              f"against {recent} counted in the last {REFUSED_WARN_WINDOW} "
+              "days — is the Origin gate refusing the page itself?",
+              file=sys.stderr)
+    return {"by_day": dict(sorted(by_day.items())),
+            "rejected": sum(refused.values())}
 
 
 COUNTED, UNDATED, REJECTED = 0, 1, 2
 
 
-def _count_tap_line(line: str, by_day: dict) -> int:
-    """Counts the line into by_day. Returns UNDATED for a tap whose timestamp
-    could not be read and REJECTED for a POST to a tap path that was not
-    answered 204 (the caller warns about both), else COUNTED — which also
-    covers lines that are not about a tap at all."""
+def _count_tap_line(line: str, by_day: dict, refused: dict) -> int:
+    """Counts the line into by_day, or into refused (per day) when it is a
+    POST to a tap path that was not answered 204. Returns UNDATED for either
+    when the timestamp could not be read (the caller warns), REJECTED for a
+    refused one, else COUNTED — which also covers lines that are not about
+    a tap at all."""
     try:
         entry = json.loads(line)
     except ValueError:
@@ -366,21 +379,22 @@ def _count_tap_line(line: str, by_day: dict) -> int:
     req = entry.get("request") if isinstance(entry, dict) else None
     if not isinstance(req, dict):
         return COUNTED
-    # Lower-cased like Caddy's path matcher, which answers /APP/JA/IPHONE
-    # with 204 too — what the server calls counted, the parser counts.
-    path = str(req.get("uri") or "").split("?", 1)[0].lower()
+    # Percent-decoded and lower-cased like Caddy's path matcher, which
+    # answers /APP/JA/IPHONE and /app/ja/iph%6Fne with 204 too — what the
+    # server calls counted, the parser counts.
+    path = unquote(str(req.get("uri") or "").split("?", 1)[0]).lower()
     method, status = str(req.get("method") or ""), entry.get("status")
     if not (method == "POST" and path in APP_TAP_PATHS):
         return COUNTED
-    if status != 204:
-        return REJECTED
-    key = APP_TAP_PATHS[path]
     try:  # Caddy's default ts is unix seconds as a float
         day = datetime.fromtimestamp(float(entry.get("ts")),
                                      tz=timezone.utc).strftime("%Y-%m-%d")
     except (TypeError, ValueError, OverflowError, OSError):
         return UNDATED
-    by_day.setdefault(day, {"iphone": 0, "android": 0})[key] += 1
+    if status != 204:
+        refused[day] = refused.get(day, 0) + 1
+        return REJECTED
+    by_day.setdefault(day, {"iphone": 0, "android": 0})[APP_TAP_PATHS[path]] += 1
     return COUNTED
 
 

@@ -256,9 +256,12 @@ stored and fresh, so a log Caddy has rolled away (10 MiB per file, five rolled f
 older than 400 days) costs no history. Without the directory the block just says so — unless the
 state already holds tap history, then it is a WARN; a directory with no `app*.log` in it is a
 WARN too, because Caddy creates the file at start and an empty directory means the mount moved.
-A tap POST the Origin gate refused is logged as a 404 on a tap path; when those outnumber the
-counted taps the run warns, because a gate refusing the page itself would otherwise read as
-"nobody wants the app". `PAPAMAP_APP_LOG_DIR=` (empty) disables the block.
+A tap POST the Origin gate refused is logged as a 404 on a tap path; when the last seven days
+hold at least three of those and no more counted taps than refused ones, the run warns, because
+a gate refusing the page itself would otherwise read as "nobody wants the app". Judged over the
+window, not all time, so a page that breaks after a good month is noticed that week; the floor
+keeps a stray curl (the verify step below is one) quiet. `PAPAMAP_APP_LOG_DIR=` (empty) disables
+the block.
 
 **Rate limit at the edge.** The tap endpoint is unauthenticated by design — the page promises
 no account, no cookie, no address — so a `curl` loop can inflate the one number the app
