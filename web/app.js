@@ -3,9 +3,9 @@
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox } from "./datasource.js?v=w49";
+         parseBbox } from "./datasource.js?v=app1";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=w49";
+         langUrl } from "./i18n.js?v=app1";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -50,6 +50,8 @@ function applyI18n() {
   // Each language's footer leads to the area page its readers search
   // for — the Danish UI to danmark.html, the French one to france.html.
   document.getElementById("regions-link").href = t("regionsHref");
+  // German reads its own app page, every other language the English one.
+  document.getElementById("app-link").href = t("appHref");
   // Boot may have resolved a language the markup does not show (a stored
   // choice, or a Czech browser): the control has to agree with the page.
   const sel = document.getElementById("lang-select");
@@ -579,10 +581,29 @@ langSelect.replaceChildren(...LANGS.map((code) => {
   return opt;
 }));
 langSelect.value = lang;
+// A select is as wide as its longest option — 103px for the 32 names here —
+// and on a 375px phone that one width wrapped the German and English nav to
+// a second row while the Czech one fit. style.css sizes it to the shown name
+// with field-sizing; browsers without it get the same by measurement.
+function fitLangSelect() {
+  if (typeof CSS !== "undefined" && CSS.supports?.("field-sizing", "content")) return;
+  const cs = getComputedStyle(langSelect);
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (!ctx) return;
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const text = langSelect.selectedOptions[0]?.textContent ?? "";
+  const px = (v) => parseFloat(v) || 0;
+  const w = ctx.measureText(text).width + text.length * px(cs.letterSpacing) +
+    px(cs.paddingLeft) + px(cs.paddingRight) +
+    px(cs.borderLeftWidth) + px(cs.borderRightWidth) + 2;
+  langSelect.style.width = `${Math.ceil(w)}px`;
+}
+fitLangSelect();
 
 langSelect.addEventListener("change", () => {
   lang = LANGS.includes(langSelect.value) ? langSelect.value : DEFAULT_LANG;
   localStorage.setItem("papamap-lang", lang);
+  fitLangSelect();
   // A ?lang= param would override the stored choice on reload — drop it.
   if (new URLSearchParams(location.search).has("lang")) {
     const url = new URL(location.href);

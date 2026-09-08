@@ -200,7 +200,9 @@ def test_apex_and_generated_pages_share_one_social_card_cache_key():
     bumps one side ships half the site on the old card with no red test."""
     web = Path(__file__).resolve().parent.parent / "web"
     for name, image in (("index.html", "og-image.jpg"),
-                        ("index-en.html", "og-image-en.jpg")):
+                        ("index-en.html", "og-image-en.jpg"),
+                        ("app.html", "og-image.jpg"),
+                        ("app-en.html", "og-image-en.jpg")):
         html = (web / name).read_text(encoding="utf-8")
         m = re.search(r'property="og:image" content="https://papamap\.de/'
                       + re.escape(image) + r'\?v=([^"]+)"', html)

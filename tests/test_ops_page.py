@@ -366,6 +366,7 @@ def test_run_check_writes_the_page_and_caches_edits(tmp_path):
             stats_path=str(tmp_path / "stats.json"),
             geojson_path=str(tmp_path / "gj.json"),
             mail=lambda *a: None, visits_fetch=lambda **kw: None,
+            taps_read=lambda **kw: None,
             edits_fetch=lambda **kw: edits,
             html_path=str(html_path), history_path=str(tmp_path / "history.json"),
             build_log_path=str(tmp_path / "pipeline.log"),
@@ -410,6 +411,7 @@ def test_run_check_with_empty_html_path_writes_nothing(tmp_path):
                   stats_path=str(tmp_path / "stats.json"),
                   geojson_path=str(tmp_path / "absent.json"),
                   mail=lambda *a: None, visits_fetch=lambda **kw: None,
+                  taps_read=lambda **kw: None,
                   edits_fetch=lambda **kw: None, html_path="",
                   private_html_path="")
     assert not list(tmp_path.glob("**/*.html"))
@@ -425,6 +427,7 @@ def test_unwritable_page_does_not_fail_the_check(tmp_path, capsys):
         stats_path=str(tmp_path / "stats.json"),
         geojson_path=str(tmp_path / "absent.json"),
         mail=lambda *a: None, visits_fetch=lambda **kw: None,
+        taps_read=lambda **kw: None,
         edits_fetch=lambda **kw: None, html_path=str(blocker / "ops.html"),
         private_html_path="")
     assert "ops page not written" in capsys.readouterr().err
@@ -597,6 +600,7 @@ def test_run_check_fetches_visits_daily_and_writes_the_private_page(tmp_path):
                                        {"days": 7, "requests": sum(v["requests"] for v in by_day.values()),
                                         "uniques": 1, "by_day": by_day}),
             edits_fetch=lambda **kw: None,
+            taps_read=lambda **kw: None,
             html_path=str(public_path), private_html_path=str(private_path),
             history_path=str(tmp_path / "none.json"),
             build_log_path=str(tmp_path / "none.log"))
@@ -617,3 +621,28 @@ def test_run_check_fetches_visits_daily_and_writes_the_private_page(tmp_path):
     assert any("visits (Cloudflare, 7d): 2500 requests" in b for b in sent)
     state = json.loads(state_path.read_text())
     assert list(state["visits"]) == ["2026-08-22", "2026-08-23"]
+
+
+TAPS = {"2026-09-07": {"iphone": 4, "android": 2},
+        "2026-09-08": {"iphone": 1, "android": 0}}
+
+
+def test_private_page_counts_app_taps_and_public_never_does():
+    private = render(private=True, visits=VISITS, taps=TAPS)
+    assert "<h2>App page</h2>" in private
+    assert "<b>7</b><span>taps, all 2 days</span>" in private
+    assert "<b>7</b><span>taps, last 7 days</span>" in private
+    assert "<b>5</b><span>iPhone</span>" in private
+    assert "<b>2</b><span>Android</span>" in private
+    assert "page requests" not in private and "no page views" in private
+    # newest day first in the table
+    assert private.index("2026-09-08</td>") < private.index("2026-09-07</td>")
+    assert "no addresses in it" in private
+    public = render(private=False, visits=VISITS, taps=TAPS)
+    assert "App page" not in public and "taps" not in public
+
+
+def test_private_page_says_when_no_tap_was_counted_yet():
+    private = render(private=True, visits=VISITS, taps=None)
+    assert "<h2>App page</h2>" in private
+    assert "No taps counted yet" in private

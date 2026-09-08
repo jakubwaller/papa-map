@@ -171,7 +171,7 @@
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=w49" />
+  <link rel="stylesheet" href="style.css?v=app1" />
 </head>
 <body>
   <div id="map"></div>
@@ -213,6 +213,14 @@
            lets it stay on the wordmark's row on a phone while the four links
            take the next one, which is what keeps the header three rows tall. -->
       <button id="add-place" type="button" class="add-btn" data-i18n="addPlace">+ Ort hinzufügen</button>
+      <!-- The app page, as a pill on the button's row rather than a fifth
+           link in the nav: on a 375px phone the four nav items already use
+           about 337 of the 347 available pixels, and a fifth wraps the header
+           into a fourth row. Next to the button it fits (about 310px with the
+           brand) and sits on the row people look at. app.js sets the href per
+           language: German reads app.html, every other language app-en.html. -->
+      <a id="app-link" class="app-btn" href="app-en.html" data-i18n="app"
+         data-i18n-aria="ariaApp" aria-label="PapaMap as an app — do you want it?">App</a>
       <nav class="header-actions">
         <!-- "Bundesländer" stays German in every language, same as Impressum and
              Datenschutz: it points at German-only pages. Both links sat in the
@@ -275,6 +283,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=w49"></script>
+  <script type="module" src="app.js?v=app1"></script>
 </body>
 </html>

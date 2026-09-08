@@ -23,6 +23,12 @@ services:
       # so Docker cannot create it and the container would not start.
       - ./web-data/private:/srv/private:ro
       - ./deploy/private:/etc/caddy/private:ro
+      # The app page's tap count: Caddy's only access log, holding the taps
+      # under /app/ja/* and nothing else — no page views — and stripped of
+      # addresses and headers (see the Caddyfile). Outside web-data on
+      # purpose — that directory is served.
+      # `mkdir -p caddy-logs` before `up`, so the ops cron's user owns it.
+      - ./caddy-logs:/var/log/caddy
     networks:
       - web_proxy
 

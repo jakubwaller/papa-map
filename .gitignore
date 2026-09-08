@@ -19,6 +19,8 @@ web/wickeltische/*
 web/private/*
 !web/private/.gitkeep
 /web-data/
+# The app page's tap log, written by the papamap container (docker-compose.yml).
+/caddy-logs/
 *.sqlite
 pipeline.log
 .DS_Store

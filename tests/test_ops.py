@@ -1,5 +1,7 @@
+import gzip
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 
 import requests
 
@@ -39,6 +41,7 @@ def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None):
         mail=lambda subject, body: sent.append((subject, body)),
         visits_fetch=lambda **kw: None,
         edits_fetch=lambda **kw: None,
+        taps_read=lambda **kw: None,
         html_path=str(tmp_path / "ops.html"),
         private_html_path=str(tmp_path / "private-ops.html"))
     return anomalies, report, sent, state_path
@@ -279,6 +282,7 @@ def test_digest_carries_edits_line(tmp_path):
                            geojson([("node", 1, "unknown")])),
         mail=lambda subject, body: sent.append((subject, body)),
         visits_fetch=lambda **kw: None,
+        taps_read=lambda **kw: None,
         edits_fetch=lambda **kw: {"days": 7, "changesets": 2},
         html_path="", private_html_path="")
     assert "edits via papamap theme (OSMCha, 7d): 2 changesets" in sent[0][1]
@@ -324,3 +328,236 @@ def test_send_mail_smtp_flow(monkeypatch):
     assert calls["msg"]["From"] == "ops@example.com"
     assert calls["msg"]["To"] == "inbox@example.com"
     assert calls["msg"]["Subject"] == "subject"
+
+
+# ---- The app page's taps -----------------------------------------------------
+
+def _ts(iso: str) -> float:
+    return datetime.fromisoformat(iso).replace(tzinfo=timezone.utc).timestamp()
+
+
+def _line(iso, method, uri, status):
+    # The shape Caddy's json access log has after the Caddyfile's filter:
+    # a timestamp, a method, a path, a status — nothing else.
+    return json.dumps({"level": "info", "ts": _ts(iso), "logger": "http.log.access",
+                       "msg": "handled request",
+                       "request": {"method": method, "uri": uri}, "status": status})
+
+
+def test_app_taps_counts_taps_per_utc_day_and_nothing_else(tmp_path):
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    (d / "app.log").write_text("\n".join([
+        _line("2026-09-07T00:00:00", "POST", "/app/ja/iphone", 204),
+        _line("2026-09-07T12:00:01", "POST", "/app/ja/android", 204),
+        _line("2026-09-07T23:59:59", "POST", "/app/ja/iphone", 204),
+        _line("2026-09-08T00:00:01", "POST", "/app/ja/iphone", 204),  # next UTC day
+        _line("2026-09-07T12:00:04", "GET", "/app/ja/iphone", 404),    # a GET is not a tap
+        _line("2026-09-07T12:00:05", "POST", "/app/ja/iphone", 404),   # no Origin: not answered 204
+        _line("2026-09-07T12:00:06", "POST", "/app/ja/nope", 404),     # verify-curl, not a tap
+        _line("2026-09-07T12:00:07", "GET", "/app.html", 200),         # never logged; skipped anyway
+        "not json at all",
+    ]) + "\n")
+    # A rolled file, gzipped the way Caddy rolls them, counts too.
+    with gzip.open(d / "app-2026-09-01T05-30-00.000.log.gz", "wt") as fh:
+        fh.write(_line("2026-09-01T09:00:00", "POST", "/app/ja/android", 204) + "\n")
+    assert ops.app_taps(str(d)) == {"by_day": {
+        "2026-09-01": {"iphone": 0, "android": 1},
+        "2026-09-07": {"iphone": 2, "android": 1},
+        "2026-09-08": {"iphone": 1, "android": 0}}, "rejected": 1}
+
+
+def test_app_taps_without_the_log_directory_is_none_and_empty_is_a_warn(tmp_path, capsys):
+    assert ops.app_taps(str(tmp_path / "caddy-logs")) is None
+    (tmp_path / "caddy-logs").mkdir()
+    assert ops.app_taps(str(tmp_path / "caddy-logs")) == {"by_day": {}, "rejected": 0}
+    assert "no app*.log in" in capsys.readouterr().err
+    assert ops.app_taps("") is None  # empty override disables, like the page paths
+
+
+def test_tap_paths_are_the_caddyfiles():
+    caddy = (Path(__file__).resolve().parents[1] / "deploy"
+             / "papamap.Caddyfile").read_text()
+    assert f"path {' '.join(ops.APP_TAP_PATHS)}" in caddy
+    assert "header Origin https://papamap.de" in caddy
+    assert "handle @tap {" in caddy and "respond 204" in caddy
+    assert 'header Cache-Control "no-store"' in caddy
+    # Only the tap paths are ever logged — no page views.
+    assert "not path /app/ja/*" in caddy and "log_skip @outside_taps" in caddy
+    for field in ("request>remote_ip", "request>client_ip", "request>headers",
+                  "request>host", "request>proto"):
+        assert f"{field} delete" in caddy, field
+
+
+def test_merge_taps_keeps_the_larger_count_per_day_and_the_rolled_away_days():
+    kept = {"2026-08-01": {"iphone": 5, "android": 1},          # rolled away: kept
+            "2026-09-06": {"iphone": 3, "android": 2},          # half rolled away: kept
+            "2026-09-07": {"iphone": 1, "android": 0}}          # yesterday partial: healed
+    taps = {"by_day": {"2026-09-06": {"iphone": 1, "android": 2},
+                       "2026-09-07": {"iphone": 4, "android": 2},
+                       "2026-09-08": {"iphone": 1, "android": 0}}}
+    merged = ops.merge_taps(kept, taps)
+    assert merged == {"2026-08-01": {"iphone": 5, "android": 1},
+                      "2026-09-06": {"iphone": 3, "android": 2},
+                      "2026-09-07": {"iphone": 4, "android": 2},
+                      "2026-09-08": {"iphone": 1, "android": 0}}
+    assert list(merged) == sorted(merged)
+    assert ops.merge_taps(kept, None) == kept
+    assert ops.merge_taps({}, {"by_day": {}}) == {}
+
+
+def test_taps_totals_week_is_seven_calendar_days_ending_today():
+    now = datetime(2026, 9, 8, 5, 30, tzinfo=timezone.utc)
+    days = {"2026-09-01": {"iphone": 1, "android": 0},   # 8th day back: out
+            "2026-09-02": {"iphone": 1, "android": 0},   # 7th: in
+            "2026-09-08": {"iphone": 1, "android": 2}}   # today: in
+    assert ops.taps_totals(days, now) == {"iphone": 3, "android": 2, "recent": 4, "days": 7}
+    assert ops.taps_totals({}, now) is None
+
+
+def test_report_carries_the_tap_line_every_day_and_state_keeps_the_days(tmp_path):
+    taps = {"by_day": {"2026-08-03": {"iphone": 4, "android": 2}}}
+    state_path = tmp_path / "state.json"
+    write(state_path, {"statuses": {}, "history": [],
+                       "app_taps": {"2026-07-01": {"iphone": 1, "android": 0}}})
+    sent = []
+    _, report = ops.run_check(
+        now=TUESDAY, state_path=str(state_path),
+        stats_path=write(tmp_path / "stats.json", fresh_stats(TUESDAY)),
+        geojson_path=write(tmp_path / "gj.json", geojson([("node", 1, "unknown")])),
+        mail=lambda subject, body: sent.append((subject, body)),
+        visits_fetch=lambda **kw: None, edits_fetch=lambda **kw: None,
+        taps_read=lambda **kw: taps,
+        html_path=str(tmp_path / "ops.html"),
+        private_html_path=str(tmp_path / "private-ops.html"))
+    # A Tuesday: no mail, but the line is in the report (ops.log) regardless.
+    assert sent == []
+    assert "app page: 5 iPhone + 2 Android taps in all (6 in the last 7d)" in report
+    state = json.loads(state_path.read_text())
+    assert state["app_taps"] == {"2026-07-01": {"iphone": 1, "android": 0},
+                                 "2026-08-03": {"iphone": 4, "android": 2}}
+    private = (tmp_path / "private-ops.html").read_text()
+    assert "<h2>App page</h2>" in private and "7</b><span>taps, all 2 days" in private
+    assert "App page" not in (tmp_path / "ops.html").read_text()
+
+
+def test_report_has_no_tap_line_without_any_history(tmp_path):
+    _, report, _, _ = run(tmp_path, stats=fresh_stats(), gj=geojson([]))
+    assert "app page" not in report
+
+
+def test_app_taps_survives_a_half_written_rolled_gz_and_skips_its_twin(tmp_path, capsys):
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    good = _line("2026-09-07T12:00:00", "POST", "/app/ja/iphone", 204)
+    # Caddy mid-roll: the finished plain file and its half-written .gz twin.
+    (d / "app-2026-09-06T05-30-00.000.log").write_text(good + "\n")
+    (d / "app-2026-09-06T05-30-00.000.log.gz").write_bytes(b"\x1f\x8b\x08\x00trunc")
+    # A corrupt .gz without a twin: warned about, not fatal.
+    (d / "app-2026-09-01T05-30-00.000.log.gz").write_bytes(
+        b"\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03garbage")
+    (d / "app.log").write_text(good + "\n")
+    assert ops.app_taps(str(d))["by_day"] == {"2026-09-07": {"iphone": 2, "android": 0}}
+    err = capsys.readouterr().err
+    assert "app-2026-09-01T05-30-00.000.log.gz unreadable" in err
+    assert "app-2026-09-06" not in err  # the twin was skipped, not read
+
+
+def test_app_taps_warns_when_the_timestamp_format_changes(tmp_path, capsys):
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    (d / "app.log").write_text(json.dumps({
+        "ts": "2026-09-07T12:00:00Z",
+        "request": {"method": "POST", "uri": "/app/ja/iphone"}, "status": 204}) + "\n")
+    assert ops.app_taps(str(d))["by_day"] == {}
+    assert "1 app-log lines had no unix-seconds ts" in capsys.readouterr().err
+
+
+def test_app_taps_counts_upper_case_paths_like_caddy_answers_them(tmp_path):
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    (d / "app.log").write_text(
+        _line("2026-09-07T12:00:00", "POST", "/APP/JA/ANDROID", 204) + "\n"
+        + _line("2026-09-07T12:00:01", "POST", "/app/ja/iph%6Fne", 204) + "\n")
+    assert ops.app_taps(str(d))["by_day"] == {"2026-09-07": {"iphone": 1, "android": 1}}
+
+
+def test_refused_taps_outnumbering_counted_ones_is_a_warn(tmp_path, capsys):
+    """A tap path answering 404 is the Origin gate refusing the request. The
+    page never sees that (fetch resolves, "Danke" shows), so zero taps would
+    read as no interest — the run has to say so instead."""
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    now = datetime(2026, 9, 8, 5, 30, tzinfo=timezone.utc)
+    (d / "app.log").write_text("\n".join([
+        _line("2026-09-07T12:00:00", "POST", "/app/ja/iphone", 404),
+        _line("2026-09-07T12:00:01", "POST", "/app/ja/android", 404),
+        _line("2026-09-08T04:00:00", "POST", "/app/ja/iphone", 404),
+        _line("2026-09-07T12:00:02", "POST", "/app/ja/iphone", 204),
+    ]) + "\n")
+    out = ops.app_taps(str(d), now=now)
+    assert out["rejected"] == 3 and out["by_day"] == {"2026-09-07": {"iphone": 1, "android": 0}}
+    assert ("3 tap POSTs were refused (not 204) against 1 counted in the last 7 days"
+            in capsys.readouterr().err)
+    # The other way round — a stray curl or two — is not worth a line, and
+    # neither are two with nothing counted yet: the deploy's own verify-curl
+    # is one of them.
+    (d / "app.log").write_text("\n".join([
+        _line("2026-09-07T12:00:00", "POST", "/app/ja/iphone", 404),
+        _line("2026-09-07T12:00:01", "POST", "/app/ja/iphone", 404),
+    ]) + "\n")
+    ops.app_taps(str(d), now=now)
+    assert "refused" not in capsys.readouterr().err
+    (d / "app.log").write_text("\n".join([
+        _line("2026-09-07T12:00:00", "POST", "/app/ja/iphone", 404),
+        _line("2026-09-07T12:00:02", "POST", "/app/ja/iphone", 204),
+        _line("2026-09-07T12:00:03", "POST", "/app/ja/iphone", 204),
+    ]) + "\n")
+    ops.app_taps(str(d), now=now)
+    assert "refused" not in capsys.readouterr().err
+
+
+def test_refused_taps_are_judged_against_recent_days_not_all_time(tmp_path, capsys):
+    """A page that worked for a month and then broke has hundreds of counted
+    taps behind it; the week in which every tap is refused must still warn.
+    And refusals older than the window are history, not a warning."""
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    now = datetime(2026, 10, 8, 5, 30, tzinfo=timezone.utc)
+    good_month = [_line(f"2026-09-{day:02d}T12:00:00", "POST", "/app/ja/iphone", 204)
+                  for day in range(1, 31) for _ in range(10)]
+    broken_week = [_line(f"2026-10-0{day}T12:00:00", "POST", "/app/ja/android", 404)
+                   for day in range(2, 8)]
+    (d / "app.log").write_text("\n".join(good_month + broken_week) + "\n")
+    out = ops.app_taps(str(d), now=now)
+    assert out["rejected"] == 6 and sum(v["iphone"] for v in out["by_day"].values()) == 300
+    assert "6 tap POSTs were refused (not 204) against 0 counted" in capsys.readouterr().err
+    # The same refusals seen a fortnight later, with taps flowing again
+    (d / "app.log").write_text("\n".join(
+        broken_week + [_line("2026-10-20T12:00:00", "POST", "/app/ja/iphone", 204)]) + "\n")
+    ops.app_taps(str(d), now=datetime(2026, 10, 22, tzinfo=timezone.utc))
+    assert "refused" not in capsys.readouterr().err
+
+
+def test_vanished_log_directory_with_history_is_a_warn(tmp_path, capsys):
+    state_path = tmp_path / "state.json"
+    write(state_path, {"statuses": {}, "history": [],
+                       "app_taps": {"2026-07-01": {"iphone": 1, "android": 0}}})
+    ops.run_check(
+        now=TUESDAY, state_path=str(state_path),
+        stats_path=write(tmp_path / "stats.json", fresh_stats(TUESDAY)),
+        geojson_path=write(tmp_path / "gj.json", geojson([("node", 1, "unknown")])),
+        mail=lambda *a: None, visits_fetch=lambda **kw: None,
+        edits_fetch=lambda **kw: None, taps_read=lambda **kw: None,
+        html_path="", private_html_path="")
+    assert "app-log directory is gone but the tap history is not" in capsys.readouterr().err
+    # Without history, the same None is a checkout without the container: quiet.
+    write(state_path, {"statuses": {}, "history": []})
+    ops.run_check(
+        now=TUESDAY, state_path=str(state_path),
+        stats_path=str(tmp_path / "stats.json"), geojson_path=str(tmp_path / "gj.json"),
+        mail=lambda *a: None, visits_fetch=lambda **kw: None,
+        edits_fetch=lambda **kw: None, taps_read=lambda **kw: None,
+        html_path="", private_html_path="")
+    assert "app-log directory" not in capsys.readouterr().err
+

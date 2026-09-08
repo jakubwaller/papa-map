@@ -45,6 +45,70 @@
 		respond 404
 	}
 
+	# The app page (web/app.html, app-en.html) asks one question — do you
+	# want PapaMap as an app? — and counts the answer: each of its two
+	# buttons POSTs to one of the paths below, answered 204 with no body.
+	# Nothing else on this host answers POST. The Origin condition is what
+	# a browser sends with every POST from the page itself; a fetch from
+	# someone else's page carries theirs and falls through to a 404. curl
+	# can fake it, which is what the Cloudflare rate limit is for.
+	@tap {
+		method POST
+		path /app/ja/iphone /app/ja/android
+		header Origin https://papamap.de
+	}
+	# A handle block, not a bare respond: the site-wide Cache-Control below
+	# is set before it and this one wins, so no edge ever keeps the answer
+	# to a tap. A counted tap is not a document.
+	handle @tap {
+		header Cache-Control "no-store"
+		respond 204
+	}
+
+	# That count is this container's only access log, and it holds the taps
+	# and nothing else: log_skip drops every request outside /app/ja/ before
+	# it is written — page views included, because methods.html promises
+	# no analytics and a tap is an answer, not a visit — and the filter
+	# deletes the client address, every request header (User-Agent,
+	# Referer, cookies), the host, the protocol, the sizes and the duration
+	# from the lines that remain, and cuts any query string off the path.
+	# A line is a timestamp, a method, a path and a status, which is what
+	# datenschutz.html says it is, and identifies nobody. Written to
+	# ./caddy-logs on the host (a mount in docker-compose.yml, created by
+	# the deploying user, docs/DEPLOY.md); pipeline.ops reads it into the
+	# private ops page and the Monday mail. mode 0644 because Caddy runs as
+	# root in the image and the ops cron does not. log_skip and mode need
+	# Caddy 2.8+ (2024) — validate the file against the image before
+	# restarting, DEPLOY.md shows how.
+	@outside_taps not path /app/ja/*
+	log_skip @outside_taps
+	log {
+		output file /var/log/caddy/app.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 400d
+			mode 0644
+		}
+		format filter {
+			wrap json
+			fields {
+				request>remote_ip delete
+				request>remote_port delete
+				request>client_ip delete
+				request>headers delete
+				request>tls delete
+				request>host delete
+				request>proto delete
+				request>uri regexp "[?].*$" ""
+				resp_headers delete
+				bytes_read delete
+				size delete
+				duration delete
+				user_id delete
+			}
+		}
+	}
+
 	# The data files are regenerated daily; the rest is versioned by URL — bar
 	# the Bundesland pages under /wickeltische/, which are also regenerated
 	# nightly but keep plain URLs (they are indexed). An hour of staleness on a

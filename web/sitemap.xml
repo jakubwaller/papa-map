@@ -3692,6 +3692,21 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/wickeltische/rangliste.html"/>
   </url>
 
+  <!-- The app page: German and English only (the header pill sends every
+       other language to the English one), so two alternates, not 32. -->
+  <url>
+    <loc>https://papamap.de/app.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/app.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/app-en.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/app.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/app-en.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/app.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/app-en.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/app.html"/>
+  </url>
+
   <!-- German-only by design, so no alternates. -->
   <url><loc>https://papamap.de/impressum.html</loc></url>
   <url><loc>https://papamap.de/datenschutz.html</loc></url>

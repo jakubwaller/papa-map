@@ -137,6 +137,23 @@ header {
 }
 .add-btn:hover { background: var(--green-strong); border-color: var(--green-strong); }
 
+/* The app-page link: the add button's outlined twin, same row, same shape, so
+   the two read as one pair — filled = act on the map, outlined = a question. */
+.app-btn {
+  order: 3;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--green);
+  background: none;
+  color: var(--green-strong);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.app-btn:hover { background: var(--green); color: #fff; }
+.app-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
 /* Language toggle: styled like the nav links, shaped like a small button.
    Shows the language it switches TO. */
 .lang-btn {
@@ -165,6 +182,12 @@ select.lang-btn {
   text-overflow: ellipsis;
   /* Safari right-aligns select text by default at some widths. */
   text-align: left;
+  /* Sized to the name it shows, not to the widest of the 32 options: a
+     select is as wide as its longest option, 103px here in every language,
+     and on a 375px phone that is what pushed the nav to a second row in
+     German and English while Czech fit (measured 2026-09-07). app.js does
+     the same by hand where field-sizing is not supported. */
+  field-sizing: content;
 }
 /* Options render in the OS popup, which does not inherit the header's
    colours — say so explicitly or Windows dark mode draws black on black. */
@@ -462,9 +485,14 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
      below. Without this the button drops to a row of its own — 132px of header
      on a 375px phone instead of 100. */
   .wordmark .city { display: none; }
-  .header-actions { order: 3; flex: 1 0 100%; justify-content: flex-start; }
+  .header-actions { order: 3; flex: 1 0 100%; justify-content: flex-start; gap: 6px 12px; }
+  /* 13px, like the add button's 12: with the select sized to its value the
+     German nav needs ~306 of 347px, the English ~333, the Bosnian ~341 —
+     the last two only at this size. */
+  .header-actions a { font-size: 13px; }
   .tagline { order: 4; flex-basis: 100%; font-size: 12px; }
   .add-btn { padding: 6px 11px; font-size: 12px; }
+  .app-btn { padding: 6px 11px; font-size: 12px; }
   #stats { padding: 6px 14px; gap: 2px 18px; font-size: 12px; }
   .chip-bar { padding-left: 14px; padding-right: 14px; }
   .chip { padding: 7px 11px; font-size: 12px; }

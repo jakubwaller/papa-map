@@ -407,13 +407,54 @@ def _visitors(visits: dict | None) -> str:
     return "".join(parts)
 
 
+def _app_taps(taps: dict | None, now: datetime) -> str:
+    """The private page's other extra section: the app page's two buttons,
+    counted per UTC day from the container's log of those taps alone (see
+    the Caddyfile). No page views: the site has no analytics, and a tap is
+    an answer someone chose to give. The week is the calendar window the
+    mail's line uses: seven days ending today."""
+    days = sorted((taps or {}).items())
+    if not days:
+        return ('<h2>App page</h2>\n<p class="muted">No taps counted yet — '
+                "the app page is not deployed, or caddy-logs/ is empty.</p>\n")
+    iphone = sum(int(v.get("iphone", 0)) for _, v in days)
+    android = sum(int(v.get("android", 0)) for _, v in days)
+    since = (now - timedelta(days=6)).strftime("%Y-%m-%d")
+    taps_week = sum(int(v.get("iphone", 0)) + int(v.get("android", 0))
+                    for d, v in days if d >= since)
+    parts = ["<h2>App page</h2>\n"
+             '<p class="muted">Taps on the two buttons of /app.html, per UTC '
+             "day, from a log that holds those taps and nothing else — no "
+             "address, no user agent, no page views. A burst on one day is "
+             "a script, not a crowd.</p>\n"
+             '<div class="kpis">\n'
+             f'<div class="kpi"><b>{_n(iphone + android)}</b>'
+             f"<span>taps, all {len(days)} days</span></div>\n"
+             f'<div class="kpi"><b>{_n(taps_week)}</b>'
+             "<span>taps, last 7 days</span></div>\n"
+             f'<div class="kpi"><b>{_n(iphone)}</b><span>iPhone</span></div>\n'
+             f'<div class="kpi"><b>{_n(android)}</b><span>Android</span></div>\n'
+             "</div>\n"]
+    rows = list(reversed(days))
+    parts.append(f"<details>\n<summary>all {len(rows)} days</summary>\n"
+                 '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
+                 "<th>iPhone</th><th>Android</th></tr></thead>\n<tbody>\n")
+    for day, v in rows:
+        parts.append(f'<tr><td class="l">{esc(day)}</td>'
+                     f'<td>{_n(v.get("iphone", 0))}</td>'
+                     f'<td>{_n(v.get("android", 0))}</td></tr>\n')
+    parts.append("</tbody>\n</table>\n</div>\n</details>\n")
+    return "".join(parts)
+
+
 def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                 changes: dict | None, history: list[dict],
                 anomalies: list[str], edits: dict | None = None,
                 edits_days: dict | None = None,
                 regions: dict | None = None, build: dict | None = None,
                 site_url: str = "https://papamap.de",
-                private: bool = False, visits: dict | None = None) -> str:
+                private: bool = False, visits: dict | None = None,
+                taps: dict | None = None) -> str:
     """The whole page. `history` is the ops state's daily list (oldest first,
     the entry for today already appended); `regions` is region_rows()'s
     output; `build` is parse_build_log()'s; `edits` the cached OSMCha line,
@@ -570,6 +611,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
 
     if private:
         p.append(_visitors(visits))
+        p.append(_app_taps(taps, now))
 
     # Last build
     p.append("<h2>Last build</h2>\n")
@@ -654,7 +696,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
         p.append("</tbody>\n</table>\n</div>\n</details>\n")
 
     p.append(f"""<footer>
-<p>Everything on this page is an aggregate of public OpenStreetMap data (ODbL) and of this site's own nightly build. {"The Visitors block is Cloudflare's zone-level count of requests, kept per day; it identifies nobody." if private else "No visitor data is collected, stored or shown — the site has no analytics."}</p>
+<p>Everything on this page is an aggregate of public OpenStreetMap data (ODbL) and of this site's own nightly build. {"The Visitors block is Cloudflare's zone-level count of requests, kept per day, and the App page block counts taps on two buttons from a log with no addresses in it; each identifies nobody." if private else "No visitor data is collected, stored or shown — the site has no analytics."}</p>
 <p>Sources: <a href="/data/stats.json">stats.json</a> · <a href="/data/history.json">history.json</a> · <a href="/data/changing_tables.geojson">changing_tables.geojson</a> · <a href="{esc(site_url)}/methods-en.html">how the classification works</a></p>
 </footer>
 </body>
