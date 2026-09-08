@@ -580,7 +580,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     # two above, and on the report every run: the line is one number Jakub
     # reads daily in ops.log while the question is open (September 2026),
     # and it identifies nobody.
-    taps = taps_read(log_dir=app_log_dir)
+    taps = taps_read(log_dir=app_log_dir, now=now)
     if taps is None and state.get("app_taps"):
         # The history says the log existed; the directory says it does not.
         # Silence here would keep quoting the last totals in every report.

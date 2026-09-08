@@ -260,7 +260,7 @@ A tap POST the Origin gate refused is logged as a 404 on a tap path; when the la
 hold at least three of those and no more counted taps than refused ones, the run warns, because
 a gate refusing the page itself would otherwise read as "nobody wants the app". Judged over the
 window, not all time, so a page that breaks after a good month is noticed that week; the floor
-keeps a stray curl (the verify step below is one) quiet. `PAPAMAP_APP_LOG_DIR=` (empty) disables
+keeps a scanner's stray POST or two quiet. `PAPAMAP_APP_LOG_DIR=` (empty) disables
 the block.
 
 **Rate limit at the edge.** The tap endpoint is unauthenticated by design — the page promises
