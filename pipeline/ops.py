@@ -297,7 +297,10 @@ def app_taps(log_dir=None) -> dict | None:
     those paths are skipped. The Caddyfile's filter has already removed
     everything that could identify anyone; nothing here needs to. None when
     the directory does not exist — a checkout without the container."""
-    d = Path(log_dir or APP_LOG_DIR)
+    log_dir = APP_LOG_DIR if log_dir is None else log_dir
+    if not log_dir:  # "" disables, like the page-path overrides in this module
+        return None
+    d = Path(log_dir)
     if not d.is_dir():
         return None
     files = sorted(d.glob("app*.log*"))
@@ -313,7 +316,7 @@ def app_taps(log_dir=None) -> dict | None:
     # is skipped; the next run reads the finished .gz alone.
     names = {f.name for f in files}
     by_day: dict[str, dict[str, int]] = {}
-    undated = 0
+    undated = rejected = 0
     for f in files:
         if f.suffix == ".gz" and f.name[:-3] in names:
             continue
@@ -321,7 +324,9 @@ def app_taps(log_dir=None) -> dict | None:
         try:
             with opener(f, "rt", errors="replace") as fh:
                 for line in fh:
-                    undated += _count_tap_line(line, by_day)
+                    kind = _count_tap_line(line, by_day)
+                    undated += kind == UNDATED
+                    rejected += kind == REJECTED
         # A truncated .gz raises EOFError, a corrupt one zlib.error — neither
         # is an OSError, and this is decoration on the check, not the check:
         # the other optional inputs degrade rather than take the run down.
@@ -333,33 +338,50 @@ def app_taps(log_dir=None) -> dict | None:
         # — a time_format change in the Caddyfile would do exactly that.
         print(f"WARN: {undated} app-log lines had no unix-seconds ts and "
               "were not counted", file=sys.stderr)
-    return {"by_day": dict(sorted(by_day.items()))}
+    accepted = sum(sum(v.values()) for v in by_day.values())
+    if rejected and rejected >= accepted:
+        # A POST to a tap path that was not answered 204 is the Origin gate
+        # refusing it. From the page itself that never happens; if it starts
+        # to (a Referrer-Policy at the host, a different hostname), every
+        # tap 404s, the page still says "gezählt", and zero taps reads as
+        # "nobody wants the app" — the one conclusion this must not fake.
+        print(f"WARN: {rejected} tap POSTs were refused (not 204) against "
+              f"{accepted} counted — is the Origin gate refusing the page "
+              "itself?", file=sys.stderr)
+    return {"by_day": dict(sorted(by_day.items())), "rejected": rejected}
+
+
+COUNTED, UNDATED, REJECTED = 0, 1, 2
 
 
 def _count_tap_line(line: str, by_day: dict) -> int:
-    """Counts the line into by_day; returns 1 for a tap whose timestamp could
-    not be read (the caller warns), else 0."""
+    """Counts the line into by_day. Returns UNDATED for a tap whose timestamp
+    could not be read and REJECTED for a POST to a tap path that was not
+    answered 204 (the caller warns about both), else COUNTED — which also
+    covers lines that are not about a tap at all."""
     try:
         entry = json.loads(line)
     except ValueError:
-        return 0
+        return COUNTED
     req = entry.get("request") if isinstance(entry, dict) else None
     if not isinstance(req, dict):
-        return 0
+        return COUNTED
     # Lower-cased like Caddy's path matcher, which answers /APP/JA/IPHONE
     # with 204 too — what the server calls counted, the parser counts.
     path = str(req.get("uri") or "").split("?", 1)[0].lower()
     method, status = str(req.get("method") or ""), entry.get("status")
-    if not (method == "POST" and path in APP_TAP_PATHS and status == 204):
-        return 0
+    if not (method == "POST" and path in APP_TAP_PATHS):
+        return COUNTED
+    if status != 204:
+        return REJECTED
     key = APP_TAP_PATHS[path]
     try:  # Caddy's default ts is unix seconds as a float
         day = datetime.fromtimestamp(float(entry.get("ts")),
                                      tz=timezone.utc).strftime("%Y-%m-%d")
     except (TypeError, ValueError, OverflowError, OSError):
-        return 1
+        return UNDATED
     by_day.setdefault(day, {"iphone": 0, "android": 0})[key] += 1
-    return 0
+    return COUNTED
 
 
 def merge_taps(kept: dict, taps: dict | None) -> dict:
@@ -544,8 +566,13 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     # two above, and on the report every run: the line is one number Jakub
     # reads daily in ops.log while the question is open (September 2026),
     # and it identifies nobody.
-    taps_days = merge_taps(state.get("app_taps") or {},
-                           taps_read(log_dir=app_log_dir))
+    taps = taps_read(log_dir=app_log_dir)
+    if taps is None and state.get("app_taps"):
+        # The history says the log existed; the directory says it does not.
+        # Silence here would keep quoting the last totals in every report.
+        print("WARN: the app-log directory is gone but the tap history is "
+              "not — did the caddy-logs mount move?", file=sys.stderr)
+    taps_days = merge_taps(state.get("app_taps") or {}, taps)
     report = render_report(counts, changes, history, anomalies,
                            visits if (anomalies or weekly) else None, edits,
                            taps_totals(taps_days, now))

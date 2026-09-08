@@ -134,11 +134,11 @@
   }
   var stored = null;
   try { stored = localStorage.getItem(KEY); } catch (e) { /* private mode */ }
-  if (NAMES[stored]) show(stored);
+  if (Object.prototype.hasOwnProperty.call(NAMES, stored)) show(stored);
   Array.prototype.forEach.call(document.querySelectorAll("button[data-tap]"), function (b) {
     b.addEventListener("click", function () {
       var which = b.getAttribute("data-tap");
-      if (!NAMES[which]) return;
+      if (!Object.prototype.hasOwnProperty.call(NAMES, which)) return;
       b.disabled = true;
       try { localStorage.setItem(KEY, which); } catch (e) { /* then the page asks again next time */ }
       // keepalive: the request survives the view swap below.

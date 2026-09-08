@@ -135,11 +135,11 @@
   }
   var stored = null;
   try { stored = localStorage.getItem(KEY); } catch (e) { /* privater Modus */ }
-  if (NAMES[stored]) show(stored);
+  if (Object.prototype.hasOwnProperty.call(NAMES, stored)) show(stored);
   Array.prototype.forEach.call(document.querySelectorAll("button[data-tap]"), function (b) {
     b.addEventListener("click", function () {
       var which = b.getAttribute("data-tap");
-      if (!NAMES[which]) return;
+      if (!Object.prototype.hasOwnProperty.call(NAMES, which)) return;
       b.disabled = true;
       try { localStorage.setItem(KEY, which); } catch (e) { /* dann fragt die Seite nächstes Mal wieder */ }
       // keepalive: der Request überlebt den Wechsel der Ansicht darunter.

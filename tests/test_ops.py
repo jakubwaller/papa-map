@@ -364,14 +364,15 @@ def test_app_taps_counts_taps_per_utc_day_and_nothing_else(tmp_path):
     assert ops.app_taps(str(d)) == {"by_day": {
         "2026-09-01": {"iphone": 0, "android": 1},
         "2026-09-07": {"iphone": 2, "android": 1},
-        "2026-09-08": {"iphone": 1, "android": 0}}}
+        "2026-09-08": {"iphone": 1, "android": 0}}, "rejected": 1}
 
 
 def test_app_taps_without_the_log_directory_is_none_and_empty_is_a_warn(tmp_path, capsys):
     assert ops.app_taps(str(tmp_path / "caddy-logs")) is None
     (tmp_path / "caddy-logs").mkdir()
-    assert ops.app_taps(str(tmp_path / "caddy-logs")) == {"by_day": {}}
+    assert ops.app_taps(str(tmp_path / "caddy-logs")) == {"by_day": {}, "rejected": 0}
     assert "no app*.log in" in capsys.readouterr().err
+    assert ops.app_taps("") is None  # empty override disables, like the page paths
 
 
 def test_tap_paths_are_the_caddyfiles():
@@ -456,7 +457,7 @@ def test_app_taps_survives_a_half_written_rolled_gz_and_skips_its_twin(tmp_path,
     (d / "app-2026-09-01T05-30-00.000.log.gz").write_bytes(
         b"\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03garbage")
     (d / "app.log").write_text(good + "\n")
-    assert ops.app_taps(str(d)) == {"by_day": {"2026-09-07": {"iphone": 2, "android": 0}}}
+    assert ops.app_taps(str(d))["by_day"] == {"2026-09-07": {"iphone": 2, "android": 0}}
     err = capsys.readouterr().err
     assert "app-2026-09-01T05-30-00.000.log.gz unreadable" in err
     assert "app-2026-09-06" not in err  # the twin was skipped, not read
@@ -468,7 +469,7 @@ def test_app_taps_warns_when_the_timestamp_format_changes(tmp_path, capsys):
     (d / "app.log").write_text(json.dumps({
         "ts": "2026-09-07T12:00:00Z",
         "request": {"method": "POST", "uri": "/app/ja/iphone"}, "status": 204}) + "\n")
-    assert ops.app_taps(str(d)) == {"by_day": {}}
+    assert ops.app_taps(str(d))["by_day"] == {}
     assert "1 app-log lines had no unix-seconds ts" in capsys.readouterr().err
 
 
@@ -478,3 +479,51 @@ def test_app_taps_counts_upper_case_paths_like_caddy_answers_them(tmp_path):
     (d / "app.log").write_text(
         _line("2026-09-07T12:00:00", "POST", "/APP/JA/ANDROID", 204) + "\n")
     assert ops.app_taps(str(d))["by_day"] == {"2026-09-07": {"iphone": 0, "android": 1}}
+
+
+def test_refused_taps_outnumbering_counted_ones_is_a_warn(tmp_path, capsys):
+    """A tap path answering 404 is the Origin gate refusing the request. The
+    page never sees that (fetch resolves, "Danke" shows), so zero taps would
+    read as no interest — the run has to say so instead."""
+    d = tmp_path / "caddy-logs"
+    d.mkdir()
+    (d / "app.log").write_text("\n".join([
+        _line("2026-09-07T12:00:00", "POST", "/app/ja/iphone", 404),
+        _line("2026-09-07T12:00:01", "POST", "/app/ja/android", 404),
+        _line("2026-09-07T12:00:02", "POST", "/app/ja/iphone", 204),
+    ]) + "\n")
+    out = ops.app_taps(str(d))
+    assert out["rejected"] == 2 and out["by_day"] == {"2026-09-07": {"iphone": 1, "android": 0}}
+    assert "2 tap POSTs were refused (not 204) against 1 counted" in capsys.readouterr().err
+    # The other way round — a stray curl or two — is not worth a line.
+    (d / "app.log").write_text("\n".join([
+        _line("2026-09-07T12:00:00", "POST", "/app/ja/iphone", 404),
+        _line("2026-09-07T12:00:02", "POST", "/app/ja/iphone", 204),
+        _line("2026-09-07T12:00:03", "POST", "/app/ja/iphone", 204),
+    ]) + "\n")
+    ops.app_taps(str(d))
+    assert "refused" not in capsys.readouterr().err
+
+
+def test_vanished_log_directory_with_history_is_a_warn(tmp_path, capsys):
+    state_path = tmp_path / "state.json"
+    write(state_path, {"statuses": {}, "history": [],
+                       "app_taps": {"2026-07-01": {"iphone": 1, "android": 0}}})
+    ops.run_check(
+        now=TUESDAY, state_path=str(state_path),
+        stats_path=write(tmp_path / "stats.json", fresh_stats(TUESDAY)),
+        geojson_path=write(tmp_path / "gj.json", geojson([("node", 1, "unknown")])),
+        mail=lambda *a: None, visits_fetch=lambda **kw: None,
+        edits_fetch=lambda **kw: None, taps_read=lambda **kw: None,
+        html_path="", private_html_path="")
+    assert "app-log directory is gone but the tap history is not" in capsys.readouterr().err
+    # Without history, the same None is a checkout without the container: quiet.
+    write(state_path, {"statuses": {}, "history": []})
+    ops.run_check(
+        now=TUESDAY, state_path=str(state_path),
+        stats_path=str(tmp_path / "stats.json"), geojson_path=str(tmp_path / "gj.json"),
+        mail=lambda *a: None, visits_fetch=lambda **kw: None,
+        edits_fetch=lambda **kw: None, taps_read=lambda **kw: None,
+        html_path="", private_html_path="")
+    assert "app-log directory" not in capsys.readouterr().err
+

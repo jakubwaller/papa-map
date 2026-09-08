@@ -252,9 +252,22 @@ timestamp, a method, a path and a status (`deploy/papamap.Caddyfile`). It is wri
 `caddy-logs`, relative to where the cron runs like `pipeline.log`) into the private ops
 page's **App page** block, a line in every report (`app page: …` in `ops.log` daily, in the
 mail on digest days), and `ops-state.json` under `app_taps` — per day, keeping the larger of
-stored and fresh, so a log Caddy has rolled away (10 MiB, kept 400 days) costs no history.
-Without the directory the block just says so; a directory with no `app*.log` in it is a WARN,
-because Caddy creates the file at start and an empty directory means the mount moved.
+stored and fresh, so a log Caddy has rolled away (10 MiB per file, five rolled files kept, none
+older than 400 days) costs no history. Without the directory the block just says so — unless the
+state already holds tap history, then it is a WARN; a directory with no `app*.log` in it is a
+WARN too, because Caddy creates the file at start and an empty directory means the mount moved.
+A tap POST the Origin gate refused is logged as a 404 on a tap path; when those outnumber the
+counted taps the run warns, because a gate refusing the page itself would otherwise read as
+"nobody wants the app". `PAPAMAP_APP_LOG_DIR=` (empty) disables the block.
+
+**Rate limit at the edge.** The tap endpoint is unauthenticated by design — the page promises
+no account, no cookie, no address — so a `curl` loop can inflate the one number the app
+decision rests on. The site cannot tell taps apart without identifying people; Cloudflare, which
+sees the address anyway, can. One rate-limiting rule in the zone (Security → WAF → Rate
+limiting rules; the free plan allows one): expression
+`(http.request.method eq "POST" and starts_with(http.request.uri.path, "/app/ja/"))`, counted
+per IP, more than 5 requests in 10 seconds → block for 10 seconds. It stops a script, not a
+patient person with three browsers; nothing does that without identifying people.
 
 Deploying it is a new mount and a changed Caddyfile, so **recreate, don't restart**, and
 validate the Caddyfile against the image first — `log_skip` and the file writer's `mode`
