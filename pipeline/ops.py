@@ -78,14 +78,16 @@ OPS_HISTORY_PATH = os.environ.get(
 # cron also runs; read for the "last build" section, optional.
 BUILD_LOG_PATH = os.environ.get("PAPAMAP_BUILD_LOG_PATH", "pipeline.log")
 # The app page's tap log: the papamap container's only access log, scoped
-# to /app.html and /app/* and stripped of addresses and headers by the
+# to the two tap paths under /app/ja/ (page views are not logged — the
+# site promises no analytics, and a tap is an answer someone chose to
+# give, not a visit) and stripped of addresses and headers by the
 # Caddyfile's filter (deploy/papamap.Caddyfile), mounted to ./caddy-logs on
 # the host (docker-compose.yml) — the directory the ops cron runs in, like
 # pipeline.log. Absent (a checkout without Docker), the block is simply not
 # there. The paths are the Caddyfile's; tests/test_ops.py pins them to it.
 APP_LOG_DIR = os.environ.get("PAPAMAP_APP_LOG_DIR", "caddy-logs")
 APP_TAP_PATHS = {"/app/ja/iphone": "iphone", "/app/ja/android": "android"}
-APP_PAGE_PATHS = ("/app.html", "/app-en.html")
+TAP_KEYS = ("iphone", "android")
 TAPS_HISTORY_DAYS = 400
 STALE_AFTER_H = float(os.environ.get("PAPAMAP_OPS_STALE_H", "48"))
 DROP_ALERT_PCT = float(os.environ.get("PAPAMAP_OPS_DROP_PCT", "20"))
@@ -242,8 +244,7 @@ def render_report(counts, changes, history, anomalies, visits=None,
     if taps:
         lines.append(
             f"app page: {taps['iphone']} iPhone + {taps['android']} Android "
-            f"taps in all ({taps['recent']} in the last {taps['days']}d), "
-            f"{taps['views']} page requests")
+            f"taps in all ({taps['recent']} in the last {taps['days']}d)")
     return "\n".join(lines) or "no data at all — nothing to report on"
 
 
@@ -289,12 +290,10 @@ def cf_visits(days=CF_HISTORY_DAYS, report_days=CF_REPORT_DAYS,
 
 
 def app_taps(log_dir=None) -> dict | None:
-    """{'by_day': {date: {'iphone': n, 'android': n, 'views': n}}} from every
-    app*.log (rolled and gzipped ones included) in the directory, per UTC
-    day. A tap is a POST to one of APP_TAP_PATHS answered 204; a view is a
-    GET of one of APP_PAGE_PATHS answered 200 or 304 — a cached reload is
-    still a reader, and crawlers are in there too, so views are a floor for
-    the ratio, not a conversion rate. Lines that are not JSON or not about
+    """{'by_day': {date: {'iphone': n, 'android': n}}} from every app*.log
+    (rolled and gzipped ones included) in the directory, per UTC day. A tap
+    is a POST to one of APP_TAP_PATHS answered 204; nothing else is in the
+    log, by the Caddyfile's log_skip. Lines that are not JSON or not about
     those paths are skipped. The Caddyfile's filter has already removed
     everything that could identify anyone; nothing here needs to. None when
     the directory does not exist — a checkout without the container."""
@@ -302,6 +301,12 @@ def app_taps(log_dir=None) -> dict | None:
     if not d.is_dir():
         return None
     files = sorted(d.glob("app*.log*"))
+    if not files:
+        # Caddy opens the file when it starts, so an empty directory means
+        # the mount or the filename moved, not a quiet week — and without
+        # this line the report would keep quoting the last known totals.
+        print(f"WARN: no app*.log in {d} — log mount or filename changed?",
+              file=sys.stderr)
     # Caddy rolls by renaming app.log to app-<stamp>.log, then gzips that in
     # place and deletes the plain file. A run that lands inside that window
     # sees both, so the complete plain file wins and its half-written .gz
@@ -332,8 +337,8 @@ def app_taps(log_dir=None) -> dict | None:
 
 
 def _count_tap_line(line: str, by_day: dict) -> int:
-    """Counts the line into by_day; returns 1 for a line about the app page
-    whose timestamp could not be read (the caller warns), else 0."""
+    """Counts the line into by_day; returns 1 for a tap whose timestamp could
+    not be read (the caller warns), else 0."""
     try:
         entry = json.loads(line)
     except ValueError:
@@ -345,31 +350,30 @@ def _count_tap_line(line: str, by_day: dict) -> int:
     # with 204 too — what the server calls counted, the parser counts.
     path = str(req.get("uri") or "").split("?", 1)[0].lower()
     method, status = str(req.get("method") or ""), entry.get("status")
-    if method == "POST" and path in APP_TAP_PATHS and status == 204:
-        key = APP_TAP_PATHS[path]
-    elif method == "GET" and path in APP_PAGE_PATHS and status in (200, 304):
-        key = "views"
-    else:
+    if not (method == "POST" and path in APP_TAP_PATHS and status == 204):
         return 0
+    key = APP_TAP_PATHS[path]
     try:  # Caddy's default ts is unix seconds as a float
         day = datetime.fromtimestamp(float(entry.get("ts")),
                                      tz=timezone.utc).strftime("%Y-%m-%d")
     except (TypeError, ValueError, OverflowError, OSError):
         return 1
-    by_day.setdefault(day, {"iphone": 0, "android": 0, "views": 0})[key] += 1
+    by_day.setdefault(day, {"iphone": 0, "android": 0})[key] += 1
     return 0
 
 
 def merge_taps(kept: dict, taps: dict | None) -> dict:
-    """The per-day tap history. The log is re-read whole on every run, so
-    every day it still covers overwrites the stored one — today's partial
-    figure included, healed tomorrow — and the days Caddy has rolled away
-    stay as they were. Capped and sorted like the other histories."""
-    merged = dict(kept)
+    """The per-day tap history. The log is re-read whole on every run and
+    only ever grows within a day, so the larger of stored and fresh wins
+    per day and key: a fresh read that has more lines heals yesterday's
+    partial figure, and a day whose early lines Caddy has rolled away keeps
+    the count it had. Capped and sorted like the other histories."""
+    merged = {day: dict(v) for day, v in kept.items() if isinstance(v, dict)}
     for day, v in ((taps or {}).get("by_day") or {}).items():
         if isinstance(v, dict):
-            merged[day] = {k: int(v.get(k, 0))
-                           for k in ("iphone", "android", "views")}
+            old = merged.get(day) or {}
+            merged[day] = {k: max(int(old.get(k, 0)), int(v.get(k, 0)))
+                           for k in TAP_KEYS}
     return dict(sorted(merged.items())[-TAPS_HISTORY_DAYS:])
 
 
@@ -382,9 +386,9 @@ def taps_totals(days: dict, now: datetime, window: int = 7) -> dict | None:
         return None
     # window calendar days ending today, the private page's window too
     since = (now - timedelta(days=window - 1)).strftime("%Y-%m-%d")
-    tot = {"iphone": 0, "android": 0, "views": 0, "recent": 0, "days": window}
+    tot = {"iphone": 0, "android": 0, "recent": 0, "days": window}
     for day, v in days.items():
-        for k in ("iphone", "android", "views"):
+        for k in TAP_KEYS:
             tot[k] += int(v.get(k, 0))
         if day >= since:
             tot["recent"] += int(v.get("iphone", 0)) + int(v.get("android", 0))

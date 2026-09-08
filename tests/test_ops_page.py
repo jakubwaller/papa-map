@@ -623,8 +623,8 @@ def test_run_check_fetches_visits_daily_and_writes_the_private_page(tmp_path):
     assert list(state["visits"]) == ["2026-08-22", "2026-08-23"]
 
 
-TAPS = {"2026-09-07": {"iphone": 4, "android": 2, "views": 30},
-        "2026-09-08": {"iphone": 1, "android": 0, "views": 20}}
+TAPS = {"2026-09-07": {"iphone": 4, "android": 2},
+        "2026-09-08": {"iphone": 1, "android": 0}}
 
 
 def test_private_page_counts_app_taps_and_public_never_does():
@@ -634,8 +634,7 @@ def test_private_page_counts_app_taps_and_public_never_does():
     assert "<b>7</b><span>taps, last 7 days</span>" in private
     assert "<b>5</b><span>iPhone</span>" in private
     assert "<b>2</b><span>Android</span>" in private
-    assert "<b>50</b><span>page requests, all 2 days</span>" in private
-    assert "<b>14.0 %</b><span>taps per request</span>" in private
+    assert "page requests" not in private and "no page views" in private
     # newest day first in the table
     assert private.index("2026-09-08</td>") < private.index("2026-09-07</td>")
     assert "no addresses in it" in private
@@ -647,4 +646,3 @@ def test_private_page_says_when_no_tap_was_counted_yet():
     private = render(private=True, visits=VISITS, taps=None)
     assert "<h2>App page</h2>" in private
     assert "No taps counted yet" in private
-

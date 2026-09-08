@@ -409,51 +409,40 @@ def _visitors(visits: dict | None) -> str:
 
 def _app_taps(taps: dict | None, now: datetime) -> str:
     """The private page's other extra section: the app page's two buttons,
-    counted per UTC day from the container's stripped access log (see the
-    Caddyfile). Requests for the page are counted too, crawlers included,
-    so taps per hundred requests is a rough ratio, not a conversion rate.
-    The week is the calendar window the mail's line uses: seven days ending
-    today, whether or not each of them has a row."""
+    counted per UTC day from the container's log of those taps alone (see
+    the Caddyfile). No page views: the site has no analytics, and a tap is
+    an answer someone chose to give. The week is the calendar window the
+    mail's line uses: seven days ending today."""
     days = sorted((taps or {}).items())
     if not days:
         return ('<h2>App page</h2>\n<p class="muted">No taps counted yet — '
                 "the app page is not deployed, or caddy-logs/ is empty.</p>\n")
     iphone = sum(int(v.get("iphone", 0)) for _, v in days)
     android = sum(int(v.get("android", 0)) for _, v in days)
-    views = sum(int(v.get("views", 0)) for _, v in days)
-    taps_all = iphone + android
     since = (now - timedelta(days=6)).strftime("%Y-%m-%d")
     taps_week = sum(int(v.get("iphone", 0)) + int(v.get("android", 0))
                     for d, v in days if d >= since)
     parts = ["<h2>App page</h2>\n"
              '<p class="muted">Taps on the two buttons of /app.html, per UTC '
-             "day, from the container's access log for that page alone — no "
-             "address, no user agent in it. Requests are the GETs of the page "
-             "that reached the container, crawlers included and repeat visits "
-             "within the hour's cache excluded, so taps per request is a rough "
-             "ratio, not a conversion rate.</p>\n"
+             "day, from a log that holds those taps and nothing else — no "
+             "address, no user agent, no page views. A burst on one day is "
+             "a script, not a crowd.</p>\n"
              '<div class="kpis">\n'
-             f'<div class="kpi"><b>{_n(taps_all)}</b>'
+             f'<div class="kpi"><b>{_n(iphone + android)}</b>'
              f"<span>taps, all {len(days)} days</span></div>\n"
              f'<div class="kpi"><b>{_n(taps_week)}</b>'
              "<span>taps, last 7 days</span></div>\n"
              f'<div class="kpi"><b>{_n(iphone)}</b><span>iPhone</span></div>\n'
              f'<div class="kpi"><b>{_n(android)}</b><span>Android</span></div>\n'
-             f'<div class="kpi"><b>{_n(views)}</b>'
-             f"<span>page requests, all {len(days)} days</span></div>\n"
-             f'<div class="kpi"><b>{_pct(taps_all, views)}</b>'
-             "<span>taps per request</span></div>\n"
              "</div>\n"]
     rows = list(reversed(days))
     parts.append(f"<details>\n<summary>all {len(rows)} days</summary>\n"
                  '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
-                 "<th>iPhone</th><th>Android</th><th>requests</th></tr></thead>\n"
-                 "<tbody>\n")
+                 "<th>iPhone</th><th>Android</th></tr></thead>\n<tbody>\n")
     for day, v in rows:
         parts.append(f'<tr><td class="l">{esc(day)}</td>'
                      f'<td>{_n(v.get("iphone", 0))}</td>'
-                     f'<td>{_n(v.get("android", 0))}</td>'
-                     f'<td>{_n(v.get("views", 0))}</td></tr>\n')
+                     f'<td>{_n(v.get("android", 0))}</td></tr>\n')
     parts.append("</tbody>\n</table>\n</div>\n</details>\n")
     return "".join(parts)
 

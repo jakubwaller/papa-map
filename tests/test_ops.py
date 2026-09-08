@@ -338,15 +338,13 @@ def _ts(iso: str) -> float:
 
 def _line(iso, method, uri, status):
     # The shape Caddy's json access log has after the Caddyfile's filter:
-    # no remote_ip, no headers — a timestamp, a method, a path, a status.
+    # a timestamp, a method, a path, a status — nothing else.
     return json.dumps({"level": "info", "ts": _ts(iso), "logger": "http.log.access",
                        "msg": "handled request",
-                       "request": {"method": method, "host": "papamap.de",
-                                   "uri": uri, "proto": "HTTP/1.1"},
-                       "status": status, "size": 0})
+                       "request": {"method": method, "uri": uri}, "status": status})
 
 
-def test_app_taps_counts_taps_and_page_views_per_utc_day(tmp_path):
+def test_app_taps_counts_taps_per_utc_day_and_nothing_else(tmp_path):
     d = tmp_path / "caddy-logs"
     d.mkdir()
     (d / "app.log").write_text("\n".join([
@@ -354,73 +352,73 @@ def test_app_taps_counts_taps_and_page_views_per_utc_day(tmp_path):
         _line("2026-09-07T12:00:01", "POST", "/app/ja/android", 204),
         _line("2026-09-07T23:59:59", "POST", "/app/ja/iphone", 204),
         _line("2026-09-08T00:00:01", "POST", "/app/ja/iphone", 204),  # next UTC day
-        _line("2026-09-07T12:00:02", "GET", "/app.html", 200),
-        _line("2026-09-07T12:00:03", "GET", "/app-en.html?x=1", 304),  # a cached reload reads
         _line("2026-09-07T12:00:04", "GET", "/app/ja/iphone", 404),    # a GET is not a tap
-        _line("2026-09-07T12:00:05", "POST", "/app/ja/iphone", 404),   # not answered 204
+        _line("2026-09-07T12:00:05", "POST", "/app/ja/iphone", 404),   # no Origin: not answered 204
         _line("2026-09-07T12:00:06", "POST", "/app/ja/nope", 404),     # verify-curl, not a tap
-        _line("2026-09-07T12:00:07", "GET", "/index.html", 200),       # never logged; skipped anyway
+        _line("2026-09-07T12:00:07", "GET", "/app.html", 200),         # never logged; skipped anyway
         "not json at all",
-        json.dumps({"ts": "garbage", "request": {"method": "POST", "uri": "/app/ja/iphone"},
-                    "status": 204}),
     ]) + "\n")
     # A rolled file, gzipped the way Caddy rolls them, counts too.
     with gzip.open(d / "app-2026-09-01T05-30-00.000.log.gz", "wt") as fh:
         fh.write(_line("2026-09-01T09:00:00", "POST", "/app/ja/android", 204) + "\n")
-    out = ops.app_taps(str(d))
-    assert out == {"by_day": {
-        "2026-09-01": {"iphone": 0, "android": 1, "views": 0},
-        "2026-09-07": {"iphone": 2, "android": 1, "views": 2},
-        "2026-09-08": {"iphone": 1, "android": 0, "views": 0}}}
+    assert ops.app_taps(str(d)) == {"by_day": {
+        "2026-09-01": {"iphone": 0, "android": 1},
+        "2026-09-07": {"iphone": 2, "android": 1},
+        "2026-09-08": {"iphone": 1, "android": 0}}}
 
 
-def test_app_taps_without_the_log_directory_is_none(tmp_path):
+def test_app_taps_without_the_log_directory_is_none_and_empty_is_a_warn(tmp_path, capsys):
     assert ops.app_taps(str(tmp_path / "caddy-logs")) is None
     (tmp_path / "caddy-logs").mkdir()
     assert ops.app_taps(str(tmp_path / "caddy-logs")) == {"by_day": {}}
+    assert "no app*.log in" in capsys.readouterr().err
 
 
 def test_tap_paths_are_the_caddyfiles():
     caddy = (Path(__file__).resolve().parents[1] / "deploy"
              / "papamap.Caddyfile").read_text()
     assert f"path {' '.join(ops.APP_TAP_PATHS)}" in caddy
-    assert "respond @tap 204" in caddy
-    # log_skip's exclusion has to name every page the parser counts views on
-    assert f"not path {' '.join(ops.APP_PAGE_PATHS)} /app/*" in caddy
-    for field in ("request>remote_ip", "request>client_ip", "request>headers"):
+    assert "header Origin https://papamap.de" in caddy
+    assert "handle @tap {" in caddy and "respond 204" in caddy
+    assert 'header Cache-Control "no-store"' in caddy
+    # Only the tap paths are ever logged — no page views.
+    assert "not path /app/ja/*" in caddy and "log_skip @outside_taps" in caddy
+    for field in ("request>remote_ip", "request>client_ip", "request>headers",
+                  "request>host", "request>proto"):
         assert f"{field} delete" in caddy, field
 
 
-def test_merge_taps_overwrites_logged_days_and_keeps_rolled_away_ones():
-    kept = {"2026-08-01": {"iphone": 5, "android": 1, "views": 40},
-            "2026-09-07": {"iphone": 1, "android": 0, "views": 3}}
-    taps = {"by_day": {"2026-09-07": {"iphone": 4, "android": 2, "views": 30},
-                       "2026-09-08": {"iphone": 1, "android": 0, "views": 2}}}
+def test_merge_taps_keeps_the_larger_count_per_day_and_the_rolled_away_days():
+    kept = {"2026-08-01": {"iphone": 5, "android": 1},          # rolled away: kept
+            "2026-09-06": {"iphone": 3, "android": 2},          # half rolled away: kept
+            "2026-09-07": {"iphone": 1, "android": 0}}          # yesterday partial: healed
+    taps = {"by_day": {"2026-09-06": {"iphone": 1, "android": 2},
+                       "2026-09-07": {"iphone": 4, "android": 2},
+                       "2026-09-08": {"iphone": 1, "android": 0}}}
     merged = ops.merge_taps(kept, taps)
-    assert merged == {"2026-08-01": {"iphone": 5, "android": 1, "views": 40},
-                      "2026-09-07": {"iphone": 4, "android": 2, "views": 30},
-                      "2026-09-08": {"iphone": 1, "android": 0, "views": 2}}
+    assert merged == {"2026-08-01": {"iphone": 5, "android": 1},
+                      "2026-09-06": {"iphone": 3, "android": 2},
+                      "2026-09-07": {"iphone": 4, "android": 2},
+                      "2026-09-08": {"iphone": 1, "android": 0}}
     assert list(merged) == sorted(merged)
     assert ops.merge_taps(kept, None) == kept
     assert ops.merge_taps({}, {"by_day": {}}) == {}
 
 
-def test_taps_totals_split_all_time_from_the_last_week():
-    days = {"2026-08-01": {"iphone": 5, "android": 1, "views": 40},
-            "2026-09-06": {"iphone": 4, "android": 2, "views": 30},
-            "2026-09-08": {"iphone": 1, "android": 0, "views": 2}}
+def test_taps_totals_week_is_seven_calendar_days_ending_today():
     now = datetime(2026, 9, 8, 5, 30, tzinfo=timezone.utc)
-    assert ops.taps_totals(days, now) == {"iphone": 10, "android": 3, "views": 72,
-                                          "recent": 7, "days": 7}
+    days = {"2026-09-01": {"iphone": 1, "android": 0},   # 8th day back: out
+            "2026-09-02": {"iphone": 1, "android": 0},   # 7th: in
+            "2026-09-08": {"iphone": 1, "android": 2}}   # today: in
+    assert ops.taps_totals(days, now) == {"iphone": 3, "android": 2, "recent": 4, "days": 7}
     assert ops.taps_totals({}, now) is None
 
 
 def test_report_carries_the_tap_line_every_day_and_state_keeps_the_days(tmp_path):
-    taps = {"by_day": {"2026-08-03": {"iphone": 4, "android": 2, "views": 30}}}
+    taps = {"by_day": {"2026-08-03": {"iphone": 4, "android": 2}}}
     state_path = tmp_path / "state.json"
     write(state_path, {"statuses": {}, "history": [],
-                       "app_taps": {"2026-07-01": {"iphone": 1, "android": 0,
-                                                   "views": 9}}})
+                       "app_taps": {"2026-07-01": {"iphone": 1, "android": 0}}})
     sent = []
     _, report = ops.run_check(
         now=TUESDAY, state_path=str(state_path),
@@ -433,12 +431,10 @@ def test_report_carries_the_tap_line_every_day_and_state_keeps_the_days(tmp_path
         private_html_path=str(tmp_path / "private-ops.html"))
     # A Tuesday: no mail, but the line is in the report (ops.log) regardless.
     assert sent == []
-    assert ("app page: 5 iPhone + 2 Android taps in all (6 in the last 7d), "
-            "39 page requests") in report
+    assert "app page: 5 iPhone + 2 Android taps in all (6 in the last 7d)" in report
     state = json.loads(state_path.read_text())
-    assert state["app_taps"] == {
-        "2026-07-01": {"iphone": 1, "android": 0, "views": 9},
-        "2026-08-03": {"iphone": 4, "android": 2, "views": 30}}
+    assert state["app_taps"] == {"2026-07-01": {"iphone": 1, "android": 0},
+                                 "2026-08-03": {"iphone": 4, "android": 2}}
     private = (tmp_path / "private-ops.html").read_text()
     assert "<h2>App page</h2>" in private and "7</b><span>taps, all 2 days" in private
     assert "App page" not in (tmp_path / "ops.html").read_text()
@@ -460,8 +456,7 @@ def test_app_taps_survives_a_half_written_rolled_gz_and_skips_its_twin(tmp_path,
     (d / "app-2026-09-01T05-30-00.000.log.gz").write_bytes(
         b"\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03garbage")
     (d / "app.log").write_text(good + "\n")
-    out = ops.app_taps(str(d))
-    assert out == {"by_day": {"2026-09-07": {"iphone": 2, "android": 0, "views": 0}}}
+    assert ops.app_taps(str(d)) == {"by_day": {"2026-09-07": {"iphone": 2, "android": 0}}}
     err = capsys.readouterr().err
     assert "app-2026-09-01T05-30-00.000.log.gz unreadable" in err
     assert "app-2026-09-06" not in err  # the twin was skipped, not read
@@ -482,14 +477,4 @@ def test_app_taps_counts_upper_case_paths_like_caddy_answers_them(tmp_path):
     d.mkdir()
     (d / "app.log").write_text(
         _line("2026-09-07T12:00:00", "POST", "/APP/JA/ANDROID", 204) + "\n")
-    assert ops.app_taps(str(d))["by_day"] == {
-        "2026-09-07": {"iphone": 0, "android": 1, "views": 0}}
-
-
-def test_taps_totals_week_is_seven_calendar_days_ending_today():
-    now = datetime(2026, 9, 8, 5, 30, tzinfo=timezone.utc)
-    days = {"2026-09-01": {"iphone": 1, "android": 0, "views": 1},   # 8th day back: out
-            "2026-09-02": {"iphone": 1, "android": 0, "views": 1},   # 7th: in
-            "2026-09-08": {"iphone": 1, "android": 0, "views": 1}}   # today: in
-    assert ops.taps_totals(days, now)["recent"] == 2
-
+    assert ops.app_taps(str(d))["by_day"] == {"2026-09-07": {"iphone": 0, "android": 1}}

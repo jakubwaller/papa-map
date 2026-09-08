@@ -30,10 +30,11 @@ test("the buttons post to the paths Caddy answers 204 and logs", () => {
     assert.ok(html.includes('localStorage.getItem(KEY)') && html.includes('"papamap-app"'), f);
   }
   assert.ok(caddy.includes("path /app/ja/iphone /app/ja/android"));
-  assert.ok(caddy.includes("respond @tap 204"));
-  // The log is scoped to the two pages and their paths, and stripped.
-  assert.ok(caddy.includes("not path /app.html /app-en.html /app/*"));
-  assert.ok(caddy.includes("log_skip @outside_app_page"));
+  assert.ok(caddy.includes("header Origin https://papamap.de"));
+  assert.ok(caddy.includes("handle @tap {") && caddy.includes("respond 204"));
+  // The log holds the taps and nothing else — no page views — and is stripped.
+  assert.ok(caddy.includes("not path /app/ja/*"));
+  assert.ok(caddy.includes("log_skip @outside_taps"));
   for (const field of ["request>remote_ip", "request>client_ip", "request>headers"])
     assert.ok(caddy.includes(`${field} delete`), field);
 });
