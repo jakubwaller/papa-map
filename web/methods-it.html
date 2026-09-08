@@ -154,6 +154,29 @@ spazi, messo in minuscolo e confrontato come token intero. Mai come sottostringa
 </ul>
 <p>Un oggetto con un tag <code>centralkey</code> (diverso da <code>no</code>) resta fuori dalla mappa quando la chiave chiude tutta la porta: <code>access=centralkey</code>, un fasciatoio nel bagno disabili, o niente nei tag dice che la chiave vale solo per una cabina. Un blocco con bagni uomini e donne aperti e una cabina disabili chiusa a chiave (<code>wheelchair:access=centralkey</code>, oppure <code>male=yes</code> e <code>female=yes</code>) resta sulla mappa, grigio finché qualcuno non registra la stanza. La chiave europea si ottiene solo dimostrando una disabilità, quindi la maggior parte dei papà da quella porta non passa.</p>
 
+<h2>Il selettore Papà / Mamma</h2>
+<p>I tre colori qui sopra rispondono alla domanda del papà: un papà riesce a raggiungere il
+fasciatoio? Per una mamma la stessa risposta si legge di solito in modo diverso — può usare un
+fasciatoio nel bagno donne, e anche un fasciatoio senza stanza registrata si trova, nella maggior
+parte dei casi, in una stanza in cui può comunque entrare. Il selettore <em>Papà / Mamma</em>, a
+sinistra nella fila dei chip, cambia quindi solo il modo in cui si leggono le stesse tre risposte,
+mai le risposte stesse.</p>
+<ul>
+  <li><strong>Papà</strong> (di default): verde, rosso e grigio come descritto sopra.</li>
+  <li><strong>Mamma</strong>: Verde ora significa entrambe le cose — la stanza liberamente
+      accessibile <em>e</em> il bagno donne. Arancione sta per &laquo;stanza non
+      registrata&raquo;, quindi di solito utilizzabile.</li>
+</ul>
+<p>Quello che il selettore non fa: non cambia nessun tag, non scrive nulla su OSM, e non calcola
+nessuna nuova classificazione. È una seconda lettura degli stessi tre valori, salvata solo nel tuo
+browser sotto <code>papamap-mode</code>. I numeri nei chip sono gli stessi in entrambe le
+modalità.</p>
+<p>Un'eccezione è segnalata qui perché in modalità mamma sembra verde senza esserlo del tutto: un
+fasciatoio che secondo <code>changing_table:location</code> si trova solo nel bagno uomini
+(<code>male_toilet</code> da solo), conta come verde. È raro, ma succede. Per questo il testo del
+pin dice &laquo;nei casi rari solo il bagno uomini&raquo; e il numero sopra dice
+&laquo;probabilmente&raquo;.</p>
+
 <h2>L'anello blu: l'angolo giochi</h2>
 <p>Un pin con l'anello blu ha anche un angolo giochi &mdash; un posto dove non si cambia soltanto
 il bambino, ci si ferma anche un po'. Il filtro <em>Con angolo giochi</em> mostra solo questi
