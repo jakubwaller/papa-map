@@ -134,6 +134,63 @@ are listed by hand in `web/sitemap.xml`; `tests/test_pages.py` asserts that
 list matches the slugs the generator writes. `PAPAMAP_PAGES_DIR` moves the
 output elsewhere.
 
+## Reading the map as a father or as a mother
+
+The pipeline emits three statuses and the frontend renders them two ways. A
+`Papa` / `Mama` switch sits at the head of the chip bar; the choice is stored in
+`localStorage` under `papamap-mode` and a `?mode=` parameter overrides it for a
+shared link, exactly as `?lang=` does.
+
+It is a **view, not a second classification.** `VIEW` in `web/datasource.js`
+maps each status to a bucket per reading, and everything downstream — pin
+colour, chip dot, chip label, popup sentence, the local stats sentence, the
+headline, and what "usable" means to the nearest-table button — is read out of
+that one table:
+
+| status        | Papa                     | Mama                     |
+| ------------- | ------------------------ | ------------------------ |
+| `accessible`  | good — green             | good — green             |
+| `female_only` | bad — orange             | good — green             |
+| `unknown`     | ask — grey               | maybe — amber            |
+
+Nothing is re-derived from the raw tags in JavaScript, no pipeline field was
+added and `CONTRACT.md`'s emitted shape did not move. The default stays `papa`:
+it is the rendering every screenshot and every og: description describes, so a
+mother's map is a deliberate opt-in rather than a silent redefinition for
+everyone. Switching mode is one `setPaintProperty` on a layer whose source data
+never changes, so 26k pins recolour without a re-fetch.
+
+The one simplification the switch inherits is disclosed on the methods pages: a
+table tagged `male_toilet` only is counted as reachable in both readings.
+
+## Nearest usable table
+
+The second button under the zoom controls answers "where can I change him?" in
+one tap. It asks the browser for a position, finds the nearest table the
+**current reading** calls usable, flies there and opens the popup.
+
+Three things it deliberately does not do:
+
+- **It does not send the position anywhere.** The whole GeoJSON is already in
+  memory, so the search is a haversine loop in the tab and no request leaves the
+  browser. That also makes it a true global nearest over every pin in every
+  swept country, not the nearest thing in the current viewport.
+- **It does not choose a maps app.** The popup's `Route` button is a `geo:` URI,
+  so the phone opens Apple Maps or Organic Maps or whatever the reader already
+  uses, and no third party learns where they are standing. Only the
+  *destination's* coordinates travel in that link. The openstreetmap.org link
+  stays beside it for desktop browsers, which mostly ignore `geo:`.
+- **It does not claim to know how far you will walk.** The distance is
+  straight-line and the toast says so — "1,2 km Luftlinie" — because routing
+  needs a server this project does not have.
+
+Distances round to the nearest 10 m: a good phone fix is accurate to a handful
+of metres and a poor one to fifty, so "437 m" would claim precision the sensor
+cannot deliver. The search ignores the chip filters, since a chip left switched
+off should not change which table is *nearest* — but a filter that would hide
+the winner is switched back on, visibly, so the map never flies to an empty
+spot.
+
 ## Play corners
 
 Every feature carries a boolean `play`: true when the object also records an

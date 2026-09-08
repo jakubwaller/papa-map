@@ -5,7 +5,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
-         pinColorExpression, momCounts } from "./datasource.js";
+         pinColorExpression, momCounts, usableStatuses, haversineKm,
+         nearestUsable, formatDistance, geoUri } from "./datasource.js";
 
 const feat = (lon, lat, props) => ({
   type: "Feature",
@@ -333,4 +334,83 @@ test("momCounts adds the two rooms and keeps the unrecorded ones apart", () => {
   assert.deepEqual(momCounts({}), { good: 0, maybe: 0 });
   assert.deepEqual(momCounts(), { good: 0, maybe: 0 });
   assert.deepEqual(momCounts({ accessible: 4 }), { good: 4, maybe: 0 });
+});
+
+// ---- Nearest usable table ----
+
+test("usable means what the reading already calls good, nothing new", () => {
+  // A father can only use the open room. A mother can use both — and the
+  // difference is read out of VIEW, not written down a second time here.
+  assert.deepEqual(usableStatuses("papa"), ["accessible"]);
+  assert.deepEqual(usableStatuses("mama"), ["accessible", "female_only"]);
+  // Junk degrades to the father's reading, like every other mode lookup.
+  assert.deepEqual(usableStatuses("nonsense"), ["accessible"]);
+  // "unknown" is never usable in either reading: nobody has recorded the room,
+  // so sending a parent there is a guess dressed up as an answer.
+  for (const m of MODES) assert.ok(!usableStatuses(m).includes("unknown"));
+});
+
+test("haversineKm measures a known distance", () => {
+  // Hamburg Rathaus → Hamburg Hbf, ~1.2 km apart.
+  const km = haversineKm(53.5503, 9.9920, 53.5528, 10.0067);
+  assert.ok(km > 0.9 && km < 1.3, `got ${km}`);
+  // Symmetric, zero on itself, and no NaN from asin's domain edge.
+  assert.equal(haversineKm(53.55, 9.99, 53.55, 9.99), 0);
+  assert.equal(haversineKm(1, 2, 3, 4).toFixed(9),
+               haversineKm(3, 4, 1, 2).toFixed(9));
+});
+
+test("nearestUsable picks by mode, not by proximity alone", () => {
+  const rows = [
+    { id: "near-red", status: "female_only", lat: 53.5503, lon: 9.9920 },
+    { id: "far-green", status: "accessible", lat: 53.5528, lon: 10.0067 },
+    { id: "near-grey", status: "unknown", lat: 53.5504, lon: 9.9921 },
+  ];
+  // The closest pin is the women's room. A father is sent past it to the one
+  // he can actually walk into — this is the whole point of the feature.
+  assert.equal(nearestUsable(rows, 53.5503, 9.9920, "papa").feature.id, "far-green");
+  // A mother is sent to the near one, because for her it is a usable table.
+  assert.equal(nearestUsable(rows, 53.5503, 9.9920, "mama").feature.id, "near-red");
+  assert.ok(nearestUsable(rows, 53.5503, 9.9920, "papa").km > 0.9);
+});
+
+test("nearestUsable degrades instead of throwing", () => {
+  assert.equal(nearestUsable([], 53.55, 9.99, "papa"), null);
+  // Only grey pins in range: no answer is the honest answer.
+  assert.equal(nearestUsable([{ status: "unknown", lat: 53.55, lon: 9.99 }],
+                             53.55, 9.99, "papa"), null);
+  // A feature with no usable coordinates is skipped, not ranked as distance 0
+  // or NaN — a NaN would sort first and fly the map to nowhere.
+  const rows = [{ id: "broken", status: "accessible", lat: null, lon: 9.99 },
+                { id: "real", status: "accessible", lat: 53.60, lon: 9.99 }];
+  assert.equal(nearestUsable(rows, 53.55, 9.99, "papa").feature.id, "real");
+  // A geolocation fix that arrived without coordinates finds nothing rather
+  // than picking whichever pin NaN happens to compare against.
+  assert.equal(nearestUsable(rows, NaN, 9.99, "papa"), null);
+});
+
+test("formatDistance rounds to what a phone fix can actually claim", () => {
+  assert.deepEqual(formatDistance(0.437), { key: "distM", n: 440 });
+  assert.deepEqual(formatDistance(0.004), { key: "distM", n: 0 });
+  // 999 m rounds up to a full kilometre, so it must switch units rather than
+  // render "1000 m" — the unit is chosen after the rounding, not before.
+  assert.deepEqual(formatDistance(0.999), { key: "distKm", n: 1 });
+  assert.deepEqual(formatDistance(0.994), { key: "distM", n: 990 });
+  assert.deepEqual(formatDistance(1), { key: "distKm", n: 1 });
+  assert.deepEqual(formatDistance(3.47), { key: "distKm", n: 3.5 });
+  // The number stays a number: the caller renders it in the reader's locale,
+  // so a German sees "3,5 km" and not "3.5 km".
+  assert.equal(typeof formatDistance(3.47).n, "number");
+});
+
+test("geoUri carries the point and escapes the label", () => {
+  assert.equal(geoUri(53.5503, 9.992), "geo:53.550300,9.992000?q=53.550300,9.992000");
+  // A venue name is a free-text OSM field. It goes through encodeURIComponent
+  // so a name with a space, an ampersand or a parenthesis cannot break out of
+  // the q= parameter and turn into a different destination.
+  assert.equal(geoUri(1, 2, "Café A&B (Nord)"),
+    "geo:1.000000,2.000000?q=1.000000,2.000000(Caf%C3%A9%20A%26B%20(Nord))");
+  // Six decimals is ~11 cm — plenty for a doorway, and it never emits
+  // exponent notation the way a raw float can.
+  assert.ok(!geoUri(0.0000001, 0.0000001).includes("e-"));
 });

@@ -4,9 +4,10 @@ import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
-         pinColorExpression, momCounts } from "./datasource.js?v=mode1";
+         pinColorExpression, momCounts, nearestUsable, formatDistance,
+         geoUri } from "./datasource.js?v=near1";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=mode1";
+         langUrl } from "./i18n.js?v=near1";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -288,6 +289,7 @@ function popupHTML(f) {
         osmUrl = safeUrl(f.osm_url);
   if (mcUrl)
     links.push(`<a class="btn primary" href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+  links.push(`<a class="btn" href="${esc(geoUri(f.lat, f.lon, f.name || ""))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -312,6 +314,7 @@ function placeHTML(p) {
         osmUrl = safeUrl(p.osm_url);
   if (mcUrl)
     links.push(`<a class="btn primary" href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+  links.push(`<a class="btn" href="${esc(geoUri(p.lat, p.lon, p.name || ""))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -534,6 +537,17 @@ function fitHome() {
 // transient toast instead of a blocking alert.
 let youMarker = null, toastTimer = null;
 
+// Shared by the locate button and the nearest-table one: both put the reader
+// on the map, and a second marker class would drift from the first.
+function showYou(at) {
+  if (!youMarker) {
+    const dot = document.createElement("div");
+    dot.className = "you-dot";
+    youMarker = new maplibregl.Marker({ element: dot });
+  }
+  youMarker.setLngLat(at).addTo(map);
+}
+
 function toast(msg) {
   const el = document.getElementById("toast");
   el.textContent = msg;
@@ -547,13 +561,49 @@ document.getElementById("locate").addEventListener("click", () => {
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       const at = [pos.coords.longitude, pos.coords.latitude];
-      if (!youMarker) {
-        const dot = document.createElement("div");
-        dot.className = "you-dot";
-        youMarker = new maplibregl.Marker({ element: dot });
-      }
-      youMarker.setLngLat(at).addTo(map);
+      showYou(at);
       map.flyTo({ center: at, zoom: Math.max(map.getZoom(), 14) });
+    },
+    () => toast(t("toastGeoFail")),
+    { enableHighAccuracy: true, timeout: 10000 },
+  );
+});
+
+// ---- Nearest usable table: the one tap that answers "where can I change him?"
+// Two things this deliberately does not do. It does not send the position
+// anywhere: the fix stays in the tab, the search runs against the GeoJSON
+// already in memory, and no request leaves the browser because of it — which is
+// what keeps the Datenschutz page's promise true. And it does not choose a maps
+// app for the reader; that is the popup's Route button, a geo: URI.
+//
+// "Usable" is the current reading's own verdict, so the same tap sends a father
+// to the nearest open room and a mother to the nearest room of either kind.
+document.getElementById("nearest").addEventListener("click", () => {
+  if (!navigator.geolocation) { toast(t("toastNoGeo")); return; }
+  if (!dataReady) { toast(t("countNoData")); return; }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      showYou([lon, lat]);
+      const hit = nearestUsable(allFeatures, lat, lon, mode);
+      if (!hit) { toast(t("toastNearestNone")); return; }
+      const f = hit.feature;
+      // The search runs over every pin, not just the shown ones: a chip left
+      // switched off should not change which table is nearest. It would fly the
+      // view to an empty spot, though, so the filters that would hide the
+      // winner are switched back on — visibly, in the chip strip.
+      let refilter = false;
+      if (!visible.has(f.status)) { visible.add(f.status); refilter = true; }
+      if (playOnly && !f.play) { playOnly = false; refilter = true; }
+      if (refilter) { renderChips(); refreshPins(); }
+      openPopup(f);
+      map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+      const d = formatDistance(hit.km);
+      toast(t("toastNearestFound", {
+        dist: t(d.key, { n: num(d.n) }),
+        name: f.name
+          || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed"),
+      }));
     },
     () => toast(t("toastGeoFail")),
     { enableHighAccuracy: true, timeout: 10000 },

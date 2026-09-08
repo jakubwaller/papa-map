@@ -320,7 +320,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   color: var(--muted-2);
 }
 #zoom-ctrl button:hover { border-color: var(--green); color: var(--green-strong); }
-#locate { display: flex; align-items: center; justify-content: center; }
+#locate, #nearest { display: flex; align-items: center; justify-content: center; }
 
 /* You-are-here dot (single DOM marker, added on demand) */
 .you-dot {

@@ -127,6 +127,7 @@ export const STRINGS = {
     ariaZoomIn: "Hineinzoomen",
     ariaZoomOut: "Herauszoomen",
     ariaLocate: "Meinen Standort zeigen",
+    ariaNearest: "Nächsten nutzbaren Wickeltisch finden",
     ariaHome: "PapaMap — Startseite",
     ariaClose: "Schließen",
     ariaLang: "Sprache wählen",
@@ -193,6 +194,7 @@ export const STRINGS = {
     popupHours: "Öffnungszeiten",
     popupAnswerMC: "Auf MapComplete beantworten",
     popupViewOSM: "Auf OSM ansehen",
+    popupDirections: "Route",
     popupToilets: "Öffentliche Toilette",
     popupUnnamed: "Unbenannter Ort",
 
@@ -206,6 +208,10 @@ export const STRINGS = {
 
     toastNoGeo: "Standortbestimmung ist in diesem Browser nicht verfügbar.",
     toastGeoFail: "Standort nicht gefunden — Browser-Berechtigung prüfen.",
+    toastNearestNone: "Kein nutzbarer Wickeltisch in den Daten.",
+    toastNearestFound: "{dist} Luftlinie: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Fehlenden Ort hinzufügen",
     dlgIntro: "PapaMap hat keine eigenen Daten — neue Orte gehen in OpenStreetMap und erscheinen hier nach dem nächtlichen Update.",
@@ -238,6 +244,7 @@ export const STRINGS = {
     ariaZoomIn: "Zoom in",
     ariaZoomOut: "Zoom out",
     ariaLocate: "Show my location",
+    ariaNearest: "Find the nearest usable changing table",
     ariaHome: "PapaMap — home",
     ariaClose: "Close",
     ariaLang: "Choose language",
@@ -294,6 +301,7 @@ export const STRINGS = {
     popupHours: "Hours",
     popupAnswerMC: "Answer on MapComplete",
     popupViewOSM: "View on OSM",
+    popupDirections: "Directions",
     popupToilets: "Public toilets",
     popupUnnamed: "Unnamed place",
 
@@ -307,6 +315,10 @@ export const STRINGS = {
 
     toastNoGeo: "Geolocation is not available in this browser.",
     toastGeoFail: "Couldn't get your location — check the browser's permission.",
+    toastNearestNone: "No usable changing table in the data.",
+    toastNearestFound: "{dist} as the crow flies: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Add a missing place",
     dlgIntro: "PapaMap has no data of its own — new places go into OpenStreetMap and show up here after the nightly refresh.",
@@ -337,6 +349,7 @@ export const STRINGS = {
     ariaZoomIn: "Zoom ind",
     ariaZoomOut: "Zoom ud",
     ariaLocate: "Vis min placering",
+    ariaNearest: "Find det nærmeste brugbare puslebord",
     ariaHome: "PapaMap — forsiden",
     ariaClose: "Luk",
     ariaLang: "Vælg sprog",
@@ -392,6 +405,7 @@ export const STRINGS = {
     popupHours: "Åbningstider",
     popupAnswerMC: "Svar på MapComplete",
     popupViewOSM: "Se på OSM",
+    popupDirections: "Rute",
     popupToilets: "Offentligt toilet",
     popupUnnamed: "Sted uden navn",
 
@@ -405,6 +419,10 @@ export const STRINGS = {
 
     toastNoGeo: "Placering er ikke tilgængelig i denne browser.",
     toastGeoFail: "Kunne ikke finde din placering — tjek browserens tilladelse.",
+    toastNearestNone: "Intet brugbart puslebord i dataene.",
+    toastNearestFound: "{dist} i luftlinje: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Tilføj et sted, der mangler",
     dlgIntro: "PapaMap har ingen egne data — nye steder kommer ind i OpenStreetMap og dukker op her efter den natlige opdatering.",
@@ -438,6 +456,7 @@ export const STRINGS = {
     ariaZoomIn: "Inzoomen",
     ariaZoomOut: "Uitzoomen",
     ariaLocate: "Mijn locatie tonen",
+    ariaNearest: "Dichtstbijzijnde bruikbare verschoontafel vinden",
     ariaHome: "PapaMap — startpagina",
     ariaClose: "Sluiten",
     ariaLang: "Taal kiezen",
@@ -488,6 +507,7 @@ export const STRINGS = {
     popupHours: "Openingstijden",
     popupAnswerMC: "Beantwoorden op MapComplete",
     popupViewOSM: "Bekijken op OSM",
+    popupDirections: "Route",
     popupToilets: "Openbaar toilet",
     popupUnnamed: "Naamloze plek",
 
@@ -501,6 +521,10 @@ export const STRINGS = {
 
     toastNoGeo: "Locatiebepaling is niet beschikbaar in deze browser.",
     toastGeoFail: "Locatie niet gevonden — controleer de toestemming in de browser.",
+    toastNearestNone: "Geen bruikbare verschoontafel in de gegevens.",
+    toastNearestFound: "{dist} hemelsbreed: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Ontbrekende plek toevoegen",
     dlgIntro: "PapaMap heeft geen eigen gegevens — nieuwe plekken gaan naar OpenStreetMap en verschijnen hier na de nachtelijke update.",
@@ -532,6 +556,7 @@ export const STRINGS = {
     ariaZoomIn: "Zoom avant",
     ariaZoomOut: "Zoom arrière",
     ariaLocate: "Afficher ma position",
+    ariaNearest: "Trouver la table à langer accessible la plus proche",
     ariaHome: "PapaMap — accueil",
     ariaClose: "Fermer",
     ariaLang: "Choisir la langue",
@@ -582,6 +607,7 @@ export const STRINGS = {
     popupHours: "Horaires",
     popupAnswerMC: "Répondre sur MapComplete",
     popupViewOSM: "Voir sur OSM",
+    popupDirections: "Itinéraire",
     popupToilets: "Toilettes publiques",
     popupUnnamed: "Lieu sans nom",
 
@@ -595,6 +621,10 @@ export const STRINGS = {
 
     toastNoGeo: "La géolocalisation n'est pas disponible dans ce navigateur.",
     toastGeoFail: "Position introuvable — vérifie l'autorisation du navigateur.",
+    toastNearestNone: "Aucune table à langer accessible dans les données.",
+    toastNearestFound: "{dist} à vol d'oiseau : {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Ajouter un lieu manquant",
     dlgIntro: "PapaMap n'a pas de données à lui — les nouveaux lieux vont dans OpenStreetMap et apparaissent ici après la mise à jour nocturne.",
@@ -626,6 +656,7 @@ export const STRINGS = {
     ariaZoomIn: "Ingrandisci",
     ariaZoomOut: "Rimpicciolisci",
     ariaLocate: "Mostra la mia posizione",
+    ariaNearest: "Trova il fasciatoio raggiungibile più vicino",
     ariaHome: "PapaMap — pagina iniziale",
     ariaClose: "Chiudi",
     ariaLang: "Scegli la lingua",
@@ -676,6 +707,7 @@ export const STRINGS = {
     popupHours: "Orari",
     popupAnswerMC: "Rispondi su MapComplete",
     popupViewOSM: "Vedi su OSM",
+    popupDirections: "Indicazioni",
     popupToilets: "Bagno pubblico",
     popupUnnamed: "Luogo senza nome",
 
@@ -689,6 +721,10 @@ export const STRINGS = {
 
     toastNoGeo: "La geolocalizzazione non è disponibile in questo browser.",
     toastGeoFail: "Non riesco a trovare la tua posizione — controlla i permessi del browser.",
+    toastNearestNone: "Nessun fasciatoio raggiungibile nei dati.",
+    toastNearestFound: "{dist} in linea d'aria: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Aggiungi un luogo che manca",
     dlgIntro: "PapaMap non ha dati propri — i nuovi luoghi finiscono in OpenStreetMap e compaiono qui dopo l'aggiornamento notturno.",
@@ -720,6 +756,7 @@ export const STRINGS = {
     ariaZoomIn: "Přiblížit",
     ariaZoomOut: "Oddálit",
     ariaLocate: "Zobrazit mou polohu",
+    ariaNearest: "Najít nejbližší použitelný přebalovací pult",
     ariaHome: "PapaMap — úvodní stránka",
     ariaClose: "Zavřít",
     ariaLang: "Vybrat jazyk",
@@ -770,6 +807,7 @@ export const STRINGS = {
     popupHours: "Otevírací doba",
     popupAnswerMC: "Odpovědět na MapComplete",
     popupViewOSM: "Zobrazit na OSM",
+    popupDirections: "Trasa",
     popupToilets: "Veřejné WC",
     popupUnnamed: "Místo bez názvu",
 
@@ -783,6 +821,10 @@ export const STRINGS = {
 
     toastNoGeo: "Určování polohy není v tomto prohlížeči k dispozici.",
     toastGeoFail: "Polohu se nepodařilo zjistit — zkontroluj oprávnění prohlížeče.",
+    toastNearestNone: "Žádný použitelný přebalovací pult v datech.",
+    toastNearestFound: "{dist} vzdušnou čarou: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Přidat chybějící místo",
     dlgIntro: "PapaMap nemá vlastní data — nová místa se zapisují do OpenStreetMap a objeví se tady po noční aktualizaci.",
@@ -814,6 +856,7 @@ export const STRINGS = {
     ariaZoomIn: "Powiększ",
     ariaZoomOut: "Pomniejsz",
     ariaLocate: "Pokaż moją lokalizację",
+    ariaNearest: "Znajdź najbliższy dostępny przewijak",
     ariaHome: "PapaMap — strona główna",
     ariaClose: "Zamknij",
     ariaLang: "Wybierz język",
@@ -864,6 +907,7 @@ export const STRINGS = {
     popupHours: "Godziny otwarcia",
     popupAnswerMC: "Odpowiedz w MapComplete",
     popupViewOSM: "Zobacz na OSM",
+    popupDirections: "Trasa",
     popupToilets: "Toaleta publiczna",
     popupUnnamed: "Miejsce bez nazwy",
 
@@ -877,6 +921,10 @@ export const STRINGS = {
 
     toastNoGeo: "Geolokalizacja nie jest dostępna w tej przeglądarce.",
     toastGeoFail: "Nie udało się ustalić lokalizacji — sprawdź uprawnienia przeglądarki.",
+    toastNearestNone: "Brak dostępnego przewijaka w danych.",
+    toastNearestFound: "{dist} w linii powietrznej: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Dodaj brakujące miejsce",
     dlgIntro: "PapaMap nie ma własnych danych — nowe miejsca trafiają do OpenStreetMap i pojawiają się tutaj po nocnej aktualizacji.",
@@ -908,6 +956,7 @@ export const STRINGS = {
     ariaZoomIn: "Zooma in",
     ariaZoomOut: "Zooma ut",
     ariaLocate: "Visa min position",
+    ariaNearest: "Hitta närmaste användbara skötbord",
     ariaHome: "PapaMap — startsidan",
     ariaClose: "Stäng",
     ariaLang: "Välj språk",
@@ -958,6 +1007,7 @@ export const STRINGS = {
     popupHours: "Öppettider",
     popupAnswerMC: "Svara på MapComplete",
     popupViewOSM: "Visa på OSM",
+    popupDirections: "Rutt",
     popupToilets: "Offentlig toalett",
     popupUnnamed: "Namnlös plats",
 
@@ -971,6 +1021,10 @@ export const STRINGS = {
 
     toastNoGeo: "Positionering är inte tillgänglig i den här webbläsaren.",
     toastGeoFail: "Hittade inte din position — kontrollera webbläsarens behörighet.",
+    toastNearestNone: "Inget användbart skötbord i data.",
+    toastNearestFound: "{dist} fågelvägen: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Lägg till en plats som saknas",
     dlgIntro: "PapaMap har inga egna data — nya platser hamnar i OpenStreetMap och dyker upp här efter den nattliga uppdateringen.",
@@ -1001,6 +1055,7 @@ export const STRINGS = {
     ariaZoomIn: "Uvećaj",
     ariaZoomOut: "Umanji",
     ariaLocate: "Prikaži moju lokaciju",
+    ariaNearest: "Pronađi najbliži dostupan sto za previjanje",
     ariaHome: "PapaMap — početna stranica",
     ariaClose: "Zatvori",
     ariaLang: "Odaberi jezik",
@@ -1051,6 +1106,7 @@ export const STRINGS = {
     popupHours: "Radno vrijeme",
     popupAnswerMC: "Odgovori na MapComplete",
     popupViewOSM: "Pogledaj na OSM",
+    popupDirections: "Ruta",
     popupToilets: "Javni WC",
     popupUnnamed: "Mjesto bez naziva",
 
@@ -1064,6 +1120,10 @@ export const STRINGS = {
 
     toastNoGeo: "Geolokacija nije dostupna u ovom pregledniku.",
     toastGeoFail: "Nije moguće utvrditi tvoju lokaciju — provjeri dozvole preglednika.",
+    toastNearestNone: "Nema dostupnog stola za previjanje u podacima.",
+    toastNearestFound: "{dist} zračnom linijom: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Dodaj mjesto koje nedostaje",
     dlgIntro: "PapaMap nema svoje podatke — nova mjesta idu u OpenStreetMap i ovdje se pojavljuju nakon noćnog ažuriranja.",
@@ -1094,6 +1154,7 @@ export const STRINGS = {
     ariaZoomIn: "Apropa",
     ariaZoomOut: "Allunya",
     ariaLocate: "Mostra la meva ubicació",
+    ariaNearest: "Troba el canviador accessible més proper",
     ariaHome: "PapaMap — pàgina d'inici",
     ariaClose: "Tanca",
     ariaLang: "Tria l'idioma",
@@ -1144,6 +1205,7 @@ export const STRINGS = {
     popupHours: "Horari",
     popupAnswerMC: "Respon a MapComplete",
     popupViewOSM: "Mira-ho a OSM",
+    popupDirections: "Itinerari",
     popupToilets: "Lavabos públics",
     popupUnnamed: "Lloc sense nom",
 
@@ -1157,6 +1219,10 @@ export const STRINGS = {
 
     toastNoGeo: "La geolocalització no està disponible en aquest navegador.",
     toastGeoFail: "No s'ha pogut trobar la teva ubicació — comprova els permisos del navegador.",
+    toastNearestNone: "Cap canviador accessible a les dades.",
+    toastNearestFound: "{dist} a vol d'ocell: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Afegeix un lloc que falta",
     dlgIntro: "PapaMap no té dades pròpies — els llocs nous van a OpenStreetMap i apareixen aquí després de l'actualització nocturna.",
@@ -1187,6 +1253,7 @@ export const STRINGS = {
     ariaZoomIn: "Suumi sisse",
     ariaZoomOut: "Suumi välja",
     ariaLocate: "Näita minu asukohta",
+    ariaNearest: "Leia lähim kasutatav mähkimislaud",
     ariaHome: "PapaMap — avaleht",
     ariaClose: "Sulge",
     ariaLang: "Vali keel",
@@ -1237,6 +1304,7 @@ export const STRINGS = {
     popupHours: "Lahtiolekuajad",
     popupAnswerMC: "Vasta MapComplete'is",
     popupViewOSM: "Vaata OSM-is",
+    popupDirections: "Marsruut",
     popupToilets: "Avalik tualett",
     popupUnnamed: "Nimetu koht",
 
@@ -1250,6 +1318,10 @@ export const STRINGS = {
 
     toastNoGeo: "Asukoha määramine ei ole selles brauseris saadaval.",
     toastGeoFail: "Asukohta ei õnnestunud leida — kontrolli brauseri luba.",
+    toastNearestNone: "Kasutatavat mähkimislauda andmetes ei ole.",
+    toastNearestFound: "{dist} linnulennult: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Lisa puuduv koht",
     dlgIntro: "PapaMapil pole oma andmeid — uued kohad lähevad OpenStreetMapi ja ilmuvad siia pärast öist uuendust.",
@@ -1280,6 +1352,7 @@ export const STRINGS = {
     ariaZoomIn: "Acercar",
     ariaZoomOut: "Alejar",
     ariaLocate: "Mostrar mi ubicación",
+    ariaNearest: "Encontrar el cambiador utilizable más cercano",
     ariaHome: "PapaMap — inicio",
     ariaClose: "Cerrar",
     ariaLang: "Elegir idioma",
@@ -1330,6 +1403,7 @@ export const STRINGS = {
     popupHours: "Horario",
     popupAnswerMC: "Responder en MapComplete",
     popupViewOSM: "Ver en OSM",
+    popupDirections: "Ruta",
     popupToilets: "Aseo público",
     popupUnnamed: "Lugar sin nombre",
 
@@ -1343,6 +1417,10 @@ export const STRINGS = {
 
     toastNoGeo: "La geolocalización no está disponible en este navegador.",
     toastGeoFail: "No se ha podido encontrar tu ubicación — comprueba el permiso del navegador.",
+    toastNearestNone: "No hay ningún cambiador utilizable en los datos.",
+    toastNearestFound: "{dist} en línea recta: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Añadir un lugar que falta",
     dlgIntro: "PapaMap no tiene datos propios — los lugares nuevos se añaden a OpenStreetMap y aparecen aquí después de la actualización nocturna.",
@@ -1373,6 +1451,7 @@ export const STRINGS = {
     ariaZoomIn: "Približi",
     ariaZoomOut: "Udalji",
     ariaLocate: "Prikaži moju lokaciju",
+    ariaNearest: "Pronađi najbliži upotrebljivi stol za previjanje",
     ariaHome: "PapaMap — početna stranica",
     ariaClose: "Zatvori",
     ariaLang: "Odaberi jezik",
@@ -1423,6 +1502,7 @@ export const STRINGS = {
     popupHours: "Radno vrijeme",
     popupAnswerMC: "Odgovori na MapComplete",
     popupViewOSM: "Pogledaj na OSM-u",
+    popupDirections: "Ruta",
     popupToilets: "Javni WC",
     popupUnnamed: "Mjesto bez naziva",
 
@@ -1436,6 +1516,10 @@ export const STRINGS = {
 
     toastNoGeo: "Određivanje lokacije nije dostupno u ovom pregledniku.",
     toastGeoFail: "Nije moguće dohvatiti tvoju lokaciju — provjeri dopuštenje u pregledniku.",
+    toastNearestNone: "Nema upotrebljivog stola za previjanje u podacima.",
+    toastNearestFound: "{dist} zračnom linijom: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Dodaj mjesto koje nedostaje",
     dlgIntro: "PapaMap nema vlastite podatke — nova mjesta idu u OpenStreetMap i ovdje se pojave nakon noćnog osvježavanja podataka.",
@@ -1466,6 +1550,7 @@ export const STRINGS = {
     ariaZoomIn: "Þysja inn",
     ariaZoomOut: "Þysja út",
     ariaLocate: "Sýna staðsetningu mína",
+    ariaNearest: "Finna næsta nothæfa skiptiborðið",
     ariaHome: "PapaMap — forsíða",
     ariaClose: "Loka",
     ariaLang: "Velja tungumál",
@@ -1516,6 +1601,7 @@ export const STRINGS = {
     popupHours: "Opnunartími",
     popupAnswerMC: "Svara á MapComplete",
     popupViewOSM: "Skoða á OSM",
+    popupDirections: "Leið",
     popupToilets: "Almenningssalerni",
     popupUnnamed: "Nafnlaus staður",
 
@@ -1529,6 +1615,10 @@ export const STRINGS = {
 
     toastNoGeo: "Staðsetning er ekki tiltæk í þessum vafra.",
     toastGeoFail: "Tókst ekki að finna staðsetningu þína — athugaðu heimildir vafrans.",
+    toastNearestNone: "Ekkert nothæft skiptiborð er í gögnunum.",
+    toastNearestFound: "{dist} í loftlínu: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Bæta við stað sem vantar",
     dlgIntro: "PapaMap á engin eigin gögn — nýir staðir fara inn í OpenStreetMap og birtast hér eftir næturuppfærsluna.",
@@ -1559,6 +1649,7 @@ export const STRINGS = {
     ariaZoomIn: "Tuvināt",
     ariaZoomOut: "Tālināt",
     ariaLocate: "Rādīt manu atrašanās vietu",
+    ariaNearest: "Atrast tuvāko lietojamo pārtinamo galdiņu",
     ariaHome: "PapaMap — sākumlapa",
     ariaClose: "Aizvērt",
     ariaLang: "Izvēlēties valodu",
@@ -1609,6 +1700,7 @@ export const STRINGS = {
     popupHours: "Darba laiks",
     popupAnswerMC: "Atbildēt vietnē MapComplete",
     popupViewOSM: "Skatīt vietnē OSM",
+    popupDirections: "Maršruts",
     popupToilets: "Sabiedriskā tualete",
     popupUnnamed: "Vieta bez nosaukuma",
 
@@ -1622,6 +1714,10 @@ export const STRINGS = {
 
     toastNoGeo: "Šajā pārlūkprogrammā ģeolokācija nav pieejama.",
     toastGeoFail: "Neizdevās noteikt tavu atrašanās vietu — pārbaudi pārlūkprogrammas atļauju.",
+    toastNearestNone: "Datos nav lietojama pārtinamā galdiņa.",
+    toastNearestFound: "{dist} taisnā līnijā: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Pievienot trūkstošu vietu",
     dlgIntro: "PapaMapam nav savu datu — jaunas vietas nonāk OpenStreetMap kartē un šeit parādās pēc nakts atjaunināšanas.",
@@ -1652,6 +1748,7 @@ export const STRINGS = {
     ariaZoomIn: "Priartinti",
     ariaZoomOut: "Nutolinti",
     ariaLocate: "Rodyti mano buvimo vietą",
+    ariaNearest: "Rasti artimiausią tinkamą naudoti pervystymo stalą",
     ariaHome: "PapaMap — pradžia",
     ariaClose: "Uždaryti",
     ariaLang: "Pasirinkti kalbą",
@@ -1702,6 +1799,7 @@ export const STRINGS = {
     popupHours: "Darbo laikas",
     popupAnswerMC: "Atsakyti per MapComplete",
     popupViewOSM: "Peržiūrėti OSM",
+    popupDirections: "Maršrutas",
     popupToilets: "Viešas tualetas",
     popupUnnamed: "Vieta be pavadinimo",
 
@@ -1715,6 +1813,10 @@ export const STRINGS = {
 
     toastNoGeo: "Vietos nustatymas šioje naršyklėje nepasiekiamas.",
     toastGeoFail: "Nepavyko nustatyti tavo vietos — patikrink naršyklės leidimą.",
+    toastNearestNone: "Duomenyse nėra tinkamo naudoti pervystymo stalo.",
+    toastNearestFound: "{dist} tiesia linija: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Pridėti trūkstamą vietą",
     dlgIntro: "PapaMap neturi savo duomenų — naujos vietos pridedamos į OpenStreetMap ir čia atsiranda po naktinio atnaujinimo.",
@@ -1745,6 +1847,7 @@ export const STRINGS = {
     ariaZoomIn: "Nagyítás",
     ariaZoomOut: "Kicsinyítés",
     ariaLocate: "Saját helyzet megjelenítése",
+    ariaNearest: "Legközelebbi használható pelenkázóasztal megkeresése",
     ariaHome: "PapaMap — kezdőlap",
     ariaClose: "Bezárás",
     ariaLang: "Nyelv kiválasztása",
@@ -1795,6 +1898,7 @@ export const STRINGS = {
     popupHours: "Nyitvatartás",
     popupAnswerMC: "Válaszolás a MapCompleten",
     popupViewOSM: "Megtekintés az OSM-en",
+    popupDirections: "Útvonal",
     popupToilets: "Nyilvános mosdó",
     popupUnnamed: "Névtelen hely",
 
@@ -1808,6 +1912,10 @@ export const STRINGS = {
 
     toastNoGeo: "A helymeghatározás nem elérhető ebben a böngészőben.",
     toastGeoFail: "Nem sikerült megállapítani a helyzeted — ellenőrizd a böngésző engedélyét.",
+    toastNearestNone: "Nincs használható pelenkázóasztal az adatokban.",
+    toastNearestFound: "{dist} légvonalban: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Hiányzó hely hozzáadása",
     dlgIntro: "A PapaMapnek nincs saját adata — az új helyek az OpenStreetMapbe kerülnek, és az éjszakai frissítés után jelennek meg itt.",
@@ -1838,6 +1946,7 @@ export const STRINGS = {
     ariaZoomIn: "Zoom inn",
     ariaZoomOut: "Zoom ut",
     ariaLocate: "Vis min posisjon",
+    ariaNearest: "Finn nærmeste brukbare stellebord",
     ariaHome: "PapaMap — startsiden",
     ariaClose: "Lukk",
     ariaLang: "Velg språk",
@@ -1888,6 +1997,7 @@ export const STRINGS = {
     popupHours: "Åpningstider",
     popupAnswerMC: "Svar på MapComplete",
     popupViewOSM: "Se på OSM",
+    popupDirections: "Rute",
     popupToilets: "Offentlig toalett",
     popupUnnamed: "Navnløst sted",
 
@@ -1901,6 +2011,10 @@ export const STRINGS = {
 
     toastNoGeo: "Posisjonering er ikke tilgjengelig i denne nettleseren.",
     toastGeoFail: "Fant ikke posisjonen din — sjekk nettleserens tillatelse.",
+    toastNearestNone: "Ingen brukbare stellebord i dataene.",
+    toastNearestFound: "{dist} i luftlinje: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Legg til et sted som mangler",
     dlgIntro: "PapaMap har ingen egne data — nye steder legges inn i OpenStreetMap og dukker opp her etter den nattlige oppdateringen.",
@@ -1931,6 +2045,7 @@ export const STRINGS = {
     ariaZoomIn: "Aumentar zoom",
     ariaZoomOut: "Diminuir zoom",
     ariaLocate: "Mostrar a minha localização",
+    ariaNearest: "Encontrar o fraldário utilizável mais próximo",
     ariaHome: "PapaMap — página inicial",
     ariaClose: "Fechar",
     ariaLang: "Escolher idioma",
@@ -1981,6 +2096,7 @@ export const STRINGS = {
     popupHours: "Horário",
     popupAnswerMC: "Responder no MapComplete",
     popupViewOSM: "Ver no OSM",
+    popupDirections: "Rota",
     popupToilets: "Casas de banho públicas",
     popupUnnamed: "Local sem nome",
 
@@ -1994,6 +2110,10 @@ export const STRINGS = {
 
     toastNoGeo: "A geolocalização não está disponível neste navegador.",
     toastGeoFail: "Não foi possível obter a tua localização — verifica a autorização do navegador.",
+    toastNearestNone: "Não há nenhum fraldário utilizável nos dados.",
+    toastNearestFound: "{dist} em linha reta: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Adicionar um local em falta",
     dlgIntro: "O PapaMap não tem dados próprios — os locais novos vão para o OpenStreetMap e aparecem aqui depois da atualização noturna.",
@@ -2024,6 +2144,7 @@ export const STRINGS = {
     ariaZoomIn: "Mărește",
     ariaZoomOut: "Micșorează",
     ariaLocate: "Arată locația mea",
+    ariaNearest: "Găsește cea mai apropiată masă de înfășat utilizabilă",
     ariaHome: "PapaMap — pagina principală",
     ariaClose: "Închide",
     ariaLang: "Alege limba",
@@ -2074,6 +2195,7 @@ export const STRINGS = {
     popupHours: "Program",
     popupAnswerMC: "Răspunde pe MapComplete",
     popupViewOSM: "Vezi pe OSM",
+    popupDirections: "Traseu",
     popupToilets: "Toaletă publică",
     popupUnnamed: "Loc fără nume",
 
@@ -2087,6 +2209,10 @@ export const STRINGS = {
 
     toastNoGeo: "Geolocalizarea nu este disponibilă în acest browser.",
     toastGeoFail: "Nu am putut afla locația ta — verifică permisiunea browserului.",
+    toastNearestNone: "Nu există nicio masă de înfășat utilizabilă în date.",
+    toastNearestFound: "{dist} în linie dreaptă: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Adaugă un loc lipsă",
     dlgIntro: "PapaMap nu are date proprii — locurile noi ajung în OpenStreetMap și apar aici după actualizarea de peste noapte.",
@@ -2117,6 +2243,7 @@ export const STRINGS = {
     ariaZoomIn: "Zmadho",
     ariaZoomOut: "Zvogëlo",
     ariaLocate: "Shfaq vendndodhjen time",
+    ariaNearest: "Gjej tavolinën e ndërrimit më të afërt që mund të përdoret",
     ariaHome: "PapaMap — faqja kryesore",
     ariaClose: "Mbyll",
     ariaLang: "Zgjidh gjuhën",
@@ -2167,6 +2294,7 @@ export const STRINGS = {
     popupHours: "Orari",
     popupAnswerMC: "Përgjigju në MapComplete",
     popupViewOSM: "Shiko në OSM",
+    popupDirections: "Itinerar",
     popupToilets: "Tualete publike",
     popupUnnamed: "Vend pa emër",
 
@@ -2180,6 +2308,10 @@ export const STRINGS = {
 
     toastNoGeo: "Gjeolokalizimi nuk është i disponueshëm në këtë shfletues.",
     toastGeoFail: "Nuk u gjet vendndodhja jote — kontrollo lejen e shfletuesit.",
+    toastNearestNone: "Nuk ka asnjë tavolinë ndërrimi të përdorshme në të dhënat.",
+    toastNearestFound: "{dist} në vijë ajrore: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Shto një vend që mungon",
     dlgIntro: "PapaMap nuk ka të dhëna të veta — vendet e reja shkojnë në OpenStreetMap dhe shfaqen këtu pas përditësimit të natës.",
@@ -2210,6 +2342,7 @@ export const STRINGS = {
     ariaZoomIn: "Priblížiť",
     ariaZoomOut: "Oddialiť",
     ariaLocate: "Zobraziť moju polohu",
+    ariaNearest: "Nájsť najbližší dostupný prebaľovací pult",
     ariaHome: "PapaMap — domovská stránka",
     ariaClose: "Zavrieť",
     ariaLang: "Vybrať jazyk",
@@ -2260,6 +2393,7 @@ export const STRINGS = {
     popupHours: "Otváracie hodiny",
     popupAnswerMC: "Odpovedať na MapComplete",
     popupViewOSM: "Zobraziť na OSM",
+    popupDirections: "Trasa",
     popupToilets: "Verejné WC",
     popupUnnamed: "Miesto bez názvu",
 
@@ -2273,6 +2407,10 @@ export const STRINGS = {
 
     toastNoGeo: "Určovanie polohy nie je v tomto prehliadači k dispozícii.",
     toastGeoFail: "Polohu sa nepodarilo zistiť — skontroluj povolenie prehliadača.",
+    toastNearestNone: "V dátach nie je žiadny dostupný prebaľovací pult.",
+    toastNearestFound: "{dist} vzdušnou čiarou: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Pridať chýbajúce miesto",
     dlgIntro: "PapaMap nemá vlastné dáta — nové miesta sa zapisujú do OpenStreetMap a objavia sa tu po nočnej aktualizácii.",
@@ -2303,6 +2441,7 @@ export const STRINGS = {
     ariaZoomIn: "Približaj",
     ariaZoomOut: "Oddalji",
     ariaLocate: "Prikaži mojo lokacijo",
+    ariaNearest: "Poišči najbližjo dostopno previjalno mizo",
     ariaHome: "PapaMap — domača stran",
     ariaClose: "Zapri",
     ariaLang: "Izberi jezik",
@@ -2353,6 +2492,7 @@ export const STRINGS = {
     popupHours: "Odpiralni čas",
     popupAnswerMC: "Odgovori na MapComplete",
     popupViewOSM: "Poglej na OSM",
+    popupDirections: "Pot",
     popupToilets: "Javno stranišče",
     popupUnnamed: "Neimenovan kraj",
 
@@ -2366,6 +2506,10 @@ export const STRINGS = {
 
     toastNoGeo: "Geolokacija v tem brskalniku ni na voljo.",
     toastGeoFail: "Lokacije ni bilo mogoče ugotoviti — preveri dovoljenje brskalnika.",
+    toastNearestNone: "V podatkih ni nobene dostopne previjalne mize.",
+    toastNearestFound: "{dist} po zračni črti: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Dodaj manjkajoč kraj",
     dlgIntro: "PapaMap nima lastnih podatkov — novi kraji gredo v OpenStreetMap in se tu pojavijo po nočni posodobitvi.",
@@ -2396,6 +2540,7 @@ export const STRINGS = {
     ariaZoomIn: "Lähennä",
     ariaZoomOut: "Loitonna",
     ariaLocate: "Näytä sijaintini",
+    ariaNearest: "Etsi lähin käytettävä hoitopöytä",
     ariaHome: "PapaMap — etusivu",
     ariaClose: "Sulje",
     ariaLang: "Valitse kieli",
@@ -2446,6 +2591,7 @@ export const STRINGS = {
     popupHours: "Aukioloajat",
     popupAnswerMC: "Vastaa MapCompletessa",
     popupViewOSM: "Katso OSM:ssä",
+    popupDirections: "Reitti",
     popupToilets: "Julkinen WC",
     popupUnnamed: "Nimetön paikka",
 
@@ -2459,6 +2605,10 @@ export const STRINGS = {
 
     toastNoGeo: "Sijainninmääritys ei ole käytettävissä tässä selaimessa.",
     toastGeoFail: "Sijaintia ei löytynyt — tarkista selaimen käyttöoikeus.",
+    toastNearestNone: "Käytettävää hoitopöytää ei löydy tiedoista.",
+    toastNearestFound: "{dist} linnuntietä: {name}",
+    distM: "{n} m",
+    distKm: "{n} km",
 
     dlgTitle: "Lisää puuttuva paikka",
     dlgIntro: "PapaMapilla ei ole omaa dataa — uudet paikat lisätään OpenStreetMapiin ja ilmestyvät tänne yöllisen päivityksen jälkeen.",
@@ -2489,6 +2639,7 @@ export const STRINGS = {
     ariaZoomIn: "Μεγέθυνση",
     ariaZoomOut: "Σμίκρυνση",
     ariaLocate: "Εμφάνιση της τοποθεσίας μου",
+    ariaNearest: "Εύρεση της πλησιέστερης διαθέσιμης αλλαξιέρας",
     ariaHome: "PapaMap — αρχική",
     ariaClose: "Κλείσιμο",
     ariaLang: "Επιλογή γλώσσας",
@@ -2539,6 +2690,7 @@ export const STRINGS = {
     popupHours: "Ωράριο",
     popupAnswerMC: "Απάντηση στο MapComplete",
     popupViewOSM: "Προβολή στο OSM",
+    popupDirections: "Διαδρομή",
     popupToilets: "Δημόσιες τουαλέτες",
     popupUnnamed: "Μέρος χωρίς όνομα",
 
@@ -2552,6 +2704,10 @@ export const STRINGS = {
 
     toastNoGeo: "Ο εντοπισμός τοποθεσίας δεν είναι διαθέσιμος σε αυτό το πρόγραμμα περιήγησης.",
     toastGeoFail: "Δεν ήταν δυνατός ο εντοπισμός της τοποθεσίας σου — έλεγξε τα δικαιώματα του προγράμματος περιήγησης.",
+    toastNearestNone: "Δεν υπάρχει διαθέσιμη αλλαξιέρα στα δεδομένα.",
+    toastNearestFound: "{dist} σε ευθεία γραμμή: {name}",
+    distM: "{n} μ",
+    distKm: "{n} χλμ",
 
     dlgTitle: "Προσθήκη μέρους που λείπει",
     dlgIntro: "Το PapaMap δεν έχει δικά του δεδομένα — τα νέα μέρη καταχωρούνται στο OpenStreetMap και εμφανίζονται εδώ μετά τη νυχτερινή ενημέρωση.",
@@ -2582,6 +2738,7 @@ export const STRINGS = {
     ariaZoomIn: "Павялічыць",
     ariaZoomOut: "Паменшыць",
     ariaLocate: "Паказаць маё месцазнаходжанне",
+    ariaNearest: "Знайсці найбліжэйшы даступны стол для спавівання",
     ariaHome: "PapaMap — галоўная старонка",
     ariaClose: "Закрыць",
     ariaLang: "Выбраць мову",
@@ -2632,6 +2789,7 @@ export const STRINGS = {
     popupHours: "Гадзіны працы",
     popupAnswerMC: "Адказаць на MapComplete",
     popupViewOSM: "Паглядзець на OSM",
+    popupDirections: "Маршрут",
     popupToilets: "Грамадскі туалет",
     popupUnnamed: "Месца без назвы",
 
@@ -2645,6 +2803,10 @@ export const STRINGS = {
 
     toastNoGeo: "Вызначэнне месцазнаходжання недаступнае ў гэтым браўзеры.",
     toastGeoFail: "Не ўдалося вызначыць тваё месцазнаходжанне — правер дазвол браўзера.",
+    toastNearestNone: "У дадзеных няма даступнага стала для спавівання.",
+    toastNearestFound: "{dist} па прамой: {name}",
+    distM: "{n} м",
+    distKm: "{n} км",
 
     dlgTitle: "Дадаць адсутнае месца",
     dlgIntro: "PapaMap не мае ўласных дадзеных — новыя месцы трапляюць у OpenStreetMap і з'яўляюцца тут пасля начнога абнаўлення.",
@@ -2675,6 +2837,7 @@ export const STRINGS = {
     ariaZoomIn: "Приближаване",
     ariaZoomOut: "Отдалечаване",
     ariaLocate: "Покажи местоположението ми",
+    ariaNearest: "Намери най-близката достъпна маса за повиване",
     ariaHome: "PapaMap — начало",
     ariaClose: "Затвори",
     ariaLang: "Избери език",
@@ -2725,6 +2888,7 @@ export const STRINGS = {
     popupHours: "Работно време",
     popupAnswerMC: "Отговори в MapComplete",
     popupViewOSM: "Виж в OSM",
+    popupDirections: "Маршрут",
     popupToilets: "Обществена тоалетна",
     popupUnnamed: "Място без име",
 
@@ -2738,6 +2902,10 @@ export const STRINGS = {
 
     toastNoGeo: "Определянето на местоположение не е достъпно в този браузър.",
     toastGeoFail: "Местоположението не бе намерено — провери разрешенията на браузъра.",
+    toastNearestNone: "В данните няма достъпна маса за повиване.",
+    toastNearestFound: "{dist} по права линия: {name}",
+    distM: "{n} м",
+    distKm: "{n} км",
 
     dlgTitle: "Добави липсващо място",
     dlgIntro: "PapaMap няма собствени данни — новите места отиват в OpenStreetMap и се появяват тук след нощната актуализация.",
@@ -2768,6 +2936,7 @@ export const STRINGS = {
     ariaZoomIn: "Зголеми",
     ariaZoomOut: "Намали",
     ariaLocate: "Прикажи ја мојата локација",
+    ariaNearest: "Пронајди ја најблиската достапна маса за пеленање",
     ariaHome: "PapaMap — почетна",
     ariaClose: "Затвори",
     ariaLang: "Избери јазик",
@@ -2818,6 +2987,7 @@ export const STRINGS = {
     popupHours: "Работно време",
     popupAnswerMC: "Одговори на MapComplete",
     popupViewOSM: "Погледни на OSM",
+    popupDirections: "Маршрута",
     popupToilets: "Јавни тоалети",
     popupUnnamed: "Место без име",
 
@@ -2831,6 +3001,10 @@ export const STRINGS = {
 
     toastNoGeo: "Геолокацијата не е достапна во овој прелистувач.",
     toastGeoFail: "Не успеавме да ја одредиме твојата локација — провери ја дозволата на прелистувачот.",
+    toastNearestNone: "Во податоците нема достапна маса за пеленање.",
+    toastNearestFound: "{dist} во права линија: {name}",
+    distM: "{n} м",
+    distKm: "{n} км",
 
     dlgTitle: "Додади место што недостасува",
     dlgIntro: "PapaMap нема сопствени податоци — новите места одат во OpenStreetMap и се појавуваат тука по ноќното ажурирање.",
@@ -2861,6 +3035,7 @@ export const STRINGS = {
     ariaZoomIn: "Увећај",
     ariaZoomOut: "Умањи",
     ariaLocate: "Прикажи моју локацију",
+    ariaNearest: "Пронађи најближи доступан сто за превијање",
     ariaHome: "PapaMap — почетна",
     ariaClose: "Затвори",
     ariaLang: "Изабери језик",
@@ -2911,6 +3086,7 @@ export const STRINGS = {
     popupHours: "Радно време",
     popupAnswerMC: "Одговори на MapComplete",
     popupViewOSM: "Погледај на OSM",
+    popupDirections: "Маршрута",
     popupToilets: "Јавни тоалет",
     popupUnnamed: "Неименовано место",
 
@@ -2924,6 +3100,10 @@ export const STRINGS = {
 
     toastNoGeo: "Одређивање локације није доступно у овом прегледачу.",
     toastGeoFail: "Није могуће утврдити твоју локацију — провери дозволу прегледача.",
+    toastNearestNone: "У подацима нема доступног стола за превијање.",
+    toastNearestFound: "{dist} ваздушном линијом: {name}",
+    distM: "{n} м",
+    distKm: "{n} км",
 
     dlgTitle: "Додај место које недостаје",
     dlgIntro: "PapaMap нема сопствене податке — нова места иду у OpenStreetMap и појављују се овде после ноћног освежавања.",
@@ -2954,6 +3134,7 @@ export const STRINGS = {
     ariaZoomIn: "Наблизити",
     ariaZoomOut: "Віддалити",
     ariaLocate: "Показати моє місцезнаходження",
+    ariaNearest: "Знайти найближчий доступний пеленальний столик",
     ariaHome: "PapaMap — головна",
     ariaClose: "Закрити",
     ariaLang: "Вибрати мову",
@@ -3004,6 +3185,7 @@ export const STRINGS = {
     popupHours: "Години роботи",
     popupAnswerMC: "Відповісти на MapComplete",
     popupViewOSM: "Переглянути на OSM",
+    popupDirections: "Маршрут",
     popupToilets: "Громадський туалет",
     popupUnnamed: "Місце без назви",
 
@@ -3017,6 +3199,10 @@ export const STRINGS = {
 
     toastNoGeo: "Визначення місцезнаходження недоступне в цьому браузері.",
     toastGeoFail: "Не вдалося визначити місцезнаходження — перевір дозвіл браузера.",
+    toastNearestNone: "У даних немає доступного пеленального столика.",
+    toastNearestFound: "{dist} навпростець: {name}",
+    distM: "{n} м",
+    distKm: "{n} км",
 
     dlgTitle: "Додати місце, якого бракує",
     dlgIntro: "PapaMap не має власних даних — нові місця потрапляють в OpenStreetMap і з'являються тут після нічного оновлення.",
@@ -3051,6 +3237,7 @@ export const STRINGS = {
     ariaZoomIn: "ズームイン",
     ariaZoomOut: "ズームアウト",
     ariaLocate: "現在地を表示",
+    ariaNearest: "最も近い使えるおむつ交換台を見つける",
     ariaHome: "PapaMap — ホーム",
     ariaClose: "閉じる",
     ariaLang: "言語を選択",
@@ -3101,6 +3288,7 @@ export const STRINGS = {
     popupHours: "営業時間",
     popupAnswerMC: "MapCompleteで答える",
     popupViewOSM: "OSMで見る",
+    popupDirections: "ルート",
     popupToilets: "公衆トイレ",
     popupUnnamed: "名前のない場所",
 
@@ -3114,6 +3302,10 @@ export const STRINGS = {
 
     toastNoGeo: "このブラウザでは位置情報を利用できません。",
     toastGeoFail: "現在地を取得できませんでした — ブラウザの位置情報の許可を確認してください。",
+    toastNearestNone: "データに使えるおむつ交換台がありません。",
+    toastNearestFound: "直線距離で{dist}: {name}",
+    distM: "{n}m",
+    distKm: "{n}km",
 
     dlgTitle: "足りない場所を追加",
     dlgIntro: "PapaMapは独自のデータを持っていません — 新しい場所はOpenStreetMapに登録され、夜間更新のあとここに表示されます。",

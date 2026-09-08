@@ -281,3 +281,74 @@ export function pinColorExpression(mode) {
 export function momCounts({ accessible = 0, female_only = 0, unknown = 0 } = {}) {
   return { good: accessible + female_only, maybe: unknown };
 }
+
+// ---- Nearest usable table ----
+// "Usable" is the reading's own verdict, not a second classification: a status
+// counts when the view already buckets it "good". So a father searches the
+// green pins and a mother searches green and red together, both fall out of
+// the same VIEW table the colours come from, and neither one re-derives
+// anything from the raw tags. Add a mode to VIEW and this follows for free.
+export function usableStatuses(mode) {
+  return STATUSES.filter((s) => viewFor(s, mode).bucket === "good");
+}
+
+const EARTH_KM = 6371;
+const rad = (deg) => (deg * Math.PI) / 180;
+
+// Haversine on a sphere. The answers here are a few kilometres at most, where
+// the error against a proper ellipsoid geodesic is centimetres — orders below
+// the accuracy of the phone fix the distance is measured from, so the extra
+// arithmetic would buy precision the input never had.
+export function haversineKm(aLat, aLon, bLat, bLon) {
+  const dLat = rad(bLat - aLat), dLon = rad(bLon - aLon);
+  const h = Math.sin(dLat / 2) ** 2
+    + Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(dLon / 2) ** 2;
+  // min(1, …) guards the domain of asin: for two identical points the root can
+  // land a float epsilon above 1 and hand back NaN.
+  return 2 * EARTH_KM * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+// Straight-line nearest over the whole loaded set, which is every pin in every
+// swept country — the site holds the entire GeoJSON in memory, so this is a
+// real global nearest and not the nearest thing in the current viewport.
+//
+// Straight-line, though, and the popup says so: a table 200 m away across a
+// river or a motorway is not 200 m away on foot. Routing is what would fix
+// that, and routing needs a server this project does not have.
+export function nearestUsable(features, lat, lon, mode) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  const ok = new Set(usableStatuses(mode));
+  let best = null;
+  for (const f of features) {
+    if (!ok.has(f.status)) continue;
+    if (!Number.isFinite(f.lat) || !Number.isFinite(f.lon)) continue;
+    const km = haversineKm(lat, lon, f.lat, f.lon);
+    if (best === null || km < best.km) best = { feature: f, km };
+  }
+  return best;
+}
+
+// Metres below a kilometre, and rounded to the nearest ten: a good phone fix
+// is accurate to a handful of metres and a poor one to fifty, so "437 m" would
+// claim a precision the sensor cannot deliver. Returns the i18n key and the
+// bare number; the caller formats the number in the reader's own locale.
+export function formatDistance(km) {
+  // Round first, then choose the unit: picking metres for anything under a
+  // kilometre and rounding afterwards renders 999 m as "1000 m", which is a
+  // kilometre written the long way round.
+  const m = Math.round((km * 1000) / 10) * 10;
+  return m < 1000
+    ? { key: "distM", n: m }
+    : { key: "distKm", n: Math.round(km * 10) / 10 };
+}
+
+// A geo: URI hands the coordinates to whichever map app the reader already has
+// — Apple Maps on an iPhone, Google Maps or Organic Maps or OsmAnd on Android
+// — instead of this site picking one for them and telling a third party where
+// they are standing. Desktop browsers mostly ignore it, which is why the popup
+// keeps the openstreetmap.org link beside it.
+export function geoUri(lat, lon, label) {
+  const at = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+  const q = label ? `(${encodeURIComponent(label)})` : "";
+  return `geo:${at}?q=${at}${q}`;
+}
