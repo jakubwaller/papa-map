@@ -628,6 +628,14 @@ function syncModeButtons() {
     modeButtons[m].classList.toggle("on", on);
     modeButtons[m].setAttribute("aria-pressed", String(on));
   }
+  // The <h1> is the map's promise, and in the mother's reading the father's
+  // version contradicts the pins under it. Swap the key rather than the text —
+  // the same trick the stats toggle uses for its aria-label — so applyI18n()
+  // re-reads it on a language change instead of resetting it to the father's.
+  // Crawlers only ever see the markup default, which is the papa line.
+  const tagline = document.querySelector(".tagline");
+  tagline.dataset.i18n = mode === "mama" ? "taglineMama" : "tagline";
+  tagline.textContent = t(tagline.dataset.i18n);
 }
 
 function applyMode() {
