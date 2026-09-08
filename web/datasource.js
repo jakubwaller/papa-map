@@ -204,3 +204,80 @@ export function placesToFeatureCollection(places) {
     })),
   };
 }
+
+// ---- Papa/Mama: two readings of the same three answers ----
+// The pipeline's `status` is, and stays, the dad question: can a father reach
+// this table. Mothers are the larger audience by a distance (roughly nine in
+// ten parental-leave months), and for them the same three answers mean
+// something else — a table in the women's room is usable, and an unrecorded
+// room is usually usable too. So the site gets a second *reading*, never a
+// second classification: everything below is a lookup over the three values
+// classify.py already emits, and no OSM tag is consulted here. That is what
+// keeps CONTRACT.md's rule intact — classification lives only in Python.
+export const MODES = ["papa", "mama"];
+export const DEFAULT_MODE = "papa";
+
+// ?mode= beats the stored choice beats the default — the precedence pickLang
+// already uses, minus browser detection: a mode is not a locale, and no
+// browser header says whether the reader is a father or a mother.
+export function pickMode(query, stored) {
+  if (MODES.includes(query)) return query;
+  if (MODES.includes(stored)) return stored;
+  return DEFAULT_MODE;
+}
+
+// One row per (mode, status). `bucket` is the shared vocabulary the pin
+// layer, the chips and the popup all paint and label from, so none of the
+// three can drift into disagreeing about what a mode means. The papa rows
+// are exactly the STATUS_COLOR / STATUS_META tables app.js carried before,
+// moved here so they are unit-testable and so "papa mode is unchanged" is a
+// property of one file rather than a promise.
+const VIEW = {
+  papa: {
+    accessible:  { bucket: "good",  cls: "ok",    labelKey: "stAccessible",     metaKey: "metaAccessible" },
+    female_only: { bucket: "bad",   cls: "bad",   labelKey: "stFemaleOnly",     metaKey: "metaFemaleOnly" },
+    unknown:     { bucket: "ask",   cls: "ask",   labelKey: "stUnknown",        metaKey: "metaUnknown" },
+  },
+  mama: {
+    // Both rooms collapse into one bucket: an openly accessible table and a
+    // women's-room table are equally usable to her. Unknown becomes "maybe"
+    // rather than the grey call to action — for a mother an unrecorded room
+    // is usually still her room, so grey would overstate the doubt.
+    accessible:  { bucket: "good",  cls: "ok",    labelKey: "stAccessibleMama", metaKey: "metaAccessibleMama" },
+    female_only: { bucket: "good",  cls: "ok",    labelKey: "stFemaleOnlyMama", metaKey: "metaFemaleOnlyMama" },
+    unknown:     { bucket: "maybe", cls: "maybe", labelKey: "stUnknownMama",    metaKey: "metaUnknownMama" },
+  },
+};
+
+// An unknown mode or status degrades to the papa reading rather than throwing:
+// a hand-typed ?mode=papi must render the map, not a blank page.
+export function viewFor(status, mode) {
+  const rows = VIEW[mode] ?? VIEW[DEFAULT_MODE];
+  return rows[status] ?? VIEW[DEFAULT_MODE].unknown;
+}
+
+// Okabe-Ito throughout. good/bad/ask are the exact three values app.js used
+// before; `maybe` is the one new colour — the palette's orange, far enough
+// from the blue play halo and from all three status colours to stay readable
+// under the common kinds of colour-vision deficiency.
+export const BUCKET_COLOR = {
+  good: "#009e73", bad: "#d55e00", ask: "#3d4247", maybe: "#e69f00",
+};
+
+// A MapLibre paint expression rather than a per-feature branch: switching
+// mode is then one setPaintProperty on a layer whose source data never
+// moves, so 26k pins recolour without a setData() or a re-fetch.
+export function pinColorExpression(mode) {
+  return ["match", ["get", "status"],
+    "accessible", BUCKET_COLOR[viewFor("accessible", mode).bucket],
+    "female_only", BUCKET_COLOR[viewFor("female_only", mode).bucket],
+    /* unknown */ BUCKET_COLOR[viewFor("unknown", mode).bucket]];
+}
+
+// The mama reading of the local stats sentence: the two rooms add up, the
+// unrecorded ones stay their own number. Same three fields stats.json already
+// carries — no new pipeline field, no new query, nothing added to the
+// contract's emitted shape.
+export function momCounts({ accessible = 0, female_only = 0, unknown = 0 } = {}) {
+  return { good: accessible + female_only, maybe: unknown };
+}

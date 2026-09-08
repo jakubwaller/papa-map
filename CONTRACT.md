@@ -1,5 +1,42 @@
 # papa-map — build contract (v0)
 
+> **v23 amendment (8 Sep 2026, the Papa/Mama reading):** the frontend now offers
+> **two readings of the same three statuses**, and the emitted shape does not change
+> by one byte. `classify.py` still answers exactly one question — can a *father*
+> reach this table — and still emits `accessible | female_only | unknown`; the new
+> `viewFor(status, mode)` in `web/datasource.js` is a lookup over those three values
+> and nothing else. No OSM tag is read in JavaScript, no fourth status exists, and
+> `stats.json`, `changing_tables.geojson` and `history.json` are untouched.
+>
+> **What the mother's reading changes:** `accessible` and `female_only` both paint
+> green (a table in the women's room is one she can use), and `unknown` paints
+> Okabe-Ito orange `#e69f00` rather than the grey call to action, because for her an
+> unrecorded room is usually still her room. The three filter chips stay three, over
+> the *literal* status, with identical counts in both readings — a mother may
+> deliberately want the women's-room tables over a shared unisex one, and collapsing
+> the chips would remove that. Only the pin colour, the chip labels, the popup
+> sentence and the one `statsLocal` sentence differ; `statsGlobal` and
+> `statsHonesty` are objective dataset facts and stay mode-invariant.
+>
+> **The mother's count sentence needs no new pipeline field:** `momCounts` adds
+> `local.accessible + local.female_only` and keeps `local.unknown` apart, and those
+> three already partition the tables (2,873 + 477 + 22,419 = 25,769 = `ct_yes` +
+> `ct_limited`, live build of 8 Sep 2026).
+>
+> **The one disclosed simplification:** a table tagged `changing_table:location=male_toilet`
+> alone reads green in the mother's view too, which is not literally true. It is named
+> in `methods.html` in all 32 languages *and* hedged in the product copy itself — the
+> popup says "in rare cases the men's room only" and the count sentence says
+> "probably" — because a reader deciding at the door has not read the methods page.
+> Demoting those pins instead would mean branching on `location_raw` in JavaScript,
+> which is the re-derivation this contract forbids.
+>
+> `?mode=papa|mama` is honoured on load and stripped from the URL once the reader
+> chooses in-page, exactly as `?lang=` is; it deliberately does **not** touch the
+> canonical or the hreflang set, because a reading is a personalization of the same
+> content, not a new indexable page. Stored in `localStorage` under `papamap-mode`,
+> named in the Datenschutz beside `papamap-lang` and `papamap-app`.
+
 > **v22 amendment (5 Sep 2026, wave 3 — Japan, and Japanese as the 32nd page
 > language):** papamap.de sweeps **49 countries** — v21's 48 plus `jp`, the
 > last of the world's top six by pins that is *in*. The one left out, China

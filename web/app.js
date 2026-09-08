@@ -3,9 +3,10 @@
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox } from "./datasource.js?v=app1";
+         parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
+         pinColorExpression, momCounts } from "./datasource.js?v=mode1";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app1";
+         langUrl } from "./i18n.js?v=mode1";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -18,6 +19,15 @@ let lang = pickLang(new URLSearchParams(location.search).get("lang"),
                     localStorage.getItem("papamap-lang"),
                     navigator.languages ?? navigator.language);
 const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
+
+// ---- Reading mode: the same three answers, read as a father or as a mother.
+// Same precedence as the language, and the same storage: a shared ?mode= link
+// wins over the remembered choice, which wins over the default. The default
+// stays "papa" — it is the rendering the site has always had, the one every
+// screenshot and every piece of og: copy describes, so a mother's map is a
+// deliberate opt-in rather than a silent redefinition for everyone.
+let mode = pickMode(new URLSearchParams(location.search).get("mode"),
+                    localStorage.getItem("papamap-mode"));
 
 // index.html ships German head tags; the ?lang= views have to carry their own,
 // or the hreflang alternates it advertises would all describe themselves as the
@@ -64,10 +74,12 @@ function applyI18n() {
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
   .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-// Okabe-Ito bluish green + vermillion — distinguishable under the common kinds
-// of color-vision deficiency. Grey is deliberately the darkest pin and one size
-// up on the map: an untagged room is the call to action, not a footnote.
-const STATUS_COLOR = { accessible: "#009e73", female_only: "#d55e00", unknown: "#3d4247" };
+// The pin colours now live in datasource.js as BUCKET_COLOR, keyed by the
+// reading's bucket rather than by status directly, so the map, the chips and
+// the popup all paint from one table that a unit test can pin down. Okabe-Ito
+// throughout — distinguishable under the common kinds of colour-vision
+// deficiency. Grey is deliberately the darkest pin and one size up on the map:
+// for a father an untagged room is the call to action, not a footnote.
 
 // Okabe-Ito blue for the play-corner halo — the fourth palette entry, far
 // enough from all three status colors to stay readable under color-vision
@@ -75,17 +87,12 @@ const STATUS_COLOR = { accessible: "#009e73", female_only: "#d55e00", unknown: "
 // color still means "can a dad reach the table", and the halo annotates.
 const PLAY_COLOR = "#0072b2";
 
+// The legend order. The label and the colour of each row are read from
+// viewFor(status, mode) rather than stored here: there are two readings and
+// only one of them may be baked into a constant.
 const STATUS_DEFS = [
-  { value: "accessible", labelKey: "stAccessible" },
-  { value: "female_only", labelKey: "stFemaleOnly" },
-  { value: "unknown", labelKey: "stUnknown" },
+  { value: "accessible" }, { value: "female_only" }, { value: "unknown" },
 ];
-
-const STATUS_META = {
-  accessible: { cls: "ok", textKey: "metaAccessible" },
-  female_only: { cls: "bad", textKey: "metaFemaleOnly" },
-  unknown: { cls: "ask", textKey: "metaUnknown" },
-};
 
 const OSM_STYLE = {
   version: 8,
@@ -217,10 +224,7 @@ function addTableLayer() {
     paint: {
       // Grey (unknown) pins run one size up — they are the call to action.
       "circle-radius": pinRadius(0),
-      "circle-color": ["match", ["get", "status"],
-        "accessible", STATUS_COLOR.accessible,
-        "female_only", STATUS_COLOR.female_only,
-        /* unknown */ STATUS_COLOR.unknown],
+      "circle-color": pinColorExpression(mode),
       // Full strokes on 2-px country-zoom dots would read as all-white mush.
       "circle-stroke-width": ["interpolate", ["linear"], ["zoom"],
         5, 0.5, 10, 2],
@@ -270,9 +274,9 @@ let popup = null;
 const safeUrl = (u) => (typeof u === "string" && u.startsWith("https://") ? u : null);
 
 function popupHTML(f) {
-  const s = STATUS_META[f.status];
+  const s = viewFor(f.status, mode);
   const rows = [
-    `<div class="status ${s.cls}">${esc(t(s.textKey))}</div>`,
+    `<div class="status ${s.cls}">${esc(t(s.metaKey))}</div>`,
     `<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
       (f.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(f.location_raw)}` : "") + `</div>`,
   ];
@@ -340,12 +344,16 @@ function renderChips() {
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
   const frag = document.createDocumentFragment();
   for (const d of STATUS_DEFS) {
+    const v = viewFor(d.value, mode);
     const b = document.createElement("button");
     b.type = "button";
     b.className = "chip" + (visible.has(d.value) ? "" : " off");
     b.setAttribute("aria-pressed", String(visible.has(d.value)));
-    b.innerHTML = `<span class="dot" style="background:${STATUS_COLOR[d.value]}"></span>` +
-      `${esc(t(d.labelKey))} <span class="cnt">${counts[d.value]}</span>`;
+    // The count is the same number in both readings: the chips filter the
+    // literal status, and a mother who wants only the women's-room tables
+    // (a room with a door, not a shared unisex one) can still ask for them.
+    b.innerHTML = `<span class="dot" style="background:${BUCKET_COLOR[v.bucket]}"></span>` +
+      `${esc(t(v.labelKey))} <span class="cnt">${counts[d.value]}</span>`;
     b.addEventListener("click", () => {
       if (visible.has(d.value)) visible.delete(d.value); else visible.add(d.value);
       b.classList.toggle("off", !visible.has(d.value));
@@ -356,7 +364,9 @@ function renderChips() {
   }
   frag.appendChild(playChip(countPlay(allFeatures)));
   frag.appendChild(placesChip(allPlaces.length));
-  filterBar.insertBefore(frag, filterBar.firstChild);
+  // Not firstChild: the mode toggle is static markup and holds that slot, so
+  // the generated chips go in front of the spacer instead.
+  filterBar.insertBefore(frag, filterBar.querySelector(".spacer"));
 }
 
 // The two blue chips are deliberately not one. "Mit Spielecke" narrows the
@@ -452,10 +462,14 @@ function renderStats(stats) {
   }
   // Not the wordmark's `area`: a counted label declines inside the sentence.
   const areaInSentence = areaLabel(stats, true);
+  const m = momCounts(l);
+  const localSentence = mode === "mama"
+    ? t("statsLocalMama", { good: num(m.good), maybe: num(m.maybe),
+                            area: esc(areaInSentence || "—") })
+    : t("statsLocal", { tables: num(tables), area: esc(areaInSentence || "—"),
+                        unknown: num(l.unknown) });
   statsEl.innerHTML =
-    `<span class="stat">${t("statsLocal", {
-      tables: num(tables), area: esc(areaInSentence || "—"),
-      unknown: num(l.unknown) })}</span>` +
+    `<span class="stat">${localSentence}</span>` +
     globalPart +
     `<span class="stat honesty">${t("statsHonesty", {
       toilets: num(l.toilets_total), cap: num(l.capacity_tagged_toilets),
@@ -600,6 +614,50 @@ function fitLangSelect() {
 }
 fitLangSelect();
 
+// ---- Papa/Mama toggle: repaint, never re-fetch ----
+// Two buttons rather than a select: there are exactly two states and there
+// always will be, which is the case a segmented control is for. The pins are
+// recoloured with one setPaintProperty on a source whose data never moves —
+// 26k features change meaning without a byte being re-read.
+const modeButtons = { papa: document.getElementById("mode-papa"),
+                      mama: document.getElementById("mode-mama") };
+
+function syncModeButtons() {
+  for (const m of MODES) {
+    const on = m === mode;
+    modeButtons[m].classList.toggle("on", on);
+    modeButtons[m].setAttribute("aria-pressed", String(on));
+  }
+}
+
+function applyMode() {
+  syncModeButtons();
+  // Guarded: a click before the WebGL style is ready would throw, and the
+  // layer is created with pinColorExpression(mode) anyway, so a mode chosen
+  // that early is already painted correctly when the style arrives.
+  if (styleReady) map.setPaintProperty(SRC, "circle-color", pinColorExpression(mode));
+  if (popup) { popup.remove(); popup = null; }   // its text belonged to the old reading
+  renderStats(lastStats);
+  renderChips();
+  positionZoomCtrl();   // the sentence can wrap to a different height
+}
+
+for (const m of MODES) {
+  modeButtons[m].addEventListener("click", () => {
+    if (mode === m) return;
+    mode = m;
+    localStorage.setItem("papamap-mode", mode);
+    // A ?mode= param would override the stored choice on the next reload —
+    // drop it once the reader has chosen in-page, exactly as ?lang= does.
+    if (new URLSearchParams(location.search).has("mode")) {
+      const url = new URL(location.href);
+      url.searchParams.delete("mode");
+      history.replaceState(null, "", url);
+    }
+    applyMode();
+  });
+}
+
 langSelect.addEventListener("change", () => {
   lang = LANGS.includes(langSelect.value) ? langSelect.value : DEFAULT_LANG;
   localStorage.setItem("papamap-lang", lang);
@@ -615,6 +673,7 @@ langSelect.addEventListener("change", () => {
   renderStats(lastStats);
   renderChips();
   refreshPins();
+  syncModeButtons();   // applyI18n() relabels them; the pressed state is ours
   positionZoomCtrl();  // strip height can change with string lengths
 });
 // Click on the backdrop (the dialog element itself, not its children) closes.
@@ -640,6 +699,7 @@ async function loadJSON(url) {
 
 async function boot() {
   applyI18n();  // markup default is German — swap before first paint if not
+  syncModeButtons();  // ...and the markup default is papa
   const [fc, places, stats] = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
     loadJSON("data/play_places.geojson"),

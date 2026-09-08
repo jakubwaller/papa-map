@@ -4,7 +4,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
-         parseBbox } from "./datasource.js";
+         parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
+         pinColorExpression, momCounts } from "./datasource.js";
 
 const feat = (lon, lat, props) => ({
   type: "Feature",
@@ -252,4 +253,84 @@ test("parseBbox accepts a Bundesland page's box and rejects anything unusable", 
                      "8.4,-91,9,53.6", "8.4,53,181,53.6", "8.4,53,9,91",
                      "Infinity,53,9,53.6"])
     assert.equal(parseBbox(bad), null, `expected null for ${JSON.stringify(bad)}`);
+});
+
+// ---- Papa/Mama: the second reading ----
+
+test("papa mode is exactly what the map rendered before the toggle existed", () => {
+  // The guard against the whole feature: if these three rows ever change, a
+  // father's map has silently changed meaning. Colours are the STATUS_COLOR
+  // values app.js carried; classes are its STATUS_META ones.
+  assert.equal(BUCKET_COLOR[viewFor("accessible", "papa").bucket], "#009e73");
+  assert.equal(BUCKET_COLOR[viewFor("female_only", "papa").bucket], "#d55e00");
+  assert.equal(BUCKET_COLOR[viewFor("unknown", "papa").bucket], "#3d4247");
+  assert.equal(viewFor("accessible", "papa").cls, "ok");
+  assert.equal(viewFor("female_only", "papa").cls, "bad");
+  assert.equal(viewFor("unknown", "papa").cls, "ask");
+});
+
+test("mama mode reads both rooms as usable and the unrecorded one as maybe", () => {
+  // The point of the feature: a women's-room table stops being the red pin
+  // it is for a father. It must NOT go the other way — accessible stays good.
+  assert.equal(viewFor("female_only", "mama").bucket, "good");
+  assert.equal(viewFor("accessible", "mama").bucket, "good");
+  assert.equal(viewFor("unknown", "mama").bucket, "maybe");
+  assert.notEqual(BUCKET_COLOR.maybe, BUCKET_COLOR.ask);   // orange, not grey
+});
+
+test("every mode/status pair resolves, and junk degrades to the papa reading", () => {
+  for (const mode of MODES)
+    for (const status of STATUSES) {
+      const v = viewFor(status, mode);
+      assert.ok(BUCKET_COLOR[v.bucket], `${mode}/${status} has no bucket colour`);
+      assert.ok(v.labelKey && v.metaKey && v.cls);
+    }
+  // A hand-typed ?mode=papi, or a status this build predates, must still
+  // render a map rather than throw on the first pin.
+  assert.deepEqual(viewFor("accessible", "papi"), viewFor("accessible", "papa"));
+  assert.deepEqual(viewFor("nonsense", "mama"), viewFor("unknown", "papa"));
+  assert.deepEqual(viewFor(undefined, undefined), viewFor("unknown", "papa"));
+});
+
+test("the mama reading never invents a status the pipeline does not emit", () => {
+  // CONTRACT.md: classification lives only in Python. The view may recolour
+  // the three values, never add a fourth or consult an OSM tag.
+  const rows = STATUSES.map((s) => viewFor(s, "mama"));
+  assert.equal(rows.length, STATUSES.length);
+  for (const r of rows) assert.ok(["good", "bad", "ask", "maybe"].includes(r.bucket));
+});
+
+test("pickMode: query beats stored beats the default", () => {
+  assert.equal(pickMode("mama", "papa"), "mama");
+  assert.equal(pickMode(null, "mama"), "mama");
+  assert.equal(pickMode(null, null), DEFAULT_MODE);
+  assert.equal(DEFAULT_MODE, "papa");   // today's rendering stays the default
+  // Anything unrecognised falls through rather than ending the search.
+  assert.equal(pickMode("papi", "mama"), "mama");
+  assert.equal(pickMode("", ""), DEFAULT_MODE);
+  assert.equal(pickMode(undefined, "nonsense"), DEFAULT_MODE);
+});
+
+test("pinColorExpression is a MapLibre match over the three statuses", () => {
+  const expr = pinColorExpression("mama");
+  assert.deepEqual(expr.slice(0, 2), ["match", ["get", "status"]]);
+  // accessible and female_only both green in mama mode, unknown orange.
+  assert.equal(expr[3], BUCKET_COLOR.good);
+  assert.equal(expr[5], BUCKET_COLOR.good);
+  assert.equal(expr[6], BUCKET_COLOR.maybe);
+  // Papa keeps the three distinct colours it always had.
+  const papa = pinColorExpression("papa");
+  assert.equal(papa[3], BUCKET_COLOR.good);
+  assert.equal(papa[5], BUCKET_COLOR.bad);
+  assert.equal(papa[6], BUCKET_COLOR.ask);
+});
+
+test("momCounts adds the two rooms and keeps the unrecorded ones apart", () => {
+  assert.deepEqual(momCounts({ accessible: 2, female_only: 3, unknown: 9 }),
+                   { good: 5, maybe: 9 });
+  // stats.json may be missing, or missing a key: the sentence renders zeros
+  // rather than NaN, the way the papa sentence already degrades.
+  assert.deepEqual(momCounts({}), { good: 0, maybe: 0 });
+  assert.deepEqual(momCounts(), { good: 0, maybe: 0 });
+  assert.deepEqual(momCounts({ accessible: 4 }), { good: 4, maybe: 0 });
 });
