@@ -263,10 +263,12 @@
     </div>
   </div>
 
-  <!-- The Ko-fi label is one word on purpose: the box is anchored right with no left
-       edge, so a longer one wraps it to two lines over the map on a 375px phone. The
-       whole sentence lives in the title / aria-label. -->
-  <div id="attribution">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="ops.html" title="Build and dataset status">Status</a> · <a href="https://ko-fi.com/jakubwaller" target="_blank" rel="noopener" title="Kaffee spendieren" data-i18n="kofi" data-i18n-aria="ariaKofi">☕ Kaffee</a></div>
+  <!-- The box is anchored right with no left edge and capped at the viewport width, so it
+       wraps to two lines on a phone. The Ko-fi label stays one word (its sentence lives in the
+       title / aria-label) so that line two is only the coffee link plus the maker credit;
+       checked at 375px and 360px. The credit is the same English line as the Bürgerwecker
+       footer, left untranslated on purpose, like "OpenStreetMap contributors". -->
+  <div id="attribution">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="ops.html" title="Build and dataset status">Status</a> · <a href="https://ko-fi.com/jakubwaller" target="_blank" rel="noopener" title="Kaffee spendieren" data-i18n="kofi" data-i18n-aria="ariaKofi">☕ Kaffee</a> · <a href="https://jakubwaller.eu" rel="author">Made with ♥ in Hamburg by Jakub Waller</a></div>
 
   <!-- Add-a-place dialog: everything lands in OpenStreetMap, not here -->
   <dialog id="add-dialog">

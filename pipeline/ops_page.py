@@ -698,6 +698,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
     p.append(f"""<footer>
 <p>Everything on this page is an aggregate of public OpenStreetMap data (ODbL) and of this site's own nightly build. {"The Visitors block is Cloudflare's zone-level count of requests, kept per day, and the App page block counts taps on two buttons from a log with no addresses in it; each identifies nobody." if private else "No visitor data is collected, stored or shown — the site has no analytics."}</p>
 <p>Sources: <a href="/data/stats.json">stats.json</a> · <a href="/data/history.json">history.json</a> · <a href="/data/changing_tables.geojson">changing_tables.geojson</a> · <a href="{esc(site_url)}/methods-en.html">how the classification works</a></p>
+<p><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 </footer>
 </body>
 </html>
