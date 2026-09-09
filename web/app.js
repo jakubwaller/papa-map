@@ -5,9 +5,9 @@ import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
-         geoUri } from "./datasource.js?v=near1";
+         geoUri } from "./datasource.js?v=off1";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=near1";
+         langUrl } from "./i18n.js?v=off1";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -744,7 +744,28 @@ addDialog.addEventListener("click", (e) => { if (e.target === addDialog) addDial
 // file may be missing (pipeline not run yet) — the page degrades to a message.
 let dataReady = false, styleReady = false;
 
-map.on("load", () => { styleReady = true; addTableLayer(); refreshPins(); });
+// NOT map.on("load"): MapLibre fires that only after "all necessary resources
+// have been downloaded and the first visually complete rendering has occurred",
+// and the raster basemap is one of those resources. With no signal its tiles
+// can never arrive, so "load" never fires, the pin layer is never added, and
+// the map sits empty — offline failing in precisely the case offline exists
+// for. "styledata" plus an isStyleLoaded() guard is the documented way to wait
+// for the style alone, which is all adding a layer actually needs.
+// isStyleLoaded() is no good as a guard here either: it reports false until
+// every source cache has loaded, the raster basemap included, so offline it
+// stays false through all the styledata events and then never fires another.
+// "style.load" is the event that means the style JSON itself is parsed, which
+// is all adding a layer needs. "load" stays attached behind a run-once latch
+// as a belt-and-braces fallback: it is the event that definitely exists, it
+// just cannot be relied on without a network.
+function whenStyleReady(fn) {
+  let done = false;
+  const go = () => { if (done) return; done = true; fn(); };
+  map.on("style.load", go);
+  map.on("load", go);
+}
+
+whenStyleReady(() => { styleReady = true; addTableLayer(); refreshPins(); });
 
 async function loadJSON(url) {
   try {
@@ -771,7 +792,21 @@ async function boot() {
   fitHome();           // ...and so does the home view's top padding
   dataReady = true;
   refreshPins();
+  // Reassurance, not an error: the map works, the data is simply the copy from
+  // an earlier visit. The stats line already names the build date it is
+  // showing, so the two together say exactly how stale "stored" is.
+  if (!navigator.onLine && allFeatures.length) toast(t("toastOffline"));
 }
 
 boot();
 window.addEventListener("resize", positionZoomCtrl);
+
+// ---- Offline: register the service worker ----
+// Last thing in the module and deliberately unawaited — a browser without
+// service workers, a failed registration, or a page opened over plain http
+// must all leave the map working exactly as before. sw.js stores the shell and
+// the dataset; it never touches map tiles, and the comment at the top of that
+// file says why that is not a detail but the whole constraint.
+if ("serviceWorker" in navigator)
+  window.addEventListener("load",
+    () => navigator.serviceWorker.register("sw.js").catch(() => {}));

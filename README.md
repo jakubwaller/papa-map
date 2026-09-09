@@ -191,6 +191,38 @@ off should not change which table is *nearest* — but a filter that would hide
 the winner is switched back on, visibly, so the map never flies to an empty
 spot.
 
+## Offline
+
+`web/sw.js` is a service worker that makes the map work with no signal, which is
+where a parent actually needs it. One rule governs the whole file:
+
+**It must never cache map tiles.** The OSMF tile policy states outright that
+"Offline use is not permitted on tile.openstreetmap.org", defines bulk
+downloading as *any* pre-emptive fetching beyond what the user is actively
+viewing, and warns that prefetch and offline patterns "will be blocked without
+notice". papamap.de carries a Ko-fi link, which also puts it inside that
+policy's explicit warning to services that seek donations. So the fetch handler
+returns early for every cross-origin request and never calls `respondWith()` on
+one: tiles go to the network exactly as if no worker were installed. Offline,
+you therefore get the pins without a basemap. Fixing *that* means moving to
+OpenFreeMap — a different source under a different licence — and it belongs in
+its own commit, not in a widened condition here.
+
+`web/sw.test.js` loads the worker into a `vm` context with a faked service
+worker scope and drives the fetch handler, so the tile rule is a failing test
+rather than a comment. It also pins that an origin check cannot be loosened to
+a prefix match, since `papamap.de.evil.example` would pass one.
+
+Strategy is stale-while-revalidate, one rule for everything same-origin: answer
+from the cache immediately, refresh in the background. A visitor is at most one
+visit behind after a deploy, and the map says which build it is showing, because
+the dataset date in the stats line comes from the same cached `stats.json`.
+Only the shell is precached — the GeoJSON is not, because the page fetches it
+anyway on the first visit and the runtime handler stores *that* response, so
+offline costs the visitor no extra bytes rather than a surprise 1.3 MB on mobile
+data. `ops.html` and `private/` are never stored: they exist to say what is true
+right now, and a stale status page is worse than none.
+
 ## Play corners
 
 Every feature carries a boolean `play`: true when the object also records an
