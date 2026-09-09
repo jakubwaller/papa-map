@@ -2802,6 +2802,7 @@ contributors</a>、<a href="https://opendatacommons.org/licenses/odbl/">ODbL</a>
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">おむつ交換台が女性トイレにばかりあるのを見てきた一人のパパが作りました。PapaMapは無料で広告もありません。
 <a href="https://ko-fi.com/jakubwaller">&#9749; コーヒーをおごる</a>。</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """,
     },
 }
