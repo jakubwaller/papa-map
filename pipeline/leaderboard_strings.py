@@ -189,6 +189,7 @@ How things are counted and coloured: <a href="{up}methods-en.html">Methods</a> �
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Built by a dad who kept finding the changing table in the women's toilet. PapaMap is free and ad-free.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Buy me a coffee</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "da": {
@@ -274,6 +275,7 @@ Sådan tælles og farvelægges der: <a href="{up}methods-da.html">Metode</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Bygget af en far, der blev ved med at finde puslebordet på dametoilettet. PapaMap er gratis og uden reklamer.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Giv mig en kaffe</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "nl": {
@@ -364,6 +366,7 @@ Hoe geteld en gekleurd wordt: <a href="{up}methods-nl.html">Methode</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Gebouwd door een vader die de verschoontafel steeds weer op het damestoilet aantrof. PapaMap is gratis en reclamevrij.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Trakteer me op een koffie</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "fr": {
@@ -453,6 +456,7 @@ Comment le comptage et les couleurs fonctionnent : <a href="{up}methods-fr.html"
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Créé par un papa qui trouvait toujours la table à langer dans les toilettes des femmes. PapaMap est gratuit et sans publicité.
 <a href="https://ko-fi.com/jakubwaller">&#9749; M'offrir un café</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "it": {
@@ -540,6 +544,7 @@ Come si conta e si colora: <a href="{up}methods-it.html">Metodo</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Creata da un papà che trovava sempre il fasciatoio nel bagno delle donne. PapaMap è gratuita e senza pubblicità.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Offrimi un caffè</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "cs": {
@@ -625,6 +630,7 @@ Jak se tu počítá a barví: <a href="{up}methods-cs.html">Metody</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Vytvořil táta, který přebalovací pult pořád nacházel na dámských záchodech. PapaMap je zdarma a bez reklam.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Pozvat mě na kávu</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "pl": {
@@ -710,6 +716,7 @@ Jak liczymy i kolorujemy: <a href="{up}methods-pl.html">Metody</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Stworzony przez tatę, który przewijak wciąż znajdował w damskiej toalecie. PapaMap jest darmowy i bez reklam.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Postaw mi kawę</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "sv": {
@@ -794,6 +801,7 @@ Hur saker räknas och färgläggs: <a href="{up}methods-sv.html">Metod</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Byggd av en pappa som hela tiden hittade skötbordet på damtoaletten. PapaMap är gratis och reklamfri.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Bjud på en kaffe</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "bs": {
@@ -881,6 +889,7 @@ Kako se broji i boji: <a href="{up}methods-bs.html">Metode</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Napravio tata koji je sto za previjanje stalno nalazio u ženskom toaletu. PapaMap je besplatan i bez reklama.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Časti me kafom</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "ca": {
@@ -966,6 +975,7 @@ Com es compta i s'acoloreix: <a href="{up}methods-ca.html">Mètodes</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Creat per un pare que sempre trobava el canviador al lavabo de dones. PapaMap és gratuït i sense publicitat.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Convida'm a un cafè</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "et": {
@@ -1050,6 +1060,7 @@ Kuidas kohti loetakse ja värvitakse: <a href="{up}methods-et.html">Meetodid</a>
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Loonud isa, kes leidis mähkimislaua ikka ja jälle naiste tualetist. PapaMap on tasuta ja reklaamivaba.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Osta mulle kohv</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "es": {
@@ -1135,6 +1146,7 @@ Cómo se cuenta y se colorea: <a href="{up}methods-es.html">Métodos</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Creado por un padre que siempre encontraba el cambiador en el baño de mujeres. PapaMap es gratis y sin publicidad.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Invítame a un café</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "hr": {
@@ -1221,6 +1233,7 @@ Kako se broji i boji: <a href="{up}methods-hr.html">Metode</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Izradio tata koji je stol za previjanje stalno nalazio u ženskom WC-u. PapaMap je besplatan i bez oglasa.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Časti me kavom</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "is": {
@@ -1308,6 +1321,7 @@ Hvernig talið er og litað: <a href="{up}methods-is.html">Aðferð</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Smíðað af pabba sem fann skiptiborðið sífellt á kvennaklósettinu. PapaMap er ókeypis og auglýsingalaust.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Bjóða mér upp á kaffi</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "lv": {
@@ -1394,6 +1408,7 @@ Kā tiek skaitīts un iekrāsots: <a href="{up}methods-lv.html">Metodika</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Izveidoja tētis, kurš pārtinamo galdu atkal un atkal atrada sieviešu tualetē. PapaMap ir bezmaksas un bez reklāmām.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Nopērc man kafiju</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "lt": {
@@ -1484,6 +1499,7 @@ Kaip skaičiuojama ir spalvinama: <a href="{up}methods-lt.html">Metodai</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Sukūrė tėtis, kuris vystymo stalą vis rasdavo moterų tualete. PapaMap yra nemokamas ir be reklamos.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Pavaišink mane kava</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "hu": {
@@ -1575,6 +1591,7 @@ Hogyan számolunk és színezünk: <a href="{up}methods-hu.html">Módszertan</a>
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Egy apa készítette, aki a pelenkázót újra és újra a női mosdóban találta. A PapaMap ingyenes és reklámmentes.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Hívj meg egy kávéra</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "no": {
@@ -1660,6 +1677,7 @@ Slik telles og fargelegges det: <a href="{up}methods-no.html">Metode</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Laget av en pappa som stadig fant stellebordet på dametoalettet. PapaMap er gratis og reklamefritt.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Spander en kaffe på meg</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "pt": {
@@ -1746,6 +1764,7 @@ Como se conta e colore: <a href="{up}methods-pt.html">Métodos</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Criado por um pai que encontrava sempre o fraldário na casa de banho das senhoras. O PapaMap é gratuito e sem anúncios.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Oferece-me um café</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "ro": {
@@ -1837,6 +1856,7 @@ Cum se numără și se colorează: <a href="{up}methods-ro.html">Metode</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Creat de un tată care găsea mereu masa de înfășat în toaleta femeilor. PapaMap este gratuit și fără reclame.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Oferă-mi o cafea</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "sq": {
@@ -1922,6 +1942,7 @@ Si numërohet dhe ngjyroset: <a href="{up}methods-sq.html">Metodologjia</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Ndërtuar nga një baba që tavolinën e ndërrimit e gjente gjithnjë në tualetin e grave. PapaMap është falas dhe pa reklama.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Blimë një kafe</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "sk": {
@@ -2009,6 +2030,7 @@ Ako sa počíta a farbí: <a href="{up}methods-sk.html">Metódy</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Vytvoril otec, ktorý prebaľovací pult stále nachádzal na dámskych toaletách. PapaMap je zadarmo a bez reklám.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Pozvi ma na kávu</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "sl": {
@@ -2097,6 +2119,7 @@ Kako se šteje in barva: <a href="{up}methods-sl.html">Metode</a> ·
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Ustvaril očka, ki je previjalno mizo vedno znova našel v ženskem stranišču. PapaMap je brezplačen in brez oglasov.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Povabi me na kavo</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "fi": {
@@ -2182,6 +2205,7 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Tehnyt isä, joka löysi hoitopöydän yhä uudelleen naisten vessasta. PapaMap on ilmainen eikä siinä ole mainoksia.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Tarjoa minulle kahvia</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "el": {
@@ -2267,6 +2291,7 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Φτιαγμένο από έναν μπαμπά που έβρισκε συνέχεια την αλλαξιέρα στην τουαλέτα των γυναικών. Το PapaMap είναι δωρεάν και χωρίς διαφημίσεις.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Κέρασέ με έναν καφέ</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "be": {
@@ -2356,6 +2381,7 @@ OpenStreetMap</a>, паводле <a href="https://opendatacommons.org/licenses/
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Зрабіў тата, які раз за разам знаходзіў пеленальны столік у жаночай прыбіральні. PapaMap бясплатны і без рэкламы.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Пачастуй мяне кавай</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "bg": {
@@ -2441,6 +2467,7 @@ contributors</a>, под <a href="https://opendatacommons.org/licenses/odbl/">OD
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Създаден от татко, който все намираше масата за повиване в дамската тоалетна. PapaMap е безплатен и без реклами.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Почерпи ме с кафе</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "mk": {
@@ -2527,6 +2554,7 @@ OpenStreetMap</a>, под лиценцата <a href="https://opendatacommons.or
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Направен од татко кој масата за повивање постојано ја наоѓаше во женскиот тоалет. PapaMap е бесплатен и без реклами.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Почерпи ме со кафе</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "sr": {
@@ -2614,6 +2642,7 @@ OpenStreetMap-а</a>, под лиценцом <a href="https://opendatacommons.o
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Направио тата који је сто за повијање стално налазио у женском тоалету. PapaMap је бесплатан и без реклама.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Части ме кафом</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "uk": {
@@ -2698,6 +2727,7 @@ OpenStreetMap</a>, за ліцензією <a href="https://opendatacommons.org/
 <a href="{up}datenschutz.html">Datenschutz</a></p>
 <p class="muted">Зробив тато, який раз у раз знаходив пеленальний столик у жіночому туалеті. PapaMap безкоштовний і без реклами.
 <a href="https://ko-fi.com/jakubwaller">&#9749; Пригости мене кавою</a>.</p>
+<p class="muted"><a href="https://jakubwaller.eu" rel="author">Made with &hearts; in Hamburg by Jakub Waller</a></p>
 """),
     },
     "ja": {
