@@ -4,7 +4,7 @@ import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_CHECK_DELAYS } from "./datasource.js?v=app2";
+         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app2";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          langUrl } from "./i18n.js?v=app2";
 
@@ -533,9 +533,10 @@ function toast(msg, { ms = 4000, onTap = null } = {}) {
   el.textContent = msg;
   el.classList.add("show");
   el.classList.toggle("tap", !!onTap);
-  el.onclick = onTap ? () => { el.classList.remove("show"); onTap(); } : null;
+  const hide = () => { el.classList.remove("show", "tap"); el.onclick = null; };
+  el.onclick = onTap ? () => { hide(); onTap(); } : null;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), ms);
+  toastTimer = setTimeout(hide, ms);
 }
 
 document.getElementById("locate").addEventListener("click", () => {
@@ -575,7 +576,9 @@ let editNote = null;   // { osm_url, cls, key, tags } — re-attached when the p
 function readEdit() {
   try {
     const rec = JSON.parse(sessionStorage.getItem(EDIT_KEY));
-    return rec && Date.now() - rec.t0 < EDIT_TTL_MS ? rec : null;
+    if (!rec) return null;
+    if (Date.now() - rec.t0 >= EDIT_TTL_MS) { sessionStorage.removeItem(EDIT_KEY); return null; }
+    return rec;
   } catch { return null; }
 }
 
@@ -594,7 +597,7 @@ function clearEditTimers() {
 // { version, tags } | { gone: true } | null while the API is unreachable.
 async function fetchOsm(ref) {
   try {
-    const r = await fetch(osmApiUrl(ref));
+    const r = await fetch(osmApiUrl(ref), { cache: "no-store" });
     if (r.status === 404 || r.status === 410) return { gone: true };
     return r.ok ? osmElementFromApi(await r.json()) : null;
   } catch { return null; }
@@ -604,6 +607,7 @@ function startEditCheck(kind, obj) {
   const ref = osmRef(obj.osm_url);
   if (!ref) return;
   clearEditTimers();
+  dropEditNote();
   const rec = { kind, osm_url: obj.osm_url, ref, t0: Date.now(), before: null };
   writeEdit(rec);
   fetchOsm(ref).then((el) => {
@@ -633,26 +637,31 @@ async function pollEdit(last) {
     if (Date.now() - rec.t0 > 10000) { clearEditTimers(); writeEdit(null); dropEditNote(); }
     return;
   }
-  const out = editOutcome(rec.before, await fetchOsm(rec.ref));
-  if (out?.changed) {
+  const after = await fetchOsm(rec.ref);
+  // Unreachable is not "nothing new": the edit may well be on OSM. Say nothing.
+  if (!after) { if (last) dropEditNote(); return; }
+  const out = editOutcome(rec.before, after);
+  if (out.changed) {
     clearEditTimers();
     writeEdit(null);
     setEditNote(rec, "found", out.tags ? "editFound" : "editFoundPlain", out.tags);
   } else if (last) {
     // The record stays: coming back to the tab re-arms the reads until the
-    // TTL runs out, for the reader who returned once before answering.
+    // TTL runs out, for the reader who returned once before answering — but
+    // the "log in and upload" nudge is given once, not on every return.
+    if (rec.told) { dropEditNote(); return; }
+    rec.told = true;
+    writeEdit(rec);
     setEditNote(rec, "none", "editNone");
   }
 }
 
 // "Changing table: yes · room: unisex_toilet" — the popup's own labels, the
 // tag values verbatim. Goes through textContent, so no escaping here.
+const EDIT_TAG_LABEL = { changing_table: "popupTable", "changing_table:location": "popupRoom" };
 function tagsLabel(tags) {
-  const parts = [];
-  if (tags.changing_table) parts.push(`${t("popupTable")}: ${tags.changing_table}`);
-  if (tags["changing_table:location"])
-    parts.push(`${t("popupRoom")}: ${tags["changing_table:location"]}`);
-  return parts.join(" · ");
+  return EDIT_TAGS.filter((k) => tags[k])
+    .map((k) => `${t(EDIT_TAG_LABEL[k])}: ${tags[k]}`).join(" · ");
 }
 
 const editText = (note) =>
@@ -660,20 +669,31 @@ const editText = (note) =>
 
 // Into the open popup when it is this object's, otherwise a toast that
 // reopens the pin — except "looking", which nobody asked to be told about.
+// With the tab hidden an 8 s toast would burn down unseen, so it waits for
+// the visibilitychange that brings the reader back.
 function setEditNote(rec, cls, key, tags = null) {
-  editNote = { osm_url: rec.osm_url, cls, key, tags };
+  editNote = { kind: rec.kind, osm_url: rec.osm_url, cls, key, tags, at: Date.now(), unseen: false };
   if (attachEditNote() || cls === "looking") return;
-  const obj = (rec.kind === "place" ? allPlaces : allFeatures)
-    .find((o) => o.osm_url === rec.osm_url);
-  toast(editText(editNote), {
+  if (document.hidden) { editNote.unseen = true; return; }
+  toastEditNote();
+}
+
+function toastEditNote() {
+  const note = editNote;
+  const obj = (note.kind === "place" ? allPlaces : allFeatures)
+    .find((o) => o.osm_url === note.osm_url);
+  toast(editText(note), {
     ms: 8000,
-    onTap: obj ? () => (rec.kind === "place" ? openPlacePopup : openPopup)(obj) : null,
+    onTap: obj ? () => (note.kind === "place" ? openPlacePopup : openPopup)(obj) : null,
   });
 }
 
 // A row at the bottom of the open popup, if that popup belongs to the object
-// being checked. Returns whether it found one to live in.
+// being checked. Returns whether it found one to live in. A note is worth
+// showing for as long as the check itself could run; after that the nightly
+// build has had its say and the row would only repeat it.
 function attachEditNote() {
+  if (editNote && Date.now() - editNote.at >= EDIT_TTL_MS) editNote = null;
   if (!editNote || !popup?.isOpen() || popupObj?.obj.osm_url !== editNote.osm_url) return false;
   const root = popup.getElement()?.querySelector(".popup");
   if (!root) return false;
@@ -696,7 +716,12 @@ document.addEventListener("click", (e) => {
     startEditCheck(popupObj.kind, popupObj.obj);
 });
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && readEdit()) armEditCheck();
+  if (document.visibilityState !== "visible") return;
+  if (editNote?.unseen) {
+    editNote.unseen = false;
+    if (!attachEditNote()) toastEditNote();
+  }
+  if (readEdit()) armEditCheck();
 });
 
 // ---- Add a place: deep links out to MapComplete, at the current view ----

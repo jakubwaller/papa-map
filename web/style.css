@@ -349,7 +349,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 /* A toast with something to open (the edit confirmation reopens its pin). */
-#toast.tap { pointer-events: auto; cursor: pointer; }
+#toast.show.tap { pointer-events: auto; cursor: pointer; }
 
 /* ---------- Add-a-place dialog ---------- */
 #add-dialog {

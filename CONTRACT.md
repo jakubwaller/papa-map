@@ -17,7 +17,12 @@
 > interpreted. The emitted shape does not change by one byte. The reader's
 > browser talks to the OSM API directly (named in the Datenschutz), and what it
 > remembers — the object and its baseline version — lives in `sessionStorage`
-> under `papamap-edit-check` for fifteen minutes at most.
+> under `papamap-edit-check` for fifteen minutes at most — the key is removed
+> when it expires, not merely ignored. Riding along on the same day: the
+> *play area only* chip now starts switched **on**, so the prospects are on
+> the map from the first paint; v10's "off by default" describes the state
+> before 10 Sep 2026. Its count stays a separate clause of the count line
+> and never joins the table total.
 
 > **v22 amendment (5 Sep 2026, wave 3 — Japan, and Japanese as the 32nd page
 > language):** papamap.de sweeps **49 countries** — v21's 48 plus `jp`, the
