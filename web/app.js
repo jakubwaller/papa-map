@@ -336,11 +336,12 @@ function openPlacePopup(p) {
 
 // ---- Status chips: legend, count badges and filter toggles in one ----
 // Three status chips (on by default, each one subtracts when switched off),
-// then two blue ones that work the other way round — each one adds. The first
-// (off by default) narrows to the pins with a recorded play corner; the second
-// (on by default since 10 Sep 2026) adds the places that have a play corner
-// and no changing-table answer at all. Neither is a status: rendering them as
-// one would claim every other pin has no play area, which OSM never said.
+// then two blue ones. The first is off by default and, switched on, narrows
+// to the pins with a recorded play corner; the second is on by default (since
+// 10 Sep 2026) and, switched off, takes away the places that have a play
+// corner and no changing-table answer at all. Neither is a status: rendering
+// them as one would claim every other pin has no play area, which OSM never
+// said.
 function renderChips() {
   const counts = countsByStatus(allFeatures);
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
@@ -873,8 +874,18 @@ async function boot() {
   refreshPins();
   // A phone that dropped the tab while the reader was in MapComplete comes
   // back to a reloaded page: pick the check up where it was. (Only with its
-  // baseline — a record whose first read never landed stays quiet.)
-  if (readEdit()) armEditCheck();
+  // baseline — a record whose first read never landed stays quiet.) The
+  // visibilitychange that would have booked the time away never fires on a
+  // fresh load, so a record still marked hidden is credited here.
+  const pending = readEdit();
+  if (pending) {
+    if (pending.hiddenAt) {
+      pending.away = (pending.away ?? 0) + (Date.now() - pending.hiddenAt);
+      pending.hiddenAt = null;
+      writeEdit(pending);
+    }
+    armEditCheck();
+  }
 }
 
 boot();
