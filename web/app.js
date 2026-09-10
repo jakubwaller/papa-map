@@ -152,7 +152,7 @@ let allFeatures = [];                                     // flattened GeoJSON
 let allPlaces = [];                                       // play-area prospects
 let visible = new Set(STATUS_DEFS.map((d) => d.value));   // toggled-on statuses
 let playOnly = false;                                     // narrow to play corners
-let placesOn = false;                                     // add the prospects
+let placesOn = true;                                      // add the prospects (on by default since 2026-09-10)
 
 const statsEl = document.getElementById("stats");
 const filterBar = document.getElementById("filter-bar");
@@ -336,11 +336,11 @@ function openPlacePopup(p) {
 
 // ---- Status chips: legend, count badges and filter toggles in one ----
 // Three status chips (on by default, each one subtracts when switched off),
-// then two blue ones — both off by default and the other way round. The first
-// narrows to the pins with a recorded play corner; the second adds the places
-// that have a play corner and no changing-table answer at all. Neither is a
-// status: rendering them as one would claim every other pin has no play area,
-// which OSM never said.
+// then two blue ones that work the other way round — each one adds. The first
+// (off by default) narrows to the pins with a recorded play corner; the second
+// (on by default since 10 Sep 2026) adds the places that have a play corner
+// and no changing-table answer at all. Neither is a status: rendering them as
+// one would claim every other pin has no play area, which OSM never said.
 function renderChips() {
   const counts = countsByStatus(allFeatures);
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
