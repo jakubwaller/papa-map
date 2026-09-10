@@ -571,6 +571,7 @@ const EDIT_KEY = "papamap-edit-check";
 const EDIT_TTL_MS = 15 * 60 * 1000;
 
 let editTimers = [];
+let editGen = 0;       // bumped per schedule, so a poll from an old one is ignored
 let editNote = null;   // { osm_url, cls, key, tags } — re-attached when the popup reopens
 
 function readEdit() {
@@ -615,20 +616,22 @@ function startEditCheck(kind, obj) {
     if (el && !el.gone && cur && cur.osm_url === rec.osm_url) { cur.before = el; writeEdit(cur); }
   });
   // A desktop can open the editor beside this tab without ever hiding it, so
-  // "coming back" never fires there; the fallback arms the reads anyway.
-  editTimers.push(setTimeout(armEditCheck, 30000));
+  // "coming back" never fires there; the fallback arms the reads anyway — but
+  // only in a tab that is in front. A hidden tab waits for the reader.
+  editTimers.push(setTimeout(() => { if (!document.hidden) armEditCheck(); }, 30000));
 }
 
 function armEditCheck() {
   const rec = readEdit();
   if (!rec) return;
   clearEditTimers();
+  const gen = ++editGen;
   setEditNote(rec, "looking", "editLooking");
   EDIT_CHECK_DELAYS.forEach((ms, i) =>
-    editTimers.push(setTimeout(() => pollEdit(i === EDIT_CHECK_DELAYS.length - 1), ms)));
+    editTimers.push(setTimeout(() => pollEdit(gen, i === EDIT_CHECK_DELAYS.length - 1), ms)));
 }
 
-async function pollEdit(last) {
+async function pollEdit(gen, last) {
   const rec = readEdit();
   if (!rec) { clearEditTimers(); return; }
   if (!rec.before) {
@@ -638,6 +641,7 @@ async function pollEdit(last) {
     return;
   }
   const after = await fetchOsm(rec.ref);
+  if (gen !== editGen) return;   // a newer schedule took over while this read was in flight
   // Unreachable is not "nothing new": the edit may well be on OSM. Say nothing.
   if (!after) { if (last) dropEditNote(); return; }
   const out = editOutcome(rec.before, after);
@@ -648,8 +652,10 @@ async function pollEdit(last) {
   } else if (last) {
     // The record stays: coming back to the tab re-arms the reads until the
     // TTL runs out, for the reader who returned once before answering — but
-    // the "log in and upload" nudge is given once, not on every return.
-    if (rec.told) { dropEditNote(); return; }
+    // the "log in and upload" nudge is given once, not on every return, and
+    // never to a hidden tab: the reader may still be inside MapComplete, and
+    // the return will re-read before anything is claimed.
+    if (rec.told || document.hidden) { dropEditNote(); return; }
     rec.told = true;
     writeEdit(rec);
     setEditNote(rec, "none", "editNone");
@@ -721,7 +727,10 @@ document.addEventListener("visibilitychange", () => {
     editNote.unseen = false;
     if (!attachEditNote()) toastEditNote();
   }
-  if (readEdit()) armEditCheck();
+  // A schedule already running keeps running: its 20 s / 1 min / 2 min /
+  // 5 min reads catch an answer made in between, and a reader flipping
+  // between the two tabs must not turn into one API request per flip.
+  if (!editTimers.length && readEdit()) armEditCheck();
 });
 
 // ---- Add a place: deep links out to MapComplete, at the current view ----

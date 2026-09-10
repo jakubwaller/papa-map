@@ -162,7 +162,7 @@ The other 701 of those DE+DK objects pass the same rule and carry no
 `changing_table` tag at all, so they are not pins and never could be — nobody
 has answered the first question about them. They get their own file,
 `web/data/play_places.geojson`, their own hollow-blue-ring layer and their own
-chip, off by default. `changing_table=no` places stay out: somebody did answer.
+chip, on by default. `changing_table=no` places stay out: somebody did answer.
 
 They are the best-targeted open questions on the map. A father with a toddler
 is going to an indoor playground or a café with a ball pit anyway, and while he
