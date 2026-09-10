@@ -570,8 +570,9 @@ document.getElementById("locate").addEventListener("click", () => {
 const EDIT_KEY = "papamap-edit-check";
 const EDIT_TTL_MS = 15 * 60 * 1000;
 
-let editTimers = [];
-let editGen = 0;       // bumped per schedule, so a poll from an old one is ignored
+let editTimers = [];   // the running schedule's pending reads — the last one empties it
+let editFallback = null;   // the 30 s arm for a tab that never went hidden
+let editGen = 0;       // bumped per schedule and per click, so a stale poll is ignored
 let editNote = null;   // { osm_url, cls, key, tags } — re-attached when the popup reopens
 
 function readEdit() {
@@ -593,6 +594,8 @@ function writeEdit(rec) {
 function clearEditTimers() {
   for (const id of editTimers) clearTimeout(id);
   editTimers = [];
+  clearTimeout(editFallback);
+  editFallback = null;
 }
 
 // { version, tags } | { gone: true } | null while the API is unreachable.
@@ -608,6 +611,7 @@ function startEditCheck(kind, obj) {
   const ref = osmRef(obj.osm_url);
   if (!ref) return;
   clearEditTimers();
+  editGen++;
   dropEditNote();
   const rec = { kind, osm_url: obj.osm_url, ref, t0: Date.now(), before: null };
   writeEdit(rec);
@@ -618,7 +622,10 @@ function startEditCheck(kind, obj) {
   // A desktop can open the editor beside this tab without ever hiding it, so
   // "coming back" never fires there; the fallback arms the reads anyway — but
   // only in a tab that is in front. A hidden tab waits for the reader.
-  editTimers.push(setTimeout(() => { if (!document.hidden) armEditCheck(); }, 30000));
+  editFallback = setTimeout(() => {
+    editFallback = null;
+    if (!document.hidden) armEditCheck();
+  }, 30000);
 }
 
 function armEditCheck() {
@@ -632,6 +639,7 @@ function armEditCheck() {
 }
 
 async function pollEdit(gen, last) {
+  if (last) editTimers = [];   // the schedule's final timer: nothing of it is pending now
   const rec = readEdit();
   if (!rec) { clearEditTimers(); return; }
   if (!rec.before) {
@@ -725,7 +733,7 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "visible") return;
   if (editNote?.unseen) {
     editNote.unseen = false;
-    if (!attachEditNote()) toastEditNote();
+    if (!attachEditNote() && editNote) toastEditNote();
   }
   // A schedule already running keeps running: its 20 s / 1 min / 2 min /
   // 5 min reads catch an answer made in between, and a reader flipping
@@ -841,7 +849,8 @@ async function boot() {
   dataReady = true;
   refreshPins();
   // A phone that dropped the tab while the reader was in MapComplete comes
-  // back to a reloaded page: pick the check up where it was.
+  // back to a reloaded page: pick the check up where it was. (Only with its
+  // baseline — a record whose first read never landed stays quiet.)
   if (readEdit()) armEditCheck();
 }
 
