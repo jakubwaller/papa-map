@@ -12,8 +12,9 @@
 > unsaved changes. **It is still not a classifier.** No status is derived from
 > those tags, no pin changes colour, no count moves; the nightly build remains
 > the only path from OSM into the map, and the confirmation says so ("the map
-> updates tonight"). The one place a changing-table tag is read in JavaScript
-> is `EDIT_TAGS` in `web/datasource.js`, and it is displayed, never
+> updates tonight"). The changing-table tags JavaScript touches are named in
+> `EDIT_TAGS` (`web/datasource.js`, which compares them) and labelled in
+> `EDIT_TAG_LABEL` (`web/app.js`, which prints them) — displayed, never
 > interpreted. The emitted shape does not change by one byte. The reader's
 > browser talks to the OSM API directly (named in the Datenschutz), and what it
 > remembers — the object and its baseline version — lives in `sessionStorage`

@@ -476,8 +476,10 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
 .popup .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
 /* Edit confirmation: what OSM holds after a MapComplete answer. Found is
-   painted like the accessible status — a reply, not a verdict: the text
-   quotes the tag, the pin keeps its colour until the nightly build. */
+   bold ink on the neutral ground, deliberately not green: green is the one
+   colour this site reserves for "a dad can reach it", and the row quotes a
+   tag — which may well say female_toilet — while the pin keeps its colour
+   until the nightly build. */
 .popup .edit-note {
   margin-top: 8px;
   padding: 6px 9px;
@@ -487,7 +489,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   color: var(--muted-2);
   background: #f1f4f2;
 }
-.popup .edit-note.found { color: var(--green-strong); background: #e6f5ef; font-weight: 600; }
+.popup .edit-note.found { color: var(--ink); font-weight: 600; }
 .popup .edit-note.none { color: #6b4a00; background: #fff3d6; }
 
 /* ---------- Mobile ---------- */

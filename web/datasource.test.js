@@ -302,6 +302,8 @@ test("editOutcome: nothing to say while the API is unreachable or the version st
   assert.deepEqual(editOutcome(null, { version: 4, tags: {} }), { changed: false, tags: null });
   assert.deepEqual(editOutcome({ version: null, tags: {} }, { version: 4, tags: {} }),
     { changed: false, tags: null });
+  // A deletion is no verdict either without a baseline.
+  assert.deepEqual(editOutcome(null, { gone: true }), { changed: false, tags: null });
 });
 
 test("editOutcome quotes the changing-table tags when the edit touched them", () => {

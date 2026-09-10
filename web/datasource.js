@@ -251,9 +251,9 @@ export const EDIT_CHECK_DELAYS = [0, 20000, 60000, 120000, 300000];
 // did not change) or when the object is gone.
 export function editOutcome(before, after) {
   if (!after) return null;
+  if (!before || !Number.isFinite(before.version)) return { changed: false, tags: null };
   if (after.gone) return { changed: true, tags: null };
-  if (!before || !Number.isFinite(before.version) || after.version <= before.version)
-    return { changed: false, tags: null };
+  if (after.version <= before.version) return { changed: false, tags: null };
   const tags = {};
   for (const k of EDIT_TAGS) if (after.tags?.[k] != null) tags[k] = after.tags[k];
   const moved = EDIT_TAGS.some(

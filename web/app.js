@@ -628,7 +628,13 @@ function startEditCheck(kind, obj) {
   // only in a tab that is in front. A hidden tab waits for the reader.
   editFallback = setTimeout(() => {
     editFallback = null;
-    if (!document.hidden) armEditCheck();
+    if (document.hidden) return;
+    // Thirty seconds with the map still in front means the editor is open
+    // beside it; for the nudge at the end of the schedule that counts as
+    // time spent there, since this tab will never book any.
+    const cur = readEdit();
+    if (cur) { cur.away = Math.max(cur.away ?? 0, EDIT_AWAY_MS); writeEdit(cur); }
+    armEditCheck();
   }, 30000);
 }
 
@@ -643,7 +649,6 @@ function armEditCheck() {
 }
 
 async function pollEdit(gen, last) {
-  if (last) editTimers = [];   // the schedule's final timer: nothing of it is pending now
   const rec = readEdit();
   if (!rec) { clearEditTimers(); dropEditNote(); return; }
   if (!rec.before) {
@@ -653,6 +658,9 @@ async function pollEdit(gen, last) {
     return;
   }
   const after = await fetchOsm(rec.ref);
+  // The schedule's final read has resolved: nothing of it is pending now. Not
+  // before the await — a return to the tab mid-read would restart everything.
+  if (last && gen === editGen) editTimers = [];
   if (gen !== editGen) return;   // a newer schedule took over while this read was in flight
   // Unreachable is not "nothing new": the edit may well be on OSM. Say nothing.
   if (!after) { if (last) dropEditNote(); return; }
