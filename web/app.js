@@ -569,6 +569,7 @@ document.getElementById("locate").addEventListener("click", () => {
 // the reader comes back to a reloaded page.
 const EDIT_KEY = "papamap-edit-check";
 const EDIT_TTL_MS = 15 * 60 * 1000;
+const EDIT_AWAY_MS = 20 * 1000;   // time in the other tab that counts as "tried to answer"
 
 let editTimers = [];   // the running schedule's pending reads — the last one empties it
 let editFallback = null;   // the 30 s arm for a tab that never went hidden
@@ -579,7 +580,10 @@ function readEdit() {
   try {
     const rec = JSON.parse(sessionStorage.getItem(EDIT_KEY));
     if (!rec) return null;
-    if (Date.now() - rec.t0 >= EDIT_TTL_MS) { sessionStorage.removeItem(EDIT_KEY); return null; }
+    // Re-vet what came back from storage: the API URL is built from ref, and
+    // the regex that keeps it well-formed ran on a previous page load.
+    rec.ref = osmRef(rec.osm_url);
+    if (!rec.ref || Date.now() - rec.t0 >= EDIT_TTL_MS) { sessionStorage.removeItem(EDIT_KEY); return null; }
     return rec;
   } catch { return null; }
 }
@@ -602,17 +606,17 @@ function clearEditTimers() {
 async function fetchOsm(ref) {
   try {
     const r = await fetch(osmApiUrl(ref), { cache: "no-store" });
-    if (r.status === 404 || r.status === 410) return { gone: true };
+    if (r.status === 410) return { gone: true };
     return r.ok ? osmElementFromApi(await r.json()) : null;
   } catch { return null; }
 }
 
 function startEditCheck(kind, obj) {
-  const ref = osmRef(obj.osm_url);
-  if (!ref) return;
   clearEditTimers();
   editGen++;
   dropEditNote();
+  const ref = osmRef(obj.osm_url);
+  if (!ref) { writeEdit(null); return; }
   const rec = { kind, osm_url: obj.osm_url, ref, t0: Date.now(), before: null };
   writeEdit(rec);
   fetchOsm(ref).then((el) => {
@@ -641,7 +645,7 @@ function armEditCheck() {
 async function pollEdit(gen, last) {
   if (last) editTimers = [];   // the schedule's final timer: nothing of it is pending now
   const rec = readEdit();
-  if (!rec) { clearEditTimers(); return; }
+  if (!rec) { clearEditTimers(); dropEditNote(); return; }
   if (!rec.before) {
     // The baseline read may still be in flight right after the click; once
     // it has clearly failed there is nothing to compare against — stay quiet.
@@ -660,10 +664,12 @@ async function pollEdit(gen, last) {
   } else if (last) {
     // The record stays: coming back to the tab re-arms the reads until the
     // TTL runs out, for the reader who returned once before answering — but
-    // the "log in and upload" nudge is given once, not on every return, and
-    // never to a hidden tab: the reader may still be inside MapComplete, and
-    // the return will re-read before anything is claimed.
-    if (rec.told || document.hidden) { dropEditNote(); return; }
+    // the "log in and upload" nudge is given once, not on every return;
+    // never to a hidden tab (the reader may still be inside MapComplete, and
+    // the return will re-read before anything is claimed); and only to a
+    // reader who was away long enough to have answered at all. Most clicks
+    // are a glance at MapComplete and back, and those deserve silence.
+    if (rec.told || document.hidden || (rec.away ?? 0) < EDIT_AWAY_MS) { dropEditNote(); return; }
     rec.told = true;
     writeEdit(rec);
     setEditNote(rec, "none", "editNone");
@@ -730,6 +736,15 @@ document.addEventListener("click", (e) => {
     startEditCheck(popupObj.kind, popupObj.obj);
 });
 document.addEventListener("visibilitychange", () => {
+  // Book the time spent away: the nudge at the end of a schedule is for a
+  // reader who was in MapComplete long enough to have answered.
+  const rec = readEdit();
+  if (rec) {
+    if (document.visibilityState === "visible" && rec.hiddenAt)
+      { rec.away = (rec.away ?? 0) + (Date.now() - rec.hiddenAt); rec.hiddenAt = null; }
+    else if (document.visibilityState !== "visible") rec.hiddenAt = Date.now();
+    writeEdit(rec);
+  }
   if (document.visibilityState !== "visible") return;
   if (editNote?.unseen) {
     editNote.unseen = false;
