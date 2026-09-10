@@ -348,6 +348,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   transition: opacity .18s ease, transform .18s ease;
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* A toast with something to open (the edit confirmation reopens its pin). */
+#toast.show.tap { pointer-events: auto; cursor: pointer; }
 
 /* ---------- Add-a-place dialog ---------- */
 #add-dialog {
@@ -473,6 +475,22 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .btn:hover { border-color: var(--green); color: var(--green-strong); }
 .popup .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
 .popup .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
+/* Edit confirmation: what OSM holds after a MapComplete answer. Found is
+   bold ink on the neutral ground, deliberately not green: green is the one
+   colour this site reserves for "a dad can reach it", and the row quotes a
+   tag — which may well say female_toilet — while the pin keeps its colour
+   until the nightly build. */
+.popup .edit-note {
+  margin-top: 8px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--muted-2);
+  background: #f1f4f2;
+}
+.popup .edit-note.found { color: var(--ink); font-weight: 600; }
+.popup .edit-note.none { color: #6b4a00; background: #fff3d6; }
 
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {

@@ -204,3 +204,59 @@ export function placesToFeatureCollection(places) {
     })),
   };
 }
+
+// ---- Edit confirmation: one object re-read from the OSM API ----
+// The nightly build is the only path from OSM into the map, so a reader who
+// has just answered the room question sees nothing for up to a day. The OSM
+// API's single-object read reflects a changeset the moment it lands (Overpass
+// lags minutes; this does not), needs no login, and answers papamap.de
+// cross-origin — so app.js keeps the object's version and tags as a baseline
+// when the MapComplete button is clicked and re-reads it a few times once the
+// tab is back in front. What it shows is the raw tag value, never a colour:
+// classification stays in the pipeline (CONTRACT.md v23).
+const OSM_REF = /^https:\/\/www\.openstreetmap\.org\/(node|way|relation)\/(\d+)$/;
+
+// The pipeline's osm_url → { type, id }, or null for anything else.
+export function osmRef(osmUrl) {
+  const m = OSM_REF.exec(String(osmUrl ?? ""));
+  return m ? { type: m[1], id: m[2] } : null;
+}
+
+export function osmApiUrl(ref) {
+  return `https://api.openstreetmap.org/api/0.6/${ref.type}/${ref.id}.json`;
+}
+
+// The API wraps the one element in { elements: [ { version, tags, … } ] }.
+// Returns { version, tags } or null when the reply is not that shape.
+export function osmElementFromApi(json) {
+  const el = json?.elements?.[0];
+  if (!el || !Number.isFinite(el.version)) return null;
+  return { version: el.version, tags: el.tags ?? {} };
+}
+
+// The two tags the confirmation names, in display order. Displayed verbatim —
+// this file must never map them to a status.
+export const EDIT_TAGS = ["changing_table", "changing_table:location"];
+
+// Re-read schedule in ms once the tab is back in front. MapComplete uploads
+// within seconds of an answer, so the first read usually settles it; the tail
+// covers a slow upload or a reader who came back before answering.
+export const EDIT_CHECK_DELAYS = [0, 20000, 60000, 120000, 300000];
+
+// Compare the baseline read with a later one. `after` is null while the API
+// is unreachable, { gone: true } once the object was deleted. Returns
+// { changed, tags }: `tags` carries the object's current EDIT_TAGS when the
+// edit touched one of them, null when the version moved for another reason
+// (the confirmation then says "your edit is on OSM" without quoting a tag it
+// did not change) or when the object is gone.
+export function editOutcome(before, after) {
+  if (!after) return null;
+  if (!before || !Number.isFinite(before.version)) return { changed: false, tags: null };
+  if (after.gone) return { changed: true, tags: null };
+  if (after.version <= before.version) return { changed: false, tags: null };
+  const tags = {};
+  for (const k of EDIT_TAGS) if (after.tags?.[k] != null) tags[k] = after.tags[k];
+  const moved = EDIT_TAGS.some(
+    (k) => (before.tags?.[k] ?? null) !== (after.tags?.[k] ?? null));
+  return { changed: true, tags: moved && Object.keys(tags).length ? tags : null };
+}

@@ -4,7 +4,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
-         parseBbox } from "./datasource.js";
+         parseBbox, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
+         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js";
 
 const feat = (lon, lat, props) => ({
   type: "Feature",
@@ -252,4 +253,92 @@ test("parseBbox accepts a Bundesland page's box and rejects anything unusable", 
                      "8.4,-91,9,53.6", "8.4,53,181,53.6", "8.4,53,9,91",
                      "Infinity,53,9,53.6"])
     assert.equal(parseBbox(bad), null, `expected null for ${JSON.stringify(bad)}`);
+});
+
+// ---- Edit confirmation ----
+
+test("osmRef reads the pipeline's osm_url and nothing else", () => {
+  assert.deepEqual(osmRef("https://www.openstreetmap.org/node/123"), { type: "node", id: "123" });
+  assert.deepEqual(osmRef("https://www.openstreetmap.org/way/2"), { type: "way", id: "2" });
+  assert.deepEqual(osmRef("https://www.openstreetmap.org/relation/99"), { type: "relation", id: "99" });
+  assert.equal(osmRef(null), null);
+  assert.equal(osmRef(""), null);
+  assert.equal(osmRef("https://www.openstreetmap.org/node/abc"), null);
+  assert.equal(osmRef("https://www.openstreetmap.org/node/1/history"), null);
+  // Only the site's own URL shape: never build an API call from a foreign host.
+  assert.equal(osmRef("https://evil.example/openstreetmap.org/node/1"), null);
+  assert.equal(osmRef("http://www.openstreetmap.org/node/1"), null);
+});
+
+test("osmApiUrl is the single-object JSON read", () => {
+  assert.equal(osmApiUrl({ type: "node", id: "123" }),
+    "https://api.openstreetmap.org/api/0.6/node/123.json");
+  assert.equal(osmApiUrl(osmRef("https://www.openstreetmap.org/way/2")),
+    "https://api.openstreetmap.org/api/0.6/way/2.json");
+});
+
+test("osmElementFromApi unwraps the API's envelope and rejects the rest", () => {
+  const json = { version: 0.6, elements: [{ type: "node", id: 1, version: 7,
+    tags: { amenity: "toilets", changing_table: "yes" } }] };
+  assert.deepEqual(osmElementFromApi(json),
+    { version: 7, tags: { amenity: "toilets", changing_table: "yes" } });
+  // A node with no tags at all still has a version.
+  assert.deepEqual(osmElementFromApi({ elements: [{ id: 1, version: 2 }] }),
+    { version: 2, tags: {} });
+  assert.equal(osmElementFromApi({ elements: [] }), null);
+  assert.equal(osmElementFromApi({}), null);
+  assert.equal(osmElementFromApi(null), null);
+  assert.equal(osmElementFromApi({ elements: [{ id: 1 }] }), null);
+});
+
+test("editOutcome: nothing to say while the API is unreachable or the version stands", () => {
+  const before = { version: 3, tags: { changing_table: "yes" } };
+  assert.equal(editOutcome(before, null), null);
+  assert.deepEqual(editOutcome(before, { version: 3, tags: { changing_table: "yes" } }),
+    { changed: false, tags: null });
+  // A lower version cannot happen, but must not read as an edit either.
+  assert.deepEqual(editOutcome(before, { version: 2, tags: {} }), { changed: false, tags: null });
+  // Without a baseline version there is nothing to compare against.
+  assert.deepEqual(editOutcome(null, { version: 4, tags: {} }), { changed: false, tags: null });
+  assert.deepEqual(editOutcome({ version: null, tags: {} }, { version: 4, tags: {} }),
+    { changed: false, tags: null });
+  // A deletion is no verdict either without a baseline.
+  assert.deepEqual(editOutcome(null, { gone: true }), { changed: false, tags: null });
+});
+
+test("editOutcome quotes the changing-table tags when the edit touched them", () => {
+  const before = { version: 3, tags: { amenity: "toilets", changing_table: "yes" } };
+  const after = { version: 4, tags: { amenity: "toilets", changing_table: "yes",
+    "changing_table:location": "unisex_toilet" } };
+  assert.deepEqual(editOutcome(before, after),
+    { changed: true, tags: { changing_table: "yes", "changing_table:location": "unisex_toilet" } });
+  // A prospect (no changing_table before) that just got one.
+  assert.deepEqual(editOutcome({ version: 1, tags: { amenity: "cafe" } },
+    { version: 2, tags: { amenity: "cafe", changing_table: "yes" } }),
+    { changed: true, tags: { changing_table: "yes" } });
+  // Displayed verbatim, whatever the value — "no" and "female_toilet" included.
+  assert.deepEqual(editOutcome(before,
+    { version: 4, tags: { changing_table: "no", "changing_table:location": "female_toilet" } }),
+    { changed: true, tags: { changing_table: "no", "changing_table:location": "female_toilet" } });
+});
+
+test("editOutcome does not quote tags the edit left alone", () => {
+  const before = { version: 3, tags: { changing_table: "yes", "changing_table:location": "room" } };
+  // Opening hours changed, the table tags did not: an edit, but not "your answer".
+  assert.deepEqual(editOutcome(before,
+    { version: 4, tags: { changing_table: "yes", "changing_table:location": "room", opening_hours: "24/7" } }),
+    { changed: true, tags: null });
+  // Both table tags removed: an edit with nothing left to quote.
+  assert.deepEqual(editOutcome(before, { version: 4, tags: { amenity: "toilets" } }),
+    { changed: true, tags: null });
+  // Deleted object.
+  assert.deepEqual(editOutcome(before, { gone: true }), { changed: true, tags: null });
+});
+
+test("the edit check names only the two table tags and stops within five minutes", () => {
+  assert.deepEqual(EDIT_TAGS, ["changing_table", "changing_table:location"]);
+  assert.equal(EDIT_CHECK_DELAYS[0], 0);
+  for (let i = 1; i < EDIT_CHECK_DELAYS.length; i++)
+    assert.ok(EDIT_CHECK_DELAYS[i] > EDIT_CHECK_DELAYS[i - 1], "ascending");
+  assert.ok(EDIT_CHECK_DELAYS.at(-1) <= 5 * 60 * 1000);
 });
