@@ -3,9 +3,10 @@
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox } from "./datasource.js?v=app1";
+         parseBbox, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
+         EDIT_CHECK_DELAYS } from "./datasource.js?v=app2";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app1";
+         langUrl } from "./i18n.js?v=app2";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -264,6 +265,7 @@ function refreshPins() {
 
 // ---- Popup ----
 let popup = null;
+let popupObj = null;   // { kind: "table" | "place", obj } behind the open popup
 
 // The URL fields are built by our own pipeline, but belt-and-braces: esc()
 // stops HTML injection, not a javascript: href — so only https links render.
@@ -283,7 +285,7 @@ function popupHTML(f) {
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
   if (mcUrl)
-    links.push(`<a class="btn primary" href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+    links.push(`<a class="btn primary" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -307,7 +309,7 @@ function placeHTML(p) {
   const mcUrl = safeUrl(withMapCompleteLanguage(p.mapcomplete_url, lang)),
         osmUrl = safeUrl(p.osm_url);
   if (mcUrl)
-    links.push(`<a class="btn primary" href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+    links.push(`<a class="btn primary" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -318,14 +320,18 @@ function placeHTML(p) {
 
 function openPopup(f) {
   if (popup) popup.remove();
+  popupObj = { kind: "table", obj: f };
   popup = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
     .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
+  attachEditNote();
 }
 
 function openPlacePopup(p) {
   if (popup) popup.remove();
+  popupObj = { kind: "place", obj: p };
   popup = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
     .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
+  attachEditNote();
 }
 
 // ---- Status chips: legend, count badges and filter toggles in one ----
@@ -520,12 +526,16 @@ function fitHome() {
 // transient toast instead of a blocking alert.
 let youMarker = null, toastTimer = null;
 
-function toast(msg) {
+// onTap makes the toast a button for as long as it shows — the edit
+// confirmation uses it to reopen the pin it is about.
+function toast(msg, { ms = 4000, onTap = null } = {}) {
   const el = document.getElementById("toast");
   el.textContent = msg;
   el.classList.add("show");
+  el.classList.toggle("tap", !!onTap);
+  el.onclick = onTap ? () => { el.classList.remove("show"); onTap(); } : null;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), 4000);
+  toastTimer = setTimeout(() => el.classList.remove("show"), ms);
 }
 
 document.getElementById("locate").addEventListener("click", () => {
@@ -544,6 +554,149 @@ document.getElementById("locate").addEventListener("click", () => {
     () => toast(t("toastGeoFail")),
     { enableHighAccuracy: true, timeout: 10000 },
   );
+});
+
+// ---- Edit confirmation: re-read the object from OSM after a MapComplete click ----
+// The nightly build is the only way an answer reaches the map, so a reader who
+// has just tagged a room sees nothing for up to a day. Once the MapComplete
+// button is clicked the object's current version and tags are kept as a
+// baseline, and when the tab is back in front the object is re-read from the
+// OSM API a few times over five minutes (EDIT_CHECK_DELAYS). What the reader
+// gets is the raw tag value OSM now holds — never a colour: classification
+// stays in the pipeline (CONTRACT.md v23). The record lives in sessionStorage
+// rather than a variable because a phone drops a background tab freely, and
+// the reader comes back to a reloaded page.
+const EDIT_KEY = "papamap-edit-check";
+const EDIT_TTL_MS = 15 * 60 * 1000;
+
+let editTimers = [];
+let editNote = null;   // { osm_url, cls, key, tags } — re-attached when the popup reopens
+
+function readEdit() {
+  try {
+    const rec = JSON.parse(sessionStorage.getItem(EDIT_KEY));
+    return rec && Date.now() - rec.t0 < EDIT_TTL_MS ? rec : null;
+  } catch { return null; }
+}
+
+function writeEdit(rec) {
+  try {
+    if (rec) sessionStorage.setItem(EDIT_KEY, JSON.stringify(rec));
+    else sessionStorage.removeItem(EDIT_KEY);
+  } catch { /* storage blocked: the check simply does not run */ }
+}
+
+function clearEditTimers() {
+  for (const id of editTimers) clearTimeout(id);
+  editTimers = [];
+}
+
+// { version, tags } | { gone: true } | null while the API is unreachable.
+async function fetchOsm(ref) {
+  try {
+    const r = await fetch(osmApiUrl(ref));
+    if (r.status === 404 || r.status === 410) return { gone: true };
+    return r.ok ? osmElementFromApi(await r.json()) : null;
+  } catch { return null; }
+}
+
+function startEditCheck(kind, obj) {
+  const ref = osmRef(obj.osm_url);
+  if (!ref) return;
+  clearEditTimers();
+  const rec = { kind, osm_url: obj.osm_url, ref, t0: Date.now(), before: null };
+  writeEdit(rec);
+  fetchOsm(ref).then((el) => {
+    const cur = readEdit();
+    if (el && !el.gone && cur && cur.osm_url === rec.osm_url) { cur.before = el; writeEdit(cur); }
+  });
+  // A desktop can open the editor beside this tab without ever hiding it, so
+  // "coming back" never fires there; the fallback arms the reads anyway.
+  editTimers.push(setTimeout(armEditCheck, 30000));
+}
+
+function armEditCheck() {
+  const rec = readEdit();
+  if (!rec) return;
+  clearEditTimers();
+  setEditNote(rec, "looking", "editLooking");
+  EDIT_CHECK_DELAYS.forEach((ms, i) =>
+    editTimers.push(setTimeout(() => pollEdit(i === EDIT_CHECK_DELAYS.length - 1), ms)));
+}
+
+async function pollEdit(last) {
+  const rec = readEdit();
+  if (!rec) { clearEditTimers(); return; }
+  if (!rec.before) {
+    // The baseline read may still be in flight right after the click; once
+    // it has clearly failed there is nothing to compare against — stay quiet.
+    if (Date.now() - rec.t0 > 10000) { clearEditTimers(); writeEdit(null); dropEditNote(); }
+    return;
+  }
+  const out = editOutcome(rec.before, await fetchOsm(rec.ref));
+  if (out?.changed) {
+    clearEditTimers();
+    writeEdit(null);
+    setEditNote(rec, "found", out.tags ? "editFound" : "editFoundPlain", out.tags);
+  } else if (last) {
+    // The record stays: coming back to the tab re-arms the reads until the
+    // TTL runs out, for the reader who returned once before answering.
+    setEditNote(rec, "none", "editNone");
+  }
+}
+
+// "Changing table: yes · room: unisex_toilet" — the popup's own labels, the
+// tag values verbatim. Goes through textContent, so no escaping here.
+function tagsLabel(tags) {
+  const parts = [];
+  if (tags.changing_table) parts.push(`${t("popupTable")}: ${tags.changing_table}`);
+  if (tags["changing_table:location"])
+    parts.push(`${t("popupRoom")}: ${tags["changing_table:location"]}`);
+  return parts.join(" · ");
+}
+
+const editText = (note) =>
+  note.key === "editFound" ? t("editFound", { tags: tagsLabel(note.tags) }) : t(note.key);
+
+// Into the open popup when it is this object's, otherwise a toast that
+// reopens the pin — except "looking", which nobody asked to be told about.
+function setEditNote(rec, cls, key, tags = null) {
+  editNote = { osm_url: rec.osm_url, cls, key, tags };
+  if (attachEditNote() || cls === "looking") return;
+  const obj = (rec.kind === "place" ? allPlaces : allFeatures)
+    .find((o) => o.osm_url === rec.osm_url);
+  toast(editText(editNote), {
+    ms: 8000,
+    onTap: obj ? () => (rec.kind === "place" ? openPlacePopup : openPopup)(obj) : null,
+  });
+}
+
+// A row at the bottom of the open popup, if that popup belongs to the object
+// being checked. Returns whether it found one to live in.
+function attachEditNote() {
+  if (!editNote || !popup?.isOpen() || popupObj?.obj.osm_url !== editNote.osm_url) return false;
+  const root = popup.getElement()?.querySelector(".popup");
+  if (!root) return false;
+  let el = root.querySelector(".edit-note");
+  if (!el) { el = document.createElement("div"); root.appendChild(el); }
+  el.className = `edit-note ${editNote.cls}`;
+  el.textContent = editText(editNote);
+  return true;
+}
+
+function dropEditNote() {
+  editNote = null;
+  popup?.getElement()?.querySelector(".edit-note")?.remove();
+}
+
+// The popup markup is rebuilt on every open, so the hook listens once at the
+// document; the button itself keeps its plain target=_blank navigation.
+document.addEventListener("click", (e) => {
+  if (popupObj && e.target.closest?.("a[data-edit-check]"))
+    startEditCheck(popupObj.kind, popupObj.obj);
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && readEdit()) armEditCheck();
 });
 
 // ---- Add a place: deep links out to MapComplete, at the current view ----
@@ -653,6 +806,9 @@ async function boot() {
   fitHome();           // ...and so does the home view's top padding
   dataReady = true;
   refreshPins();
+  // A phone that dropped the tab while the reader was in MapComplete comes
+  // back to a reloaded page: pick the check up where it was.
+  if (readEdit()) armEditCheck();
 }
 
 boot();
