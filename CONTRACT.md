@@ -1,6 +1,6 @@
 # papa-map — build contract (v0)
 
-> **v23 amendment (8 Sep 2026, the Papa/Mama reading):** the frontend now offers
+> **v24 amendment (8 Sep 2026, the Papa/Mama reading; numbered after v23 when the two branches met on 11 Sep):** the frontend now offers
 > **two readings of the same three statuses**, and the emitted shape does not change
 > by one byte. `classify.py` still answers exactly one question — can a *father*
 > reach this table — and still emits `accessible | female_only | unknown`; the new
@@ -36,6 +36,31 @@
 > canonical or the hreflang set, because a reading is a personalization of the same
 > content, not a new indexable page. Stored in `localStorage` under `papamap-mode`,
 > named in the Datenschutz beside `papamap-lang` and `papamap-app`.
+> **v23 amendment (10 Sep 2026, the edit confirmation):** after a reader
+> clicks a pin's MapComplete button, the frontend re-reads **that one object**
+> from the OSM API (`api.openstreetmap.org/api/0.6/<type>/<id>.json` — answers
+> papamap.de cross-origin, needs no login, reflects a changeset the moment it
+> lands where Overpass lags minutes): once on the click as a baseline, then a
+> few times over five minutes once the tab is back in front. It then tells the
+> reader what OSM now holds — the raw `changing_table` and
+> `changing_table:location` values, verbatim, as a popup row or a toast — or,
+> after five minutes with no new version, that MapComplete may still be holding
+> unsaved changes. **It is still not a classifier.** No status is derived from
+> those tags, no pin changes colour, no count moves; the nightly build remains
+> the only path from OSM into the map, and the confirmation says so ("the map
+> updates tonight"). The changing-table tags JavaScript touches are named in
+> `EDIT_TAGS` (`web/datasource.js`, which compares them) and labelled in
+> `EDIT_TAG_LABEL` (`web/app.js`, which prints them) — displayed, never
+> interpreted. The emitted shape does not change by one byte. The reader's
+> browser talks to the OSM API directly (named in the Datenschutz), and what it
+> remembers — the object and its baseline version — lives in `sessionStorage`
+> under `papamap-edit-check` and counts as expired fifteen minutes after the
+> click — the next read removes it, and the tab's end removes it in any
+> case. Riding along on the same day: the
+> *play area only* chip now starts switched **on**, so the prospects are on
+> the map from the first paint; v10's "off by default" describes the state
+> before 10 Sep 2026. Its count stays a separate clause of the count line
+> and never joins the table total.
 
 > **v22 amendment (5 Sep 2026, wave 3 — Japan, and Japanese as the 32nd page
 > language):** papamap.de sweeps **49 countries** — v21's 48 plus `jp`, the

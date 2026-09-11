@@ -33,10 +33,10 @@ const SHELL = [
   "./",
   "vendor/maplibre-gl.css",
   "vendor/maplibre-gl.js",
-  "style.css?v=off1",
-  "app.js?v=off1",
-  "datasource.js?v=off1",
-  "i18n.js?v=off1",
+  "style.css?v=app3",
+  "app.js?v=app3",
+  "datasource.js?v=app3",
+  "i18n.js?v=app3",
 ];
 
 // The status pages exist to tell you what is true right now. A stale one is
