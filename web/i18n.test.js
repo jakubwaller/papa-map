@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { STRINGS, LANGS, NUMBER_LOCALE, pickLang, fmt,
          langUrl, DEFAULT_LANG } from "./i18n.js";
 
@@ -11,6 +12,21 @@ test("every language defines exactly the same keys", () => {
       Object.keys(STRINGS[DEFAULT_LANG]).sort(), `key mismatch in ${lang}`);
   }
   assert.deepEqual(Object.keys(STRINGS).sort(), [...LANGS].sort());
+});
+
+test("no language block declares a key twice", () => {
+  // An object literal keeps the last duplicate and says nothing, so the
+  // parity test above cannot see one. Fifteen languages carried a doubled
+  // toastOffline for two days before anyone noticed; read the source instead.
+  const src = fs.readFileSync(new URL("./i18n.js", import.meta.url), "utf8");
+  const blocks = src.split(/\n  ([a-z]{2}): \{\n/);
+  assert.equal((blocks.length - 1) / 2, LANGS.length, "one block per language");
+  for (let i = 1; i < blocks.length; i += 2) {
+    const lang = blocks[i], body = blocks[i + 1].split(/\n  \},?\n/)[0];
+    const keys = [...body.matchAll(/^ {4}([A-Za-z0-9_]+):/gm)].map((m) => m[1]);
+    const dupes = keys.filter((k, j) => keys.indexOf(k) !== j);
+    assert.deepEqual(dupes, [], `${lang} declares a key twice`);
+  }
 });
 
 test("every template carries the same tokens in every language", () => {

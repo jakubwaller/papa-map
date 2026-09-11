@@ -31,6 +31,8 @@ const CACHE = "papamap-v1";
 // no extra bytes rather than a surprise 1.3 MB on someone's mobile data.
 const SHELL = [
   "./",
+  "index.html",
+  "index-en.html",
   "vendor/maplibre-gl.css",
   "vendor/maplibre-gl.js",
   "style.css?v=app3",
@@ -42,6 +44,28 @@ const SHELL = [
 // The status pages exist to tell you what is true right now. A stale one is
 // worse than none, so they are never stored.
 const NEVER_CACHE = /(^|\/)(ops\.html|private\/)/;
+
+// The dataset is network-first. The nightly build is the only path from OSM
+// into the map and the edit confirmation promises "the map updates tonight",
+// so a reader who is online must see tonight's build, not the copy from their
+// last visit. The stored copy answers only when the network fails or is too
+// slow to deliver 1.3 MB — the basement café this worker exists for.
+const DATA = /^\/data\//;
+const DATA_TIMEOUT_MS = 8000;
+
+// A put can fail (quota, a Vary: * header) and nothing about the answer the
+// page already has depends on it, so the rejection is swallowed rather than
+// left to surface as an unhandled one in the worker.
+const store = (cache, req, res) => cache.put(req, res.clone()).catch(() => {});
+
+// A stored dataset answer carries a header the page reads to say "this is the
+// copy from an earlier visit". Nothing else can tell it: navigator.onLine
+// reports the machine's interface, and a Wi-Fi with no internet says "online".
+function fromStore(res) {
+  const headers = new Headers(res.headers);
+  headers.set("X-PapaMap-Source", "cache");
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
 
 self.addEventListener("install", (e) => {
   // addAll() is atomic — one 404 in the list aborts the install and leaves the
@@ -57,11 +81,11 @@ self.addEventListener("activate", (e) => {
     .then(() => self.clients.claim()));
 });
 
-// Stale-while-revalidate, one rule for everything same-origin: answer from the
-// cache the instant there is something to answer with, and refresh it in the
-// background for next time. A visitor is therefore at most one visit behind on
-// a deploy — and the map says which build it is showing, because the dataset
-// date in the stats line comes out of the same cached stats.json.
+// The shell is stale-while-revalidate: answer from the cache the instant there
+// is something to answer with, and refresh it in the background for next time.
+// A visitor is therefore at most one visit behind on a deploy of the page
+// itself; the data under it is network-first (above), so what they see is
+// tonight's build whenever the network can deliver it.
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
@@ -71,6 +95,13 @@ self.addEventListener("fetch", (e) => {
   if (NEVER_CACHE.test(url.pathname)) return;
 
   e.respondWith(caches.open(CACHE).then(async (cache) => {
+    if (DATA.test(url.pathname)) {
+      const fresh = await fetch(req, { signal: AbortSignal.timeout(DATA_TIMEOUT_MS) })
+        .catch(() => null);
+      if (fresh?.ok && fresh.type === "basic") { store(cache, req, fresh); return fresh; }
+      const hit = await cache.match(req);
+      return hit ? fromStore(hit) : fresh ?? Response.error();
+    }
     // Every language on this site is a query string — "/?lang=ja",
     // "/index.html?lang=de" — and each is a distinct cache key, so a reader who
     // bookmarked their own language would get nothing offline while the German
@@ -84,7 +115,7 @@ self.addEventListener("fetch", (e) => {
     const fresh = fetch(req).then((res) => {
       // Only full, successful, same-origin answers are stored. An opaque or
       // partial response cached here would serve a broken file forever.
-      if (res.ok && res.type === "basic") cache.put(req, res.clone());
+      if (res.ok && res.type === "basic") store(cache, req, res);
       return res;
     }).catch(() => null);
     // Offline with nothing stored still has to reject rather than resolve to

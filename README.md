@@ -213,15 +213,25 @@ worker scope and drives the fetch handler, so the tile rule is a failing test
 rather than a comment. It also pins that an origin check cannot be loosened to
 a prefix match, since `papamap.de.evil.example` would pass one.
 
-Strategy is stale-while-revalidate, one rule for everything same-origin: answer
-from the cache immediately, refresh in the background. A visitor is at most one
-visit behind after a deploy, and the map says which build it is showing, because
-the dataset date in the stats line comes from the same cached `stats.json`.
-Only the shell is precached — the GeoJSON is not, because the page fetches it
-anyway on the first visit and the runtime handler stores *that* response, so
-offline costs the visitor no extra bytes rather than a surprise 1.3 MB on mobile
-data. `ops.html` and `private/` are never stored: they exist to say what is true
-right now, and a stale status page is worse than none.
+Two strategies. The **dataset** (`data/`) is network-first: a reader who is
+online sees tonight's build, which is what the edit confirmation promises, and
+the stored copy answers only when the network fails or cannot deliver it within
+eight seconds. A stored answer carries an `X-PapaMap-Source: cache` header, and
+that header — not `navigator.onLine`, which says "online" on a Wi-Fi with no
+internet — is what makes the page say it is showing stored data. The **shell**
+is stale-while-revalidate: answered from the cache immediately and refreshed in
+the background, so a visitor is at most one visit behind on a deploy of the page
+itself; the `?v=` pins make that safe, and a test holds `sw.js`'s precache list
+to the same pin as `index.html`. Only the shell is precached — the GeoJSON is
+not, because the page fetches it anyway on the first visit and the runtime
+handler stores *that* response, so offline costs the visitor no extra bytes
+rather than a surprise 1.3 MB on mobile data. `ops.html` and `private/` are
+never stored: they exist to say what is true right now, and a stale status page
+is worse than none.
+
+To test offline, kill the dev server. DevTools' "Offline" throttling applies to
+the page's own requests and not to the worker's, so the worker keeps fetching
+from the network and the fallback never runs.
 
 ## Play corners
 
