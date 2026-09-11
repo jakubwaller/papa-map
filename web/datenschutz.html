@@ -57,6 +57,18 @@
   <p>Links zu MapComplete, StreetComplete und openstreetmap.org führen auf externe Angebote; dort
      bearbeiten Sie Daten unter Ihrem eigenen OSM-Konto nach deren Datenschutzbestimmungen — über
      diese Website läuft dabei nichts.</p>
+  <h2>Antworten auf der Karte: Anmeldung bei OpenStreetMap (OAuth 2)</h2>
+  <p>Tippen Sie in einem grauen Pin auf einen der Raum-Buttons, werden Sie einmalig zu
+     openstreetmap.org weitergeleitet und melden sich dort mit Ihrem OSM-Konto an (OAuth 2 mit PKCE;
+     Ihr Passwort sieht diese Website nie). OSM gibt der Seite ein Zugriffstoken zurück, das im
+     Local Storage Ihres Browsers liegt (Schlüssel <code>papamap-osm-token</code>, dazu Ihr
+     OSM-Anzeigename unter <code>papamap-osm-user</code>), bis Sie im Pin auf „Abmelden“ tippen
+     oder die Browserdaten löschen (§ 25 Abs. 2 Nr. 2 TDDDG). Ihre Antwort schreibt der Browser
+     direkt an api.openstreetmap.org, als Änderungssatz unter Ihrem eigenen OSM-Konto und Namen,
+     gekennzeichnet mit <code>created_by=PapaMap</code>; es gelten die
+     <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">Datenschutzbestimmungen der OSMF</a>.
+     Dieser Server erfährt davon nichts: Token, Konto und Antwort laufen nicht über papamap.de, und
+     PapaMap speichert keine Bearbeitungen. Ohne Anmeldung bleibt die Karte vollständig nutzbar.</p>
   <h2>Abgleich nach einer Bearbeitung (OSM-API)</h2>
   <p>Tippen Sie in einem Pin auf „Auf MapComplete beantworten“, fragt die Seite in den folgenden
      Minuten einige Male bei api.openstreetmap.org die aktuellen Tags dieses einen Objekts ab, um
