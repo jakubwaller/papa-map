@@ -186,6 +186,13 @@ export function roomPatch(choice) {
   return { "changing_table:location": ROOMS[choice] };
 }
 
+// The play-place answer. There the table is news to OSM, so the yes travels
+// with the room; a reader who tapped a room stood in front of one, which is
+// `yes`, never `limited`. Same vocabulary, one more tag.
+export function tablePatch(choice) {
+  return { changing_table: "yes", ...roomPatch(choice) };
+}
+
 export const CREATED_BY = "PapaMap";
 
 export function changesetTags(comment) {

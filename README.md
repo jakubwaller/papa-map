@@ -259,6 +259,13 @@ in the pipeline and nowhere else (`CONTRACT.md` v25). A pin that already carries
 a room in words the classifier does not read is not asked — that is somebody's
 tag, and MapComplete shows it before letting anyone write over it.
 
+A blue play place asks the other question, *is there a changing table? then tap
+its room*, and the one tap writes both `changing_table=yes` and the room —
+the table is news to OSM there, and the yes without the room would only make
+a grey pin tonight. The "no" and everything else stay with the MapComplete
+button under it. Nothing is written to an object that is not already on the
+map: a café with no tags at all is still MapComplete's `dad_venue` layer.
+
 Any host that is not `papamap.de` talks to the **sandbox** API
 (`master.apis.dev.openstreetmap.org`), whose database is separate and wiped
 periodically. Its client is registered for `http://127.0.0.1:8000/` and

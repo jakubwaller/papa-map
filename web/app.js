@@ -10,7 +10,7 @@ import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          langUrl } from "./i18n.js?v=app3";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
-         setLogin, clearLogin, takeIntent, roomChoices, roomPatch,
+         setLogin, clearLogin, takeIntent, roomChoices, roomPatch, tablePatch,
          writeTags } from "./osm.js?v=app3";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -30,7 +30,10 @@ const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 const osm = endpoints(location);
 const ROOM_LABEL = { both: "roomBoth", male: "roomMale", female: "roomFemale",
                      unisex: "roomUnisex", dedicated: "roomDedicated" };
-const CHANGESET_COMMENT = "Changing table: which room (answered on papamap.de)";
+const CHANGESET_COMMENT = {
+  table: "Changing table: which room (answered on papamap.de)",
+  place: "Changing table: added, with its room (answered on papamap.de)",
+};
 
 // ---- Reading mode: the same three answers, read as a father or as a mother.
 // Same precedence as the language, and the same storage: a shared ?mode= link
@@ -318,7 +321,7 @@ function popupHTML(f) {
 // The question and its answers, in the reading's own vocabulary: a mother is
 // offered the rooms she can vouch for, a father every room. Under it, who the
 // answer will be filed as — or, before the first login, that it will be.
-function askHTML() {
+function askHTML(question = "askRoom") {
   const btns = roomChoices(mode)
     .map((c) => `<button type="button" class="btn ask-btn" data-room="${c}">${esc(t(ROOM_LABEL[c]))}</button>`)
     .join("");
@@ -326,19 +329,24 @@ function askHTML() {
   const who = user
     ? `${esc(t("askAs", { user }))} · <button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button>`
     : esc(t("askLoginHint"));
-  return `<div class="ask"><div class="ask-q">${esc(t("askRoom"))}</div>` +
+  return `<div class="ask"><div class="ask-q">${esc(t(question))}</div>` +
          `<div class="ask-btns">${btns}</div><div class="ask-who">${who}</div></div>`;
 }
 
 // A prospect's popup says one thing the pin popups never do: nobody has
 // answered the changing-table question here at all. So it leads with the one
-// fact OSM does record, and the primary button opens MapComplete on exactly
-// that question rather than on the room follow-up.
+// fact OSM does record, then asks the question itself — a room tapped here
+// writes the table *and* its room, since the yes alone would only make a
+// grey pin tonight. The MapComplete button still opens the same question,
+// for the "no" and for everything the two taps cannot say. Once answered
+// in this session the popup reads like a pin's: the tags, no question.
 function placeHTML(p) {
-  const rows = [
-    `<div class="status play">${esc(t("metaPlaces"))}</div>`,
-    `<div class="row">${esc(t("popupPlacesCta"))}</div>`,
-  ];
+  const rows = [`<div class="status play">${esc(t("metaPlaces"))}</div>`];
+  if (p.changing_table)
+    rows.push(`<div class="row">${esc(t("popupTable"))}: <b>${esc(p.changing_table)}</b>` +
+      (p.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(p.location_raw)}` : "") + `</div>`);
+  else
+    rows.push(`<div class="row">${esc(t("popupPlacesCta"))}</div>`, askHTML("askTable"));
   if (p.opening_hours)
     rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(p.opening_hours)}</div>`);
   const links = [];
@@ -807,7 +815,7 @@ function toastEditNote() {
     .find((o) => o.osm_url === note.osm_url);
   toast(editText(note), {
     ms: 8000,
-    onTap: obj ? () => (note.kind === "place" ? openPlacePopup : openPopup)(obj) : null,
+    onTap: obj ? () => reopen(note.kind, obj) : null,
   });
 }
 
@@ -838,7 +846,7 @@ document.addEventListener("click", (e) => {
   if (popupObj && e.target.closest?.("a[data-edit-check]"))
     startEditCheck(popupObj.kind, popupObj.obj);
   const room = e.target.closest?.("button.ask-btn");
-  if (room && popupObj?.kind === "table") answerRoom(popupObj.obj, room.dataset.room);
+  if (room && popupObj) answer(popupObj.kind, popupObj.obj, room.dataset.room);
   if (e.target.closest?.("button[data-logout]")) logout();
 });
 
@@ -856,34 +864,42 @@ function rememberView() {
   localStorage.setItem("papamap-mode", mode);
 }
 
-async function answerRoom(f, choice) {
+// One path for both pin kinds: a grey table gets its room, a play place gets
+// the table and the room. The kind rides along in the login intent so the
+// return leg knows which dataset to look the object up in.
+async function answer(kind, obj, choice) {
   const token = getToken();
-  if (!token) { rememberView(); startLogin(osm, { osm_url: f.osm_url, choice }); return; }
-  const rec = { kind: "table", osm_url: f.osm_url };
+  const intent = { kind, osm_url: obj.osm_url, choice };
+  if (!token) { rememberView(); startLogin(osm, intent); return; }
+  const rec = { kind, osm_url: obj.osm_url };
+  const patch = kind === "place" ? tablePatch(choice) : roomPatch(choice);
   setEditNote(rec, "looking", "askSaving");
   try {
-    const out = await writeTags(osm, token, osmRef(f.osm_url), roomPatch(choice), CHANGESET_COMMENT);
-    // The popup's room row and the question's absence both read from the
-    // feature, so the object in memory learns the answer. Its status does
-    // not move — that is the pipeline's to say, tonight.
-    f.location_raw = out.tags["changing_table:location"];
+    const out = await writeTags(osm, token, osmRef(obj.osm_url), patch, CHANGESET_COMMENT[kind]);
+    // The popup's tag row and the question's absence both read from the
+    // object, so the one in memory learns the answer. A pin's status and a
+    // place's colour do not move — that is the pipeline's to say, tonight.
+    obj.changing_table = out.tags.changing_table;
+    obj.location_raw = out.tags["changing_table:location"];
     popup?.getElement()?.querySelector(".ask")?.remove();
     const tags = {};
     for (const k of EDIT_TAGS) if (out.tags[k]) tags[k] = out.tags[k];
     setEditNote(rec, "found", "editFound", tags);
   } catch (err) {
     // A dead token is not the reader's problem: log in again, answer in hand.
-    if (err.status === 401) { clearLogin(); rememberView(); startLogin(osm, { osm_url: f.osm_url, choice }); return; }
+    if (err.status === 401) { clearLogin(); rememberView(); startLogin(osm, intent); return; }
     setEditNote(rec, "none", err.status === 409 ? "askConflict" : "askFailed", null,
                 { status: err.status || "network" });
   }
 }
 
+const reopen = (kind, obj) => (kind === "place" ? openPlacePopup : openPopup)(obj);
+
 function logout() {
   const token = getToken();
   clearLogin();
   if (token) revoke(osm, token);
-  if (popupObj?.kind === "table") openPopup(popupObj.obj);   // the footer line changes
+  if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line changes
 }
 document.addEventListener("visibilitychange", () => {
   // Book the time spent away: the nudge at the end of a schedule is for a
@@ -1113,11 +1129,12 @@ async function boot() {
   if (fromStore && allFeatures.length) toast(t("toastOffline"));
   // The answer given before the login round trip: land on its pin and file it.
   if (intent && login?.token) {
-    const f = allFeatures.find((x) => x.osm_url === intent.osm_url);
-    if (f) {
-      map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
-      openPopup(f);
-      answerRoom(f, intent.choice);
+    const kind = intent.kind === "place" ? "place" : "table";
+    const obj = (kind === "place" ? allPlaces : allFeatures).find((x) => x.osm_url === intent.osm_url);
+    if (obj) {
+      map.jumpTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
+      reopen(kind, obj);
+      answer(kind, obj, intent.choice);
     }
   }
   // A phone that dropped the tab while the reader was in MapComplete comes
