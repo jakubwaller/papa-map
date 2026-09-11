@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
-         finishLogin, ROOMS, roomChoices, roomPatch, changesetTags, changesetXml,
+         finishLogin, ROOMS, roomChoices, roomPatch, tablePatch, changesetTags, changesetXml,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY } from "./osm.js";
 
 // ---- Which OSM ----
@@ -109,6 +109,12 @@ test("the patch touches only the room — limited is never promoted to yes", () 
   assert.deepEqual(roomPatch("female"), { "changing_table:location": "female_toilet" });
   assert.ok(!("changing_table" in roomPatch("both")));
   assert.throws(() => roomPatch("garden"));
+});
+
+test("the play-place patch adds the table as yes, with the same room values", () => {
+  assert.deepEqual(tablePatch("unisex"), { changing_table: "yes", "changing_table:location": "unisex_toilet" });
+  assert.deepEqual(tablePatch("both"), { changing_table: "yes", "changing_table:location": "female_toilet;male_toilet" });
+  assert.throws(() => tablePatch("garden"));
 });
 
 test("changeset tags name the tool, the hashtag and the host", () => {

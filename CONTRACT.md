@@ -21,6 +21,14 @@
 > `papamap.de` talks to the sandbox API. The token lives in `localStorage`
 > (`papamap-osm-token`, `papamap-osm-user`), named in the Datenschutz; the pending answer
 > and the PKCE state sit in `sessionStorage` for the round trip only.
+> **The play places get the same question** (later the same day): a room tapped on a
+> blue pin writes `changing_table=yes` *and* `changing_table:location`, because on an
+> object with no table tag at all the room alone would make a grey pin tonight and the
+> yes alone would ask the room question twice. `yes`, never `limited` — the reader stood in
+> front of one. The place stays in `play_places.geojson` and stays blue until the nightly
+> build moves it over; the in-memory object learns both tags so the popup reads like a
+> pin's. Nothing is written to an object that is not already on the map: an untagged café
+> is still MapComplete's `dad_venue` layer, since the site's GeoJSON carries no venues.
 
 > **v24 amendment (8 Sep 2026, the Papa/Mama reading; numbered after v23 when the two branches met on 11 Sep):** the frontend now offers
 > **two readings of the same three statuses**, and the emitted shape does not change
