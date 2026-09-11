@@ -1,5 +1,27 @@
 # papa-map — build contract (v0)
 
+> **v25 amendment (11 Sep 2026, the in-page answer):** the frontend may now **write to
+> OSM on the reader's behalf** — the one Global Rule that has changed since v0, and it is
+> edited in that section directly, not only noted here. `web/osm.js` logs the reader in
+> with OAuth 2 + PKCE (a public client: no secret in the repo, the token exchange runs in
+> the browser as iD's does), and the two-tap room answer on a grey pin becomes one
+> changeset under the reader's own account, tagged `created_by=PapaMap`,
+> `hashtags=#papamap`, `host=https://papamap.de/`, `source=survey`. The pipeline still
+> writes nothing, PapaMap still stores nothing, and the changeset's author is the reader,
+> as with StreetComplete. Only `changing_table:location` is written, with values from the
+> theme's own vocabulary (`female_toilet;male_toilet`, `male_toilet`, `female_toilet`,
+> `unisex_toilet`, `dedicated_room`; never `changing_table` itself, so `limited` is not
+> promoted to `yes`), and only on a pin whose status is `unknown` *and* whose
+> `location_raw` is empty — a room somebody tagged in words the classifier does not read
+> is left to MapComplete, where the reader sees it before writing over it. The mother's
+> reading offers only the rooms she can vouch for (`female`, `unisex`, `dedicated`).
+> **Still not a classifier:** OSM's reply is quoted in the popup, `location_raw` on the
+> in-memory feature is updated so the question does not reappear, and the pin keeps its
+> colour until the nightly build — the emitted shape is untouched. Any host other than
+> `papamap.de` talks to the sandbox API. The token lives in `localStorage`
+> (`papamap-osm-token`, `papamap-osm-user`), named in the Datenschutz; the pending answer
+> and the PKCE state sit in `sessionStorage` for the round trip only.
+
 > **v24 amendment (8 Sep 2026, the Papa/Mama reading; numbered after v23 when the two branches met on 11 Sep):** the frontend now offers
 > **two readings of the same three statuses**, and the emitted shape does not change
 > by one byte. `classify.py` still answers exactly one question — can a *father*
@@ -778,7 +800,10 @@ do not silently ship something unloadable as if tested.
 ## Global rules
 
 - Match beer-map's code style (comment density, naming). No frameworks, no TypeScript.
-- Nothing in this repo may write to OSM. Contribution happens only via links out to
-  MapComplete/StreetComplete/iD.
+- The pipeline never writes to OSM. The frontend writes only on a logged-in reader's
+  behalf — OAuth 2 with PKCE in the browser, the reader's own account, one element per
+  changeset tagged `created_by=PapaMap` (`web/osm.js`, v25) — and derives nothing from
+  what it wrote: the nightly build stays the only path from OSM into the map. Links out
+  to MapComplete/StreetComplete/iD remain for everything the in-page answer does not cover.
 - Domain `papamap.de` is a placeholder — mark it as such in docs.
 - Do not `git commit` — the orchestrator handles commits.

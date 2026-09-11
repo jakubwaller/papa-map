@@ -9,7 +9,8 @@ dad can actually reach it: **green** = accessible room (men's/unisex/dedicated/w
 **red** = women's room only, **grey** = table exists but nobody has recorded which room —
 the call to action. Every grey pin deep-links to the same object on MapComplete so the
 missing answer becomes an OpenStreetMap contribution. OSM is the only data source and the
-only write destination; this repo owns no data and writes nothing to OSM itself.
+only write destination; this repo owns no data, its pipeline writes nothing to OSM, and the
+frontend writes only what a logged-in reader answers, under that reader's own account.
 
 Why: Google Maps, Apple Maps and Yelp have no changing-table attribute at all, and OSM's
 `changing_table:location` is the only open vocabulary on Earth recording *which room* a
@@ -232,6 +233,39 @@ is worse than none.
 To test offline, kill the dev server. DevTools' "Offline" throttling applies to
 the page's own requests and not to the worker's, so the worker keeps fetching
 from the network and the fallback never runs.
+
+## Answering on the map: OSM login and the two-tap room answer
+
+A grey pin's popup asks *which room is the changing table in?* and offers the
+rooms as buttons. The first tap on a room sends the reader to openstreetmap.org
+once, to log in and consent; they come back with the answer still in hand and it
+is saved without asking again. From then on it is two taps: the pin, the room.
+
+`web/osm.js` is the whole of it. The login is OAuth 2 with PKCE — a static site
+is a *public* client, so there is no secret anywhere in this repo and the token
+exchange runs in the browser, the way iD does it. The answer is one changeset
+under the **reader's own OSM account** (StreetComplete's model: PapaMap is the
+tool in `created_by`, the reader is the author), and it writes exactly one tag,
+`changing_table:location`, with values from the theme's vocabulary — the same
+words MapComplete would write for the same tap, and the words `classify.py`
+reads. `changing_table` itself is never touched, so `limited` is not promoted
+to `yes` by someone who was only asked about the door. In the mother's reading
+the buttons are the rooms she can vouch for — women's, unisex, a separate room
+— and the men's room is left to a father to answer.
+
+What OSM holds afterwards is quoted in the popup, and that is all that changes:
+the pin keeps its colour until the nightly build, because classification lives
+in the pipeline and nowhere else (`CONTRACT.md` v25). A pin that already carries
+a room in words the classifier does not read is not asked — that is somebody's
+tag, and MapComplete shows it before letting anyone write over it.
+
+Any host that is not `papamap.de` talks to the **sandbox** API
+(`master.apis.dev.openstreetmap.org`), whose database is separate and wiped
+periodically. Its client is registered for `http://127.0.0.1:8000/` and
+`:8899/` — open the dev server at `127.0.0.1`, not `localhost`, or the redirect
+is refused. The token is kept in `localStorage` (`papamap-osm-token`,
+`papamap-osm-user`) and named in the Datenschutz; "Abmelden" in the popup
+forgets it here and revokes it at OSM.
 
 ## Play corners
 

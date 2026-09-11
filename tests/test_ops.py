@@ -142,12 +142,15 @@ def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
     monkeypatch.setenv("OSMCHA_TOKEN", "token")
     seen = {}
 
+    calls = []
+
     def fake_get(url, timeout, headers, params):
         seen.update(url=url, headers=headers, params=params)
+        calls.append(params)
 
         class R:
             def json(self):
-                return {"count": 3, "features": []}
+                return {"count": 3 if len(calls) == 1 else 2, "features": []}
         return R()
 
     edits = ops.osmcha_edits(now=NOW, get=fake_get)
@@ -155,9 +158,16 @@ def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
     assert seen["url"] == ops.OSMCHA_URL
     assert seen["headers"]["Authorization"] == "Token token"
     # the changeset theme tag is the theme URL, not the id (MapComplete
-    # stamps remote themes with forcedId = link)
-    assert seen["params"]["metadata"] == f"theme={ops.PAPAMAP_THEME_URL}"
-    assert seen["params"]["date__gte"] == "2026-07-27"  # NOW minus 7 days
+    # stamps remote themes with forcedId = link); the second query is the
+    # in-page answers, which web/osm.js tags created_by=PapaMap, counted
+    # apart from the theme's and never added to it
+    assert [c["metadata"] for c in calls] == [
+        f"theme={ops.PAPAMAP_THEME_URL}", "created_by=PapaMap"]
+    assert calls[0]["date__gte"] == calls[1]["date__gte"] == "2026-07-27"  # NOW minus 7 days
+    assert edits["web_changesets"] == 2
+    report = ops.render_report(None, None, [], [], edits=edits)
+    assert "edits via papamap theme (OSMCha, 7d): 3 changesets" in report
+    assert "answers on the map itself (OSMCha, created_by=PapaMap, 7d): 2 changesets" in report
 
 
 def test_osmcha_edits_groups_by_complete_day(monkeypatch):

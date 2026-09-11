@@ -122,7 +122,7 @@ test("the shell precache pins the same ?v= as index.html", () => {
   const pin = /app\.js\?v=([\w-]+)/.exec(html)?.[1];
   assert.ok(pin, "index.html carries no app.js?v= pin");
   const list = SRC.slice(SRC.indexOf("const SHELL"), SRC.indexOf("const NEVER_CACHE"));
-  for (const f of ["style.css", "app.js", "datasource.js", "i18n.js"])
+  for (const f of ["style.css", "app.js", "datasource.js", "i18n.js", "osm.js"])
     assert.ok(list.includes(`"${f}?v=${pin}"`), `sw.js SHELL must carry ${f}?v=${pin}`);
   assert.ok(list.includes('"index.html"') && list.includes('"index-en.html"'),
     "both index files must be stored, or /index.html?lang=x has nothing to fall back to");

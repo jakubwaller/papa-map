@@ -9,6 +9,9 @@ import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app3";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          langUrl } from "./i18n.js?v=app3";
+import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
+         setLogin, clearLogin, takeIntent, roomChoices, roomPatch,
+         writeTags } from "./osm.js?v=app3";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -21,6 +24,13 @@ let lang = pickLang(new URLSearchParams(location.search).get("lang"),
                     localStorage.getItem("papamap-lang"),
                     navigator.languages ?? navigator.language);
 const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
+
+// Which OSM this page writes to: the live API on papamap.de, the sandbox
+// anywhere else — a dev server cannot put a test answer on the real map.
+const osm = endpoints(location);
+const ROOM_LABEL = { both: "roomBoth", male: "roomMale", female: "roomFemale",
+                     unisex: "roomUnisex", dedicated: "roomDedicated" };
+const CHANGESET_COMMENT = "Changing table: which room (answered on papamap.de)";
 
 // ---- Reading mode: the same three answers, read as a father or as a mother.
 // Same precedence as the language, and the same storage: a shared ?mode= link
@@ -286,6 +296,11 @@ function popupHTML(f) {
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
   if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
+  // The two-tap answer, on the pins nobody has answered for. Not on a pin that
+  // already carries a room in words the classifier does not read: that is
+  // somebody's tag, and replacing it belongs in MapComplete, where the reader
+  // sees what is there before writing over it.
+  if (f.status === "unknown" && !f.location_raw) rows.push(askHTML());
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
@@ -298,6 +313,21 @@ function popupHTML(f) {
   const title = f.name || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
   const sub = f.amenity ? `<div class="sub">${esc(f.amenity.replace(/_/g, " "))}</div>` : "";
   return `<div class="popup"><h3>${esc(title)}</h3>${sub}${rows.join("")}</div>`;
+}
+
+// The question and its answers, in the reading's own vocabulary: a mother is
+// offered the rooms she can vouch for, a father every room. Under it, who the
+// answer will be filed as — or, before the first login, that it will be.
+function askHTML() {
+  const btns = roomChoices(mode)
+    .map((c) => `<button type="button" class="btn ask-btn" data-room="${c}">${esc(t(ROOM_LABEL[c]))}</button>`)
+    .join("");
+  const user = getUser();
+  const who = user
+    ? `${esc(t("askAs", { user }))} · <button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button>`
+    : esc(t("askLoginHint"));
+  return `<div class="ask"><div class="ask-q">${esc(t("askRoom"))}</div>` +
+         `<div class="ask-btns">${btns}</div><div class="ask-who">${who}</div></div>`;
 }
 
 // A prospect's popup says one thing the pin popups never do: nobody has
@@ -758,14 +788,14 @@ function tagsLabel(tags) {
 }
 
 const editText = (note) =>
-  note.key === "editFound" ? t("editFound", { tags: tagsLabel(note.tags) }) : t(note.key);
+  note.key === "editFound" ? t("editFound", { tags: tagsLabel(note.tags) }) : t(note.key, note.vars ?? {});
 
 // Into the open popup when it is this object's, otherwise a toast that
 // reopens the pin — except "looking", which nobody asked to be told about.
 // With the tab hidden an 8 s toast would burn down unseen, so it waits for
 // the visibilitychange that brings the reader back.
-function setEditNote(rec, cls, key, tags = null) {
-  editNote = { kind: rec.kind, osm_url: rec.osm_url, cls, key, tags, at: Date.now(), unseen: false };
+function setEditNote(rec, cls, key, tags = null, vars = null) {
+  editNote = { kind: rec.kind, osm_url: rec.osm_url, cls, key, tags, vars, at: Date.now(), unseen: false };
   if (attachEditNote() || cls === "looking") return;
   if (document.hidden) { editNote.unseen = true; return; }
   toastEditNote();
@@ -807,7 +837,54 @@ function dropEditNote() {
 document.addEventListener("click", (e) => {
   if (popupObj && e.target.closest?.("a[data-edit-check]"))
     startEditCheck(popupObj.kind, popupObj.obj);
+  const room = e.target.closest?.("button.ask-btn");
+  if (room && popupObj?.kind === "table") answerRoom(popupObj.obj, room.dataset.room);
+  if (e.target.closest?.("button[data-logout]")) logout();
 });
+
+// ---- The two-tap answer: written to OSM under the reader's own account ----
+// One tap on the pin, one on the room. The first time, the second tap goes
+// through OSM's consent screen and comes back here with the answer still in
+// hand (the intent, kept in sessionStorage for the round trip), so nobody is
+// asked twice. OSM's reply is quoted in the popup the way the MapComplete
+// confirmation quotes it, and the pin keeps its colour until tonight's build:
+// what was written is displayed, never classified.
+function rememberView() {
+  // The redirect comes back to https://papamap.de/ bare, so the reader's
+  // language and reading have to survive it in storage.
+  localStorage.setItem("papamap-lang", lang);
+  localStorage.setItem("papamap-mode", mode);
+}
+
+async function answerRoom(f, choice) {
+  const token = getToken();
+  if (!token) { rememberView(); startLogin(osm, { osm_url: f.osm_url, choice }); return; }
+  const rec = { kind: "table", osm_url: f.osm_url };
+  setEditNote(rec, "looking", "askSaving");
+  try {
+    const out = await writeTags(osm, token, osmRef(f.osm_url), roomPatch(choice), CHANGESET_COMMENT);
+    // The popup's room row and the question's absence both read from the
+    // feature, so the object in memory learns the answer. Its status does
+    // not move — that is the pipeline's to say, tonight.
+    f.location_raw = out.tags["changing_table:location"];
+    popup?.getElement()?.querySelector(".ask")?.remove();
+    const tags = {};
+    for (const k of EDIT_TAGS) if (out.tags[k]) tags[k] = out.tags[k];
+    setEditNote(rec, "found", "editFound", tags);
+  } catch (err) {
+    // A dead token is not the reader's problem: log in again, answer in hand.
+    if (err.status === 401) { clearLogin(); rememberView(); startLogin(osm, { osm_url: f.osm_url, choice }); return; }
+    setEditNote(rec, "none", err.status === 409 ? "askConflict" : "askFailed", null,
+                { status: err.status || "network" });
+  }
+}
+
+function logout() {
+  const token = getToken();
+  clearLogin();
+  if (token) revoke(osm, token);
+  if (popupObj?.kind === "table") openPopup(popupObj.obj);   // the footer line changes
+}
 document.addEventListener("visibilitychange", () => {
   // Book the time spent away: the nudge at the end of a schedule is for a
   // reader who was in MapComplete long enough to have answered.
@@ -1005,6 +1082,18 @@ async function loadJSON(url) {
 async function boot() {
   applyI18n();  // markup default is German — swap before first paint if not
   syncModeButtons();  // ...and the markup default is papa
+  // A return from OSM's consent screen lands here with ?code= and ?state=.
+  const login = await finishLogin(osm, location.href).catch(() => ({ failed: true }));
+  if (login) {
+    const url = new URL(location.href);
+    for (const k of ["code", "state", "error", "error_description"]) url.searchParams.delete(k);
+    history.replaceState(null, "", url);
+    if (login.token) setLogin(login.token, await userName(osm, login.token).catch(() => null));
+    else if (login.failed) toast(t("loginFailed"));
+  }
+  // Taken whether or not the login went through: a refused consent must not
+  // leave an answer waiting to be filed under the next login.
+  const intent = takeIntent();
   const [fc, places, stats] = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
     loadJSON("data/play_places.geojson"),
@@ -1022,6 +1111,15 @@ async function boot() {
   // an earlier visit. The stats line already names the build date it is
   // showing, so the two together say exactly how stale "stored" is.
   if (fromStore && allFeatures.length) toast(t("toastOffline"));
+  // The answer given before the login round trip: land on its pin and file it.
+  if (intent && login?.token) {
+    const f = allFeatures.find((x) => x.osm_url === intent.osm_url);
+    if (f) {
+      map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+      openPopup(f);
+      answerRoom(f, intent.choice);
+    }
+  }
   // A phone that dropped the tab while the reader was in MapComplete comes
   // back to a reloaded page: pick the check up where it was. (Only with its
   // baseline — a record whose first read never landed stays quiet.) The

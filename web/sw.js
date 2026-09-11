@@ -39,6 +39,7 @@ const SHELL = [
   "app.js?v=app3",
   "datasource.js?v=app3",
   "i18n.js?v=app3",
+  "osm.js?v=app3",
 ];
 
 // The status pages exist to tell you what is true right now. A stale one is
