@@ -37,7 +37,7 @@ function loadSW({ cached = {}, network = {} } = {}) {
       if (!(req.url in network)) throw new TypeError("offline");
       return network[req.url];
     },
-    Response, URL, console,
+    Response, Headers, URL, AbortSignal, console,
   };
   vm.createContext(ctx);
   vm.runInContext(SRC, ctx);
@@ -75,12 +75,68 @@ test("a hostname that merely starts with the site's origin is still foreign", ()
                undefined);
 });
 
-test("same-origin assets are served from the cache when there is a hit", async () => {
+test("offline, the dataset is served from the store and says so", async () => {
   const url = `${ORIGIN}/data/changing_tables.geojson`;
   const { handlers } = loadSW({ cached: { [url]: res("stored") } });
   const e = fire(handlers, url);
   assert.notEqual(e.responded, undefined, "same-origin request was not handled");
-  assert.equal((await e.responded).body, "stored");
+  const answer = await e.responded;
+  assert.equal(await answer.text(), "stored");
+  // The page's "showing stored data" toast hangs on this header alone —
+  // navigator.onLine is true on a Wi-Fi with no internet.
+  assert.equal(answer.headers.get("X-PapaMap-Source"), "cache");
+});
+
+test("the dataset is network-first: online, tonight's build beats last visit's copy", async () => {
+  // The edit confirmation promises "the map updates tonight". A cache-first
+  // answer here would show a reader who came back for exactly that the pins
+  // from before their edit, with the network sitting idle.
+  const url = `${ORIGIN}/data/changing_tables.geojson`;
+  const { handlers, put } = loadSW({ cached: { [url]: res("yesterday") },
+                                     network: { [url]: res("tonight") } });
+  const answer = await fire(handlers, url).responded;
+  assert.equal(answer.body, "tonight");
+  assert.equal(answer.headers, undefined, "a fresh answer is passed through untouched");
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(put, [url], "the fresh copy is stored for the next offline visit");
+});
+
+test("a failed dataset fetch falls back to the stored copy, a 404 does not hide behind one", async () => {
+  const url = `${ORIGIN}/data/stats.json`;
+  // Network answers with an error page and nothing is stored: the page must
+  // see that error, not a synthetic network failure.
+  let sw = loadSW({ network: { [url]: res("missing", { ok: false }) } });
+  assert.equal((await fire(sw.handlers, url).responded).body, "missing");
+  // Same error page, but a stored copy exists: the stored copy wins.
+  sw = loadSW({ cached: { [url]: res("stored") },
+                network: { [url]: res("missing", { ok: false }) } });
+  assert.equal(await (await fire(sw.handlers, url).responded).text(), "stored");
+});
+
+test("the shell precache pins the same ?v= as index.html", () => {
+  // The worker precaches app.js?v=<pin>; index.html asks for app.js?v=<pin>.
+  // If the two ever differ, a deploy precaches a URL nobody requests and the
+  // page's own assets are only stored on a second visit — or, worse, the
+  // install 404s and the previous worker keeps serving the previous deploy.
+  const html = fs.readFileSync(new URL("./index.html", import.meta.url), "utf8");
+  const pin = /app\.js\?v=([\w-]+)/.exec(html)?.[1];
+  assert.ok(pin, "index.html carries no app.js?v= pin");
+  const list = SRC.slice(SRC.indexOf("const SHELL"), SRC.indexOf("const NEVER_CACHE"));
+  for (const f of ["style.css", "app.js", "datasource.js", "i18n.js"])
+    assert.ok(list.includes(`"${f}?v=${pin}"`), `sw.js SHELL must carry ${f}?v=${pin}`);
+  assert.ok(list.includes('"index.html"') && list.includes('"index-en.html"'),
+    "both index files must be stored, or /index.html?lang=x has nothing to fall back to");
+});
+
+test("the shell is cache-first with a background refresh", async () => {
+  // Unlike the dataset: the ?v= pin makes a changed file a changed URL, so a
+  // cached shell asset is by construction the right bytes for its URL.
+  const url = `${ORIGIN}/app.js?v=off1`;
+  const { handlers, put } = loadSW({ cached: { [url]: res("cached code") },
+                                     network: { [url]: res("same code") } });
+  assert.equal((await fire(handlers, url).responded).body, "cached code");
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(put, [url]);
 });
 
 test("offline with nothing stored rejects rather than resolving to undefined", async () => {

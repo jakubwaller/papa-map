@@ -290,8 +290,8 @@ function popupHTML(f) {
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
   if (mcUrl)
-  links.push(`<a class="btn" href="${esc(geoUri(f.lat, f.lon, f.name || ""))}">${esc(t("popupDirections"))}</a>`);
     links.push(`<a class="btn primary" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+  links.push(`<a class="btn" href="${esc(geoUri(f.lat, f.lon, f.name || ""))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -315,8 +315,8 @@ function placeHTML(p) {
   const mcUrl = safeUrl(withMapCompleteLanguage(p.mapcomplete_url, lang)),
         osmUrl = safeUrl(p.osm_url);
   if (mcUrl)
-  links.push(`<a class="btn" href="${esc(geoUri(p.lat, p.lon, p.name || ""))}">${esc(t("popupDirections"))}</a>`);
     links.push(`<a class="btn primary" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+  links.push(`<a class="btn" href="${esc(geoUri(p.lat, p.lon, p.name || ""))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -986,9 +986,16 @@ function whenStyleReady(fn) {
 
 whenStyleReady(() => { styleReady = true; addTableLayer(); refreshPins(); });
 
+// Set when any dataset file was answered by the service worker's stored copy.
+// That header is the only honest "you are looking at old data" signal there
+// is: navigator.onLine reports the machine's interface, and a Wi-Fi with no
+// internet — or a basement with one bar — says "online" all the same.
+let fromStore = false;
+
 async function loadJSON(url) {
   try {
     const r = await fetch(url);
+    if (r.headers.get("X-PapaMap-Source") === "cache") fromStore = true;
     return r.ok ? await r.json() : null;
   } catch {
     return null;
@@ -1014,7 +1021,7 @@ async function boot() {
   // Reassurance, not an error: the map works, the data is simply the copy from
   // an earlier visit. The stats line already names the build date it is
   // showing, so the two together say exactly how stale "stored" is.
-  if (!navigator.onLine && allFeatures.length) toast(t("toastOffline"));
+  if (fromStore && allFeatures.length) toast(t("toastOffline"));
   // A phone that dropped the tab while the reader was in MapComplete comes
   // back to a reloaded page: pick the check up where it was. (Only with its
   // baseline — a record whose first read never landed stays quiet.) The
