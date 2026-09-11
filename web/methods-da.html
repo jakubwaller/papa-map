@@ -128,7 +128,7 @@ natlige build. Stikprøven over otte bymidter er fra 26.&nbsp;juli&nbsp;2026 og 
 Ukraine, samt Australien, New Zealand, USA, Canada og Japan &mdash;, hvor OpenStreetMap
 kender et puslebord
 (<code>changing_table=yes</code> eller <code>limited</code>). Farven siger, om en far kan nå
-bordet. Kortet læser kun OSM og skriver ingen steder hen. Data retter du direkte på OSM via
+bordet. Kortet læser OSM. Svar går direkte til OSM under din egen OSM-konto — fra selve kortet eller via linkene på hver nål; PapaMap gemmer ingenting. Data retter du direkte på OSM via
 linkene på hver nål.</p>
 <p>Idéen kom, da jeg læste bogen <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> af Caroline Criado Perez.</p>
 <p>En rangliste over hvilken by der har den bedste toiletdækning er dette ikke. Hvorfor det ikke
@@ -151,6 +151,27 @@ bogstaver og sammenlignes som et helt token. Aldrig som delstreng, for
       fritekst. Ingen har registreret rummet. De grå nåle er opgaven.</li>
 </ul>
 <p>Et objekt med et <code>centralkey</code>-tag (bortset fra <code>no</code>) holdes ude af kortet, når nøglen spærrer hele døren: <code>access=centralkey</code>, et bord i handicaptoilettet, eller intet i taggene siger, at nøglen kun gælder én kabine. Et anlæg med åbent herre- og dametoilet og en aflåst handicapkabine (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> og <code>female=yes</code>) bliver på kortet, gråt indtil nogen registrerer rummet. Euronøglen udleveres kun mod dokumenteret handicap, så de fleste fædre kommer ikke gennem den dør.</p>
+
+<h2>Far / Mor-kontakten</h2>
+<p>De tre farver ovenfor besvarer farens spørgsmål: kan en far nå bordet? For en mor er det samme
+svar som regel anderledes at læse — et bord på dametoilettet kan hun bruge, og selv et bord uden
+registreret rum står i de fleste tilfælde også i et rum, hun kan komme ind i. Kontakten
+<em>Far / Mor</em> til venstre i chiprækken ændrer derfor kun, hvordan de samme tre svar læses,
+aldrig svarene selv.</p>
+<ul>
+  <li><strong>Far</strong> (standard): grøn, rød og grå som beskrevet ovenfor.</li>
+  <li><strong>Mor</strong>: Grøn betyder nu begge dele — det frit tilgængelige rum <em>og</em>
+      dametoilettet. Orange står for &raquo;rum ikke registreret&laquo;, altså som regel
+      brugbart.</li>
+</ul>
+<p>Det, kontakten ikke gør: den ændrer ikke noget tag, den skriver ingenting til OSM, og den
+beregner ingen ny klassifikation. Det er en anden læsning af de samme tre værdier, gemt kun i din
+browser under <code>papamap-mode</code>. Tallene i chipsene er de samme i begge tilstande.</p>
+<p>Én undtagelse er nævnt her, fordi den ser grøn ud i mor-tilstand uden helt at være det: et bord,
+der ifølge <code>changing_table:location</code> kun står på herretoilettet
+(<code>male_toilet</code> alene), tælles som grønt. Det er sjældent, men det sker. Derfor siger
+teksten ved nålen &raquo;i sjældne tilfælde kun herretoilettet&laquo;, og tallet ovenfor siger
+&raquo;sandsynligvis&laquo;.</p>
 
 <h2>Den blå ring: legeområde</h2>
 <p>En nål med en blå ring har også et legeområde &mdash; et sted, hvor man ikke bare skifter barnet,

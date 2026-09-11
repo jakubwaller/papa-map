@@ -126,7 +126,7 @@ nightly build. The eight-city sample is from 26&nbsp;Jul&nbsp;2026 and stays tha
 <h2>What this map is</h2>
 <p>PapaMap shows places in Europe, Australia, New Zealand, the United States, Canada and Japan where OpenStreetMap knows about a changing table
 (<code>changing_table=yes</code> or <code>limited</code>). The colour says whether a dad can reach
-it. The map only reads OSM and writes nothing. If something is wrong, you fix it on OSM, through
+it. The map reads OSM. Answers go straight to OSM under your own OSM account, from the map itself or through the links on each pin; PapaMap stores nothing. If something is wrong, you fix it on OSM, through
 the links on each pin.</p>
 <p>The idea came from reading <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> by Caroline Criado Perez.</p>
 <p>It is not a ranking of which city has the best toilets. Why that can't be done from open data
@@ -149,6 +149,26 @@ and compared as a whole token, never as a substring, because <code>female_toilet
       free text. Nobody has written down the room yet.</li>
 </ul>
 <p>An object with a <code>centralkey</code> tag (other than <code>no</code>) is left off the map when the key locks the whole door: <code>access=centralkey</code>, a table in the wheelchair toilet, or nothing in the tags saying the key is for one cubicle only. A block with open men's and women's rooms and a key-locked accessible cubicle (<code>wheelchair:access=centralkey</code>, or <code>male=yes</code> and <code>female=yes</code>) stays on the map, grey until someone records the room. You only get a Euro or RADAR key with proof of disability, so most dads don't get through that door.</p>
+
+<h2>The Dad / Mum switch</h2>
+<p>The three colours above answer the dad's question: can a dad reach the table? For a mum the
+same answer usually reads differently — she can use a table in the women's room, and even a table
+with no recorded room is, in most cases, in a room she can enter too. The <em>Dad / Mum</em> switch
+on the left of the chip row therefore only changes how the same three answers are read, never the
+answers themselves.</p>
+<ul>
+  <li><strong>Dad</strong> (default): green, red and grey as described above.</li>
+  <li><strong>Mum</strong>: green now means both — the openly accessible room <em>and</em> the
+      women's room. Orange stands for &ldquo;room not recorded&rdquo;, so usually usable.</li>
+</ul>
+<p>What the switch does not do: it doesn't change a tag, it writes nothing to OSM, and it computes
+no new classification. It's a second reading of the same three values, stored only in your browser
+under <code>papamap-mode</code>. The numbers on the chips are the same in both modes.</p>
+<p>One exception is noted here because it looks green in mum mode without quite being so: a table
+that, according to <code>changing_table:location</code>, stands only in the men's room
+(<code>male_toilet</code> alone) counts as green. That's rare, but it happens. That's why the pin
+text says &ldquo;in rare cases the men's room only&rdquo; and the number above says
+&ldquo;probably&rdquo;.</p>
 
 <h2>The blue ring: play area</h2>
 <p>A pin with a blue ring also has a play area. The <em>With play area</em> chip filters down to

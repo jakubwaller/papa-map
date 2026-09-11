@@ -9,7 +9,8 @@ dad can actually reach it: **green** = accessible room (men's/unisex/dedicated/w
 **red** = women's room only, **grey** = table exists but nobody has recorded which room —
 the call to action. Every grey pin deep-links to the same object on MapComplete so the
 missing answer becomes an OpenStreetMap contribution. OSM is the only data source and the
-only write destination; this repo owns no data and writes nothing to OSM itself.
+only write destination; this repo owns no data, its pipeline writes nothing to OSM, and the
+frontend writes only what a logged-in reader answers, under that reader's own account.
 
 Why: Google Maps, Apple Maps and Yelp have no changing-table attribute at all, and OSM's
 `changing_table:location` is the only open vocabulary on Earth recording *which room* a
@@ -133,6 +134,145 @@ The URLs are fixed (the names are constants in `pipeline/config.py`), so they
 are listed by hand in `web/sitemap.xml`; `tests/test_pages.py` asserts that
 list matches the slugs the generator writes. `PAPAMAP_PAGES_DIR` moves the
 output elsewhere.
+
+## Reading the map as a father or as a mother
+
+The pipeline emits three statuses and the frontend renders them two ways. A
+`Papa` / `Mama` switch sits at the head of the chip bar; the choice is stored in
+`localStorage` under `papamap-mode` and a `?mode=` parameter overrides it for a
+shared link, exactly as `?lang=` does.
+
+It is a **view, not a second classification.** `VIEW` in `web/datasource.js`
+maps each status to a bucket per reading, and everything downstream — pin
+colour, chip dot, chip label, popup sentence, the local stats sentence, the
+headline, and what "usable" means to the nearest-table button — is read out of
+that one table:
+
+| status        | Papa                     | Mama                     |
+| ------------- | ------------------------ | ------------------------ |
+| `accessible`  | good — green             | good — green             |
+| `female_only` | bad — orange             | good — green             |
+| `unknown`     | ask — grey               | maybe — amber            |
+
+Nothing is re-derived from the raw tags in JavaScript, no pipeline field was
+added and `CONTRACT.md`'s emitted shape did not move. The default stays `papa`:
+it is the rendering every screenshot and every og: description describes, so a
+mother's map is a deliberate opt-in rather than a silent redefinition for
+everyone. Switching mode is one `setPaintProperty` on a layer whose source data
+never changes, so 26k pins recolour without a re-fetch.
+
+The one simplification the switch inherits is disclosed on the methods pages: a
+table tagged `male_toilet` only is counted as reachable in both readings.
+
+## Nearest usable table
+
+The second button under the zoom controls answers "where can I change him?" in
+one tap. It asks the browser for a position, finds the nearest table the
+**current reading** calls usable, flies there and opens the popup.
+
+Three things it deliberately does not do:
+
+- **It does not send the position anywhere.** The whole GeoJSON is already in
+  memory, so the search is a haversine loop in the tab and no request leaves the
+  browser. That also makes it a true global nearest over every pin in every
+  swept country, not the nearest thing in the current viewport.
+- **It does not choose a maps app.** The popup's `Route` button is a `geo:` URI,
+  so the phone opens Apple Maps or Organic Maps or whatever the reader already
+  uses, and no third party learns where they are standing. Only the
+  *destination's* coordinates travel in that link. The openstreetmap.org link
+  stays beside it for desktop browsers, which mostly ignore `geo:`.
+- **It does not claim to know how far you will walk.** The distance is
+  straight-line and the toast says so — "1,2 km Luftlinie" — because routing
+  needs a server this project does not have.
+
+Distances round to the nearest 10 m: a good phone fix is accurate to a handful
+of metres and a poor one to fifty, so "437 m" would claim precision the sensor
+cannot deliver. The search ignores the chip filters, since a chip left switched
+off should not change which table is *nearest* — but a filter that would hide
+the winner is switched back on, visibly, so the map never flies to an empty
+spot.
+
+## Offline
+
+`web/sw.js` is a service worker that makes the map work with no signal, which is
+where a parent actually needs it. One rule governs the whole file:
+
+**It must never cache map tiles.** The OSMF tile policy states outright that
+"Offline use is not permitted on tile.openstreetmap.org", defines bulk
+downloading as *any* pre-emptive fetching beyond what the user is actively
+viewing, and warns that prefetch and offline patterns "will be blocked without
+notice". papamap.de carries a Ko-fi link, which also puts it inside that
+policy's explicit warning to services that seek donations. So the fetch handler
+returns early for every cross-origin request and never calls `respondWith()` on
+one: tiles go to the network exactly as if no worker were installed. Offline,
+you therefore get the pins without a basemap. Fixing *that* means moving to
+OpenFreeMap — a different source under a different licence — and it belongs in
+its own commit, not in a widened condition here.
+
+`web/sw.test.js` loads the worker into a `vm` context with a faked service
+worker scope and drives the fetch handler, so the tile rule is a failing test
+rather than a comment. It also pins that an origin check cannot be loosened to
+a prefix match, since `papamap.de.evil.example` would pass one.
+
+Two strategies. The **dataset** (`data/`) is network-first: a reader who is
+online sees tonight's build, which is what the edit confirmation promises, and
+the stored copy answers only when the network fails or cannot deliver it within
+eight seconds. A stored answer carries an `X-PapaMap-Source: cache` header, and
+that header — not `navigator.onLine`, which says "online" on a Wi-Fi with no
+internet — is what makes the page say it is showing stored data. The **shell**
+is stale-while-revalidate: answered from the cache immediately and refreshed in
+the background, so a visitor is at most one visit behind on a deploy of the page
+itself; the `?v=` pins make that safe, and a test holds `sw.js`'s precache list
+to the same pin as `index.html`. Only the shell is precached — the GeoJSON is
+not, because the page fetches it anyway on the first visit and the runtime
+handler stores *that* response, so offline costs the visitor no extra bytes
+rather than a surprise 1.3 MB on mobile data. `ops.html` and `private/` are
+never stored: they exist to say what is true right now, and a stale status page
+is worse than none.
+
+To test offline, kill the dev server. DevTools' "Offline" throttling applies to
+the page's own requests and not to the worker's, so the worker keeps fetching
+from the network and the fallback never runs.
+
+## Answering on the map: OSM login and the two-tap room answer
+
+A grey pin's popup asks *which room is the changing table in?* and offers the
+rooms as buttons. The first tap on a room sends the reader to openstreetmap.org
+once, to log in and consent; they come back with the answer still in hand and it
+is saved without asking again. From then on it is two taps: the pin, the room.
+
+`web/osm.js` is the whole of it. The login is OAuth 2 with PKCE — a static site
+is a *public* client, so there is no secret anywhere in this repo and the token
+exchange runs in the browser, the way iD does it. The answer is one changeset
+under the **reader's own OSM account** (StreetComplete's model: PapaMap is the
+tool in `created_by`, the reader is the author), and it writes exactly one tag,
+`changing_table:location`, with values from the theme's vocabulary — the same
+words MapComplete would write for the same tap, and the words `classify.py`
+reads. `changing_table` itself is never touched, so `limited` is not promoted
+to `yes` by someone who was only asked about the door. In the mother's reading
+the buttons are the rooms she can vouch for — women's, unisex, a separate room
+— and the men's room is left to a father to answer.
+
+What OSM holds afterwards is quoted in the popup, and that is all that changes:
+the pin keeps its colour until the nightly build, because classification lives
+in the pipeline and nowhere else (`CONTRACT.md` v25). A pin that already carries
+a room in words the classifier does not read is not asked — that is somebody's
+tag, and MapComplete shows it before letting anyone write over it.
+
+A blue play place asks the other question, *is there a changing table? then tap
+its room*, and the one tap writes both `changing_table=yes` and the room —
+the table is news to OSM there, and the yes without the room would only make
+a grey pin tonight. The "no" and everything else stay with the MapComplete
+button under it. Nothing is written to an object that is not already on the
+map: a café with no tags at all is still MapComplete's `dad_venue` layer.
+
+Any host that is not `papamap.de` talks to the **sandbox** API
+(`master.apis.dev.openstreetmap.org`), whose database is separate and wiped
+periodically. Its client is registered for `http://127.0.0.1:8000/` and
+`:8899/` — open the dev server at `127.0.0.1`, not `localhost`, or the redirect
+is refused. The token is kept in `localStorage` (`papamap-osm-token`,
+`papamap-osm-user`) and named in the Datenschutz; "Abmelden" in the popup
+forgets it here and revokes it at OSM.
 
 ## Play corners
 

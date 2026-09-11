@@ -111,6 +111,7 @@ WEEKLY_DIGEST_WEEKDAY = 0  # Monday
 
 CF_GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql"
 OSMCHA_URL = "https://osmcha.org/api/v1/changesets/"
+WEB_CREATED_BY = "PapaMap"   # created_by on the changesets web/osm.js opens
 # OSMCha's metadata filter is a JSONB scan over its whole changeset table, and
 # what it costs is not ours to predict: the same query measured 21.9 s on
 # 2026-08-13, over 150 s on 2026-08-18 (280 s to complete), and 0.5 s on
@@ -243,6 +244,10 @@ def render_report(counts, changes, history, anomalies, visits=None,
         lines.append(
             f"edits via papamap theme (OSMCha, {edits['days']}d): "
             f"{edits['changesets']} changesets")
+        if "web_changesets" in edits:
+            lines.append(
+                f"answers on the map itself (OSMCha, created_by=PapaMap, "
+                f"{edits['days']}d): {edits['web_changesets']} changesets")
     if visits and visits["days"]:
         lines.append(
             f"visits (Cloudflare, {visits['days']}d): "
@@ -458,6 +463,16 @@ def osmcha_edits(days=7, now=None, get=requests.get):
         by_day = edits_by_day(data, since, now)
         if by_day is not None:
             out["by_day"] = by_day
+        # The answers given on the map itself (web/osm.js) are the reader's
+        # own changesets tagged created_by=PapaMap — a second slice, counted
+        # on its own line and never folded into the theme's number. A count
+        # only: the chart stays the theme's, and a failure here drops the
+        # line rather than the whole block.
+        r = get(OSMCHA_URL, timeout=OSMCHA_TIMEOUT_S,
+                headers={"Authorization": f"Token {token}"},
+                params={"metadata": f"created_by={WEB_CREATED_BY}",
+                        "date__gte": since, "page_size": "1"})
+        out["web_changesets"] = r.json()["count"]
         return out
     except Exception as exc:  # like visits: decoration, never fail the check
         # Reported, not swallowed. A dropped line and a genuine zero both read
@@ -598,6 +613,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
         # its home, and the line is just "N changesets (7 d, dated)".
         cached_edits = {"days": edits["days"], "changesets": edits["changesets"],
                         "as_of": now.strftime("%Y-%m-%d")}
+        if "web_changesets" in edits:
+            cached_edits["web_changesets"] = edits["web_changesets"]
     if cur_statuses is not None:
         history.append({"date": now.strftime("%Y-%m-%d"), "counts": counts,
                         "changes": changes or diff_statuses({}, {})})

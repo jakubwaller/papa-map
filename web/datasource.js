@@ -205,6 +205,154 @@ export function placesToFeatureCollection(places) {
   };
 }
 
+// ---- Papa/Mama: two readings of the same three answers ----
+// The pipeline's `status` is, and stays, the dad question: can a father reach
+// this table. Mothers are the larger audience by a distance (roughly nine in
+// ten parental-leave months), and for them the same three answers mean
+// something else — a table in the women's room is usable, and an unrecorded
+// room is usually usable too. So the site gets a second *reading*, never a
+// second classification: everything below is a lookup over the three values
+// classify.py already emits, and no OSM tag is consulted here. That is what
+// keeps CONTRACT.md's rule intact — classification lives only in Python.
+export const MODES = ["papa", "mama"];
+export const DEFAULT_MODE = "papa";
+
+// ?mode= beats the stored choice beats the default — the precedence pickLang
+// already uses, minus browser detection: a mode is not a locale, and no
+// browser header says whether the reader is a father or a mother.
+export function pickMode(query, stored) {
+  if (MODES.includes(query)) return query;
+  if (MODES.includes(stored)) return stored;
+  return DEFAULT_MODE;
+}
+
+// One row per (mode, status). `bucket` is the shared vocabulary the pin
+// layer, the chips and the popup all paint and label from, so none of the
+// three can drift into disagreeing about what a mode means. The papa rows
+// are exactly the STATUS_COLOR / STATUS_META tables app.js carried before,
+// moved here so they are unit-testable and so "papa mode is unchanged" is a
+// property of one file rather than a promise.
+const VIEW = {
+  papa: {
+    accessible:  { bucket: "good",  cls: "ok",    labelKey: "stAccessible",     metaKey: "metaAccessible" },
+    female_only: { bucket: "bad",   cls: "bad",   labelKey: "stFemaleOnly",     metaKey: "metaFemaleOnly" },
+    unknown:     { bucket: "ask",   cls: "ask",   labelKey: "stUnknown",        metaKey: "metaUnknown" },
+  },
+  mama: {
+    // Both rooms collapse into one bucket: an openly accessible table and a
+    // women's-room table are equally usable to her. Unknown becomes "maybe"
+    // rather than the grey call to action — for a mother an unrecorded room
+    // is usually still her room, so grey would overstate the doubt.
+    accessible:  { bucket: "good",  cls: "ok",    labelKey: "stAccessibleMama", metaKey: "metaAccessibleMama" },
+    female_only: { bucket: "good",  cls: "ok",    labelKey: "stFemaleOnlyMama", metaKey: "metaFemaleOnlyMama" },
+    unknown:     { bucket: "maybe", cls: "maybe", labelKey: "stUnknownMama",    metaKey: "metaUnknownMama" },
+  },
+};
+
+// An unknown mode or status degrades to the papa reading rather than throwing:
+// a hand-typed ?mode=papi must render the map, not a blank page.
+export function viewFor(status, mode) {
+  const rows = VIEW[mode] ?? VIEW[DEFAULT_MODE];
+  return rows[status] ?? VIEW[DEFAULT_MODE].unknown;
+}
+
+// Okabe-Ito throughout. good/bad/ask are the exact three values app.js used
+// before; `maybe` is the one new colour — the palette's orange, far enough
+// from the blue play halo and from all three status colours to stay readable
+// under the common kinds of colour-vision deficiency.
+export const BUCKET_COLOR = {
+  good: "#009e73", bad: "#d55e00", ask: "#3d4247", maybe: "#e69f00",
+};
+
+// A MapLibre paint expression rather than a per-feature branch: switching
+// mode is then one setPaintProperty on a layer whose source data never
+// moves, so 26k pins recolour without a setData() or a re-fetch.
+export function pinColorExpression(mode) {
+  return ["match", ["get", "status"],
+    "accessible", BUCKET_COLOR[viewFor("accessible", mode).bucket],
+    "female_only", BUCKET_COLOR[viewFor("female_only", mode).bucket],
+    /* unknown */ BUCKET_COLOR[viewFor("unknown", mode).bucket]];
+}
+
+// The mama reading of the local stats sentence: the two rooms add up, the
+// unrecorded ones stay their own number. Same three fields stats.json already
+// carries — no new pipeline field, no new query, nothing added to the
+// contract's emitted shape.
+export function momCounts({ accessible = 0, female_only = 0, unknown = 0 } = {}) {
+  return { good: accessible + female_only, maybe: unknown };
+}
+
+// ---- Nearest usable table ----
+// "Usable" is the reading's own verdict, not a second classification: a status
+// counts when the view already buckets it "good". So a father searches the
+// green pins and a mother searches green and red together, both fall out of
+// the same VIEW table the colours come from, and neither one re-derives
+// anything from the raw tags. Add a mode to VIEW and this follows for free.
+export function usableStatuses(mode) {
+  return STATUSES.filter((s) => viewFor(s, mode).bucket === "good");
+}
+
+const EARTH_KM = 6371;
+const rad = (deg) => (deg * Math.PI) / 180;
+
+// Haversine on a sphere. The answers here are a few kilometres at most, where
+// the error against a proper ellipsoid geodesic is centimetres — orders below
+// the accuracy of the phone fix the distance is measured from, so the extra
+// arithmetic would buy precision the input never had.
+export function haversineKm(aLat, aLon, bLat, bLon) {
+  const dLat = rad(bLat - aLat), dLon = rad(bLon - aLon);
+  const h = Math.sin(dLat / 2) ** 2
+    + Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(dLon / 2) ** 2;
+  // min(1, …) guards the domain of asin: for two identical points the root can
+  // land a float epsilon above 1 and hand back NaN.
+  return 2 * EARTH_KM * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+// Straight-line nearest over the whole loaded set, which is every pin in every
+// swept country — the site holds the entire GeoJSON in memory, so this is a
+// real global nearest and not the nearest thing in the current viewport.
+//
+// Straight-line, though, and the popup says so: a table 200 m away across a
+// river or a motorway is not 200 m away on foot. Routing is what would fix
+// that, and routing needs a server this project does not have.
+export function nearestUsable(features, lat, lon, mode) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  const ok = new Set(usableStatuses(mode));
+  let best = null;
+  for (const f of features) {
+    if (!ok.has(f.status)) continue;
+    if (!Number.isFinite(f.lat) || !Number.isFinite(f.lon)) continue;
+    const km = haversineKm(lat, lon, f.lat, f.lon);
+    if (best === null || km < best.km) best = { feature: f, km };
+  }
+  return best;
+}
+
+// Metres below a kilometre, and rounded to the nearest ten: a good phone fix
+// is accurate to a handful of metres and a poor one to fifty, so "437 m" would
+// claim a precision the sensor cannot deliver. Returns the i18n key and the
+// bare number; the caller formats the number in the reader's own locale.
+export function formatDistance(km) {
+  // Round first, then choose the unit: picking metres for anything under a
+  // kilometre and rounding afterwards renders 999 m as "1000 m", which is a
+  // kilometre written the long way round.
+  const m = Math.round((km * 1000) / 10) * 10;
+  return m < 1000
+    ? { key: "distM", n: m }
+    : { key: "distKm", n: Math.round(km * 10) / 10 };
+}
+
+// A geo: URI hands the coordinates to whichever map app the reader already has
+// — Apple Maps on an iPhone, Google Maps or Organic Maps or OsmAnd on Android
+// — instead of this site picking one for them and telling a third party where
+// they are standing. Desktop browsers mostly ignore it, which is why the popup
+// keeps the openstreetmap.org link beside it.
+export function geoUri(lat, lon, label) {
+  const at = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+  const q = label ? `(${encodeURIComponent(label)})` : "";
+  return `geo:${at}?q=${at}${q}`;
+}
+
 // ---- Edit confirmation: one object re-read from the OSM API ----
 // The nightly build is the only path from OSM into the map, so a reader who
 // has just answered the room question sees nothing for up to a day. The OSM

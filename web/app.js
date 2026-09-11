@@ -3,10 +3,15 @@
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app2";
+         parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
+         pinColorExpression, momCounts, nearestUsable, formatDistance,
+         geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
+         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app3";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app2";
+         langUrl } from "./i18n.js?v=app3";
+import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
+         setLogin, clearLogin, takeIntent, roomChoices, roomPatch, tablePatch,
+         writeTags } from "./osm.js?v=app3";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -19,6 +24,25 @@ let lang = pickLang(new URLSearchParams(location.search).get("lang"),
                     localStorage.getItem("papamap-lang"),
                     navigator.languages ?? navigator.language);
 const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
+
+// Which OSM this page writes to: the live API on papamap.de, the sandbox
+// anywhere else — a dev server cannot put a test answer on the real map.
+const osm = endpoints(location);
+const ROOM_LABEL = { both: "roomBoth", male: "roomMale", female: "roomFemale",
+                     unisex: "roomUnisex", dedicated: "roomDedicated" };
+const CHANGESET_COMMENT = {
+  table: "Changing table: which room (answered on papamap.de)",
+  place: "Changing table: added, with its room (answered on papamap.de)",
+};
+
+// ---- Reading mode: the same three answers, read as a father or as a mother.
+// Same precedence as the language, and the same storage: a shared ?mode= link
+// wins over the remembered choice, which wins over the default. The default
+// stays "papa" — it is the rendering the site has always had, the one every
+// screenshot and every piece of og: copy describes, so a mother's map is a
+// deliberate opt-in rather than a silent redefinition for everyone.
+let mode = pickMode(new URLSearchParams(location.search).get("mode"),
+                    localStorage.getItem("papamap-mode"));
 
 // index.html ships German head tags; the ?lang= views have to carry their own,
 // or the hreflang alternates it advertises would all describe themselves as the
@@ -65,10 +89,12 @@ function applyI18n() {
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
   .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-// Okabe-Ito bluish green + vermillion — distinguishable under the common kinds
-// of color-vision deficiency. Grey is deliberately the darkest pin and one size
-// up on the map: an untagged room is the call to action, not a footnote.
-const STATUS_COLOR = { accessible: "#009e73", female_only: "#d55e00", unknown: "#3d4247" };
+// The pin colours now live in datasource.js as BUCKET_COLOR, keyed by the
+// reading's bucket rather than by status directly, so the map, the chips and
+// the popup all paint from one table that a unit test can pin down. Okabe-Ito
+// throughout — distinguishable under the common kinds of colour-vision
+// deficiency. Grey is deliberately the darkest pin and one size up on the map:
+// for a father an untagged room is the call to action, not a footnote.
 
 // Okabe-Ito blue for the play-corner halo — the fourth palette entry, far
 // enough from all three status colors to stay readable under color-vision
@@ -76,17 +102,12 @@ const STATUS_COLOR = { accessible: "#009e73", female_only: "#d55e00", unknown: "
 // color still means "can a dad reach the table", and the halo annotates.
 const PLAY_COLOR = "#0072b2";
 
+// The legend order. The label and the colour of each row are read from
+// viewFor(status, mode) rather than stored here: there are two readings and
+// only one of them may be baked into a constant.
 const STATUS_DEFS = [
-  { value: "accessible", labelKey: "stAccessible" },
-  { value: "female_only", labelKey: "stFemaleOnly" },
-  { value: "unknown", labelKey: "stUnknown" },
+  { value: "accessible" }, { value: "female_only" }, { value: "unknown" },
 ];
-
-const STATUS_META = {
-  accessible: { cls: "ok", textKey: "metaAccessible" },
-  female_only: { cls: "bad", textKey: "metaFemaleOnly" },
-  unknown: { cls: "ask", textKey: "metaUnknown" },
-};
 
 const OSM_STYLE = {
   version: 8,
@@ -218,10 +239,7 @@ function addTableLayer() {
     paint: {
       // Grey (unknown) pins run one size up — they are the call to action.
       "circle-radius": pinRadius(0),
-      "circle-color": ["match", ["get", "status"],
-        "accessible", STATUS_COLOR.accessible,
-        "female_only", STATUS_COLOR.female_only,
-        /* unknown */ STATUS_COLOR.unknown],
+      "circle-color": pinColorExpression(mode),
       // Full strokes on 2-px country-zoom dots would read as all-white mush.
       "circle-stroke-width": ["interpolate", ["linear"], ["zoom"],
         5, 0.5, 10, 2],
@@ -272,20 +290,26 @@ let popupObj = null;   // { kind: "table" | "place", obj } behind the open popup
 const safeUrl = (u) => (typeof u === "string" && u.startsWith("https://") ? u : null);
 
 function popupHTML(f) {
-  const s = STATUS_META[f.status];
+  const s = viewFor(f.status, mode);
   const rows = [
-    `<div class="status ${s.cls}">${esc(t(s.textKey))}</div>`,
+    `<div class="status ${s.cls}">${esc(t(s.metaKey))}</div>`,
     `<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
       (f.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(f.location_raw)}` : "") + `</div>`,
   ];
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
   if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
+  // The two-tap answer, on the pins nobody has answered for. Not on a pin that
+  // already carries a room in words the classifier does not read: that is
+  // somebody's tag, and replacing it belongs in MapComplete, where the reader
+  // sees what is there before writing over it.
+  if (f.status === "unknown" && !f.location_raw) rows.push(askHTML());
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
   if (mcUrl)
     links.push(`<a class="btn primary" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+  links.push(`<a class="btn" href="${esc(geoUri(f.lat, f.lon, f.name || ""))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -294,15 +318,35 @@ function popupHTML(f) {
   return `<div class="popup"><h3>${esc(title)}</h3>${sub}${rows.join("")}</div>`;
 }
 
+// The question and its answers, in the reading's own vocabulary: a mother is
+// offered the rooms she can vouch for, a father every room. Under it, who the
+// answer will be filed as — or, before the first login, that it will be.
+function askHTML(question = "askRoom") {
+  const btns = roomChoices(mode)
+    .map((c) => `<button type="button" class="btn ask-btn" data-room="${c}">${esc(t(ROOM_LABEL[c]))}</button>`)
+    .join("");
+  const user = getUser();
+  const who = user
+    ? `${esc(t("askAs", { user }))} · <button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button>`
+    : esc(t("askLoginHint"));
+  return `<div class="ask"><div class="ask-q">${esc(t(question))}</div>` +
+         `<div class="ask-btns">${btns}</div><div class="ask-who">${who}</div></div>`;
+}
+
 // A prospect's popup says one thing the pin popups never do: nobody has
 // answered the changing-table question here at all. So it leads with the one
-// fact OSM does record, and the primary button opens MapComplete on exactly
-// that question rather than on the room follow-up.
+// fact OSM does record, then asks the question itself — a room tapped here
+// writes the table *and* its room, since the yes alone would only make a
+// grey pin tonight. The MapComplete button still opens the same question,
+// for the "no" and for everything the two taps cannot say. Once answered
+// in this session the popup reads like a pin's: the tags, no question.
 function placeHTML(p) {
-  const rows = [
-    `<div class="status play">${esc(t("metaPlaces"))}</div>`,
-    `<div class="row">${esc(t("popupPlacesCta"))}</div>`,
-  ];
+  const rows = [`<div class="status play">${esc(t("metaPlaces"))}</div>`];
+  if (p.changing_table)
+    rows.push(`<div class="row">${esc(t("popupTable"))}: <b>${esc(p.changing_table)}</b>` +
+      (p.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(p.location_raw)}` : "") + `</div>`);
+  else
+    rows.push(`<div class="row">${esc(t("popupPlacesCta"))}</div>`, askHTML("askTable"));
   if (p.opening_hours)
     rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(p.opening_hours)}</div>`);
   const links = [];
@@ -310,6 +354,7 @@ function placeHTML(p) {
         osmUrl = safeUrl(p.osm_url);
   if (mcUrl)
     links.push(`<a class="btn primary" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+  links.push(`<a class="btn" href="${esc(geoUri(p.lat, p.lon, p.name || ""))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -347,12 +392,16 @@ function renderChips() {
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
   const frag = document.createDocumentFragment();
   for (const d of STATUS_DEFS) {
+    const v = viewFor(d.value, mode);
     const b = document.createElement("button");
     b.type = "button";
     b.className = "chip" + (visible.has(d.value) ? "" : " off");
     b.setAttribute("aria-pressed", String(visible.has(d.value)));
-    b.innerHTML = `<span class="dot" style="background:${STATUS_COLOR[d.value]}"></span>` +
-      `${esc(t(d.labelKey))} <span class="cnt">${counts[d.value]}</span>`;
+    // The count is the same number in both readings: the chips filter the
+    // literal status, and a mother who wants only the women's-room tables
+    // (a room with a door, not a shared unisex one) can still ask for them.
+    b.innerHTML = `<span class="dot" style="background:${BUCKET_COLOR[v.bucket]}"></span>` +
+      `${esc(t(v.labelKey))} <span class="cnt">${counts[d.value]}</span>`;
     b.addEventListener("click", () => {
       if (visible.has(d.value)) visible.delete(d.value); else visible.add(d.value);
       b.classList.toggle("off", !visible.has(d.value));
@@ -363,7 +412,9 @@ function renderChips() {
   }
   frag.appendChild(playChip(countPlay(allFeatures)));
   frag.appendChild(placesChip(allPlaces.length));
-  filterBar.insertBefore(frag, filterBar.firstChild);
+  // Not firstChild: the mode toggle is static markup and holds that slot, so
+  // the generated chips go in front of the spacer instead.
+  filterBar.insertBefore(frag, filterBar.querySelector(".spacer"));
 }
 
 // The two blue chips are deliberately not one. "Mit Spielecke" narrows the
@@ -459,10 +510,14 @@ function renderStats(stats) {
   }
   // Not the wordmark's `area`: a counted label declines inside the sentence.
   const areaInSentence = areaLabel(stats, true);
+  const m = momCounts(l);
+  const localSentence = mode === "mama"
+    ? t("statsLocalMama", { good: num(m.good), maybe: num(m.maybe),
+                            area: esc(areaInSentence || "—") })
+    : t("statsLocal", { tables: num(tables), area: esc(areaInSentence || "—"),
+                        unknown: num(l.unknown) });
   statsEl.innerHTML =
-    `<span class="stat">${t("statsLocal", {
-      tables: num(tables), area: esc(areaInSentence || "—"),
-      unknown: num(l.unknown) })}</span>` +
+    `<span class="stat">${localSentence}</span>` +
     globalPart +
     `<span class="stat honesty">${t("statsHonesty", {
       toilets: num(l.toilets_total), cap: num(l.capacity_tagged_toilets),
@@ -527,6 +582,17 @@ function fitHome() {
 // transient toast instead of a blocking alert.
 let youMarker = null, toastTimer = null;
 
+// Shared by the locate button and the nearest-table one: both put the reader
+// on the map, and a second marker class would drift from the first.
+function showYou(at) {
+  if (!youMarker) {
+    const dot = document.createElement("div");
+    dot.className = "you-dot";
+    youMarker = new maplibregl.Marker({ element: dot });
+  }
+  youMarker.setLngLat(at).addTo(map);
+}
+
 // onTap makes the toast a button for as long as it shows — the edit
 // confirmation uses it to reopen the pin it is about.
 function toast(msg, { ms = 4000, onTap = null } = {}) {
@@ -545,13 +611,49 @@ document.getElementById("locate").addEventListener("click", () => {
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       const at = [pos.coords.longitude, pos.coords.latitude];
-      if (!youMarker) {
-        const dot = document.createElement("div");
-        dot.className = "you-dot";
-        youMarker = new maplibregl.Marker({ element: dot });
-      }
-      youMarker.setLngLat(at).addTo(map);
+      showYou(at);
       map.flyTo({ center: at, zoom: Math.max(map.getZoom(), 14) });
+    },
+    () => toast(t("toastGeoFail")),
+    { enableHighAccuracy: true, timeout: 10000 },
+  );
+});
+
+// ---- Nearest usable table: the one tap that answers "where can I change him?"
+// Two things this deliberately does not do. It does not send the position
+// anywhere: the fix stays in the tab, the search runs against the GeoJSON
+// already in memory, and no request leaves the browser because of it — which is
+// what keeps the Datenschutz page's promise true. And it does not choose a maps
+// app for the reader; that is the popup's Route button, a geo: URI.
+//
+// "Usable" is the current reading's own verdict, so the same tap sends a father
+// to the nearest open room and a mother to the nearest room of either kind.
+document.getElementById("nearest").addEventListener("click", () => {
+  if (!navigator.geolocation) { toast(t("toastNoGeo")); return; }
+  if (!dataReady) { toast(t("countNoData")); return; }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      showYou([lon, lat]);
+      const hit = nearestUsable(allFeatures, lat, lon, mode);
+      if (!hit) { toast(t("toastNearestNone")); return; }
+      const f = hit.feature;
+      // The search runs over every pin, not just the shown ones: a chip left
+      // switched off should not change which table is nearest. It would fly the
+      // view to an empty spot, though, so the filters that would hide the
+      // winner are switched back on — visibly, in the chip strip.
+      let refilter = false;
+      if (!visible.has(f.status)) { visible.add(f.status); refilter = true; }
+      if (playOnly && !f.play) { playOnly = false; refilter = true; }
+      if (refilter) { renderChips(); refreshPins(); }
+      openPopup(f);
+      map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+      const d = formatDistance(hit.km);
+      toast(t("toastNearestFound", {
+        dist: t(d.key, { n: num(d.n) }),
+        name: f.name
+          || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed"),
+      }));
     },
     () => toast(t("toastGeoFail")),
     { enableHighAccuracy: true, timeout: 10000 },
@@ -694,14 +796,14 @@ function tagsLabel(tags) {
 }
 
 const editText = (note) =>
-  note.key === "editFound" ? t("editFound", { tags: tagsLabel(note.tags) }) : t(note.key);
+  note.key === "editFound" ? t("editFound", { tags: tagsLabel(note.tags) }) : t(note.key, note.vars ?? {});
 
 // Into the open popup when it is this object's, otherwise a toast that
 // reopens the pin — except "looking", which nobody asked to be told about.
 // With the tab hidden an 8 s toast would burn down unseen, so it waits for
 // the visibilitychange that brings the reader back.
-function setEditNote(rec, cls, key, tags = null) {
-  editNote = { kind: rec.kind, osm_url: rec.osm_url, cls, key, tags, at: Date.now(), unseen: false };
+function setEditNote(rec, cls, key, tags = null, vars = null) {
+  editNote = { kind: rec.kind, osm_url: rec.osm_url, cls, key, tags, vars, at: Date.now(), unseen: false };
   if (attachEditNote() || cls === "looking") return;
   if (document.hidden) { editNote.unseen = true; return; }
   toastEditNote();
@@ -713,7 +815,7 @@ function toastEditNote() {
     .find((o) => o.osm_url === note.osm_url);
   toast(editText(note), {
     ms: 8000,
-    onTap: obj ? () => (note.kind === "place" ? openPlacePopup : openPopup)(obj) : null,
+    onTap: obj ? () => reopen(note.kind, obj) : null,
   });
 }
 
@@ -743,7 +845,62 @@ function dropEditNote() {
 document.addEventListener("click", (e) => {
   if (popupObj && e.target.closest?.("a[data-edit-check]"))
     startEditCheck(popupObj.kind, popupObj.obj);
+  const room = e.target.closest?.("button.ask-btn");
+  if (room && popupObj) answer(popupObj.kind, popupObj.obj, room.dataset.room);
+  if (e.target.closest?.("button[data-logout]")) logout();
 });
+
+// ---- The two-tap answer: written to OSM under the reader's own account ----
+// One tap on the pin, one on the room. The first time, the second tap goes
+// through OSM's consent screen and comes back here with the answer still in
+// hand (the intent, kept in sessionStorage for the round trip), so nobody is
+// asked twice. OSM's reply is quoted in the popup the way the MapComplete
+// confirmation quotes it, and the pin keeps its colour until tonight's build:
+// what was written is displayed, never classified.
+function rememberView() {
+  // The redirect comes back to https://papamap.de/ bare, so the reader's
+  // language and reading have to survive it in storage.
+  localStorage.setItem("papamap-lang", lang);
+  localStorage.setItem("papamap-mode", mode);
+}
+
+// One path for both pin kinds: a grey table gets its room, a play place gets
+// the table and the room. The kind rides along in the login intent so the
+// return leg knows which dataset to look the object up in.
+async function answer(kind, obj, choice) {
+  const token = getToken();
+  const intent = { kind, osm_url: obj.osm_url, choice };
+  if (!token) { rememberView(); startLogin(osm, intent); return; }
+  const rec = { kind, osm_url: obj.osm_url };
+  const patch = kind === "place" ? tablePatch(choice) : roomPatch(choice);
+  setEditNote(rec, "looking", "askSaving");
+  try {
+    const out = await writeTags(osm, token, osmRef(obj.osm_url), patch, CHANGESET_COMMENT[kind]);
+    // The popup's tag row and the question's absence both read from the
+    // object, so the one in memory learns the answer. A pin's status and a
+    // place's colour do not move — that is the pipeline's to say, tonight.
+    obj.changing_table = out.tags.changing_table;
+    obj.location_raw = out.tags["changing_table:location"];
+    popup?.getElement()?.querySelector(".ask")?.remove();
+    const tags = {};
+    for (const k of EDIT_TAGS) if (out.tags[k]) tags[k] = out.tags[k];
+    setEditNote(rec, "found", "editFound", tags);
+  } catch (err) {
+    // A dead token is not the reader's problem: log in again, answer in hand.
+    if (err.status === 401) { clearLogin(); rememberView(); startLogin(osm, intent); return; }
+    setEditNote(rec, "none", err.status === 409 ? "askConflict" : "askFailed", null,
+                { status: err.status || "network" });
+  }
+}
+
+const reopen = (kind, obj) => (kind === "place" ? openPlacePopup : openPopup)(obj);
+
+function logout() {
+  const token = getToken();
+  clearLogin();
+  if (token) revoke(osm, token);
+  if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line changes
+}
 document.addEventListener("visibilitychange", () => {
   // Book the time spent away: the nudge at the end of a schedule is for a
   // reader who was in MapComplete long enough to have answered.
@@ -819,6 +976,58 @@ function fitLangSelect() {
 }
 fitLangSelect();
 
+// ---- Papa/Mama toggle: repaint, never re-fetch ----
+// Two buttons rather than a select: there are exactly two states and there
+// always will be, which is the case a segmented control is for. The pins are
+// recoloured with one setPaintProperty on a source whose data never moves —
+// 26k features change meaning without a byte being re-read.
+const modeButtons = { papa: document.getElementById("mode-papa"),
+                      mama: document.getElementById("mode-mama") };
+
+function syncModeButtons() {
+  for (const m of MODES) {
+    const on = m === mode;
+    modeButtons[m].classList.toggle("on", on);
+    modeButtons[m].setAttribute("aria-pressed", String(on));
+  }
+  // The <h1> is the map's promise, and in the mother's reading the father's
+  // version contradicts the pins under it. Swap the key rather than the text —
+  // the same trick the stats toggle uses for its aria-label — so applyI18n()
+  // re-reads it on a language change instead of resetting it to the father's.
+  // Crawlers only ever see the markup default, which is the papa line.
+  const tagline = document.querySelector(".tagline");
+  tagline.dataset.i18n = mode === "mama" ? "taglineMama" : "tagline";
+  tagline.textContent = t(tagline.dataset.i18n);
+}
+
+function applyMode() {
+  syncModeButtons();
+  // Guarded: a click before the WebGL style is ready would throw, and the
+  // layer is created with pinColorExpression(mode) anyway, so a mode chosen
+  // that early is already painted correctly when the style arrives.
+  if (styleReady) map.setPaintProperty(SRC, "circle-color", pinColorExpression(mode));
+  if (popup) { popup.remove(); popup = null; }   // its text belonged to the old reading
+  renderStats(lastStats);
+  renderChips();
+  positionZoomCtrl();   // the sentence can wrap to a different height
+}
+
+for (const m of MODES) {
+  modeButtons[m].addEventListener("click", () => {
+    if (mode === m) return;
+    mode = m;
+    localStorage.setItem("papamap-mode", mode);
+    // A ?mode= param would override the stored choice on the next reload —
+    // drop it once the reader has chosen in-page, exactly as ?lang= does.
+    if (new URLSearchParams(location.search).has("mode")) {
+      const url = new URL(location.href);
+      url.searchParams.delete("mode");
+      history.replaceState(null, "", url);
+    }
+    applyMode();
+  });
+}
+
 langSelect.addEventListener("change", () => {
   lang = LANGS.includes(langSelect.value) ? langSelect.value : DEFAULT_LANG;
   localStorage.setItem("papamap-lang", lang);
@@ -834,6 +1043,7 @@ langSelect.addEventListener("change", () => {
   renderStats(lastStats);
   renderChips();
   refreshPins();
+  syncModeButtons();   // applyI18n() relabels them; the pressed state is ours
   positionZoomCtrl();  // strip height can change with string lengths
 });
 // Click on the backdrop (the dialog element itself, not its children) closes.
@@ -846,11 +1056,39 @@ addDialog.addEventListener("click", (e) => { if (e.target === addDialog) addDial
 // file may be missing (pipeline not run yet) — the page degrades to a message.
 let dataReady = false, styleReady = false;
 
-map.on("load", () => { styleReady = true; addTableLayer(); refreshPins(); });
+// NOT map.on("load"): MapLibre fires that only after "all necessary resources
+// have been downloaded and the first visually complete rendering has occurred",
+// and the raster basemap is one of those resources. With no signal its tiles
+// can never arrive, so "load" never fires, the pin layer is never added, and
+// the map sits empty — offline failing in precisely the case offline exists
+// for. "styledata" plus an isStyleLoaded() guard is the documented way to wait
+// for the style alone, which is all adding a layer actually needs.
+// isStyleLoaded() is no good as a guard here either: it reports false until
+// every source cache has loaded, the raster basemap included, so offline it
+// stays false through all the styledata events and then never fires another.
+// "style.load" is the event that means the style JSON itself is parsed, which
+// is all adding a layer needs. "load" stays attached behind a run-once latch
+// as a belt-and-braces fallback: it is the event that definitely exists, it
+// just cannot be relied on without a network.
+function whenStyleReady(fn) {
+  let done = false;
+  const go = () => { if (done) return; done = true; fn(); };
+  map.on("style.load", go);
+  map.on("load", go);
+}
+
+whenStyleReady(() => { styleReady = true; addTableLayer(); refreshPins(); });
+
+// Set when any dataset file was answered by the service worker's stored copy.
+// That header is the only honest "you are looking at old data" signal there
+// is: navigator.onLine reports the machine's interface, and a Wi-Fi with no
+// internet — or a basement with one bar — says "online" all the same.
+let fromStore = false;
 
 async function loadJSON(url) {
   try {
     const r = await fetch(url);
+    if (r.headers.get("X-PapaMap-Source") === "cache") fromStore = true;
     return r.ok ? await r.json() : null;
   } catch {
     return null;
@@ -859,6 +1097,19 @@ async function loadJSON(url) {
 
 async function boot() {
   applyI18n();  // markup default is German — swap before first paint if not
+  syncModeButtons();  // ...and the markup default is papa
+  // A return from OSM's consent screen lands here with ?code= and ?state=.
+  const login = await finishLogin(osm, location.href).catch(() => ({ failed: true }));
+  if (login) {
+    const url = new URL(location.href);
+    for (const k of ["code", "state", "error", "error_description"]) url.searchParams.delete(k);
+    history.replaceState(null, "", url);
+    if (login.token) setLogin(login.token, await userName(osm, login.token).catch(() => null));
+    else if (login.failed) toast(t("loginFailed"));
+  }
+  // Taken whether or not the login went through: a refused consent must not
+  // leave an answer waiting to be filed under the next login.
+  const intent = takeIntent();
   const [fc, places, stats] = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
     loadJSON("data/play_places.geojson"),
@@ -872,6 +1123,20 @@ async function boot() {
   fitHome();           // ...and so does the home view's top padding
   dataReady = true;
   refreshPins();
+  // Reassurance, not an error: the map works, the data is simply the copy from
+  // an earlier visit. The stats line already names the build date it is
+  // showing, so the two together say exactly how stale "stored" is.
+  if (fromStore && allFeatures.length) toast(t("toastOffline"));
+  // The answer given before the login round trip: land on its pin and file it.
+  if (intent && login?.token) {
+    const kind = intent.kind === "place" ? "place" : "table";
+    const obj = (kind === "place" ? allPlaces : allFeatures).find((x) => x.osm_url === intent.osm_url);
+    if (obj) {
+      map.jumpTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
+      reopen(kind, obj);
+      answer(kind, obj, intent.choice);
+    }
+  }
   // A phone that dropped the tab while the reader was in MapComplete comes
   // back to a reloaded page: pick the check up where it was. (Only with its
   // baseline — a record whose first read never landed stays quiet.) The
@@ -890,3 +1155,13 @@ async function boot() {
 
 boot();
 window.addEventListener("resize", positionZoomCtrl);
+
+// ---- Offline: register the service worker ----
+// Last thing in the module and deliberately unawaited — a browser without
+// service workers, a failed registration, or a page opened over plain http
+// must all leave the map working exactly as before. sw.js stores the shell and
+// the dataset; it never touches map tiles, and the comment at the top of that
+// file says why that is not a detail but the whole constraint.
+if ("serviceWorker" in navigator)
+  window.addEventListener("load",
+    () => navigator.serviceWorker.register("sw.js").catch(() => {}));

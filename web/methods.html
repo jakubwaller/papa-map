@@ -127,7 +127,7 @@ bleibt so stehen.</p>
 <h2>Was diese Karte ist</h2>
 <p>PapaMap zeigt Orte in Europa, Australien, Neuseeland, den USA, Kanada und Japan, für die OpenStreetMap einen Wickeltisch kennt
 (<code>changing_table=yes</code> oder <code>limited</code>). Die Farbe sagt, ob ein Papa den Tisch
-erreicht. Die Karte liest nur OSM und schreibt nirgendwohin. Wenn was nicht stimmt, reparierst du
+erreicht. Die Karte liest OSM. Antworten gehen direkt nach OSM, unter deinem eigenen OSM-Konto — von der Karte selbst oder über die Links an jedem Pin; PapaMap speichert nichts. Wenn was nicht stimmt, reparierst du
 es direkt auf OSM, über die Links an jedem Pin.</p>
 <p>Die Idee kam beim Lesen des Buchs <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> von Caroline Criado Perez.</p>
 <p>Ein Ranking, welche Stadt die besten Toiletten hat, ist das nicht. Warum das aus offenen Daten
@@ -150,6 +150,26 @@ kleingeschrieben und als ganzes Token verglichen, nie als Teilstring, denn
       Freitext. Den Raum hat noch niemand eingetragen.</li>
 </ul>
 <p>Ein Objekt mit <code>centralkey</code>-Tag (außer <code>no</code>) bleibt von der Karte, wenn der Schlüssel die ganze Tür sperrt: <code>access=centralkey</code>, ein Tisch im Behinderten-WC, oder nichts im Tagging sagt, dass der Schlüssel nur für eine Kabine gilt. Eine Anlage mit offenem Herren- und Damen-WC und einer Behindertenkabine mit Schlüssel (<code>wheelchair:access=centralkey</code>, oder <code>male=yes</code> und <code>female=yes</code>) bleibt auf der Karte, grau, bis jemand den Raum einträgt. Den Euroschlüssel bekommt man nur mit nachgewiesener Behinderung, die meisten Väter kommen durch diese Tür nicht.</p>
+
+<h2>Der Papa-Mama-Schalter</h2>
+<p>Die drei Farben oben beantworten die Papa-Frage: Kommt ein Vater an den Tisch? Für eine Mutter
+ist dieselbe Antwort meistens anders zu lesen — einen Tisch im Damen-WC kann sie benutzen, und auch
+bei einem Tisch ohne erfassten Raum steht die Mehrheit in einem Raum, den sie betreten kann. Der
+Schalter <em>Papa / Mama</em> links in der Chip-Leiste ändert deshalb nur, wie dieselben drei
+Antworten gelesen werden, nie die Antworten selbst.</p>
+<ul>
+  <li><strong>Papa</strong> (Standard): grün, rot und grau wie oben beschrieben.</li>
+  <li><strong>Mama</strong>: Grün heißt jetzt beides — der offen zugängliche Raum <em>und</em> das
+      Damen-WC. Orange steht für &bdquo;Raum nicht erfasst&ldquo;, also meistens nutzbar.</li>
+</ul>
+<p>Was der Schalter nicht tut: Er ändert kein Tag, er schreibt nichts nach OSM, und er rechnet keine
+neue Klassifikation. Er ist eine zweite Lesart derselben drei Werte, gespeichert nur in deinem
+Browser unter <code>papamap-mode</code>. Die Zahlen in den Chips sind in beiden Modi dieselben.</p>
+<p>Eine Ausnahme steht hier, weil sie im Mama-Modus grün aussieht und es nicht ganz ist: Ein Tisch,
+der laut <code>changing_table:location</code> nur im Herren-WC steht (<code>male_toilet</code>
+allein), zählt zu den grünen. Das ist selten, aber es kommt vor. Deshalb sagt der Text am Pin
+&bdquo;in seltenen Fällen nur im Herren-WC&ldquo; und die Zahl oben sagt
+&bdquo;voraussichtlich&ldquo;.</p>
 
 <h2>Der blaue Ring: Spielecke</h2>
 <p>Ein Pin mit blauem Ring hat außerdem eine Spielecke. Der Chip <em>Mit Spielecke</em> zeigt nur

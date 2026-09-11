@@ -1,5 +1,71 @@
 # papa-map — build contract (v0)
 
+> **v25 amendment (11 Sep 2026, the in-page answer):** the frontend may now **write to
+> OSM on the reader's behalf** — the one Global Rule that has changed since v0, and it is
+> edited in that section directly, not only noted here. `web/osm.js` logs the reader in
+> with OAuth 2 + PKCE (a public client: no secret in the repo, the token exchange runs in
+> the browser as iD's does), and the two-tap room answer on a grey pin becomes one
+> changeset under the reader's own account, tagged `created_by=PapaMap`,
+> `hashtags=#papamap`, `host=https://papamap.de/`, `source=survey`. The pipeline still
+> writes nothing, PapaMap still stores nothing, and the changeset's author is the reader,
+> as with StreetComplete. Only `changing_table:location` is written, with values from the
+> theme's own vocabulary (`female_toilet;male_toilet`, `male_toilet`, `female_toilet`,
+> `unisex_toilet`, `dedicated_room`; never `changing_table` itself, so `limited` is not
+> promoted to `yes`), and only on a pin whose status is `unknown` *and* whose
+> `location_raw` is empty — a room somebody tagged in words the classifier does not read
+> is left to MapComplete, where the reader sees it before writing over it. The mother's
+> reading offers only the rooms she can vouch for (`female`, `unisex`, `dedicated`).
+> **Still not a classifier:** OSM's reply is quoted in the popup, `location_raw` on the
+> in-memory feature is updated so the question does not reappear, and the pin keeps its
+> colour until the nightly build — the emitted shape is untouched. Any host other than
+> `papamap.de` talks to the sandbox API. The token lives in `localStorage`
+> (`papamap-osm-token`, `papamap-osm-user`), named in the Datenschutz; the pending answer
+> and the PKCE state sit in `sessionStorage` for the round trip only.
+> **The play places get the same question** (later the same day): a room tapped on a
+> blue pin writes `changing_table=yes` *and* `changing_table:location`, because on an
+> object with no table tag at all the room alone would make a grey pin tonight and the
+> yes alone would ask the room question twice. `yes`, never `limited` — the reader stood in
+> front of one. The place stays in `play_places.geojson` and stays blue until the nightly
+> build moves it over; the in-memory object learns both tags so the popup reads like a
+> pin's. Nothing is written to an object that is not already on the map: an untagged café
+> is still MapComplete's `dad_venue` layer, since the site's GeoJSON carries no venues.
+
+> **v24 amendment (8 Sep 2026, the Papa/Mama reading; numbered after v23 when the two branches met on 11 Sep):** the frontend now offers
+> **two readings of the same three statuses**, and the emitted shape does not change
+> by one byte. `classify.py` still answers exactly one question — can a *father*
+> reach this table — and still emits `accessible | female_only | unknown`; the new
+> `viewFor(status, mode)` in `web/datasource.js` is a lookup over those three values
+> and nothing else. No OSM tag is read in JavaScript, no fourth status exists, and
+> `stats.json`, `changing_tables.geojson` and `history.json` are untouched.
+>
+> **What the mother's reading changes:** `accessible` and `female_only` both paint
+> green (a table in the women's room is one she can use), and `unknown` paints
+> Okabe-Ito orange `#e69f00` rather than the grey call to action, because for her an
+> unrecorded room is usually still her room. The three filter chips stay three, over
+> the *literal* status, with identical counts in both readings — a mother may
+> deliberately want the women's-room tables over a shared unisex one, and collapsing
+> the chips would remove that. Only the pin colour, the chip labels, the popup
+> sentence and the one `statsLocal` sentence differ; `statsGlobal` and
+> `statsHonesty` are objective dataset facts and stay mode-invariant.
+>
+> **The mother's count sentence needs no new pipeline field:** `momCounts` adds
+> `local.accessible + local.female_only` and keeps `local.unknown` apart, and those
+> three already partition the tables (2,873 + 477 + 22,419 = 25,769 = `ct_yes` +
+> `ct_limited`, live build of 8 Sep 2026).
+>
+> **The one disclosed simplification:** a table tagged `changing_table:location=male_toilet`
+> alone reads green in the mother's view too, which is not literally true. It is named
+> in `methods.html` in all 32 languages *and* hedged in the product copy itself — the
+> popup says "in rare cases the men's room only" and the count sentence says
+> "probably" — because a reader deciding at the door has not read the methods page.
+> Demoting those pins instead would mean branching on `location_raw` in JavaScript,
+> which is the re-derivation this contract forbids.
+>
+> `?mode=papa|mama` is honoured on load and stripped from the URL once the reader
+> chooses in-page, exactly as `?lang=` is; it deliberately does **not** touch the
+> canonical or the hreflang set, because a reading is a personalization of the same
+> content, not a new indexable page. Stored in `localStorage` under `papamap-mode`,
+> named in the Datenschutz beside `papamap-lang` and `papamap-app`.
 > **v23 amendment (10 Sep 2026, the edit confirmation):** after a reader
 > clicks a pin's MapComplete button, the frontend re-reads **that one object**
 > from the OSM API (`api.openstreetmap.org/api/0.6/<type>/<id>.json` — answers
@@ -742,7 +808,10 @@ do not silently ship something unloadable as if tested.
 ## Global rules
 
 - Match beer-map's code style (comment density, naming). No frameworks, no TypeScript.
-- Nothing in this repo may write to OSM. Contribution happens only via links out to
-  MapComplete/StreetComplete/iD.
+- The pipeline never writes to OSM. The frontend writes only on a logged-in reader's
+  behalf — OAuth 2 with PKCE in the browser, the reader's own account, one element per
+  changeset tagged `created_by=PapaMap` (`web/osm.js`, v25) — and derives nothing from
+  what it wrote: the nightly build stays the only path from OSM into the map. Links out
+  to MapComplete/StreetComplete/iD remain for everything the in-page answer does not cover.
 - Domain `papamap.de` is a placeholder — mark it as such in docs.
 - Do not `git commit` — the orchestrator handles commits.

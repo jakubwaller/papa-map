@@ -129,7 +129,7 @@ nezmenená.</p>
 Ukrajinu, a k tomu Austrália, Nový Zéland, USA, Kanada a Japonsko —, o ktorých OpenStreetMap
 vie, že sa tam nachádza prebaľovací
 pult (<code>changing_table=yes</code> alebo <code>limited</code>). Farba hovorí, či sa k pultu
-dostane aj otec. Mapa číta len OSM a nikam nezapisuje. Opraviť dáta môžeš priamo na OSM, cez odkazy
+dostane aj otec. Mapa číta OSM. Odpovede idú rovno do OSM pod tvojím vlastným účtom OSM — priamo z mapy alebo cez odkazy pri každom špendlíku; PapaMap nič neukladá. Opraviť dáta môžeš priamo na OSM, cez odkazy
 pri každom špendlíku.</p>
 <p>Nápad vznikol pri čítaní knihy <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> od Caroline Criado Perez.</p>
 <p>Rebríček miest podľa vybavenosti toaletami to nie je. Prečo sa to z otvorených dát poctivo urobiť
@@ -152,6 +152,27 @@ medzier, prevedie na malé písmená a porovnáva sa ako celý token. Nikdy ako 
       len voľný text. Nikto nezaznamenal miestnosť. Sivé špendlíky sú tá úloha.</li>
 </ul>
 <p>Objekt s tagom <code>centralkey</code> (iným ako <code>no</code>) zostane mimo mapy, keď kľúč zamyká celé dvere: <code>access=centralkey</code>, pult na bezbariérovom WC, alebo nič v tagoch nehovorí, že kľúč platí len pre jednu kabínku. Zariadenie s otvorenými pánskymi a dámskymi WC a zamknutou bezbariérovou kabínkou (<code>wheelchair:access=centralkey</code>, alebo <code>male=yes</code> a <code>female=yes</code>) na mape zostane, sivé, kým niekto nezapíše miestnosť. Eurokľúč sa vydáva len na základe preukazu zdravotného postihnutia, takže väčšina otcov cez tie dvere neprejde.</p>
+
+<h2>Prepínač Otec-Mama</h2>
+<p>Tri farby vyššie odpovedajú na otcovskú otázku: Dostane sa otec k pultu? Pre mamu sa tá istá
+odpoveď väčšinou číta inak — pult na dámskom WC môže použiť, a aj pri pulte bez zaznamenanej
+miestnosti stojí väčšina z nich v miestnosti, do ktorej sa dostane. Prepínač <em>Otec / Mama</em>
+vľavo v lište filtrov preto mení len to, ako sa tie isté tri odpovede čítajú, nikdy odpovede
+samotné.</p>
+<ul>
+  <li><strong>Otec</strong> (predvolené): zelená, červená a sivá ako vyššie.</li>
+  <li><strong>Mama</strong>: Zelená teraz znamená oboje — voľne prístupná miestnosť <em>a</em>
+      dámske WC. Oranžová znamená &bdquo;Miestnosť nezaznamenaná&ldquo;, teda väčšinou
+      použiteľná.</li>
+</ul>
+<p>Čo prepínač nerobí: nemení žiadny tag, nič nezapisuje do OSM a nepočíta žiadnu novú
+klasifikáciu. Je to druhé čítanie tých istých troch hodnôt, uložené len v tvojom prehliadači pod
+kľúčom <code>papamap-mode</code>. Čísla vo filtroch sú v oboch režimoch rovnaké.</p>
+<p>Jedna výnimka patrí sem, pretože v režime Mama vyzerá zelene, a celkom presne to tak nie je:
+Pult, ktorý je podľa <code>changing_table:location</code> len na pánskom WC
+(<code>male_toilet</code> samotné), sa počíta medzi zelené. Je to zriedkavé, ale stáva sa to.
+Preto text pri špendlíku hovorí &bdquo;výnimočne len na pánskom WC&ldquo; a číslo vyššie hovorí
+&bdquo;pravdepodobne&ldquo;.</p>
 
 <h2>Modrý krúžok: detský kútik</h2>
 <p>Špendlík s modrým krúžkom má navyše aj detský kútik &mdash; miesto, kde dieťa nielen prebalíš,

@@ -30,16 +30,45 @@
   <p>Die Karte lädt Kartenkacheln von tile.openstreetmap.org; dabei wird Ihre IP-Adresse an die
      OpenStreetMap Foundation übertragen (<a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">OSMF Privacy Policy</a>).
      Die Karten-Software (MapLibre) wird von diesem Server ausgeliefert, nicht von Dritten.</p>
+  <h2>Standort (Ortungsfunktion)</h2>
+  <p>Die beiden Ortungs-Schaltflächen fragen Ihren Standort über die Geolocation-Schnittstelle des
+     Browsers ab — erst nach Ihrer ausdrücklichen Erlaubnis, die Sie jederzeit widerrufen können.
+     Die Position wird ausschließlich in Ihrem Browser verarbeitet: Die Suche nach dem nächsten
+     nutzbaren Wickeltisch läuft gegen die Kartendaten, die ohnehin schon geladen sind. Der
+     Standort wird nicht an diesen Server und nicht an Dritte übertragen, nicht gespeichert und
+     nicht protokolliert. Die Schaltfläche „Route“ öffnet einen <code>geo:</code>-Link mit den
+     Koordinaten des Wickeltisches — welche Karten-App ihn entgegennimmt, entscheidet Ihr Gerät;
+     Ihr eigener Standort steht nicht in diesem Link.</p>
   <h2>Spracheinstellung (Local Storage)</h2>
   <p>Wählen Sie über den Sprachumschalter eine Sprache, wird diese Wahl im Local Storage Ihres
-     Browsers gespeichert (Schlüssel <code>papamap-lang</code>); ebenso merkt sich die Seite
-     app.html, ob Sie dort schon getippt haben (Schlüssel <code>papamap-app</code>) — rein
+     Browsers gespeichert (Schlüssel <code>papamap-lang</code>); ebenso, ob Sie die Karte aus
+     Papa- oder Mama-Sicht lesen (Schlüssel <code>papamap-mode</code>), und die Seite
+     app.html merkt sich, ob Sie dort schon getippt haben (Schlüssel <code>papamap-app</code>) — rein
      funktional, ohne Tracking, nur auf Ihrem Gerät, löschbar über die Browserdaten
      (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+  <h2>Offline-Speicher (Service Worker)</h2>
+  <p>Damit die Karte auch ohne Netz funktioniert, legt ein Service Worker die Seite selbst und die
+     Wickeltisch-Daten im Cache Ihres Browsers ab — rein funktional, ohne Tracking, nur auf Ihrem
+     Gerät, löschbar über die Browserdaten (§ 25 Abs. 2 Nr. 2 TDDDG). Es werden dabei keine Daten
+     an diesen Server oder an Dritte übertragen. <strong>Kartenkacheln werden ausdrücklich nicht
+     gespeichert</strong> — die Nutzungsbedingungen von tile.openstreetmap.org untersagen das.
+     Ohne Netz zeigt die Karte deshalb die gespeicherten Wickeltische ohne Kartenhintergrund.</p>
   <h2>Links zu OSM-Editoren</h2>
   <p>Links zu MapComplete, StreetComplete und openstreetmap.org führen auf externe Angebote; dort
      bearbeiten Sie Daten unter Ihrem eigenen OSM-Konto nach deren Datenschutzbestimmungen — über
      diese Website läuft dabei nichts.</p>
+  <h2>Antworten auf der Karte: Anmeldung bei OpenStreetMap (OAuth 2)</h2>
+  <p>Tippen Sie in einem grauen Pin auf einen der Raum-Buttons, werden Sie einmalig zu
+     openstreetmap.org weitergeleitet und melden sich dort mit Ihrem OSM-Konto an (OAuth 2 mit PKCE;
+     Ihr Passwort sieht diese Website nie). OSM gibt der Seite ein Zugriffstoken zurück, das im
+     Local Storage Ihres Browsers liegt (Schlüssel <code>papamap-osm-token</code>, dazu Ihr
+     OSM-Anzeigename unter <code>papamap-osm-user</code>), bis Sie im Pin auf „Abmelden“ tippen
+     oder die Browserdaten löschen (§ 25 Abs. 2 Nr. 2 TDDDG). Ihre Antwort schreibt der Browser
+     direkt an api.openstreetmap.org, als Änderungssatz unter Ihrem eigenen OSM-Konto und Namen,
+     gekennzeichnet mit <code>created_by=PapaMap</code>; es gelten die
+     <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">Datenschutzbestimmungen der OSMF</a>.
+     Dieser Server erfährt davon nichts: Token, Konto und Antwort laufen nicht über papamap.de, und
+     PapaMap speichert keine Bearbeitungen. Ohne Anmeldung bleibt die Karte vollständig nutzbar.</p>
   <h2>Abgleich nach einer Bearbeitung (OSM-API)</h2>
   <p>Tippen Sie in einem Pin auf „Auf MapComplete beantworten“, fragt die Seite in den folgenden
      Minuten einige Male bei api.openstreetmap.org die aktuellen Tags dieses einen Objekts ab, um

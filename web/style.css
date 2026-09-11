@@ -12,6 +12,8 @@
   --line-soft: #e4e9e4;
   --green: #009e73;
   --green-strong: #00775a;
+  /* Okabe-Ito reddish-purple, the mama half of the reading toggle. */
+  --mama: #cc79a7;
   --red: #d55e00;
   --grey-pin: #3d4247;
   /* Okabe-Ito blue — the play-corner halo and chip. Not a status: the three
@@ -318,7 +320,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   color: var(--muted-2);
 }
 #zoom-ctrl button:hover { border-color: var(--green); color: var(--green-strong); }
-#locate { display: flex; align-items: center; justify-content: center; }
+#locate, #nearest { display: flex; align-items: center; justify-content: center; }
 
 /* You-are-here dot (single DOM marker, added on demand) */
 .you-dot {
@@ -491,6 +493,19 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 .popup .edit-note.found { color: var(--ink); font-weight: 600; }
 .popup .edit-note.none { color: #6b4a00; background: #fff3d6; }
+/* The two-tap answer: one question, the rooms as pills, and one small line
+   saying whose name the answer goes under. The pills are .btn so they sit
+   level with the links below; buttons need the font and ground set, which
+   anchors get for free. */
+.popup .ask { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+.popup .ask-q { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.popup .ask-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.popup .ask-btn { font: inherit; font-size: 12.5px; font-weight: 600; background: #fff; cursor: pointer; }
+.popup .ask-who { margin-top: 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted-2); }
+.popup .linkish {
+  border: 0; background: none; padding: 0; font: inherit;
+  color: var(--green-strong); text-decoration: underline; cursor: pointer;
+}
 
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
@@ -514,6 +529,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   #stats { padding: 6px 14px; gap: 2px 18px; font-size: 12px; }
   .chip-bar { padding-left: 14px; padding-right: 14px; }
   .chip { padding: 7px 11px; font-size: 12px; }
+  /* Matches .chip exactly: the toggle is the first thing in that row and
+     must not stand a size taller than the chips it repaints. */
+  .mode-btn { padding: 7px 11px; font-size: 12px; }
 
   /* The strip is 161px of the 308px overlay here — over half the chrome, and
      the map pays for all of it. Collapsed keeps the headline and its "tap the
@@ -547,3 +565,33 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   }
   .stats-toggle[aria-expanded="true"] { transform: rotate(180deg); }
 }
+
+/* Papa/Mama toggle — a segmented control in the chip bar. Two states forever,
+   so two joined buttons rather than the <select> the 32 languages needed. The
+   mama half is Okabe-Ito reddish-purple: the one palette entry nothing else on
+   the site uses, and chosen for that reason rather than for any pink-for-
+   mothers association. */
+.mode-toggle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.mode-btn {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 0;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted-2);
+  cursor: pointer;
+}
+.mode-btn + .mode-btn { border-left: 1px solid var(--line); }
+.mode-btn:hover { color: var(--green); }
+.mode-btn.on { background: var(--green); color: #fff; }
+.mode-btn.on:hover { color: #fff; }
+#mode-mama.on { background: var(--mama); }
+.mode-btn:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }

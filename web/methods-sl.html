@@ -129,7 +129,7 @@ tak.</p>
 Ukrajine, pa tudi Avstralija, Nova Zelandija, ZDA, Kanada in Japonska —, kjer OpenStreetMap
 ve za previjalno mizo za dojenčke
 (<code>changing_table=yes</code> ali <code>limited</code>). Barva pove, ali oče do mize lahko
-pride. Zemljevid bere samo OSM in nič drugega, sam pa ne zapisuje nikamor. Popravljanje podatkov
+pride. Zemljevid bere OSM. Odgovori gredo neposredno v OSM pod tvojim lastnim računom OSM — z zemljevida samega ali prek povezav pri vsaki bucki; PapaMap ničesar ne shranjuje. Popravljanje podatkov
 poteka na samem OSM, prek povezav pri vsaki bucki.</p>
 <p>Ideja se je porodila ob branju knjige <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> avtorice Caroline Criado Perez.</p>
 <p>Lestvica, katero mesto ima najboljšo ponudbo stranišč, to ni. Zakaj tega iz odprtih podatkov
@@ -152,6 +152,25 @@ vsebuje <code>male</code>.</p>
       samo prosto besedilo. Nihče ni zabeležil prostora. Sive bucke so tista naloga.</li>
 </ul>
 <p>Objekt s tagom <code>centralkey</code> (drugačnim od <code>no</code>) ostane zunaj zemljevida, ko ključ zapira celotna vrata: <code>access=centralkey</code>, miza v stranišču za invalide, ali pa nič v tagih ne pove, da ključ velja le za eno kabino. Objekt z odprtim moškim in ženskim straniščem ter zaklenjeno kabino za invalide (<code>wheelchair:access=centralkey</code>, ali <code>male=yes</code> in <code>female=yes</code>) ostane na zemljevidu, siv, dokler kdo ne vpiše prostora. Evro ključ dobiš samo z dokazilom o invalidnosti, zato večina očetov skozi ta vrata ne pride.</p>
+
+<h2>Stikalo Oče-Mama</h2>
+<p>Tri barve zgoraj odgovarjajo na očetovo vprašanje: Ali oče pride do mize? Za mamo se isti
+odgovor večinoma bere drugače — mizo v ženskem stranišču lahko uporabi, in tudi pri mizi brez
+zabeleženega prostora je večina v prostoru, v katerega lahko vstopi. Stikalo <em>Oče / Mama</em>
+levo v traku filtrov zato spremeni le, kako se berejo isti trije odgovori, ne pa odgovore same.</p>
+<ul>
+  <li><strong>Oče</strong> (privzeto): zelena, rdeča in siva, kot zgoraj.</li>
+  <li><strong>Mama</strong>: Zelena zdaj pomeni oboje — prosto dostopen prostor <em>in</em>
+      žensko stranišče. Oranžna pomeni &bdquo;Prostor nezabeležen&ldquo;, torej večinoma
+      uporaben.</li>
+</ul>
+<p>Kaj stikalo ne počne: ne spremeni nobenega taga, ne zapiše nič v OSM in ne izračuna nove
+klasifikacije. Je drugo branje istih treh vrednosti, shranjeno le v tvojem brskalniku pod
+ključem <code>papamap-mode</code>. Številke v filtrih so v obeh načinih enake.</p>
+<p>Tu je izjema, ker je v načinu Mama videti zelena, pa ni čisto tako: miza, ki je po
+<code>changing_table:location</code> le v moškem stranišču (<code>male_toilet</code> samo),
+šteje med zelene. To je redko, a se zgodi. Zato besedilo pri bucki pravi &bdquo;v redkih
+primerih le v moškem stranišču&ldquo;, številka zgoraj pa pravi &bdquo;verjetno&ldquo;.</p>
 
 <h2>Modri obroč: igralni kotiček</h2>
 <p>Bucka z modrim obročem ima poleg tega tudi igralni kotiček &mdash; kraj, kjer otroka ne samo

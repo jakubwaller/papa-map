@@ -128,7 +128,7 @@ eikä se muutu.</p>
 <p>PapaMap näyttää paikkoja 44 Euroopan maassa — Islannista Kyprokseen, Portugalista
 Ukrainaan, lisäksi Australia, Uusi-Seelanti, Yhdysvallat, Kanada ja Japani — joissa OpenStreetMap tietää olevan hoitopöydän
 (<code>changing_table=yes</code> tai <code>limited</code>). Väri kertoo, pääseekö isä pöydälle.
-Kartta käyttää vain OSM:n tietoja eikä kirjoita minnekään. Tietojen korjaaminen tapahtuu OSM:ssä
+Kartta lukee OSM:ää. Vastaukset menevät suoraan OSM:ään omalla OSM-tililläsi — kartalta itseltään tai kunkin nastan linkkien kautta; PapaMap ei tallenna mitään. Tietojen korjaaminen tapahtuu OSM:ssä
 itsessään, kunkin nastan linkkien kautta.</p>
 <p>Idea syntyi, kun luin Caroline Criado Perezin kirjan <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a>.</p>
 <p>Listaa siitä, missä kaupungissa on paras vessatarjonta, tämä ei ole. Miksi sitä ei voi
@@ -151,6 +151,28 @@ osamerkkijonona, sillä <code>female_toilet</code> sisältää sanan <code>male<
       vapaata tekstiä. Kukaan ei ole merkinnyt tilaa. Harmaat nastat ovat tehtävä.</li>
 </ul>
 <p>Kohde, jolla on <code>centralkey</code>-tagi (muu kuin <code>no</code>), jätetään pois kartalta, kun avain lukitsee koko oven: <code>access=centralkey</code>, pöytä inva-wc:ssä, tai mikään tageissa ei sano, että avain koskee vain yhtä koppia. Tilat, joissa on avoimet miesten ja naisten wc:t ja avaimella lukittu inva-koppi (<code>wheelchair:access=centralkey</code>, tai <code>male=yes</code> ja <code>female=yes</code>), pysyvät kartalla, harmaana kunnes joku kirjaa huoneen. Euro-avaimen saa vain vamman todistamista vastaan, joten useimmat isät eivät pääse siitä ovesta.</p>
+
+<h2>Isä-äiti-kytkin</h2>
+<p>Kolme väriä yllä vastaavat isä-kysymykseen: Pääseekö isä pöydälle? Äidille sama vastaus
+tulkitaan useimmiten toisin — naisten WC:ssä olevan pöydän hän voi käyttää, ja myös pöydistä,
+joiden tilaa ei ole kirjattu, useimmat ovat tilassa, jonne hän pääsee. Kytkin <em>Isä / Äiti</em>
+suodattimien palkin vasemmassa reunassa muuttaa siis vain sitä, miten samat kolme vastausta
+luetaan — ei koskaan itse vastauksia.</p>
+<ul>
+  <li><strong>Isä</strong> (oletus): vihreä, punainen ja harmaa kuten yllä.</li>
+  <li><strong>Äiti</strong>: Vihreä tarkoittaa nyt molempia — vapaasti käytettävissä oleva tila
+      <em>ja</em> naisten WC. Oranssi tarkoittaa &ldquo;Tila kirjaamatta&rdquo;, joten yleensä
+      käytettävissä.</li>
+</ul>
+<p>Mitä kytkin ei tee: se ei muuta yhtään tagia, se ei kirjoita mitään OSM:ään, eikä se laske
+uutta luokitusta. Se on toinen tulkinta samoista kolmesta arvosta, tallennettuna vain
+selaimessasi avaimella <code>papamap-mode</code>. Suodattimien luvut ovat samat molemmissa
+näkymissä.</p>
+<p>Tähän kuuluu yksi poikkeus, koska se näyttää äiti-näkymässä vihreältä, vaikka se ei ihan ole:
+pöytä, joka <code>changing_table:location</code>-tagin mukaan on vain miesten WC:ssä
+(<code>male_toilet</code> yksinään), lasketaan vihreiden joukkoon. Se on harvinaista, mutta
+tapahtuu. Siksi nastan teksti sanoo &ldquo;harvinaisissa tapauksissa vain miesten WC:ssä&rdquo;,
+ja yllä oleva luku sanoo &ldquo;todennäköisesti&rdquo;.</p>
 
 <h2>Sininen rengas: leikkinurkka</h2>
 <p>Nastalla, jossa on sininen rengas, on myös leikkinurkka &mdash; paikka, jossa ei vain vaihdeta
