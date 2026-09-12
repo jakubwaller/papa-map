@@ -536,11 +536,15 @@ def backfill_edits(days: int, state_path=None, now=None,
     if merged != before:
         state["edits_days"] = merged
         save_state(state_path, state)
+    changed = sum(1 for d in before if d in merged and merged[d] != before[d])
     print(f"{edits['changesets']} changesets in the {days} days to "
           f"{(now or datetime.now(timezone.utc)).strftime('%Y-%m-%d')}; "
-          + (f"{len(added)} days added ({added[0]} → {added[-1]}), "
-             f"history now {len(merged)} days" if added
-             else f"no new days, history unchanged at {len(merged)} days"))
+          + (f"{len(added)} days added ({added[0]} → {added[-1]})" if added
+             else "no new days")
+          + (f", {changed} recorded day{'s' if changed != 1 else ''} changed"
+             if changed else "")
+          + (f", history now {len(merged)} days" if added or changed
+             else f", history unchanged at {len(merged)} days"))
     return edits
 
 
@@ -712,7 +716,7 @@ if __name__ == "__main__":
                          "changesets from OSMCha once and merge the per-day "
                          "counts into the state (see backfill_edits)")
     args = ap.parse_args()
-    if args.backfill_edits:
+    if args.backfill_edits is not None:
         edits = backfill_edits(args.backfill_edits)
         sys.exit(0 if edits and not edits.get("error") else 1)
     found, text = run_check()

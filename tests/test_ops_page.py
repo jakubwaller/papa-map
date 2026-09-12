@@ -403,6 +403,10 @@ def test_edits_section_says_when_the_fetch_stopped_or_lost_its_split():
     assert ("OSMCha's 7-day count as of 2026-09-12 is <b>120</b> changesets, "
             "but the per-day split stops at 2026-09-08") in html
     assert "has not answered" not in html
+    # a cached line with an unreadable date must not silence the stale note
+    html = render(edits_days=hist, now=now,
+                  edits={"days": 7, "changesets": 7, "as_of": "yesterday-ish"})
+    assert "3 days missing" in html and "split stops" not in html
     # a failed fetch on top of a fresh history: the error line, no stale note
     html = render(edits_days=days_from("2026-09-01", [1] * 11), now=now,
                   edits={"days": 7, "error": "Read timed out."})

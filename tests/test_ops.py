@@ -247,13 +247,24 @@ def test_backfill_edits_merges_the_days_and_touches_nothing_else(tmp_path,
         assert saved[key] == state[key]
     out = capsys.readouterr().out
     assert "40 changesets in the 31 days to 2026-09-12" in out
-    assert "2 days added (2026-08-13 → 2026-08-14), history now 4 days" in out
+    # 2026-08-25 came back as 1 where the state held 0: overwritten and said
+    assert ("2 days added (2026-08-13 → 2026-08-14), 1 recorded day changed, "
+            "history now 4 days") in out
 
     before = state_path.read_text()
     assert ops.backfill_edits(31, state_path=str(state_path), now=now,
                               fetch=lambda **kw: {"days": 31, "changesets": 400})
     assert state_path.read_text() == before
-    assert "history unchanged at 4 days" in capsys.readouterr().out
+    assert "no new days, history unchanged at 4 days" in capsys.readouterr().out
+    # a day OSMCha now counts differently (a changeset deleted since) is
+    # written and said, not called unchanged
+    assert ops.backfill_edits(31, state_path=str(state_path), now=now,
+                              fetch=lambda **kw: {"days": 31, "changesets": 39,
+                                                  "by_day": {"2026-08-14": 2}})
+    assert json.loads(state_path.read_text())["edits_days"]["2026-08-14"] == 2
+    assert ("no new days, 1 recorded day changed, history now 4 days"
+            in capsys.readouterr().out)
+    before = state_path.read_text()
     failed = ops.backfill_edits(31, state_path=str(state_path), now=now,
                                 fetch=lambda **kw: {"days": 31, "error": "x"})
     assert failed["error"] == "x" and state_path.read_text() == before

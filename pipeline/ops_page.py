@@ -60,15 +60,17 @@ OPS_STYLE = """\
   .bar-col { flex: 1 1 0; min-width: 0; height: 100%; display: flex;
              flex-direction: column; justify-content: flex-end; }
   .bar-col .bar { border-radius: 2px 2px 0 0; background: var(--line);
-                  display: flex; flex-direction: column;
+                  display: flex; flex-direction: column; flex-shrink: 0;
                   justify-content: flex-end; overflow: hidden; }
   .bar-col .bar-fill { width: 100%; }
   .bar-col:hover .bar { filter: brightness(1.12); }
   .bar-col .bar.empty { min-height: 2px; opacity: 0.45; }
   /* A labelled chart prints each non-zero value above its column; the
-     tallest column plus its label overflows the 110px into this padding.
-     Below phone width the columns are too narrow for a digit each, and
-     the table under the chart carries the numbers. */
+     tallest column plus its label overflows the 110px into this padding
+     (flex-shrink: 0 on the bar above — without it the tallest bars would
+     shrink to make room and the drawn ratios would stop matching the
+     printed numbers). Below phone width the columns are too narrow for a
+     digit each, and the table under the chart carries the numbers. */
   .bars[data-labelled] { padding-top: 0.9rem; }
   .bar-col .bar-n { font-size: 0.66rem; line-height: 1; text-align: center;
                     color: var(--muted); margin-bottom: 2px;
@@ -551,11 +553,14 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
     as_of = (edits or {}).get("as_of") if not (edits or {}).get("error") else None
     yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
     try:
-        count_through = ((date.fromisoformat(as_of) - timedelta(days=1)).isoformat()
-                         if as_of else None)
         missing = (date.fromisoformat(yesterday) - date.fromisoformat(last)).days
     except ValueError:
-        count_through, missing = None, 0
+        missing = 0
+    try:
+        count_through = ((date.fromisoformat(as_of) - timedelta(days=1)).isoformat()
+                         if as_of else None)
+    except ValueError:
+        count_through = None
     if count_through and count_through > last:
         p.append(f'<p class="warn">OSMCha\'s {edits.get("days", 7)}-day count as '
                  f"of {esc(as_of)} is <b>{_n(edits.get('changesets'))}</b> "
