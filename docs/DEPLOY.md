@@ -173,7 +173,18 @@ line says UNKNOWN, re-run the check before believing anything about that week.
 The OSMCha window is fetched on **every** run, not just digest days: the ops page draws a
 per-day chart of theme changesets, and that series only exists in `ops-state.json`
 (`edits_days`), built a run at a time the way the visits history is. The mail still quotes
-the count on digest days only.
+the count on digest days only. The page sums that series into 7-day, 30-day and all-days
+tiles; the all-days tile is called "all time" once the series reaches back to the theme's
+launch (`THEME_LIVE_SINCE`, 2026-08-13). The daily fetch began on 2026-08-31 and looks a
+week back, so on a state older than that fill the gap once — the same OSMCha query with a
+wider window, merged into `edits_days` and nothing else touched:
+
+```bash
+cd ~/papa-map && set -a && . ./ops.env && set +a && python3 -m pipeline.ops --backfill-edits 31
+```
+
+Same one-page limit as the daily fetch: a window beyond ~100 changesets returns its count
+but no split, and the command says the history is unchanged.
 
 ```cron
 30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1

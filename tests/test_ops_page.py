@@ -167,7 +167,9 @@ def test_healthy_page_carries_every_section():
     assert "1,931" in html and "1,821" in html and "94.3 %" in html
     assert "dataset built 2026-08-23T02:20:00+00:00 (3 h ago)" in html
     assert "since yesterday" in html and "last 7 days (3 runs)" in html
-    assert "<b>4</b> changesets" in html and "as of 2026-08-17" in html
+    assert "Edits through the PapaMap theme" in html
+    assert "<b>4</b>" in html and "all 2 recorded days, 2026-08-21 → 2026-08-22" in html
+    assert "as of 2026-08-17" not in html  # the tiles replace the dated line
     assert "finished" in html and "45" in html and "3 areas swept, 1 with zero tables" in html
     assert "round 2: Italy" in html
     assert "Baden-Württemberg" in html
@@ -325,6 +327,88 @@ def test_all_zero_edit_history_is_words_not_stub_bars():
     assert html.count('class="bars"') == 1
 
 
+def days_from(first, values):
+    from datetime import date, timedelta
+    d0 = date.fromisoformat(first)
+    return {(d0 + timedelta(days=i)).isoformat(): v
+            for i, v in enumerate(values)}
+
+
+def test_edit_totals_are_calendar_windows_back_from_the_newest_day():
+    """7 and 30 days counted back from the newest recorded day, plus every
+    recorded day; a window the history cannot fill is left to the all-days
+    tile, and that tile is 'all time' only once the history reaches the
+    theme's launch."""
+    # 40 days ending 2026-09-11, 1 changeset a day except a 9 on the last
+    hist = days_from("2026-08-03", [1] * 39 + [9])
+    tiles = ops_page.edit_totals(hist)
+    assert [t["label"] for t in tiles] == ["last 7 days", "last 30 days",
+                                           "all time"]
+    assert tiles[0]["changesets"] == 15 and tiles[0]["first"] == "2026-09-05"
+    assert tiles[1]["changesets"] == 38 and tiles[1]["first"] == "2026-08-13"
+    assert tiles[2]["changesets"] == 48 and tiles[2]["all_time"]
+    assert all(t["last"] == "2026-09-11" for t in tiles)
+    # 18 days, like the live state on 2026-09-12: no 30-day tile, and the
+    # rest is "recorded", not "all time" — the theme is older than that.
+    tiles = ops_page.edit_totals(days_from("2026-08-25", [1] * 18))
+    assert [t["label"] for t in tiles] == ["last 7 days",
+                                           "all 18 recorded days"]
+    assert tiles[1]["changesets"] == 18 and not tiles[1]["all_time"]
+    # a history exactly one window long is the all-days tile, not both
+    tiles = ops_page.edit_totals(days_from("2026-09-05", [2] * 7))
+    assert [t["label"] for t in tiles] == ["all 7 recorded days"]
+    # a gap inside the window is counted as the days there are, and said
+    hist = days_from("2026-08-01", [1] * 40)
+    del hist["2026-09-07"], hist["2026-09-08"]
+    tiles = ops_page.edit_totals(hist)
+    assert tiles[0]["changesets"] == 5 and tiles[0]["days"] == 5
+    assert tiles[0]["span"] == 7
+    assert ops_page.edit_totals(None) == [] and ops_page.edit_totals({}) == []
+
+
+def test_edits_section_tiles_chart_labels_and_table():
+    hist = days_from("2026-08-03", [1] * 39 + [9])
+    html = render(edits_days=hist, now=datetime(2026, 9, 12, 5, 30,
+                                                tzinfo=timezone.utc))
+    assert "changesets, last 7 days, 2026-09-05 → 2026-09-11" in html
+    assert "changesets, last 30 days, 2026-08-13 → 2026-09-11" in html
+    assert "changesets, all time, theme live since 2026-08-13" in html
+    assert "<b>15</b>" in html and "<b>38</b>" in html and "<b>48</b>" in html
+    # the number sits above its column; the movement chart stays unlabelled
+    assert '<span class="bar-n">9</span><div class="bar" style="height:100.0%">' in html
+    assert html.count('data-labelled=""') == 1  # the CSS rule is the other mention
+    assert html.count('class="bar-n"') == 40
+    # every recorded day, newest first, in the details table
+    assert "<summary>all 40 days</summary>" in html
+    assert html.index('<td class="l">2026-09-11</td><td>9</td>') \
+        < html.index('<td class="l">2026-09-10</td><td>1</td>')
+    assert "has not answered" not in html and "split stops" not in html
+
+
+def test_edits_section_says_when_the_fetch_stopped_or_lost_its_split():
+    now = datetime(2026, 9, 12, 5, 30, tzinfo=timezone.utc)
+    hist = days_from("2026-09-01", [1] * 8)          # stops at 09-08
+    html = render(edits_days=hist, now=now,
+                  edits={"days": 7, "changesets": 7, "as_of": "2026-09-09"})
+    assert ("The daily OSMCha query has not answered since 2026-09-08: "
+            "3 days missing from the totals above") in html
+    assert "8 of 7" not in html
+    # a one-day gap reads in the singular
+    html = render(edits_days=days_from("2026-09-01", [1] * 10), now=now)
+    assert "1 day missing" in html
+    # the count arrived on the 12th but the split did not (window beyond one
+    # page): the fresher number is shown, with the reason
+    html = render(edits_days=hist, now=now,
+                  edits={"days": 7, "changesets": 120, "as_of": "2026-09-12"})
+    assert ("OSMCha's 7-day count as of 2026-09-12 is <b>120</b> changesets, "
+            "but the per-day split stops at 2026-09-08") in html
+    assert "has not answered" not in html
+    # a failed fetch on top of a fresh history: the error line, no stale note
+    html = render(edits_days=days_from("2026-09-01", [1] * 11), now=now,
+                  edits={"days": 7, "error": "Read timed out."})
+    assert "Not zero." in html and "has not answered" not in html
+
+
 # ---- run_check writes it -----------------------------------------------------
 
 def test_page_and_history_default_next_to_stats(monkeypatch):
@@ -378,7 +462,8 @@ def test_run_check_writes_the_page_and_caches_edits(tmp_path):
               "by_day": {"2026-08-21": 1, "2026-08-22": 8}})
     html = html_path.read_text()
     assert "PapaMap ops" in html and "Bayern" in html and "finished" in html
-    assert "<b>9</b> changesets" in html and "as of 2026-08-23" in html
+    assert "<b>9</b>" in html and "all 2 recorded days" in html
+    assert "has not answered" not in html  # 2026-08-22 is yesterday: fresh
     state = json.loads(state_path.read_text())
     # by_day lives in edits_days, not inside the cached line
     assert state["edits"] == {"days": 7, "changesets": 9, "as_of": "2026-08-23"}
@@ -391,14 +476,17 @@ def test_run_check_writes_the_page_and_caches_edits(tmp_path):
     assert state["edits_days"] == {"2026-08-21": 1, "2026-08-22": 8,
                                    "2026-08-23": 2}
     html = html_path.read_text()
-    assert "<b>9</b> changesets" in html
+    assert "<b>11</b>" in html and "all 3 recorded days" in html
     assert "Changesets through the PapaMap theme per day" in html
 
-    # A failed fetch keeps the last good number, dated, and the day history.
+    # A failed fetch keeps the day history, and the page says the totals
+    # stopped: seven days (08-24 .. 08-30) are missing by the 31st.
     run(datetime(2026, 8, 31, 5, 30, tzinfo=timezone.utc),
         {"days": 7, "error": "timed out"})
     html = html_path.read_text()
-    assert "<b>9</b> changesets" in html and "as of 2026-08-24" in html
+    assert "<b>11</b>" in html
+    assert ("has not answered since 2026-08-23: 7 days missing from the "
+            "totals above") in html
     state = json.loads(state_path.read_text())
     assert state["edits_days"] == {"2026-08-21": 1, "2026-08-22": 8,
                                    "2026-08-23": 2}

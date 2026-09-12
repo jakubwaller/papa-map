@@ -506,6 +506,44 @@ def merge_edits(kept: dict, edits: dict | None) -> dict:
     return dict(sorted(merged.items())[-EDITS_HISTORY_DAYS:])
 
 
+def save_state(state_path: Path, state: dict) -> None:
+    tmp = state_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(state))
+    tmp.replace(state_path)
+
+
+def backfill_edits(days: int, state_path=None, now=None,
+                   fetch=osmcha_edits) -> dict | None:
+    """One wider OSMCha fetch merged into the state's per-day history, and
+    nothing else touched: no snapshot diff, no history entry, no mail, no
+    page. The daily fetch began on 2026-08-31 and looks a week back, so the
+    history starts on 2026-08-25 while the theme has been live since
+    THEME_LIVE_SINCE — run once with a window reaching back to the launch
+    and the page's all-time tile becomes literally that. Same one-page limit
+    as the daily fetch: a window beyond ~100 changesets returns its count
+    but no split, and the history is left exactly as it was."""
+    state_path = Path(state_path or STATE_PATH)
+    edits = fetch(days=days, now=now or datetime.now(timezone.utc))
+    if not edits:
+        print("WARN: OSMCHA_TOKEN unset, nothing fetched", file=sys.stderr)
+        return None
+    if edits.get("error"):
+        return edits  # osmcha_edits already said so on stderr
+    state = load_json(state_path) or {"statuses": {}, "history": []}
+    before = state.get("edits_days") or {}
+    merged = merge_edits(before, edits)
+    added = sorted(set(merged) - set(before))
+    if merged != before:
+        state["edits_days"] = merged
+        save_state(state_path, state)
+    print(f"{edits['changesets']} changesets in the {days} days to "
+          f"{(now or datetime.now(timezone.utc)).strftime('%Y-%m-%d')}; "
+          + (f"{len(added)} days added ({added[0]} → {added[-1]}), "
+             f"history now {len(merged)} days" if added
+             else f"no new days, history unchanged at {len(merged)} days"))
+    return edits
+
+
 def _short_exc(exc: Exception) -> str:
     """The readable core of an exception. requests buries the one useful
     phrase ("Read timed out. (read timeout=300)") inside connection-pool and
@@ -610,9 +648,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
             state["visits"] = visits_history
         if taps_days:
             state["app_taps"] = taps_days
-        tmp = state_path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(state))
-        tmp.replace(state_path)
+        save_state(state_path, state)
 
     html_path = OPS_HTML_PATH if html_path is None else html_path
     private_path = (OPS_PRIVATE_HTML_PATH if private_html_path is None
@@ -668,6 +704,17 @@ def write_ops_page(path, *, history_path, build_log_path, **ctx) -> None:
 
 
 if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser(
+        description="The daily check: diff, mail, ops page.")
+    ap.add_argument("--backfill-edits", type=int, metavar="DAYS",
+                    help="instead of the check, fetch DAYS days of theme "
+                         "changesets from OSMCha once and merge the per-day "
+                         "counts into the state (see backfill_edits)")
+    args = ap.parse_args()
+    if args.backfill_edits:
+        edits = backfill_edits(args.backfill_edits)
+        sys.exit(0 if edits and not edits.get("error") else 1)
     found, text = run_check()
     print(text)
     sys.exit(1 if found else 0)

@@ -218,6 +218,50 @@ def test_merge_edits_overwrites_fetched_days_and_caps():
         ops.EDITS_HISTORY_DAYS
 
 
+def test_backfill_edits_merges_the_days_and_touches_nothing_else(tmp_path,
+                                                               capsys):
+    """One wider fetch fills the days before the daily fetch existed; the
+    snapshot, history and cached line stay as they were, and a fetch that
+    returns no split (beyond one page, failed, no token) changes nothing."""
+    state_path = tmp_path / "state.json"
+    state = {"statuses": {"node/1": "accessible"},
+             "history": [{"date": "2026-09-11", "counts": {}, "changes": {}}],
+             "edits": {"days": 7, "changesets": 15, "as_of": "2026-09-12"},
+             "edits_days": {"2026-08-25": 0, "2026-08-26": 1}}
+    write(state_path, state)
+    seen = {}
+
+    def fetch(days, now):
+        seen["days"] = days
+        return {"days": days, "changesets": 40,
+                "by_day": {"2026-08-13": 2, "2026-08-14": 3, "2026-08-25": 1}}
+
+    now = datetime(2026, 9, 12, 8, 0, tzinfo=timezone.utc)
+    edits = ops.backfill_edits(31, state_path=str(state_path), now=now,
+                               fetch=fetch)
+    assert seen["days"] == 31 and edits["changesets"] == 40
+    saved = json.loads(state_path.read_text())
+    assert saved["edits_days"] == {"2026-08-13": 2, "2026-08-14": 3,
+                                   "2026-08-25": 1, "2026-08-26": 1}
+    for key in ("statuses", "history", "edits"):
+        assert saved[key] == state[key]
+    out = capsys.readouterr().out
+    assert "40 changesets in the 31 days to 2026-09-12" in out
+    assert "2 days added (2026-08-13 → 2026-08-14), history now 4 days" in out
+
+    before = state_path.read_text()
+    assert ops.backfill_edits(31, state_path=str(state_path), now=now,
+                              fetch=lambda **kw: {"days": 31, "changesets": 400})
+    assert state_path.read_text() == before
+    assert "history unchanged at 4 days" in capsys.readouterr().out
+    failed = ops.backfill_edits(31, state_path=str(state_path), now=now,
+                                fetch=lambda **kw: {"days": 31, "error": "x"})
+    assert failed["error"] == "x" and state_path.read_text() == before
+    assert ops.backfill_edits(31, state_path=str(state_path), now=now,
+                              fetch=lambda **kw: None) is None
+    assert "OSMCHA_TOKEN unset" in capsys.readouterr().err
+
+
 def test_osmcha_edits_failure_reports_itself_rather_than_reading_as_zero(
         monkeypatch):
     """A failed query and a genuine zero must not render the same. The
