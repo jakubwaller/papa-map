@@ -20,6 +20,7 @@ import ast
 import re
 from datetime import date, datetime, timedelta, timezone
 
+from .export import THEME_LIVE_SINCE
 from .pages import ICON, STYLE, esc
 
 # What `python -m pipeline.run` prints, line by line (pipeline/run.py). The
@@ -59,11 +60,22 @@ OPS_STYLE = """\
   .bar-col { flex: 1 1 0; min-width: 0; height: 100%; display: flex;
              flex-direction: column; justify-content: flex-end; }
   .bar-col .bar { border-radius: 2px 2px 0 0; background: var(--line);
-                  display: flex; flex-direction: column;
+                  display: flex; flex-direction: column; flex-shrink: 0;
                   justify-content: flex-end; overflow: hidden; }
   .bar-col .bar-fill { width: 100%; }
   .bar-col:hover .bar { filter: brightness(1.12); }
   .bar-col .bar.empty { min-height: 2px; opacity: 0.45; }
+  /* A labelled chart prints each non-zero value above its column; the
+     tallest column plus its label overflows the 110px into this padding
+     (flex-shrink: 0 on the bar above — without it the tallest bars would
+     shrink to make room and the drawn ratios would stop matching the
+     printed numbers). Below phone width the columns are too narrow for a
+     digit each, and the table under the chart carries the numbers. */
+  .bars[data-labelled] { padding-top: 0.9rem; }
+  .bar-col .bar-n { font-size: 0.66rem; line-height: 1; text-align: center;
+                    color: var(--muted); margin-bottom: 2px;
+                    font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) { .bar-col .bar-n { display: none; } }
   .bar-axis { display: flex; justify-content: space-between; font-size: 0.72rem;
               color: var(--muted); margin-bottom: 0.8rem; }
   td.pos { color: var(--green); } td.neg { color: var(--red); }
@@ -265,11 +277,50 @@ def edits_rows(edits_days: dict | None) -> list[tuple]:
     return rows
 
 
-def _day_bars(rows: list[tuple], fill_var: str = "--green") -> str:
+def edit_totals(edits_days: dict | None) -> list[dict]:
+    """The tiles over the per-day theme-changeset history: the last 7 and
+    30 days and every recorded day. Windows are calendar days back from the
+    newest *recorded* day, so a run of failed fetches shows up as the tile's
+    dates standing still (and as `days` < `span`), never as the window
+    quietly widening. A window the history cannot fill is left out — the
+    all-days tile already says how much there is — and that tile is called
+    all time once the history reaches back to the theme's launch, because
+    no earlier changeset can carry the tag."""
+    days = sorted((edits_days or {}).items())
+    if not days:
+        return []
+    try:
+        last = date.fromisoformat(days[-1][0])
+    except ValueError:
+        return []
+    tiles = []
+    for n in (7, 30):
+        start = (last - timedelta(days=n - 1)).isoformat()
+        if start <= days[0][0]:
+            continue
+        window = [(d, v) for d, v in days if d >= start]
+        tiles.append({"label": f"last {n} days", "span": n,
+                      "changesets": sum(v for _, v in window),
+                      "days": len(window), "first": window[0][0],
+                      "last": window[-1][0]})
+    all_time = days[0][0] <= THEME_LIVE_SINCE
+    tiles.append({"label": "all time" if all_time
+                  else f"all {len(days)} recorded days",
+                  "span": len(days), "changesets": sum(v for _, v in days),
+                  "days": len(days), "first": days[0][0], "last": days[-1][0],
+                  "all_time": all_time})
+    return tiles
+
+
+def _day_bars(rows: list[tuple], fill_var: str = "--green",
+              labels: bool = False) -> str:
     """The column chart itself: bar height from the shared max, the coloured
-    fill the named share of it, exact numbers in each column's title. Empty
-    string when no day has anything above zero — a flat row of stubs reads as
-    a rendering bug, and the callers say 'nothing yet' in words instead."""
+    fill the named share of it, exact numbers in each column's title — and,
+    with `labels`, printed above every non-zero column too (the theme-edits
+    chart: single digits a day, which fit; the transitions chart runs to
+    three digits a day and keeps its numbers in the tooltips). Empty string
+    when no day has anything above zero — a flat row of stubs reads as a
+    rendering bug, and the callers say 'nothing yet' in words instead."""
     top = max((v for _, _, v, _ in rows if v), default=0)
     if not top:
         return ""
@@ -280,10 +331,13 @@ def _day_bars(rows: list[tuple], fill_var: str = "--green") -> str:
                      f'background:var({fill_var})"></div>' if fill else "")
             bar = (f'<div class="bar" style="height:{100 * value / top:.1f}%">'
                    f"{inner}</div>")
+            if labels:
+                bar = f'<span class="bar-n">{value:,}</span>' + bar
         else:
             bar = '<div class="bar empty"></div>'
         cols.append(f'<div class="bar-col" title="{esc(tip)}">{bar}</div>')
-    return ('<div class="bars">' + "".join(cols) + "</div>\n"
+    attr = ' data-labelled=""' if labels else ""
+    return (f'<div class="bars"{attr}>' + "".join(cols) + "</div>\n"
             + _axis(rows[0][0], rows[-1][0]))
 
 
@@ -447,6 +501,98 @@ def _app_taps(taps: dict | None, now: datetime) -> str:
     return "".join(parts)
 
 
+def _edits_section(edits: dict | None, edits_days: dict | None,
+                   now: datetime) -> str:
+    """Changesets through the site's own theme: totals over 7/30/all days
+    from the state's per-day history, the per-day chart with its numbers
+    printed, and every recorded day in a table. The dated OSMCha line
+    (`edits`, the mail's figure) is shown only while there is no history
+    yet, or when it is fresher than the history — a fetch that returned its
+    count but no split, a window beyond one OSMCha page. A history that
+    stops short of yesterday is a failing daily fetch and says so: totals
+    that quietly stop growing read as a quiet site."""
+    p = ["<h2>Edits through the PapaMap theme</h2>\n",
+         '<p class="muted">Changesets saved through the site\'s own MapComplete '
+         "theme, counted by OSMCha: the slice of the movement above that the "
+         "site can claim. Complete UTC days only, so today is counted "
+         "tomorrow.</p>\n"]
+    if edits and edits.get("error"):
+        p.append(f'<p>OSMCha, {edits.get("days", 7)} d: '
+                 f'<span class="bad">unknown</span> — query failed '
+                 f'({esc(edits["error"])}). Not zero.</p>\n')
+    tiles = edit_totals(edits_days)
+    if not tiles:
+        if edits and not edits.get("error"):
+            as_of = f' as of {esc(edits["as_of"])}' if edits.get("as_of") else ""
+            p.append(f'<p>OSMCha, {edits.get("days", 7)} d{as_of}: '
+                     f'<b>{_n(edits.get("changesets"))}</b> changesets.</p>\n')
+            # The line is a 7-day total; without this sentence its lack of
+            # a per-day breakdown reads as the chart being broken rather
+            # than young (asked about on day one). Not under the error
+            # line, where a promise about successes would contradict it.
+            p.append('<p class="muted">A per-day chart of these appears here '
+                     "once a daily OSMCha fetch records the split — the check "
+                     "asks every run; a success covers a week, though a week "
+                     "beyond ~100 changesets is counted whole rather than "
+                     "split.</p>\n")
+        return "".join(p)
+
+    p.append('<div class="kpis">\n')
+    for t in tiles:
+        if t.get("all_time"):
+            when = f"all time, theme live since {THEME_LIVE_SINCE}"
+        else:
+            when = f"{t['label']}, {esc(t['first'])} → {esc(t['last'])}"
+        if t["days"] < t["span"]:
+            when += f" ({t['days']} of {t['span']} days fetched)"
+        p.append(f'<div class="kpi"><b>{_n(t["changesets"])}</b>'
+                 f"<span>changesets, {when}</span></div>\n")
+    p.append("</div>\n")
+
+    last = tiles[-1]["last"]
+    as_of = (edits or {}).get("as_of") if not (edits or {}).get("error") else None
+    yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+    try:
+        missing = (date.fromisoformat(yesterday) - date.fromisoformat(last)).days
+    except ValueError:
+        missing = 0
+    try:
+        count_through = ((date.fromisoformat(as_of) - timedelta(days=1)).isoformat()
+                         if as_of else None)
+    except ValueError:
+        count_through = None
+    if count_through and count_through > last:
+        p.append(f'<p class="warn">OSMCha\'s {edits.get("days", 7)}-day count as '
+                 f"of {esc(as_of)} is <b>{_n(edits.get('changesets'))}</b> "
+                 f"changesets, but the per-day split stops at {esc(last)}: a "
+                 "window beyond one OSMCha page (~100 changesets) is counted "
+                 "whole, never split.</p>\n")
+    elif missing > 0:
+        p.append(f'<p class="warn">The daily OSMCha query has not answered '
+                 f"since {esc(last)}: {missing} day{'' if missing == 1 else 's'} "
+                 f"missing from the totals above, which stop at {esc(last)}."
+                 "</p>\n")
+
+    chart = _day_bars(edits_rows(edits_days), "--accent", labels=True)
+    if chart:
+        p.append('<p class="muted">Changesets through the PapaMap theme per '
+                 "day, the number above each column that has any; hover a "
+                 "column for its date.</p>\n")
+        p.append(chart)
+    else:
+        p.append(f'<p class="muted">No changesets through the theme in the '
+                 f"{len(edits_days)} recorded days.</p>\n")
+
+    rows = sorted(edits_days.items(), reverse=True)
+    p.append(f"<details>\n<summary>all {len(rows)} days</summary>\n"
+             '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
+             "<th>changesets</th></tr></thead>\n<tbody>\n")
+    for d, n in rows:
+        p.append(f'<tr><td class="l">{esc(d)}</td><td>{_n(n)}</td></tr>\n')
+    p.append("</tbody>\n</table>\n</div>\n</details>\n")
+    return "".join(p)
+
+
 def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                 changes: dict | None, history: list[dict],
                 anomalies: list[str], edits: dict | None = None,
@@ -544,10 +690,15 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
 
     # Movement
     p.append("<h2>Movement</h2>\n"
-             '<p class="muted">A → accessible is the mission metric: somebody '
-             "answered the room question on OSM. New/gone count pins entering "
-             "and leaving the dataset, which includes areas that failed or "
-             "came back.</p>\n"
+             '<p class="muted">Each nightly dataset is diffed against the one '
+             "before it, whoever edited and in whatever editor. <b>new</b> and "
+             "<b>gone</b> are pins that entered or left the dataset: a changing "
+             "table newly tagged or removed on OSM, or a whole sweep area that "
+             "failed one night and came back. The → columns count pins present "
+             "both nights whose colour changed; <b>→ accessible</b> is the "
+             "mission metric, somebody answered the room question on OSM. A pin "
+             "that arrives already green is new, not a transition. The slice "
+             "of this made through the site itself is the next section.</p>\n"
              '<div class="scroll">\n<table>\n<thead><tr><th class="l">window</th>'
              "<th>new</th><th>gone</th><th>→ accessible</th>"
              "<th>→ female-only</th><th>→ unknown</th></tr></thead>\n<tbody>\n")
@@ -567,36 +718,6 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                  "day for its numbers, new/gone included.</p>\n")
         p.append(chart)
 
-    if edits and edits.get("error"):
-        p.append(f'<p>Edits through the PapaMap theme (OSMCha, {edits.get("days", 7)} d): '
-                 f'<span class="bad">unknown</span> — query failed '
-                 f'({esc(edits["error"])}). Not zero.</p>\n')
-    elif edits:
-        as_of = f' as of {esc(edits["as_of"])}' if edits.get("as_of") else ""
-        p.append(f'<p>Edits through the PapaMap theme (OSMCha, {edits.get("days", 7)} d'
-                 f'{as_of}): <b>{_n(edits.get("changesets"))}</b> changesets.</p>\n')
-
-    if edits_days:
-        chart = _day_bars(edits_rows(edits_days), "--accent")
-        if chart:
-            p.append('<p class="muted">Changesets through the PapaMap theme '
-                     "per day.</p>\n")
-            p.append(chart)
-        else:
-            p.append(f'<p class="muted">No changesets through the theme in '
-                     f"the {len(edits_days)} recorded days.</p>\n")
-    elif edits and not edits.get("error"):
-        # The line above is a 7-day total; without this sentence its lack of
-        # a per-day breakdown reads as the chart being broken rather than
-        # young (asked about on day one). Not under the error line, where a
-        # promise about successes would contradict it — and worded around the
-        # one success that records no split: a week beyond one OSMCha page
-        # (~100 changesets) is counted whole, never split per day.
-        p.append('<p class="muted">A per-day chart of these appears here once '
-                 "a daily OSMCha fetch records the split — the check asks "
-                 "every run; a success covers a week, though a week beyond "
-                 "~100 changesets is counted whole rather than split.</p>\n")
-
     acc_series = [e.get("counts", {}).get("accessible") for e in history]
     spark = _sparkline(acc_series, "--green")
     if spark:
@@ -608,6 +729,8 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                  "green bar above pushes upward.</p>\n")
         p.append(spark)
         p.append(_axis(first_d, last_d))
+
+    p.append(_edits_section(edits, edits_days, now))
 
     if private:
         p.append(_visitors(visits))

@@ -11,6 +11,11 @@ from .osm import element_coords
 
 PAPAMAP_THEME_URL = ("https://raw.githubusercontent.com/jakubwaller/papa-map/"
                      "main/theme/papamap.theme.json")
+# The day every pin on the site started opening this theme (PRs #19/#20,
+# deployed 2026-08-13). No changeset saved through the site before it carries
+# the theme tag, so a per-day count reaching back to this date is the whole
+# story — the ops page may call its sum "all time".
+THEME_LIVE_SINCE = "2026-08-13"
 
 
 def _mapcomplete_url(osm_type, osm_id, lat, lon):

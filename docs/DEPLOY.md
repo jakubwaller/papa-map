@@ -173,16 +173,28 @@ line says UNKNOWN, re-run the check before believing anything about that week.
 The OSMCha window is fetched on **every** run, not just digest days: the ops page draws a
 per-day chart of theme changesets, and that series only exists in `ops-state.json`
 (`edits_days`), built a run at a time the way the visits history is. The mail still quotes
-the count on digest days only.
+the count on digest days only. The page sums that series into 7-day, 30-day and all-days
+tiles; the all-days tile is called "all time" once the series reaches back to the theme's
+launch (`THEME_LIVE_SINCE`, 2026-08-13). The daily fetch began on 2026-08-31 and looks a
+week back, so on a state older than that fill the gap once — the same OSMCha query with a
+wider window, merged into `edits_days` and nothing else touched:
+
+```bash
+cd ~/papa-map && set -a && . ./ops.env && set +a && python3 -m pipeline.ops --backfill-edits 31
+```
+
+Same one-page limit as the daily fetch: a window beyond ~100 changesets returns its count
+but no split, and the command says the history is unchanged.
 
 ```cron
-30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1
+30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && python3 -m pipeline.ops >> ops.log 2>&1
 ```
 
 The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
 the report as a page plus what the mail has no room for: per-area results and warnings from
 last night's `pipeline.log`, per-region counts with a week's delta from `history.json`, the
-daily run history, the last OSMCha count dated, and two per-day movement charts — status
+daily run history, theme changesets summed over 7/30/all days with a per-day chart and
+table, and two per-day movement charts — status
 transitions, and changesets through the site's theme. Everything on it is aggregate; the one number
 it deliberately omits is the Cloudflare request total, because `methods.html` promises
 "keine Analytics" and a traffic figure on a public page reads as exactly that.
