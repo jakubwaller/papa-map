@@ -10,11 +10,14 @@
 > writes nothing, PapaMap still stores nothing, and the changeset's author is the reader,
 > as with StreetComplete. Only `changing_table:location` is written, with values from the
 > theme's own vocabulary (`female_toilet;male_toilet`, `male_toilet`, `female_toilet`,
-> `unisex_toilet`, `dedicated_room`; never `changing_table` itself, so `limited` is not
+> `unisex_toilet`, `wheelchair_toilet`, `dedicated_room`, and behind a "more" link `room`,
+> `sales_area`, `outdoor` — the whole of ACCESSIBLE_TOKENS plus the women's room, since
+> 2026-09-13; never `changing_table` itself, so `limited` is not
 > promoted to `yes`), and only on a pin whose status is `unknown` *and* whose
 > `location_raw` is empty — a room somebody tagged in words the classifier does not read
 > is left to MapComplete, where the reader sees it before writing over it. The mother's
-> reading offers only the rooms she can vouch for (`female`, `unisex`, `dedicated`).
+> reading offers only the rooms she can vouch for (`female`, `unisex`, `wheelchair`,
+> `dedicated`, and the same three behind "more").
 > **Still not a classifier:** OSM's reply is quoted in the popup, `location_raw` on the
 > in-memory feature is updated so the question does not reappear, and the pin keeps its
 > colour until the nightly build — the emitted shape is untouched. Any host other than

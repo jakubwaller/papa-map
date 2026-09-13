@@ -174,17 +174,36 @@ export const ROOMS = {
   male: "male_toilet",
   female: "female_toilet",
   unisex: "unisex_toilet",
+  // The commonest value in OSM by a distance (a quarter of all
+  // changing_table:location, taginfo 13 Sep 2026): in Germany the table is
+  // very often in the barrier-free toilet. Left out of the first cut by
+  // oversight, not by design.
+  wheelchair: "wheelchair_toilet",
   dedicated: "dedicated_room",
+  // The rare three, offered behind "more": a corridor or multi-purpose room,
+  // the shop floor, the open air.
+  room: "room",
+  sales: "sales_area",
+  outdoor: "outdoor",
 };
 
 // Which rooms a reader can vouch for. A mother has seen the women's room and
 // whatever is open to everyone; the men's room is not hers to answer for, and
 // "both" would be a guess about it. A father gets the full set: "both" is his
 // to say because his partner or the sign told him, and "women's only" is the
-// red pin — the answer the whole map exists to record.
+// red pin — the answer the whole map exists to record. The barrier-free
+// toilet is open to everyone, so both readings get it.
 export function roomChoices(mode) {
-  return mode === "mama" ? ["female", "unisex", "dedicated"]
-                         : ["both", "male", "female", "unisex", "dedicated"];
+  return mode === "mama" ? ["female", "unisex", "wheelchair", "dedicated"]
+                         : ["both", "male", "female", "unisex", "wheelchair", "dedicated"];
+}
+
+// The rest of the vocabulary, one tap further away: together 17 % of the
+// values in OSM, none of them a door anyone is kept out of, so the same
+// three in either reading. Kept off the first screen so the common answers
+// stay a two-tap flow on a phone.
+export function roomChoicesMore() {
+  return ["room", "sales", "outdoor"];
 }
 
 // Only the room. changing_table itself is already yes or limited on every
