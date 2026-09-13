@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PapaMap — metode &amp; ærlighet</title>
-<meta name="description" content="Hvordan PapaMap fargelegger stellebord fra OpenStreetMap, hvorfor et dekningsindeks ikke kan bygges ut fra de dataene, og hvordan du selv retter en grå nål.">
+<title>PapaMap — metode &amp; åpenhet</title>
+<meta name="description" content="Hvordan PapaMap fargelegger stellebord fra OpenStreetMap, hvorfor et dekningsindeks ikke kan bygges ut fra de dataene, og hvordan du selv retter et grått punkt.">
 <!-- Absolute URLs: Google ignores relative hreflang hrefs, so the
      language versions were never actually linked to each other. Thirty-two
      of them since Japanese joined (2026-09-05); every page must
@@ -119,38 +119,38 @@
   &middot; <a href="methods-sr.html" hreflang="sr" lang="sr">Српски</a>
   &middot; <a href="methods-uk.html" hreflang="uk" lang="uk">Українська</a>
   &middot; <a href="methods-ja.html" hreflang="ja" lang="ja">日本語</a></p>
-<h1>PapaMap — metode &amp; ærlighet</h1>
+<h1>PapaMap — metode &amp; åpenhet</h1>
 <p class="muted">Stellebord en pappa når. De verdensomspennende taginfo-tallene nedenfor kommer
-fra det nattlige bygget. Utvalget fra åtte bysentre er fra 26.&nbsp;juli&nbsp;2026 og blir stående.</p>
+fra den nattlige oppdateringen. Utvalget fra åtte bysentre er fra 26.&nbsp;juli&nbsp;2026 og blir uendret.</p>
 
-<h2>Hva dette kartet er. Og hva det ikke er.</h2>
+<h2>Hva dette kartet er og ikke er</h2>
 <p>PapaMap viser steder i 44 europeiske land — fra Island til Kypros, fra Portugal til
-Ukraina, samt Australia, New Zealand, USA, Canada og Japan — der OpenStreetMap
+Ukraina, samt Australia, New Zealand, USA, Canada og Japan — der OpenStreetMap (OSM)
 kjenner til et stellebord
-(<code>changing_table=yes</code> eller <code>limited</code>). Fargen sier om en pappa kan nå
-bordet. Kartet leser OSM. Svar går rett til OSM under din egen OSM-konto — fra selve kartet eller via lenkene på hver nål; PapaMap lagrer ingenting. Å rette dataene
-skjer på selve OSM, via lenkene på hver nål.</p>
+(<code>changing_table=yes</code> eller <code>limited</code>). Fargen viser om en pappa kan bruke
+bordet eller ikke. Kartet leser OSM-data. Svar går rett til OSM under din egen OSM-konto — fra selve kartet eller via lenkene på hvert punkt; PapaMap lagrer ingenting. Å rette dataene
+skjer på selve OSM, via lenkene på hvert punkt.</p>
 <p>Ideen kom da jeg leste boken <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> av Caroline Criado Perez.</p>
-<p>En rangering av hvilken by som har det beste toalettilbudet er dette ikke. Hvorfor det ikke
-ærlig kan gjøres ut fra åpne data, forklares lenger nede.</p>
+<p>Dette er ikke en rangering av hvilken by som har det beste toalettilbudet. Hvorfor det ikke
+kan gjøres ut fra åpne data, forklares lenger nede.</p>
 
-<h2>Hva fargene betyr (den eksakte regelen)</h2>
-<p>Bare objekter med <code>changing_table=yes</code> eller <code>limited</code> havner på kartet
-(<code>no</code> telles bare med i statistikken). Fargen kommer fra
+<h2>Hva fargekodingen betyr</h2>
+<p>Bare steder med <code>changing_table=yes</code> eller <code>limited</code> havner på kartet
+(<code>no</code>, som i bekreftet ikke tilstede, telles bare med i statistikken). Fargen kommer fra
 <code>changing_table:location</code>. Verdien deles opp ved <code>;</code>, trimmes, gjøres om til
-små bokstaver, og hver del sammenlignes i sin helhet. Aldri som en delstreng, for
-<code>female_toilet</code> inneholder <code>male</code>.</p>
+små bokstaver, og hver verdi sammenlignes som en helhet. Aldri som en delstreng, fordi
+<code>female_toilet</code> inneholder ordet <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Grønn:</strong> én av delene er
+  <li><span class="dot g"></span><strong>Grønn:</strong> en verdi er
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> eller <code>outdoor</code>.
-      En pappa kan komme til.</li>
-  <li><span class="dot r"></span><strong>Rød:</strong> ellers, hvis én av delene er
+      En pappa kan bruke stellebordet til å skifte på barnet.</li>
+  <li><span class="dot r"></span><strong>Rød:</strong> ellers, hvis en verdi er
       <code>female_toilet</code>. Bordet finnes, men bare på dametoalettet.</li>
   <li><span class="dot u"></span><strong>Grå:</strong> alt annet. Ingen location-tag, eller bare
-      fritekst. Ingen har registrert rommet. De grå nålene er oppgaven.</li>
+      fritekst. Ingen har kategorisert rommet. De grå punktene er dermed oppgavene man kan bidra til.</li>
 </ul>
-<p>Et objekt med et <code>centralkey</code>-tag (annet enn <code>no</code>) holdes utenfor kartet når nøkkelen sperrer hele døra: <code>access=centralkey</code>, et bord på handikaptoalettet, eller ingenting i taggene sier at nøkkelen bare gjelder én kabin. Et anlegg med åpent herre- og dametoalett og en låst handikapkabin (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> og <code>female=yes</code>) blir på kartet, grått til noen registrerer rommet. <a href="https://en.wikipedia.org/wiki/Euro_key">Euronøkkelen</a> utstedes bare mot dokumentert funksjonsnedsettelse, så de fleste pappaer kommer ikke gjennom den døra.</p>
+<p>Et objekt med et <code>centralkey</code>-tag (annet enn <code>no</code>) holdes utenfor kartet når nøkkelen sperrer hele døra: <code>access=centralkey</code>, et bord på handikaptoalettet, eller ingenting i taggene sier at nøkkelen bare gjelder én bås. Et anlegg med åpent herre- og dametoalett og en låst handikapbås (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> og <code>female=yes</code>) blir på kartet, grått til noen kategoriserer rommet korrekt. <a href="https://en.wikipedia.org/wiki/Euro_key">Euronøkkelen</a>, en uoffisiell europeisk standard, utstedes bare mot dokumentert funksjonsnedsettelse, så de fleste pappaer får ikke tilgang.</p>
 
 <h2>Pappa-mamma-bryteren</h2>
 <p>De tre fargene over svarer på pappa-spørsmålet: kommer en pappa til bordet? For en mamma skal
@@ -171,13 +171,13 @@ modusene.</p>
 <p>Ett unntak står her fordi det ser grønt ut i mamma-modus, uten helt å være det: et bord som
 ifølge <code>changing_table:location</code> bare står på herretoalettet (bare
 <code>male_toilet</code>), telles med som grønt. Det er sjeldent, men det skjer. Derfor sier
-teksten på nålen «i sjeldne tilfeller bare på herretoalettet», og tallet over sier
+teksten på punktet «i sjeldne tilfeller bare på herretoalettet», og tallet over sier
 «sannsynligvis».</p>
 
 <h2>Den blå ringen: lekeområde</h2>
-<p>En nål med en blå ring har også et lekeområde &mdash; et sted der du ikke bare steller barnet,
-men blir en stund. Filteret <em>Med lekeområde</em> viser bare disse. Et sted telles med hvis OSM
-registrerer en av disse:</p>
+<p>Et punkt med en blå ring har også et lekeområde &mdash; et sted der du ikke bare skifter på barnet,
+men kan bli en stund. Filteret <em>Med lekeområde</em> viser bare disse. Et sted telles med hvis OSM
+registrerer en av disse verdiene:</p>
 <ul>
   <li><span class="ring"></span><code>kids_area:indoor=yes</code> eller <code>designated</code>
       &mdash; wikiens dokumenterte måte å si innendørs på.</li>
@@ -189,7 +189,7 @@ registrerer en av disse:</p>
   <li><span class="ring"></span><code>leisure=playground</code> sammen med
       <code>indoor=yes</code> &mdash; det samme, tagget motsatt vei.</li>
 </ul>
-<p><code>outdoor</code> teller ikke med: en lekeplass utendørs er ikke det ringen lover. Det gjør
+<p><code>outdoor</code> teller ikke med: Sandkassen i en uteservering gir ingen ring. Det gjør
 heller ikke <code>no</code>, eller <code>limited</code> &mdash; wikien definerer den som «leker
 finnes, men ikke noe eget område». Der et eksplisitt <code>kids_area:indoor=no</code> finnes,
 vinner det over et rent <code>kids_area=yes</code>.</p>
@@ -200,44 +200,44 @@ bordet er kjent for å finnes. Her tier nesten alle objekter, og det betyr ingen
 et lekeområde, er det fortsatt velkomment å legge det til &mdash; i OSM-editoren, som
 <code>kids_area=yes</code>.</p>
 
-<h2>De tomme blå ringene: lekesteder uten svar</h2>
-<p>Den samme regelen treffer langt flere steder enn kartet har nåler. Bare
+<h2>De tomme blå ringene: lekeplasser uten svar</h2>
+<p>Den samme regelen treffer langt flere steder enn kartet har punkter. Bare
 <span data-stat="play_tables">111</span> av dem har i det hele tatt et <code>changing_table</code>-tag. På
 <span data-stat="play_places">701</span> flere har ingen svart på det første spørsmålet: er det et
-stellebord her? Ja, nei, ingen vet &mdash; OSM sier absolutt ingenting.</p>
+stellebord her? Ja, nei, ingen vet &mdash; OSM har ingen data.</p>
 <p>Kartet kan ikke fargelegge disse <span data-stat="play_places">701</span>, for det er ingenting
-å fargelegge. De er heller ikke grå: grå betyr «bordet finnes, rommet mangler», og det gjelder ikke
+å fargelegge. De er heller ikke grå: grå betyr «bordet finnes, romdefinisjonen mangler», og det gjelder ikke
 her. Derfor får de sin egen chip, <em>Bare lekeområde</em>, på som standard, og en tom blå ring i
-stedet for en fylt nål.</p>
+stedet for et fylt punkt.</p>
 <p>De er de mest lovende åpne spørsmålene på hele kartet. En innendørs lekeplass, en kafé med
 ballbasseng, en restaurant med lekerom &mdash; en pappa med en smårolling drar dit uansett, og når
-han først er der, kjenner han svaret. Et klikk på ringen åpner MapComplete med akkurat det ene
-spørsmålet. Svar på det, så er ringen borte ved neste nattlige oppdatering, erstattet av en ekte
-nål.</p>
+han først er der, kan han finne svaret. Et klikk på ringen åpner MapComplete med akkurat det ene
+spørsmålet. Svar på det, så er ringen borte ved neste nattlige oppdatering, og erstattet av et oppdatert
+punkt.</p>
 
-<h2>Slik retter du en grå nål</h2>
-<p>Grå betyr at ett svar mangler. Hvor er stellebordet? Alle med en gratis OSM-konto kan svare på
+<h2>Slik retter du et grått punkt</h2>
+<p>Grå betyr at et svar mangler. Hvor befinner stellebordet seg? Alle med en OSM-konto kan svare på
 det, på stedet, på under et minutt:</p>
 <ul>
   <li><strong>MapComplete (hvilken som helst telefon, i nettleseren):</strong> «Svar på
-      MapComplete» på en grå nål åpner det samme objektet i PapaMaps eget MapComplete-tema
-      &mdash; på hver nål, slik at endringene er gjenkjennelige som at de kommer herfra.
+      MapComplete» på et grått punkt åpner det samme objektet i PapaMaps eget MapComplete-tema
+      &mdash; på hvert punkt, slik at endringene er gjenkjennelige som at de kommer herfra.
       MapComplete advarer én gang om et uoffisielt tema, det er greit. Spørsmålene i temaet
       finnes foreløpig bare på engelsk. Logg inn med OSM-kontoen din og svar på spørsmålene om
-      stellebordet, inkludert det om rommet. Svaret går rett inn i OpenStreetMap og dukker opp
-      her etter neste nattlige oppdatering.</li>
-  <li><strong>StreetComplete (Android):</strong> har et stellebord-oppdrag, som er av som
+      stellebordet, inkludert det om romplasseringen. Svaret går rett inn i OpenStreetMap og dukker opp
+      i PapaMap etter neste nattlige oppdatering.</li>
+  <li><strong>StreetComplete (kun Android):</strong> har et stellebord-oppdrag, som er av som
       standard. Gå til <em>Innstillinger &rarr; Valg av oppdrag og visningsrekkefølge</em>, søk
-      etter «stellebord» og huk av. Den spør bare ja/nei. For spørsmålet om rommet på en
-      eksisterende grå nål bruker du MapComplete.</li>
+      etter «stellebord» og huk av. Den spør bare ja/nei. For spørsmålet om rommet på et
+      eksisterende grått punkt bruker du MapComplete.</li>
 </ul>
-<p class="muted">Endringene skjer under din egen OSM-konto og tilhører alle. De overlever dette
-nettstedet og er til nytte for alle apper som leser OpenStreetMap.</p>
+<p class="muted">Endringene blir registrert under din OSM-konto, og blir åpent tilgjengelig for alle. Dataene du registrerer vil kanskje overleve dette
+nettstedet, og kan bli til nytte for alle andre apper som bruker OpenStreetMap-data.</p>
 
 <h2 id="contribute">Slik legger du til et sted som mangler</h2>
 <p>PapaMap lagrer ingenting selv. Å legge til et sted betyr derfor alltid: å redigere
-OpenStreetMap. Knappen <em>+ Legg til et sted</em> på kartet åpner riktig editor med din nåværende
-visning.</p>
+OpenStreetMap. Knappen <em>+ Legg til et sted</em> på kartet åpner riktig editor på ditt nåværende
+kartutsnitt.</p>
 
 <h3>Et offentlig toalett mangler helt</h3>
 <p>Bruk <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMaps
@@ -269,12 +269,12 @@ som mangler. I OSMs egen editor (iD) tar det omtrent to minutter:</p>
             (<code>male_toilet;female_toilet</code>).</li>
       </ul></li>
   <li>Trykk <strong>Lagre</strong>, skriv en kort kommentar («la til plassering for
-      stellebord»), last opp. Live på OSM innen et minutt, på PapaMap etter neste nattlige
+      stellebord»), trykk så: <strong>Last opp</strong>. Informasjonen er nå live på OSM innen et minutt. På PapaMap etter neste nattlige
       oppdatering.</li>
 </ol>
 <p class="muted">Tagg bare det du selv har sett. OSM registrerer det som er, ikke det som burde
-være. Vet du ikke rommet, er <code>changing_table=yes</code> alene fortsatt nyttig: stedet blir en
-grå nål, og neste pappa svarer på spørsmålet om rommet.</p>
+være. Vet du ikke rommet, er <code>changing_table=yes</code> alene fortsatt nyttig: stedet blir et
+grått punkt, og neste pappa kan svare på spørsmålet om rommet.</p>
 
 <h2>Hvorfor et dekningsindeks ikke kan lages ut fra OSM</h2>
 <p>Det opplagte, større prosjektet ville vært et forhold mellom toalettilbudet for menn og
@@ -295,17 +295,17 @@ London, Paris, New York, Tokyo&nbsp;23&nbsp;bydeler, Amsterdam, Wien, Melbourne;
   <tr><td><strong>Alle</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
 <ul>
-  <li>Bare 29,9% av de kartlagte toalettene har noe kjønnstag i det hele tatt. Begge deler
+  <li>Bare 29,9% av de kartlagte toalettene har noen kjønnsegenskap i det hele tatt. Begge deler
       (male og female): 8,5%.</li>
-  <li>Taggene er rene ja/nei-flagg, aldri antall. Antall båser per kjønn: null i alle åtte
-      byene. Den ene kapasitetsnøkkelen, <code>toilets:num_chambers</code> (~27k bruk), er
+  <li>Egenskapene er rene ja/nei-flagg, aldri antall. Antall båser per kjønn: null i alle åtte
+      byene. Den ene kapasitetsegenskapen, <code>toilets:num_chambers</code> (~27k bruk), er
       kjønnsnøytral og kommer nesten utelukkende fra en gammel import. Variantene
       <code>:female</code> / <code>:male</code> har 2 bruk hver, på verdensbasis.</li>
-  <li>Hamburg, sjekket samme dag: 443 kartlagte toaletter, ingen med et
-      <code>toilets:num_chambers*</code>-tag. Linjen på <a href="./">forsiden</a> regner disse tallene på nytt én gang i uka per
+  <li>Hamburg, sjekket samme dag: 443 kartlagte toaletter, ingen med en
+      <code>toilets:num_chambers*</code>-egenskap. Linjen på <a href="./">forsiden</a> regner disse tallene på nytt én gang i uka per
       område; selve kartet hver natt.</li>
-  <li>Og: taggingsandeler måler mapper-fellesskapet, ikke byene. Enkeltbåser forblir riktig nok
-      kjønnsnøytrale. En byrangering ville gitt karakter til OSM-bidragsytere, ikke
+  <li>Og: egenskapsandeler måler mapper-fellesskapet, ikke byene. Enkeltbåser forblir riktig nok
+      kjønnsnøytrale. En byrangering ville gitt karakter til OSM-bidragsytere per by, ikke
       toalettlikestilling.</li>
 </ul>
 <p>Så det eneste ærlige å si er: selve tilbudet kan ikke måles ut fra åpne data i dag. Dette
@@ -328,13 +328,12 @@ det finnes, er det skjevt fordelt (taginfo, <span data-stat="date">26.&nbsp;juli
 eksakte forholdet. Retningen stemmer med det som lenge har vært dokumentert andre steder:
 stellebord henger som standard på dametoalettet. Det stenger pappaer ute, og forutsetter
 stilltiende hvem som har ansvaret for bleieskift. Dette kartet gjør de manglende dataene synlige.
-Og enkle å rette.</p>
+Og er enkle å rette.</p>
 
 <h2>Datalisens &amp; kreditering</h2>
-<p>Alle kartdata &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
-contributors</a>, tilgjengelig under
+<p>Alle kartdata &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap-bidragsytere</a>, tilgjengelig under
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
-GeoJSON- og statistikkfilene dette nettstedet serverer, er avledet fra OSM og dermed også ODbL.
+GeoJSON- og statistikkfilene dette nettstedet tilbyr, er avledet fra OSM og dermed også ODbL.
 Global tag-statistikk kommer fra <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Nettstedets egen kode er MIT-lisensiert.</p>
 
@@ -342,7 +341,7 @@ Nettstedets egen kode er MIT-lisensiert.</p>
 <p>Et statisk nettsted. Ingen kontoer, ingen informasjonskapsler, ingen analyseverktøy, ingen
 sporingsskript. Nettstedet lagrer ingenting om deg og har ingen database. Kartflisene kommer fra
 OpenStreetMaps kartserver; de forespørslene faller inn under
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMFs personvernerklæring</a>. Trykker du på <em>Svar på MapComplete</em> i en nål, spør siden dessuten api.openstreetmap.org noen ganger de neste minuttene om hva akkurat det objektet sier nå — de forespørslene omfattes av samme retningslinjer. Følger du
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMFs personvernerklæring</a>. Trykker du på <em>Svar på MapComplete</em> i et punkt, spør siden dessuten api.openstreetmap.org noen ganger de neste minuttene om hva akkurat det objektet sier nå — de forespørslene omfattes av samme retningslinjer. Følger du
 en lenke til MapComplete, StreetComplete eller openstreetmap.org, er du på deres nettsteder og
 redigerer under din egen OSM-konto. Ingenting går gjennom oss. Formelle sider:
 <a href="impressum.html">Impressum</a> ·
@@ -353,7 +352,7 @@ redigerer under din egen OSM-konto. Ingenting går gjennom oss. Formelle sider:
 tallene kommer fra det samme nattlige søket som også bygger kartet.</p>
 
 <h2>Slik blir nettstedet til</h2>
-<p>Jeg bruker KI som hjelp med koding og til å utkaste tekster. Alt går likevel gjennom mine egne
+<p>Jeg bruker KI som hjelp med koding og til å utkaste og oversette tekster. Alt sjekkes likevel av mine egne
 øyne.</p>
 
 <script>

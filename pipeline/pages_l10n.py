@@ -1244,7 +1244,7 @@ Hur det räknas och färgläggs: <a href="{up}methods-sv.html">Metod</a> ·
                   "<strong>{female_only}</strong> henger bare på "
                   "dametoalettet. Og for <strong>{unknown}</strong> av "
                   "{tables} ({pct}&nbsp;%) har ingen registrert hvilket rom "
-                  "bordet står i. Det er de grå nålene på kartet, og de er "
+                  "bordet står i. Det er de grå punktene på kartet, og de er "
                   "selve oppgaven: spørsmålet besvarer du på stedet på "
                   "under et minutt."),
         "map_cta": "Åpne {name_for} på kartet",
@@ -1267,11 +1267,11 @@ Hur det räknas och färgläggs: <a href="{up}methods-sv.html">Metod</a> ·
                         "kjede er slått sammen til én rad."),
         "th_place": "Sted", "th_kind": "Type", "th_count": "Steder",
         "help_h2": "Slik hjelper du her",
-        "help": ("En grå nål betyr: stellebordet finnes, men ingen har "
+        "help": ("Et grått punkt betyr: stellebordet finnes, men ingen har "
                  "registrert hvilket rom det står i. Akkurat det svaret "
                  "mangler pappaer. Alle med en gratis OpenStreetMap-konto "
                  "kan gi det, på stedet, på under et minutt — lenken ved "
-                 "nålen åpner MapComplete rett på riktig objekt. Svaret "
+                 "punktet åpner MapComplete rett på riktig objekt. Svaret "
                  "havner i OpenStreetMap, tilhører alle og vises her etter "
                  "neste nattlige oppdatering. "
                  '<a href="{up}{methods}#contribute">Steg for steg</a>.'),
