@@ -75,15 +75,16 @@ CF_REPORT_DAYS = 7
 # (the documented minimum) would miss.
 OPS_HISTORY_PATH = os.environ.get(
     "PAPAMAP_HISTORY_PATH", str(Path(STATS_PATH).parent / "history.json"))
-# The build cron's log, `>> pipeline.log` in the repo directory where the ops
-# cron also runs; read for the "last build" section, optional.
+# The build cron's log, `>> pipeline.log` in the repo directory; read for the
+# "last build" section, optional. Under Docker the ops service mounts it
+# read-only (docker-compose.yml).
 BUILD_LOG_PATH = os.environ.get("PAPAMAP_BUILD_LOG_PATH", "pipeline.log")
 # The app page's tap log: the papamap container's only access log, scoped
 # to the two tap paths under /app/ja/ (page views are not logged — the
 # site promises no analytics, and a tap is an answer someone chose to
 # give, not a visit) and stripped of addresses and headers by the
 # Caddyfile's filter (deploy/papamap.Caddyfile), mounted to ./caddy-logs on
-# the host (docker-compose.yml) — the directory the ops cron runs in, like
+# the host and read-only into the ops service (docker-compose.yml), like
 # pipeline.log. Absent (a checkout without Docker), the block is simply not
 # there. The paths are the Caddyfile's; tests/test_ops.py pins them to it.
 APP_LOG_DIR = os.environ.get("PAPAMAP_APP_LOG_DIR", "caddy-logs")

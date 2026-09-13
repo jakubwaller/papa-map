@@ -27,6 +27,8 @@ pipeline.log
 docs/DEPLOY.local.md
 .playwright-mcp/
 ops-state.json
+# Its home under Docker (docker-compose.yml, the ops service).
+/ops-data/
 ops.log
 ops.env
 # The private ops page's auth snippet (password hash) — server-only.

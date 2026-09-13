@@ -155,7 +155,7 @@ when Denmark was added.
 ## Ops mail (optional, recommended)
 
 `python -m pipeline.ops` compares today's dataset against yesterday's snapshot (state in
-`ops-state.json`, gitignored) and mails only on an anomaly — stale `generated_at` (>48 h),
+`ops-data/ops-state.json`, gitignored) and mails only on an anomaly — stale `generated_at` (>48 h),
 missing files, a >20% drop **or a >25% jump** in the total or accessible count — plus one
 all-clear digest every
 Monday, so a silent week means the watcher itself died. The digest carries the day's and week's
@@ -180,15 +180,45 @@ week back, so on a state older than that fill the gap once — the same OSMCha q
 wider window, merged into `edits_days` and nothing else touched:
 
 ```bash
-cd ~/papa-map && set -a && . ./ops.env && set +a && python3 -m pipeline.ops --backfill-edits 31
+cd ~/papa-map && docker compose run --build --rm ops python -m pipeline.ops --backfill-edits 31
 ```
 
 Same one-page limit as the daily fetch: a window beyond ~100 changesets returns its count
 but no split, and the command says the history is unchanged.
 
-```cron
-30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && python3 -m pipeline.ops >> ops.log 2>&1
+**The check runs in Docker, like the build** — the `ops` service in `docker-compose.yml`,
+the same image, run as the host user (uid 1000; edit `user:` if yours differs), with the
+data directory, the state directory, `pipeline.log` and `caddy-logs/` mounted. The host
+needs no Python. `ops.env` (gitignored, next to the compose file) holds the tokens and the
+mail settings only; any `PAPAMAP_*_PATH` in it is ignored under Docker, the service sets the
+container paths itself. One-time:
+
+```bash
+cd ~/papa-map
+mkdir -p ops-data caddy-logs web-data/private && touch pipeline.log   # mountpoints, owned by you
+# migrating from the host-run check: mv ops-state.json ops-data/ops-state.json
+docker compose run --build --rm ops        # first run: writes the state and both pages
 ```
+
+```cron
+30 5 * * * cd /path/to/papa-map && docker compose run --build --rm ops >> ops.log 2>&1
+```
+
+Outside Docker the equivalent line is
+`30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1`
+with the state at `ops-state.json` in the repo directory (`PAPAMAP_OPS_STATE_PATH`).
+
+To rewrite the page right now — after a deploy, say — without touching the real state or
+sending a mail, run against a copy of the state with the SMTP host blanked:
+
+```bash
+cd ~/papa-map && cp ops-data/ops-state.json ops-data/preview.json && \
+  docker compose run --build --rm -e PAPAMAP_OPS_STATE_PATH=/ops-data/preview.json \
+    -e PAPAMAP_SMTP_HOST= ops; rm -f ops-data/preview.json ops-data/preview.tmp
+```
+
+(The copy gains a second entry for today, so the page's "since yesterday" row reads zeros
+until the next 05:30 run regenerates it from the real state.)
 
 The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
 the report as a page plus what the mail has no room for: per-area results and warnings from
@@ -204,7 +234,8 @@ Docker layout that is `web-data/ops.html`, served at `/data/ops.html` and rewrit
 `/ops.html` by `deploy/papamap.Caddyfile`. That rewrite is new as of this page: after
 pulling it, `docker compose restart papamap` (the Caddyfile is a bind mount; a running
 container does not re-read it). `PAPAMAP_BUILD_LOG_PATH` (default `pipeline.log`, i.e. the
-build cron's log in the repo directory) feeds the build section; absent, the page says so.
+build cron's log in the repo directory; the ops service mounts it read-only) feeds the build
+section; absent, the page says so.
 Set `PAPAMAP_OPS_HTML_PATH=` (empty) to not write the page at all. A page that fails to
 render or write is a WARN in `ops.log`, never a failed check.
 
@@ -213,7 +244,7 @@ render or write is a WARN in `ops.log`, never a failed check.
 The same run also writes a **private copy** — the public page plus a Visitors block:
 Cloudflare's zone-level requests and uniques per complete UTC day, window sums, a curve, and a
 table of the whole history. The per-day figures are fetched on every run (the mail still quotes
-them on digest days only) and kept in `ops-state.json` under `visits`, capped at 400 days.
+them on digest days only) and kept in the state file under `visits`, capped at 400 days.
 `PAPAMAP_OPS_PRIVATE_HTML_PATH` (default `private/ops.html` next to `stats.json`, i.e.
 `web-data/private/ops.html`; empty disables).
 
@@ -339,7 +370,8 @@ No restart — the server picks up changed web files immediately, because they a
 bind-mounted. **The pipeline is different if you run it under Docker:** its code
 lives in the image, so a `git pull` alone leaves the old build logic in place. Add
 `docker compose build pipeline` (or use `run --build`, as in the cron above) after
-any change under `pipeline/`.
+any change under `pipeline/`. The ops cron already rebuilds on every run, so an ops change
+is live at the next 05:30 after the pull; to see it sooner, use the preview run above.
 
 ## Verify
 
