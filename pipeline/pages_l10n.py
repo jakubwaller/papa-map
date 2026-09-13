@@ -1252,7 +1252,7 @@ Hur det räknas och färgläggs: <a href="{up}methods-sv.html">Metod</a> ·
         "th_things": "Stellebord", "th_places": "Steder", "total": "Totalt",
         "statuses": {"accessible": "Tilgjengelig",
                      "female_only": "Kun dametoalett",
-                     "unknown": "Rom ukjent"},
+                     "unknown": "Uspesifiserte rom"},
         "toilets_note": ("{In} er det dessuten registrert {toilets} "
                          "offentlige toaletter — de aller fleste uten noen "
                          "opplysning om stellebord. En sammenligning av "

@@ -139,14 +139,14 @@ inte går att göra ärligt ur öppna data står längre ner.</p>
 <p>På kartan hamnar bara objekt med <code>changing_table=yes</code> eller <code>limited</code>
 (<code>no</code> räknas bara i statistiken). Färgen kommer från
 <code>changing_table:location</code>. Värdet delas vid <code>;</code>, trimmas, görs till gemener
-och jämförs som ett helt token. Aldrig som delsträng, för <code>female_toilet</code> innehåller
+och varje del jämförs i sin helhet. Aldrig som delsträng, för <code>female_toilet</code> innehåller
 <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Grönt:</strong> ett token är
+  <li><span class="dot g"></span><strong>Grönt:</strong> en av delarna är
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> eller <code>outdoor</code>.
       En pappa kommer åt det.</li>
-  <li><span class="dot r"></span><strong>Rött:</strong> annars, om ett token är
+  <li><span class="dot r"></span><strong>Rött:</strong> annars, om en av delarna är
       <code>female_toilet</code>. Bordet finns, men bara på damtoaletten.</li>
   <li><span class="dot u"></span><strong>Grått:</strong> allt annat. Ingen location-tagg, eller
       bara fritext. Ingen har registrerat rummet. De grå nålarna är uppgiften.</li>

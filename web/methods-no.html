@@ -138,19 +138,19 @@ skjer på selve OSM, via lenkene på hver nål.</p>
 <p>Bare objekter med <code>changing_table=yes</code> eller <code>limited</code> havner på kartet
 (<code>no</code> telles bare med i statistikken). Fargen kommer fra
 <code>changing_table:location</code>. Verdien deles opp ved <code>;</code>, trimmes, gjøres om til
-små bokstaver og sammenlignes som et helt token. Aldri som en delstreng, for
+små bokstaver, og hver del sammenlignes i sin helhet. Aldri som en delstreng, for
 <code>female_toilet</code> inneholder <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Grønn:</strong> ett token er
+  <li><span class="dot g"></span><strong>Grønn:</strong> én av delene er
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> eller <code>outdoor</code>.
       En pappa kan komme til.</li>
-  <li><span class="dot r"></span><strong>Rød:</strong> ellers, hvis ett token er
+  <li><span class="dot r"></span><strong>Rød:</strong> ellers, hvis én av delene er
       <code>female_toilet</code>. Bordet finnes, men bare på dametoalettet.</li>
   <li><span class="dot u"></span><strong>Grå:</strong> alt annet. Ingen location-tag, eller bare
       fritekst. Ingen har registrert rommet. De grå nålene er oppgaven.</li>
 </ul>
-<p>Et objekt med et <code>centralkey</code>-tag (annet enn <code>no</code>) holdes utenfor kartet når nøkkelen sperrer hele døra: <code>access=centralkey</code>, et bord på handikaptoalettet, eller ingenting i taggene sier at nøkkelen bare gjelder én kabin. Et anlegg med åpent herre- og dametoalett og en låst handikapkabin (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> og <code>female=yes</code>) blir på kartet, grått til noen registrerer rommet. Euronøkkelen utstedes bare mot dokumentert funksjonsnedsettelse, så de fleste pappaer kommer ikke gjennom den døra.</p>
+<p>Et objekt med et <code>centralkey</code>-tag (annet enn <code>no</code>) holdes utenfor kartet når nøkkelen sperrer hele døra: <code>access=centralkey</code>, et bord på handikaptoalettet, eller ingenting i taggene sier at nøkkelen bare gjelder én kabin. Et anlegg med åpent herre- og dametoalett og en låst handikapkabin (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> og <code>female=yes</code>) blir på kartet, grått til noen registrerer rommet. <a href="https://en.wikipedia.org/wiki/Euro_key">Euronøkkelen</a> utstedes bare mot dokumentert funksjonsnedsettelse, så de fleste pappaer kommer ikke gjennom den døra.</p>
 
 <h2>Pappa-mamma-bryteren</h2>
 <p>De tre fargene over svarer på pappa-spørsmålet: kommer en pappa til bordet? For en mamma skal
@@ -189,7 +189,7 @@ registrerer en av disse:</p>
   <li><span class="ring"></span><code>leisure=playground</code> sammen med
       <code>indoor=yes</code> &mdash; det samme, tagget motsatt vei.</li>
 </ul>
-<p><code>outdoor</code> teller ikke med: sandkassen i en ølhage er ikke det ringen lover. Det gjør
+<p><code>outdoor</code> teller ikke med: en lekeplass utendørs er ikke det ringen lover. Det gjør
 heller ikke <code>no</code>, eller <code>limited</code> &mdash; wikien definerer den som «leker
 finnes, men ikke noe eget område». Der et eksplisitt <code>kids_area:indoor=no</code> finnes,
 vinner det over et rent <code>kids_area=yes</code>.</p>
