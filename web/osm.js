@@ -261,8 +261,12 @@ function httpError(status, step) {
 export async function writeTags(cfg, token, ref, patch, comment, fetchFn = fetch) {
   const auth = { Authorization: `Bearer ${token}` };
   const xml = { ...auth, "Content-Type": "text/xml; charset=utf-8" };
+  // Every call bounded: a hung connection (one bar, a captive portal) must
+  // fail the answer, not leave the buttons quiet and "Saving…" up for good.
+  const bounded = () => AbortSignal.timeout?.(OSM_TIMEOUT_MS);
 
-  const read = await fetchFn(`${cfg.api}/${ref.type}/${ref.id}.json`, { headers: auth, cache: "no-store" });
+  const read = await fetchFn(`${cfg.api}/${ref.type}/${ref.id}.json`,
+    { headers: auth, cache: "no-store", signal: bounded() });
   if (!read.ok) throw httpError(read.status, "read");
   const el = elementFromApi(await read.json());
   if (!el) throw httpError(read.status, "read");
@@ -273,16 +277,22 @@ export async function writeTags(cfg, token, ref, patch, comment, fetchFn = fetch
   if (Object.keys(patch).some((k) => el.tags[k])) throw httpError(409, "taken");
 
   const open = await fetchFn(`${cfg.api}/changeset/create`,
-    { method: "PUT", headers: xml, body: changesetXml(changesetTags(comment)) });
+    { method: "PUT", headers: xml, body: changesetXml(changesetTags(comment)), signal: bounded() });
   if (!open.ok) throw httpError(open.status, "changeset");
   const changeset = (await open.text()).trim();
 
   const tags = { ...el.tags, ...patch };
-  const put = await fetchFn(`${cfg.api}/${ref.type}/${ref.id}`,
-    { method: "PUT", headers: xml, body: elementXml(el, tags, changeset) });
-  // Closed whatever happened: an open changeset would otherwise sit on the
-  // reader's account for an hour, and the next answer would open another.
-  await fetchFn(`${cfg.api}/changeset/${changeset}/close`, { method: "PUT", headers: auth }).catch(() => null);
+  let put;
+  try {
+    put = await fetchFn(`${cfg.api}/${ref.type}/${ref.id}`,
+      { method: "PUT", headers: xml, body: elementXml(el, tags, changeset), signal: bounded() });
+  } finally {
+    // Closed whatever happened, a dropped connection included: an open
+    // changeset would otherwise sit on the reader's account for an hour,
+    // and the next answer would open another.
+    await fetchFn(`${cfg.api}/changeset/${changeset}/close`,
+      { method: "PUT", headers: auth, signal: bounded() }).catch(() => null);
+  }
   if (!put.ok) throw httpError(put.status, "write");
   return { version: Number(await put.text()), tags, changeset };
 }

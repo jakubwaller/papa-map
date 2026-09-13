@@ -116,7 +116,9 @@ Verify against **https://papamap.de**, the canonical host. `www.papamap.de` and
 failure.
 
 A web-only change (HTML/CSS/JS) does not need a dataset rebuild — `git pull` on the server is the
-whole deploy, because the site is bind-mounted rather than baked into the image.
+whole deploy, because the site is bind-mounted rather than baked into the image. Verify with curl
+or a second load: the service worker hands a returning browser the previous shell first and
+refreshes it in the background.
 
 If tests or the post-deploy check fail, stop and report rather than merging or leaving the server
 half-deployed.

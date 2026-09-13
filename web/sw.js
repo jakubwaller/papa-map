@@ -20,11 +20,6 @@
 // belongs in its own commit, not in a widened condition here.
 // ---------------------------------------------------------------------------
 
-// Bump to evict the previous cache wholesale. The per-asset `?v=` pins in
-// index.html already make a changed file a changed URL; this is the coarser
-// lever for when the caching strategy itself changes.
-const CACHE = "papamap-v1";
-
 // Only the shell is precached, and it is small. The GeoJSON is deliberately
 // NOT in this list: the page fetches it on its own during the first visit and
 // the runtime handler below stores that response, so offline costs the visitor
@@ -41,6 +36,14 @@ const SHELL = [
   "i18n.js?v=app3",
   "osm.js?v=app3",
 ];
+
+// One cache per shell pin (the ?v= above). A deploy that bumps the pin
+// starts a fresh cache and activate throws the previous one away whole —
+// in a fixed-name cache the entries keyed by an old pin would sit forever,
+// one dead shell per deploy. The data comes along again on the first load,
+// which is network-first anyway.
+const SHELL_PIN = /\?v=([\w-]+)/.exec(SHELL.join(" "))?.[1] ?? "0";
+const CACHE = `papamap-${SHELL_PIN}`;
 
 // The status pages exist to tell you what is true right now. A stale one is
 // worse than none, so they are never stored.

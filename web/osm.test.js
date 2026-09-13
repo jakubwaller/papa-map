@@ -175,6 +175,7 @@ function scriptedApi(script) {
     calls.push({ url, method: init.method ?? "GET", body: init.body, headers: init.headers });
     const step = script.shift();
     if (!step) throw new Error(`unexpected call ${url}`);
+    if (step.throw) throw new TypeError("network");
     return { ok: step.status < 300, status: step.status,
              text: async () => step.text ?? "", json: async () => step.json };
   };
@@ -217,6 +218,18 @@ test("writeTags: a room somebody tagged since last night's build is theirs — 4
   await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, tablePatch("unisex"), "c", api.fetchFn),
     (e) => e.status === 409 && e.step === "taken");
   assert.equal(api.calls.length, 1);
+});
+
+test("writeTags: a connection that drops during the write still closes the changeset", async () => {
+  const { fetchFn, calls } = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 5, lat: 1, lon: 2, tags: {} }] } },
+    { status: 200, text: "78" },
+    { throw: true },                    // the PUT never gets an answer
+    { status: 200 },
+  ]);
+  await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, roomPatch("both"), "c", fetchFn),
+    (e) => e instanceof TypeError);
+  assert.equal(calls.at(-1).url, `${SANDBOX.api}/changeset/78/close`, "closed on a rejection too, not only on a bad status");
 });
 
 test("writeTags: a conflict closes the changeset and surfaces the 409", async () => {

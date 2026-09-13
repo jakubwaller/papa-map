@@ -13,7 +13,7 @@ const ORIGIN = "https://papamap.de";
 
 function loadSW({ cached = {}, network = {} } = {}) {
   const handlers = {};
-  const put = [];
+  const put = [], opened = [];
   const cache = {
     match: async (req, opts) => {
       const url = typeof req === "string" ? req : req.url;
@@ -35,7 +35,7 @@ function loadSW({ cached = {}, network = {} } = {}) {
       PAPAMAP_DATA_TIMEOUT_MS: 30,   // the 8 s of the real worker, shrunk for the tests
     },
     setTimeout, clearTimeout,
-    caches: { open: async () => cache, keys: async () => [], delete: async () => {} },
+    caches: { open: async (name) => { opened.push(name); return cache; }, keys: async () => [], delete: async () => {} },
     fetch: async (req) => {
       if (!(req.url in network)) throw new TypeError("offline");
       return network[req.url];
@@ -44,7 +44,7 @@ function loadSW({ cached = {}, network = {} } = {}) {
   };
   vm.createContext(ctx);
   vm.runInContext(SRC, ctx);
-  return { handlers, put };
+  return { handlers, put, opened };
 }
 
 const res = (body, { ok = true, type = "basic" } = {}) =>
@@ -142,6 +142,14 @@ test("a failed dataset fetch falls back to the stored copy, a 404 does not hide 
   sw = loadSW({ cached: { [url]: res("stored") },
                 network: { [url]: res("missing", { ok: false }) } });
   assert.equal(await (await fire(sw.handlers, url).responded).text(), "stored");
+});
+
+test("the cache is named after the shell pin, so a bumped deploy evicts the old shell whole", async () => {
+  const html = fs.readFileSync(new URL("./index.html", import.meta.url), "utf8");
+  const pin = /app\.js\?v=([\w-]+)/.exec(html)?.[1];
+  const { handlers, opened } = loadSW({ network: { [`${ORIGIN}/x.css`]: res("x") } });
+  await fire(handlers, `${ORIGIN}/x.css`).responded;
+  assert.deepEqual(opened, [`papamap-${pin}`]);
 });
 
 test("the shell precache pins the same ?v= as index.html", () => {

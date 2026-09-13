@@ -307,7 +307,7 @@ function popupHTML(f) {
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
   if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
-  if (asks) rows.push(askHTML());
+  if (asks) rows.push(askHTML("askRoom", inFlight.has(f.osm_url)));
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
@@ -328,11 +328,14 @@ function popupHTML(f) {
 // The play-place question alone gets one more button: a room is never the
 // only way to answer "is there a table here", and "none" is not a room, so
 // it is appended after the rooms rather than folded into roomChoices().
-function askHTML(question = "askRoom") {
+// `busy`: an answer for this object is already on its way (the popup was
+// closed and reopened mid-write), so the buttons render quiet.
+function askHTML(question = "askRoom", busy = false) {
+  const dis = busy ? " disabled" : "";
   const btns = roomChoices(mode)
-    .map((c) => `<button type="button" class="btn ask-btn" data-room="${c}">${esc(t(ROOM_LABEL[c]))}</button>`)
+    .map((c) => `<button type="button" class="btn ask-btn" data-room="${c}"${dis}>${esc(t(ROOM_LABEL[c]))}</button>`)
     .join("") + (question === "askTable"
-      ? `<button type="button" class="btn ask-btn ask-btn-none" data-room="none">${esc(t("roomNone"))}</button>`
+      ? `<button type="button" class="btn ask-btn ask-btn-none" data-room="none"${dis}>${esc(t("roomNone"))}</button>`
       : "");
   const user = getUser();
   const who = user
@@ -359,7 +362,8 @@ function placeHTML(p) {
     // open — "about a changing table, OSM says nothing" and "been here?" —
     // so answer() can sweep them with the .ask block. No styling of its own.
     rows.push(`<div class="status play ask-ctx">${esc(t("metaPlaces"))}</div>`,
-              `<div class="row ask-ctx">${esc(t("popupPlacesCta"))}</div>`, askHTML("askTable"));
+              `<div class="row ask-ctx">${esc(t("popupPlacesCta"))}</div>`,
+              askHTML("askTable", inFlight.has(p.osm_url)));
   if (p.opening_hours)
     rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(p.opening_hours)}</div>`);
   const links = [];
@@ -881,7 +885,13 @@ function rememberView() {
 // verifiable (storage blocked: some privacy settings, some webviews) the
 // login does not start, and the reader is told rather than left with a
 // button that does nothing.
-const login = (intent) => startLogin(osm, intent).then((went) => { if (!went) toast(t("loginFailed")); });
+const goLogin = (intent) => startLogin(osm, intent).then((went) => { if (!went) toast(t("loginFailed")); });
+
+// Answers on their way to OSM, by object. A pin closed and reopened during
+// the round trip renders its question again; it must not take a second
+// answer for the same object — the second write would lose the version race
+// and the popup would blame a stranger for the reader's own first one.
+const inFlight = new Set();
 
 // One path for both pin kinds: a grey table gets its room, a play place gets
 // the table and the room. The kind rides along in the login intent so the
@@ -889,7 +899,9 @@ const login = (intent) => startLogin(osm, intent).then((went) => { if (!went) to
 async function answer(kind, obj, choice) {
   const token = getToken();
   const intent = { kind, osm_url: obj.osm_url, choice };
-  if (!token) { rememberView(); login(intent); return; }
+  if (!token) { rememberView(); goLogin(intent); return; }
+  if (inFlight.has(obj.osm_url)) return;
+  inFlight.add(obj.osm_url);
   // The popup this answer belongs to, taken now: OSM takes seconds to reply,
   // and by then the reader may have opened another pin, whose question must
   // stay. Its buttons go quiet for the round trip — a second tap on a slow
@@ -925,9 +937,11 @@ async function answer(kind, obj, choice) {
   } catch (err) {
     btns.forEach((b) => { b.disabled = false; });
     // A dead token is not the reader's problem: log in again, answer in hand.
-    if (err.status === 401) { clearLogin(); rememberView(); login(intent); return; }
+    if (err.status === 401) { clearLogin(); rememberView(); goLogin(intent); return; }
     setEditNote(rec, "none", err.status === 409 ? "askConflict" : "askFailed", null,
                 { status: err.status || "network" });
+  } finally {
+    inFlight.delete(obj.osm_url);
   }
 }
 
