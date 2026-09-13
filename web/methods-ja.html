@@ -136,13 +136,13 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
 <h2>色の意味</h2>
 <p><code>changing_table=yes</code> または <code>limited</code> のオブジェクトだけがピンになります（<code>no</code>
 は統計にだけ数えます）。色は <code>changing_table:location</code> から決まります。値は <code>;</code> で分割し、
-前後の空白を除き、小文字にして、トークン全体として比較します。部分一致は決して使いません。
+前後の空白を除き、小文字にして、各部分をまるごと比較します。部分一致は決して使いません。
 <code>female_toilet</code> には <code>male</code> が含まれているからです。</p>
 <ul>
-  <li><span class="dot g"></span><strong>緑:</strong> トークンのひとつが <code>male_toilet</code>、
+  <li><span class="dot g"></span><strong>緑:</strong> 部分のひとつが <code>male_toilet</code>、
       <code>unisex_toilet</code>、<code>dedicated_room</code>、<code>room</code>、<code>wheelchair_toilet</code>、
       <code>sales_area</code> または <code>outdoor</code>。パパがたどり着けます。</li>
-  <li><span class="dot r"></span><strong>赤:</strong> それ以外で、トークンのひとつが <code>female_toilet</code>。
+  <li><span class="dot r"></span><strong>赤:</strong> それ以外で、部分のひとつが <code>female_toilet</code>。
       交換台はあるけれど、女性トイレにしかありません。</li>
   <li><span class="dot u"></span><strong>灰色:</strong> その他すべて。場所のタグがない、または自由記述だけ。
       まだ誰も部屋を書き留めていません。</li>

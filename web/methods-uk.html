@@ -139,14 +139,14 @@ taginfo беруться з нічної збірки. Вибірка восьм
 <p>На карту потрапляють лише об'єкти з <code>changing_table=yes</code> або <code>limited</code>
 (<code>no</code> враховується тільки в статистиці). Колір визначається за
 <code>changing_table:location</code>. Значення розбивається за <code>;</code>, обрізається від
-пробілів, переводиться в нижній регістр і порівнюється як цілий токен. Ніколи як частина рядка,
+пробілів, переводиться в нижній регістр і кожна частина порівнюється цілком. Ніколи як частина рядка,
 бо <code>female_toilet</code> містить у собі <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Зелений:</strong> один із токенів —
+  <li><span class="dot g"></span><strong>Зелений:</strong> одна з частин —
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> або <code>outdoor</code>.
       Тато туди дістанеться.</li>
-  <li><span class="dot r"></span><strong>Червоний:</strong> інакше, якщо один із токенів —
+  <li><span class="dot r"></span><strong>Червоний:</strong> інакше, якщо одна з частин —
       <code>female_toilet</code>. Столик є, але лише в жіночому туалеті.</li>
   <li><span class="dot u"></span><strong>Сірий:</strong> усе інше. Немає тегу з розташуванням або
       є лише довільний текст. Ніхто не зафіксував приміщення. Сірі позначки — це і є
