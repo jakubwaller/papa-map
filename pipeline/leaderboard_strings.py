@@ -1623,8 +1623,8 @@ Hogyan számolunk és színezünk: <a href="{up}methods-hu.html">Módszertan</a>
             "som har løftet den mest.</p>\n"),
         "intro2": (
             "<p>Hvert svar teller, også «bare dametoalett» — kartet lever "
-            "av ærlige svar, ikke av grønne nåler. Å svare tar under et "
-            "minutt på stedet: trykk på en grå nål på <a href=\"{up}\">"
+            "av ærlige svar, ikke av grønne punkter. Å svare tar under et "
+            "minutt på stedet: trykk på et grått punkt på <a href=\"{up}\">"
             "kartet</a> og følg MapComplete-lenken. "
             "<a href=\"{up}methods-no.html#contribute\">Steg for steg</a>."
             "</p>\n"),
@@ -1632,7 +1632,7 @@ Hogyan számolunk és színezünk: <a href="{up}methods-hu.html">Módszertan</a>
                   "sammenligningspunkt, viser denne siden hvem som har "
                   "beveget seg.</p>\n"),
         "quiet": ("<p>Ingenting har beveget seg noe sted siden {base}. De "
-                  "grå nålene venter.</p>\n"),
+                  "grå punktene venter.</p>\n"),
         "cities_h2": "Byer",
         "cities_note": ("<p>{n} store byer, sortert etter endringen i sin "
                         "besvarte andel. Berlin, Hamburg og Bremen dukker "
