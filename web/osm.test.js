@@ -132,6 +132,8 @@ test("changeset tags name the tool, the hashtag and the host", () => {
   assert.equal(tags.created_by, CREATED_BY);
   assert.equal(tags.hashtags, "#papamap");
   assert.equal(tags.host, "https://papamap.de/");
+  assert.equal(changesetTags("c", "http://127.0.0.1:8000/").host, "http://127.0.0.1:8000/",
+    "a sandbox changeset names the dev server it came from");
   assert.equal(tags.comment, "A room answered");
 });
 
@@ -139,6 +141,9 @@ test("changeset tags name the tool, the hashtag and the host", () => {
 
 test("xml escaping covers the four characters a tag value can carry", () => {
   assert.equal(xmlEscape(`Café "A&B" <Nord>`), "Café &quot;A&amp;B&quot; &lt;Nord&gt;");
+  // Attribute values: a literal newline would be normalised to a space by
+  // the parser, flattening somebody's two-line description on the way back.
+  assert.equal(xmlEscape("line one\nline two\r\n\tindented"), "line one&#10;line two&#13;&#10;&#9;indented");
   assert.equal(changesetXml({ comment: "a & b" }),
     '<osm><changeset><tag k="comment" v="a &amp; b"/></changeset></osm>');
 });

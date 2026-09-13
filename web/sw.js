@@ -151,6 +151,10 @@ self.addEventListener("fetch", (e) => {
         store(cache, req.mode === "navigate" ? navKey(url) : req, res);
       return res;
     }).catch(() => null);
+    // The refresh must outlive the answer: once the stored copy has been
+    // handed over the browser may stop the worker, and the page a returning
+    // visitor gets on the next load is only new if this landed.
+    e.waitUntil(fresh);
     // Offline with nothing stored still has to reject rather than resolve to
     // undefined, or the page would see a TypeError instead of a failed fetch.
     return hit ?? (await fresh) ?? Response.error();

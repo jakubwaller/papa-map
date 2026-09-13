@@ -18,7 +18,11 @@
 //
 // Any host that is not papamap.de talks to the sandbox API, whose database
 // is separate from osm.org and wiped periodically — so a dev server can never
-// put a test answer on the real map. The sandbox client is registered for
+// put a test answer on the real map. It can put one on an unrelated sandbox
+// object, though: the pins carry live osm.org ids, and the sandbox holds
+// whatever happens to have that number, so a dev tap is only ever meaningful
+// on a pin pointed at an object that exists there (the test fixture does
+// that). The sandbox client is registered for
 // http://127.0.0.1:8000/ and :8899/ (not localhost: OSM's Doorkeeper insists
 // on https for every host but the loopback address written as a number).
 
@@ -208,19 +212,28 @@ export function tablePatch(choice) {
 
 export const CREATED_BY = "PapaMap";
 
-export function changesetTags(comment) {
+// `host` is where the answer was given: the live site, or on the sandbox the
+// dev server the page was served from — a sandbox changeset must not claim
+// to have come from papamap.de.
+export function changesetTags(comment, host = "https://papamap.de/") {
   return {
     created_by: CREATED_BY,
     comment,
     hashtags: "#papamap",
-    host: "https://papamap.de/",
+    host,
     source: "survey",
   };
 }
 
 // ---- OSM API 0.6 ----
+// Attribute values, so the line breaks and tabs are escaped too: an XML
+// parser normalises a literal newline in an attribute to a space (XML 1.0
+// §3.3.3), and every object is written back whole — a two-line description
+// somebody wrote on a toilet would come back as one line, in the reader's
+// name, with nobody the wiser.
 export const xmlEscape = (s) => String(s)
-  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+  .replace(/\n/g, "&#10;").replace(/\r/g, "&#13;").replace(/\t/g, "&#9;");
 
 const tagsXml = (tags) => Object.entries(tags)
   .map(([k, v]) => `<tag k="${xmlEscape(k)}" v="${xmlEscape(v)}"/>`).join("");
@@ -277,7 +290,7 @@ export async function writeTags(cfg, token, ref, patch, comment, fetchFn = fetch
   if (Object.keys(patch).some((k) => el.tags[k])) throw httpError(409, "taken");
 
   const open = await fetchFn(`${cfg.api}/changeset/create`,
-    { method: "PUT", headers: xml, body: changesetXml(changesetTags(comment)), signal: bounded() });
+    { method: "PUT", headers: xml, body: changesetXml(changesetTags(comment, cfg.redirect)), signal: bounded() });
   if (!open.ok) throw httpError(open.status, "changeset");
   const changeset = (await open.text()).trim();
 

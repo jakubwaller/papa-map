@@ -26,7 +26,8 @@ let lang = pickLang(new URLSearchParams(location.search).get("lang"),
 const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 
 // Which OSM this page writes to: the live API on papamap.de, the sandbox
-// anywhere else — a dev server cannot put a test answer on the real map.
+// anywhere else — a dev server cannot put a test answer on the real map
+// (osm.js says what it can do to the sandbox).
 const osm = endpoints(location);
 const ROOM_LABEL = { both: "roomBoth", male: "roomMale", female: "roomFemale",
                      unisex: "roomUnisex", dedicated: "roomDedicated" };
@@ -876,9 +877,13 @@ document.addEventListener("click", (e) => {
 // what was written is displayed, never classified.
 function rememberView() {
   // The redirect comes back to https://papamap.de/ bare, so the reader's
-  // language and reading have to survive it in storage.
-  localStorage.setItem("papamap-lang", lang);
-  localStorage.setItem("papamap-mode", mode);
+  // language and reading have to survive it in storage. Blocked storage
+  // (private mode, quota) is not a reason for the tap to do nothing: the
+  // login still starts, and the view is reset to the defaults on return.
+  try {
+    localStorage.setItem("papamap-lang", lang);
+    localStorage.setItem("papamap-mode", mode);
+  } catch { /* blocked storage: the defaults on return */ }
 }
 
 // Leaves for OSM's consent screen. When the page cannot keep the return
@@ -896,8 +901,12 @@ const inFlight = new Set();
 // One path for both pin kinds: a grey table gets its room, a play place gets
 // the table and the room. The kind rides along in the login intent so the
 // return leg knows which dataset to look the object up in.
-async function answer(kind, obj, choice) {
-  const token = getToken();
+// `freshToken`: the token just exchanged on the return leg, handed in
+// directly. Reading it back from storage would, on a browser that lets
+// sessionStorage through but not localStorage, find nothing and send the
+// reader to the consent screen again, and again.
+async function answer(kind, obj, choice, freshToken = null) {
+  const token = freshToken ?? getToken();
   const intent = { kind, osm_url: obj.osm_url, choice };
   if (!token) { rememberView(); goLogin(intent); return; }
   if (inFlight.has(obj.osm_url)) return;
@@ -1068,7 +1077,7 @@ for (const m of MODES) {
   modeButtons[m].addEventListener("click", () => {
     if (mode === m) return;
     mode = m;
-    localStorage.setItem("papamap-mode", mode);
+    try { localStorage.setItem("papamap-mode", mode); } catch { /* blocked storage: this page only */ }
     // A ?mode= param would override the stored choice on the next reload —
     // drop it once the reader has chosen in-page, exactly as ?lang= does.
     if (new URLSearchParams(location.search).has("mode")) {
@@ -1193,7 +1202,7 @@ async function boot() {
       // over it.
       const open = kind === "place" ? !obj.changing_table
                                     : obj.status === "unknown" && !obj.location_raw;
-      if (open) answer(kind, obj, intent.choice);
+      if (open) answer(kind, obj, intent.choice, login.token);
     }
   }
   // A phone that dropped the tab while the reader was in MapComplete comes
