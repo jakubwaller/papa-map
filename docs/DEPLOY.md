@@ -393,26 +393,34 @@ with curl, which never passes through the worker, or load twice. The data files 
 under `/wickeltische/` are network-first and show the new build on the first load. A bumped
 `?v=` pin starts a new cache and evicts the old shell on activation.
 
-**Cloudflare caches the shell too, whatever the pin.** `.js` and `.css` files, `sw.js` included,
-are edge-cached for four hours (`max-age=14400`, `cf-cache-status: HIT`). HTML is not
-(`DYNAMIC`). Three rules follow:
+**Cloudflare caches the shell too, whatever the pin.** Caddy sends `max-age=3600` for every
+file. Cloudflare keeps `.js` and `.css` files at the edge, `sw.js` included
+(`cf-cache-status: HIT`), and on those responses it rewrites the header to `max-age=14400`. So a
+reader's browser may keep a stale file for four hours, and the service worker's background
+refresh reads that same browser cache. HTML is not edge-cached (`DYNAMIC`) and keeps Caddy's
+hour (measured 2026-09-13). Three rules follow:
 
 - **Any change to a shell file needs a pin bump:** `app.js`, `i18n.js`, `datasource.js`,
   `osm.js` or `style.css`. Without one, the edge keeps serving the old file under the old URL.
   #97's Norwegian wording was live at the origin and invisible to readers for that reason
   (2026-09-13). A bump does not reach every edge-cached file. `impressum.html` and
   `datenschutz.html` load `style.css` with no pin, and `vendor/maplibre-gl.*` has none either.
-  A change there either waits out the four hours or needs a purge of those exact URLs.
+  Nor does `sw.js` itself. A change to the worker, its rules or a new `SHELL` list, reaches a
+  returning reader only when their cached copy runs out, up to four hours later. Nothing breaks
+  in the meantime, because the old worker fetches new-pin URLs as they come up.
+  A change there waits out the browsers' four hours. A purge only helps readers who have not
+  loaded the file yet.
 - **Never fetch a new-pin URL before the `git pull` on the server.** The first request caches
-  whatever the origin serves at that moment under the new URL, for four hours. A pre-deploy
+  whatever the origin serves at that moment under the new URL: first at the edge, then in every
+  browser that loads it. A pre-deploy
   check poisoned `app.js?v=app4` that way, and the pin had to go to `app5`.
 - **Verify the real pinned URLs against the origin.** For `app.js?v=<pin>` and
   `i18n.js?v=<pin>`, the `etag` from the edge (no extra query) must match the `etag` of the
   same URL with `&x=$(date +%s)` added, which goes around the edge to the origin. Checking the
   real URL for the new string works too. `last-modified` alone proves nothing: `git pull`
   leaves unchanged files with their old dates. A cache-busted check on its own reports a stale
-  edge as healthy. If the two differ, purge that one URL in the Cloudflare dashboard, or bump
-  the pin again.
+  edge as healthy. If the two differ, bump the pin
+  again. A purge fixes the edge, but not the browsers that already hold the stale file.
 
 **After a change to `PAPAMAP_COUNTRIES`, check the served `area_key` before believing the
 deploy.** The site's copy is bind-mounted and live within seconds of a `git pull`, while the
@@ -426,5 +434,6 @@ curl -s https://DOMAIN/ | grep -c 'areaFallback">49 Länder'              # want
 
 Both or neither. If `area_key` still counts the old set, the build has not run under the new
 variable yet — run it by hand rather than waiting for cron, or the site claims a coverage it
-does not have until the next morning. `/data/*` is served with `Cache-Control: max-age=900`,
-so allow up to 15 minutes, or add `?x=1` to bust it.
+does not have until the next morning. `/data/*` is meant to get `max-age=900`, but in
+`deploy/papamap.Caddyfile` the site-wide `header Cache-Control` line overrides the `@data` one.
+So it goes out with an hour: allow up to 60 minutes, or add `?x=1` to bust it.
