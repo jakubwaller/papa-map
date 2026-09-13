@@ -140,15 +140,15 @@ não se pode fazer com honestidade a partir de dados abertos, explica-se mais ab
 <p>Só os objetos com <code>changing_table=yes</code> ou <code>limited</code> entram no mapa
 (<code>no</code> só conta nas estatísticas). A cor vem de
 <code>changing_table:location</code>. O valor é dividido por <code>;</code>, os espaços nas pontas
-são removidos, tudo passa a minúsculas e é comparado como token inteiro. Nunca como substring,
+são removidos, tudo passa a minúsculas e cada parte é comparada por inteiro. Nunca como substring,
 porque <code>female_toilet</code> contém
 <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Verde:</strong> um dos tokens é
+  <li><span class="dot g"></span><strong>Verde:</strong> uma das partes é
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> ou <code>outdoor</code>.
       Um pai consegue lá chegar.</li>
-  <li><span class="dot r"></span><strong>Vermelho:</strong> caso contrário, se um dos tokens for
+  <li><span class="dot r"></span><strong>Vermelho:</strong> caso contrário, se uma das partes for
       <code>female_toilet</code>. O fraldário existe, mas só na casa de banho feminina.</li>
   <li><span class="dot u"></span><strong>Cinzento:</strong> tudo o resto. Sem tag de localização,
       ou só texto livre. Ninguém registou a sala. Os pins cinzentos são o trabalho a fazer.</li>

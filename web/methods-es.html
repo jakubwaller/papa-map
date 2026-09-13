@@ -138,14 +138,14 @@ explica por qué eso no se puede hacer con datos abiertos sin mentir.</p>
 <p>Solo los objetos con <code>changing_table=yes</code> o <code>limited</code> llegan al mapa
 (<code>no</code> cuenta solo en las estadísticas). El color sale de
 <code>changing_table:location</code>. El valor se parte por <code>;</code>, se le quitan los
-espacios, se pasa a minúsculas y se compara como token entero. Nunca como subcadena, porque
+espacios, se pasa a minúsculas y cada parte se compara entera. Nunca como subcadena, porque
 <code>female_toilet</code> contiene <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Verde:</strong> un token es
+  <li><span class="dot g"></span><strong>Verde:</strong> una de las partes es
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> u <code>outdoor</code>.
       Un papá llega.</li>
-  <li><span class="dot r"></span><strong>Rojo:</strong> si no, cuando un token es
+  <li><span class="dot r"></span><strong>Rojo:</strong> si no, cuando una de las partes es
       <code>female_toilet</code>. El cambiador existe, pero solo en el baño de mujeres.</li>
   <li><span class="dot u"></span><strong>Gris:</strong> todo lo demás. Sin etiqueta de sala, o solo
       texto libre. Nadie ha registrado la sala. Los pines grises son la tarea.</li>

@@ -137,14 +137,14 @@ nicht geht, steht weiter unten.</p>
 <p>Einen Pin bekommen nur Objekte mit <code>changing_table=yes</code> oder
 <code>limited</code> (<code>no</code> zählt nur in die Statistik). Die Farbe kommt aus
 <code>changing_table:location</code>. Der Wert wird an <code>;</code> getrennt, getrimmt,
-kleingeschrieben und als ganzes Token verglichen, nie als Teilstring, denn
+kleingeschrieben, und jeder Teil wird als Ganzes verglichen, nie als Teilstring, denn
 <code>female_toilet</code> enthält <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Grün:</strong> ein Token ist
+  <li><span class="dot g"></span><strong>Grün:</strong> einer der Teile ist
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> oder <code>outdoor</code>.
       Ein Papa kommt ran.</li>
-  <li><span class="dot r"></span><strong>Rot:</strong> sonst, wenn ein Token
+  <li><span class="dot r"></span><strong>Rot:</strong> sonst, wenn einer der Teile
       <code>female_toilet</code> ist. Den Tisch gibt es, aber nur im Damen-WC.</li>
   <li><span class="dot u"></span><strong>Grau:</strong> alles andere. Kein Location-Tag oder nur
       Freitext. Den Raum hat noch niemand eingetragen.</li>

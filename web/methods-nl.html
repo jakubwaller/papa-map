@@ -141,14 +141,14 @@ data niet eerlijk kan, staat verderop.</p>
 <p>Op de kaart komen alleen objecten met <code>changing_table=yes</code> of <code>limited</code>
 (<code>no</code> telt alleen mee in de statistiek). De kleur komt uit
 <code>changing_table:location</code>. De waarde wordt gesplitst op <code>;</code>, getrimd,
-omgezet naar kleine letters en als heel token vergeleken. Nooit als deelstring, want
+omgezet naar kleine letters, en elk deel wordt in zijn geheel vergeleken. Nooit als deelstring, want
 <code>female_toilet</code> bevat <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Groen:</strong> één token is
+  <li><span class="dot g"></span><strong>Groen:</strong> één van de delen is
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> of <code>outdoor</code>.
       Een papa kan erbij.</li>
-  <li><span class="dot r"></span><strong>Rood:</strong> anders, als een token
+  <li><span class="dot r"></span><strong>Rood:</strong> anders, als een van de delen
       <code>female_toilet</code> is. De tafel bestaat, maar alleen op het damestoilet.</li>
   <li><span class="dot u"></span><strong>Grijs:</strong> al het andere. Geen location-tag, of
       alleen vrije tekst. Niemand heeft de ruimte vastgelegd. De grijze pins zijn de opdracht.</li>

@@ -138,14 +138,14 @@ može pošteno napraviti, objašnjeno je dalje dole.</p>
 <p>Na kartu dolaze samo objekti sa <code>changing_table=yes</code> ili <code>limited</code>
 (<code>no</code> se računa samo u statistici). Boja dolazi iz
 <code>changing_table:location</code>. Vrijednost se dijeli po <code>;</code>, uklanjaju se razmaci,
-pretvara u mala slova i upoređuje kao cijeli token. Nikad kao podniz, jer <code>female_toilet</code>
+pretvara u mala slova, a svaki dio se upoređuje u cjelini. Nikad kao podniz, jer <code>female_toilet</code>
 sadrži <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Zeleno:</strong> jedan od tokena je
+  <li><span class="dot g"></span><strong>Zeleno:</strong> jedan od dijelova je
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> ili <code>outdoor</code>.
       Tata može doći do njega.</li>
-  <li><span class="dot r"></span><strong>Crveno:</strong> u suprotnom, ako je jedan od tokena
+  <li><span class="dot r"></span><strong>Crveno:</strong> u suprotnom, ako je jedan od dijelova
       <code>female_toilet</code>. Sto postoji, ali samo u ženskom WC-u.</li>
   <li><span class="dot u"></span><strong>Sivo:</strong> sve ostalo. Nema oznake lokacije, ili samo
       slobodan tekst. Niko nije zabilježio prostoriju. Sive oznake su taj zadatak.</li>

@@ -139,14 +139,14 @@ pošteno ni mogoče narediti, je pojasnjeno spodaj.</p>
 <p>Na zemljevid pridejo samo objekti s <code>changing_table=yes</code> ali <code>limited</code>
 (<code>no</code> se šteje samo v statistiki). Barva izhaja iz
 <code>changing_table:location</code>. Vrednost se razdeli pri <code>;</code>, obreže presledkov,
-pretvori v male črke in primerja kot cel token. Nikoli kot podniz, ker <code>female_toilet</code>
+pretvori v male črke, nato pa se vsak del primerja v celoti. Nikoli kot podniz, ker <code>female_toilet</code>
 vsebuje <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Zelena:</strong> en od tokenov je
+  <li><span class="dot g"></span><strong>Zelena:</strong> eden od delov je
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> ali <code>outdoor</code>.
       Oče lahko pride do nje.</li>
-  <li><span class="dot r"></span><strong>Rdeča:</strong> sicer, če je en od tokenov
+  <li><span class="dot r"></span><strong>Rdeča:</strong> sicer, če je eden od delov
       <code>female_toilet</code>. Miza obstaja, a samo v ženskem stranišču.</li>
   <li><span class="dot u"></span><strong>Siva:</strong> vse drugo. Brez taga za lokacijo, ali
       samo prosto besedilo. Nihče ni zabeležil prostora. Sive bucke so tista naloga.</li>

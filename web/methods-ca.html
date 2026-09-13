@@ -139,14 +139,14 @@ expliquem per què no es pot fer honestament amb dades obertes.</p>
 <p>Al mapa només hi arriben els objectes amb <code>changing_table=yes</code> o
 <code>limited</code> (<code>no</code> només compta a les estadístiques). El color surt de
 <code>changing_table:location</code>. El valor es divideix per <code>;</code>, es retalla, es
-passa a minúscules i es compara com a token sencer. Mai com a subcadena, perquè
+passa a minúscules i cada part es compara sencera. Mai com a subcadena, perquè
 <code>female_toilet</code> conté <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Verd:</strong> un token és
+  <li><span class="dot g"></span><strong>Verd:</strong> una de les parts és
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> o <code>outdoor</code>.
       Un pare hi pot arribar.</li>
-  <li><span class="dot r"></span><strong>Vermell:</strong> si no, quan un token és
+  <li><span class="dot r"></span><strong>Vermell:</strong> si no, quan una de les parts és
       <code>female_toilet</code>. El canviador existeix, però només al lavabo de dones.</li>
   <li><span class="dot u"></span><strong>Gris:</strong> tota la resta. Sense etiqueta de
       localització, o només text lliure. Ningú no ha registrat la sala. Els pins grisos són la

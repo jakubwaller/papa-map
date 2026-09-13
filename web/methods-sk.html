@@ -139,14 +139,14 @@ nedá, je vysvetlené nižšie.</p>
 <p>Na mapu sa dostanú len objekty s <code>changing_table=yes</code> alebo <code>limited</code>
 (<code>no</code> sa počíta len do štatistiky). Farba vychádza z
 <code>changing_table:location</code>. Hodnota sa rozdelí podľa <code>;</code>, zbaví okrajových
-medzier, prevedie na malé písmená a porovnáva sa ako celý token. Nikdy ako podreťazec, pretože
+medzier, prevedie na malé písmená a každá časť sa porovnáva celá. Nikdy ako podreťazec, pretože
 <code>female_toilet</code> obsahuje <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Zelená:</strong> jeden z tokenov je
+  <li><span class="dot g"></span><strong>Zelená:</strong> jedna z častí je
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> alebo <code>outdoor</code>.
       Otec sa k nemu dostane.</li>
-  <li><span class="dot r"></span><strong>Červená:</strong> inak, ak je jeden z tokenov
+  <li><span class="dot r"></span><strong>Červená:</strong> inak, ak je jedna z častí
       <code>female_toilet</code>. Pult existuje, ale len na dámskom WC.</li>
   <li><span class="dot u"></span><strong>Sivá:</strong> všetko ostatné. Žiadny location tag, alebo
       len voľný text. Nikto nezaznamenal miestnosť. Sivé špendlíky sú tá úloha.</li>
