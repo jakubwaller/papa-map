@@ -393,6 +393,27 @@ with curl, which never passes through the worker, or load twice. The data files 
 under `/wickeltische/` are network-first and show the new build on the first load. A bumped
 `?v=` pin starts a new cache and evicts the old shell on activation.
 
+**Cloudflare caches the shell too, whatever the pin.** `.js` and `.css` files, `sw.js` included,
+are edge-cached for four hours (`max-age=14400`, `cf-cache-status: HIT`). HTML is not
+(`DYNAMIC`). Three rules follow:
+
+- **Any change to a shell file needs a pin bump:** `app.js`, `i18n.js`, `datasource.js`,
+  `osm.js` or `style.css`. Without one, the edge keeps serving the old file under the old URL.
+  #97's Norwegian wording was live at the origin and invisible to readers for that reason
+  (2026-09-13). A bump does not reach every edge-cached file. `impressum.html` and
+  `datenschutz.html` load `style.css` with no pin, and `vendor/maplibre-gl.*` has none either.
+  A change there either waits out the four hours or needs a purge of those exact URLs.
+- **Never fetch a new-pin URL before the `git pull` on the server.** The first request caches
+  whatever the origin serves at that moment under the new URL, for four hours. A pre-deploy
+  check poisoned `app.js?v=app4` that way, and the pin had to go to `app5`.
+- **Verify the real pinned URLs against the origin.** For `app.js?v=<pin>` and
+  `i18n.js?v=<pin>`, the `etag` from the edge (no extra query) must match the `etag` of the
+  same URL with `&x=$(date +%s)` added, which goes around the edge to the origin. Checking the
+  real URL for the new string works too. `last-modified` alone proves nothing: `git pull`
+  leaves unchanged files with their old dates. A cache-busted check on its own reports a stale
+  edge as healthy. If the two differ, purge that one URL in the Cloudflare dashboard, or bump
+  the pin again.
+
 **After a change to `PAPAMAP_COUNTRIES`, check the served `area_key` before believing the
 deploy.** The site's copy is bind-mounted and live within seconds of a `git pull`, while the
 dataset only changes on the next build — so the two can disagree, and the failure is silent
