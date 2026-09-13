@@ -138,14 +138,14 @@ kan gøres ærligt ud fra åbne data, står længere nede.</p>
 <p>Kun objekter med <code>changing_table=yes</code> eller <code>limited</code> havner på kortet
 (<code>no</code> tæller kun med i statistikken). Farven kommer fra
 <code>changing_table:location</code>. Værdien deles ved <code>;</code>, trimmes, sættes med små
-bogstaver og sammenlignes som et helt token. Aldrig som delstreng, for
+bogstaver, og hver del sammenlignes i sin helhed. Aldrig som delstreng, for
 <code>female_toilet</code> indeholder <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Grøn:</strong> et token er
+  <li><span class="dot g"></span><strong>Grøn:</strong> én af delene er
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> eller <code>outdoor</code>.
       En far kan komme til.</li>
-  <li><span class="dot r"></span><strong>Rød:</strong> ellers, hvis et token er
+  <li><span class="dot r"></span><strong>Rød:</strong> ellers, hvis én af delene er
       <code>female_toilet</code>. Bordet findes, men kun på dametoilettet.</li>
   <li><span class="dot u"></span><strong>Grå:</strong> alt andet. Intet location-tag eller kun
       fritekst. Ingen har registreret rummet. De grå nåle er opgaven.</li>
