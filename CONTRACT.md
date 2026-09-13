@@ -75,7 +75,7 @@
 > chooses in-page, exactly as `?lang=` is; it deliberately does **not** touch the
 > canonical or the hreflang set, because a reading is a personalization of the same
 > content, not a new indexable page. Stored in `localStorage` under `papamap-mode`,
-> named in the Datenschutz beside `papamap-lang` and `papamap-app`.
+> named in the Datenschutz beside `papamap-lang`.
 > **v23 amendment (10 Sep 2026, the edit confirmation):** after a reader
 > clicks a pin's MapComplete button, the frontend re-reads **that one object**
 > from the OSM API (`api.openstreetmap.org/api/0.6/<type>/<id>.json` — answers

@@ -23,12 +23,6 @@ services:
       # so Docker cannot create it and the container would not start.
       - ./web-data/private:/srv/private:ro
       - ./deploy/private:/etc/caddy/private:ro
-      # The app page's tap count: Caddy's only access log, holding the taps
-      # under /app/ja/* and nothing else — no page views — and stripped of
-      # addresses and headers (see the Caddyfile). Outside web-data on
-      # purpose — that directory is served.
-      # `mkdir -p caddy-logs` before `up`, so the ops cron's user owns it.
-      - ./caddy-logs:/var/log/caddy
     networks:
       - web_proxy
 
@@ -93,7 +87,6 @@ services:
       - PAPAMAP_OPS_PRIVATE_HTML_PATH=/out/private/ops.html
       - PAPAMAP_OPS_STATE_PATH=/ops-data/ops-state.json
       - PAPAMAP_BUILD_LOG_PATH=/logs/pipeline.log
-      - PAPAMAP_APP_LOG_DIR=/logs/caddy
     # The host user (uid 1000 on the live server), so the state and the two
     # pages it writes stay owned by whoever runs the cron and the one-off
     # commands, not by root.
@@ -111,8 +104,6 @@ services:
       # a directory of that name and the build cron's `>>` would fail), and
       # never rotate it by rename — the mount follows the inode.
       - ./pipeline.log:/logs/pipeline.log:ro
-      # The app page's taps, written by the papamap container above.
-      - ./caddy-logs:/logs/caddy:ro
     # Like pipeline: outbound only (OSMCha, Cloudflare, SMTP), and IPv6.
     network_mode: host
 
