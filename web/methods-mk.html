@@ -137,14 +137,14 @@ taginfo подолу доаѓаат од ноќниот билд. Примеро
 <p>На мапата стигнуваат само објекти со <code>changing_table=yes</code> или <code>limited</code>
 (<code>no</code> се смета само во статистиката). Бојата доаѓа од <code>changing_table:location</code>.
 Вредноста се дели по <code>;</code>, се чисти од празни места, се претвора во мали букви и се
-споредува како цел token. Никогаш како подниз, зашто <code>female_toilet</code> го содржи
+споредува дел по дел, секој во целост. Никогаш како подниз, зашто <code>female_toilet</code> го содржи
 <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Зелено:</strong> еден од token-ите е
+  <li><span class="dot g"></span><strong>Зелено:</strong> еден од деловите е
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> или <code>outdoor</code>.
       Татко може да стигне до неа.</li>
-  <li><span class="dot r"></span><strong>Црвено:</strong> во спротивно, ако еден token е
+  <li><span class="dot r"></span><strong>Црвено:</strong> во спротивно, ако еден од деловите е
       <code>female_toilet</code>. Масата постои, но само во женскиот тоалет.</li>
   <li><span class="dot u"></span><strong>Сиво:</strong> сè друго. Нема ознака за локација, или само
       слободен текст. Никој не ја запишал просторијата. Сивите точки се задачата.</li>

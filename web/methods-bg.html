@@ -138,14 +138,14 @@
 <p>На картата попадат само обекти с <code>changing_table=yes</code> или <code>limited</code>
 (<code>no</code> се брои само в статистиката). Цветът идва от
 <code>changing_table:location</code>. Стойността се разделя по <code>;</code>, изчиства се от
-празни знаци, преобразува се в малки букви и се сравнява като цял токен. Никога като подниз,
+празни знаци, преобразува се в малки букви и всяка част се сравнява изцяло. Никога като подниз,
 защото <code>female_toilet</code> съдържа <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Зелено:</strong> един от токените е
+  <li><span class="dot g"></span><strong>Зелено:</strong> една от частите е
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> или <code>outdoor</code>.
       Татко може да стигне до нея.</li>
-  <li><span class="dot r"></span><strong>Червено:</strong> иначе, ако един от токените е
+  <li><span class="dot r"></span><strong>Червено:</strong> иначе, ако една от частите е
       <code>female_toilet</code>. Масата съществува, но само в дамската тоалетна.</li>
   <li><span class="dot u"></span><strong>Сиво:</strong> всичко останало. Без таг за
       местоположение или само свободен текст. Никой не е отбелязал стаята. Сивите маркери са

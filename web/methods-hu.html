@@ -138,15 +138,15 @@ nem állítható össze nyílt adatokból, lentebb olvasható.</p>
 <p>Csak a <code>changing_table=yes</code> vagy <code>limited</code> értékű objektumok kerülnek fel
 a térképre (a <code>no</code> csak a statisztikában számít). A szín a
 <code>changing_table:location</code> címkéből származik. Az értéket <code>;</code> mentén
-felbontjuk, megtisztítjuk a szóközöktől, kisbetűsre alakítjuk, és teljes tokenként hasonlítjuk
+felbontjuk, megtisztítjuk a szóközöktől, kisbetűsre alakítjuk, és minden részét egészében hasonlítjuk
 össze. Sosem részlánc szerint, mert a <code>female_toilet</code> tartalmazza a <code>male</code>
 szót.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Zöld:</strong> az egyik token
+  <li><span class="dot g"></span><strong>Zöld:</strong> az egyik rész
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> vagy <code>outdoor</code>.
       Egy apa el tudja érni.</li>
-  <li><span class="dot r"></span><strong>Piros:</strong> ha nem ez a helyzet, de az egyik token
+  <li><span class="dot r"></span><strong>Piros:</strong> ha nem ez a helyzet, de az egyik rész
       <code>female_toilet</code>. Az asztal létezik, de csak a női mosdóban.</li>
   <li><span class="dot u"></span><strong>Szürke:</strong> minden más. Nincs location címke, vagy
       csak szabad szöveg van. Senki sem rögzítette a helyiséget. A szürke jelölők jelentik a

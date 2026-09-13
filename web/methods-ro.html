@@ -139,14 +139,14 @@ cinstit din date deschise, se explică mai jos.</p>
 <p>Pe hartă ajung doar obiectele cu <code>changing_table=yes</code> sau <code>limited</code>
 (<code>no</code> contează doar în statistici). Culoarea provine din
 <code>changing_table:location</code>. Valoarea este împărțită după <code>;</code>, curățată de
-spații și scrisă cu litere mici, apoi comparată ca token întreg. Niciodată ca substring, pentru că
+spații și scrisă cu litere mici, apoi fiecare parte este comparată în întregime. Niciodată ca substring, pentru că
 <code>female_toilet</code> conține <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Verde:</strong> un token este
+  <li><span class="dot g"></span><strong>Verde:</strong> una dintre părți este
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> sau <code>outdoor</code>.
       Un tată poate ajunge la ea.</li>
-  <li><span class="dot r"></span><strong>Roșu:</strong> altfel, dacă un token este
+  <li><span class="dot r"></span><strong>Roșu:</strong> altfel, dacă una dintre părți este
       <code>female_toilet</code>. Masa există, dar doar în toaleta femeilor.</li>
   <li><span class="dot u"></span><strong>Gri:</strong> orice altceva. Fără etichetă de locație, sau
       doar text liber. Nimeni nu a înregistrat încăperea. Marcajele gri sunt treaba de făcut.</li>

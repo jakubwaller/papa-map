@@ -138,14 +138,14 @@ otwartych danych nie da się go zrobić uczciwie, wyjaśniamy niżej.</p>
 <p>Na mapę trafiają tylko obiekty z <code>changing_table=yes</code> albo <code>limited</code>
 (<code>no</code> liczy się wyłącznie do statystyk). Kolor bierze się z
 <code>changing_table:location</code>. Wartość jest dzielona po <code>;</code>, przycinana,
-zamieniana na małe litery i porównywana jako cały token. Nigdy jako fragment tekstu, bo
+zamieniana na małe litery, a każda część jest porównywana w całości. Nigdy jako fragment tekstu, bo
 <code>female_toilet</code> zawiera <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Zielony:</strong> któryś token to
+  <li><span class="dot g"></span><strong>Zielony:</strong> któraś z części to
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> albo <code>outdoor</code>.
       Tata dotrze do przewijaka.</li>
-  <li><span class="dot r"></span><strong>Czerwony:</strong> w przeciwnym razie, jeśli któryś token
+  <li><span class="dot r"></span><strong>Czerwony:</strong> w przeciwnym razie, jeśli któraś z części
       to <code>female_toilet</code>. Przewijak jest, ale tylko w damskiej toalecie.</li>
   <li><span class="dot u"></span><strong>Szary:</strong> cała reszta. Brak tagu z lokalizacją albo
       tylko dowolny tekst. Nikt nie zapisał pomieszczenia. Szare pinezki to zadanie do

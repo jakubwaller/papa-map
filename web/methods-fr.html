@@ -138,14 +138,14 @@ le faire honnêtement à partir de données ouvertes, c'est expliqué plus bas.<
 <p>Seuls les objets avec <code>changing_table=yes</code> ou <code>limited</code> arrivent sur la
 carte (<code>no</code> ne compte que dans les statistiques). La couleur vient de
 <code>changing_table:location</code>. La valeur est découpée à chaque <code>;</code>, débarrassée des
-espaces, mise en minuscules et comparée comme un token entier. Jamais comme une sous-chaîne, car
+espaces, mise en minuscules, et chaque partie est comparée en entier. Jamais comme une sous-chaîne, car
 <code>female_toilet</code> contient <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Vert :</strong> un token est
+  <li><span class="dot g"></span><strong>Vert :</strong> une des parties est
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> ou <code>outdoor</code>.
       Un papa peut y accéder.</li>
-  <li><span class="dot r"></span><strong>Rouge :</strong> sinon, si un token est
+  <li><span class="dot r"></span><strong>Rouge :</strong> sinon, si une des parties est
       <code>female_toilet</code>. La table existe, mais seulement dans les WC femmes.</li>
   <li><span class="dot u"></span><strong>Gris :</strong> tout le reste. Pas de tag de localisation,
       ou seulement du texte libre. Personne n'a renseigné la pièce. Les marqueurs gris, voilà le

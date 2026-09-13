@@ -136,14 +136,14 @@ is further down.</p>
 <p>Only objects with <code>changing_table=yes</code> or <code>limited</code> get a pin
 (<code>no</code> only counts in the stats). The colour comes from
 <code>changing_table:location</code>. The value is split on <code>;</code>, trimmed, lowercased
-and compared as a whole token, never as a substring, because <code>female_toilet</code> contains
+and each part is compared whole, never as a substring, because <code>female_toilet</code> contains
 <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Green:</strong> one token is
+  <li><span class="dot g"></span><strong>Green:</strong> one of the parts is
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> or <code>outdoor</code>.
       A dad can get there.</li>
-  <li><span class="dot r"></span><strong>Red:</strong> otherwise, if one token is
+  <li><span class="dot r"></span><strong>Red:</strong> otherwise, if one of the parts is
       <code>female_toilet</code>. The table exists, but only in the women's room.</li>
   <li><span class="dot u"></span><strong>Grey:</strong> everything else. No location tag, or only
       free text. Nobody has written down the room yet.</li>

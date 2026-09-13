@@ -138,14 +138,14 @@ rehellisesti tehdä avoimesta datasta, selitetään tuonnempana.</p>
 <p>Kartalle pääsevät vain kohteet, joilla on <code>changing_table=yes</code> tai
 <code>limited</code> (<code>no</code> lasketaan mukaan vain tilastoihin). Väri tulee tagista
 <code>changing_table:location</code>. Arvo pilkotaan merkistä <code>;</code>, siistitään,
-muutetaan pieniksi kirjaimiksi ja verrataan kokonaisena tokenina. Ei koskaan
+muutetaan pieniksi kirjaimiksi, ja jokaista osaa verrataan kokonaisena. Ei koskaan
 osamerkkijonona, sillä <code>female_toilet</code> sisältää sanan <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Vihreä:</strong> yksi tokeneista on
+  <li><span class="dot g"></span><strong>Vihreä:</strong> yksi osista on
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> tai <code>outdoor</code>.
       Isä pääsee sinne.</li>
-  <li><span class="dot r"></span><strong>Punainen:</strong> muutoin, jos yksi tokeneista on
+  <li><span class="dot r"></span><strong>Punainen:</strong> muutoin, jos yksi osista on
       <code>female_toilet</code>. Pöytä on olemassa, mutta vain naisten WC:ssä.</li>
   <li><span class="dot u"></span><strong>Harmaa:</strong> kaikki muu. Ei sijaintitagia, tai vain
       vapaata tekstiä. Kukaan ei ole merkinnyt tilaa. Harmaat nastat ovat tehtävä.</li>

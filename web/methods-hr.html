@@ -138,14 +138,14 @@ iz otvorenih podataka, objašnjeno je niže.</p>
 <p>Na kartu dolaze samo objekti s <code>changing_table=yes</code> ili <code>limited</code>
 (<code>no</code> se broji samo u statistici). Boja dolazi iz
 <code>changing_table:location</code>. Vrijednost se dijeli po <code>;</code>, obrezuje, pretvara u
-mala slova i uspoređuje kao cijeli token. Nikad kao podniz, jer <code>female_toilet</code> sadrži
+mala slova, a svaki se dio uspoređuje u cijelosti. Nikad kao podniz, jer <code>female_toilet</code> sadrži
 <code>male</code>.</p>
 <ul>
-  <li><span class="dot g"></span><strong>Zeleno:</strong> jedan token je
+  <li><span class="dot g"></span><strong>Zeleno:</strong> jedan od dijelova je
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> ili <code>outdoor</code>.
       Tata do njega može doći.</li>
-  <li><span class="dot r"></span><strong>Crveno:</strong> inače, ako je jedan token
+  <li><span class="dot r"></span><strong>Crveno:</strong> inače, ako je jedan od dijelova
       <code>female_toilet</code>. Stol postoji, ali samo u ženskom WC-u.</li>
   <li><span class="dot u"></span><strong>Sivo:</strong> sve ostalo. Nema oznake prostorije, ili
       samo slobodan tekst. Nitko nije zabilježio prostoriju. Sivi pinovi su posao koji treba
