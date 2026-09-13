@@ -30,11 +30,11 @@ const SHELL = [
   "index-en.html",
   "vendor/maplibre-gl.css",
   "vendor/maplibre-gl.js",
-  "style.css?v=app5",
-  "app.js?v=app5",
-  "datasource.js?v=app5",
-  "i18n.js?v=app5",
-  "osm.js?v=app5",
+  "style.css?v=app6",
+  "app.js?v=app6",
+  "datasource.js?v=app6",
+  "i18n.js?v=app6",
+  "osm.js?v=app6",
 ];
 
 // One cache per shell pin (the ?v= above). A deploy that bumps the pin

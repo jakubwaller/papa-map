@@ -502,8 +502,21 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    anchors get for free. */
 .popup .ask { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
 .popup .ask-q { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-.popup .ask-btns { display: flex; flex-wrap: wrap; gap: 6px; }
-.popup .ask-btn { font: inherit; font-size: 12.5px; font-weight: 600; background: #fff; cursor: pointer; }
+/* Two columns, not a wrapped row: six short labels make three rows where
+   five long pills made four, and on a 12 mini the card has to be clearly
+   shorter than the map for panPopupIntoView to have anywhere to put it. A
+   label a language cannot fit in half a card wraps rather than clips. */
+.popup .ask-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.popup .ask-btns[hidden] { display: none; }
+.popup .ask-btn {
+  font: inherit; font-size: 12.5px; font-weight: 600; line-height: 1.25;
+  padding: 7px 8px; text-align: center; background: #fff; cursor: pointer;
+}
+/* The rare rooms unfold under this link, in place; the "no table" answer of
+   a play place keeps a full-width row of its own below both. */
+.popup .ask-more { display: block; margin-top: 6px; font-size: 11.5px; }
+.popup .ask-btns-more, .popup .ask-btns-none { margin-top: 6px; }
+.popup .ask-btns-none { grid-template-columns: 1fr; }
 /* "Kein Wickeltisch" is the secondary answer: same pill as a room, but a
    lighter ink so the rooms still read as the expected tap. No new colour —
    --muted is the token the rest of the popup already uses for text that

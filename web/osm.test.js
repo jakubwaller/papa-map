@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
-         finishLogin, ROOMS, roomChoices, roomPatch, tablePatch, changesetTags, changesetXml,
+         finishLogin, ROOMS, roomChoices, roomChoicesMore, roomPatch, tablePatch, changesetTags, changesetXml,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY } from "./osm.js";
 
 // ---- Which OSM ----
@@ -91,21 +91,39 @@ test("finishLogin: not a return, a refusal, a foreign code, and the exchange", a
 test("room values are the theme's vocabulary, which is what classify.py reads", () => {
   // Every value here must be a token classify.py knows, or the answer would
   // paint the pin grey again tomorrow night.
-  const known = new Set(["male_toilet", "unisex_toilet", "dedicated_room", "female_toilet"]);
+  const known = new Set(["male_toilet", "unisex_toilet", "dedicated_room", "female_toilet",
+                         "wheelchair_toilet", "room", "sales_area", "outdoor"]);
   for (const v of Object.values(ROOMS))
     for (const tok of v.split(";")) assert.ok(known.has(tok), tok);
   assert.equal(ROOMS.both, "female_toilet;male_toilet");
 });
 
 test("a mother is not asked about the men's room; a father gets every answer", () => {
-  assert.deepEqual(roomChoices("mama"), ["female", "unisex", "dedicated"]);
+  assert.deepEqual(roomChoices("mama"), ["female", "unisex", "wheelchair", "dedicated"]);
   assert.ok(!roomChoices("mama").includes("male") && !roomChoices("mama").includes("both"));
-  assert.deepEqual(roomChoices("papa"), ["both", "male", "female", "unisex", "dedicated"]);
+  assert.deepEqual(roomChoices("papa"), ["both", "male", "female", "unisex", "wheelchair", "dedicated"]);
   assert.deepEqual(roomChoices("nonsense"), roomChoices("papa"));
   for (const m of ["papa", "mama"]) for (const c of roomChoices(m)) assert.ok(c in ROOMS, c);
   // "none" is a play-place-only answer to "is there a table", never a room —
   // it must not turn up as something a reader could vouch for a room with.
   for (const m of ["papa", "mama"]) assert.ok(!roomChoices(m).includes("none"));
+});
+
+test("the rare rooms sit behind 'more', the same three in either reading, none twice", () => {
+  assert.deepEqual(roomChoicesMore(), ["room", "sales", "outdoor"]);
+  for (const c of roomChoicesMore()) assert.ok(c in ROOMS, c);
+  for (const m of ["papa", "mama"]) {
+    const first = roomChoices(m);
+    for (const c of roomChoicesMore()) assert.ok(!first.includes(c), `${c} offered twice in ${m}`);
+  }
+  // Together the two lists are the whole vocabulary: a value in ROOMS that
+  // no button offers is dead weight, and a button without a value throws.
+  assert.deepEqual([...roomChoices("papa"), ...roomChoicesMore()].sort(), Object.keys(ROOMS).sort());
+});
+
+test("the accessible toilet writes the token classify.py paints green", () => {
+  assert.deepEqual(roomPatch("wheelchair"), { "changing_table:location": "wheelchair_toilet" });
+  assert.deepEqual(roomPatch("outdoor"), { "changing_table:location": "outdoor" });
 });
 
 test("the patch touches only the room — limited is never promoted to yes", () => {

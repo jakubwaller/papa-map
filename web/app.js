@@ -6,12 +6,12 @@ import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app5";
+         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app6";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app5";
+         langUrl } from "./i18n.js?v=app6";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
-         setLogin, clearLogin, takeIntent, roomChoices, roomPatch, tablePatch,
-         writeTags } from "./osm.js?v=app5";
+         setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
+         writeTags } from "./osm.js?v=app6";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -30,7 +30,8 @@ const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 // (osm.js says what it can do to the sandbox).
 const osm = endpoints(location);
 const ROOM_LABEL = { both: "roomBoth", male: "roomMale", female: "roomFemale",
-                     unisex: "roomUnisex", dedicated: "roomDedicated" };
+                     unisex: "roomUnisex", wheelchair: "roomWheelchair", dedicated: "roomDedicated",
+                     room: "roomRoom", sales: "roomSales", outdoor: "roomOutdoor" };
 const CHANGESET_COMMENT = {
   table: "Changing table: which room (answered on papamap.de)",
   place: "Changing table: added, with its room (answered on papamap.de)",
@@ -300,11 +301,20 @@ function popupHTML(f) {
   // the headline ("room unknown", in either reading) is marked ask-ctx so the
   // answer can take it down with the buttons.
   const asks = f.status === "unknown" && !f.location_raw;
+  // While the question is open the father's headline is the short label,
+  // not the sentence: the question two lines down asks the same thing, and
+  // on a 12 mini the popup had to fit the map twice over. The mother keeps
+  // her sentence — "usually one you can reach" is the one thing her amber
+  // pin has to say, and her two rows of pills leave the room for it.
+  // "Changing table: yes" goes for the same reason — every pin that asks
+  // says it — and comes back for `limited`, or once a room is on record.
+  const short = asks && mode !== "mama";
   const rows = [
-    `<div class="status ${s.cls}${asks ? " ask-ctx" : ""}">${esc(t(s.metaKey))}</div>`,
-    `<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
-      (f.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(f.location_raw)}` : "") + `</div>`,
+    `<div class="status ${s.cls}${asks ? " ask-ctx" : ""}">${esc(t(short ? s.labelKey : s.metaKey))}</div>`,
   ];
+  if (f.changing_table !== "yes" || f.location_raw)
+    rows.push(`<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
+      (f.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(f.location_raw)}` : "") + `</div>`);
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
   if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
@@ -312,8 +322,10 @@ function popupHTML(f) {
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
+  // MapComplete is the primary action only where the page cannot answer
+  // itself; beside the in-page question it is the other way, in plain dress.
   if (mcUrl)
-    links.push(`<a class="btn primary" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+    links.push(`<a class="btn${asks ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   links.push(`<a class="btn" href="${esc(geoUri(f.lat, f.lon, f.name || ""))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
@@ -333,17 +345,26 @@ function popupHTML(f) {
 // closed and reopened mid-write), so the buttons render quiet.
 function askHTML(question = "askRoom", busy = false) {
   const dis = busy ? " disabled" : "";
-  const btns = roomChoices(mode)
-    .map((c) => `<button type="button" class="btn ask-btn" data-room="${c}"${dis}>${esc(t(ROOM_LABEL[c]))}</button>`)
-    .join("") + (question === "askTable"
-      ? `<button type="button" class="btn ask-btn ask-btn-none" data-room="none"${dis}>${esc(t("roomNone"))}</button>`
+  // The label rides along explicitly: a room added to ROOMS without a label
+  // then renders as "undefined" — loud — not as another answer's words.
+  const pill = (c, label, extra = "") =>
+    `<button type="button" class="btn ask-btn${extra}" data-room="${c}"${dis}>${esc(t(label))}</button>`;
+  // Two columns of short labels: six rooms in three rows where five pills
+  // took four. The rare three sit behind one link and unfold in place —
+  // not a <select>, which costs a second tap and hides the choices that
+  // make this a two-tap flow.
+  const btns = `<div class="ask-btns">${roomChoices(mode).map((c) => pill(c, ROOM_LABEL[c])).join("")}</div>` +
+    `<button type="button" class="linkish ask-more"${dis}>${esc(t("askMore"))}</button>` +
+    `<div class="ask-btns ask-btns-more" hidden>${roomChoicesMore().map((c) => pill(c, ROOM_LABEL[c])).join("")}</div>` +
+    (question === "askTable"
+      ? `<div class="ask-btns ask-btns-none">${pill("none", "roomNone", " ask-btn-none")}</div>`
       : "");
   const user = getUser();
   const who = user
     ? `${esc(t("askAs", { user }))} · <button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button>`
     : esc(t("askLoginHint"));
   return `<div class="ask"><div class="ask-q">${esc(t(question))}</div>` +
-         `<div class="ask-btns">${btns}</div><div class="ask-who">${who}</div></div>`;
+         `${btns}<div class="ask-who">${who}</div></div>`;
 }
 
 // A prospect's popup says one thing the pin popups never do: nobody has
@@ -359,11 +380,12 @@ function placeHTML(p) {
     rows.push(`<div class="row">${esc(t("popupTable"))}: <b>${esc(p.changing_table)}</b>` +
       (p.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(p.location_raw)}` : "") + `</div>`);
   else
-    // ask-ctx marks the two lines that are true only while the question is
-    // open — "about a changing table, OSM says nothing" and "been here?" —
-    // so answer() can sweep them with the .ask block. No styling of its own.
+    // ask-ctx marks the line that is true only while the question is open —
+    // "about a changing table, OSM says nothing" — so answer() can sweep it
+    // with the .ask block. No styling of its own. ("Been here? Then you know"
+    // used to stand between the two; the question says it, and on a 12 mini
+    // the play-place card was the one that still did not fit.)
     rows.push(`<div class="status play ask-ctx">${esc(t("metaPlaces"))}</div>`,
-              `<div class="row ask-ctx">${esc(t("popupPlacesCta"))}</div>`,
               askHTML("askTable", inFlight.has(p.osm_url)));
   if (p.opening_hours)
     rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(p.opening_hours)}</div>`);
@@ -371,7 +393,7 @@ function placeHTML(p) {
   const mcUrl = safeUrl(withMapCompleteLanguage(p.mapcomplete_url, lang)),
         osmUrl = safeUrl(p.osm_url);
   if (mcUrl)
-    links.push(`<a class="btn primary" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+    links.push(`<a class="btn${p.changing_table ? " primary" : ""}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   links.push(`<a class="btn" href="${esc(geoUri(p.lat, p.lon, p.name || ""))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
@@ -387,6 +409,7 @@ function openPopup(f) {
   popup = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
     .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
   attachEditNote();
+  panPopupIntoView();
 }
 
 function openPlacePopup(p) {
@@ -395,6 +418,36 @@ function openPlacePopup(p) {
   popup = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
     .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
   attachEditNote();
+  panPopupIntoView();
+}
+
+// MapLibre anchors the card to the pin and picks the side with room, but a
+// card taller or wider than the free space overflows on every side — a pin
+// at the bottom of a 12 mini opened it half under the footer, and one high
+// up under the topbar, which floats over the canvas. So after the card is
+// in the DOM, measure it against what is actually visible (canvas minus the
+// topbar, minus the attribution line at the foot) and pan the map by the
+// overflow. The pin moves with the map, the card with the pin. Where nothing
+// overflows nothing moves, so a desktop tap stays a tap.
+const EDGE = 8;
+function panPopupIntoView() {
+  const el = popup?.getElement();
+  if (!el) return;
+  const r = el.getBoundingClientRect(), c = map.getContainer().getBoundingClientRect();
+  // Never let the topbar claim more than half the canvas: on a short
+  // landscape phone the strip can approach the full height (fitHome has the
+  // same clamp), and a band with no room in it would pan the card clean off.
+  const top = c.top + Math.min(topbar.offsetHeight, c.height / 2) + EDGE;
+  // The attribution's own top edge, not its height from the bottom: in the
+  // installed app it floats a safe-area inset above the foot.
+  const attr = document.getElementById("attribution")?.getBoundingClientRect();
+  const bottom = Math.min(c.bottom, attr?.top ?? c.bottom) - EDGE;
+  let dx = 0, dy = 0;
+  if (r.bottom > bottom) dy = r.bottom - bottom;
+  if (r.top - dy < top) dy = r.top - top;         // taller than the space: keep the head
+  if (r.right > c.right - EDGE) dx = r.right - (c.right - EDGE);
+  if (r.left - dx < c.left + EDGE) dx = r.left - (c.left + EDGE);
+  if (dx || dy) map.panBy([dx, dy], { duration: 250 });
 }
 
 // ---- Status chips: legend, count badges and filter toggles in one ----
@@ -665,7 +718,10 @@ document.getElementById("nearest").addEventListener("click", () => {
       if (playOnly && !f.play) { playOnly = false; refilter = true; }
       if (refilter) { renderChips(); refreshPins(); }
       openPopup(f);
+      // flyTo stops the pan openPopup just started; once the flight lands,
+      // fit the card to the view it landed in.
       map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+      map.once("moveend", panPopupIntoView);
       const d = formatDistance(hit.km);
       toast(t("toastNearestFound", {
         dist: t(d.key, { n: num(d.n) }),
@@ -865,6 +921,12 @@ document.addEventListener("click", (e) => {
     startEditCheck(popupObj.kind, popupObj.obj);
   const room = e.target.closest?.("button.ask-btn");
   if (room && popupObj) answer(popupObj.kind, popupObj.obj, room.dataset.room);
+  const more = e.target.closest?.("button.ask-more");
+  if (more) {
+    more.nextElementSibling?.removeAttribute("hidden");
+    more.remove();
+    panPopupIntoView();   // three more pills: the card just grew a row
+  }
   if (e.target.closest?.("button[data-logout]")) logout();
 });
 
@@ -916,7 +978,7 @@ async function answer(kind, obj, choice, freshToken = null) {
   // stay. Its buttons go quiet for the round trip — a second tap on a slow
   // connection would otherwise open a second changeset for the same answer.
   const el = popup?.getElement();
-  const btns = [...(el?.querySelectorAll("button.ask-btn") ?? [])];
+  const btns = [...(el?.querySelectorAll("button.ask-btn, button.ask-more") ?? [])];
   btns.forEach((b) => { b.disabled = true; });
   const rec = { kind, osm_url: obj.osm_url };
   setEditNote(rec, "looking", "askSaving");

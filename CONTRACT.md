@@ -34,6 +34,11 @@
 > "no" names no room — under its own changeset comment. `pipeline/export.py` already
 > treats `changing_table=no` as an answered place and leaves it off next night's ask list,
 > so the question does not return.
+> **The whole vocabulary** (13 Sep 2026, evening): `wheelchair_toilet` joins both readings
+> — it was the commonest value in OSM and the one the first cut left out — and `room`,
+> `sales_area`, `outdoor` are offered behind a "more" link, so the values written are now
+> ACCESSIBLE_TOKENS plus the women's room and the two-room list. Still only
+> `changing_table:location` on a pin, still never `changing_table` itself.
 
 > **v24 amendment (8 Sep 2026, the Papa/Mama reading; numbered after v23 when the two branches met on 11 Sep):** the frontend now offers
 > **two readings of the same three statuses**, and the emitted shape does not change
