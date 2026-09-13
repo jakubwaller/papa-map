@@ -447,6 +447,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .status.ok { color: var(--green-strong); }
 .popup .status.bad { color: #a84a00; }   /* darker vermillion for contrast on white */
 .popup .status.ask { color: var(--grey-pin); }
+/* The mother's "probably her room": amber like the pin, darkened so 13px
+   bold still clears contrast on white (the pin itself is #e69f00). */
+.popup .status.maybe { color: #8a5a00; }
 /* A prospect's headline: blue like the ring it was clicked on, and darker than
    --play so 13px bold still clears contrast on white. */
 .popup .status.play { color: #005b8f; }

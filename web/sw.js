@@ -116,7 +116,13 @@ self.addEventListener("fetch", (e) => {
     const fresh = fetch(req).then((res) => {
       // Only full, successful, same-origin answers are stored. An opaque or
       // partial response cached here would serve a broken file forever.
-      if (res.ok && res.type === "basic") store(cache, req, res);
+      // A navigation is stored under its bare URL: the page is the same for
+      // every query string (?lang=, ?mode=, ?bbox=, the OAuth return's
+      // ?code=), and keying by the full URL would keep one copy per link
+      // ever followed, one-time codes included. The search-insensitive
+      // match above is what finds it again.
+      if (res.ok && res.type === "basic")
+        store(cache, req.mode === "navigate" ? req.url.split("?")[0] : req, res);
       return res;
     }).catch(() => null);
     // Offline with nothing stored still has to reject rather than resolve to

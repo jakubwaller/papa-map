@@ -262,9 +262,9 @@ tag, and MapComplete shows it before letting anyone write over it.
 A blue play place asks the other question, *is there a changing table? then tap
 its room*, and the one tap writes both `changing_table=yes` and the room —
 the table is news to OSM there, and the yes without the room would only make
-a grey pin tonight. The "no" and everything else stay with the MapComplete
-button under it. Nothing is written to an object that is not already on the
-map: a café with no tags at all is still MapComplete's `dad_venue` layer.
+a grey pin tonight. A sixth button, *no changing table*, writes
+`changing_table=no` alone; everything else stays with the MapComplete button
+under it. Nothing is written to an object that is not already on the map: a café with no tags at all is still MapComplete's `dad_venue` layer.
 
 Any host that is not `papamap.de` talks to the **sandbox** API
 (`master.apis.dev.openstreetmap.org`), whose database is separate and wiped

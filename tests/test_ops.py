@@ -170,6 +170,32 @@ def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
     assert "answers on the map itself (OSMCha, created_by=PapaMap, 7d): 2 changesets" in report
 
 
+def test_osmcha_second_query_failing_keeps_the_theme_count(monkeypatch):
+    """The created_by slice is decoration on top of the theme count: when its
+    query dies (OSMCha's metadata scan has taken 150 s on a bad day) the
+    theme count, its chart point and the cache all survive; only the
+    'answers on the map itself' line is missing."""
+    monkeypatch.setenv("OSMCHA_TOKEN", "token")
+    calls = []
+
+    def fake_get(url, timeout, headers, params):
+        calls.append(params)
+        if len(calls) == 2:
+            raise TimeoutError("read timed out")
+
+        class R:
+            def json(self):
+                return {"count": 3, "features": []}
+        return R()
+
+    edits = ops.osmcha_edits(now=NOW, get=fake_get)
+    assert edits["changesets"] == 3 and "error" not in edits
+    assert "web_changesets" not in edits
+    report = ops.render_report(None, None, [], [], edits=edits)
+    assert "edits via papamap theme (OSMCha, 7d): 3 changesets" in report
+    assert "answers on the map itself" not in report
+
+
 def test_osmcha_edits_groups_by_complete_day(monkeypatch):
     """The chart's series: one count per complete day the window covers —
     a day without a changeset is a 0, not a hole, and today (partial at

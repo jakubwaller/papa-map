@@ -292,19 +292,22 @@ const safeUrl = (u) => (typeof u === "string" && u.startsWith("https://") ? u : 
 
 function popupHTML(f) {
   const s = viewFor(f.status, mode);
+  // The two-tap answer, on the pins nobody has answered for. Not on a pin that
+  // already carries a room in words the classifier does not read: that is
+  // somebody's tag, and replacing it belongs in MapComplete, where the reader
+  // sees what is there before writing over it. While the question is open
+  // the headline ("room unknown", in either reading) is marked ask-ctx so the
+  // answer can take it down with the buttons.
+  const asks = f.status === "unknown" && !f.location_raw;
   const rows = [
-    `<div class="status ${s.cls}">${esc(t(s.metaKey))}</div>`,
+    `<div class="status ${s.cls}${asks ? " ask-ctx" : ""}">${esc(t(s.metaKey))}</div>`,
     `<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
       (f.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(f.location_raw)}` : "") + `</div>`,
   ];
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
   if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
-  // The two-tap answer, on the pins nobody has answered for. Not on a pin that
-  // already carries a room in words the classifier does not read: that is
-  // somebody's tag, and replacing it belongs in MapComplete, where the reader
-  // sees what is there before writing over it.
-  if (f.status === "unknown" && !f.location_raw) rows.push(askHTML());
+  if (asks) rows.push(askHTML());
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
@@ -881,30 +884,40 @@ async function answer(kind, obj, choice) {
   const token = getToken();
   const intent = { kind, osm_url: obj.osm_url, choice };
   if (!token) { rememberView(); startLogin(osm, intent); return; }
+  // The popup this answer belongs to, taken now: OSM takes seconds to reply,
+  // and by then the reader may have opened another pin, whose question must
+  // stay. Its buttons go quiet for the round trip — a second tap on a slow
+  // connection would otherwise open a second changeset for the same answer.
+  const el = popup?.getElement();
+  const btns = [...(el?.querySelectorAll("button.ask-btn") ?? [])];
+  btns.forEach((b) => { b.disabled = true; });
   const rec = { kind, osm_url: obj.osm_url };
-  const patch = kind === "place" ? tablePatch(choice) : roomPatch(choice);
-  // "none" only ever arrives for a place, and it gets its own changeset
-  // comment — the room comment would claim a room was named.
-  const comment = kind === "place" && choice === "none" ? CHANGESET_COMMENT.place_none : CHANGESET_COMMENT[kind];
   setEditNote(rec, "looking", "askSaving");
   try {
+    // Inside the try: a choice that is not one of ours (a stale or edited
+    // intent from storage) fails like any other answer, with a note, rather
+    // than as an unhandled rejection the reader never sees.
+    const patch = kind === "place" ? tablePatch(choice) : roomPatch(choice);
+    // "none" only ever arrives for a place, and it gets its own changeset
+    // comment — the room comment would claim a room was named.
+    const comment = kind === "place" && choice === "none" ? CHANGESET_COMMENT.place_none : CHANGESET_COMMENT[kind];
     const out = await writeTags(osm, token, osmRef(obj.osm_url), patch, comment);
     // The popup's tag row and the question's absence both read from the
     // object, so the one in memory learns the answer. A pin's status and a
     // place's colour do not move — that is the pipeline's to say, tonight.
     obj.changing_table = out.tags.changing_table;
     obj.location_raw = out.tags["changing_table:location"];
-    // Both .ask blocks go: the headline ("nobody has tagged the room") is no
-    // longer true, and the question has been answered. querySelector would
-    // take the headline alone and leave the buttons standing (sandbox test,
-    // 13 Sep 2026). The play place's two context lines (.ask-ctx, "OSM says
-    // nothing" and "been here?") go with them: false after a room, false
-    // after a no.
-    popup?.getElement()?.querySelectorAll(".ask, .ask-ctx").forEach((el) => el.remove());
+    // Everything that was true only while the question was open goes: the
+    // question itself (.ask — querySelector would take the headline alone
+    // and leave the buttons standing, sandbox test 13 Sep 2026) and the
+    // context lines marked .ask-ctx: a pin's "room unknown" headline in
+    // either reading, a play place's "OSM says nothing" and "been here?".
+    el?.querySelectorAll(".ask, .ask-ctx").forEach((x) => x.remove());
     const tags = {};
     for (const k of EDIT_TAGS) if (out.tags[k]) tags[k] = out.tags[k];
     setEditNote(rec, "found", "editFound", tags);
   } catch (err) {
+    btns.forEach((b) => { b.disabled = false; });
     // A dead token is not the reader's problem: log in again, answer in hand.
     if (err.status === 401) { clearLogin(); rememberView(); startLogin(osm, intent); return; }
     setEditNote(rec, "none", err.status === 409 ? "askConflict" : "askFailed", null,
@@ -1153,7 +1166,14 @@ async function boot() {
     if (obj) {
       map.jumpTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
       reopen(kind, obj);
-      answer(kind, obj, intent.choice);
+      // Checked again against the dataset just loaded, not the one the tap
+      // was made on: had the nightly build landed during the consent round
+      // trip with somebody else's room on this object, the popup now shows
+      // that room and the stored answer stays unfiled rather than writing
+      // over it.
+      const open = kind === "place" ? !obj.changing_table
+                                    : obj.status === "unknown" && !obj.location_raw;
+      if (open) answer(kind, obj, intent.choice);
     }
   }
   // A phone that dropped the tab while the reader was in MapComplete comes

@@ -467,13 +467,18 @@ def osmcha_edits(days=7, now=None, get=requests.get):
         # The answers given on the map itself (web/osm.js) are the reader's
         # own changesets tagged created_by=PapaMap — a second slice, counted
         # on its own line and never folded into the theme's number. A count
-        # only: the chart stays the theme's, and a failure here drops the
-        # line rather than the whole block.
-        r = get(OSMCHA_URL, timeout=OSMCHA_TIMEOUT_S,
-                headers={"Authorization": f"Token {token}"},
-                params={"metadata": f"created_by={WEB_CREATED_BY}",
-                        "date__gte": since, "page_size": "1"})
-        out["web_changesets"] = r.json()["count"]
+        # only: the chart stays the theme's. Its own try, because this is a
+        # second metadata scan on a day the first one already cost up to
+        # 150 s: a failure here drops this line and says so, and never the
+        # theme count fetched a moment ago.
+        try:
+            r = get(OSMCHA_URL, timeout=OSMCHA_TIMEOUT_S,
+                    headers={"Authorization": f"Token {token}"},
+                    params={"metadata": f"created_by={WEB_CREATED_BY}",
+                            "date__gte": since, "page_size": "1"})
+            out["web_changesets"] = int(r.json()["count"])
+        except Exception as exc:
+            print(f"WARN: OSMCha created_by query failed: {exc}", file=sys.stderr)
         return out
     except Exception as exc:  # like visits: decoration, never fail the check
         # Reported, not swallowed. A dropped line and a genuine zero both read

@@ -382,6 +382,7 @@ is live at the next 05:30 after the pull; to see it sooner, use the preview run 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" https://DOMAIN/
 curl -s https://DOMAIN/data/stats.json | head
+curl -sI https://DOMAIN/manifest.webmanifest | grep -i '^content-type'   # application/manifest+json
 tail -n 20 /path/to/papa-map/pipeline.log
 ```
 

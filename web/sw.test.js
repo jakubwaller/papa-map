@@ -22,7 +22,7 @@ function loadSW({ cached = {}, network = {} } = {}) {
       const k = Object.keys(cached).find((u) => bare(u) === bare(req.url));
       return k ? cached[k] : undefined;
     },
-    put: async (req, res) => { put.push(req.url); },
+    put: async (req, res) => { put.push(typeof req === "string" ? req : req.url); },
     addAll: async () => {},
   };
   const ctx = {
@@ -191,6 +191,17 @@ test("a ?lang= page still resolves offline — every language is a query string"
   const { handlers } = loadSW({ cached: { [stored]: res("the page") } });
   const e = fire(handlers, `${ORIGIN}/index.html?lang=ja`, "GET", "navigate");
   assert.equal((await e.responded).body, "the page");
+});
+
+test("a navigation is stored under its bare URL, never with its query string", async () => {
+  // The OAuth return lands on /?code=…&state=…; ?lang=, ?mode= and ?bbox=
+  // links are the same page too. One stored copy, found by the
+  // search-insensitive match — not one per query string ever followed.
+  const url = `${ORIGIN}/?code=one-time&state=x`;
+  const { handlers, put } = loadSW({ network: { [url]: res("the page") } });
+  await fire(handlers, url, "GET", "navigate").responded;
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(put, [`${ORIGIN}/`]);
 });
 
 test("the search-insensitive match is for navigations only", async () => {
