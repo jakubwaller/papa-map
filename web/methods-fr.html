@@ -128,7 +128,7 @@ ci-dessous viennent du build nocturne. L'échantillon sur huit centres-villes da
 <p>PapaMap montre les lieux de 44 pays européens &mdash; de l'Islande à Chypre, du Portugal à
 l'Ukraine, plus l'Australie, la Nouvelle-Zélande, les États-Unis, le Canada et le Japon &mdash; pour lesquels OpenStreetMap connaît une table à langer
 (<code>changing_table=yes</code> ou <code>limited</code>). La couleur dit si un papa peut
-atteindre la table. La carte lit OSM et rien d'autre, et elle n'écrit nulle part. Les données, tu
+atteindre la table. La carte lit OSM. Les réponses partent directement dans OSM, sous ton propre compte OSM — depuis la carte elle-même ou par les liens de chaque marqueur ; PapaMap n'enregistre rien. Les données, tu
 peux les corriger directement sur OSM, par les liens de chaque marqueur.</p>
 <p>L’idée est venue en lisant le livre <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> de Caroline Criado Perez.</p>
 <p>Un classement des villes selon leur offre de toilettes, ce n'est pas ça. Pourquoi on ne peut pas
@@ -152,6 +152,29 @@ espaces, mise en minuscules et comparée comme un token entier. Jamais comme une
       travail.</li>
 </ul>
 <p>Un objet avec un tag <code>centralkey</code> (autre que <code>no</code>) reste hors de la carte quand la clé ferme toute la porte : <code>access=centralkey</code>, une table dans le WC handicapé, ou rien dans les tags ne dit que la clé ne concerne qu'une cabine. Un bloc avec WC hommes et femmes ouverts et une cabine PMR fermée à clé (<code>wheelchair:access=centralkey</code>, ou <code>male=yes</code> et <code>female=yes</code>) reste sur la carte, gris jusqu'à ce que quelqu'un renseigne la pièce. La clé européenne ne se délivre que sur justificatif de handicap, la plupart des papas ne passent donc pas cette porte.</p>
+
+<h2>Le sélecteur Papa / Maman</h2>
+<p>Les trois couleurs ci-dessus répondent à la question papa : un papa peut-il accéder à la table ?
+Pour une maman, la même réponse se lit généralement autrement — une table dans les WC femmes, elle
+peut l'utiliser, et même une table sans pièce renseignée se trouve, dans la plupart des cas, dans
+une pièce où elle peut entrer aussi. Le sélecteur <em>Papa / Maman</em>, à gauche dans la rangée de
+filtres, ne change donc que la façon de lire ces trois mêmes réponses, jamais les réponses
+elles-mêmes.</p>
+<ul>
+  <li><strong>Papa</strong> (par défaut) : vert, rouge et gris comme décrit plus haut.</li>
+  <li><strong>Maman</strong> : Vert veut désormais dire les deux à la fois — la pièce librement
+      accessible <em>et</em> les WC femmes. Orange signifie « pièce non renseignée », donc
+      généralement utilisable.</li>
+</ul>
+<p>Ce que le sélecteur ne fait pas : il ne change aucun tag, il n'écrit rien sur OSM, et il ne
+calcule aucune nouvelle classification. C'est une seconde lecture des trois mêmes valeurs,
+enregistrée seulement dans ton navigateur sous <code>papamap-mode</code>. Les chiffres des filtres
+sont les mêmes dans les deux modes.</p>
+<p>Une exception est signalée ici parce qu'elle paraît verte en mode maman sans l'être vraiment :
+une table qui, selon <code>changing_table:location</code>, se trouve seulement dans les WC hommes
+(<code>male_toilet</code> seul), compte comme verte. C'est rare, mais cela arrive. C'est pourquoi le
+texte du marqueur dit « dans de rares cas, uniquement les WC hommes » et le chiffre ci-dessus dit
+« probablement ».</p>
 
 <h2>L'anneau bleu : le coin jeux</h2>
 <p>Un marqueur avec un anneau bleu a en plus un coin jeux &mdash; un endroit où l'on ne fait pas que

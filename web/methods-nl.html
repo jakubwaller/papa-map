@@ -128,7 +128,7 @@ en blijft zo staan.</p>
 <p>PapaMap toont plekken in 44 Europese landen — van IJsland tot Cyprus, van Portugal tot
 Oekraïne, plus Australië, Nieuw-Zeeland, de Verenigde Staten, Canada en Japan — waar
 OpenStreetMap een verschoontafel kent (<code>changing_table=yes</code> of <code>limited</code>).
-De kleur zegt of een papa bij de tafel kan. De kaart leest alleen OSM en schrijft nergens naartoe.
+De kleur zegt of een papa bij de tafel kan. De kaart leest OSM. Antwoorden gaan rechtstreeks naar OSM onder je eigen OSM-account — vanaf de kaart zelf of via de links bij elke pin; PapaMap slaat niets op.
 De gegevens verbeter je op OSM zelf, via de links bij elke pin.</p>
 <p class="muted">Verschoontafel, luiertafel, babyverschooncommode &mdash; hetzelfde ding, ander
 woord per streek. In Vlaanderen is het doorgaans de <em>luiertafel</em>; deze pagina houdt het
@@ -154,6 +154,28 @@ omgezet naar kleine letters en als heel token vergeleken. Nooit als deelstring, 
       alleen vrije tekst. Niemand heeft de ruimte vastgelegd. De grijze pins zijn de opdracht.</li>
 </ul>
 <p>Een object met een <code>centralkey</code>-tag (behalve <code>no</code>) blijft van de kaart als de sleutel de hele deur afsluit: <code>access=centralkey</code>, een tafel in het invalidentoilet, of niets in de tags zegt dat de sleutel maar voor één cabine geldt. Een blok met open heren- en damestoilet en een afgesloten invalidencabine (<code>wheelchair:access=centralkey</code>, of <code>male=yes</code> en <code>female=yes</code>) blijft op de kaart, grijs tot iemand de ruimte invult. De eurosleutel krijg je alleen met een aangetoonde beperking, dus de meeste vaders komen niet door die deur.</p>
+
+<h2>De Papa/Mama-schakelaar</h2>
+<p>De drie kleuren hierboven beantwoorden papa's vraag: kan een papa bij de tafel? Voor een mama is
+hetzelfde antwoord meestal anders te lezen — een tafel op het damestoilet kan zij gebruiken, en ook
+een tafel zonder vastgelegde ruimte staat in de meeste gevallen ook in een ruimte waar zij naar
+binnen kan. De schakelaar <em>Papa / Mama</em> links in de chiprij verandert daarom alleen hoe
+dezelfde drie antwoorden worden gelezen, nooit de antwoorden zelf.</p>
+<ul>
+  <li><strong>Papa</strong> (standaard): groen, rood en grijs zoals hierboven beschreven.</li>
+  <li><strong>Mama</strong>: Groen betekent nu allebei — de vrij toegankelijke ruimte <em>en</em>
+      het damestoilet. Oranje staat voor &ldquo;ruimte niet vastgelegd&rdquo;, dus meestal
+      bruikbaar.</li>
+</ul>
+<p>Wat de schakelaar niet doet: hij verandert geen tag, hij schrijft niets naar OSM, en hij berekent
+geen nieuwe classificatie. Het is een tweede manier om dezelfde drie waarden te lezen, opgeslagen
+alleen in je browser onder <code>papamap-mode</code>. De getallen in de chips zijn in beide modi
+hetzelfde.</p>
+<p>Eén uitzondering staat hier, omdat hij in mama-modus groen lijkt zonder dat helemaal te zijn: een
+tafel die volgens <code>changing_table:location</code> alleen op het herentoilet staat
+(<code>male_toilet</code> alleen), telt mee als groen. Dat is zeldzaam, maar het komt voor. Daarom
+staat er bij de pin &ldquo;in zeldzame gevallen alleen het herentoilet&rdquo; en zegt het getal
+hierboven &ldquo;waarschijnlijk&rdquo;.</p>
 
 <h2>De blauwe ring: speelhoek</h2>
 <p>Een pin met een blauwe ring heeft ook een speelhoek &mdash; een plek waar je niet alleen

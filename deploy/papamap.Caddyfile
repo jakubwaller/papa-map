@@ -116,4 +116,8 @@
 	@data path /data/* /ops.html
 	header @data Cache-Control "public, max-age=900"
 	header Cache-Control "public, max-age=3600"
+	# Go's mime table has no .webmanifest and the alpine image ships no
+	# /etc/mime.types, so without this the manifest goes out as text/plain.
+	# Chrome installs the app anyway; the type is what the spec asks for.
+	header /manifest.webmanifest Content-Type application/manifest+json
 }

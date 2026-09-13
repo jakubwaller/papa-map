@@ -129,7 +129,7 @@ změny.</p>
 Ukrajinu, a k tomu Austrálie, Nový Zéland, USA, Kanada a Japonsko —, o kterých
 OpenStreetMap ví, že tam je přebalovací pult
 (<code>changing_table=yes</code> nebo <code>limited</code>). Barva říká, jestli se táta k pultu
-dostane. Mapa čte jen OSM a nikam nezapisuje. Opravit data můžeš přímo na OSM, přes odkazy u
+dostane. Mapa čte OSM. Odpovědi jdou rovnou do OSM pod tvým vlastním účtem OSM — přímo z mapy nebo přes odkazy u každého špendlíku; PapaMap nic neukládá. Opravit data můžeš přímo na OSM, přes odkazy u
 každého špendlíku.</p>
 <p>Nápad vznikl při čtení knihy <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> od Caroline Criado Perez.</p>
 <p>Žebříček měst podle vybavenosti toaletami to není. Proč to z otevřených dat poctivě nejde, je
@@ -152,6 +152,26 @@ převede na malá písmena a porovnává se jako celý token. Nikdy jako podřet
       jen volný text. Nikdo nezaznamenal místnost. Šedé špendlíky jsou ten úkol.</li>
 </ul>
 <p>Objekt s tagem <code>centralkey</code> (jiným než <code>no</code>) zůstane mimo mapu, když klíč zamyká celé dveře: <code>access=centralkey</code>, pult na bezbariérovém WC, nebo nic v tazích neříká, že klíč platí jen pro jednu kabinu. Zařízení s otevřenými pánskými a dámskými WC a zamčenou bezbariérovou kabinou (<code>wheelchair:access=centralkey</code>, nebo <code>male=yes</code> a <code>female=yes</code>) na mapě zůstane, šedé, dokud někdo nezapíše místnost. Euroklíč se vydává jen proti doložení zdravotního postižení, takže většina tátů těmi dveřmi neprojde.</p>
+
+<h2>Přepínač táta/máma</h2>
+<p>Tři barvy nahoře odpovídají na otázku táty: Dostane se táta k pultu? Pro mámu se stejná
+odpověď obvykle čte jinak — pult na dámském WC může použít, a i u pultu bez zaznamenané
+místnosti je většina v místnosti, do které se dostane. Přepínač <em>Táta / Máma</em> vlevo v
+liště filtrů proto jen mění, jak se čtou tytéž tři odpovědi, nikdy odpovědi samotné.</p>
+<ul>
+  <li><strong>Táta</strong> (výchozí): zelená, červená a šedá jak je popsáno výše.</li>
+  <li><strong>Máma</strong>: zelená teď znamená obojí — volně přístupnou místnost <em>i</em>
+      dámské WC. Oranžová znamená &bdquo;Nezaznamenaná místnost&ldquo;, tedy obvykle
+      použitelná.</li>
+</ul>
+<p>Co přepínač nedělá: nemění žádný tag, nic nezapisuje do OSM a nepočítá žádnou novou
+klasifikaci. Je to druhé čtení stejných tří hodnot, uložené jen v tvém prohlížeči pod
+<code>papamap-mode</code>. Čísla ve filtrech jsou v obou režimech stejná.</p>
+<p>Jedna výjimka tu stojí, protože v mámině režimu vypadá zeleně a úplně to není: pult, který
+podle <code>changing_table:location</code> stojí jen na pánském WC (<code>male_toilet</code>
+samotný), se počítá mezi zelené. Je to vzácné, ale stává se to. Proto text u špendlíku říká
+&bdquo;ve vzácných případech jen na pánském WC&ldquo; a číslo nahoře říká
+&bdquo;pravděpodobně&ldquo;.</p>
 
 <h2>Modrý kroužek: dětský koutek</h2>
 <p>Špendlík s modrým kroužkem má navíc dětský koutek &mdash; místo, kde se nejen přebaluje, ale kde

@@ -129,8 +129,7 @@ vijnë nga ndërtimi i natës. Kampioni nga tetë qendra qytetesh është nga
 Portugalia deri në Ukrainë, si dhe Australia, Zelanda e Re, SHBA-ja, Kanadaja dhe Japonia — për të cilat OpenStreetMap
 di se ka një tavolinë
 ndërrimi bebesh (<code>changing_table=yes</code> ose <code>limited</code>). Ngjyra tregon nëse
-një baba mund ta arrijë tavolinën. Harta lexon vetëm OSM dhe asgjë tjetër, dhe nuk shkruan
-askund. Rregullimi i të dhënave bëhet në vetë OSM-në, përmes lidhjeve te çdo shenjues.</p>
+një baba mund ta arrijë tavolinën. Harta lexon OSM. Përgjigjet shkojnë drejt e në OSM me llogarinë tënde të OSM — nga vetë harta ose përmes lidhjeve te çdo shenjues; PapaMap nuk ruan asgjë. Rregullimi i të dhënave bëhet në vetë OSM-në, përmes lidhjeve te çdo shenjues.</p>
 <p>Ideja lindi duke lexuar librin <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> të Caroline Criado Perez.</p>
 <p>Një renditje qytetesh sipas ofertës më të mirë të tualeteve kjo nuk është. Pse kjo nuk mund
 të bëhet me ndershmëri nga të dhëna të hapura, shpjegohet më poshtë.</p>
@@ -153,6 +152,28 @@ si nënvarg, sepse <code>female_toilet</code> përmban <code>male</code>.</p>
       janë puna që na mbetet.</li>
 </ul>
 <p>Një objekt me etiketën <code>centralkey</code> (të ndryshme nga <code>no</code>) mbetet jashtë hartës kur çelësi mbyll gjithë derën: <code>access=centralkey</code>, një tavolinë në tualetin për persona me aftësi të kufizuara, ose asgjë në etiketa nuk thotë se çelësi vlen vetëm për një kabinë. Një bllok me tualete për burra dhe gra të hapura dhe një kabinë të aksesueshme të mbyllur me çelës (<code>wheelchair:access=centralkey</code>, ose <code>male=yes</code> dhe <code>female=yes</code>) mbetet në hartë, gri derisa dikush të regjistrojë dhomën. Çelësi Euro jepet vetëm me dëshmi aftësie të kufizuar, kështu që shumica e baballarëve nuk e kalojnë dot atë derë.</p>
+
+<h2>Ndërruesi Baba-Nënë</h2>
+<p>Tri ngjyrat më sipër u përgjigjen pyetjes së babait: A e arrin një baba tavolinën? Për një
+nënë, e njëjta përgjigje zakonisht lexohet ndryshe — një tavolinë te tualeti i grave ajo mund ta
+përdorë, dhe edhe te një tavolinë pa dhomë të regjistruar, shumica gjendet në një dhomë ku ajo
+mund të hyjë. Ndërruesi <em>Baba / Nënë</em> majtas në shiritin e filtrave ndryshon prandaj vetëm
+si lexohen të njëjtat tri përgjigje, kurrë vetë përgjigjet.</p>
+<ul>
+  <li><strong>Baba</strong> (parazgjedhje): e gjelbër, e kuqe dhe gri, si më sipër.</li>
+  <li><strong>Nënë</strong>: E gjelbërta tani do të thotë të dyja — dhoma e hapur <em>dhe</em>
+      tualeti i grave. Portokalli do të thotë «Dhomë e paregjistruar», pra zakonisht e
+      përdorshme.</li>
+</ul>
+<p>Çfarë nuk bën ndërruesi: nuk ndryshon asnjë etiketë, nuk shkruan asgjë në OSM, dhe nuk llogarit
+asnjë klasifikim të ri. Është një lexim i dytë i të njëjtave tri vlera, i ruajtur vetëm në
+shfletuesin tënd me çelësin <code>papamap-mode</code>. Numrat në filtra janë të njëjtë në të dy
+leximet.</p>
+<p>Këtu qëndron një përjashtim, sepse në modin Nënë duket e gjelbër, dhe nuk është plotësisht
+kështu: një tavolinë, e cila sipas <code>changing_table:location</code> ndodhet vetëm te tualeti
+i burrave (<code>male_toilet</code> vetëm), llogaritet tek të gjelbërat. Kjo është e rrallë, por
+ndodh. Prandaj teksti te shenjuesi thotë «në raste të rralla, vetëm te tualeti i burrave», dhe
+numri më sipër thotë «me shumë gjasa».</p>
 
 <h2>Rrethi blu: hapësirë lojërash</h2>
 <p>Një shenjues me rreth blu ka gjithashtu edhe një hapësirë lojërash &mdash; një vend ku nuk

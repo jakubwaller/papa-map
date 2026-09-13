@@ -129,7 +129,7 @@ queda així.</p>
 a Ucraïna, i a més Austràlia, Nova Zelanda, els Estats Units, el Canadà i el Japó — on OpenStreetMap
 sap que hi ha un canviador
 de bolquers (<code>changing_table=yes</code> o <code>limited</code>). El color diu si un pare hi
-pot arribar. El mapa només llegeix OSM i no escriu enlloc. Les dades es corregeixen a OSM mateix, a
+pot arribar. El mapa llegeix OSM. Les respostes van directament a OSM amb el teu propi compte d'OSM — des del mapa mateix o pels enllaços de cada pin; PapaMap no desa res. Les dades es corregeixen a OSM mateix, a
 través dels enllaços de cada pin.</p>
 <p>La idea va sorgir llegint el llibre <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> de Caroline Criado Perez.</p>
 <p>Una classificació de quina ciutat té la millor oferta de lavabos, això no ho és. Més avall
@@ -153,6 +153,29 @@ passa a minúscules i es compara com a token sencer. Mai com a subcadena, perqu�
       feina pendent.</li>
 </ul>
 <p>Un objecte amb una etiqueta <code>centralkey</code> (diferent de <code>no</code>) queda fora del mapa quan la clau tanca tota la porta: <code>access=centralkey</code>, un canviador al lavabo adaptat, o res a les etiquetes diu que la clau és només per a una cabina. Un bloc amb lavabos d'homes i de dones oberts i una cabina adaptada tancada amb clau (<code>wheelchair:access=centralkey</code>, o <code>male=yes</code> i <code>female=yes</code>) es queda al mapa, gris fins que algú registri la sala. La clau Euro només es dona amb certificat de discapacitat, així que la majoria de pares no passen per aquesta porta.</p>
+
+<h2>El commutador pare/mare</h2>
+<p>Els tres colors de dalt responen la pregunta del pare: Hi arriba un pare, al canviador? Per a
+una mare, la mateixa resposta normalment es llegeix diferent — un canviador al lavabo de dones
+el pot utilitzar, i també en un canviador sense sala registrada la majoria és en una sala on pot
+entrar. El commutador <em>Pare / Mare</em>, a l'esquerra de la barra de filtres, per això només
+canvia la manera com es llegeixen les mateixes tres respostes, mai les respostes en si.</p>
+<ul>
+  <li><strong>Pare</strong> (per defecte): verd, vermell i gris, tal com s'ha descrit més
+      amunt.</li>
+  <li><strong>Mare</strong>: el verd ara vol dir totes dues coses — la sala d'accés obert
+      <em>i</em> el lavabo de dones. El taronja vol dir &ldquo;Sala no registrada&rdquo;, és a
+      dir, normalment utilitzable.</li>
+</ul>
+<p>Què no fa el commutador: no canvia cap etiqueta, no escriu res a OSM, i no calcula cap
+classificació nova. És una segona lectura dels mateixos tres valors, desada només al teu
+navegador sota <code>papamap-mode</code>. Els números als filtres són els mateixos en tots dos
+modes.</p>
+<p>Hi ha una excepció aquí, perquè en el mode mare sembla verd i no ho és del tot: un canviador
+que, segons <code>changing_table:location</code>, només és al lavabo d'homes
+(<code>male_toilet</code> tot sol), es compta entre els verds. És rar, però passa. Per això el
+text al pin diu &ldquo;en casos rars, només al lavabo d'homes&rdquo;, i el número de dalt diu
+&ldquo;probablement&rdquo;.</p>
 
 <h2>L'anell blau: racó de jocs</h2>
 <p>Un pin amb un anell blau també té un racó de jocs &mdash; un lloc on no només canvies el nadó,

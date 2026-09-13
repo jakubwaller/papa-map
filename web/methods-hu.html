@@ -128,7 +128,7 @@ készült, és ez nem fog változni.</p>
 <p>A PapaMap 44 európai ország helyeit mutatja — Izlandtól Ciprusig, Portugáliától
 Ukrajnáig, továbbá Ausztrália, Új-Zéland, az Egyesült Államok, Kanada és Japán —, amelyekről az OpenStreetMap tudja, hogy van ott
 pelenkázóasztal (<code>changing_table=yes</code> vagy <code>limited</code>). A szín azt mondja
-meg, hogy egy apa hozzáfér-e az asztalhoz. A térkép csak az OSM-et olvassa, és sehova sem ír. Az
+meg, hogy egy apa hozzáfér-e az asztalhoz. A térkép az OSM-et olvassa. A válaszok közvetlenül az OSM-be kerülnek, a saját OSM-fiókod alatt — magáról a térképről vagy az egyes jelölőknél található linkeken keresztül; a PapaMap semmit sem tárol. Az
 adatok javítása magán az OSM-en történik, az egyes jelölőknél található linkeken keresztül.</p>
 <p>Az ötlet Caroline Criado Perez <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> című könyvének olvasása közben született.</p>
 <p>Rangsor arról, melyik városban a legjobb a mosdóellátottság, ez nem. Hogy ez becsületesen miért
@@ -153,6 +153,28 @@ szót.</p>
       feladatot.</li>
 </ul>
 <p>A <code>centralkey</code> címkés objektum (a <code>no</code> kivételével) akkor marad le a térképről, ha a kulcs az egész ajtót zárja: <code>access=centralkey</code>, asztal az akadálymentes mosdóban, vagy semmi nem mondja a címkékben, hogy a kulcs csak egy fülkére vonatkozik. Egy nyitott férfi és női mosdóval és kulcsra zárt akadálymentes fülkével rendelkező blokk (<code>wheelchair:access=centralkey</code>, vagy <code>male=yes</code> és <code>female=yes</code>) a térképen marad, szürkén, amíg valaki be nem írja a helyiséget. Eurokulcsot csak fogyatékosság igazolásával adnak, így a legtöbb apa nem jut be azon az ajtón.</p>
+
+<h2>Az apa-anya kapcsoló</h2>
+<p>A fenti három szín az apa-kérdésre válaszol: el tudja-e érni egy apa az asztalt? Egy anya
+számára ugyanez a válasz többnyire másképp olvasandó — a női mosdóban álló asztalt
+használhatja, és egy olyan asztalnál is, amelynek helyiségét nem rögzítették, a többség olyan
+helyiségben áll, ahová be tud menni. Ezért az <em>Apa / Anya</em> kapcsoló, a szűrősor bal
+oldalán, csak azt változtatja meg, hogyan olvassuk ugyanazt a három választ, sosem a
+válaszokat magukat.</p>
+<ul>
+  <li><strong>Apa</strong> (alapértelmezett): zöld, piros és szürke, mint fent leírva.</li>
+  <li><strong>Anya</strong>: a zöld most mindkettőt jelenti — a nyitottan elérhető helyiséget
+      <em>és</em> a női mosdót. A narancssárga azt jelenti: „a helyiség nincs rögzítve”, tehát
+      többnyire használható.</li>
+</ul>
+<p>Amit a kapcsoló nem csinál: nem módosít semmilyen címkét, nem ír semmit az OSM-be, és nem
+számol ki új osztályozást. Csak egy második olvasata ugyanannak a három értéknek, ami csak a
+böngésződben tárolódik, a <code>papamap-mode</code> alatt. A szűrők számai mindkét módban
+ugyanazok.</p>
+<p>Egy kivétel ide tartozik, mert anya-módban zöldnek látszik, pedig nem egészen az: az az
+asztal, amely a <code>changing_table:location</code> szerint csak a férfi mosdóban van (csak
+<code>male_toilet</code>), a zöldek közé kerül. Ez ritka, de előfordul. Ezért a jelölő szövege
+azt mondja: „ritka esetben csak a férfi mosdóban”, a fenti szám pedig azt: „valószínűleg”.</p>
 
 <h2>A kék gyűrű: játszósarok</h2>
 <p>A kék gyűrűs jelölőnél játszósarok is van &mdash; olyan hely, ahol nemcsak pelenkázni lehet,

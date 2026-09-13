@@ -382,8 +382,16 @@ is live at the next 05:30 after the pull; to see it sooner, use the preview run 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" https://DOMAIN/
 curl -s https://DOMAIN/data/stats.json | head
+curl -sI https://DOMAIN/manifest.webmanifest | grep -i '^content-type'   # application/manifest+json
 tail -n 20 /path/to/papa-map/pipeline.log
 ```
+
+**A browser is one load behind on the shell.** The service worker answers a returning
+visitor with the HTML/CSS/JS it stored last time and refreshes them in the background, so the
+first load after a web deploy shows the previous page and the second shows the new one. Verify
+with curl, which never passes through the worker, or load twice. The data files and the pages
+under `/wickeltische/` are network-first and show the new build on the first load. A bumped
+`?v=` pin starts a new cache and evicts the old shell on activation.
 
 **After a change to `PAPAMAP_COUNTRIES`, check the served `area_key` before believing the
 deploy.** The site's copy is bind-mounted and live within seconds of a `git pull`, while the

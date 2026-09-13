@@ -130,7 +130,7 @@ Ucrânia, mais a Austrália, a Nova Zelândia, os Estados Unidos, o Canadá e o 
 sabe de um
 fraldário
 (<code>changing_table=yes</code> ou <code>limited</code>). A cor diz se um pai consegue chegar ao
-fraldário. O mapa só lê o OSM, mais nada, e não escreve em lado nenhum. Corrigir os dados acontece
+fraldário. O mapa lê o OSM. As respostas vão diretamente para o OSM com a tua própria conta OSM — a partir do próprio mapa ou pelas ligações em cada pin; o PapaMap não guarda nada. Corrigir os dados acontece
 no próprio OSM, através das ligações em cada pin.</p>
 <p>A ideia surgiu ao ler o livro <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a>, de Caroline Criado Perez.</p>
 <p>Uma tabela de qual cidade tem a melhor oferta de casas de banho, isto não é. Porque é que isso
@@ -154,6 +154,27 @@ porque <code>female_toilet</code> contém
       ou só texto livre. Ninguém registou a sala. Os pins cinzentos são o trabalho a fazer.</li>
 </ul>
 <p>Um objeto com uma tag <code>centralkey</code> (diferente de <code>no</code>) fica fora do mapa quando a chave fecha a porta toda: <code>access=centralkey</code>, um fraldário na casa de banho adaptada, ou nada nas tags diz que a chave é só para uma cabina. Um bloco com casas de banho de homens e de mulheres abertas e uma cabina adaptada fechada à chave (<code>wheelchair:access=centralkey</code>, ou <code>male=yes</code> e <code>female=yes</code>) fica no mapa, cinzento até alguém registar a sala. A chave Euro só se obtém com prova de deficiência, por isso a maioria dos pais não passa por essa porta.</p>
+
+<h2>O seletor Pai / Mãe</h2>
+<p>As três cores acima respondem à pergunta do pai: um pai consegue chegar a este fraldário?
+Para uma mãe, a mesma resposta costuma ler-se de outra forma — um fraldário na casa de banho
+feminina ela pode usar, e também num fraldário sem sala registada, a maioria está numa sala
+onde ela pode entrar. Por isso o seletor <em>Pai / Mãe</em>, à esquerda na barra de chips, muda
+apenas a forma de ler as mesmas três respostas, nunca as respostas em si.</p>
+<ul>
+  <li><strong>Pai</strong> (por defeito): verde, vermelho e cinzento, como descrito acima.</li>
+  <li><strong>Mãe</strong>: o verde passa a significar as duas coisas — a sala abertamente
+      acessível <em>e</em> a casa de banho feminina. O laranja significa «sala não registada»,
+      ou seja, normalmente utilizável.</li>
+</ul>
+<p>O que o seletor não faz: não altera nenhuma tag, não escreve nada no OSM, e não calcula
+nenhuma classificação nova. É apenas uma segunda leitura dos mesmos três valores, guardada só
+no teu navegador, sob <code>papamap-mode</code>. Os números nos chips são os mesmos nos dois
+modos.</p>
+<p>Fica aqui uma exceção, porque no modo mãe parece verde, sem ser bem assim: um fraldário que,
+segundo <code>changing_table:location</code>, está só na casa de banho masculina (só
+<code>male_toilet</code>), conta como verde. É raro, mas acontece. Por isso o texto do pin diz
+«em casos raros, só na casa de banho masculina», e o número acima diz «provavelmente».</p>
 
 <h2>O anel azul: cantinho de brincar</h2>
 <p>Um pin com um anel azul também tem um cantinho de brincar &mdash; um local onde não te limitas a
