@@ -10,14 +10,11 @@
 > writes nothing, PapaMap still stores nothing, and the changeset's author is the reader,
 > as with StreetComplete. Only `changing_table:location` is written, with values from the
 > theme's own vocabulary (`female_toilet;male_toilet`, `male_toilet`, `female_toilet`,
-> `unisex_toilet`, `wheelchair_toilet`, `dedicated_room`, and behind a "more" link `room`,
-> `sales_area`, `outdoor` — the whole of ACCESSIBLE_TOKENS plus the women's room, since
-> 2026-09-13; never `changing_table` itself, so `limited` is not
+> `unisex_toilet`, `dedicated_room`; never `changing_table` itself, so `limited` is not
 > promoted to `yes`), and only on a pin whose status is `unknown` *and* whose
 > `location_raw` is empty — a room somebody tagged in words the classifier does not read
 > is left to MapComplete, where the reader sees it before writing over it. The mother's
-> reading offers only the rooms she can vouch for (`female`, `unisex`, `wheelchair`,
-> `dedicated`, and the same three behind "more").
+> reading offers only the rooms she can vouch for (`female`, `unisex`, `dedicated`).
 > **Still not a classifier:** OSM's reply is quoted in the popup, `location_raw` on the
 > in-memory feature is updated so the question does not reappear, and the pin keeps its
 > colour until the nightly build — the emitted shape is untouched. Any host other than
@@ -37,6 +34,11 @@
 > "no" names no room — under its own changeset comment. `pipeline/export.py` already
 > treats `changing_table=no` as an answered place and leaves it off next night's ask list,
 > so the question does not return.
+> **The whole vocabulary** (13 Sep 2026, evening): `wheelchair_toilet` joins both readings
+> — it was the commonest value in OSM and the one the first cut left out — and `room`,
+> `sales_area`, `outdoor` are offered behind a "more" link, so the values written are now
+> ACCESSIBLE_TOKENS plus the women's room and the two-room list. Still only
+> `changing_table:location` on a pin, still never `changing_table` itself.
 
 > **v24 amendment (8 Sep 2026, the Papa/Mama reading; numbered after v23 when the two branches met on 11 Sep):** the frontend now offers
 > **two readings of the same three statuses**, and the emitted shape does not change

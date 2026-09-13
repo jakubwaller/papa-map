@@ -250,8 +250,10 @@ tool in `created_by`, the reader is the author), and it writes exactly one tag,
 words MapComplete would write for the same tap, and the words `classify.py`
 reads. `changing_table` itself is never touched, so `limited` is not promoted
 to `yes` by someone who was only asked about the door. In the mother's reading
-the buttons are the rooms she can vouch for — women's, unisex, a separate room
-— and the men's room is left to a father to answer.
+the buttons are the rooms she can vouch for — women's, unisex, the accessible
+toilet, a separate room — and the men's room is left to a father to answer.
+Three rarer rooms (a hallway, the shop floor, outdoors) sit behind a *more* link
+in either reading.
 
 What OSM holds afterwards is quoted in the popup, and that is all that changes:
 the pin keeps its colour until the nightly build, because classification lives
@@ -262,9 +264,9 @@ tag, and MapComplete shows it before letting anyone write over it.
 A blue play place asks the other question, *is there a changing table? then tap
 its room*, and the one tap writes both `changing_table=yes` and the room —
 the table is news to OSM there, and the yes without the room would only make
-a grey pin tonight. A sixth button, *no changing table*, writes
-`changing_table=no` alone; everything else stays with the MapComplete button
-under it. Nothing is written to an object that is not already on the map: a café with no tags at all is still MapComplete's `dad_venue` layer.
+a grey pin tonight. One more button on a row of its own, *no changing table*,
+writes `changing_table=no` alone; everything else stays with the MapComplete
+link under it. Nothing is written to an object that is not already on the map: a café with no tags at all is still MapComplete's `dad_venue` layer.
 
 Any host that is not `papamap.de` talks to the **sandbox** API
 (`master.apis.dev.openstreetmap.org`), whose database is separate and wiped

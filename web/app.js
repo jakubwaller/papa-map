@@ -301,13 +301,16 @@ function popupHTML(f) {
   // the headline ("room unknown", in either reading) is marked ask-ctx so the
   // answer can take it down with the buttons.
   const asks = f.status === "unknown" && !f.location_raw;
-  // While the question is open the headline is the short label, not the
-  // sentence: the question two lines down asks the same thing, and on a
-  // 12 mini the popup had to fit the map twice over. "Changing table: yes"
-  // goes for the same reason — every pin that asks says it — and comes back
-  // for `limited`, or once a room is on record next to it.
+  // While the question is open the father's headline is the short label,
+  // not the sentence: the question two lines down asks the same thing, and
+  // on a 12 mini the popup had to fit the map twice over. The mother keeps
+  // her sentence — "usually one you can reach" is the one thing her amber
+  // pin has to say, and her two rows of pills leave the room for it.
+  // "Changing table: yes" goes for the same reason — every pin that asks
+  // says it — and comes back for `limited`, or once a room is on record.
+  const short = asks && mode !== "mama";
   const rows = [
-    `<div class="status ${s.cls}${asks ? " ask-ctx" : ""}">${esc(t(asks ? s.labelKey : s.metaKey))}</div>`,
+    `<div class="status ${s.cls}${asks ? " ask-ctx" : ""}">${esc(t(short ? s.labelKey : s.metaKey))}</div>`,
   ];
   if (f.changing_table !== "yes" || f.location_raw)
     rows.push(`<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
@@ -342,17 +345,19 @@ function popupHTML(f) {
 // closed and reopened mid-write), so the buttons render quiet.
 function askHTML(question = "askRoom", busy = false) {
   const dis = busy ? " disabled" : "";
-  const pill = (c, extra = "") =>
-    `<button type="button" class="btn ask-btn${extra}" data-room="${c}"${dis}>${esc(t(ROOM_LABEL[c] ?? "roomNone"))}</button>`;
+  // The label rides along explicitly: a room added to ROOMS without a label
+  // then renders its raw key, not another answer's words.
+  const pill = (c, label, extra = "") =>
+    `<button type="button" class="btn ask-btn${extra}" data-room="${c}"${dis}>${esc(t(label))}</button>`;
   // Two columns of short labels: six rooms in three rows where five pills
   // took four. The rare three sit behind one link and unfold in place —
   // not a <select>, which costs a second tap and hides the choices that
   // make this a two-tap flow.
-  const btns = `<div class="ask-btns">${roomChoices(mode).map((c) => pill(c)).join("")}</div>` +
+  const btns = `<div class="ask-btns">${roomChoices(mode).map((c) => pill(c, ROOM_LABEL[c])).join("")}</div>` +
     `<button type="button" class="linkish ask-more"${dis}>${esc(t("askMore"))}</button>` +
-    `<div class="ask-btns ask-btns-more" hidden>${roomChoicesMore().map((c) => pill(c)).join("")}</div>` +
+    `<div class="ask-btns ask-btns-more" hidden>${roomChoicesMore().map((c) => pill(c, ROOM_LABEL[c])).join("")}</div>` +
     (question === "askTable"
-      ? `<div class="ask-btns ask-btns-none">${pill("none", " ask-btn-none")}</div>`
+      ? `<div class="ask-btns ask-btns-none">${pill("none", "roomNone", " ask-btn-none")}</div>`
       : "");
   const user = getUser();
   const who = user
@@ -429,8 +434,14 @@ function panPopupIntoView() {
   const el = popup?.getElement();
   if (!el) return;
   const r = el.getBoundingClientRect(), c = map.getContainer().getBoundingClientRect();
-  const top = c.top + topbar.offsetHeight + EDGE;
-  const bottom = c.bottom - (document.getElementById("attribution")?.offsetHeight ?? 0) - EDGE;
+  // Never let the topbar claim more than half the canvas: on a short
+  // landscape phone the strip can approach the full height (fitHome has the
+  // same clamp), and a band with no room in it would pan the card clean off.
+  const top = c.top + Math.min(topbar.offsetHeight, c.height / 2) + EDGE;
+  // The attribution's own top edge, not its height from the bottom: in the
+  // installed app it floats a safe-area inset above the foot.
+  const attr = document.getElementById("attribution")?.getBoundingClientRect();
+  const bottom = Math.min(c.bottom, attr?.top ?? c.bottom) - EDGE;
   let dx = 0, dy = 0;
   if (r.bottom > bottom) dy = r.bottom - bottom;
   if (r.top - dy < top) dy = r.top - top;         // taller than the space: keep the head
@@ -707,7 +718,10 @@ document.getElementById("nearest").addEventListener("click", () => {
       if (playOnly && !f.play) { playOnly = false; refilter = true; }
       if (refilter) { renderChips(); refreshPins(); }
       openPopup(f);
+      // flyTo stops the pan openPopup just started; once the flight lands,
+      // fit the card to the view it landed in.
       map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+      map.once("moveend", panPopupIntoView);
       const d = formatDistance(hit.km);
       toast(t("toastNearestFound", {
         dist: t(d.key, { n: num(d.n) }),
