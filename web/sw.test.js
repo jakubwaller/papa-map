@@ -165,6 +165,13 @@ test("the shell precache pins the same ?v= as index.html", () => {
     assert.ok(list.includes(`"${f}?v=${pin}"`), `sw.js SHELL must carry ${f}?v=${pin}`);
   assert.ok(list.includes('"index.html"') && list.includes('"index-en.html"'),
     "both index files must be stored, or /index.html?lang=x has nothing to fall back to");
+  // app.js's own imports carry the pin too (its header says "bump all four
+  // together"): a bump that misses them keeps every reader on the old
+  // i18n.js/datasource.js/osm.js URLs, which the edge holds for hours, and
+  // precaches URLs nobody requests. PR #105 nearly shipped exactly that.
+  const app = fs.readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  for (const f of ["datasource.js", "i18n.js", "osm.js"])
+    assert.ok(app.includes(`"./${f}?v=${pin}"`), `app.js must import ${f}?v=${pin}`);
 });
 
 test("the shell is cache-first with a background refresh", async () => {

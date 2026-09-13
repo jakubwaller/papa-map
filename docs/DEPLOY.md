@@ -9,7 +9,9 @@ bind-mounts `web/`, which is why `git pull` is the whole deploy for a web-only c
 image rebuild is involved. The exception is `deploy/papamap.Caddyfile`: Caddy reads it once at
 container start, so a change there needs `docker compose restart papamap` after the pull —
 the restart re-mounts the file and picks up the new content. (Verify with
-`curl -s 'https://papamap.de/?lang=en' | grep og:title` — it must card in English.) Serving the directory with a static web server you already run works
+`curl -s 'https://papamap.de/?lang=en' | grep og:title` — it must card in English.) A change
+to `docker-compose.yml` itself (a mount, an `environment` line) needs `docker compose up -d
+papamap`, which recreates the container; a restart does not re-read the compose file. Serving the directory with a static web server you already run works
 just as well — both paths are below.
 
 Works on any always-on Linux box. Substitute your own paths and domain; `DOMAIN` stands for

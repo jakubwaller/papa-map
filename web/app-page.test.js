@@ -32,9 +32,16 @@ test("both pages carry the install steps, and the map carries the manifest they 
   const manifest = JSON.parse(read("manifest.webmanifest"));
   assert.equal(manifest.name, "PapaMap");
   assert.equal(manifest.display, "standalone");
-  const index = read("index.html");
-  assert.ok(index.includes('<link rel="manifest" href="manifest.webmanifest" />'));
-  assert.ok(index.includes('<meta name="apple-mobile-web-app-title" content="PapaMap" />'));
+  assert.ok(read("index.html").includes('<link rel="manifest" href="manifest.webmanifest" />'));
+  // The steps are read here, so here is where people follow them: without
+  // the manifest, iOS would pin the instructions and Android would show no
+  // "Install" item at all.
+  for (const f of PAGES) {
+    const html = read(f);
+    assert.ok(html.includes('<link rel="manifest" href="manifest.webmanifest">'), f);
+    assert.ok(html.includes('<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">'), f);
+    assert.ok(html.includes('<meta name="apple-mobile-web-app-title" content="PapaMap">'), f);
+  }
 });
 
 test("nothing of the vote counter is left: no buttons, no POST paths, no Caddy log, no key", () => {
