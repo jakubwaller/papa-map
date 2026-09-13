@@ -153,6 +153,25 @@ och jämförs som ett helt token. Aldrig som delsträng, för <code>female_toile
 </ul>
 <p>Ett objekt med en <code>centralkey</code>-tagg (utom <code>no</code>) hålls utanför kartan när nyckeln spärrar hela dörren: <code>access=centralkey</code>, ett bord i handikapptoaletten, eller inget i taggarna säger att nyckeln bara gäller en kabin. En anläggning med öppen herr- och damtoalett och en låst handikappkabin (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> och <code>female=yes</code>) stannar på kartan, grå tills någon registrerar rummet. Euronyckeln får man bara mot styrkt funktionsnedsättning, så de flesta pappor kommer inte genom den dörren.</p>
 
+<h2>Omkopplaren pappa/mamma</h2>
+<p>De tre färgerna ovan svarar på pappas fråga: Kommer en pappa åt bordet? För en mamma läses
+samma svar oftast annorlunda — ett bord på damtoaletten kan hon använda, och även vid ett bord
+utan registrerat rum står de flesta i ett rum hon kommer in i. Omkopplaren <em>Pappa / Mamma</em>
+till vänster i filterraden ändrar därför bara hur samma tre svar läses, aldrig svaren själva.</p>
+<ul>
+  <li><strong>Pappa</strong> (standard): grönt, rött och grått som beskrivet ovan.</li>
+  <li><strong>Mamma</strong>: grönt betyder nu båda — det fritt tillgängliga rummet <em>och</em>
+      damtoaletten. Orange står för &rdquo;Rum ej registrerat&rdquo;, alltså oftast användbart.</li>
+</ul>
+<p>Det omkopplaren inte gör: den ändrar ingen tagg, den skriver ingenting till OSM, och den
+räknar ingen ny klassificering. Den är en andra läsning av samma tre värden, sparad bara i din
+webbläsare under <code>papamap-mode</code>. Siffrorna i filtren är desamma i båda lägena.</p>
+<p>Ett undantag står här, för det ser grönt ut i mamma-läget men är det inte riktigt: ett bord
+som enligt <code>changing_table:location</code> bara står på herrtoaletten
+(<code>male_toilet</code> ensamt), räknas till de gröna. Det är sällsynt, men det förekommer.
+Därför säger texten vid nålen &rdquo;i sällsynta fall bara på herrtoaletten&rdquo; och siffran
+ovan säger &rdquo;troligen&rdquo;.</p>
+
 <h2>Den blå ringen: lekhörna</h2>
 <p>En nål med blå ring har dessutom en lekhörna &mdash; en plats där man inte bara byter blöja utan
 också blir kvar en stund. Filtret <em>Med lekhörna</em> i filterraden visar bara dem. En plats räknas

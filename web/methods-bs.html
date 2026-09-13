@@ -152,6 +152,26 @@ sadrži <code>male</code>.</p>
 </ul>
 <p>Objekat s oznakom <code>centralkey</code> (različitom od <code>no</code>) ostaje izvan karte kad ključ zaključava cijela vrata: <code>access=centralkey</code>, sto u WC-u za invalide, ili ništa u oznakama ne kaže da ključ vrijedi samo za jednu kabinu. Objekat s otvorenim muškim i ženskim WC-om i zaključanom kabinom za invalide (<code>wheelchair:access=centralkey</code>, ili <code>male=yes</code> i <code>female=yes</code>) ostaje na karti, siv dok neko ne upiše prostoriju. Euro ključ se dobija samo uz dokaz o invaliditetu, pa većina tata ne prođe kroz ta vrata.</p>
 
+<h2>Prekidač tata/mama</h2>
+<p>Tri boje gore odgovaraju na tatino pitanje: Može li tata doći do stola? Za mamu se isti
+odgovor obično čita drugačije — sto u ženskom WC-u ona može koristiti, a i kod stola bez
+zabilježene prostorije većina stoji u prostoriji u koju ona može ući. Prekidač
+<em>Tata / Mama</em> lijevo u traci filtera zato samo mijenja kako se čitaju ista tri odgovora,
+nikad same odgovore.</p>
+<ul>
+  <li><strong>Tata</strong> (podrazumijevano): zeleno, crveno i sivo kao što je opisano gore.</li>
+  <li><strong>Mama</strong>: zeleno sada znači oboje — slobodno dostupnu prostoriju <em>i</em>
+      žensko WC. Narandžasto znači &bdquo;Prostorija nije zabilježena&ldquo;, odnosno najčešće
+      upotrebljivo.</li>
+</ul>
+<p>Šta prekidač ne radi: ne mijenja nijednu oznaku, ništa ne upisuje u OSM i ne računa nikakvu
+novu klasifikaciju. To je drugo čitanje istih tri vrijednosti, sačuvano samo u tvom pretraživaču
+pod <code>papamap-mode</code>. Brojevi u filterima su isti u oba režima.</p>
+<p>Jedan izuzetak stoji ovdje, zato što u mama režimu izgleda zeleno, a nije baš to: sto koji
+prema <code>changing_table:location</code> stoji samo u muškom WC-u (<code>male_toilet</code>
+sam), računa se u zelene. To je rijetko, ali se dešava. Zato tekst kod oznake kaže &bdquo;u
+rijetkim slučajevima samo u muškom WC-u&ldquo;, a broj gore kaže &bdquo;vjerovatno&ldquo;.</p>
+
 <h2>Plavi prsten: kutak za igru</h2>
 <p>Oznaka sa plavim prstenom ima i kutak za igru &mdash; mjesto gdje dijete ne samo da presvučeš,
 nego i ostaneš neko vrijeme. Filter <em>S kutkom za igru</em> sužava kartu samo na njih. Mjesto se

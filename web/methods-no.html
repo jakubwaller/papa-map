@@ -152,6 +152,28 @@ små bokstaver og sammenlignes som et helt token. Aldri som en delstreng, for
 </ul>
 <p>Et objekt med et <code>centralkey</code>-tag (annet enn <code>no</code>) holdes utenfor kartet når nøkkelen sperrer hele døra: <code>access=centralkey</code>, et bord på handikaptoalettet, eller ingenting i taggene sier at nøkkelen bare gjelder én kabin. Et anlegg med åpent herre- og dametoalett og en låst handikapkabin (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> og <code>female=yes</code>) blir på kartet, grått til noen registrerer rommet. Euronøkkelen utstedes bare mot dokumentert funksjonsnedsettelse, så de fleste pappaer kommer ikke gjennom den døra.</p>
 
+<h2>Pappa-mamma-bryteren</h2>
+<p>De tre fargene over svarer på pappa-spørsmålet: kommer en pappa til bordet? For en mamma skal
+det samme svaret vanligvis leses annerledes — et bord på dametoalettet kan hun bruke, og også
+ved et bord uten registrert rom står de fleste i et rom hun kan gå inn i. Bryteren <em>Pappa /
+Mamma</em> til venstre i filterlisten endrer derfor bare hvordan de samme tre svarene leses,
+aldri svarene selv.</p>
+<ul>
+  <li><strong>Pappa</strong> (standard): grønn, rød og grå som beskrevet over.</li>
+  <li><strong>Mamma</strong>: grønn betyr nå begge deler — det åpent tilgjengelige rommet
+      <em>og</em> dametoalettet. Oransje står for «rom ikke registrert», altså vanligvis
+      brukbart.</li>
+</ul>
+<p>Det bryteren ikke gjør: den endrer ingen tag, den skriver ingenting til OSM, og den beregner
+ingen ny klassifisering. Den er bare en annen lesning av de samme tre verdiene, lagret kun i din
+egen nettleser, under <code>papamap-mode</code>. Tallene i filtrene er de samme i begge
+modusene.</p>
+<p>Ett unntak står her fordi det ser grønt ut i mamma-modus, uten helt å være det: et bord som
+ifølge <code>changing_table:location</code> bare står på herretoalettet (bare
+<code>male_toilet</code>), telles med som grønt. Det er sjeldent, men det skjer. Derfor sier
+teksten på nålen «i sjeldne tilfeller bare på herretoalettet», og tallet over sier
+«sannsynligvis».</p>
+
 <h2>Den blå ringen: lekeområde</h2>
 <p>En nål med en blå ring har også et lekeområde &mdash; et sted der du ikke bare steller barnet,
 men blir en stund. Filteret <em>Med lekeområde</em> viser bare disse. Et sted telles med hvis OSM

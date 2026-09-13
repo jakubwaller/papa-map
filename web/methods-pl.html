@@ -153,6 +153,27 @@ zamieniana na małe litery i porównywana jako cały token. Nigdy jako fragment 
 </ul>
 <p>Obiekt z tagiem <code>centralkey</code> (innym niż <code>no</code>) zostaje poza mapą, gdy klucz zamyka całe drzwi: <code>access=centralkey</code>, przewijak w toalecie dla niepełnosprawnych, albo nic w tagach nie mówi, że klucz dotyczy tylko jednej kabiny. Obiekt z otwartą toaletą męską i damską oraz zamkniętą na klucz kabiną dla niepełnosprawnych (<code>wheelchair:access=centralkey</code>, albo <code>male=yes</code> i <code>female=yes</code>) zostaje na mapie, szary, dopóki ktoś nie wpisze pomieszczenia. Euroklucz dostaje się wyłącznie po okazaniu orzeczenia o niepełnosprawności, więc większość ojców przez te drzwi nie przejdzie.</p>
 
+<h2>Przełącznik tata/mama</h2>
+<p>Trzy kolory na górze odpowiadają na pytanie taty: Czy tata dotrze do przewijaka? Dla mamy ta
+sama odpowiedź najczęściej czyta się inaczej — z przewijaka w damskim WC może skorzystać, a przy
+przewijaku bez zapisanego pomieszczenia większość stoi w pomieszczeniu, do którego może wejść.
+Przełącznik <em>Tata / Mama</em> po lewej w pasku filtrów zmienia więc tylko sposób odczytu tych
+samych trzech odpowiedzi, nigdy same odpowiedzi.</p>
+<ul>
+  <li><strong>Tata</strong> (domyślnie): zielony, czerwony i szary, jak opisano wyżej.</li>
+  <li><strong>Mama</strong>: zielony znaczy teraz obie rzeczy — ogólnodostępne pomieszczenie
+      <em>i</em> damskie WC. Pomarańczowy oznacza &bdquo;Pomieszczenie nieznane&rdquo;, czyli
+      najczęściej możliwe do użycia.</li>
+</ul>
+<p>Czego przełącznik nie robi: nie zmienia żadnego tagu, nic nie zapisuje do OSM i nie liczy
+żadnej nowej klasyfikacji. To drugi sposób odczytu tych samych trzech wartości, zapisany tylko w
+twojej przeglądarce pod <code>papamap-mode</code>. Liczby w filtrach są takie same w obu trybach.</p>
+<p>Jest tu jeden wyjątek, bo w trybie mamy wygląda na zielony, a nie do końca jest: przewijak,
+który według <code>changing_table:location</code> stoi tylko w męskiej toalecie
+(<code>male_toilet</code> samo), liczy się do zielonych. To rzadkie, ale się zdarza. Dlatego
+tekst przy pinezce mówi &bdquo;w rzadkich przypadkach tylko w męskiej toalecie&rdquo;, a liczba
+na górze mówi &bdquo;prawdopodobnie&rdquo;.</p>
+
 <h2>Niebieska obwódka: kącik zabaw</h2>
 <p>Pinezka z niebieską obwódką ma dodatkowo kącik zabaw &mdash; miejsce, w którym nie tylko się
 przewija, ale i zostaje na dłużej. Filtr <em>Z kącikiem zabaw</em> pokazuje na mapie tylko takie.

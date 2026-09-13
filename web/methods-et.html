@@ -152,6 +152,27 @@ alamstringina, sest <code>female_toilet</code> sisaldab sõna <code>male</code>.
 </ul>
 <p><code>centralkey</code>-sildiga (muu kui <code>no</code>) objekt jääb kaardilt välja, kui võti lukustab kogu ukse: <code>access=centralkey</code>, laud invatualetis, või miski siltides ei ütle, et võti kehtib ainult ühe kabiini kohta. Avatud meeste- ja naistetualetiga ning lukustatud invakabiiniga kompleks (<code>wheelchair:access=centralkey</code>, või <code>male=yes</code> ja <code>female=yes</code>) jääb kaardile, hallina, kuni keegi ruumi kirja paneb. Eurovõtme saab ainult puude tõendamisel, nii et enamik isasid sellest uksest läbi ei saa.</p>
 
+<h2>Isa-ema lüliti</h2>
+<p>Kolm ülalpool kirjeldatud värvi vastavad isa küsimusele: kas isa pääseb laua juurde? Emale on
+sama vastus enamasti teistsugune &mdash; naiste WC-s olevat lauda saab ta kasutada, ja ka lauast,
+mille ruum on märkimata, on suurem osa sellises ruumis, kuhu ta pääseb sisse. Lüliti
+<em>Isa / Ema</em> filtririba vasakus servas muudab seepärast ainult seda, kuidas samu kolme
+vastust loetakse, mitte kunagi vastuseid ise.</p>
+<ul>
+  <li><strong>Isa</strong> (vaikimisi): roheline, punane ja hall, nagu eespool kirjeldatud.</li>
+  <li><strong>Ema</strong>: Roheline tähendab nüüd mõlemat &mdash; vabalt ligipääsetavat ruumi
+      <em>ja</em> naiste WC-d. Oranž tähendab &bdquo;Ruum märkimata&ldquo;, seega enamasti
+      kasutatav.</li>
+</ul>
+<p>Mida lüliti ei tee: see ei muuda ühtegi silti, ei kirjuta midagi OSM-i ega arvuta uut
+klassifikatsiooni. See on samade kolme väärtuse teine lugemisviis, mis on salvestatud vaid sinu
+brauserisse, võtme <code>papamap-mode</code> alla. Numbrid filtrites on mõlemas režiimis samad.</p>
+<p>Siin on üks erand, sest ema-režiimis näeb see roheline välja, kuid täpselt see ei ole: laud, mis
+sildi <code>changing_table:location</code> järgi asub ainult meeste WC-s (ainuke väärtus
+<code>male_toilet</code>), loetakse roheliste hulka. See on harv, aga tuleb ette. Seepärast ütleb
+tekst nõela juures &bdquo;harvadel juhtudel ainult meeste WC-s&ldquo; ja number ülal ütleb
+&bdquo;tõenäoliselt&ldquo;.</p>
+
 <h2>Sinine rõngas: mänguala</h2>
 <p>Sinise rõngaga nõelal on lisaks ka mänguala &mdash; koht, kus last ei mähita lihtsalt ära, vaid
 jäädakse veidi pikemaks. Filter <em>Mängualaga</em> näitab kaardil ainult neid kohti. Koht loetakse

@@ -153,6 +153,26 @@ mala slova i uspoređuje kao cijeli token. Nikad kao podniz, jer <code>female_to
 </ul>
 <p>Objekt s oznakom <code>centralkey</code> (drugačijom od <code>no</code>) ostaje izvan karte kad ključ zaključava cijela vrata: <code>access=centralkey</code>, stol u WC-u za invalide, ili ništa u oznakama ne kaže da ključ vrijedi samo za jednu kabinu. Objekt s otvorenim muškim i ženskim WC-om i zaključanom kabinom za invalide (<code>wheelchair:access=centralkey</code>, ili <code>male=yes</code> i <code>female=yes</code>) ostaje na karti, siv dok netko ne upiše prostoriju. Euro ključ dobiva se samo uz dokaz invaliditeta, pa većina tata kroz ta vrata ne prolazi.</p>
 
+<h2>Prekidač tata-mama</h2>
+<p>Tri boje gore odgovaraju na tatino pitanje: može li tata doći do stola? Mami je isti odgovor
+obično čitljiv drukčije &mdash; stol u ženskom WC-u ona može koristiti, a i kod stola bez
+zabilježene prostorije većina njih stoji u prostoriji u koju ona može ući. Prekidač
+<em>Tata / Mama</em> lijevo u traci filtara zato mijenja samo to kako se čitaju iste tri boje,
+nikad same odgovore.</p>
+<ul>
+  <li><strong>Tata</strong> (zadano): zeleno, crveno i sivo, kao gore.</li>
+  <li><strong>Mama</strong>: Zeleno sada znači oboje &mdash; slobodno pristupnu prostoriju
+      <em>i</em> žensko WC. Narančasto znači »Nezabilježena prostorija«, dakle obično
+      upotrebljivo.</li>
+</ul>
+<p>Što prekidač ne radi: ne mijenja nijednu oznaku, ne piše ništa u OSM-u i ne izračunava novu
+klasifikaciju. To je drugo čitanje istih triju vrijednosti, spremljeno samo u tvom pregledniku pod
+<code>papamap-mode</code>. Brojevi na filtrima isti su u oba načina.</p>
+<p>Ovdje je jedna iznimka, jer u mama-načinu izgleda zeleno, a nije baš: stol koji je, prema
+<code>changing_table:location</code>, samo u muškom WC-u (jedina vrijednost
+<code>male_toilet</code>), ubraja se u zelene. To je rijetko, ali se dogodi. Zato tekst kod pina
+kaže »u rijetkim slučajevima samo u muškom WC-u«, a broj gore kaže »vjerojatno«.</p>
+
 <h2>Plavi kružić: dječji kutak</h2>
 <p>Pin s plavim kružićem ima i dječji kutak &mdash; mjesto gdje se ne samo previja, nego se i može
 ostati neko vrijeme. Filtar <em>S dječjim kutkom</em> suzuje kartu samo na njih. Mjesto se broji ako
