@@ -405,6 +405,9 @@ hour (measured 2026-09-13). Three rules follow:
   #97's Norwegian wording was live at the origin and invisible to readers for that reason
   (2026-09-13). A bump does not reach every edge-cached file. `impressum.html` and
   `datenschutz.html` load `style.css` with no pin, and `vendor/maplibre-gl.*` has none either.
+  Nor does `sw.js` itself. A change to the worker, its rules or a new `SHELL` list, reaches a
+  returning reader only when their cached copy runs out, up to four hours later. Nothing breaks
+  in the meantime, because the old worker fetches new-pin URLs as they come up.
   A change there waits out the browsers' four hours. A purge only helps readers who have not
   loaded the file yet.
 - **Never fetch a new-pin URL before the `git pull` on the server.** The first request caches
@@ -431,5 +434,6 @@ curl -s https://DOMAIN/ | grep -c 'areaFallback">49 Länder'              # want
 
 Both or neither. If `area_key` still counts the old set, the build has not run under the new
 variable yet — run it by hand rather than waiting for cron, or the site claims a coverage it
-does not have until the next morning. `/data/*` is served with `Cache-Control: max-age=900`,
-so allow up to 15 minutes, or add `?x=1` to bust it.
+does not have until the next morning. `/data/*` is meant to get `max-age=900`, but in
+`deploy/papamap.Caddyfile` the site-wide `header Cache-Control` line overrides the `@data` one.
+So it goes out with an hour: allow up to 60 minutes, or add `?x=1` to bust it.
