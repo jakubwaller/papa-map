@@ -346,7 +346,7 @@ function popupHTML(f) {
 function askHTML(question = "askRoom", busy = false) {
   const dis = busy ? " disabled" : "";
   // The label rides along explicitly: a room added to ROOMS without a label
-  // then renders its raw key, not another answer's words.
+  // then renders as "undefined" — loud — not as another answer's words.
   const pill = (c, label, extra = "") =>
     `<button type="button" class="btn ask-btn${extra}" data-room="${c}"${dis}>${esc(t(label))}</button>`;
   // Two columns of short labels: six rooms in three rows where five pills
