@@ -9,7 +9,9 @@ bind-mounts `web/`, which is why `git pull` is the whole deploy for a web-only c
 image rebuild is involved. The exception is `deploy/papamap.Caddyfile`: Caddy reads it once at
 container start, so a change there needs `docker compose restart papamap` after the pull —
 the restart re-mounts the file and picks up the new content. (Verify with
-`curl -s 'https://papamap.de/?lang=en' | grep og:title` — it must card in English.) Serving the directory with a static web server you already run works
+`curl -s 'https://papamap.de/?lang=en' | grep og:title` — it must card in English.) A change
+to `docker-compose.yml` itself (a mount, an `environment` line) needs `docker compose up -d
+papamap`, which recreates the container; a restart does not re-read the compose file. Serving the directory with a static web server you already run works
 just as well — both paths are below.
 
 Works on any always-on Linux box. Substitute your own paths and domain; `DOMAIN` stands for
@@ -188,7 +190,7 @@ but no split, and the command says the history is unchanged.
 
 **The check runs in Docker, like the build** — the `ops` service in `docker-compose.yml`,
 the same image, run as the host user (uid 1000; edit `user:` if yours differs), with the
-data directory, the state directory, `pipeline.log` and `caddy-logs/` mounted. The host
+data directory, the state directory and `pipeline.log` mounted. The host
 needs no Python. `ops.env` (gitignored, next to the compose file) holds the tokens and the
 mail settings only; every `PAPAMAP_*_PATH` the check reads is set by the service itself
 (`environment` beats `env_file`), so a host layout's paths left in the file are harmless.
@@ -198,7 +200,7 @@ lose its run history, visits curve and theme-edit series:
 
 ```bash
 cd ~/papa-map
-mkdir -p ops-data caddy-logs web-data/private && touch pipeline.log   # mountpoints, owned by you
+mkdir -p ops-data web-data/private && touch pipeline.log   # mountpoints, owned by you
 [ -f ops-state.json ] && mv ops-state.json ops-data/ops-state.json     # migrate the state
 docker compose run --build --rm ops        # first run: writes the state and both pages
 ```
@@ -281,65 +283,6 @@ without it the container refuses to start and the whole site answers 502.)
 
 To rotate the token, regenerate the snippet and `docker compose restart papamap` (it is a
 bind mount — restart, not reload). Everyone's cookie stops working at the same moment.
-
-### The app page's tap count
-
-`web/app.html` (and `app-en.html`, which every non-German UI links to) asks whether people
-want PapaMap as an app. Its two buttons POST to `/app/ja/iphone` and `/app/ja/android`, which
-the container Caddy answers 204 when the request carries the page's own `Origin`. The count is
-the container's **only access log**, and it holds the taps and nothing else: `log_skip` drops
-every request outside `/app/ja/` before it is written — page views included, the site has no
-analytics — and the log filter deletes the client address, every request header, host,
-protocol, sizes and duration, and cuts the query string off the path, so a line is a
-timestamp, a method, a path and a status (`deploy/papamap.Caddyfile`). It is written to
-`/var/log/caddy/app.log`, mounted from `./caddy-logs` in the repo directory.
-
-`pipeline.ops` reads that directory on every run (`PAPAMAP_APP_LOG_DIR`, default
-`caddy-logs` in the repo directory; the ops service mounts it read-only at `/logs/caddy`
-and sets the variable) into the private ops
-page's **App page** block, a line in every report (`app page: …` in `ops.log` daily, in the
-mail on digest days), and `ops-state.json` under `app_taps` — per day, keeping the larger of
-stored and fresh, so a log Caddy has rolled away (10 MiB per file, five rolled files kept, none
-older than 400 days) costs no history. Without the directory the block just says so — unless the
-state already holds tap history, then it is a WARN; a directory with no `app*.log` in it is a
-WARN too, because Caddy creates the file at start and an empty directory means the mount moved.
-A tap POST the Origin gate refused is logged as a 404 on a tap path; when the last seven days
-hold at least three of those and no more counted taps than refused ones, the run warns, because
-a gate refusing the page itself would otherwise read as "nobody wants the app". Judged over the
-window, not all time, so a page that breaks after a good month is noticed that week; the floor
-keeps a scanner's stray POST or two quiet. `PAPAMAP_APP_LOG_DIR=` (empty) disables
-the block.
-
-**Rate limit at the edge.** The tap endpoint is unauthenticated by design — the page promises
-no account, no cookie, no address — so a `curl` loop can inflate the one number the app
-decision rests on. The site cannot tell taps apart without identifying people; Cloudflare, which
-sees the address anyway, can. One rate-limiting rule in the zone (Security → WAF → Rate
-limiting rules; the free plan allows one): expression
-`(http.request.method eq "POST" and starts_with(http.request.uri.path, "/app/ja/"))`, counted
-per IP, more than 5 requests in 10 seconds → block for 10 seconds. It stops a script, not a
-patient person with three browsers; nothing does that without identifying people.
-
-Deploying it is a new mount and a changed Caddyfile, so **recreate, don't restart**, and
-validate the Caddyfile against the image first — `log_skip` and the file writer's `mode`
-need Caddy 2.8 (2024), and a container that fails to start on an old image is the whole
-site down:
-
-```sh
-cd ~/papa-map && git pull
-mkdir -p caddy-logs                      # before `up`: Docker would create it root-owned
-docker run --rm -v "$PWD/deploy/papamap.Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine \
-  caddy validate --config /etc/caddy/Caddyfile   # the container's own image; "Valid configuration"
-docker compose up -d papamap             # picks up the mount and the Caddyfile
-curl -s -o /dev/null -w "%{http_code}\n" https://papamap.de/app.html         # 200, not logged
-curl -s -o /dev/null -w "%{http_code}\n" -X POST -H "Origin: https://papamap.de" \
-  https://papamap.de/app/ja/nope         # 404, logged, not counted
-tail -n 1 caddy-logs/app.log             # one line: ts, method, uri, status — nothing else
-```
-
-If `validate` complains about `log_skip` or `mode`, the local image predates 2.8:
-`docker compose pull papamap`, validate again, then `up`. A POST to one of the two real
-paths with that Origin answers 204 and **counts as a tap** — test it once from your own phone
-and know that one is yours.
 
 `ops.env` (git-ignored, `chmod 600`) holds the same `PAPAMAP_*` path overrides as the build cron
 (if any) plus:

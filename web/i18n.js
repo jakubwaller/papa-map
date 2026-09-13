@@ -118,7 +118,7 @@ export const STRINGS = {
     // carries the full question in each language.
     app: "App",
     appHref: "app.html",
-    ariaApp: "PapaMap als App — willst du sie?",
+    ariaApp: "PapaMap als App",
     // The picker's own entry: every language names itself, so a reader who
     // cannot read the current UI can still find their own. Never translated.
     langName: "Deutsch",
@@ -261,7 +261,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap as an app — do you want it?",
+    ariaApp: "PapaMap as an app",
     langName: "English",
     kofi: "☕ Coffee",
 
@@ -390,7 +390,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-da.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap som app — vil du have den?",
+    ariaApp: "PapaMap som app",
     langName: "Dansk",
     kofi: "☕ Kaffe",
 
@@ -521,7 +521,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-nl.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap als app — wil je die?",
+    ariaApp: "PapaMap als app",
     langName: "Nederlands",
     kofi: "☕ Koffie",
 
@@ -645,7 +645,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-fr.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap en appli — tu la veux ?",
+    ariaApp: "PapaMap en appli",
     langName: "Français",
     kofi: "☕ Café",
 
@@ -769,7 +769,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-it.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap come app — la vuoi?",
+    ariaApp: "PapaMap come app",
     langName: "Italiano",
     kofi: "☕ Caffè",
 
@@ -893,7 +893,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-cs.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap jako aplikace — chceš ji?",
+    ariaApp: "PapaMap jako aplikace",
     langName: "Čeština",
     kofi: "☕ Káva",
 
@@ -1017,7 +1017,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-pl.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap jako aplikacja — chcesz ją?",
+    ariaApp: "PapaMap jako aplikacja",
     langName: "Polski",
     kofi: "☕ Kawa",
 
@@ -1141,7 +1141,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-sv.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap som app — vill du ha den?",
+    ariaApp: "PapaMap som app",
     langName: "Svenska",
     kofi: "☕ Kaffe",
 
@@ -1264,7 +1264,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-bs.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap kao aplikacija — želiš li je?",
+    ariaApp: "PapaMap kao aplikacija",
     langName: "Bosanski",
     kofi: "☕ Kafa",
 
@@ -1387,7 +1387,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-ca.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap com a app — la vols?",
+    ariaApp: "PapaMap com a app",
     langName: "Català",
     kofi: "☕ Cafè",
 
@@ -1510,7 +1510,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-et.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap äpina — kas tahad seda?",
+    ariaApp: "PapaMap äpina",
     langName: "Eesti",
     kofi: "☕ Kohv",
 
@@ -1633,7 +1633,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-es.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap como app — ¿la quieres?",
+    ariaApp: "PapaMap como app",
     langName: "Español",
     kofi: "☕ Café",
 
@@ -1756,7 +1756,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-hr.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap kao aplikacija — želiš li je?",
+    ariaApp: "PapaMap kao aplikacija",
     langName: "Hrvatski",
     kofi: "☕ Kava",
 
@@ -1879,7 +1879,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-is.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap sem app — viltu það?",
+    ariaApp: "PapaMap sem app",
     langName: "Íslenska",
     kofi: "☕ Kaffi",
 
@@ -2002,7 +2002,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-lv.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap kā lietotne — vai tu to vēlies?",
+    ariaApp: "PapaMap kā lietotne",
     langName: "Latviešu",
     kofi: "☕ Kafija",
 
@@ -2125,7 +2125,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-lt.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap kaip programėlė — ar norėtum jos?",
+    ariaApp: "PapaMap kaip programėlė",
     langName: "Lietuvių",
     kofi: "☕ Kava",
 
@@ -2248,7 +2248,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-hu.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap alkalmazásként — szeretnéd?",
+    ariaApp: "PapaMap alkalmazásként",
     langName: "Magyar",
     kofi: "☕ Kávé",
 
@@ -2371,7 +2371,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-no.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap som app — vil du ha den?",
+    ariaApp: "PapaMap som app",
     langName: "Norsk",
     kofi: "☕ Kaffe",
 
@@ -2494,7 +2494,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-pt.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap como app — queres?",
+    ariaApp: "PapaMap como app",
     langName: "Português",
     kofi: "☕ Café",
 
@@ -2617,7 +2617,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-ro.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap ca aplicație — o vrei?",
+    ariaApp: "PapaMap ca aplicație",
     langName: "Română",
     kofi: "☕ Cafea",
 
@@ -2740,7 +2740,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-sq.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap si aplikacion — e do?",
+    ariaApp: "PapaMap si aplikacion",
     langName: "Shqip",
     kofi: "☕ Kafe",
 
@@ -2863,7 +2863,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-sk.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap ako aplikácia — chceš ju?",
+    ariaApp: "PapaMap ako aplikácia",
     langName: "Slovenčina",
     kofi: "☕ Káva",
 
@@ -2986,7 +2986,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-sl.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap kot aplikacija — jo želiš?",
+    ariaApp: "PapaMap kot aplikacija",
     langName: "Slovenščina",
     kofi: "☕ Kava",
 
@@ -3109,7 +3109,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-fi.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap sovelluksena — haluatko sen?",
+    ariaApp: "PapaMap sovelluksena",
     langName: "Suomi",
     kofi: "☕ Kahvi",
 
@@ -3232,7 +3232,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-el.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "Το PapaMap ως εφαρμογή — το θέλεις;",
+    ariaApp: "Το PapaMap ως εφαρμογή",
     langName: "Ελληνικά",
     kofi: "☕ Καφές",
 
@@ -3355,7 +3355,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-be.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap як дадатак — хочаш яго?",
+    ariaApp: "PapaMap як дадатак",
     langName: "Беларуская",
     kofi: "☕ Кава",
 
@@ -3478,7 +3478,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-bg.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap като приложение — искаш ли го?",
+    ariaApp: "PapaMap като приложение",
     langName: "Български",
     kofi: "☕ Кафе",
 
@@ -3601,7 +3601,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-mk.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap како апликација — ја сакаш?",
+    ariaApp: "PapaMap како апликација",
     langName: "Македонски",
     kofi: "☕ Кафе",
 
@@ -3724,7 +3724,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-sr.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap као апликација — желиш ли је?",
+    ariaApp: "PapaMap као апликација",
     langName: "Српски",
     kofi: "☕ Кафа",
 
@@ -3847,7 +3847,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-uk.html",
     app: "App",
     appHref: "app-en.html",
-    ariaApp: "PapaMap як застосунок — хочеш його?",
+    ariaApp: "PapaMap як застосунок",
     langName: "Українська",
     kofi: "☕ Кава",
 
@@ -3974,7 +3974,7 @@ export const STRINGS = {
     boardHref: "wickeltische/leaderboard-ja.html",
     app: "アプリ",
     appHref: "app-en.html",
-    ariaApp: "PapaMapをアプリに — ほしいですか？",
+    ariaApp: "PapaMapをアプリとして",
     langName: "日本語",
     kofi: "☕ コーヒー",
 
