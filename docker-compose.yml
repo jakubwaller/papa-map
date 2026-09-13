@@ -68,17 +68,20 @@ services:
   # (docs/DEPLOY.md). The same image as the build, so the host needs no
   # Python at all; `--build` on every run keeps the image at the checkout,
   # which keeps `git pull` the whole deploy for an ops change (a cached
-  # rebuild is seconds). Its own container name: a build that overruns must
-  # not collide with it.
+  # rebuild is seconds). No container_name on purpose: `run` then gets a
+  # unique generated name per run, so a build that overruns, a preview run
+  # during the cron, or a container left behind by a reboot can never block
+  # the next 05:30 with "name already in use".
   ops:
     build: .
-    container_name: papamap-ops
     profiles: ["tools"]
     command: ["python", "-m", "pipeline.ops"]
     # ops.env holds the secrets and the mail settings — OSMCHA_TOKEN, CF_*,
     # PAPAMAP_SMTP_*, PAPAMAP_OPS_TO. Any path it sets belongs to the host
     # layout and is overridden below (`environment` beats `env_file`).
-    # Optional so that a checkout without it can still `up` the site.
+    # Optional so that a checkout without it can still `up` the site. This
+    # long form needs Compose 2.24+ (the live server runs 5.x); an older
+    # compose fails to parse the whole file, the site's `up` included.
     env_file:
       - path: ops.env
         required: false
@@ -86,6 +89,8 @@ services:
       - PAPAMAP_GEOJSON_PATH=/out/changing_tables.geojson
       - PAPAMAP_STATS_PATH=/out/stats.json
       - PAPAMAP_HISTORY_PATH=/out/history.json
+      - PAPAMAP_OPS_HTML_PATH=/out/ops.html
+      - PAPAMAP_OPS_PRIVATE_HTML_PATH=/out/private/ops.html
       - PAPAMAP_OPS_STATE_PATH=/ops-data/ops-state.json
       - PAPAMAP_BUILD_LOG_PATH=/logs/pipeline.log
       - PAPAMAP_APP_LOG_DIR=/logs/caddy

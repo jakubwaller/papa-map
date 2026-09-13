@@ -190,13 +190,16 @@ but no split, and the command says the history is unchanged.
 the same image, run as the host user (uid 1000; edit `user:` if yours differs), with the
 data directory, the state directory, `pipeline.log` and `caddy-logs/` mounted. The host
 needs no Python. `ops.env` (gitignored, next to the compose file) holds the tokens and the
-mail settings only; any `PAPAMAP_*_PATH` in it is ignored under Docker, the service sets the
-container paths itself. One-time:
+mail settings only; every `PAPAMAP_*_PATH` the check reads is set by the service itself
+(`environment` beats `env_file`), so a host layout's paths left in the file are harmless.
+One-time — the `mv` is the migration from the host-run check, and it must happen before
+the first containerized run, which would otherwise start a fresh state and the page would
+lose its run history, visits curve and theme-edit series:
 
 ```bash
 cd ~/papa-map
 mkdir -p ops-data caddy-logs web-data/private && touch pipeline.log   # mountpoints, owned by you
-# migrating from the host-run check: mv ops-state.json ops-data/ops-state.json
+[ -f ops-state.json ] && mv ops-state.json ops-data/ops-state.json     # migrate the state
 docker compose run --build --rm ops        # first run: writes the state and both pages
 ```
 
@@ -292,7 +295,8 @@ timestamp, a method, a path and a status (`deploy/papamap.Caddyfile`). It is wri
 `/var/log/caddy/app.log`, mounted from `./caddy-logs` in the repo directory.
 
 `pipeline.ops` reads that directory on every run (`PAPAMAP_APP_LOG_DIR`, default
-`caddy-logs`, relative to where the cron runs like `pipeline.log`) into the private ops
+`caddy-logs` in the repo directory; the ops service mounts it read-only at `/logs/caddy`
+and sets the variable) into the private ops
 page's **App page** block, a line in every report (`app page: …` in `ops.log` daily, in the
 mail on digest days), and `ops-state.json` under `app_taps` — per day, keeping the larger of
 stored and fresh, so a log Caddy has rolled away (10 MiB per file, five rolled files kept, none
