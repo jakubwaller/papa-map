@@ -189,7 +189,15 @@ export function roomPatch(choice) {
 // The play-place answer. There the table is news to OSM, so the yes travels
 // with the room; a reader who tapped a room stood in front of one, which is
 // `yes`, never `limited`. Same vocabulary, one more tag.
+//
+// "none" is the one choice roomPatch refuses: a play place with no table at
+// all has no room to name, so the patch is changing_table alone. That also
+// keeps "none" out of ROOMS and roomChoices — it is not a room a mother or
+// father can vouch for, only an answer to "is there a table here" that a
+// grey table pin (a table OSM already knows about) must never be able to
+// give, which is why roomPatch itself still throws on it.
 export function tablePatch(choice) {
+  if (choice === "none") return { changing_table: "no" };
   return { changing_table: "yes", ...roomPatch(choice) };
 }
 

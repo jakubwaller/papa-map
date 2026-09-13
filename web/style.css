@@ -501,6 +501,12 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .ask-q { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
 .popup .ask-btns { display: flex; flex-wrap: wrap; gap: 6px; }
 .popup .ask-btn { font: inherit; font-size: 12.5px; font-weight: 600; background: #fff; cursor: pointer; }
+/* "Kein Wickeltisch" is the secondary answer: same pill as a room, but a
+   lighter ink so the rooms still read as the expected tap. No new colour —
+   --muted is the token the rest of the popup already uses for text that
+   should recede (the amenity subtitle, the "away" caption). */
+.popup .ask-btn-none { color: var(--muted); }
+.popup .ask-btn-none:hover { border-color: var(--line); color: var(--muted-2); }
 .popup .ask-who { margin-top: 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted-2); }
 .popup .linkish {
   border: 0; background: none; padding: 0; font: inherit;

@@ -103,18 +103,28 @@ test("a mother is not asked about the men's room; a father gets every answer", (
   assert.deepEqual(roomChoices("papa"), ["both", "male", "female", "unisex", "dedicated"]);
   assert.deepEqual(roomChoices("nonsense"), roomChoices("papa"));
   for (const m of ["papa", "mama"]) for (const c of roomChoices(m)) assert.ok(c in ROOMS, c);
+  // "none" is a play-place-only answer to "is there a table", never a room —
+  // it must not turn up as something a reader could vouch for a room with.
+  for (const m of ["papa", "mama"]) assert.ok(!roomChoices(m).includes("none"));
 });
 
 test("the patch touches only the room — limited is never promoted to yes", () => {
   assert.deepEqual(roomPatch("female"), { "changing_table:location": "female_toilet" });
   assert.ok(!("changing_table" in roomPatch("both")));
   assert.throws(() => roomPatch("garden"));
+  // A grey table pin already carries changing_table=yes/limited; "no room" is
+  // never on offer there, so roomPatch must keep refusing "none" too.
+  assert.throws(() => roomPatch("none"));
 });
 
 test("the play-place patch adds the table as yes, with the same room values", () => {
   assert.deepEqual(tablePatch("unisex"), { changing_table: "yes", "changing_table:location": "unisex_toilet" });
   assert.deepEqual(tablePatch("both"), { changing_table: "yes", "changing_table:location": "female_toilet;male_toilet" });
   assert.throws(() => tablePatch("garden"));
+});
+
+test("the play-place 'no table' answer writes changing_table=no alone, no room", () => {
+  assert.deepEqual(tablePatch("none"), { changing_table: "no" });
 });
 
 test("changeset tags name the tool, the hashtag and the host", () => {

@@ -33,6 +33,7 @@ const ROOM_LABEL = { both: "roomBoth", male: "roomMale", female: "roomFemale",
 const CHANGESET_COMMENT = {
   table: "Changing table: which room (answered on papamap.de)",
   place: "Changing table: added, with its room (answered on papamap.de)",
+  place_none: "Changing table: none (answered on papamap.de)",
 };
 
 // ---- Reading mode: the same three answers, read as a father or as a mother.
@@ -321,10 +322,15 @@ function popupHTML(f) {
 // The question and its answers, in the reading's own vocabulary: a mother is
 // offered the rooms she can vouch for, a father every room. Under it, who the
 // answer will be filed as — or, before the first login, that it will be.
+// The play-place question alone gets one more button: a room is never the
+// only way to answer "is there a table here", and "none" is not a room, so
+// it is appended after the rooms rather than folded into roomChoices().
 function askHTML(question = "askRoom") {
   const btns = roomChoices(mode)
     .map((c) => `<button type="button" class="btn ask-btn" data-room="${c}">${esc(t(ROOM_LABEL[c]))}</button>`)
-    .join("");
+    .join("") + (question === "askTable"
+      ? `<button type="button" class="btn ask-btn ask-btn-none" data-room="none">${esc(t("roomNone"))}</button>`
+      : "");
   const user = getUser();
   const who = user
     ? `${esc(t("askAs", { user }))} · <button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button>`
@@ -341,12 +347,16 @@ function askHTML(question = "askRoom") {
 // for the "no" and for everything the two taps cannot say. Once answered
 // in this session the popup reads like a pin's: the tags, no question.
 function placeHTML(p) {
-  const rows = [`<div class="status play">${esc(t("metaPlaces"))}</div>`];
+  const rows = [];
   if (p.changing_table)
     rows.push(`<div class="row">${esc(t("popupTable"))}: <b>${esc(p.changing_table)}</b>` +
       (p.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(p.location_raw)}` : "") + `</div>`);
   else
-    rows.push(`<div class="row">${esc(t("popupPlacesCta"))}</div>`, askHTML("askTable"));
+    // ask-ctx marks the two lines that are true only while the question is
+    // open — "about a changing table, OSM says nothing" and "been here?" —
+    // so answer() can sweep them with the .ask block. No styling of its own.
+    rows.push(`<div class="status play ask-ctx">${esc(t("metaPlaces"))}</div>`,
+              `<div class="row ask-ctx">${esc(t("popupPlacesCta"))}</div>`, askHTML("askTable"));
   if (p.opening_hours)
     rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(p.opening_hours)}</div>`);
   const links = [];
@@ -873,9 +883,12 @@ async function answer(kind, obj, choice) {
   if (!token) { rememberView(); startLogin(osm, intent); return; }
   const rec = { kind, osm_url: obj.osm_url };
   const patch = kind === "place" ? tablePatch(choice) : roomPatch(choice);
+  // "none" only ever arrives for a place, and it gets its own changeset
+  // comment — the room comment would claim a room was named.
+  const comment = kind === "place" && choice === "none" ? CHANGESET_COMMENT.place_none : CHANGESET_COMMENT[kind];
   setEditNote(rec, "looking", "askSaving");
   try {
-    const out = await writeTags(osm, token, osmRef(obj.osm_url), patch, CHANGESET_COMMENT[kind]);
+    const out = await writeTags(osm, token, osmRef(obj.osm_url), patch, comment);
     // The popup's tag row and the question's absence both read from the
     // object, so the one in memory learns the answer. A pin's status and a
     // place's colour do not move — that is the pipeline's to say, tonight.
@@ -884,8 +897,10 @@ async function answer(kind, obj, choice) {
     // Both .ask blocks go: the headline ("nobody has tagged the room") is no
     // longer true, and the question has been answered. querySelector would
     // take the headline alone and leave the buttons standing (sandbox test,
-    // 13 Sep 2026).
-    popup?.getElement()?.querySelectorAll(".ask").forEach((el) => el.remove());
+    // 13 Sep 2026). The play place's two context lines (.ask-ctx, "OSM says
+    // nothing" and "been here?") go with them: false after a room, false
+    // after a no.
+    popup?.getElement()?.querySelectorAll(".ask, .ask-ctx").forEach((el) => el.remove());
     const tags = {};
     for (const k of EDIT_TAGS) if (out.tags[k]) tags[k] = out.tags[k];
     setEditNote(rec, "found", "editFound", tags);

@@ -29,6 +29,11 @@
 > build moves it over; the in-memory object learns both tags so the popup reads like a
 > pin's. Nothing is written to an object that is not already on the map: an untagged café
 > is still MapComplete's `dad_venue` layer, since the site's GeoJSON carries no venues.
+> **The same question also offers "no"** (13 Sep 2026): a play place can be told there is
+> no changing table at all, which writes `changing_table=no` alone — no room tag, since a
+> "no" names no room — under its own changeset comment. `pipeline/export.py` already
+> treats `changing_table=no` as an answered place and leaves it off next night's ask list,
+> so the question does not return.
 
 > **v24 amendment (8 Sep 2026, the Papa/Mama reading; numbered after v23 when the two branches met on 11 Sep):** the frontend now offers
 > **two readings of the same three statuses**, and the emitted shape does not change
