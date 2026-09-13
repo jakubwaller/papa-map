@@ -16,10 +16,11 @@ function loadSW({ cached = {}, network = {} } = {}) {
   const put = [];
   const cache = {
     match: async (req, opts) => {
-      if (cached[req.url]) return cached[req.url];
+      const url = typeof req === "string" ? req : req.url;
+      if (cached[url]) return cached[url];
       if (!opts?.ignoreSearch) return undefined;
       const bare = (u) => u.split("?")[0];
-      const k = Object.keys(cached).find((u) => bare(u) === bare(req.url));
+      const k = Object.keys(cached).find((u) => bare(u) === bare(url));
       return k ? cached[k] : undefined;
     },
     put: async (req, res) => { put.push(typeof req === "string" ? req : req.url); },
@@ -31,7 +32,9 @@ function loadSW({ cached = {}, network = {} } = {}) {
       location: { origin: ORIGIN },
       skipWaiting: () => {},
       clients: { claim: () => {} },
+      PAPAMAP_DATA_TIMEOUT_MS: 30,   // the 8 s of the real worker, shrunk for the tests
     },
+    setTimeout, clearTimeout,
     caches: { open: async () => cache, keys: async () => [], delete: async () => {} },
     fetch: async (req) => {
       if (!(req.url in network)) throw new TypeError("offline");
@@ -50,7 +53,7 @@ const res = (body, { ok = true, type = "basic" } = {}) =>
 // Fire a fetch event and report whether the worker took it over at all.
 function fire(handlers, url, method = "GET", mode = "no-cors") {
   const e = { request: { url, method, mode }, responded: undefined,
-              respondWith(p) { this.responded = p; } };
+              respondWith(p) { this.responded = p; }, waitUntil() {} };
   handlers.fetch(e);
   return e;
 }
@@ -99,6 +102,34 @@ test("the dataset is network-first: online, tonight's build beats last visit's c
   assert.equal(answer.headers, undefined, "a fresh answer is passed through untouched");
   await new Promise((r) => setImmediate(r));
   assert.deepEqual(put, [url], "the fresh copy is stored for the next offline visit");
+});
+
+const later = (ms, value) => new Promise((r) => setTimeout(() => r(value), ms));
+
+test("a slow dataset download is not cut off: the stored copy answers, the download still lands", async () => {
+  // Headers at 2 s, body by 12 s on a weak cell: an AbortSignal would have
+  // killed the body at 8 s and served nothing. The timer only decides who
+  // answers now; the fetch runs on and is stored for the next visit.
+  const url = `${ORIGIN}/data/changing_tables.geojson`;
+  const { handlers, put } = loadSW({ cached: { [url]: res("yesterday") },
+                                     network: { [url]: later(80, res("tonight")) } });
+  const answer = await fire(handlers, url).responded;
+  assert.equal(await answer.text(), "yesterday");
+  assert.equal(answer.headers.get("X-PapaMap-Source"), "cache");
+  await later(120);
+  assert.deepEqual(put, [url], "the slow download was stored once it arrived");
+});
+
+test("with nothing stored, a slow download is waited for rather than replaced by an error", async () => {
+  const url = `${ORIGIN}/data/stats.json`;
+  const { handlers } = loadSW({ network: { [url]: later(80, res("late but whole")) } });
+  assert.equal((await fire(handlers, url).responded).body, "late but whole");
+});
+
+test("the area pages are nightly output too: network-first like the data", async () => {
+  const url = `${ORIGIN}/wickeltische/berlin.html`;
+  const { handlers } = loadSW({ cached: { [url]: res("august") }, network: { [url]: res("tonight") } });
+  assert.equal((await fire(handlers, url, "GET", "navigate").responded).body, "tonight");
 });
 
 test("a failed dataset fetch falls back to the stored copy, a 404 does not hide behind one", async () => {
@@ -202,6 +233,13 @@ test("a navigation is stored under its bare URL, never with its query string", a
   await fire(handlers, url, "GET", "navigate").responded;
   await new Promise((r) => setTimeout(r, 0));
   assert.deepEqual(put, [`${ORIGIN}/`]);
+  // ?lang= stays in the key: on the live host /?lang=en is index-en.html,
+  // a different document with its own og: block. One copy per language.
+  const en = `${ORIGIN}/?lang=en&mode=mama`;
+  const sw = loadSW({ network: { [en]: res("english") } });
+  await fire(sw.handlers, en, "GET", "navigate").responded;
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(sw.put, [`${ORIGIN}/?lang=en`]);
 });
 
 test("the search-insensitive match is for navigations only", async () => {

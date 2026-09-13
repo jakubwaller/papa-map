@@ -54,6 +54,9 @@ export function endpoints(loc) {
 export const TOKEN_KEY = "papamap-osm-token";
 export const USER_KEY = "papamap-osm-user";
 export const PKCE_KEY = "papamap-osm-pkce";
+// The two calls on the return leg run before the map loads its data: a
+// hanging OSM must not hold the map hostage (a failed one already does not).
+const OSM_TIMEOUT_MS = 15000;
 export const INTENT_KEY = "papamap-osm-intent";
 
 const local = () => globalThis.localStorage;
@@ -108,8 +111,9 @@ export async function startLogin(cfg, intent, navigate = (url) => location.assig
   try {
     session().setItem(PKCE_KEY, JSON.stringify({ verifier, state }));
     if (intent) session().setItem(INTENT_KEY, JSON.stringify(intent));
-  } catch { /* no session storage: the return cannot be verified, so no login */ return; }
+  } catch { /* no session storage: the return cannot be verified, so no login */ return false; }
   navigate(authorizeUrl(cfg, { state, challenge: await pkceChallenge(verifier) }));
+  return true;
 }
 
 // Called on every page load. null when this load is not a return from OSM;
@@ -126,7 +130,7 @@ export async function finishLogin(cfg, href, fetchFn = fetch) {
   // login was started in another tab. Do not exchange it.
   if (!pkce || pkce.state !== state) throw new Error("oauth state mismatch");
   const r = await fetchFn(`${cfg.site}/oauth2/token`, {
-    method: "POST",
+    method: "POST", signal: AbortSignal.timeout?.(OSM_TIMEOUT_MS),
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       grant_type: "authorization_code", code, redirect_uri: cfg.redirect,
@@ -141,7 +145,8 @@ export async function finishLogin(cfg, href, fetchFn = fetch) {
 
 // The display name, for "logged in as …". read_prefs is the scope for it.
 export async function userName(cfg, token, fetchFn = fetch) {
-  const r = await fetchFn(`${cfg.api}/user/details.json`, { headers: { Authorization: `Bearer ${token}` } });
+  const r = await fetchFn(`${cfg.api}/user/details.json`,
+    { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout?.(OSM_TIMEOUT_MS) });
   if (!r.ok) throw httpError(r.status, "user");
   return (await r.json())?.user?.display_name ?? null;
 }
@@ -261,6 +266,11 @@ export async function writeTags(cfg, token, ref, patch, comment, fetchFn = fetch
   if (!read.ok) throw httpError(read.status, "read");
   const el = elementFromApi(await read.json());
   if (!el) throw httpError(read.status, "read");
+  // The popup's gate saw a snapshot up to a day old. If somebody has answered
+  // since — a room on the live object, a changing_table on the play place —
+  // that answer is theirs, and this tap does not write over it (CONTRACT.md
+  // v25). Reported as the conflict it is, before any changeset is opened.
+  if (Object.keys(patch).some((k) => el.tags[k])) throw httpError(409, "taken");
 
   const open = await fetchFn(`${cfg.api}/changeset/create`,
     { method: "PUT", headers: xml, body: changesetXml(changesetTags(comment)) });

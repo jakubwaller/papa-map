@@ -51,8 +51,22 @@ const NEVER_CACHE = /(^|\/)(ops\.html|private\/)/;
 // so a reader who is online must see tonight's build, not the copy from their
 // last visit. The stored copy answers only when the network fails or is too
 // slow to deliver 1.3 MB — the basement café this worker exists for.
-const DATA = /^\/data\//;
-const DATA_TIMEOUT_MS = 8000;
+// The nightly output: the JSON under /data/ and the area pages (and the
+// leaderboard) under /wickeltische/, which carry the night's numbers in
+// their prose and are one build behind if served cache-first.
+const DATA = /^\/(data|wickeltische)\//;
+const DATA_TIMEOUT_MS = self.PAPAMAP_DATA_TIMEOUT_MS ?? 8000;
+const sleep = (ms) => new Promise((r) => { const t = setTimeout(r, ms); t.unref?.(); });
+
+// A navigation's cache key: the path plus ?lang=, nothing else. ?lang=en is
+// a different document on the live host (the Caddyfile rewrites it to
+// index-en.html, with its own og: block), so each language keeps its own
+// copy; ?mode=, ?bbox= and the OAuth return's ?code= do not change the page
+// and would otherwise each keep one, one-time codes included.
+const navKey = (url) => {
+  const lang = url.searchParams.get("lang");
+  return url.origin + url.pathname + (lang ? `?lang=${encodeURIComponent(lang)}` : "");
+};
 
 // A put can fail (quota, a Vary: * header) and nothing about the answer the
 // page already has depends on it, so the rejection is swallowed rather than
@@ -97,11 +111,23 @@ self.addEventListener("fetch", (e) => {
 
   e.respondWith(caches.open(CACHE).then(async (cache) => {
     if (DATA.test(url.pathname)) {
-      const fresh = await fetch(req, { signal: AbortSignal.timeout(DATA_TIMEOUT_MS) })
-        .catch(() => null);
-      if (fresh?.ok && fresh.type === "basic") { store(cache, req, fresh); return fresh; }
+      // Network first, and the wait is a timer, not an AbortSignal: aborting
+      // a fetch after its headers arrived kills the body mid-transfer, and
+      // 1.3 MB on a weak cell can need longer than the timeout yet is still
+      // worth having. When the timer wins, the stored copy answers and the
+      // download carries on in the background into the store for the next
+      // visit; waitUntil keeps the worker alive for it.
+      const network = fetch(req).then((res) => {
+        if (res.ok && res.type === "basic") store(cache, req, res);
+        return res;
+      }).catch(() => null);
+      e.waitUntil(network);
+      const fresh = await Promise.race([network, sleep(DATA_TIMEOUT_MS)]);
+      if (fresh?.ok && fresh.type === "basic") return fresh;
       const hit = await cache.match(req);
-      return hit ? fromStore(hit) : fresh ?? Response.error();
+      // A stored copy beats an error page and beats waiting; with nothing
+      // stored, the slow download is still the best answer there is.
+      return hit ? fromStore(hit) : (fresh ?? (await network) ?? Response.error());
     }
     // Every language on this site is a query string — "/?lang=ja",
     // "/index.html?lang=de" — and each is a distinct cache key, so a reader who
@@ -112,17 +138,14 @@ self.addEventListener("fetch", (e) => {
     // those would serve the previous deploy's JavaScript forever.
     const hit = await cache.match(req)
       ?? (req.mode === "navigate"
-            ? await cache.match(req, { ignoreSearch: true }) : undefined);
+            ? (await cache.match(navKey(url)) ?? await cache.match(req, { ignoreSearch: true }))
+            : undefined);
     const fresh = fetch(req).then((res) => {
       // Only full, successful, same-origin answers are stored. An opaque or
       // partial response cached here would serve a broken file forever.
-      // A navigation is stored under its bare URL: the page is the same for
-      // every query string (?lang=, ?mode=, ?bbox=, the OAuth return's
-      // ?code=), and keying by the full URL would keep one copy per link
-      // ever followed, one-time codes included. The search-insensitive
-      // match above is what finds it again.
+      // A navigation is stored under navKey (path + language), see above.
       if (res.ok && res.type === "basic")
-        store(cache, req.mode === "navigate" ? req.url.split("?")[0] : req, res);
+        store(cache, req.mode === "navigate" ? navKey(url) : req, res);
       return res;
     }).catch(() => null);
     // Offline with nothing stored still has to reject rather than resolve to

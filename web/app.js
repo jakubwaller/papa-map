@@ -877,13 +877,19 @@ function rememberView() {
   localStorage.setItem("papamap-mode", mode);
 }
 
+// Leaves for OSM's consent screen. When the page cannot keep the return
+// verifiable (storage blocked: some privacy settings, some webviews) the
+// login does not start, and the reader is told rather than left with a
+// button that does nothing.
+const login = (intent) => startLogin(osm, intent).then((went) => { if (!went) toast(t("loginFailed")); });
+
 // One path for both pin kinds: a grey table gets its room, a play place gets
 // the table and the room. The kind rides along in the login intent so the
 // return leg knows which dataset to look the object up in.
 async function answer(kind, obj, choice) {
   const token = getToken();
   const intent = { kind, osm_url: obj.osm_url, choice };
-  if (!token) { rememberView(); startLogin(osm, intent); return; }
+  if (!token) { rememberView(); login(intent); return; }
   // The popup this answer belongs to, taken now: OSM takes seconds to reply,
   // and by then the reader may have opened another pin, whose question must
   // stay. Its buttons go quiet for the round trip — a second tap on a slow
@@ -919,7 +925,7 @@ async function answer(kind, obj, choice) {
   } catch (err) {
     btns.forEach((b) => { b.disabled = false; });
     // A dead token is not the reader's problem: log in again, answer in hand.
-    if (err.status === 401) { clearLogin(); rememberView(); startLogin(osm, intent); return; }
+    if (err.status === 401) { clearLogin(); rememberView(); login(intent); return; }
     setEditNote(rec, "none", err.status === 409 ? "askConflict" : "askFailed", null,
                 { status: err.status || "network" });
   }

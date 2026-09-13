@@ -201,6 +201,24 @@ test("writeTags: read, open, write with the patch on top of the existing tags, c
   assert.ok(calls[1].body.includes(`<tag k="created_by" v="${CREATED_BY}"/>`));
 });
 
+test("writeTags: a room somebody tagged since last night's build is theirs — 409, no changeset", async () => {
+  // The grey pin's gate saw yesterday's snapshot; the live object has a room.
+  let api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 5, lat: 1, lon: 2,
+                                        tags: { "changing_table:location": "dedicated_room" } }] } },
+  ]);
+  await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, roomPatch("female"), "c", api.fetchFn),
+    (e) => e.status === 409 && e.step === "taken");
+  assert.equal(api.calls.length, 1, "nothing after the read: no changeset was opened");
+  // Same for a play place that got its changing_table (yes or no) meanwhile.
+  api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 5, lat: 1, lon: 2, tags: { changing_table: "no" } }] } },
+  ]);
+  await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, tablePatch("unisex"), "c", api.fetchFn),
+    (e) => e.status === 409 && e.step === "taken");
+  assert.equal(api.calls.length, 1);
+});
+
 test("writeTags: a conflict closes the changeset and surfaces the 409", async () => {
   const { fetchFn, calls } = scriptedApi([
     { status: 200, json: { elements: [{ type: "node", id: 42, version: 5, lat: 1, lon: 2, tags: {} }] } },
