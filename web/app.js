@@ -881,7 +881,11 @@ async function answer(kind, obj, choice) {
     // place's colour do not move — that is the pipeline's to say, tonight.
     obj.changing_table = out.tags.changing_table;
     obj.location_raw = out.tags["changing_table:location"];
-    popup?.getElement()?.querySelector(".ask")?.remove();
+    // Both .ask blocks go: the headline ("nobody has tagged the room") is no
+    // longer true, and the question has been answered. querySelector would
+    // take the headline alone and leave the buttons standing (sandbox test,
+    // 13 Sep 2026).
+    popup?.getElement()?.querySelectorAll(".ask").forEach((el) => el.remove());
     const tags = {};
     for (const k of EDIT_TAGS) if (out.tags[k]) tags[k] = out.tags[k];
     setEditNote(rec, "found", "editFound", tags);
