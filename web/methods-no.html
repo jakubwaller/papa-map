@@ -138,7 +138,7 @@ kan gjøres ut fra åpne data, forklares lenger nede.</p>
 <p>Bare steder med <code>changing_table=yes</code> eller <code>limited</code> havner på kartet
 (<code>no</code>, som i bekreftet ikke tilstede, telles bare med i statistikken). Fargen kommer fra
 <code>changing_table:location</code>. Verdien deles opp ved <code>;</code>, trimmes, gjøres om til
-små bokstaver og sammenlignes som en helhet. Aldri som en delstreng, fordi
+små bokstaver, og hver verdi sammenlignes som en helhet. Aldri som en delstreng, fordi
 <code>female_toilet</code> inneholder ordet <code>male</code>.</p>
 <ul>
   <li><span class="dot g"></span><strong>Grønn:</strong> en verdi er
@@ -176,7 +176,7 @@ teksten på punktet «i sjeldne tilfeller bare på herretoalettet», og tallet o
 
 <h2>Den blå ringen: lekeområde</h2>
 <p>Et punkt med en blå ring har også et lekeområde &mdash; et sted der du ikke bare skifter på barnet,
-men kan bli en stund. Filteret <em>Med lekeområde</em> viser bare disse. Et sted vises hvis OSM
+men kan bli en stund. Filteret <em>Med lekeområde</em> viser bare disse. Et sted telles med hvis OSM
 registrerer en av disse verdiene:</p>
 <ul>
   <li><span class="ring"></span><code>kids_area:indoor=yes</code> eller <code>designated</code>
@@ -189,7 +189,7 @@ registrerer en av disse verdiene:</p>
   <li><span class="ring"></span><code>leisure=playground</code> sammen med
       <code>indoor=yes</code> &mdash; det samme, tagget motsatt vei.</li>
 </ul>
-<p><code>outdoor</code> teller ikke med: Sandkassen i en uteservering vises ikke. Det gjør
+<p><code>outdoor</code> teller ikke med: Sandkassen i en uteservering gir ingen ring. Det gjør
 heller ikke <code>no</code>, eller <code>limited</code> &mdash; wikien definerer den som «leker
 finnes, men ikke noe eget område». Der et eksplisitt <code>kids_area:indoor=no</code> finnes,
 vinner det over et rent <code>kids_area=yes</code>.</p>
@@ -217,7 +217,7 @@ punkt.</p>
 
 <h2>Slik retter du et grått punkt</h2>
 <p>Grå betyr at et svar mangler. Hvor befinner stellebordet seg? Alle med en OSM-konto kan svare på
-det, på under et minutt:</p>
+det, på stedet, på under et minutt:</p>
 <ul>
   <li><strong>MapComplete (hvilken som helst telefon, i nettleseren):</strong> «Svar på
       MapComplete» på et grått punkt åpner det samme objektet i PapaMaps eget MapComplete-tema
@@ -242,7 +242,7 @@ kartutsnitt.</p>
 <h3>Et offentlig toalett mangler helt</h3>
 <p>Bruk <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMaps
 MapComplete-tema</a> (den første lenken i dialogen). Logg inn, trykk på kartet der toalettet er,
-velg «et offentlig toalett», svar på spørsmålene. Inkludert de om stellebord og rommet ellers.</p>
+velg «et offentlig toalett», svar på spørsmålene. Inkludert de om stellebordet og rommet.</p>
 
 <h3>En kafé, butikk eller restaurant har et bord ingen har kartlagt</h3>
 <p>Raskest går det med PapaMaps MapComplete-tema, det som dialogens andre knapp også åpner: fra
@@ -295,13 +295,13 @@ London, Paris, New York, Tokyo&nbsp;23&nbsp;bydeler, Amsterdam, Wien, Melbourne;
   <tr><td><strong>Alle</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
 <ul>
-  <li>Bare 29,9% av de kartlagte toalettene har noe kjønnsegenskap i det hele tatt. Begge deler
+  <li>Bare 29,9% av de kartlagte toalettene har noen kjønnsegenskap i det hele tatt. Begge deler
       (male og female): 8,5%.</li>
   <li>Egenskapene er rene ja/nei-flagg, aldri antall. Antall båser per kjønn: null i alle åtte
       byene. Den ene kapasitetsegenskapen, <code>toilets:num_chambers</code> (~27k bruk), er
       kjønnsnøytral og kommer nesten utelukkende fra en gammel import. Variantene
       <code>:female</code> / <code>:male</code> har 2 bruk hver, på verdensbasis.</li>
-  <li>Hamburg, sjekket samme dag: 443 kartlagte toaletter, ingen med et
+  <li>Hamburg, sjekket samme dag: 443 kartlagte toaletter, ingen med en
       <code>toilets:num_chambers*</code>-egenskap. Linjen på <a href="./">forsiden</a> regner disse tallene på nytt én gang i uka per
       område; selve kartet hver natt.</li>
   <li>Og: egenskapsandeler måler mapper-fellesskapet, ikke byene. Enkeltbåser forblir riktig nok
@@ -352,7 +352,7 @@ redigerer under din egen OSM-konto. Ingenting går gjennom oss. Formelle sider:
 tallene kommer fra det samme nattlige søket som også bygger kartet.</p>
 
 <h2>Slik blir nettstedet til</h2>
-<p>Jeg bruker KI som hjelp med koding og til å oversette tekster. Alt sjekkes likevel av mine egne
+<p>Jeg bruker KI som hjelp med koding og til å utkaste og oversette tekster. Alt sjekkes likevel av mine egne
 øyne.</p>
 
 <script>
