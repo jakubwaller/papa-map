@@ -415,3 +415,13 @@ def test_send_mail_smtp_flow(monkeypatch):
     assert calls["msg"]["From"] == "ops@example.com"
     assert calls["msg"]["To"] == "inbox@example.com"
     assert calls["msg"]["Subject"] == "subject"
+
+
+def test_feature_statuses_skip_the_key_locked_tables():
+    # v26 keeps them in the GeoJSON for the wheelchair chip; the report's
+    # totals and day-over-day diff are over the pins, like the map's numbers.
+    def feat(i, **props):
+        return {"type": "Feature", "properties": {"osm_type": "node", "osm_id": i,
+                                                  "status": "accessible", **props}}
+    fc = {"features": [feat(1), feat(2, key="eurokey"), feat(3, key=None)]}
+    assert ops.feature_statuses(fc) == {"node/1": "accessible", "node/3": "accessible"}

@@ -115,7 +115,9 @@ def build_play_features(play_data: dict, ct_data: dict | None = None) -> list[di
         # build_features re-applies classify(): what a file contains must be
         # decided by the exporter, not by whoever assembled its input.
         value = (tags.get("changing_table") or "").strip()
-        if value not in ("", "no") or not has_play_area(tags):
+        # The key's presence decides, not the stripped value: a blank
+        # `changing_table=` is somebody's tag, not an open question.
+        if ("changing_table" in tags and value != "no") or not has_play_area(tags):
             continue
         lat, lon = element_coords(el)
         if lat is None:

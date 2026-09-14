@@ -125,6 +125,10 @@ def feature_statuses(geojson) -> dict[str, str]:
         p = (f or {}).get("properties") or {}
         if p.get("osm_type") is None or p.get("osm_id") is None:
             continue
+        # A table behind a central key rides in the file for the wheelchair
+        # chip (v26) but is not a pin; the report counts what the map shows.
+        if p.get("key"):
+            continue
         out[f"{p['osm_type']}/{p['osm_id']}"] = p.get("status") or "unknown"
     return out
 

@@ -636,7 +636,8 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                            ("ct_objects", "objects tagged changing_table=*"),
                            ("ct_yes", "… of which changing_table=yes"),
                            ("centralkey_locked", "dropped: locked behind a central key"),
-                           ("play_places", "play places"),
+                           ("play_places", "play places (no changing-table answer)"),
+                           ("play_places_no", "play places that answered no"),
                            ("play_tables", "play places with a changing table"),
                            ("capacity_tagged_toilets", "toilets with toilets:num_chambers*")):
             if key in local:
@@ -703,7 +704,9 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
             r = build["result"] or {}
             p.append('<p><span class="ok">finished</span>'
                      + (f' — {_n(r.get("features"))} features, '
-                        f'{_n(r.get("play_places"))} play places, '
+                        f'{_n(r.get("play_places"))} play places'
+                        + (f' + {_n(r["play_places_no"])} that answered no'
+                           if r.get("play_places_no") else "") + ", "
                         f'{_n(r.get("pages"))} pages, '
                         f'global block from {esc(str(r.get("global_source", "?")))}'
                         if r else "") + ".</p>\n")
