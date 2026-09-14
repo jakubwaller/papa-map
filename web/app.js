@@ -7,12 +7,12 @@ import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app10";
+         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app11";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app10";
+         langUrl } from "./i18n.js?v=app11";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         writeTags } from "./osm.js?v=app10";
+         writeTags } from "./osm.js?v=app11";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -357,8 +357,8 @@ function refreshPins() {
   // The count stays a count of changing tables even with the prospects on —
   // they are not tables, and folding them in would inflate the one number the
   // whole map is about. They get their own clause instead. The total is the
-  // pins: the key-locked tables ride in the GeoJSON for the wheelchair chip
-  // and are not counted, here or anywhere.
+  // same universe `shown` was drawn from: the pins, or with the wheelchair
+  // chip on, its tables — keyed ones included, since it draws them.
   const total = pinFeatures(allFeatures, wheelchairOnly).length;
   countEl.textContent = total
     ? t("countShown", { shown: shown.length, total })
@@ -653,6 +653,10 @@ function wheelchairChip(count) {
     // The strip is rebuilt, not toggled: the status badges count over the
     // chip's universe, so they change with it (renderChips reads the state).
     renderChips();
+    // The rebuild removed the button that had the focus; a keyboard or
+    // screen-reader user — this chip's audience — would otherwise land on
+    // <body> and never hear the new aria-pressed state.
+    filterBar.querySelector(".chip.wc")?.focus();
     refreshPins();
   });
   return b;

@@ -252,7 +252,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
 
     generated_at = build_time.isoformat(timespec="seconds")
     exported = export.export_geojson(features, geojson_path)
-    exported_play = export.export_geojson(play_features, play_geojson_path)
+    export.export_geojson(play_features, play_geojson_path)
     export.export_stats({
         "generated_at": generated_at,
         "area_name": display_area,
