@@ -61,11 +61,13 @@ export function loadFeatures(fc) {
   return out;
 }
 
-// play_places.geojson — places that record an indoor play area and carry no
-// changing_table tag at all. A separate dataset, not a fourth status: these
-// have no answer to colour, so they get no status field, no filter by status
-// and no count in the table totals. Same tolerance as loadFeatures — a missing
-// file degrades to [] and the chip simply reads 0.
+// play_places.geojson — places that record an indoor play area and are not
+// pins: no changing_table tag at all (the open question), or, since v27,
+// `changing_table=no` (answered, and the answer was no). A separate dataset,
+// not a fourth status: neither has an answer to colour — red would promise a
+// mother a table — so they get no status field, no filter by status and no
+// count in the table totals. Same tolerance as loadFeatures — a missing file
+// degrades to [] and the chip simply reads 0.
 export function loadPlaces(fc) {
   if (!fc || !Array.isArray(fc.features)) return [];
   const out = [];
@@ -79,6 +81,9 @@ export function loadPlaces(fc) {
       lat: coords[1],
       name: p.name ?? null,
       kind: p.kind ?? null,
+      // "no" or null, and only those: a dataset from before v27 has no such
+      // property and must read as the open question, never as an answer.
+      changing_table: p.changing_table === "no" ? "no" : null,
       opening_hours: p.opening_hours ?? null,
       osm_url: p.osm_url ?? null,
       mapcomplete_url: p.mapcomplete_url ?? null,
@@ -243,7 +248,8 @@ export function placesToFeatureCollection(places) {
     features: places.map((p) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-      properties: { idx: p.idx },
+      // `no` picks the dashed ring over the hollow one.
+      properties: { idx: p.idx, no: p.changing_table === "no" },
     })),
   };
 }

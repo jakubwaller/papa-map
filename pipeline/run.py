@@ -227,7 +227,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     ct_data = {"elements": osm.dedup_elements(ct_elements)}
     play_data = {"elements": osm.dedup_elements(play_elements)}
     features = export.build_features(ct_data)
-    play_features = export.build_play_features(play_data)
+    play_features = export.build_play_features(play_data, ct_data)
     # The key-locked tables ride along in the GeoJSON for the wheelchair chip
     # (v26) and nowhere else: the pages, the leaderboard and the history
     # count pins, and a table behind a Euro key is not one.

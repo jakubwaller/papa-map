@@ -36,14 +36,18 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
     downloading ~74k of them for two counters was about 12 MB of the nightly
     ~28 MB."""
     ct_yes = ct_no = ct_limited = yes_location_known = locked = play_tables = 0
+    play_places_no = 0
     status_counts = {"accessible": 0, "female_only": 0, "unknown": 0}
     elements = ct_data.get("elements", [])
     for el in elements:
         tags = el.get("tags") or {}
         value = (tags.get("changing_table") or "").strip()
         location = tags.get("changing_table:location")
-        if value == "no":  # never a feature — coordinates irrelevant
+        if value == "no":  # never a pin
             ct_no += 1
+            # ... but a place, if it has a play corner and can be drawn (v27)
+            if has_play_area(tags) and element_coords(el)[0] is not None:
+                play_places_no += 1
             continue
         if element_coords(el)[0] is None:
             continue  # build_features drops it, so we must not count it
@@ -79,6 +83,10 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
         "play_tables": play_tables,
         "play_places": sum(1 for el in (play_data or {}).get("elements", [])
                            if element_coords(el)[0] is not None),
+        # The third kind (v27): a play corner and `changing_table=no`. Drawn
+        # as a dashed ring, so it is in play_places.geojson — but it is not an
+        # open question, so it is not in play_places.
+        "play_places_no": play_places_no,
         "capacity_tagged_toilets": int(toilets.get("capacity_tagged", 0)),
     }
 
