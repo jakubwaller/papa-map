@@ -1,17 +1,18 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
+         countWheelchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app7";
+         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app8";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app7";
+         langUrl } from "./i18n.js?v=app8";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         writeTags } from "./osm.js?v=app7";
+         writeTags } from "./osm.js?v=app8";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -105,6 +106,15 @@ const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
 // color still means "can a dad reach the table", and the halo annotates.
 const PLAY_COLOR = "#0072b2";
 
+// The International Symbol of Access (Material Design's "accessible" glyph,
+// Apache 2.0) and a key, both as bare paths. Drawn in ink on the chip and in
+// the popup, never as a fifth pin colour: wheelchair access is a badge on a
+// pin that already has its status colour, exactly like the play halo.
+const ISA_PATH = "M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm7 11v-2c-1.54.02-3.09-.75-4.07-1.83l-1.29-1.43c-.17-.19-.38-.34-.61-.45-.01 0-.01-.01-.02-.01H13c-.35-.2-.75-.3-1.19-.26C10.76 7.11 10 8.04 10 9.09V15c0 1.1.9 2 2 2h5v5h2v-5.5c0-1.1-.9-2-2-2h-3v-3.45c1.29 1.07 3.25 1.94 5 1.95zm-6.17 5c-.41 1.16-1.52 2-2.83 2-1.66 0-3-1.34-3-3 0-1.31.84-2.41 2-2.83V12.1c-2.28.46-4 2.48-4 4.9 0 2.76 2.24 5 5 5 2.42 0 4.44-1.72 4.9-4h-2.07z";
+const KEY_PATH = "M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z";
+const svgIcon = (path, cls) =>
+  `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>`;
+
 // The legend order. The label and the colour of each row are read from
 // viewFor(status, mode) rather than stored here: there are two readings and
 // only one of them may be baked into a constant.
@@ -176,6 +186,7 @@ let allFeatures = [];                                     // flattened GeoJSON
 let allPlaces = [];                                       // play-area prospects
 let visible = new Set(STATUS_DEFS.map((d) => d.value));   // toggled-on statuses
 let playOnly = false;                                     // narrow to play corners
+let wheelchairOnly = false;                               // narrow to wheelchair=yes (v26)
 let placesOn = true;                                      // add the prospects (on by default since 2026-09-10)
 
 const statsEl = document.getElementById("stats");
@@ -192,6 +203,7 @@ const scopeEl = document.getElementById("scope");
 // object up in allFeatures.
 const SRC = "tables";
 const PLAY_LAYER = "tables-play";
+const KEY_LAYER = "tables-key";
 const PLACES = "play-places";
 const IS_UNKNOWN = ["==", ["get", "status"], "unknown"];
 
@@ -204,6 +216,14 @@ const pinRadius = (extra) => ["interpolate", ["linear"], ["zoom"],
   17, ["case", IS_UNKNOWN, 13 + extra, 10 + extra]];
 
 function addTableLayer() {
+  // The key glyph for KEY_LAYER, rasterised from the same path the popup
+  // draws. Registered asynchronously (an Image decodes off-thread); MapLibre
+  // draws the symbols the moment it lands, and until then the keyed pins
+  // are ordinary circles — acceptable for the few hundred ms it takes.
+  const keyImg = new Image(48, 48);
+  keyImg.onload = () => { if (!map.hasImage("key")) map.addImage("key", keyImg, { pixelRatio: 2 }); };
+  keyImg.src = "data:image/svg+xml," + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48"><path fill="#fff" d="${KEY_PATH}"/></svg>`);
   map.addSource(PLACES, { type: "geojson", data: placesToFeatureCollection([]) });
   map.addSource(SRC, { type: "geojson", data: toFeatureCollection([]) });
   // Bottom of the stack, and hollow: a filled circle would compete with the
@@ -249,9 +269,25 @@ function addTableLayer() {
       "circle-stroke-color": "#ffffff",
     },
   });
-  // Both layers, so the halo's extra 5.5 px is part of the hit target rather
-  // than a dead ring around a clickable pin.
-  for (const layer of [PLAY_LAYER, SRC]) {
+  // A white key over the pin for the tables behind a central key — only ever
+  // on the map with the wheelchair chip on, since that chip is the one place
+  // they are drawn (datasource.pinFeatures). Inside the circle rather than a
+  // ring around it, so it cannot be mistaken for the play halo; from zoom 13,
+  // where a pin is wide enough to hold a glyph (6 px at 14, 2-4 px below 10).
+  map.addLayer({
+    id: KEY_LAYER, type: "symbol", source: SRC, minzoom: 13,
+    filter: ["==", ["get", "key"], true],
+    layout: {
+      "icon-image": "key",
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 13, 0.4, 17, 0.7],
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
+    },
+  });
+  // Both circle layers, so the halo's extra 5.5 px is part of the hit target
+  // rather than a dead ring around a clickable pin; the key glyph too, so the
+  // tap does not fall through the middle of the pin it sits on.
+  for (const layer of [PLAY_LAYER, SRC, KEY_LAYER]) {
     map.on("click", layer, (e) => {
       const f = allFeatures[e.features[0].properties.idx];
       if (f) openPopup(f);
@@ -261,7 +297,7 @@ function addTableLayer() {
     const p = allPlaces[e.features[0].properties.idx];
     if (p) openPlacePopup(p);
   });
-  for (const layer of [PLAY_LAYER, SRC, PLACES]) {
+  for (const layer of [PLAY_LAYER, SRC, KEY_LAYER, PLACES]) {
     map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
   }
@@ -269,12 +305,15 @@ function addTableLayer() {
 
 function refreshPins() {
   if (!dataReady) return;
-  const shown = filterFeatures(allFeatures, visible, playOnly);
+  const shown = filterFeatures(allFeatures, visible, playOnly, wheelchairOnly);
   // The count stays a count of changing tables even with the prospects on —
   // they are not tables, and folding them in would inflate the one number the
-  // whole map is about. They get their own clause instead.
-  countEl.textContent = allFeatures.length
-    ? t("countShown", { shown: shown.length, total: allFeatures.length })
+  // whole map is about. They get their own clause instead. The total is the
+  // pins: the key-locked tables ride in the GeoJSON for the wheelchair chip
+  // and are not counted, here or anywhere.
+  const total = pinFeatures(allFeatures).length;
+  countEl.textContent = total
+    ? t("countShown", { shown: shown.length, total })
       + (placesOn && allPlaces.length
         ? t("countPlaces", { n: allPlaces.length }) : "")
     : t("countNoData");
@@ -291,6 +330,9 @@ let popupObj = null;   // { kind: "table" | "place", obj } behind the open popup
 // The URL fields are built by our own pipeline, but belt-and-braces: esc()
 // stops HTML injection, not a javascript: href — so only https links render.
 const safeUrl = (u) => (typeof u === "string" && u.startsWith("https://") ? u : null);
+
+// The three values `wheelchair` can carry, as i18n keys.
+const WC_LABEL = { yes: "wcYes", limited: "wcLimited", no: "wcNo" };
 
 function popupHTML(f) {
   const s = viewFor(f.status, mode);
@@ -316,6 +358,21 @@ function popupHTML(f) {
     rows.push(`<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
       (f.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(f.location_raw)}` : "") + `</div>`);
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
+  // The wheelchair tags as recorded, value by value — the information half
+  // of the request is worth more than the filter half. `wheelchair` on a
+  // shop or café is the entrance, on a toilet block the toilet; the second
+  // row is the place's accessible toilet; the free-text description is what
+  // a mapper wrote about the step. Nothing here is a status.
+  if (f.wheelchair)
+    rows.push(`<div class="row wc${f.wheelchair === "yes" ? " ok" : ""}">${svgIcon(ISA_PATH, "isa")}` +
+      `${esc(t("popupWheelchair"))}: <b>${esc(t(WC_LABEL[f.wheelchair]))}</b></div>`);
+  if (f.toilets_wheelchair)
+    rows.push(`<div class="row wc">${esc(t("popupToiletsWheelchair"))}: <b>${esc(t(WC_LABEL[f.toilets_wheelchair]))}</b></div>`);
+  if (f.wheelchair_description)
+    rows.push(`<div class="row wc-desc">${esc(f.wheelchair_description)}</div>`);
+  // Only ever seen under the wheelchair chip: the door needs a central key.
+  if (f.key)
+    rows.push(`<div class="row key">${svgIcon(KEY_PATH, "key")}${esc(t("popupKey"))}</div>`);
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
   if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
   if (asks) rows.push(askHTML("askRoom", inFlight.has(f.osm_url)));
@@ -459,7 +516,7 @@ function panPopupIntoView() {
 // them as one would claim every other pin has no play area, which OSM never
 // said.
 function renderChips() {
-  const counts = countsByStatus(allFeatures);
+  const counts = countsByStatus(pinFeatures(allFeatures));
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
   const frag = document.createDocumentFragment();
   for (const d of STATUS_DEFS) {
@@ -481,8 +538,9 @@ function renderChips() {
     });
     frag.appendChild(b);
   }
-  frag.appendChild(playChip(countPlay(allFeatures)));
+  frag.appendChild(playChip(countPlay(pinFeatures(allFeatures))));
   frag.appendChild(placesChip(allPlaces.length));
+  frag.appendChild(wheelchairChip(countWheelchair(allFeatures)));
   // Not firstChild: the mode toggle is static markup and holds that slot, so
   // the generated chips go in front of the spacer instead.
   filterBar.insertBefore(frag, filterBar.querySelector(".spacer"));
@@ -522,6 +580,31 @@ function placesChip(count) {
     label: "stPlaces", aria: "ariaPlaces", count, on: placesOn, hollow: true,
     toggle: () => (placesOn = !placesOn),
   });
+}
+
+// The wheelchair chip (v26), last in the strip and off by default: switched
+// on it narrows to the tables whose place is tagged `wheelchair=yes` — and
+// brings back, marked with a key, the tables behind a Euro key that the
+// default map leaves out, because the people this chip is for are exactly
+// the people who hold one. Ink, not a colour: it is a badge, like play, and
+// the pin keeps its status colour underneath. The count includes the keyed
+// tables, which is why it is taken over every feature rather than the pins.
+function wheelchairChip(count) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "chip wc" + (wheelchairOnly ? " on" : "");
+  b.setAttribute("aria-pressed", String(wheelchairOnly));
+  b.setAttribute("aria-label", t("ariaWheelchair"));
+  b.title = t("ariaWheelchair");
+  b.innerHTML = svgIcon(ISA_PATH, "isa") +
+    `${esc(t("stWheelchair"))} <span class="cnt">${count}</span>`;
+  b.addEventListener("click", () => {
+    wheelchairOnly = !wheelchairOnly;
+    b.classList.toggle("on", wheelchairOnly);
+    b.setAttribute("aria-pressed", String(wheelchairOnly));
+    refreshPins();
+  });
+  return b;
 }
 
 // ---- Stats strip (from stats.json, shape per CONTRACT.md) ----
@@ -706,7 +789,7 @@ document.getElementById("nearest").addEventListener("click", () => {
     (pos) => {
       const { latitude: lat, longitude: lon } = pos.coords;
       showYou([lon, lat]);
-      const hit = nearestUsable(allFeatures, lat, lon, mode);
+      const hit = nearestUsable(allFeatures, lat, lon, mode, wheelchairOnly);
       if (!hit) { toast(t("toastNearestNone")); return; }
       const f = hit.feature;
       // The search runs over every pin, not just the shown ones: a chip left

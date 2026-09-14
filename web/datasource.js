@@ -5,6 +5,9 @@
 // for countsByStatus, so the UI can render zero badges.
 export const STATUSES = ["accessible", "female_only", "unknown"];
 
+// The three values `wheelchair` / `toilets:wheelchair` can carry (v26).
+export const WHEELCHAIR_STATES = ["yes", "limited", "no"];
+
 // Flatten the pipeline FeatureCollection into plain {lon, lat, ...props} objects.
 // Tolerates a missing/empty/malformed collection by returning [] — the UI shows
 // a "no data" message instead of crashing. Features without a usable Point
@@ -37,6 +40,18 @@ export function loadFeatures(fc) {
       // Strict === true: a dataset written before this property existed leaves
       // it undefined, and "no play corner recorded" must never render as one.
       play: p.play === true,
+      // Tri-state or null, straight from the pipeline (v26). Same strictness
+      // as play: only the three wiki values pass, so a dataset from before the
+      // property, or a junk value, reads as "unrecorded" — never as "no".
+      wheelchair: WHEELCHAIR_STATES.includes(p.wheelchair) ? p.wheelchair : null,
+      toilets_wheelchair: WHEELCHAIR_STATES.includes(p.toilets_wheelchair)
+        ? p.toilets_wheelchair : null,
+      wheelchair_description: typeof p.wheelchair_description === "string"
+        ? p.wheelchair_description : null,
+      // The central key system that locks the door ("eurokey", "nks", …) or
+      // null. A keyed table is not a pin: it is hidden by default and comes
+      // back only under the wheelchair chip, whose audience holds the key.
+      key: typeof p.key === "string" && p.key ? p.key : null,
       fee: p.fee ?? null,
       opening_hours: p.opening_hours ?? null,
       osm_url: p.osm_url ?? null,
@@ -92,12 +107,40 @@ export function countPlay(features) {
   return features.reduce((n, f) => n + (f.play ? 1 : 0), 0);
 }
 
-// What the map actually draws: the status toggles, then the play filter
-// narrowing on top. The play filter subtracts and never adds — an untagged
-// object is unrecorded, not known to lack a play corner, so switching it on
-// promises "these definitely have one", not "the rest definitely don't".
-export function filterFeatures(features, visible, playOnly = false) {
-  const byStatus = filterByStatus(features, visible);
+// The wheelchair chip's rule, in one place: `wheelchair=yes` and nothing
+// else. `limited` is heterogeneous by the wiki's definition (one step of up
+// to 7 cm, or help needed) and Wheelmap keeps it orange, never green;
+// `toilets:wheelchair=yes` alone would admit places with a step or a "no" at
+// the door. Both stay visible in the popup — the information is worth more
+// than the filter — but neither gets a place under the chip.
+export function isWheelchairOk(f) {
+  return f.wheelchair === "yes";
+}
+
+export function countWheelchair(features) {
+  return features.reduce((n, f) => n + (isWheelchairOk(f) ? 1 : 0), 0);
+}
+
+// The universe the chips, the counts and the nearest search work over. By
+// default it is every pin — the features with no central key on the door
+// (CONTRACT v5: a Euro key is issued only against proof of disability, so a
+// door it gates is closed to most dads). Under the wheelchair chip it is
+// every table that passes the chip's rule, keyed or not: the chip's audience
+// is exactly who holds the key, so the tables v5 took away come back here,
+// marked, and nowhere else.
+export function pinFeatures(features, wheelchairOnly = false) {
+  return wheelchairOnly
+    ? features.filter(isWheelchairOk)
+    : features.filter((f) => !f.key);
+}
+
+// What the map actually draws: the pin universe, the status toggles, then
+// the play filter narrowing on top. The play and wheelchair filters subtract
+// and never add — an untagged object is unrecorded, not known to lack a play
+// corner or a level entrance, so switching one on promises "these definitely
+// have it", not "the rest definitely don't".
+export function filterFeatures(features, visible, playOnly = false, wheelchairOnly = false) {
+  const byStatus = filterByStatus(pinFeatures(features, wheelchairOnly), visible);
   return playOnly ? byStatus.filter((f) => f.play) : byStatus;
 }
 
@@ -175,8 +218,8 @@ export function mapCompleteVenueUrl(lon, lat, zoom, lang) {
 }
 
 // Rebuild a FeatureCollection for the map source. Properties carry only
-// {idx, status, play}: status drives the data-driven circle color, play the
-// halo layer's filter, idx the click lookup. "unknown" features are emitted
+// {idx, status, play, key}: status drives the data-driven circle color, play
+// the halo layer's filter, key the key-icon layer's, idx the click lookup. "unknown" features are emitted
 // last so their grey circles draw on top of the others — the untagged rooms
 // are the call to action.
 export function toFeatureCollection(features) {
@@ -187,7 +230,7 @@ export function toFeatureCollection(features) {
     features: ordered.map((f) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [f.lon, f.lat] },
-      properties: { idx: f.idx, status: f.status, play: f.play },
+      properties: { idx: f.idx, status: f.status, play: f.play, key: f.key !== null },
     })),
   };
 }
@@ -315,11 +358,16 @@ export function haversineKm(aLat, aLon, bLat, bLon) {
 // Straight-line, though, and the popup says so: a table 200 m away across a
 // river or a motorway is not 200 m away on foot. Routing is what would fix
 // that, and routing needs a server this project does not have.
-export function nearestUsable(features, lat, lon, mode) {
+//
+// Searched over the same universe the map draws from (pinFeatures): a keyed
+// table is nobody's nearest unless the wheelchair chip is on, and with it on
+// the nearest is the nearest that passes the chip — a reader who switched it
+// on is asking for a table they can get to, not the closest one of any kind.
+export function nearestUsable(features, lat, lon, mode, wheelchairOnly = false) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   const ok = new Set(usableStatuses(mode));
   let best = null;
-  for (const f of features) {
+  for (const f of pinFeatures(features, wheelchairOnly)) {
     if (!ok.has(f.status)) continue;
     if (!Number.isFinite(f.lat) || !Number.isFinite(f.lon)) continue;
     const km = haversineKm(lat, lon, f.lat, f.lon);

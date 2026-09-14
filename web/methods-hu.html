@@ -152,7 +152,7 @@ szót.</p>
       csak szabad szöveg van. Senki sem rögzítette a helyiséget. A szürke jelölők jelentik a
       feladatot.</li>
 </ul>
-<p>A <code>centralkey</code> címkés objektum (a <code>no</code> kivételével) akkor marad le a térképről, ha a kulcs az egész ajtót zárja: <code>access=centralkey</code>, asztal az akadálymentes mosdóban, vagy semmi nem mondja a címkékben, hogy a kulcs csak egy fülkére vonatkozik. Egy nyitott férfi és női mosdóval és kulcsra zárt akadálymentes fülkével rendelkező blokk (<code>wheelchair:access=centralkey</code>, vagy <code>male=yes</code> és <code>female=yes</code>) a térképen marad, szürkén, amíg valaki be nem írja a helyiséget. Eurokulcsot csak fogyatékosság igazolásával adnak, így a legtöbb apa nem jut be azon az ajtón.</p>
+<p>A <code>centralkey</code> címkés objektum (a <code>no</code> kivételével) akkor marad le a térképről, ha a kulcs az egész ajtót zárja: <code>access=centralkey</code>, asztal az akadálymentes mosdóban, vagy semmi nem mondja a címkékben, hogy a kulcs csak egy fülkére vonatkozik. Egy nyitott férfi és női mosdóval és kulcsra zárt akadálymentes fülkével rendelkező blokk (<code>wheelchair:access=centralkey</code>, vagy <code>male=yes</code> és <code>female=yes</code>) a térképen marad, szürkén, amíg valaki be nem írja a helyiséget. Eurokulcsot csak fogyatékosság igazolásával adnak, így a legtöbb apa nem jut be azon az ajtón. A <em>Kerekesszék</em> csip alatt ezek az asztalok visszatérnek, lásd lejjebb.</p>
 
 <h2>Az apa-anya kapcsoló</h2>
 <p>A fenti három szín az apa-kérdésre válaszol: el tudja-e érni egy apa az asztalt? Egy anya
@@ -202,6 +202,10 @@ címkét.</p>
 az asztal létezéséről tudunk. Itt viszont szinte minden objektum hallgat, és ez nem jelent semmit.
 Ha tudsz egy játszósarokról, nyugodtan add hozzá &mdash; az OSM szerkesztőjében,
 <code>kids_area=yes</code> címkeként.</p>
+
+<h2>A Kerekesszék csip</h2>
+<p>A <em>Kerekesszék</em> csip csak azokat a helyeket mutatja, amelyeken az OSM-ben <code>wheelchair=yes</code> áll. A <code>limited</code> (egy legfeljebb 7&nbsp;cm-es lépcső, vagy segítség kell) és a <code>toilets:wheelchair=yes</code> önmagában nem elég; mindkettő így is megjelenik a felugró ablakban, a <code>wheelchair:description</code> mellett. Egy címke nélküli hely nem megközelíthetetlen, az OSM egyszerűen nem mond róla semmit, így a csip csak szűr, és semmit sem színez.</p>
+<p>E csip alatt, és csak ott, visszatérnek az eurokulcs mögötti asztalok, kulccsal a tűben: akinek a csip kell, annak többnyire kulcsa is van. A rendes térképen, a számokban és a ranglistán kimaradnak.</p>
 
 <h2>Az üres kék gyűrűk: játszóhelyek válasz nélkül</h2>
 <p>Ugyanez a szabály sokkal több helyre illik, mint amennyi jelölő van a térképen. Közülük csak

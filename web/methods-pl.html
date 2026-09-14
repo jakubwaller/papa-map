@@ -151,7 +151,7 @@ zamieniana na małe litery, a każda część jest porównywana w całości. Nig
       tylko dowolny tekst. Nikt nie zapisał pomieszczenia. Szare pinezki to zadanie do
       zrobienia.</li>
 </ul>
-<p>Obiekt z tagiem <code>centralkey</code> (innym niż <code>no</code>) zostaje poza mapą, gdy klucz zamyka całe drzwi: <code>access=centralkey</code>, przewijak w toalecie dla niepełnosprawnych, albo nic w tagach nie mówi, że klucz dotyczy tylko jednej kabiny. Obiekt z otwartą toaletą męską i damską oraz zamkniętą na klucz kabiną dla niepełnosprawnych (<code>wheelchair:access=centralkey</code>, albo <code>male=yes</code> i <code>female=yes</code>) zostaje na mapie, szary, dopóki ktoś nie wpisze pomieszczenia. Euroklucz dostaje się wyłącznie po okazaniu orzeczenia o niepełnosprawności, więc większość ojców przez te drzwi nie przejdzie.</p>
+<p>Obiekt z tagiem <code>centralkey</code> (innym niż <code>no</code>) zostaje poza mapą, gdy klucz zamyka całe drzwi: <code>access=centralkey</code>, przewijak w toalecie dla niepełnosprawnych, albo nic w tagach nie mówi, że klucz dotyczy tylko jednej kabiny. Obiekt z otwartą toaletą męską i damską oraz zamkniętą na klucz kabiną dla niepełnosprawnych (<code>wheelchair:access=centralkey</code>, albo <code>male=yes</code> i <code>female=yes</code>) zostaje na mapie, szary, dopóki ktoś nie wpisze pomieszczenia. Euroklucz dostaje się wyłącznie po okazaniu orzeczenia o niepełnosprawności, więc większość ojców przez te drzwi nie przejdzie. Pod chipem <em>Wózek</em> te przewijaki wracają, patrz niżej.</p>
 
 <h2>Przełącznik tata/mama</h2>
 <p>Trzy kolory na górze odpowiadają na pytanie taty: Czy tata dotrze do przewijaka? Dla mamy ta
@@ -198,6 +198,10 @@ kącika zabaw — OSM po prostu nic o nim nie mówi. Dlatego nie ma tu szarości
 wykonania: przy <code>changing_table:location</code> milczenie jest wymowne, bo wiadomo, że
 przewijak istnieje. Tutaj milczy prawie każdy obiekt, a to nie znaczy nic. Jeśli znasz jakiś
 kącik zabaw, i tak warto go dodać &mdash; w edytorze OSM, jako <code>kids_area=yes</code>.</p>
+
+<h2>Chip Wózek</h2>
+<p>Chip <em>Wózek</em> pokazuje tylko miejsca z <code>wheelchair=yes</code> w OSM. <code>limited</code> (jeden stopień do 7&nbsp;cm lub potrzebna pomoc) i samo <code>toilets:wheelchair=yes</code> nie wystarczają; oba i tak widać w dymku, razem z <code>wheelchair:description</code>. Miejsce bez tagu nie jest niedostępne, OSM po prostu nic o nim nie mówi, więc chip tylko filtruje i niczego nie koloruje.</p>
+<p>Pod tym chipem, i tylko tam, wracają przewijaki za eurokluczem, z kluczem w pinezce: kto potrzebuje chipa, zwykle ma klucz. Na zwykłej mapie, w liczbach i w rankingu pozostają poza.</p>
 
 <h2>Puste niebieskie obwódki: miejsca do zabawy bez odpowiedzi</h2>
 <p>Ta sama reguła pasuje do dużo większej liczby miejsc, niż mapa ma pinezek. Tylko

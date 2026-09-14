@@ -1,5 +1,35 @@
 # papa-map — build contract (v0)
 
+> **v26 amendment (14 Sep 2026, wheelchair access):** every feature gains four
+> properties carried verbatim from OSM — **`wheelchair`** and **`toilets_wheelchair`**
+> (`yes | limited | no | null`, the wiki's three values from `wheelchair` and
+> `toilets:wheelchair`; anything else, and a missing tag, is `null`, which the frontend
+> reads as unrecorded and never as `no`), **`wheelchair_description`** (`wheelchair:description`
+> or `null`) and **`key`** (the `centralkey` value when the key locks the table per the v5
+> rule, else `null`). No new Overpass query: the sweep already returns every tag. The
+> popup shows the three as they are; the chip bar gains a last chip, off by default, that
+> narrows to **`wheelchair=yes` and nothing else** (`web/datasource.js::isWheelchairOk`).
+> `limited` is one step of up to 7 cm or help needed by the wiki's definition, Wheelmap
+> paints it orange, and `toilets:wheelchair=yes` alone would admit a place with a step at
+> the door — so both stay in the popup and out of the filter. A badge, never a status, on
+> the v9 reasoning: an untagged place is unrecorded, not inaccessible.
+>
+> **v5 is amended, not retracted.** A key-locked object is now **emitted**, with `key`
+> set and its `status` from the room rule alone (the key locks the door, not the room),
+> but it is still not a pin: `web/datasource.js::pinFeatures` hides every `key != null`
+> feature by default and admits it only under the wheelchair chip and only if it passes
+> the chip's rule — the chip's audience is exactly who holds the key (the 2026-08-14
+> "exclude, don't caveat" call stands for the default map). `pipeline/run.py` hands only
+> the `key: null` features to the area pages, the leaderboard and the history, the chip
+> counts and the "shown of total" figure are taken over the pins, and
+> `stats.local.centralkey_locked` counts them as locked as before, so no published number
+> changes by them. On the map a keyed pin carries a white key glyph from zoom 13 (a
+> symbol layer, `tables-key`) and the popup a line saying the door needs a central key;
+> the nearest-table search skips them unless the chip is on, and with it on searches
+> only what the chip shows. Measured on Germany, 13 Sep 2026: 6,190 `changing_table=yes`
+> objects, 4,419 `wheelchair=yes` (71 %), 534 `limited`, 495 `no`, 742 untagged; 1,339
+> `toilets:wheelchair=yes`; 390 tables in a wheelchair toilet, 7 behind a Euro key.
+
 > **v25 amendment (11 Sep 2026, the in-page answer):** the frontend may now **write to
 > OSM on the reader's behalf** — the one Global Rule that has changed since v0, and it is
 > edited in that section directly, not only noted here. `web/osm.js` logs the reader in
@@ -690,6 +720,10 @@ Overpass `out center`). Feature `properties`:
   "location_raw": "raw changing_table:location value or null",
   "status": "accessible|female_only|unknown",
   "play": "true|false — indoor play area recorded (v9); false also means unrecorded",
+  "wheelchair": "yes|limited|no|null — the place's wheelchair tag verbatim (v26); null also means unrecorded",
+  "toilets_wheelchair": "yes|limited|no|null — toilets:wheelchair verbatim (v26)",
+  "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",
+  "key": "string or null — the centralkey value when the key locks the table (v5 rule); such a feature is not a pin (v26)",
   "fee": "string or null",
   "opening_hours": "string or null",
   "osm_url": "https://www.openstreetmap.org/<type>/<id>",

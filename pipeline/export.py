@@ -5,7 +5,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from .classify import classify, has_play_area
+from .classify import central_key, classify, has_play_area, wheelchair_state
 from .osm import element_coords
 
 
@@ -32,13 +32,22 @@ def _mapcomplete_url(osm_type, osm_id, lat, lon):
 
 def build_features(ct_data: dict) -> list[dict]:
     """GeoJSON features for changing_table=yes/limited objects with usable
-    coordinates. `no` and junk values are dropped here (stats still see them)."""
+    coordinates. `no` and junk values are dropped here (stats still see them).
+
+    Key-locked objects (classify.central_key) are emitted too, since v26, with
+    `key` naming the key system; everything else carries `key: null`. They
+    are not pins: the frontend hides them unless the wheelchair chip is on,
+    and run.py hands only the `key: null` features to the area pages and the
+    leaderboard, so no count anywhere grows by them. Their `status` is the
+    room rule alone — the door is what the key locks, not the room behind
+    it."""
     features = []
     for el in ct_data.get("elements", []):
         tags = el.get("tags") or {}
         value = (tags.get("changing_table") or "").strip()
         location = tags.get("changing_table:location")
-        status = classify(value, location, tags)
+        key = central_key(tags, location)
+        status = classify(value, location, None if key else tags)
         if status is None:
             continue
         lat, lon = element_coords(el)
@@ -57,6 +66,12 @@ def build_features(ct_data: dict) -> list[dict]:
                 # Free: the sweep already asks for every tag on these objects,
                 # so the play corner costs no extra Overpass query.
                 "play": has_play_area(tags),
+                # Free for the same reason. Tri-state or null, shown verbatim
+                # in the popup; only wheelchair=yes drives a filter.
+                "wheelchair": wheelchair_state(tags),
+                "toilets_wheelchair": wheelchair_state(tags, "toilets:wheelchair"),
+                "wheelchair_description": tags.get("wheelchair:description"),
+                "key": key,
                 # the table-specific fee wins over the venue-level fee tag
                 "fee": tags.get("changing_table:fee") or tags.get("fee"),
                 "opening_hours": tags.get("opening_hours"),

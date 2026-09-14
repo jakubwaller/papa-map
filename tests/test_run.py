@@ -68,8 +68,9 @@ EUROPE_SWEEP = ELEVEN_SWEEP + [(config.COUNTRY_AREAS[c][0][0], "2")
 BY_CODE = {code: name for (name, _), (_, code) in config.AREA_SELECTORS.items()}
 
 
-def _fake_overpass(load_fixture):
-    """Answers every sweep area with the same fixtures — dedup_elements must
+def _fake_overpass(load_fixture, ct=None):
+    """Answers every sweep area with the same fixtures (`ct` replaces the
+    changing-table half when a test needs an extra object in it) — dedup_elements must
     collapse the 17 identical copies back to one, which is exactly what the
     totals in the tests assert. Records the (area, admin_level) pairs queried.
 
@@ -78,6 +79,7 @@ def _fake_overpass(load_fixture):
     backfill's narrow query carry no kids_area clause and get the
     changing_table fixture alone."""
     areas_seen = []
+    ct_fixture = ct or load_fixture("overpass_changing_tables.json")
 
     def fetch(ql, **kwargs):
         # name:en for the countries whose own `name` is multilingual
@@ -92,11 +94,10 @@ def _fake_overpass(load_fixture):
             value = BY_CODE[value]
         areas_seen.append((value, m.group(3)))
         if '"kids_area"' in ql:
-            return {"elements":
-                    load_fixture("overpass_changing_tables.json")["elements"]
+            return {"elements": ct_fixture["elements"]
                     + load_fixture("overpass_play_places.json")["elements"]}
         if '"changing_table"' in ql:
-            return load_fixture("overpass_changing_tables.json")
+            return ct_fixture
         assert '"amenity"="toilets"' in ql
         # Toilets come back as two server-side counts, not objects. Derived
         # from the same fixture so it stays the single source of truth: 3
@@ -184,6 +185,29 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     assert payload["local"]["play_places"] == 3
     assert payload["global"]["ct_total"] == 77287
     assert payload["global"]["source"] == "taginfo"
+
+
+def test_key_locked_tables_ride_in_the_geojson_but_in_no_count(tmp_path, load_fixture):
+    ct = load_fixture("overpass_changing_tables.json")
+    ct["elements"].append({"type": "node", "id": 900, "lat": 53.55, "lon": 10.0,
+                           "tags": {"changing_table": "yes", "wheelchair": "yes",
+                                    "changing_table:location": "wheelchair_toilet",
+                                    "centralkey": "eurokey"}})
+    history_path = tmp_path / "history.json"
+    geojson_path = tmp_path / "ct.geojson"
+    run_pipeline(
+        geojson_path=str(geojson_path), stats_path=str(tmp_path / "stats.json"),
+        pages_dir=str(tmp_path / "pages"), history_path=str(history_path),
+        overpass_fetch=_fake_overpass(load_fixture, ct=ct),
+        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+    feats = json.loads(geojson_path.read_text(encoding="utf-8"))["features"]
+    keyed = [f for f in feats if f["properties"]["key"]]
+    assert [f["properties"]["osm_id"] for f in keyed] == [900]
+    stats = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))["local"]
+    assert stats["centralkey_locked"] == 1
+    assert stats["accessible"] + stats["female_only"] + stats["unknown"] == len(feats) - 1
+    day = json.loads(history_path.read_text(encoding="utf-8"))["days"][0]
+    assert day["regions"]["Baden-Württemberg"] == [3, 2, 2]  # unchanged by the key
 
 
 def test_single_area_build_keeps_its_own_name(tmp_path, load_fixture):

@@ -149,7 +149,7 @@ alamstringina, sest <code>female_toilet</code> sisaldab sõna <code>male</code>.
   <li><span class="dot u"></span><strong>Hall:</strong> kõik muu. Asukohasilti pole, või on ainult
       vabatekst. Keegi pole ruumi märkinud. Hallid nõelad ongi see töö.</li>
 </ul>
-<p><code>centralkey</code>-sildiga (muu kui <code>no</code>) objekt jääb kaardilt välja, kui võti lukustab kogu ukse: <code>access=centralkey</code>, laud invatualetis, või miski siltides ei ütle, et võti kehtib ainult ühe kabiini kohta. Avatud meeste- ja naistetualetiga ning lukustatud invakabiiniga kompleks (<code>wheelchair:access=centralkey</code>, või <code>male=yes</code> ja <code>female=yes</code>) jääb kaardile, hallina, kuni keegi ruumi kirja paneb. Eurovõtme saab ainult puude tõendamisel, nii et enamik isasid sellest uksest läbi ei saa.</p>
+<p><code>centralkey</code>-sildiga (muu kui <code>no</code>) objekt jääb kaardilt välja, kui võti lukustab kogu ukse: <code>access=centralkey</code>, laud invatualetis, või miski siltides ei ütle, et võti kehtib ainult ühe kabiini kohta. Avatud meeste- ja naistetualetiga ning lukustatud invakabiiniga kompleks (<code>wheelchair:access=centralkey</code>, või <code>male=yes</code> ja <code>female=yes</code>) jääb kaardile, hallina, kuni keegi ruumi kirja paneb. Eurovõtme saab ainult puude tõendamisel, nii et enamik isasid sellest uksest läbi ei saa. Kiibi <em>Ratastool</em> all tulevad need lauad tagasi, vt allpool.</p>
 
 <h2>Isa-ema lüliti</h2>
 <p>Kolm ülalpool kirjeldatud värvi vastavad isa küsimusele: kas isa pääseb laua juurde? Emale on
@@ -196,6 +196,10 @@ mängualaga kohaks, kui OSM registreerib mõne järgnevatest:</p>
 teha: sildi <code>changing_table:location</code> puhul on vaikimine kõnekas, sest laud on teadaolevalt
 olemas. Siin on vait peaaegu kõik objektid, ja see ei tähenda mitte midagi. Kui sa mänguala tead,
 on selle lisamine ikkagi teretulnud &mdash; OSM-i redaktoris, sildiga <code>kids_area=yes</code>.</p>
+
+<h2>Kiip Ratastool</h2>
+<p>Kiip <em>Ratastool</em> näitab ainult kohti, millel on OSM-is <code>wheelchair=yes</code>. <code>limited</code> (üks kuni 7&nbsp;cm aste või abi vajalik) ja ainult <code>toilets:wheelchair=yes</code> ei ole piisavad; mõlemad on siiski hüpikaknas koos <code>wheelchair:description</code>-ga. Sildita koht ei ole ligipääsmatu, OSM lihtsalt ei ütle midagi, seega kiip ainult filtreerib ega värvi midagi.</p>
+<p>Selle kiibi all, ja ainult seal, tulevad eurovõtme taga olevad lauad tagasi, võtmega nõela sees: kes kiipi vajab, sel on enamasti võti. Tavalisel kaardil, arvudes ja edetabelis jäävad nad välja.</p>
 
 <h2>Tühjad sinised rõngad: mängukohad, millele pole vastust</h2>
 <p>Sama reegel sobib palju rohkematele kohtadele, kui kaardil nõelu on. Ainult

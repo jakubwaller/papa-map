@@ -152,7 +152,7 @@ passa a minúscules i cada part es compara sencera. Mai com a subcadena, perquè
       localització, o només text lliure. Ningú no ha registrat la sala. Els pins grisos són la
       feina pendent.</li>
 </ul>
-<p>Un objecte amb una etiqueta <code>centralkey</code> (diferent de <code>no</code>) queda fora del mapa quan la clau tanca tota la porta: <code>access=centralkey</code>, un canviador al lavabo adaptat, o res a les etiquetes diu que la clau és només per a una cabina. Un bloc amb lavabos d'homes i de dones oberts i una cabina adaptada tancada amb clau (<code>wheelchair:access=centralkey</code>, o <code>male=yes</code> i <code>female=yes</code>) es queda al mapa, gris fins que algú registri la sala. La clau Euro només es dona amb certificat de discapacitat, així que la majoria de pares no passen per aquesta porta.</p>
+<p>Un objecte amb una etiqueta <code>centralkey</code> (diferent de <code>no</code>) queda fora del mapa quan la clau tanca tota la porta: <code>access=centralkey</code>, un canviador al lavabo adaptat, o res a les etiquetes diu que la clau és només per a una cabina. Un bloc amb lavabos d'homes i de dones oberts i una cabina adaptada tancada amb clau (<code>wheelchair:access=centralkey</code>, o <code>male=yes</code> i <code>female=yes</code>) es queda al mapa, gris fins que algú registri la sala. La clau Euro només es dona amb certificat de discapacitat, així que la majoria de pares no passen per aquesta porta. Sota el xip <em>Cadira de rodes</em> aquests canviadors tornen, vegeu més avall.</p>
 
 <h2>El commutador pare/mare</h2>
 <p>Els tres colors de dalt responen la pregunta del pare: Hi arriba un pare, al canviador? Per a
@@ -202,6 +202,10 @@ crida a l'acció: amb <code>changing_table:location</code> el silenci vol dir al
 se sap que el canviador existeix. Aquí gairebé tots els objectes callen, i això no vol dir res. Si
 coneixes un racó de jocs, afegir-lo és sempre benvingut — a l'editor d'OSM, com a
 <code>kids_area=yes</code>.</p>
+
+<h2>El xip Cadira de rodes</h2>
+<p>El xip <em>Cadira de rodes</em> només mostra llocs amb <code>wheelchair=yes</code> a OSM. <code>limited</code> (un graó de fins a 7&nbsp;cm, o cal ajuda) i <code>toilets:wheelchair=yes</code> tot sol no són suficients; tots dos apareixen igualment a la finestra, amb <code>wheelchair:description</code>. Un lloc sense l'etiqueta no és inaccessible, OSM simplement no en diu res, així que el xip només filtra i no acoloreix res.</p>
+<p>Sota aquest xip, i només aquí, tornen els canviadors darrere una clau Euro, amb una clau dibuixada a l'agulla: qui necessita el xip sol tenir la clau. Al mapa normal, als números i a la classificació queden fora.</p>
 
 <h2>Els anells blaus buits: llocs per jugar, sense resposta</h2>
 <p>La mateixa regla afecta molts més llocs dels que el mapa té pins. Només

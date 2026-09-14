@@ -151,7 +151,7 @@ och varje del jämförs i sin helhet. Aldrig som delsträng, för <code>female_t
   <li><span class="dot u"></span><strong>Grått:</strong> allt annat. Ingen location-tagg, eller
       bara fritext. Ingen har registrerat rummet. De grå nålarna är uppgiften.</li>
 </ul>
-<p>Ett objekt med en <code>centralkey</code>-tagg (utom <code>no</code>) hålls utanför kartan när nyckeln spärrar hela dörren: <code>access=centralkey</code>, ett bord i handikapptoaletten, eller inget i taggarna säger att nyckeln bara gäller en kabin. En anläggning med öppen herr- och damtoalett och en låst handikappkabin (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> och <code>female=yes</code>) stannar på kartan, grå tills någon registrerar rummet. Euronyckeln får man bara mot styrkt funktionsnedsättning, så de flesta pappor kommer inte genom den dörren.</p>
+<p>Ett objekt med en <code>centralkey</code>-tagg (utom <code>no</code>) hålls utanför kartan när nyckeln spärrar hela dörren: <code>access=centralkey</code>, ett bord i handikapptoaletten, eller inget i taggarna säger att nyckeln bara gäller en kabin. En anläggning med öppen herr- och damtoalett och en låst handikappkabin (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> och <code>female=yes</code>) stannar på kartan, grå tills någon registrerar rummet. Euronyckeln får man bara mot styrkt funktionsnedsättning, så de flesta pappor kommer inte genom den dörren. Under chippet <em>Rullstol</em> kommer dessa skötbord tillbaka, se nedan.</p>
 
 <h2>Omkopplaren pappa/mamma</h2>
 <p>De tre färgerna ovan svarar på pappas fråga: Kommer en pappa åt bordet? För en mamma läses
@@ -196,6 +196,10 @@ lekhörna&rdquo; — OSM säger helt enkelt ingenting om den. Därför finns hä
 uppgift: vid <code>changing_table:location</code> är tystnaden talande, eftersom bordet bevisligen
 finns. Här tiger nästan alla objekt, och det betyder ingenting. Den som känner till en lekhörna får
 gärna lägga in den ändå — i OSM-editorn, med <code>kids_area=yes</code>.</p>
+
+<h2>Chippet Rullstol</h2>
+<p>Chippet <em>Rullstol</em> visar bara platser med <code>wheelchair=yes</code> i OSM. <code>limited</code> (ett steg på upp till 7&nbsp;cm, eller hjälp behövs) och <code>toilets:wheelchair=yes</code> ensamt räcker inte; båda står ändå i popupen tillsammans med <code>wheelchair:description</code>. En plats utan taggen är inte otillgänglig, OSM säger bara inget, så chippet filtrerar bara och färgar inget.</p>
+<p>Under detta chip, och bara där, kommer skötborden bakom eurokey tillbaka, med en nyckel i nålen: den som behöver chippet har oftast nyckeln. På den vanliga kartan, i siffrorna och i rankningen stannar de utanför.</p>
 
 <h2>De tomma blå ringarna: lekställen utan svar</h2>
 <p>Samma regel matchar långt fler platser än kartan har nålar. Bara
