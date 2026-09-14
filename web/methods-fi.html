@@ -150,7 +150,7 @@ osamerkkijonona, sillä <code>female_toilet</code> sisältää sanan <code>male<
   <li><span class="dot u"></span><strong>Harmaa:</strong> kaikki muu. Ei sijaintitagia, tai vain
       vapaata tekstiä. Kukaan ei ole merkinnyt tilaa. Harmaat nastat ovat tehtävä.</li>
 </ul>
-<p>Kohde, jolla on <code>centralkey</code>-tagi (muu kuin <code>no</code>), jätetään pois kartalta, kun avain lukitsee koko oven: <code>access=centralkey</code>, pöytä inva-wc:ssä, tai mikään tageissa ei sano, että avain koskee vain yhtä koppia. Tilat, joissa on avoimet miesten ja naisten wc:t ja avaimella lukittu inva-koppi (<code>wheelchair:access=centralkey</code>, tai <code>male=yes</code> ja <code>female=yes</code>), pysyvät kartalla, harmaana kunnes joku kirjaa huoneen. Euro-avaimen saa vain vamman todistamista vastaan, joten useimmat isät eivät pääse siitä ovesta.</p>
+<p>Kohde, jolla on <code>centralkey</code>-tagi (muu kuin <code>no</code>), jätetään pois kartalta, kun avain lukitsee koko oven: <code>access=centralkey</code>, pöytä inva-wc:ssä, tai mikään tageissa ei sano, että avain koskee vain yhtä koppia. Tilat, joissa on avoimet miesten ja naisten wc:t ja avaimella lukittu inva-koppi (<code>wheelchair:access=centralkey</code>, tai <code>male=yes</code> ja <code>female=yes</code>), pysyvät kartalla, harmaana kunnes joku kirjaa huoneen. Euro-avaimen saa vain vamman todistamista vastaan, joten useimmat isät eivät pääse siitä ovesta. <em>Pyörätuoli</em>-napin alla nämä pöydät palaavat, ks. alempana.</p>
 
 <h2>Isä-äiti-kytkin</h2>
 <p>Kolme väriä yllä vastaavat isä-kysymykseen: Pääseekö isä pöydälle? Äidille sama vastaus
@@ -199,6 +199,10 @@ toimintakehotusta: kohdassa <code>changing_table:location</code> hiljaisuus on m
 koska pöydän tiedetään olevan olemassa. Täällä lähes jokainen kohde on hiljaa, eikä se tarkoita
 mitään. Jos tiedät leikkinurkasta, sen lisääminen on silti tervetullutta &mdash;
 OSM-editorissa, tagilla <code>kids_area=yes</code>.</p>
+
+<h2>Pyörätuoli-nappi</h2>
+<p><em>Pyörätuoli</em>-nappi näyttää vain paikat, joilla on OSM:ssä <code>wheelchair=yes</code>. <code>limited</code> (yksi enintään 7&nbsp;cm:n porras tai apua tarvitaan) ja pelkkä <code>toilets:wheelchair=yes</code> eivät riitä; molemmat näkyvät silti ponnahdusikkunassa yhdessä <code>wheelchair:description</code>-tekstin kanssa. Paikka ilman tagia ei ole esteellinen, OSM ei vain sano mitään, joten nappi vain suodattaa eikä värjää mitään.</p>
+<p>Tämän napin alla, ja vain siellä, euroavaimen takana olevat pöydät palaavat, avain neulassa: se joka tarvitsee nappia, omistaa yleensä avaimen. Tavallisella kartalla, luvuissa ja listalla ne pysyvät poissa.</p>
 
 <h2>Tyhjät siniset renkaat: leikkipaikkoja, ei vastausta</h2>
 <p>Sama sääntö osuu paljon useampaan paikkaan kuin kartalla on nastoja. Vain

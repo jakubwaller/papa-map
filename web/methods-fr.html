@@ -151,7 +151,7 @@ espaces, mise en minuscules, et chaque partie est comparée en entier. Jamais co
       ou seulement du texte libre. Personne n'a renseigné la pièce. Les marqueurs gris, voilà le
       travail.</li>
 </ul>
-<p>Un objet avec un tag <code>centralkey</code> (autre que <code>no</code>) reste hors de la carte quand la clé ferme toute la porte : <code>access=centralkey</code>, une table dans le WC handicapé, ou rien dans les tags ne dit que la clé ne concerne qu'une cabine. Un bloc avec WC hommes et femmes ouverts et une cabine PMR fermée à clé (<code>wheelchair:access=centralkey</code>, ou <code>male=yes</code> et <code>female=yes</code>) reste sur la carte, gris jusqu'à ce que quelqu'un renseigne la pièce. La clé européenne ne se délivre que sur justificatif de handicap, la plupart des papas ne passent donc pas cette porte.</p>
+<p>Un objet avec un tag <code>centralkey</code> (autre que <code>no</code>) reste hors de la carte quand la clé ferme toute la porte : <code>access=centralkey</code>, une table dans le WC handicapé, ou rien dans les tags ne dit que la clé ne concerne qu'une cabine. Un bloc avec WC hommes et femmes ouverts et une cabine PMR fermée à clé (<code>wheelchair:access=centralkey</code>, ou <code>male=yes</code> et <code>female=yes</code>) reste sur la carte, gris jusqu'à ce que quelqu'un renseigne la pièce. La clé européenne ne se délivre que sur justificatif de handicap, la plupart des papas ne passent donc pas cette porte. Sous la puce <em>Fauteuil roulant</em>, ces tables reviennent, voir plus bas.</p>
 
 <h2>Le sélecteur Papa / Maman</h2>
 <p>Les trois couleurs ci-dessus répondent à la question papa : un papa peut-il accéder à la table ?
@@ -201,6 +201,10 @@ jeux » &mdash; OSM n'en dit tout simplement rien. Il n'y a donc ici ni gris ni 
 avec <code>changing_table:location</code>, le silence est parlant, parce qu'on sait que la table
 existe. Ici presque tous les objets se taisent, et cela ne veut rien dire. Si tu connais un coin
 jeux, ajoute-le quand même &mdash; dans l'éditeur OSM, avec <code>kids_area=yes</code>.</p>
+
+<h2>La puce Fauteuil roulant</h2>
+<p>La puce <em>Fauteuil roulant</em> n'affiche que les lieux portant <code>wheelchair=yes</code> dans OSM. <code>limited</code> (une marche de 7&nbsp;cm au plus, ou de l'aide nécessaire) et <code>toilets:wheelchair=yes</code> seul ne suffisent pas ; les deux figurent tout de même dans la fenêtre, avec <code>wheelchair:description</code>. Un lieu sans ce tag n'est pas inaccessible, OSM n'en dit simplement rien : la puce filtre, elle ne colore rien.</p>
+<p>Sous cette puce, et seulement là, les tables derrière une clé Euro reviennent, avec une clé dessinée dans l'épingle : qui a besoin de la puce a le plus souvent la clé. Sur la carte normale, dans les chiffres et dans le classement, elles restent absentes.</p>
 
 <h2>Les anneaux bleus vides : des lieux pour jouer, sans réponse</h2>
 <p>La même règle correspond à bien plus de lieux que la carte n'a de marqueurs. Seuls

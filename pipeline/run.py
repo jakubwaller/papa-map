@@ -228,6 +228,10 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     play_data = {"elements": osm.dedup_elements(play_elements)}
     features = export.build_features(ct_data)
     play_features = export.build_play_features(play_data)
+    # The key-locked tables ride along in the GeoJSON for the wheelchair chip
+    # (v26) and nowhere else: the pages, the leaderboard and the history
+    # count pins, and a table behind a Euro key is not one.
+    open_features = [f for f in features if f["properties"]["key"] is None]
     # Summed, where the object halves are deduped: a count cannot tell us
     # whether a toilet on a Länder boundary was already counted next door.
     # Overpass assigns a node to exactly one area, so only a *way* straddling
@@ -269,7 +273,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # gets one page in its own language, France additionally its 13 région
     # pages. The routing and the reasoning live in config.COUNTRY_PAGES and
     # pages.write_all_pages.
-    written = pages.write_all_pages(areas, features, ct_area, toilets_by_area,
+    written = pages.write_all_pages(areas, open_features, ct_area, toilets_by_area,
                                     pages_dir, generated_at)
 
     # History + leaderboard, only when the city sweep ran (i.e. a full build).
@@ -280,7 +284,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         # town in Alabama, and since the US is swept its ids would match.
         city_by_key = leaderboard.city_membership(cities, city_ids, ct_area)
         region_counts, city_counts = leaderboard.counts_from_features(
-            features, ct_area, city_by_key,
+            open_features, ct_area, city_by_key,
             region_names=[name for name, _ in areas],
             city_names=list(city_ids))
         history = leaderboard.load_history(history_path)

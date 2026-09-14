@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
-         countsByStatus, countPlay, toFeatureCollection,
+         countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
+         isWheelchairOk, countWheelchair, pinFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
@@ -186,6 +187,72 @@ test("filterFeatures narrows to play corners on top of the status filter", () =>
   assert.deepEqual(filterFeatures(v, new Set(), true), []);
 });
 
+test("wheelchair is a tri-state or null — never derived, never a status", () => {
+  const load = (props) => loadFeatures({ type: "FeatureCollection",
+    features: [feat(9.9, 53.5, { status: "unknown", ...props })] })[0];
+  for (const v of WHEELCHAIR_STATES) assert.equal(load({ wheelchair: v }).wheelchair, v);
+  // pre-v26 GeoJSON and junk both read as unrecorded, not as "no"
+  for (const v of [undefined, null, "designated", true, 1, ""])
+    assert.equal(load({ wheelchair: v }).wheelchair, null);
+  assert.equal(load({ toilets_wheelchair: "yes" }).toilets_wheelchair, "yes");
+  assert.equal(load({ toilets_wheelchair: "yes" }).wheelchair, null);
+  assert.equal(load({ wheelchair_description: "eine Stufe" }).wheelchair_description, "eine Stufe");
+  assert.equal(load({ wheelchair_description: 3 }).wheelchair_description, null);
+  assert.equal(load({ key: "eurokey" }).key, "eurokey");
+  for (const v of [undefined, null, "", 0]) assert.equal(load({ key: v }).key, null);
+  // the status is whatever the pipeline said, whatever the wheelchair tags say
+  assert.equal(load({ wheelchair: "no", status: "accessible" }).status, "accessible");
+});
+
+test("the wheelchair chip admits wheelchair=yes and nothing else", () => {
+  assert.equal(isWheelchairOk({ wheelchair: "yes" }), true);
+  assert.equal(isWheelchairOk({ wheelchair: "limited" }), false);
+  assert.equal(isWheelchairOk({ wheelchair: "no" }), false);
+  assert.equal(isWheelchairOk({ wheelchair: null }), false);
+  // an accessible toilet at a place with a step at the door is not enough
+  assert.equal(isWheelchairOk({ wheelchair: null, toilets_wheelchair: "yes" }), false);
+  assert.equal(isWheelchairOk({ wheelchair: "limited", toilets_wheelchair: "yes" }), false);
+  assert.equal(countWheelchair([{ wheelchair: "yes" }, { wheelchair: "yes", key: "eurokey" },
+                                { wheelchair: "limited" }, {}]), 2);
+});
+
+test("keyed tables are hidden by default and come back only under the chip", () => {
+  const fc = { type: "FeatureCollection", features: [
+    feat(1, 1, { status: "accessible", wheelchair: "yes" }),
+    feat(2, 2, { status: "accessible", wheelchair: "yes", key: "eurokey" }),
+    feat(3, 3, { status: "unknown", wheelchair: "limited", key: "nks" }),
+    feat(4, 4, { status: "unknown" }),
+  ] };
+  const v = loadFeatures(fc);
+  // the default universe: every pin, no keyed table
+  assert.deepEqual(pinFeatures(v).map((f) => f.idx), [0, 3]);
+  assert.deepEqual(filterFeatures(v, new Set(STATUSES)).map((f) => f.idx), [0, 3]);
+  // rows without the property at all (older callers, tests) are pins
+  assert.equal(pinFeatures([{ status: "unknown" }]).length, 1);
+  // under the chip: the rule alone decides, and the Euro-key table is back
+  assert.deepEqual(pinFeatures(v, true).map((f) => f.idx), [0, 1]);
+  assert.deepEqual(filterFeatures(v, new Set(STATUSES), false, true).map((f) => f.idx), [0, 1]);
+  // a keyed table that fails the rule stays hidden either way
+  assert.ok(!filterFeatures(v, new Set(STATUSES), false, true).some((f) => f.idx === 2));
+  // the status toggles and the play filter still narrow on top
+  assert.deepEqual(filterFeatures(v, new Set(["unknown"]), false, true), []);
+  assert.deepEqual(filterFeatures(v, new Set(STATUSES), true, true), []);
+  // the map source carries the key as a flag for the icon layer
+  assert.deepEqual(toFeatureCollection(pinFeatures(v, true)).features.map((f) => f.properties.key),
+    [false, true]);
+});
+
+test("nearestUsable skips keyed tables unless the chip is on, then obeys it", () => {
+  const rows = [
+    { id: "near-keyed", status: "accessible", wheelchair: "yes", key: "eurokey", lat: 53.5503, lon: 9.9920 },
+    { id: "mid-step", status: "accessible", wheelchair: "limited", lat: 53.5510, lon: 9.9940 },
+    { id: "far-level", status: "accessible", wheelchair: "yes", lat: 53.5528, lon: 10.0067 },
+  ];
+  assert.equal(nearestUsable(rows, 53.5503, 9.9920, "papa").feature.id, "mid-step");
+  assert.equal(nearestUsable(rows, 53.5503, 9.9920, "papa", true).feature.id, "near-keyed");
+  assert.equal(nearestUsable(rows.slice(1), 53.5503, 9.9920, "papa", true).feature.id, "far-level");
+});
+
 test("toFeatureCollection emits unknown last so grey pins draw on top", () => {
   const fc = { type: "FeatureCollection", features: [
     feat(1, 1, { status: "unknown" }),
@@ -235,7 +302,7 @@ test("toFeatureCollection carries only {idx, status, play} and idx survives the 
   const out = toFeatureCollection(filterByStatus(v, ["unknown", "accessible"]));
   assert.equal(out.type, "FeatureCollection");
   for (const f of out.features) {
-    assert.deepEqual(Object.keys(f.properties).sort(), ["idx", "play", "status"]);
+    assert.deepEqual(Object.keys(f.properties).sort(), ["idx", "key", "play", "status"]);
     const orig = v[f.properties.idx];  // the click-lookup the app does
     assert.equal(orig.status, f.properties.status);
     assert.equal(orig.play, f.properties.play);   // drives the halo layer filter

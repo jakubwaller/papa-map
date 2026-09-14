@@ -153,7 +153,7 @@ porque <code>female_toilet</code> contém
   <li><span class="dot u"></span><strong>Cinzento:</strong> tudo o resto. Sem tag de localização,
       ou só texto livre. Ninguém registou a sala. Os pins cinzentos são o trabalho a fazer.</li>
 </ul>
-<p>Um objeto com uma tag <code>centralkey</code> (diferente de <code>no</code>) fica fora do mapa quando a chave fecha a porta toda: <code>access=centralkey</code>, um fraldário na casa de banho adaptada, ou nada nas tags diz que a chave é só para uma cabina. Um bloco com casas de banho de homens e de mulheres abertas e uma cabina adaptada fechada à chave (<code>wheelchair:access=centralkey</code>, ou <code>male=yes</code> e <code>female=yes</code>) fica no mapa, cinzento até alguém registar a sala. A chave Euro só se obtém com prova de deficiência, por isso a maioria dos pais não passa por essa porta.</p>
+<p>Um objeto com uma tag <code>centralkey</code> (diferente de <code>no</code>) fica fora do mapa quando a chave fecha a porta toda: <code>access=centralkey</code>, um fraldário na casa de banho adaptada, ou nada nas tags diz que a chave é só para uma cabina. Um bloco com casas de banho de homens e de mulheres abertas e uma cabina adaptada fechada à chave (<code>wheelchair:access=centralkey</code>, ou <code>male=yes</code> e <code>female=yes</code>) fica no mapa, cinzento até alguém registar a sala. A chave Euro só se obtém com prova de deficiência, por isso a maioria dos pais não passa por essa porta. Sob o chip <em>Cadeira de rodas</em> estes fraldários voltam, ver abaixo.</p>
 
 <h2>O seletor Pai / Mãe</h2>
 <p>As três cores acima respondem à pergunta do pai: um pai consegue chegar a este fraldário?
@@ -201,6 +201,10 @@ ação: com <code>changing_table:location</code> o silêncio é significativo, p
 fraldário existe. Aqui quase todos os objetos estão em silêncio, e isso não significa nada. Se
 conheces um cantinho de brincar, adicioná-lo continua a ser bem-vindo — no editor do OSM, como
 <code>kids_area=yes</code>.</p>
+
+<h2>O chip Cadeira de rodas</h2>
+<p>O chip <em>Cadeira de rodas</em> mostra só locais com <code>wheelchair=yes</code> no OSM. <code>limited</code> (um degrau até 7&nbsp;cm, ou ajuda necessária) e <code>toilets:wheelchair=yes</code> por si só não chegam; ambos aparecem na mesma na janela, com <code>wheelchair:description</code>. Um local sem a etiqueta não é inacessível, o OSM simplesmente nada diz, por isso o chip só filtra e nada colore.</p>
+<p>Sob este chip, e só aí, voltam os fraldários atrás de uma chave Euro, com uma chave desenhada no pino: quem precisa do chip costuma ter a chave. No mapa normal, nos números e na classificação ficam de fora.</p>
 
 <h2>Os anéis azuis vazios: locais para brincar, sem resposta</h2>
 <p>A mesma regra apanha muitos mais locais do que o mapa tem pins. Só

@@ -152,7 +152,7 @@ spazi, messo in minuscolo, e ogni parte viene confrontata per intero. Mai come s
       o solo testo libero. Nessuno ha registrato la stanza. I pin grigi sono il lavoro da
       fare.</li>
 </ul>
-<p>Un oggetto con un tag <code>centralkey</code> (diverso da <code>no</code>) resta fuori dalla mappa quando la chiave chiude tutta la porta: <code>access=centralkey</code>, un fasciatoio nel bagno disabili, o niente nei tag dice che la chiave vale solo per una cabina. Un blocco con bagni uomini e donne aperti e una cabina disabili chiusa a chiave (<code>wheelchair:access=centralkey</code>, oppure <code>male=yes</code> e <code>female=yes</code>) resta sulla mappa, grigio finché qualcuno non registra la stanza. La chiave europea si ottiene solo dimostrando una disabilità, quindi la maggior parte dei papà da quella porta non passa.</p>
+<p>Un oggetto con un tag <code>centralkey</code> (diverso da <code>no</code>) resta fuori dalla mappa quando la chiave chiude tutta la porta: <code>access=centralkey</code>, un fasciatoio nel bagno disabili, o niente nei tag dice che la chiave vale solo per una cabina. Un blocco con bagni uomini e donne aperti e una cabina disabili chiusa a chiave (<code>wheelchair:access=centralkey</code>, oppure <code>male=yes</code> e <code>female=yes</code>) resta sulla mappa, grigio finché qualcuno non registra la stanza. La chiave europea si ottiene solo dimostrando una disabilità, quindi la maggior parte dei papà da quella porta non passa. Sotto il chip <em>Sedia a rotelle</em> questi fasciatoi tornano, vedi sotto.</p>
 
 <h2>Il selettore Papà / Mamma</h2>
 <p>I tre colori qui sopra rispondono alla domanda del papà: un papà riesce a raggiungere il
@@ -203,6 +203,10 @@ riguardo. Per questo qui non c'è il grigio e non c'è un compito da svolgere: c
 <code>changing_table:location</code> il silenzio dice qualcosa, perché il fasciatoio esiste con
 certezza. Qui invece tacciono quasi tutti gli oggetti, e questo non significa nulla. Se conosci un
 angolo giochi, aggiungilo pure &mdash; nell'editor di OSM, con <code>kids_area=yes</code>.</p>
+
+<h2>Il chip Sedia a rotelle</h2>
+<p>Il chip <em>Sedia a rotelle</em> mostra solo i luoghi con <code>wheelchair=yes</code> in OSM. <code>limited</code> (un gradino fino a 7&nbsp;cm, o aiuto necessario) e <code>toilets:wheelchair=yes</code> da solo non bastano; entrambi compaiono comunque nel popup, insieme a <code>wheelchair:description</code>. Un luogo senza il tag non è inaccessibile, OSM semplicemente non dice nulla: il chip filtra soltanto, non colora.</p>
+<p>Sotto questo chip, e solo lì, tornano i fasciatoi dietro una chiave Euro, con una chiave disegnata nel segnaposto: chi ha bisogno del chip di solito ha la chiave. Sulla mappa normale, nei numeri e nella classifica restano fuori.</p>
 
 <h2>Gli anelli blu vuoti: posti per giocare, nessuna risposta</h2>
 <p>La stessa regola vale per molti più luoghi di quanti pin abbia la mappa. Solo

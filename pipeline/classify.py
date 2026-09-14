@@ -19,6 +19,14 @@ FEATURE_VALUES = {"yes", "limited"}
 # along with `no`, `outdoor` and anything unrecognized.
 PLAY_AREA_VALUES = {"yes", "indoor", "designated"}
 
+# The three values the wheelchair tags can honestly carry (wiki: Key:wheelchair).
+# Anything else — `designated`, free text, a typo — is emitted as None, which
+# the frontend reads as "unrecorded", exactly like a missing tag. Never fold
+# `limited` into `yes`: the wiki defines it as one step of up to 7 cm or help
+# needed, Wheelmap paints it orange, and a chip that promised "accessible"
+# over it would send a wheelchair user to a step.
+WHEELCHAIR_VALUES = {"yes", "limited", "no"}
+
 
 def centralkey_locked(tags: dict, location: str | None = None) -> bool:
     """True when a central key system (`centralkey` tag present and not `no`)
@@ -98,6 +106,30 @@ def has_play_area(tags: dict) -> bool:
     if leisure == "indoor_play":
         return True
     return leisure == "playground" and _v(tags, "indoor") == "yes"
+
+
+def wheelchair_state(tags: dict, key: str = "wheelchair") -> str | None:
+    """`yes` | `limited` | `no` from the `wheelchair` tag (or, with
+    key="toilets:wheelchair", from that one), None when unrecorded or junk.
+
+    On a shop or a café `wheelchair=*` describes the entrance, on an
+    `amenity=toilets` object the toilet itself; `toilets:wheelchair=*` says the
+    place has an accessible toilet. The frontend shows both as they are and
+    filters on `wheelchair=yes` alone (CONTRACT v26) — neither says where the
+    table is, which stays `changing_table:location`'s job."""
+    value = _v(tags, key)
+    return value if value in WHEELCHAIR_VALUES else None
+
+
+def central_key(tags: dict, location: str | None = None) -> str | None:
+    """The `centralkey` value when the key locks the table (centralkey_locked),
+    else None. What the frontend carries as `key`: a locked table is not a pin
+    by default (v5) but comes back under the wheelchair chip (v26), whose
+    audience is exactly who holds the key — so the export keeps the object
+    and names the key system rather than dropping the object outright."""
+    if not centralkey_locked(tags, location):
+        return None
+    return _v(tags, "centralkey")
 
 
 def classify(changing_table: str | None, location: str | None,

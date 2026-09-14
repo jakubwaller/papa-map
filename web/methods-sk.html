@@ -151,7 +151,7 @@ medzier, prevedie na malé písmená a každá časť sa porovnáva celá. Nikdy
   <li><span class="dot u"></span><strong>Sivá:</strong> všetko ostatné. Žiadny location tag, alebo
       len voľný text. Nikto nezaznamenal miestnosť. Sivé špendlíky sú tá úloha.</li>
 </ul>
-<p>Objekt s tagom <code>centralkey</code> (iným ako <code>no</code>) zostane mimo mapy, keď kľúč zamyká celé dvere: <code>access=centralkey</code>, pult na bezbariérovom WC, alebo nič v tagoch nehovorí, že kľúč platí len pre jednu kabínku. Zariadenie s otvorenými pánskymi a dámskymi WC a zamknutou bezbariérovou kabínkou (<code>wheelchair:access=centralkey</code>, alebo <code>male=yes</code> a <code>female=yes</code>) na mape zostane, sivé, kým niekto nezapíše miestnosť. Eurokľúč sa vydáva len na základe preukazu zdravotného postihnutia, takže väčšina otcov cez tie dvere neprejde.</p>
+<p>Objekt s tagom <code>centralkey</code> (iným ako <code>no</code>) zostane mimo mapy, keď kľúč zamyká celé dvere: <code>access=centralkey</code>, pult na bezbariérovom WC, alebo nič v tagoch nehovorí, že kľúč platí len pre jednu kabínku. Zariadenie s otvorenými pánskymi a dámskymi WC a zamknutou bezbariérovou kabínkou (<code>wheelchair:access=centralkey</code>, alebo <code>male=yes</code> a <code>female=yes</code>) na mape zostane, sivé, kým niekto nezapíše miestnosť. Eurokľúč sa vydáva len na základe preukazu zdravotného postihnutia, takže väčšina otcov cez tie dvere neprejde. Pod čipom <em>Bezbariérové</em> sa tieto pulty vracajú, pozri nižšie.</p>
 
 <h2>Prepínač Otec-Mama</h2>
 <p>Tri farby vyššie odpovedajú na otcovskú otázku: Dostane sa otec k pultu? Pre mamu sa tá istá
@@ -198,6 +198,10 @@ kútik&ldquo; &mdash; OSM o ňom jednoducho nič nehovorí. Preto tu nie je žia
 na akciu: pri <code>changing_table:location</code> je mlčanie výpovedné, pretože o existencii pultu
 je isté. Tu mlčí takmer každý objekt, a to neznamená nič. Ak detský kútik poznáš, jeho doplnenie je
 aj tak vítané &mdash; v editore OSM, ako <code>kids_area=yes</code>.</p>
+
+<h2>Čip Bezbariérové</h2>
+<p>Čip <em>Bezbariérové</em> ukazuje len miesta, ktoré majú v OSM <code>wheelchair=yes</code>. <code>limited</code> (jeden schod do 7&nbsp;cm alebo potrebná pomoc) a samotné <code>toilets:wheelchair=yes</code> nestačia; oboje sa aj tak zobrazí vo vyskakovacom okne spolu s <code>wheelchair:description</code>. Miesto bez tagu nie je neprístupné, OSM o ňom jednoducho nič nehovorí, takže čip len filtruje a nič nefarbí.</p>
+<p>Pod týmto čipom, a len tam, sa vracajú pulty za eurokľúčom, s kľúčom v špendlíku: kto čip potrebuje, zvyčajne kľúč má. Na bežnej mape, v číslach a v rebríčku zostávajú vonku.</p>
 
 <h2>Prázdne modré krúžky: miesta na hranie bez odpovede</h2>
 <p>To isté pravidlo sedí na oveľa viac miest, než koľko má mapa špendlíkov. Len

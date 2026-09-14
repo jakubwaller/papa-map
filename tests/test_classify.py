@@ -1,6 +1,7 @@
 import pytest
 
-from pipeline.classify import ACCESSIBLE_TOKENS, classify, tokens
+from pipeline.classify import (ACCESSIBLE_TOKENS, central_key, classify, tokens,
+                               wheelchair_state)
 
 
 @pytest.mark.parametrize("token", sorted(ACCESSIBLE_TOKENS))
@@ -91,3 +92,22 @@ def test_tokens_splits_trims_and_lowercases():
     assert tokens("Female_Toilet; male_toilet ;") == ["female_toilet", "male_toilet"]
     assert tokens(None) == []
     assert tokens("") == []
+
+
+def test_wheelchair_state_reads_only_the_three_wiki_values():
+    assert wheelchair_state({"wheelchair": "yes"}) == "yes"
+    assert wheelchair_state({"wheelchair": " LIMITED "}) == "limited"
+    assert wheelchair_state({"wheelchair": "no"}) == "no"
+    assert wheelchair_state({"wheelchair": "designated"}) is None
+    assert wheelchair_state({}) is None
+    assert wheelchair_state({"wheelchair": "no", "toilets:wheelchair": "yes"},
+                            "toilets:wheelchair") == "yes"
+
+
+def test_central_key_names_the_system_only_when_it_locks_the_table():
+    assert central_key({"changing_table": "yes", "centralkey": "eurokey"}) == "eurokey"
+    assert central_key({"centralkey": "NKS", "access": "centralkey"}) == "nks"
+    # scoped to the cubicle: the table is reachable, so no key on the feature
+    assert central_key({"centralkey": "eurokey", "male": "yes"}) is None
+    assert central_key({"centralkey": "no"}) is None
+    assert central_key({}) is None

@@ -150,7 +150,7 @@ små bokstaver, og hver verdi sammenlignes som en helhet. Aldri som en delstreng
   <li><span class="dot u"></span><strong>Grå:</strong> alt annet. Ingen location-tag, eller bare
       fritekst. Ingen har kategorisert rommet. De grå punktene er dermed oppgavene man kan bidra til.</li>
 </ul>
-<p>Et objekt med et <code>centralkey</code>-tag (annet enn <code>no</code>) holdes utenfor kartet når nøkkelen sperrer hele døra: <code>access=centralkey</code>, et bord på handikaptoalettet, eller ingenting i taggene sier at nøkkelen bare gjelder én bås. Et anlegg med åpent herre- og dametoalett og en låst handikapbås (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> og <code>female=yes</code>) blir på kartet, grått til noen kategoriserer rommet korrekt. <a href="https://en.wikipedia.org/wiki/Euro_key">Euronøkkelen</a>, en uoffisiell europeisk standard, utstedes bare mot dokumentert funksjonsnedsettelse, så de fleste pappaer får ikke tilgang.</p>
+<p>Et objekt med et <code>centralkey</code>-tag (annet enn <code>no</code>) holdes utenfor kartet når nøkkelen sperrer hele døra: <code>access=centralkey</code>, et bord på handikaptoalettet, eller ingenting i taggene sier at nøkkelen bare gjelder én bås. Et anlegg med åpent herre- og dametoalett og en låst handikapbås (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> og <code>female=yes</code>) blir på kartet, grått til noen kategoriserer rommet korrekt. <a href="https://en.wikipedia.org/wiki/Euro_key">Euronøkkelen</a>, en uoffisiell europeisk standard, utstedes bare mot dokumentert funksjonsnedsettelse, så de fleste pappaer får ikke tilgang. Under chippen <em>Rullestol</em> kommer disse stellebordene tilbake, se nedenfor.</p>
 
 <h2>Pappa-mamma-bryteren</h2>
 <p>De tre fargene over svarer på pappa-spørsmålet: kommer en pappa til bordet? For en mamma skal
@@ -199,6 +199,10 @@ oppfordring til handling: ved <code>changing_table:location</code> betyr stillhe
 bordet er kjent for å finnes. Her tier nesten alle objekter, og det betyr ingenting. Kjenner du til
 et lekeområde, er det fortsatt velkomment å legge det til &mdash; i OSM-editoren, som
 <code>kids_area=yes</code>.</p>
+
+<h2>Chippen Rullestol</h2>
+<p>Chippen <em>Rullestol</em> viser bare steder med <code>wheelchair=yes</code> i OSM. <code>limited</code> (ett trinn på opptil 7&nbsp;cm, eller hjelp trengs) og <code>toilets:wheelchair=yes</code> alene er ikke nok; begge står likevel i popupen sammen med <code>wheelchair:description</code>. Et sted uten taggen er ikke utilgjengelig, OSM sier bare ingenting, så chippen bare filtrerer og farger ingenting.</p>
+<p>Under denne chippen, og bare der, kommer stellebordene bak euronøkkel tilbake, med en nøkkel i nålen: den som trenger chippen, har som regel nøkkelen. På det vanlige kartet, i tallene og på rangeringen blir de ute.</p>
 
 <h2>De tomme blå ringene: lekeplasser uten svar</h2>
 <p>Den samme regelen treffer langt flere steder enn kartet har punkter. Bare

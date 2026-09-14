@@ -257,7 +257,7 @@ in either reading.
 
 What OSM holds afterwards is quoted in the popup, and that is all that changes:
 the pin keeps its colour until the nightly build, because classification lives
-in the pipeline and nowhere else (`CONTRACT.md` v25). A pin that already carries
+in the pipeline and nowhere else (`CONTRACT.md` v26). A pin that already carries
 a room in words the classifier does not read is not asked — that is somebody's
 tag, and MapComplete shows it before letting anyone write over it.
 
@@ -314,6 +314,35 @@ and the layer's first question is "does this place have a baby changing table?"
 
 The sweep pays nothing for them: one union Overpass query per area returns both
 halves, and `osm.split_sweep()` sorts them apart by tag.
+
+## Wheelchair access
+
+Every feature carries the place's wheelchair tags as recorded, and nothing
+derived from them: `wheelchair` (`yes|limited|no|null`), `toilets_wheelchair`
+(the same three, from `toilets:wheelchair`), `wheelchair_description` (the
+mapper's free text) and `key` — the central-key system that locks the door
+(`eurokey`, `nks`, …) or null. On a shop or a café `wheelchair=*` describes the
+entrance, on a toilet block the toilet itself. The popup shows all of it; the
+chip bar gains a last chip that narrows to `wheelchair=yes` and nothing else.
+`limited` is one step of up to 7 cm or help needed (the wiki's definition, and
+what Wheelmap paints orange), and `toilets:wheelchair=yes` alone would admit a
+place with a step at the door, so both stay in the popup and out of the
+filter. Like play it is a badge, never a status: an untagged place is
+unrecorded, not inaccessible, so the chip starts off and subtracts.
+
+What the chip changes on the map is the Euro-key tables. Since v5 an object
+whose door needs a central key is not a pin, because the key is issued only
+against proof of disability and a typical father cannot get one. The people
+this chip is for are exactly the people who hold that key, so under it — and
+only under it — those tables come back, with a white key drawn inside the pin
+from zoom 13 and a line in the popup. They ride in the GeoJSON with `key` set,
+the frontend hides them by default, and `pipeline/run.py` hands only the
+`key: null` features to the area pages and the leaderboard, so no count
+anywhere grows by them; `stats.local.centralkey_locked` still counts them as
+locked. Costs no extra Overpass query. Measured on Germany, 13 Sep 2026:
+6,190 `changing_table=yes` objects, 4,419 of them `wheelchair=yes`, 534
+`limited`, 495 `no`, 742 untagged; 390 tables in a wheelchair toilet, 7 of
+them behind a Euro key.
 
 ## Leaderboard
 

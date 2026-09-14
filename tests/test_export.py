@@ -18,7 +18,7 @@ def test_build_features_keeps_only_yes_and_limited(load_fixture):
                         9: "female_only"}
 
 
-def test_centralkey_locked_element_never_becomes_a_pin(load_fixture):
+def test_centralkey_locked_element_is_emitted_with_its_key_not_as_a_pin(load_fixture):
     ct = load_fixture("overpass_changing_tables.json")
     ct["elements"].append({"type": "node", "id": 50, "lat": 53.55, "lon": 10.0,
                            "tags": {"changing_table": "yes",
@@ -28,8 +28,15 @@ def test_centralkey_locked_element_never_becomes_a_pin(load_fixture):
                            "tags": {"changing_table": "yes", "centralkey": "nks",
                                     "access": "yes", "wheelchair:access": "centralkey"}})
     feats = {f["properties"]["osm_id"]: f for f in build_features(ct)}
-    assert 50 not in feats
+    # v26: still not a pin — the frontend hides key != null by default and
+    # run.py keeps it out of every count — but carried for the wheelchair
+    # chip, with the room rule applied as if the door were open.
+    assert feats[50]["properties"]["key"] == "eurokey"
+    assert feats[50]["properties"]["status"] == "accessible"
     assert feats[51]["properties"]["status"] == "unknown"  # key scoped to the cubicle
+    assert feats[51]["properties"]["key"] is None
+    assert all(f["properties"]["key"] is None
+               for i, f in feats.items() if i not in (50, 51))
 
 
 def test_way_and_relation_use_center_geometry(load_fixture):
@@ -49,6 +56,8 @@ def test_feature_properties_match_data_contract(load_fixture):
         "amenity": "toilets", "changing_table": "yes",
         "location_raw": "male_toilet", "status": "accessible",
         "play": False,
+        "wheelchair": None, "toilets_wheelchair": None,
+        "wheelchair_description": None, "key": None,
         "fee": "yes", "opening_hours": "24/7",
         "osm_url": "https://www.openstreetmap.org/node/1",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
@@ -60,6 +69,27 @@ def test_feature_properties_match_data_contract(load_fixture):
     assert feats[3]["location_raw"] is None
     assert feats[4]["fee"] == "no"  # changing_table:fee wins over fee=yes
     assert feats[7]["location_raw"] == "hinten im Flur beim Personalraum"
+
+
+def test_wheelchair_is_a_tri_state_never_a_status():
+    def props(tags):
+        el = {"type": "node", "id": 1, "lat": 53.5, "lon": 10.0,
+              "tags": {"changing_table": "yes", **tags}}
+        return build_features({"elements": [el]})[0]["properties"]
+
+    assert props({"wheelchair": "yes"})["wheelchair"] == "yes"
+    assert props({"wheelchair": "Limited "})["wheelchair"] == "limited"
+    assert props({"wheelchair": "no"})["wheelchair"] == "no"
+    # unrecorded and junk both read as "nobody said" — never as "no"
+    assert props({})["wheelchair"] is None
+    assert props({"wheelchair": "designated"})["wheelchair"] is None
+    assert props({"toilets:wheelchair": "yes"})["toilets_wheelchair"] == "yes"
+    assert props({"toilets:wheelchair": "yes"})["wheelchair"] is None
+    p = props({"wheelchair": "limited", "wheelchair:description": "eine Stufe"})
+    assert p["wheelchair_description"] == "eine Stufe"
+    # the status is untouched by any of it
+    assert props({"wheelchair": "yes"})["status"] == "unknown"
+    assert props({"wheelchair": "no", "changing_table:location": "male_toilet"})["status"] == "accessible"
 
 
 def test_play_area_is_a_property_not_a_status(load_fixture):
