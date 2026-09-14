@@ -7,12 +7,12 @@ import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app8";
+         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app9";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app8";
+         langUrl } from "./i18n.js?v=app9";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         writeTags } from "./osm.js?v=app8";
+         writeTags } from "./osm.js?v=app9";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -205,6 +205,7 @@ const SRC = "tables";
 const PLAY_LAYER = "tables-play";
 const KEY_LAYER = "tables-key";
 const PLACES = "play-places";
+const PLACES_NO = "play-places-no";   // the dashed rings: answered, no table (v27)
 const IS_UNKNOWN = ["==", ["get", "status"], "unknown"];
 
 // Pin radius by zoom, grey one size up. Shared so the halo can be defined as
@@ -215,6 +216,23 @@ const pinRadius = (extra) => ["interpolate", ["linear"], ["zoom"],
   14, ["case", IS_UNKNOWN, 9 + extra, 7 + extra],
   17, ["case", IS_UNKNOWN, 13 + extra, 10 + extra]];
 
+// The dashed-ring icon, at 2x: fill and stroke as the hollow ring's paint
+// (white at 0.9, PLAY_COLOR), the dash the only difference.
+function dashedRing() {
+  const size = 56, c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d");
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, 20, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.fill();
+  ctx.setLineDash([7, 5]);
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = PLAY_COLOR;
+  ctx.stroke();
+  return ctx.getImageData(0, 0, size, size);
+}
+
 function addTableLayer() {
   // The key glyph for KEY_LAYER, rasterised from the same path the popup
   // draws. Registered asynchronously (an Image decodes off-thread); MapLibre
@@ -224,6 +242,13 @@ function addTableLayer() {
   keyImg.onload = () => { if (!map.hasImage("key")) map.addImage("key", keyImg, { pixelRatio: 2 }); };
   keyImg.src = "data:image/svg+xml," + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48"><path fill="#fff" d="${KEY_PATH}"/></svg>`);
+  // The dashed ring for the places where somebody answered "no" (v27). A
+  // circle layer cannot dash its stroke, so these are symbols: one ring
+  // drawn on a canvas at the zoom-17 size (the hollow ring's radius 10 +
+  // stroke 2.5, at 2x) and scaled down with the circles below. Synchronous,
+  // unlike the key glyph — nothing to decode — so the layer can use it at
+  // once. Guarded like the key: the style can be reloaded.
+  if (!map.hasImage("ring-dashed")) map.addImage("ring-dashed", dashedRing(), { pixelRatio: 2 });
   map.addSource(PLACES, { type: "geojson", data: placesToFeatureCollection([]) });
   map.addSource(SRC, { type: "geojson", data: toFeatureCollection([]) });
   // Bottom of the stack, and hollow: a filled circle would compete with the
@@ -232,6 +257,7 @@ function addTableLayer() {
   // the whole disc stays clickable.
   map.addLayer({
     id: PLACES, type: "circle", source: PLACES,
+    filter: ["!=", ["get", "no"], true],
     paint: {
       "circle-radius": ["interpolate", ["linear"], ["zoom"],
         5, 2, 10, 4, 14, 7, 17, 10],
@@ -240,6 +266,22 @@ function addTableLayer() {
       "circle-stroke-color": PLAY_COLOR,
       "circle-stroke-width": ["interpolate", ["linear"], ["zoom"],
         5, 1, 10, 2, 14, 2.5],
+    },
+  });
+  // Same size as the hollow ring at every zoom, and only the stroke differs:
+  // "someone said no" and "nobody has asked" are two facts about the same
+  // kind of place, and the reader should have to look twice to tell them
+  // apart, not once. The icon is 22.5 css px across (2 × (10 + 1.25)) at
+  // zoom 17; the stops are the circle's diameter, stroke included, over that.
+  map.addLayer({
+    id: PLACES_NO, type: "symbol", source: PLACES,
+    filter: ["==", ["get", "no"], true],
+    layout: {
+      "icon-image": "ring-dashed",
+      "icon-size": ["interpolate", ["linear"], ["zoom"],
+        5, 0.22, 10, 0.44, 14, 0.73, 17, 1],
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
     },
   });
   // Drawn next, so the status circle lands on top of it and what remains
@@ -293,11 +335,13 @@ function addTableLayer() {
       if (f) openPopup(f);
     });
   }
-  map.on("click", PLACES, (e) => {
-    const p = allPlaces[e.features[0].properties.idx];
-    if (p) openPlacePopup(p);
-  });
-  for (const layer of [PLAY_LAYER, SRC, KEY_LAYER, PLACES]) {
+  for (const layer of [PLACES, PLACES_NO]) {
+    map.on("click", layer, (e) => {
+      const p = allPlaces[e.features[0].properties.idx];
+      if (p) openPlacePopup(p);
+    });
+  }
+  for (const layer of [PLAY_LAYER, SRC, KEY_LAYER, PLACES, PLACES_NO]) {
     map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
   }

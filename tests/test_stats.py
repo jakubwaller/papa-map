@@ -18,7 +18,7 @@ def test_local_stats_counts_every_bucket(load_fixture):
         "centralkey_locked": 0,
         # One fixture pin carries kids_area=yes; no play half was passed in,
         # which is the single-argument caller's honest zero.
-        "play_tables": 1, "play_places": 0,
+        "play_tables": 1, "play_places": 0, "play_places_no": 0,
         "capacity_tagged_toilets": 1,
     }
 
@@ -36,6 +36,27 @@ def test_local_stats_separates_play_pins_from_play_prospects(load_fixture):
     assert local["play_tables"] == 1
     # 5 fixture objects: one is outdoors, one has no coordinates.
     assert local["play_places"] == 3
+    assert local["play_places_no"] == 0
+
+
+def test_local_stats_counts_the_answered_no_play_places():
+    # changing_table=no with a play corner: counted apart from the open
+    # questions (play_places) and never as a pin; coordless ones skipped.
+    def el(id_, tags, coords=True):
+        e = {"type": "node", "id": id_, "tags": tags}
+        if coords:
+            e.update(lat=53.5, lon=9.9)
+        return e
+    local = stats.local_stats({"elements": [
+        el(1, {"kids_area": "yes", "changing_table": "no"}),
+        el(2, {"kids_area": "yes", "changing_table": "no"}, coords=False),
+        el(3, {"changing_table": "no"}),
+        el(4, {"kids_area": "yes", "changing_table": "yes"}),
+    ]}, {})
+    assert local["play_places_no"] == 1
+    assert local["ct_no"] == 3
+    assert local["play_places"] == 0
+    assert local["play_tables"] == 1
 
 
 def test_local_stats_empty_responses():

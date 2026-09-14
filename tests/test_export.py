@@ -139,7 +139,7 @@ def test_play_features_are_their_own_dataset(load_fixture):
     assert [f["properties"]["osm_id"] for f in feats] == [9001, 9002, 9003]
     assert feats[0]["properties"] == {
         "osm_type": "node", "osm_id": 9001, "name": "Café Bauklotz",
-        "kind": "cafe", "opening_hours": "Mo-Fr 09:00-18:00",
+        "kind": "cafe", "changing_table": None, "opening_hours": "Mo-Fr 09:00-18:00",
         "osm_url": "https://www.openstreetmap.org/node/9001",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
                             "https://raw.githubusercontent.com/jakubwaller/papa-map/"
@@ -148,7 +148,27 @@ def test_play_features_are_their_own_dataset(load_fixture):
     }
     for f in feats:
         assert "status" not in f["properties"]
-        assert "changing_table" not in f["properties"]
+        assert f["properties"]["changing_table"] is None
+
+
+def test_play_features_include_the_answered_no(load_fixture):
+    # A play corner and changing_table=no is a place too (v27): not a pin —
+    # no table, so nothing to colour, and red would promise a mother one —
+    # but worth drawing, as a dashed ring. Tells itself apart by the value.
+    def el(id_, tags):
+        return {"type": "node", "id": id_, "lat": 53.5, "lon": 9.9, "tags": tags}
+    ct = {"elements": [
+        el(1, {"amenity": "cafe", "kids_area": "yes", "changing_table": "no"}),
+        el(2, {"amenity": "cafe", "changing_table": "no"}),               # no corner
+        el(3, {"amenity": "cafe", "kids_area": "yes", "changing_table": "yes"}),  # a pin
+        el(4, {"amenity": "cafe", "kids_area": "yes", "changing_table": "02"}),   # junk
+        el(5, {"amenity": "cafe", "kids_area": "yes", "changing_table": " no "}),
+    ]}
+    feats = build_play_features(load_fixture("overpass_play_places.json"), ct)
+    got = {f["properties"]["osm_id"]: f["properties"]["changing_table"] for f in feats}
+    assert got == {9001: None, 9002: None, 9003: None, 1: "no", 5: "no"}
+    # ct_data is optional: the prospects alone, as before v27
+    assert len(build_play_features(load_fixture("overpass_play_places.json"))) == 3
 
 
 def test_play_feature_kind_takes_the_most_specific_tag(load_fixture):

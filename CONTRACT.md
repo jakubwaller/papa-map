@@ -1,5 +1,27 @@
 # papa-map — build contract (v0)
 
+> **v27 amendment (14 Sep 2026, the answered "no"):** `play_places.geojson` now also
+> carries the places that record an indoor play area **and `changing_table=no`** —
+> until now dropped as "somebody did answer". They are still not pins, and still not a
+> fourth status: there is no table, so there is nothing to colour, and red would tell
+> a mother there is a table for her. But a café with a play corner is worth a father's
+> visit whether or not it has a table, so it is drawn — as a **dashed** blue ring
+> (`play-places-no`, a symbol layer over a canvas-drawn icon, since a circle layer
+> cannot dash its stroke; same size as the hollow ring at every zoom), and its popup
+> says "changing table: no" where the hollow ring asks the question. Every play-place
+> feature gains **`changing_table`: `"no" | null`** — `null` is the open question, and
+> the only two values the frontend accepts (`web/datasource.js::loadPlaces`); a
+> dataset from before v27 has no such property and reads as all-open. The pipeline's
+> `build_play_features` takes the sweep's changing_table half as a second argument
+> and keeps `no` from it; `yes`/`limited` remain pins, junk remains junk.
+> `stats.local` gains **`play_places_no`**, counted apart: `play_places` stays the
+> open questions (the methods pages' "nobody has answered" number), and the two are
+> not to be added. Overpass is not asked anything new — the union sweep already
+> returns every `changing_table` object. Measured on Germany, 14 Sep 2026: **18**
+> such places; worldwide taginfo has 1,182 objects with both keys, the vast majority
+> pins. Prompted by Nanas Café, Hamburg (node 3696100956): a play corner added and
+> nowhere on the map, because the café had honestly recorded `changing_table=no`.
+
 > **v26 amendment (14 Sep 2026, wheelchair access):** every feature gains four
 > properties carried verbatim from OSM — **`wheelchair`** and **`toilets_wheelchair`**
 > (`yes | limited | no | null`, the wiki's three values from `wheelchair` and
@@ -732,7 +754,8 @@ Overpass `out center`). Feature `properties`:
 ```
 
 `web/data/play_places.geojson` — same FeatureCollection shape, the v10 dataset
-of places with a play area and no changing-table answer. Feature `properties`:
+of places with a play area and no changing-table answer — or, since v27, the answer
+`no`. Feature `properties`:
 
 ```json
 {
@@ -740,6 +763,7 @@ of places with a play area and no changing-table answer. Feature `properties`:
   "osm_id": 123,
   "name": "string or null",
   "kind": "cafe|indoor_play|mall|... or null",
+  "changing_table": "\"no\" (answered: no table, v27) or null (nobody has answered)",
   "opening_hours": "string or null",
   "osm_url": "https://www.openstreetmap.org/<type>/<id>",
   "mapcomplete_url": "string or null"
@@ -757,7 +781,7 @@ of places with a play area and no changing-table answer. Feature `properties`:
     "toilets_total": 443, "ct_objects": 213, "ct_yes": 85, "ct_no": 127, "ct_limited": 1,
     "yes_location_known": 17, "yes_location_unknown": 68,
     "accessible": 0, "female_only": 0, "unknown": 0,
-    "play_tables": 0, "play_places": 0,
+    "play_tables": 0, "play_places": 0, "play_places_no": 0,
     "capacity_tagged_toilets": 2
   },
   "global": {

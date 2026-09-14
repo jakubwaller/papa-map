@@ -55,6 +55,11 @@ const PLACES_FC = {
       osm_type: "way", osm_id: 9002, kind: "indoor_play",
       osm_url: "https://www.openstreetmap.org/way/9002",
     }),
+    // answered, and the answer was no (v27): a place, not a pin
+    feat(10.03, 53.59, {
+      osm_type: "node", osm_id: 9004, kind: "cafe", changing_table: "no",
+      osm_url: "https://www.openstreetmap.org/node/9004",
+    }),
     // no geometry at all — must not become a ring on the map
     { type: "Feature", geometry: null, properties: { osm_id: 9003 } },
   ],
@@ -62,9 +67,9 @@ const PLACES_FC = {
 
 test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   const places = loadPlaces(PLACES_FC);
-  assert.equal(places.length, 2);
+  assert.equal(places.length, 3);
   assert.deepEqual(places[0], {
-    idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe",
+    idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe", changing_table: null,
     opening_hours: "Mo-Fr 09:00-18:00",
     osm_url: "https://www.openstreetmap.org/node/9001",
     mapcomplete_url: "https://mapcomplete.org/theme.html#node/9001",
@@ -76,11 +81,21 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   assert.equal(places[1].mapcomplete_url, null);
 });
 
+test("loadPlaces reads changing_table=no and nothing else as an answer", () => {
+  const places = loadPlaces(PLACES_FC);
+  assert.equal(places[0].changing_table, null);   // the open question
+  assert.equal(places[2].changing_table, "no");   // answered: no table
+  // A yes would be a pin, junk is junk: neither may render as an answer.
+  for (const v of ["yes", "limited", "02", "", true, 0]) {
+    const [p] = loadPlaces({ features: [feat(1, 2, { changing_table: v })] });
+    assert.equal(p.changing_table, null, `value ${JSON.stringify(v)}`);
+  }
+});
+
 test("loadPlaces carries no status — these places have no answer to colour", () => {
   for (const p of loadPlaces(PLACES_FC)) {
     assert.equal("status" in p, false);
     assert.equal("play" in p, false);
-    assert.equal("changing_table" in p, false);
   }
 });
 
@@ -90,10 +105,11 @@ test("loadPlaces tolerates a missing or malformed file", () => {
   assert.deepEqual(loadPlaces({ features: "nope" }), []);
 });
 
-test("placesToFeatureCollection carries only idx", () => {
+test("placesToFeatureCollection carries idx and the no flag", () => {
   const out = placesToFeatureCollection(loadPlaces(PLACES_FC));
   assert.equal(out.type, "FeatureCollection");
-  assert.deepEqual(out.features.map((f) => f.properties), [{ idx: 0 }, { idx: 1 }]);
+  assert.deepEqual(out.features.map((f) => f.properties),
+    [{ idx: 0, no: false }, { idx: 1, no: false }, { idx: 2, no: true }]);
   assert.deepEqual(out.features[0].geometry.coordinates, [9.98, 53.54]);
   assert.deepEqual(placesToFeatureCollection([]).features, []);
 });
