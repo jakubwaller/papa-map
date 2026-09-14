@@ -156,7 +156,7 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     # objects, so it cannot tell one area's copy from another's. Here that
     # means 17 identical fixture answers really do add to 17x3; in the real
     # sweep the areas are disjoint, so summing is the correct total.
-    assert summary == {"features": 7, "play_places": 3, "ct_objects": 9,
+    assert summary == {"features": 7, "play_places": 3, "play_places_no": 0, "ct_objects": 9,
                        "toilets_total": 51, "global_source": "taginfo",
                        "pages": 18 + len(leaderboard.L)}
     # Still two object queries per area, not three: the play half rides along

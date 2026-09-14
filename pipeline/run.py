@@ -309,7 +309,11 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             print(f"  WARN toilet counts not saved to {counts_path}: {exc} — "
                   "every area is recounted tomorrow", file=sys.stderr)
 
-    return {"features": exported, "play_places": exported_play,
+    # play_places is the open questions, as in stats.json, not the file's
+    # length: the answered-no places (v27) ride in the same file and get
+    # their own number, so the ops page prints one meaning per label.
+    return {"features": exported, "play_places": local["play_places"],
+            "play_places_no": local["play_places_no"],
             "ct_objects": local["ct_objects"],
             "toilets_total": local["toilets_total"],
             "global_source": global_source, "pages": len(written)}

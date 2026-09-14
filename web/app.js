@@ -7,12 +7,12 @@ import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app9";
+         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app10";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app9";
+         langUrl } from "./i18n.js?v=app10";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         writeTags } from "./osm.js?v=app9";
+         writeTags } from "./osm.js?v=app10";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -222,8 +222,11 @@ function dashedRing() {
   const size = 56, c = document.createElement("canvas");
   c.width = c.height = size;
   const ctx = c.getContext("2d");
+  // MapLibre draws circle-stroke-width OUTSIDE circle-radius, so the hollow
+  // ring is 2 × (10 + 2.5) = 25 css px across at zoom 17: the fill is radius
+  // 20 here and the 5-wide stroke sits on radius 22.5, outer edge 25 (2x).
   ctx.beginPath();
-  ctx.arc(size / 2, size / 2, 20, 0, Math.PI * 2);
+  ctx.arc(size / 2, size / 2, 22.5, 0, Math.PI * 2);
   ctx.fillStyle = "rgba(255,255,255,0.9)";
   ctx.fill();
   ctx.setLineDash([7, 5]);
@@ -271,15 +274,16 @@ function addTableLayer() {
   // Same size as the hollow ring at every zoom, and only the stroke differs:
   // "someone said no" and "nobody has asked" are two facts about the same
   // kind of place, and the reader should have to look twice to tell them
-  // apart, not once. The icon is 22.5 css px across (2 × (10 + 1.25)) at
-  // zoom 17; the stops are the circle's diameter, stroke included, over that.
+  // apart, not once. The icon is 25 css px across at zoom 17, the hollow
+  // ring's outer diameter; the stops are the circle's diameter, stroke
+  // included, at each zoom (6, 12, 19, 25) over that.
   map.addLayer({
     id: PLACES_NO, type: "symbol", source: PLACES,
     filter: ["==", ["get", "no"], true],
     layout: {
       "icon-image": "ring-dashed",
       "icon-size": ["interpolate", ["linear"], ["zoom"],
-        5, 0.22, 10, 0.44, 14, 0.73, 17, 1],
+        5, 0.24, 10, 0.48, 14, 0.76, 17, 1],
       "icon-allow-overlap": true,
       "icon-ignore-placement": true,
     },
@@ -355,7 +359,7 @@ function refreshPins() {
   // whole map is about. They get their own clause instead. The total is the
   // pins: the key-locked tables ride in the GeoJSON for the wheelchair chip
   // and are not counted, here or anywhere.
-  const total = pinFeatures(allFeatures).length;
+  const total = pinFeatures(allFeatures, wheelchairOnly).length;
   countEl.textContent = total
     ? t("countShown", { shown: shown.length, total })
       + (placesOn && allPlaces.length
@@ -560,7 +564,9 @@ function panPopupIntoView() {
 // them as one would claim every other pin has no play area, which OSM never
 // said.
 function renderChips() {
-  const counts = countsByStatus(pinFeatures(allFeatures));
+  // Over the same universe the map draws: with the wheelchair chip on, the
+  // keyed tables it brings back count in their badge like any other pin.
+  const counts = countsByStatus(pinFeatures(allFeatures, wheelchairOnly));
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
   const frag = document.createDocumentFragment();
   for (const d of STATUS_DEFS) {
@@ -582,7 +588,7 @@ function renderChips() {
     });
     frag.appendChild(b);
   }
-  frag.appendChild(playChip(countPlay(pinFeatures(allFeatures))));
+  frag.appendChild(playChip(countPlay(pinFeatures(allFeatures, wheelchairOnly))));
   frag.appendChild(placesChip(allPlaces.length));
   frag.appendChild(wheelchairChip(countWheelchair(allFeatures)));
   // Not firstChild: the mode toggle is static markup and holds that slot, so
@@ -644,8 +650,9 @@ function wheelchairChip(count) {
     `${esc(t("stWheelchair"))} <span class="cnt">${count}</span>`;
   b.addEventListener("click", () => {
     wheelchairOnly = !wheelchairOnly;
-    b.classList.toggle("on", wheelchairOnly);
-    b.setAttribute("aria-pressed", String(wheelchairOnly));
+    // The strip is rebuilt, not toggled: the status badges count over the
+    // chip's universe, so they change with it (renderChips reads the state).
+    renderChips();
     refreshPins();
   });
   return b;

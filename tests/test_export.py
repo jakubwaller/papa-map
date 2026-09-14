@@ -163,6 +163,7 @@ def test_play_features_include_the_answered_no(load_fixture):
         el(3, {"amenity": "cafe", "kids_area": "yes", "changing_table": "yes"}),  # a pin
         el(4, {"amenity": "cafe", "kids_area": "yes", "changing_table": "02"}),   # junk
         el(5, {"amenity": "cafe", "kids_area": "yes", "changing_table": " no "}),
+        el(6, {"amenity": "cafe", "kids_area": "yes", "changing_table": "  "}),   # blank tag
     ]}
     feats = build_play_features(load_fixture("overpass_play_places.json"), ct)
     got = {f["properties"]["osm_id"]: f["properties"]["changing_table"] for f in feats}

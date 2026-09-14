@@ -191,7 +191,7 @@ export const STRINGS = {
     // Datensatz. Das kurze Label passt in die Chipleiste, das aria-label sagt,
     // was es wirklich ist.
     stPlaces: "Nur Spielecke",
-    ariaPlaces: "Orte mit Spielecke anzeigen, an denen niemand einen Wickeltisch erfasst hat",
+    ariaPlaces: "Orte mit Spielecke anzeigen, an denen niemand einen Wickeltisch erfasst hat oder an denen es keinen gibt",
     metaPlaces: "Spielecke erfasst — über einen Wickeltisch sagt OSM hier nichts.",
 
     countShown: "{shown} von {total} Wickeltischen",
@@ -331,7 +331,7 @@ export const STRINGS = {
     popupKey: "Door needs a central key (Euro key, RADAR key)",
 
     stPlaces: "Play area only",
-    ariaPlaces: "Show places with a play area where nobody has recorded a changing table",
+    ariaPlaces: "Show places with a play area where nobody has recorded a changing table, or where there is none",
     metaPlaces: "A play area is recorded here — about a changing table, OSM says nothing.",
 
     countShown: "{shown} of {total} tables",
@@ -468,7 +468,7 @@ export const STRINGS = {
     popupKey: "Døren kræver en centralnøgle (f.eks. euronøgle)",
 
     stPlaces: "Kun legeområde",
-    ariaPlaces: "Vis steder med legeområde, hvor ingen har registreret et puslebord",
+    ariaPlaces: "Vis steder med legeområde, hvor ingen har registreret et puslebord, eller hvor der ikke er noget",
     metaPlaces: "Her er der registreret et legeområde — om et puslebord siger OSM intet.",
 
     countShown: "{shown} af {total} pusleborde",
@@ -603,7 +603,7 @@ export const STRINGS = {
     popupKey: "Deur alleen met centrale sleutel (bijv. eurosleutel)",
 
     stPlaces: "Alleen speelhoek",
-    ariaPlaces: "Plekken met een speelhoek tonen waar niemand een verschoontafel heeft vastgelegd",
+    ariaPlaces: "Plekken met een speelhoek tonen waar niemand een verschoontafel heeft vastgelegd, of waar er geen is",
     metaPlaces: "Hier is een speelhoek vastgelegd — over een verschoontafel zegt OSM niets.",
 
     countShown: "{shown} van {total} verschoontafels",
@@ -736,7 +736,7 @@ export const STRINGS = {
     popupKey: "Porte ouverte seulement avec une clé centrale (clé Euro)",
 
     stPlaces: "Coin jeux uniquement",
-    ariaPlaces: "Afficher les lieux avec un coin jeux où personne n'a renseigné de table à langer",
+    ariaPlaces: "Afficher les lieux avec un coin jeux où personne n'a renseigné de table à langer, ou où il n'y en a pas",
     metaPlaces: "Un coin jeux est renseigné ici — sur une table à langer, OSM ne dit rien.",
 
     countShown: "{shown} tables sur {total}",
@@ -869,7 +869,7 @@ export const STRINGS = {
     popupKey: "Porta apribile solo con chiave centrale (es. chiave Euro)",
 
     stPlaces: "Solo angolo giochi",
-    ariaPlaces: "Mostra i luoghi con angolo giochi dove nessuno ha registrato un fasciatoio",
+    ariaPlaces: "Mostra i luoghi con angolo giochi dove nessuno ha registrato un fasciatoio, o dove non c'è",
     metaPlaces: "Qui è registrato un angolo giochi — sul fasciatoio OSM non dice nulla.",
 
     countShown: "{shown} di {total} fasciatoi",
@@ -1002,7 +1002,7 @@ export const STRINGS = {
     popupKey: "Dveře jen na centrální klíč (např. euroklíč)",
 
     stPlaces: "Jen dětský koutek",
-    ariaPlaces: "Zobrazit místa s dětským koutkem, kde nikdo nezaznamenal přebalovací pult",
+    ariaPlaces: "Zobrazit místa s dětským koutkem, kde nikdo nezaznamenal přebalovací pult, nebo kde žádný není",
     metaPlaces: "Je tu zaznamenaný dětský koutek — o přebalovacím pultu OSM neříká nic.",
 
     countShown: "{shown} z {total} přebalovacích pultů",
@@ -1135,7 +1135,7 @@ export const STRINGS = {
     popupKey: "Drzwi tylko na klucz centralny (np. euroklucz)",
 
     stPlaces: "Tylko kącik zabaw",
-    ariaPlaces: "Pokaż miejsca z kącikiem zabaw, w których nikt nie zapisał przewijaka",
+    ariaPlaces: "Pokaż miejsca z kącikiem zabaw, w których nikt nie zapisał przewijaka albo w których go nie ma",
     metaPlaces: "Kącik zabaw jest zapisany — o przewijaku OSM nic tu nie mówi.",
 
     countShown: "{shown} z {total} przewijaków",
@@ -1268,7 +1268,7 @@ export const STRINGS = {
     popupKey: "Dörren kräver centralnyckel (t.ex. eurokey)",
 
     stPlaces: "Bara lekhörna",
-    ariaPlaces: "Visa platser med lekhörna där ingen har registrerat något skötbord",
+    ariaPlaces: "Visa platser med lekhörna där ingen har registrerat något skötbord, eller där det inte finns något",
     metaPlaces: "Här finns en lekhörna registrerad — om skötbord säger OSM ingenting.",
 
     countShown: "{shown} av {total} skötbord",
@@ -1400,7 +1400,7 @@ export const STRINGS = {
     popupKey: "Vrata samo uz centralni ključ (npr. euroključ)",
 
     stPlaces: "Samo kutak za igru",
-    ariaPlaces: "Prikaži mjesta sa kutkom za igru gdje niko nije zabilježio sto za previjanje",
+    ariaPlaces: "Prikaži mjesta sa kutkom za igru gdje niko nije zabilježio sto za previjanje, ili gdje ga nema",
     metaPlaces: "Ovdje je zabilježen kutak za igru — o stolu za previjanje OSM ne kaže ništa.",
 
     countShown: "{shown} od {total} stolova za previjanje",
@@ -1532,7 +1532,7 @@ export const STRINGS = {
     popupKey: "Porta només amb clau central (p. ex. clau Euro)",
 
     stPlaces: "Només racó de jocs",
-    ariaPlaces: "Mostra llocs amb racó de jocs on ningú no ha registrat cap canviador",
+    ariaPlaces: "Mostra llocs amb racó de jocs on ningú no ha registrat cap canviador, o on no n'hi ha",
     metaPlaces: "Aquí hi ha un racó de jocs registrat — sobre un canviador, OSM no diu res.",
 
     countShown: "{shown} de {total} canviadors",
@@ -1664,7 +1664,7 @@ export const STRINGS = {
     popupKey: "Uks avaneb ainult keskvõtmega (nt eurovõti)",
 
     stPlaces: "Ainult mänguala",
-    ariaPlaces: "Näita kohti, kus on mänguala, aga mähkimislauda pole keegi märkinud",
+    ariaPlaces: "Näita kohti, kus on mänguala, aga mähkimislauda pole keegi märkinud või seda pole",
     metaPlaces: "Siin on registreeritud mänguala — mähkimislaua kohta OSM midagi ei ütle.",
 
     countShown: "{shown} mähkimislauda {total}-st",
@@ -1796,7 +1796,7 @@ export const STRINGS = {
     popupKey: "Puerta solo con llave central (p. ej. llave Euro)",
 
     stPlaces: "Solo zona de juegos",
-    ariaPlaces: "Mostrar los lugares con zona de juegos donde nadie ha registrado un cambiador",
+    ariaPlaces: "Mostrar los lugares con zona de juegos donde nadie ha registrado un cambiador, o donde no lo hay",
     metaPlaces: "Aquí hay una zona de juegos registrada — sobre un cambiador, OSM no dice nada.",
 
     countShown: "{shown} de {total} cambiadores",
@@ -1928,7 +1928,7 @@ export const STRINGS = {
     popupKey: "Vrata samo uz središnji ključ (npr. euroključ)",
 
     stPlaces: "Samo dječji kutak",
-    ariaPlaces: "Prikaži mjesta s dječjim kutkom gdje nitko nije zabilježio stol za previjanje",
+    ariaPlaces: "Prikaži mjesta s dječjim kutkom gdje nitko nije zabilježio stol za previjanje, ili gdje ga nema",
     metaPlaces: "Ovdje je zabilježen dječji kutak — o stolu za previjanje OSM ne kaže ništa.",
 
     countShown: "{shown} od {total} stolova",
@@ -2060,7 +2060,7 @@ export const STRINGS = {
     popupKey: "Hurð aðeins með miðlægum lykli (t.d. evrulykli)",
 
     stPlaces: "Aðeins leiksvæði",
-    ariaPlaces: "Sýna staði með leiksvæði þar sem enginn hefur skráð skiptiborð",
+    ariaPlaces: "Sýna staði með leiksvæði þar sem enginn hefur skráð skiptiborð, eða þar sem ekkert er",
     metaPlaces: "Hér er skráð leiksvæði — um skiptiborð segir OSM ekkert.",
 
     countShown: "{shown} af {total} skiptiborðum",
@@ -2192,7 +2192,7 @@ export const STRINGS = {
     popupKey: "Durvis tikai ar centrālo atslēgu (piem., eiroatslēgu)",
 
     stPlaces: "Tikai rotaļu stūrītis",
-    ariaPlaces: "Rādīt vietas ar rotaļu stūrīti, kur neviens nav atzīmējis pārtinamo galdiņu",
+    ariaPlaces: "Rādīt vietas ar rotaļu stūrīti, kur neviens nav atzīmējis pārtinamo galdiņu vai kur tāda nav",
     metaPlaces: "Šeit ir atzīmēts rotaļu stūrītis — par pārtinamo galdiņu OSM neko nesaka.",
 
     countShown: "{shown} no {total} galdiņiem",
@@ -2324,7 +2324,7 @@ export const STRINGS = {
     popupKey: "Durys tik su centriniu raktu (pvz., euro raktu)",
 
     stPlaces: "Tik žaidimų kampelis",
-    ariaPlaces: "Rodyti vietas su žaidimų kampeliu, kuriose niekas nepažymėjo pervystymo stalo",
+    ariaPlaces: "Rodyti vietas su žaidimų kampeliu, kuriose niekas nepažymėjo pervystymo stalo arba kuriose jo nėra",
     metaPlaces: "Čia pažymėtas žaidimų kampelis — apie pervystymo stalą OSM nieko nesako.",
 
     countShown: "{shown} iš {total} stalų",
@@ -2456,7 +2456,7 @@ export const STRINGS = {
     popupKey: "Az ajtó csak központi kulccsal nyílik (pl. eurokulcs)",
 
     stPlaces: "Csak játszósarok",
-    ariaPlaces: "Olyan helyek megjelenítése, ahol van játszósarok, de senki nem rögzített pelenkázóasztalt",
+    ariaPlaces: "Olyan helyek megjelenítése, ahol van játszósarok, de senki nem rögzített pelenkázóasztalt, vagy nincs is",
     metaPlaces: "Itt egy játszósarok van rögzítve — pelenkázóasztalról az OSM nem mond semmit.",
 
     countShown: "{shown}/{total} pelenkázóasztal",
@@ -2588,7 +2588,7 @@ export const STRINGS = {
     popupKey: "Døren krever sentralnøkkel (f.eks. euronøkkel)",
 
     stPlaces: "Bare lekeområde",
-    ariaPlaces: "Vis steder med lekeområde der ingen har registrert et stellebord",
+    ariaPlaces: "Vis steder med lekeområde der ingen har registrert et stellebord, eller der det ikke finnes noe",
     metaPlaces: "Her er det registrert et lekeområde — om et stellebord sier OSM ingenting.",
 
     countShown: "{shown} av {total} stellebord",
@@ -2720,7 +2720,7 @@ export const STRINGS = {
     popupKey: "Porta só com chave central (p. ex. chave Euro)",
 
     stPlaces: "Só cantinho de brincar",
-    ariaPlaces: "Mostrar locais com cantinho de brincar onde ninguém registou um fraldário",
+    ariaPlaces: "Mostrar locais com cantinho de brincar onde ninguém registou um fraldário, ou onde não há nenhum",
     metaPlaces: "Aqui há um cantinho de brincar registado — sobre um fraldário, o OSM não diz nada.",
 
     countShown: "{shown} de {total} fraldários",
@@ -2852,7 +2852,7 @@ export const STRINGS = {
     popupKey: "Ușa se deschide doar cu cheie centrală (de ex. cheie Euro)",
 
     stPlaces: "Doar zonă de joacă",
-    ariaPlaces: "Arată locurile cu zonă de joacă unde nimeni nu a înregistrat o masă de înfășat",
+    ariaPlaces: "Arată locurile cu zonă de joacă unde nimeni nu a înregistrat o masă de înfășat sau unde nu există",
     metaPlaces: "Aici este înregistrată o zonă de joacă — despre o masă de înfășat, OSM nu spune nimic.",
 
     countShown: "{shown} din {total} mese",
@@ -2984,7 +2984,7 @@ export const STRINGS = {
     popupKey: "Dera hapet vetëm me çelës qendror (p.sh. çelës Euro)",
 
     stPlaces: "Vetëm hapësirë lojërash",
-    ariaPlaces: "Shfaq vendet me hapësirë lojërash, ku askush nuk ka regjistruar një tavolinë ndërrimi",
+    ariaPlaces: "Shfaq vendet me hapësirë lojërash, ku askush nuk ka regjistruar një tavolinë ndërrimi ose ku nuk ka fare",
     metaPlaces: "Këtu është regjistruar një hapësirë lojërash — për tavolinë ndërrimi, OSM nuk thotë asgjë.",
 
     countShown: "{shown} nga {total} tavolina",
@@ -3116,7 +3116,7 @@ export const STRINGS = {
     popupKey: "Dvere len na centrálny kľúč (napr. eurokľúč)",
 
     stPlaces: "Len detský kútik",
-    ariaPlaces: "Zobraziť miesta s detským kútikom, kde nikto nezaznamenal prebaľovací pult",
+    ariaPlaces: "Zobraziť miesta s detským kútikom, kde nikto nezaznamenal prebaľovací pult alebo kde žiadny nie je",
     metaPlaces: "Je tu zaznamenaný detský kútik — o prebaľovacom pulte OSM nehovorí nič.",
 
     countShown: "{shown} z {total} prebaľovacích pultov",
@@ -3248,7 +3248,7 @@ export const STRINGS = {
     popupKey: "Vrata le s centralnim ključem (npr. evroključ)",
 
     stPlaces: "Samo igralni kotiček",
-    ariaPlaces: "Prikaži kraje z igralnim kotičkom, kjer nihče ni zabeležil previjalne mize",
+    ariaPlaces: "Prikaži kraje z igralnim kotičkom, kjer nihče ni zabeležil previjalne mize ali kjer je ni",
     metaPlaces: "Tukaj je zabeležen igralni kotiček — o previjalni mizi OSM ne pove nič.",
 
     countShown: "{shown} od {total} previjalnih miz",
@@ -3380,7 +3380,7 @@ export const STRINGS = {
     popupKey: "Ovi vain keskusavaimella (esim. euroavain)",
 
     stPlaces: "Vain leikkinurkka",
-    ariaPlaces: "Näytä paikat, joissa on leikkinurkka mutta joihin kukaan ei ole merkinnyt hoitopöytää",
+    ariaPlaces: "Näytä paikat, joissa on leikkinurkka mutta joihin kukaan ei ole merkinnyt hoitopöytää tai joissa sitä ei ole",
     metaPlaces: "Täällä on merkitty leikkinurkka — hoitopöydästä OSM ei kerro tässä mitään.",
 
     countShown: "{shown}/{total} hoitopöytää",
@@ -3512,7 +3512,7 @@ export const STRINGS = {
     popupKey: "Η πόρτα ανοίγει μόνο με κεντρικό κλειδί (π.χ. κλειδί Euro)",
 
     stPlaces: "Μόνο παιδική γωνιά",
-    ariaPlaces: "Εμφάνιση μερών με παιδική γωνιά όπου κανείς δεν έχει καταγράψει αλλαξιέρα",
+    ariaPlaces: "Εμφάνιση μερών με παιδική γωνιά όπου κανείς δεν έχει καταγράψει αλλαξιέρα, ή όπου δεν υπάρχει",
     metaPlaces: "Εδώ είναι καταγεγραμμένη μια παιδική γωνιά — για αλλαξιέρα, το OSM δεν λέει τίποτα.",
 
     countShown: "{shown} από {total} αλλαξιέρες",
@@ -3644,7 +3644,7 @@ export const STRINGS = {
     popupKey: "Дзверы толькі з цэнтральным ключом (напр. еўраключ)",
 
     stPlaces: "Толькі гульнявы куток",
-    ariaPlaces: "Паказваць месцы з гульнявым кутком, дзе ніхто не адзначыў стол для спавівання",
+    ariaPlaces: "Паказваць месцы з гульнявым кутком, дзе ніхто не адзначыў стол для спавівання або дзе яго няма",
     metaPlaces: "Тут адзначаны гульнявы куток — а пра стол для спавівання OSM нічога не кажа.",
 
     countShown: "{shown} з {total} сталоў для спавівання",
@@ -3776,7 +3776,7 @@ export const STRINGS = {
     popupKey: "Вратата се отваря само с централен ключ (напр. евроключ)",
 
     stPlaces: "Само кът за игра",
-    ariaPlaces: "Покажи местата с кът за игра, където никой не е отбелязал маса за повиване",
+    ariaPlaces: "Покажи местата с кът за игра, където никой не е отбелязал маса за повиване или където няма такава",
     metaPlaces: "Тук е отбелязан кът за игра — за маса за повиване OSM не казва нищо.",
 
     countShown: "{shown} от {total} маси",
@@ -3908,7 +3908,7 @@ export const STRINGS = {
     popupKey: "Вратата само со централен клуч (на пр. евроклуч)",
 
     stPlaces: "Само простор за игра",
-    ariaPlaces: "Прикажи места со простор за игра каде никој не забележал маса за пеленање",
+    ariaPlaces: "Прикажи места со простор за игра каде никој не забележал маса за пеленање или каде нема",
     metaPlaces: "Тука е забележан простор за игра — за маса за пеленање, OSM не кажува ништо.",
 
     countShown: "{shown} од {total} маси",
@@ -4040,7 +4040,7 @@ export const STRINGS = {
     popupKey: "Врата само уз централни кључ (нпр. еврокључ)",
 
     stPlaces: "Само играоница",
-    ariaPlaces: "Прикажи места са играоницом где нико није унео сто за превијање",
+    ariaPlaces: "Прикажи места са играоницом где нико није унео сто за превијање, или где га нема",
     metaPlaces: "Овде је забележена играоница — о столу за превијање OSM не каже ништа.",
 
     countShown: "{shown} од {total} столова",
@@ -4172,7 +4172,7 @@ export const STRINGS = {
     popupKey: "Двері лише з центральним ключем (напр. євроключ)",
 
     stPlaces: "Лише дитячий куточок",
-    ariaPlaces: "Показати місця з дитячим куточком, де ніхто не зафіксував пеленальний столик",
+    ariaPlaces: "Показати місця з дитячим куточком, де ніхто не зафіксував пеленальний столик або де його немає",
     metaPlaces: "Тут зафіксовано дитячий куточок — про пеленальний столик OSM нічого не каже.",
 
     countShown: "{shown} з {total} столиків",
@@ -4308,7 +4308,7 @@ export const STRINGS = {
     popupKey: "ドアは共通鍵（ユーロキー等）が必要",
 
     stPlaces: "遊び場のみ",
-    ariaPlaces: "遊び場はあるが、おむつ交換台を誰も記録していない場所を表示",
+    ariaPlaces: "遊び場はあるが、おむつ交換台を誰も記録していない、または交換台がない場所を表示",
     metaPlaces: "ここには遊び場が記録されています — おむつ交換台については、OSMは何も言っていません。",
 
     countShown: "{total}台のうち{shown}台",
