@@ -85,15 +85,22 @@ function fromStore(res) {
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }
 
-// Every fetch the worker makes for itself asks the server, not the browser's
-// HTTP cache. The site goes out with max-age=3600 (deploy/papamap.Caddyfile),
-// and a plain fetch() inside that hour is answered from the HTTP cache with
-// the copy the worker already holds: the background refresh stored the old
-// page again, and a returning reader stayed on the previous deploy for up to
-// an hour plus a load instead of one load (the app13 deploy, 2026-09-15).
-// "no-cache" still goes through the HTTP cache, as a conditional request, so
-// an unchanged file costs a 304 rather than a download.
-const refresh = (req) => fetch(req, { cache: "no-cache" });
+// A page the worker refreshes asks the server, not the browser's HTTP cache.
+// The site goes out with max-age=3600 (deploy/papamap.Caddyfile), and a plain
+// fetch() inside that hour is answered from the HTTP cache with the copy the
+// worker already holds: the background refresh stored the old page again, and
+// a returning reader stayed on the previous deploy for up to an hour plus a
+// load instead of one load (the app13 deploy, 2026-09-15).
+//
+// Navigations only. The HTML is the one file whose URL stays put across a
+// deploy; everything it loads carries a ?v= pin, so a new deploy is a new URL
+// and the HTTP cache cannot answer it with old bytes. And "no-cache" is not
+// cheap everywhere: Chromium sends it as a conditional request (a 304), but
+// WebKit sent no validators and downloaded the whole file again (PR #114
+// review). On the dataset that would be 1.7 MB of an iPhone's data on every
+// load, for a build that changes once a night.
+const refresh = (req) =>
+  req.mode === "navigate" ? fetch(req, { cache: "no-cache" }) : fetch(req);
 
 self.addEventListener("install", (e) => {
   // addAll() is atomic — one 404 in the list aborts the install and leaves the

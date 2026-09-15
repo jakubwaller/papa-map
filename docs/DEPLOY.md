@@ -335,15 +335,17 @@ first load after a web deploy shows the previous page and the second shows the n
 with curl, which never passes through the worker, or load twice. The data files and the pages
 under `/wickeltische/` are network-first and show the new build on the first load. A bumped
 `?v=` pin starts a new cache and evicts the old shell on activation. One load holds only because
-the worker's own fetches skip the browser's HTTP cache (`no-cache` on the refresh, a conditional
-request; `reload` on install). Before 2026-09-15 they read it, the refresh stored the hour-old
-HTML again, and the app13 home-screen app stayed on app12 for load after load.
+the worker refreshes a page past the browser's HTTP cache (`no-cache` on navigations, `reload` on
+install). Before 2026-09-15 it read that cache, stored the hour-old HTML again, and the app13
+home-screen app stayed on app12 for load after load. Chromium sends `no-cache` as a conditional
+request (304), but WebKit re-downloaded the page in a test, so it stays on navigations only:
+pinned files change URL anyway, and the dataset would cost 1.7 MB a load on an iPhone.
 
 **Cloudflare caches the shell too, whatever the pin.** Caddy sends `max-age=3600` for every
 file. Cloudflare keeps `.js` and `.css` files at the edge, `sw.js` included
 (`cf-cache-status: HIT`), and on those responses it rewrites the header to `max-age=14400`. So a
 reader's browser may keep a stale file for four hours, and the service worker's background
-refresh, which revalidates against the edge, gets that same stale file. HTML is not edge-cached (`DYNAMIC`) and keeps Caddy's
+refresh reads that same browser cache. HTML is not edge-cached (`DYNAMIC`) and keeps Caddy's
 hour (measured 2026-09-13). Three rules follow:
 
 - **Any change to a shell file needs a pin bump:** `app.js`, `i18n.js`, `datasource.js`,

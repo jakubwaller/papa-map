@@ -189,19 +189,29 @@ test("the shell is cache-first with a background refresh", async () => {
   assert.deepEqual(put, [url]);
 });
 
-test("the worker's own fetches ask the server, not the browser's HTTP cache", async () => {
+test("a page refresh asks the server, not the browser's HTTP cache", async () => {
   // The site sends max-age=3600. A plain fetch() in that hour was answered
   // from the HTTP cache, so the background refresh stored the old page again
   // and a returning reader ran the previous deploy for up to an hour (app13).
-  const page = `${ORIGIN}/`, code = `${ORIGIN}/app.js?v=off1`, data = `${ORIGIN}/data/stats.json`;
+  // Only navigations: pinned files change URL on a deploy, and WebKit turns
+  // "no-cache" into a full download, which on the dataset is 1.7 MB a load.
+  const page = `${ORIGIN}/`, area = `${ORIGIN}/wickeltische/berlin.html`,
+        code = `${ORIGIN}/app.js?v=off1`, data = `${ORIGIN}/data/stats.json`;
   const { handlers, fetched } = loadSW({
     cached: { [page]: res("old page"), [code]: res("code") },
-    network: { [page]: res("new page"), [code]: res("code"), [data]: res("{}") },
+    network: { [page]: res("new page"), [area]: res("tonight"),
+               [code]: res("code"), [data]: res("{}") },
   });
   await fire(handlers, page, "GET", "navigate").responded;
+  await fire(handlers, area, "GET", "navigate").responded;
   await fire(handlers, code).responded;
   await fire(handlers, data).responded;
-  assert.deepEqual(fetched, [page, code, data].map((url) => ({ url, cache: "no-cache" })));
+  assert.deepEqual(fetched, [
+    { url: page, cache: "no-cache" },
+    { url: area, cache: "no-cache" },
+    { url: code, cache: undefined },
+    { url: data, cache: undefined },
+  ]);
 });
 
 test("the install precaches fresh copies, not the HTTP cache's", async () => {
