@@ -139,7 +139,9 @@ def test_play_features_are_their_own_dataset(load_fixture):
     assert [f["properties"]["osm_id"] for f in feats] == [9001, 9002, 9003]
     assert feats[0]["properties"] == {
         "osm_type": "node", "osm_id": 9001, "name": "Café Bauklotz",
-        "kind": "cafe", "changing_table": None, "opening_hours": "Mo-Fr 09:00-18:00",
+        "kind": "cafe", "changing_table": None,
+        "wheelchair": None, "toilets_wheelchair": None, "wheelchair_description": None,
+        "opening_hours": "Mo-Fr 09:00-18:00",
         "osm_url": "https://www.openstreetmap.org/node/9001",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
                             "https://raw.githubusercontent.com/jakubwaller/papa-map/"
@@ -149,6 +151,18 @@ def test_play_features_are_their_own_dataset(load_fixture):
     for f in feats:
         assert "status" not in f["properties"]
         assert f["properties"]["changing_table"] is None
+
+
+def test_play_features_carry_the_wheelchair_tags(load_fixture):
+    # v28: the same three properties as a pin, verbatim, so the wheelchair
+    # chip can narrow the rings by the pins' rule.
+    feats = {f["properties"]["osm_id"]: f["properties"]
+             for f in build_play_features(load_fixture("overpass_play_places.json"))}
+    assert feats[9002]["wheelchair"] == "yes"
+    assert feats[9002]["toilets_wheelchair"] == "no"
+    assert feats[9002]["wheelchair_description"] == "Aufzug am Hintereingang"
+    assert feats[9003]["wheelchair"] == "limited"
+    assert feats[9001]["wheelchair"] is None
 
 
 def test_play_features_include_the_answered_no(load_fixture):

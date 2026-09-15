@@ -1,5 +1,18 @@
 # papa-map — build contract (v0)
 
+> **v28 amendment (15 Sep 2026, play places under the wheelchair chip):** every
+> `play_places.geojson` feature gains the three v26 properties, verbatim and with the
+> same values — **`wheelchair`**, **`toilets_wheelchair`** (`yes | limited | no | null`)
+> and **`wheelchair_description`** (string or `null`). With the wheelchair chip on, the
+> hollow and dashed rings narrow by the pins' rule, `wheelchair=yes` and nothing else
+> (`web/datasource.js::placeFeatures`), and so do the "play area only" badge and the
+> places clause of the count; the place popup shows the tags as the pin popup does.
+> Until v28 the chip narrowed the tables and left every ring standing, which read as a
+> promise of access nobody had recorded — 5,383 rings on 15 Sep 2026, none with the
+> property. No `key` on places: v5 is about tables. A dataset from before v28 has no
+> such property, so under the chip it shows no rings at all, never all of them. No new
+> Overpass query.
+
 > **v27 amendment (14 Sep 2026, the answered "no"):** `play_places.geojson` now also
 > carries the places that record an indoor play area **and `changing_table=no`** —
 > until now dropped as "somebody did answer". They are still not pins, and still not a
@@ -764,6 +777,9 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "name": "string or null",
   "kind": "cafe|indoor_play|mall|... or null",
   "changing_table": "\"no\" (answered: no table, v27) or null (nobody has answered)",
+  "wheelchair": "yes|limited|no|null — as on the tables (v28)",
+  "toilets_wheelchair": "yes|limited|no|null — as on the tables (v28)",
+  "wheelchair_description": "string or null — as on the tables (v28)",
   "opening_hours": "string or null",
   "osm_url": "https://www.openstreetmap.org/<type>/<id>",
   "mapcomplete_url": "string or null"

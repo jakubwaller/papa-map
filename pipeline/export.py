@@ -132,6 +132,11 @@ def build_play_features(play_data: dict, ct_data: dict | None = None) -> list[di
                 "kind": next((tags[k] for k in KIND_KEYS if tags.get(k)), None),
                 # "no" or None — see the docstring; never anything else.
                 "changing_table": value or None,
+                # As on the pins (v26), so the wheelchair chip can narrow the
+                # rings by the same rule (v28). Same free tags, no new query.
+                "wheelchair": wheelchair_state(tags),
+                "toilets_wheelchair": wheelchair_state(tags, "toilets:wheelchair"),
+                "wheelchair_description": tags.get("wheelchair:description"),
                 "opening_hours": tags.get("opening_hours"),
                 "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
                 "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),

@@ -1,18 +1,18 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
-import { loadFeatures, loadPlaces, filterFeatures, countsByStatus, countPlay,
+import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus, countPlay,
          countWheelchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app11";
+         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app12";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app11";
+         langUrl } from "./i18n.js?v=app12";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         writeTags } from "./osm.js?v=app11";
+         writeTags } from "./osm.js?v=app12";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -360,15 +360,15 @@ function refreshPins() {
   // same universe `shown` was drawn from: the pins, or with the wheelchair
   // chip on, its tables — keyed ones included, since it draws them.
   const total = pinFeatures(allFeatures, wheelchairOnly).length;
+  // The places narrow under the wheelchair chip like the tables (v28).
+  const places = placesOn ? placeFeatures(allPlaces, wheelchairOnly) : [];
   countEl.textContent = total
     ? t("countShown", { shown: shown.length, total })
-      + (placesOn && allPlaces.length
-        ? t("countPlaces", { n: allPlaces.length }) : "")
+      + (places.length ? t("countPlaces", { n: places.length }) : "")
     : t("countNoData");
   if (!styleReady) return;
   map.getSource(SRC).setData(toFeatureCollection(shown));
-  map.getSource(PLACES).setData(
-    placesToFeatureCollection(placesOn ? allPlaces : []));
+  map.getSource(PLACES).setData(placesToFeatureCollection(places));
 }
 
 // ---- Popup ----
@@ -381,6 +381,24 @@ const safeUrl = (u) => (typeof u === "string" && u.startsWith("https://") ? u : 
 
 // The three values `wheelchair` can carry, as i18n keys.
 const WC_LABEL = { yes: "wcYes", limited: "wcLimited", no: "wcNo" };
+
+// The wheelchair tags as recorded, value by value — the information half
+// of the request is worth more than the filter half. `wheelchair` on a
+// shop or café is the entrance, on a toilet block the toilet; the second
+// row is the place's accessible toilet; the free-text description is what
+// a mapper wrote about the step. Nothing here is a status. The table and
+// the play-place popups share it (v28).
+function wheelchairRows(o) {
+  const rows = [];
+  if (o.wheelchair)
+    rows.push(`<div class="row wc${o.wheelchair === "yes" ? " ok" : ""}">${svgIcon(ISA_PATH, "isa")}` +
+      `${esc(t("popupWheelchair"))}: <b>${esc(t(WC_LABEL[o.wheelchair]))}</b></div>`);
+  if (o.toilets_wheelchair)
+    rows.push(`<div class="row wc">${esc(t("popupToiletsWheelchair"))}: <b>${esc(t(WC_LABEL[o.toilets_wheelchair]))}</b></div>`);
+  if (o.wheelchair_description)
+    rows.push(`<div class="row wc-desc">${esc(o.wheelchair_description)}</div>`);
+  return rows;
+}
 
 function popupHTML(f) {
   const s = viewFor(f.status, mode);
@@ -406,18 +424,7 @@ function popupHTML(f) {
     rows.push(`<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
       (f.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(f.location_raw)}` : "") + `</div>`);
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
-  // The wheelchair tags as recorded, value by value — the information half
-  // of the request is worth more than the filter half. `wheelchair` on a
-  // shop or café is the entrance, on a toilet block the toilet; the second
-  // row is the place's accessible toilet; the free-text description is what
-  // a mapper wrote about the step. Nothing here is a status.
-  if (f.wheelchair)
-    rows.push(`<div class="row wc${f.wheelchair === "yes" ? " ok" : ""}">${svgIcon(ISA_PATH, "isa")}` +
-      `${esc(t("popupWheelchair"))}: <b>${esc(t(WC_LABEL[f.wheelchair]))}</b></div>`);
-  if (f.toilets_wheelchair)
-    rows.push(`<div class="row wc">${esc(t("popupToiletsWheelchair"))}: <b>${esc(t(WC_LABEL[f.toilets_wheelchair]))}</b></div>`);
-  if (f.wheelchair_description)
-    rows.push(`<div class="row wc-desc">${esc(f.wheelchair_description)}</div>`);
+  rows.push(...wheelchairRows(f));
   // Only ever seen under the wheelchair chip: the door needs a central key.
   if (f.key)
     rows.push(`<div class="row key">${svgIcon(KEY_PATH, "key")}${esc(t("popupKey"))}</div>`);
@@ -490,8 +497,10 @@ function placeHTML(p) {
     // with the .ask block. No styling of its own. ("Been here? Then you know"
     // used to stand between the two; the question says it, and on a 12 mini
     // the play-place card was the one that still did not fit.)
-    rows.push(`<div class="status play ask-ctx">${esc(t("metaPlaces"))}</div>`,
-              askHTML("askTable", inFlight.has(p.osm_url)));
+    rows.push(`<div class="status play ask-ctx">${esc(t("metaPlaces"))}</div>`);
+  // Between the headline and the question, where a pin's popup has them.
+  rows.push(...wheelchairRows(p));
+  if (!p.changing_table) rows.push(askHTML("askTable", inFlight.has(p.osm_url)));
   if (p.opening_hours)
     rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(p.opening_hours)}</div>`);
   const links = [];
@@ -589,7 +598,7 @@ function renderChips() {
     frag.appendChild(b);
   }
   frag.appendChild(playChip(countPlay(pinFeatures(allFeatures, wheelchairOnly))));
-  frag.appendChild(placesChip(allPlaces.length));
+  frag.appendChild(placesChip(placeFeatures(allPlaces, wheelchairOnly).length));
   frag.appendChild(wheelchairChip(countWheelchair(allFeatures)));
   // Not firstChild: the mode toggle is static markup and holds that slot, so
   // the generated chips go in front of the spacer instead.

@@ -84,6 +84,12 @@ export function loadPlaces(fc) {
       // "no" or null, and only those: a dataset from before v27 has no such
       // property and must read as the open question, never as an answer.
       changing_table: p.changing_table === "no" ? "no" : null,
+      // As on the pins (v26), read with the same strictness (v28).
+      wheelchair: WHEELCHAIR_STATES.includes(p.wheelchair) ? p.wheelchair : null,
+      toilets_wheelchair: WHEELCHAIR_STATES.includes(p.toilets_wheelchair)
+        ? p.toilets_wheelchair : null,
+      wheelchair_description: typeof p.wheelchair_description === "string"
+        ? p.wheelchair_description : null,
       opening_hours: p.opening_hours ?? null,
       osm_url: p.osm_url ?? null,
       mapcomplete_url: p.mapcomplete_url ?? null,
@@ -147,6 +153,13 @@ export function pinFeatures(features, wheelchairOnly = false) {
 export function filterFeatures(features, visible, playOnly = false, wheelchairOnly = false) {
   const byStatus = filterByStatus(pinFeatures(features, wheelchairOnly), visible);
   return playOnly ? byStatus.filter((f) => f.play) : byStatus;
+}
+
+// The play places the map draws (v28). Under the wheelchair chip they follow
+// the tables' rule: a ring left standing there reads as "you get in here" as
+// much as a pin does, and one with a step at the door would break that.
+export function placeFeatures(places, wheelchairOnly = false) {
+  return wheelchairOnly ? places.filter(isWheelchairOk) : places;
 }
 
 // ?bbox=minLon,minLat,maxLon,maxLat — how the Bundesland pages link into the

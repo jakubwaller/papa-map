@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
-         isWheelchairOk, countWheelchair, pinFeatures,
+         isWheelchairOk, countWheelchair, pinFeatures, placeFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
@@ -70,6 +70,7 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   assert.equal(places.length, 3);
   assert.deepEqual(places[0], {
     idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe", changing_table: null,
+    wheelchair: null, toilets_wheelchair: null, wheelchair_description: null,
     opening_hours: "Mo-Fr 09:00-18:00",
     osm_url: "https://www.openstreetmap.org/node/9001",
     mapcomplete_url: "https://mapcomplete.org/theme.html#node/9001",
@@ -90,6 +91,24 @@ test("loadPlaces reads changing_table=no and nothing else as an answer", () => {
     const [p] = loadPlaces({ features: [feat(1, 2, { changing_table: v })] });
     assert.equal(p.changing_table, null, `value ${JSON.stringify(v)}`);
   }
+});
+
+test("play places narrow under the wheelchair chip by the tables' rule", () => {
+  const places = loadPlaces({ features: [
+    feat(1, 1, { wheelchair: "yes", toilets_wheelchair: "no", wheelchair_description: "Aufzug" }),
+    feat(2, 2, { wheelchair: "limited" }),
+    feat(3, 3, { toilets_wheelchair: "yes" }),
+    feat(4, 4, { wheelchair: "YES" }),
+    feat(5, 5, {}),
+  ] });
+  assert.deepEqual(places.map((p) => p.wheelchair), ["yes", "limited", null, null, null]);
+  assert.equal(places[0].toilets_wheelchair, "no");
+  assert.equal(places[0].wheelchair_description, "Aufzug");
+  // off: every place; on: wheelchair=yes and nothing else
+  assert.equal(placeFeatures(places).length, 5);
+  assert.deepEqual(placeFeatures(places, true).map((p) => p.idx), [0]);
+  // a dataset from before v28 has no tag on any place, so the chip shows none
+  assert.deepEqual(placeFeatures(loadPlaces(PLACES_FC), true), []);
 });
 
 test("loadPlaces carries no status — these places have no answer to colour", () => {
