@@ -21,7 +21,10 @@
       "tags": {
         "leisure": "indoor_play",
         "name": "Hallenhüpfer",
-        "shop": "toys"
+        "shop": "toys",
+        "wheelchair": "yes",
+        "toilets:wheelchair": "no",
+        "wheelchair:description": "Aufzug am Hintereingang"
       }
     },
     {
@@ -31,7 +34,8 @@
       "lon": 9.9871,
       "tags": {
         "leisure": "playground",
-        "indoor": "yes"
+        "indoor": "yes",
+        "wheelchair": "limited"
       }
     },
     {
