@@ -13,7 +13,7 @@ const ORIGIN = "https://papamap.de";
 
 function loadSW({ cached = {}, network = {} } = {}) {
   const handlers = {};
-  const put = [], opened = [];
+  const put = [], opened = [], fetched = [], added = [];
   const cache = {
     match: async (req, opts) => {
       const url = typeof req === "string" ? req : req.url;
@@ -24,7 +24,7 @@ function loadSW({ cached = {}, network = {} } = {}) {
       return k ? cached[k] : undefined;
     },
     put: async (req, res) => { put.push(typeof req === "string" ? req : req.url); },
-    addAll: async () => {},
+    addAll: async (list) => { added.push(...list); },
   };
   const ctx = {
     self: {
@@ -36,15 +36,19 @@ function loadSW({ cached = {}, network = {} } = {}) {
     },
     setTimeout, clearTimeout,
     caches: { open: async (name) => { opened.push(name); return cache; }, keys: async () => [], delete: async () => {} },
-    fetch: async (req) => {
+    fetch: async (req, init) => {
+      fetched.push({ url: req.url, cache: init?.cache });
       if (!(req.url in network)) throw new TypeError("offline");
       return network[req.url];
     },
+    // Node's Request refuses the relative "./" the worker resolves against its
+    // own location, so the install sees a stand-in that keeps what it was given.
+    Request: class { constructor(url, init) { this.url = url; this.cache = init?.cache; } },
     Response, Headers, URL, AbortSignal, console,
   };
   vm.createContext(ctx);
   vm.runInContext(SRC, ctx);
-  return { handlers, put, opened };
+  return { handlers, put, opened, fetched, added };
 }
 
 const res = (body, { ok = true, type = "basic" } = {}) =>
@@ -183,6 +187,32 @@ test("the shell is cache-first with a background refresh", async () => {
   assert.equal((await fire(handlers, url).responded).body, "cached code");
   await new Promise((r) => setImmediate(r));
   assert.deepEqual(put, [url]);
+});
+
+test("the worker's own fetches ask the server, not the browser's HTTP cache", async () => {
+  // The site sends max-age=3600. A plain fetch() in that hour was answered
+  // from the HTTP cache, so the background refresh stored the old page again
+  // and a returning reader ran the previous deploy for up to an hour (app13).
+  const page = `${ORIGIN}/`, code = `${ORIGIN}/app.js?v=off1`, data = `${ORIGIN}/data/stats.json`;
+  const { handlers, fetched } = loadSW({
+    cached: { [page]: res("old page"), [code]: res("code") },
+    network: { [page]: res("new page"), [code]: res("code"), [data]: res("{}") },
+  });
+  await fire(handlers, page, "GET", "navigate").responded;
+  await fire(handlers, code).responded;
+  await fire(handlers, data).responded;
+  assert.deepEqual(fetched, [page, code, data].map((url) => ({ url, cache: "no-cache" })));
+});
+
+test("the install precaches fresh copies, not the HTTP cache's", async () => {
+  // A new pin's cache filled from the HTTP cache can hold the previous
+  // deploy's index.html under the new name.
+  const { handlers, added } = loadSW();
+  let done;
+  handlers.install({ waitUntil(p) { done = p; } });
+  await done;
+  assert.ok(added.some((r) => r.url === "index.html"), "the shell was not precached");
+  for (const r of added) assert.equal(r.cache, "reload", r.url);
 });
 
 test("offline with nothing stored rejects rather than resolving to undefined", async () => {
