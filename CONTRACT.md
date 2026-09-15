@@ -1,5 +1,13 @@
 # papa-map — build contract (v0)
 
+> **v29 amendment (15 Sep 2026, the wheelchair chip is remembered):** the chip's state
+> is kept in `localStorage` under **`papamap-wheelchair`** (`"1"` when on, removed when
+> switched off; `web/datasource.js::pickWheelchair`), and the map opens with it as it
+> was left. Its audience needs it on every visit, and the home-screen app otherwise
+> opened with it off each time. No `?wheelchair=` parameter: nothing links to it. Named
+> in the Datenschutz beside `papamap-lang` and `papamap-mode`. Nothing in the emitted
+> data changes.
+
 > **v28 amendment (15 Sep 2026, play places under the wheelchair chip):** every
 > `play_places.geojson` feature gains the three v26 properties, verbatim and with the
 > same values — **`wheelchair`**, **`toilets_wheelchair`** (`yes | limited | no | null`)

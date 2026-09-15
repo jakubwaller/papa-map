@@ -4,15 +4,15 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          countWheelchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
+         parseBbox, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app12";
+         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app13";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app12";
+         langUrl } from "./i18n.js?v=app13";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         writeTags } from "./osm.js?v=app12";
+         writeTags } from "./osm.js?v=app13";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -186,7 +186,10 @@ let allFeatures = [];                                     // flattened GeoJSON
 let allPlaces = [];                                       // play-area prospects
 let visible = new Set(STATUS_DEFS.map((d) => d.value));   // toggled-on statuses
 let playOnly = false;                                     // narrow to play corners
-let wheelchairOnly = false;                               // narrow to wheelchair=yes (v26)
+// narrow to wheelchair=yes (v26), remembered on the device
+let wheelchairOnly = (() => {
+  try { return pickWheelchair(localStorage.getItem(WHEELCHAIR_KEY)); } catch { return false; }
+})();
 let placesOn = true;                                      // add the prospects (on by default since 2026-09-10)
 
 const statsEl = document.getElementById("stats");
@@ -659,6 +662,10 @@ function wheelchairChip(count) {
     `${esc(t("stWheelchair"))} <span class="cnt">${count}</span>`;
   b.addEventListener("click", () => {
     wheelchairOnly = !wheelchairOnly;
+    try {
+      if (wheelchairOnly) localStorage.setItem(WHEELCHAIR_KEY, "1");
+      else localStorage.removeItem(WHEELCHAIR_KEY);
+    } catch { /* blocked storage: this visit only */ }
     // The strip is rebuilt, not toggled: the status badges count over the
     // chip's universe, so they change with it (renderChips reads the state).
     renderChips();

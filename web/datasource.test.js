@@ -5,7 +5,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          isWheelchairOk, countWheelchair, pinFeatures, placeFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
-         parseBbox, MODES, DEFAULT_MODE, pickMode, viewFor, BUCKET_COLOR,
+         parseBbox, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js";
@@ -413,6 +413,11 @@ test("pickMode: query beats stored beats the default", () => {
   assert.equal(pickMode("papi", "mama"), "mama");
   assert.equal(pickMode("", ""), DEFAULT_MODE);
   assert.equal(pickMode(undefined, "nonsense"), DEFAULT_MODE);
+});
+
+test("pickWheelchair: only a stored \"1\" turns the chip on", () => {
+  assert.equal(pickWheelchair("1"), true);
+  for (const v of [null, undefined, "", "0", "true", "yes", 1]) assert.equal(pickWheelchair(v), false);
 });
 
 test("pinColorExpression is a MapLibre match over the three statuses", () => {

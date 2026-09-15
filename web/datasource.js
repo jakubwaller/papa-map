@@ -288,6 +288,15 @@ export function pickMode(query, stored) {
   return DEFAULT_MODE;
 }
 
+// The wheelchair chip, as remembered on the device (`papamap-wheelchair`).
+// Whoever needs it needs it every time, and the home-screen app would open
+// with it off otherwise. Only "1" is on: a missing or blocked store, or
+// anything else in it, leaves the map as a first visit sees it.
+export const WHEELCHAIR_KEY = "papamap-wheelchair";
+export function pickWheelchair(stored) {
+  return stored === "1";
+}
+
 // One row per (mode, status). `bucket` is the shared vocabulary the pin
 // layer, the chips and the popup all paint and label from, so none of the
 // three can drift into disagreeing about what a mode means. The papa rows
