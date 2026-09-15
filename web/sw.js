@@ -85,10 +85,30 @@ function fromStore(res) {
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }
 
+// A page the worker refreshes asks the server, not the browser's HTTP cache.
+// The site goes out with max-age=3600 (deploy/papamap.Caddyfile), and a plain
+// fetch() inside that hour is answered from the HTTP cache with the copy the
+// worker already holds: the background refresh stored the old page again, and
+// a returning reader stayed on the previous deploy for up to an hour plus a
+// load instead of one load (the app13 deploy, 2026-09-15).
+//
+// Navigations only. The HTML is the one file whose URL stays put across a
+// deploy; everything it loads carries a ?v= pin, so a new deploy is a new URL
+// and the HTTP cache cannot answer it with old bytes. And "no-cache" is not
+// cheap everywhere: Chromium sends it as a conditional request (a 304), but
+// WebKit sent no validators and downloaded the whole file again (PR #114
+// review). On the dataset that would be 1.7 MB of an iPhone's data on every
+// load, for a build that changes once a night.
+const refresh = (req) =>
+  req.mode === "navigate" ? fetch(req, { cache: "no-cache" }) : fetch(req);
+
 self.addEventListener("install", (e) => {
   // addAll() is atomic — one 404 in the list aborts the install and leaves the
-  // previous worker serving, which is the failure mode we want.
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL))
+  // previous worker serving, which is the failure mode we want. "reload" for
+  // the same reason as refresh() above: a new pin's cache filled from the HTTP
+  // cache can hold the previous deploy's index.html under the new name.
+  e.waitUntil(caches.open(CACHE)
+    .then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" }))))
     .then(() => self.skipWaiting()));
 });
 
@@ -120,7 +140,7 @@ self.addEventListener("fetch", (e) => {
       // worth having. When the timer wins, the stored copy answers and the
       // download carries on in the background into the store for the next
       // visit; waitUntil keeps the worker alive for it.
-      const network = fetch(req).then((res) => {
+      const network = refresh(req).then((res) => {
         if (res.ok && res.type === "basic") store(cache, req, res);
         return res;
       }).catch(() => null);
@@ -143,7 +163,7 @@ self.addEventListener("fetch", (e) => {
       ?? (req.mode === "navigate"
             ? (await cache.match(navKey(url)) ?? await cache.match(req, { ignoreSearch: true }))
             : undefined);
-    const fresh = fetch(req).then((res) => {
+    const fresh = refresh(req).then((res) => {
       // Only full, successful, same-origin answers are stored. An opaque or
       // partial response cached here would serve a broken file forever.
       // A navigation is stored under navKey (path + language), see above.

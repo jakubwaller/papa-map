@@ -334,7 +334,12 @@ visitor with the HTML/CSS/JS it stored last time and refreshes them in the backg
 first load after a web deploy shows the previous page and the second shows the new one. Verify
 with curl, which never passes through the worker, or load twice. The data files and the pages
 under `/wickeltische/` are network-first and show the new build on the first load. A bumped
-`?v=` pin starts a new cache and evicts the old shell on activation.
+`?v=` pin starts a new cache and evicts the old shell on activation. One load holds only because
+the worker refreshes a page past the browser's HTTP cache (`no-cache` on navigations, `reload` on
+install). Before 2026-09-15 it read that cache, stored the hour-old HTML again, and the app13
+home-screen app stayed on app12 for load after load. Chromium sends `no-cache` as a conditional
+request (304), but WebKit re-downloaded the page in a test, so it stays on navigations only:
+pinned files change URL anyway, and the dataset would cost 1.7 MB a load on an iPhone.
 
 **Cloudflare caches the shell too, whatever the pin.** Caddy sends `max-age=3600` for every
 file. Cloudflare keeps `.js` and `.css` files at the edge, `sw.js` included
