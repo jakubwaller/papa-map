@@ -331,7 +331,8 @@ chip bar gains a last chip that narrows to `wheelchair=yes` and nothing else.
 what Wheelmap paints orange), and `toilets:wheelchair=yes` alone would admit a
 place with a step at the door, so both stay in the popup and out of the
 filter. Like play it is a badge, never a status: an untagged place is
-unrecorded, not inaccessible, so the chip starts off and subtracts. The play
+unrecorded, not inaccessible, so the chip starts off and subtracts. Switched on,
+it stays on for that device (`localStorage`, `papamap-wheelchair`). The play
 places carry the same three tags since v28, and the chip narrows their rings
 by the same rule.
 
