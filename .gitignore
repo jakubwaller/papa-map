@@ -32,3 +32,8 @@ ops.log
 ops.env
 # The private ops page's auth snippet (password hash) — server-only.
 deploy/private/*.caddy
+
+# The store app's offline city basemaps: weekly build output (pipeline/tiles.py),
+# served from web-data/tiles; the mountpoint web/tiles/ is tracked (.gitkeep).
+web/tiles/*
+!web/tiles/.gitkeep

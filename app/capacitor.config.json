@@ -1,0 +1,16 @@
+{
+  "appId": "de.papamap.app",
+  "appName": "PapaMap",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "scheme": "PapaMap"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "CapacitorCookies": { "enabled": false },
+    "CapacitorHttp": { "enabled": false }
+  }
+}
