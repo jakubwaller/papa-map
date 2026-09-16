@@ -14,7 +14,7 @@ shared host Caddy. OSM is the only data source and the only write destination â€
 data; the pipeline writes nothing to OSM, and the frontend writes only what a logged-in reader
 answers, under that reader's own OSM account (`web/osm.js`, OAuth 2 with PKCE, no secret).
 
-`README.md` covers usage and the build. `web/methods.html` is the honest public account of the
+`README.md` is the short overview, `docs/FEATURES.md` the long one (every feature and why it works the way it does). `web/methods.html` is the honest public account of the
 classification rule, and it is the thing to keep truthful when the rule changes.
 
 ## Commands
