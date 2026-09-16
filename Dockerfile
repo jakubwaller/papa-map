@@ -6,8 +6,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # release, its checksum checked, so the image never depends on what a
 # "latest" URL answers. The one Go binary is the only non-Python thing here.
 ARG PMTILES_VERSION=1.31.2
-ARG PMTILES_SHA256=0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5
-ADD https://github.com/protomaps/go-pmtiles/releases/download/v${PMTILES_VERSION}/go-pmtiles-${PMTILES_VERSION}_Linux_x86_64.tar.gz /tmp/pmtiles.tar.gz
+ARG PMTILES_SHA256=3ed7dbf4ec2e6dfe5e25b6f70d1ffc932729f93c86db353bf514dd71010a312f
+ADD https://github.com/protomaps/go-pmtiles/releases/download/v${PMTILES_VERSION}/go-pmtiles_${PMTILES_VERSION}_Linux_x86_64.tar.gz /tmp/pmtiles.tar.gz
 RUN echo "${PMTILES_SHA256}  /tmp/pmtiles.tar.gz" | sha256sum -c - \
     && tar -xzf /tmp/pmtiles.tar.gz -C /usr/local/bin pmtiles && rm /tmp/pmtiles.tar.gz
 COPY pipeline ./pipeline

@@ -79,5 +79,7 @@ def test_run_writes_index_even_when_the_extract_fails(tmp_path, monkeypatch):
     monkeypatch.setattr(tiles.subprocess, "run", boom)
     idx = tiles.run(tmp_path, only=["hamburg"], build="20260915")
     assert idx["cities"] == []
+    assert idx["failed"] == ["hamburg"]
+    assert tiles.main(["--out", str(tmp_path), "--only", "hamburg", "--build", "20260915"]) == 1
     assert json.loads((tmp_path / "index.json").read_text())["build"] == "20260915"
     assert not list(tmp_path.glob("*.tmp"))

@@ -5,7 +5,7 @@ import CoreLocation
 // and the Shortcuts app. Answers in words with the name and the distance and
 // opens the pin in the app on tap. Nothing is sent anywhere: the dataset is
 // the copy the app shared (TableStore), the position is the phone's.
-@available(iOS 16.0, *)
+@available(iOS 17.0, *)
 struct NearestTableIntent: AppIntent {
     static var title: LocalizedStringResource = "Nearest changing table"
     static var description = IntentDescription("Finds the nearest changing table you can actually reach.")
@@ -32,7 +32,7 @@ struct NearestTableIntent: AppIntent {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 17.0, *)
 struct PapaMapShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(

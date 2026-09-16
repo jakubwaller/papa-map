@@ -98,7 +98,9 @@ struct LockView: View {
                     Text("\(TableStore.formatDistance(n.metres, lang: entry.lang)) · \(n.table.name.isEmpty ? "—" : n.table.name)")
                         .font(.footnote).fontWeight(.semibold).lineLimit(1)
                 } else {
-                    Text(entry.state == .noData ? L.noData(lang: entry.lang) : L.none(lang: entry.lang))
+                    Text(entry.state == .noData ? L.noData(lang: entry.lang)
+                         : entry.state == .noLocation ? L.noLocation(lang: entry.lang)
+                         : L.none(lang: entry.lang))
                         .font(.footnote).lineLimit(2)
                 }
             }

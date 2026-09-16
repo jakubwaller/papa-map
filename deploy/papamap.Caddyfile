@@ -49,10 +49,10 @@
 	# the Bundesland pages under /wickeltische/, which are also regenerated
 	# nightly but keep plain URLs (they are indexed). An hour of staleness on a
 	# page that changes once a night is not worth a shorter TTL.
-	@data path /data/* /ops.html
+	@data path /data/* /ops.html /tiles/index.json
 	header @data Cache-Control "public, max-age=900"
 	# The store app (app/) is this same site under its own origin
-	# (capacitor://localhost on iOS, https://localhost on Android), so its
+	# (papamap://localhost on iOS, https://localhost on Android), so its
 	# fetch of the dataset and the city catalogue is cross-origin. Read-only
 	# public files; "*" grants nothing a curl does not already have.
 	@app_reads path /data/*.geojson /data/*.json /tiles/index.json
@@ -60,7 +60,7 @@
 	# The offline city basemaps (pipeline/tiles.py, weekly; docker-compose.yml
 	# mounts web-data/tiles here). A day of caching: the files change once a
 	# week and are 20–100 MB each, so an edge hit is worth a lot more than
-	# freshness. index.json follows the @data TTL above via @app_reads' path.
+	# freshness. index.json is in @data above, so it gets the 15-minute TTL.
 	@tiles path /tiles/*.pmtiles
 	header @tiles Cache-Control "public, max-age=86400"
 	header @tiles Content-Type application/vnd.pmtiles

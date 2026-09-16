@@ -67,7 +67,8 @@ public enum TableStore {
 
     public static func save(json: String) throws {
         guard let dir = PapaMap.container else { throw NSError(domain: "PapaMap", code: 1) }
-        try json.data(using: .utf8)?.write(to: dir.appendingPathComponent(PapaMap.datasetFile), options: .atomic)
+        guard let data = json.data(using: .utf8) else { throw NSError(domain: "PapaMap", code: 2) }
+        try data.write(to: dir.appendingPathComponent(PapaMap.datasetFile), options: .atomic)
     }
 
     public static var mode: String { PapaMap.defaults?.string(forKey: PapaMap.modeKey) ?? "papa" }

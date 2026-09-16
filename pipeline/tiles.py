@@ -171,6 +171,7 @@ def run(out_dir: Path, only: list[str] | None = None, build: str | None = None) 
             failed.append(slug)
             tmp.unlink(missing_ok=True)
     index = catalogue(out_dir, build)
+    index["failed"] = failed
     tmp_index = out_dir / "index.json.tmp"
     tmp_index.write_text(json.dumps(index, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     tmp_index.replace(out_dir / "index.json")
@@ -188,8 +189,8 @@ def main(argv=None) -> int:
     unknown = set(a.only or []) - set(slugs())
     if unknown:
         ap.error(f"unknown city slugs: {sorted(unknown)}")
-    run(a.out, a.only, a.build)
-    return 0
+    index = run(a.out, a.only, a.build)
+    return 1 if index["failed"] else 0   # cron mail on a broken week, not a green log
 
 
 if __name__ == "__main__":

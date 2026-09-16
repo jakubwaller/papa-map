@@ -66,7 +66,9 @@ that directory is not committed.
 - If `ios/` was ever regenerated (`npx cap add ios --packagemanager SPM`), run
   `ruby ios/add-native-targets.rb` again (`gem install --user-install xcodeproj`) and re-apply
   the two Info.plist edits it does not make (the `papamap` URL scheme, the location text) and
-  the storyboard's `MainViewController` — `git diff` on those files shows what.
+  the storyboard's `MainViewController` and `SceneDelegate.swift` (its root view controller
+  must be `MainViewController`, or the share plugin is never registered) — `git diff` on those
+  files shows what.
 - Archive, *Distribute App*, App Store Connect.
 
 ### The OSM login

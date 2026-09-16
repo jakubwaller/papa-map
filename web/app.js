@@ -1127,7 +1127,7 @@ function rememberView() {
 // verifiable (storage blocked: some privacy settings, some webviews) the
 // login does not start, and the reader is told rather than left with a
 // button that does nothing.
-const goLogin = (intent) => startLogin(osm, intent).then((went) => { if (!went) toast(t("loginFailed")); });
+const goLogin = (intent) => startLogin(osm, intent, isNative() ? nativeNavigate : undefined).then((went) => { if (!went) toast(t("loginFailed")); });
 
 // Answers on their way to OSM, by object. A pin closed and reopened during
 // the round trip renders its question again; it must not take a second
@@ -1503,13 +1503,13 @@ const offlineBtn = document.getElementById("offline");
 const offlineDialog = document.getElementById("offline-dialog");
 const offlineList = document.getElementById("offline-list");
 
+let nativeScripts = Promise.resolve();   // declared before the call site below
 function bootNative() {
   interceptLinks();                  // site pages and OSM open in the system browser
   document.getElementById("app-link").hidden = true;   // this is the app
   offlineBtn.hidden = false;
   onAppUrl({ auth: (url) => completeLogin(url), table: openPin });
-  loadScript("vendor/pmtiles.js");
-  loadScript("vendor/protomaps/basemaps.js");
+  nativeScripts = Promise.all([loadScript("vendor/pmtiles.js"), loadScript("vendor/protomaps/basemaps.js")]);
 }
 
 // The two vendored libraries the offline cities need, loaded only here so
@@ -1559,10 +1559,12 @@ function unmountCity(slug) {
   for (const l of map.getStyle().layers)
     if (l.id.startsWith(`city-${slug}-`)) map.removeLayer(l.id);
   if (map.getSource(`city-${slug}`)) map.removeSource(`city-${slug}`);
+  pmProtocol?.tiles.delete(slug);   // the archive is in memory; let it go
   mounted.delete(slug);
 }
 
 async function mountSavedCities() {
+  await nativeScripts.catch(() => {});   // the map's load event can beat the two scripts
   for (const c of await savedCities()) mountCity(c).catch(() => {});
 }
 

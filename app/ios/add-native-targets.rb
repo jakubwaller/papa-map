@@ -44,15 +44,15 @@ add_variant(app_group, app, "InfoPlist.strings", %w[de en])
 app_group.new_file("App.entitlements") unless app_group.files.any? { |f| f.path == "App.entitlements" }
 app.build_configurations.each do |c|
   c.build_settings["CODE_SIGN_ENTITLEMENTS"] = "App/App.entitlements"
-  c.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "16.0"
+  c.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "17.0"
 end
-proj.build_configurations.each { |c| c.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "16.0" }
+proj.build_configurations.each { |c| c.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "17.0" }
 proj.root_object.known_regions |= %w[en de Base]
 
 # --- The widget extension target
 widget = proj.targets.find { |t| t.name == "PapaMapWidget" }
 unless widget
-  widget = proj.new_target(:app_extension, "PapaMapWidget", :ios, "16.0")
+  widget = proj.new_target(:app_extension, "PapaMapWidget", :ios, "17.0")
   wgroup = proj.main_group.new_group("PapaMapWidget", "PapaMapWidget")
   add_file(wgroup, widget, "PapaMapWidget.swift")
   wgroup.new_file("Info.plist")
@@ -71,7 +71,7 @@ unless widget
       "CODE_SIGN_ENTITLEMENTS" => "PapaMapWidget/PapaMapWidget.entitlements",
       "SWIFT_VERSION" => "5.0",
       "TARGETED_DEVICE_FAMILY" => "1,2",
-      "IPHONEOS_DEPLOYMENT_TARGET" => "16.0",
+      "IPHONEOS_DEPLOYMENT_TARGET" => "17.0",
       "MARKETING_VERSION" => "1.0",
       "CURRENT_PROJECT_VERSION" => "1",
       "SKIP_INSTALL" => "YES",
@@ -87,6 +87,17 @@ unless widget
   embed.dst_path = ""
   bf = embed.add_file_reference(widget.product_reference, true)
   bf.settings = { "ATTRIBUTES" => ["RemoveHeadersOnCopy"] }
+end
+
+# A shared "App" scheme, so xcodebuild on a machine that never opened the
+# project in Xcode (the GitHub runner) has something to build. Xcode itself
+# would generate one on first open, but as a per-user file that is not in git.
+scheme_dir = File.join(proj.path, "xcshareddata", "xcschemes")
+unless File.exist?(File.join(scheme_dir, "App.xcscheme"))
+  scheme = Xcodeproj::XCScheme.new
+  scheme.add_build_target(app)
+  scheme.set_launch_target(app)
+  scheme.save_as(proj.path, "App", true)
 end
 
 proj.save
