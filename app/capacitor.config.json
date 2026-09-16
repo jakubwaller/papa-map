@@ -10,7 +10,18 @@
     "allowMixedContent": false
   },
   "plugins": {
-    "CapacitorCookies": { "enabled": false },
-    "CapacitorHttp": { "enabled": false }
+    "CapacitorCookies": {
+      "enabled": false
+    },
+    "CapacitorHttp": {
+      "enabled": false
+    }
+  },
+  "experimental": {
+    "ios": {
+      "spm": {
+        "swiftToolsVersion": "6.0"
+      }
+    }
   }
 }
