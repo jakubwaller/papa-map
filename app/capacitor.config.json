@@ -4,7 +4,8 @@
   "webDir": "www",
   "ios": {
     "contentInset": "never",
-    "scheme": "PapaMap"
+    "scheme": "PapaMap",
+    "packageManager": "SPM"
   },
   "android": {
     "allowMixedContent": false
