@@ -30,7 +30,7 @@ Live at [papamap.de](https://papamap.de).
 - Play corners and places to play, as blue rings. A café with a ball pit is worth a visit anyway.
 - A wheelchair filter, which also brings back the Euro-key toilets hidden by default.
 - One static page per Bundesland, country and région, in the language people search in.
-- A leaderboard that ranks regions by how many grey pins turned green in the last week.
+- A leaderboard that ranks regions by how much their share of answered pins grew in the last week.
 - Works offline, except the basemap: the OSM tile policy forbids caching tiles.
 
 How each of these works and why it was built that way: [`docs/FEATURES.md`](docs/FEATURES.md).
