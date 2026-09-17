@@ -32,7 +32,8 @@
 > the 16 Land pages; France and Japan: hubs in English over their native
 > chunk pages) whose `<link rel="canonical">` is the majority-language page.
 > Twins link each other and the majority pages by endonym in the back row
-> and are **not** in `sitemap.xml`. Shell pin `app15` → `app16`.
+> and are **not** in `sitemap.xml`. Shell pin `app15` → `app16` (→ `app17` with the
+> review fixes the same day).
 > `stats.json`, the two GeoJSON files and `history.json` are untouched.
 
 > **v31 amendment (17 Sep 2026, the play question gets its third answer):**

@@ -7,12 +7,12 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app16";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app17";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app16";
+         langUrl } from "./i18n.js?v=app17";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app16";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app17";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -111,11 +111,22 @@ function updateRegionsLink() {
   const el = document.getElementById("regions-link");
   let link = null;
   try {
-    const c = map.getCenter().wrap();
-    link = areaLink(pickArea(areaIndex, allFeatures, [c.lng, c.lat], map.getBounds().toArray()), lang);
+    // Wrap the centre and shift the view by the same amount: past a
+    // continuous pan over ±180° getBounds() runs on past 180 while the
+    // area boxes never do, and the two must share a frame for the overlap.
+    const raw = map.getCenter(), c = raw.wrap(), dx = c.lng - raw.lng;
+    const view = map.getBounds().toArray().map(([x, y]) => [x + dx, y]);
+    link = areaLink(pickArea(areaIndex, allFeatures, [c.lng, c.lat], view), lang);
   } catch { /* no map yet: the fallback below */ }
+  const label = link ? link.label : t("regions");
   el.href = link ? link.href : t("regionsHref");
-  el.textContent = link ? link.label : t("regions");
+  if (el.textContent === label) return;
+  el.textContent = label;
+  // "Bundesländer" → "Wickeltische in Schleswig-Holstein" can wrap the nav
+  // row at phone width, and the zoom control sits under the topbar's
+  // measured height (positionZoomCtrl) — re-seat it whenever the label
+  // changes, the same hazard the stats strip already handles.
+  positionZoomCtrl();
 }
 
 // Names, hours and tag values in the popups originate from OpenStreetMap

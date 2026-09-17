@@ -425,7 +425,10 @@ def render_area(page: dict, generated_at: str, base_url: str = SITE_BASE_URL,
     lang = page["lang"]
     t = L[lang]
     summary = page["summary"]
-    name, slug = summary["name"], summary["slug"]
+    slug = summary["slug"]
+    # An English twin names the country in English (page["name"]); the
+    # summary's name is the sweep label, an endonym for Denmark ("Danmark").
+    name = page.get("name") or summary["name"]
     name_in = page.get("name_in") or f"in {name}"
     name_for = page.get("name_for") or name
     name_in_cap = name_in[0].upper() + name_in[1:]
@@ -883,7 +886,7 @@ def write_all_pages(areas, features, area_by_key, toilets_by_area,
             }, generated_at, base_url, base_path))
         if not twin:
             continue
-        _, name_in, name_for = COUNTRY_FORMS_EN[cc]
+        name_en, name_in, name_for = COUNTRY_FORMS_EN[cc]
         back_to_own = [(BOARD_L[lang]["lang_name"], f"{slug}.html")]
         canonical = f"{base_url}{base_path}{slug}.html"
         if cc in region_entries:
@@ -894,7 +897,7 @@ def write_all_pages(areas, features, area_by_key, toilets_by_area,
                 alt=back_to_own))
         else:
             emit(twin, render_area({
-                "lang": "en", "summary": e["summary"],
+                "lang": "en", "summary": e["summary"], "name": name_en,
                 "name_in": name_in, "name_for": name_for,
                 "back": [(L["en"]["back_map"], UP)],
                 "countries": countries_nav_en, "alt": back_to_own,
