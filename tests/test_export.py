@@ -64,6 +64,7 @@ def test_feature_properties_match_data_contract(load_fixture):
                             "https://raw.githubusercontent.com/jakubwaller/papa-map/"
                             "main/theme/papamap.theme.json"
                             "&z=18&lat=53.5528&lon=10.0065#node/1"),
+        "area": None,
     }
     assert feats[2]["name"] is None
     assert feats[3]["location_raw"] is None
@@ -286,3 +287,15 @@ def test_atomic_write_keeps_old_file_when_rename_fails(tmp_path, monkeypatch):
         write_json_atomic({"new": True}, str(out))
     # the served file is only ever touched by the rename
     assert json.loads(out.read_text(encoding="utf-8")) == {"old": True}
+
+
+def test_features_carry_the_sweep_area_that_found_them(load_fixture):
+    # v32: the footer link asks the pins which area they are in; the mapping
+    # is run.py's ct_area, the same authority as the pages and the
+    # leaderboard. An object the mapping does not know keeps null.
+    feats = {f["properties"]["osm_id"]: f["properties"]
+             for f in build_features(load_fixture("overpass_changing_tables.json"),
+                                     {("node", 1): "Hamburg", ("node", 2): "Danmark"})}
+    assert feats[1]["area"] == "Hamburg"
+    assert feats[2]["area"] == "Danmark"
+    assert feats[3]["area"] is None

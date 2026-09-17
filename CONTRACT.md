@@ -1,5 +1,40 @@
 # papa-map — build contract (v0)
 
+> **v32 amendment (17 Sep 2026, the footer link follows the map view):**
+> every `changing_tables.geojson` feature gains **`area`** — the sweep area
+> that found the object (`"Hamburg"`, `"Bretagne"`, `"Florida"`,
+> `"Danmark"`), from the same `ct_area` mapping the pages and the leaderboard
+> count by; `null` for an object no sweep area claims. It is the one exact
+> answer to "which Land or country is this pin in": a bounding box has
+> Strasbourg in Germany and Salzburg in Bavaria. And the pipeline writes a
+> fourth JSON, **`data/areas.json`**: a list of rows, one per generated area
+> page. Every row has `href` (site-relative: `wickeltische/hamburg.html`,
+> `wickeltische/` for the German index), `lang` (the page's language),
+> `label` (its own h1, "Wickeltische in Hamburg"), `bbox` (`[w, s, e, n]` in
+> the padded form the pages' own `?bbox=` links use, or `null` when the area
+> has no object or straddles the antimeridian; a hub's box is the union of
+> its chunks') and, unless the page is English already, `en`
+> (`{href, label}`): the English reading for a reader whose UI language is
+> not `lang` — a country's English twin, or for a chunk the twin of its
+> country. A country row carries **`areas`**, the sweep area names behind
+> it (Germany: the 16 Länder; Denmark: `["Danmark"]`); a chunk row — Land,
+> région, state, prefecture — carries **`area`**, its one sweep area, and
+> **`parent`**, the `href` of its country row. The frontend
+> (`pickArea`/`areaLink` in `web/datasource.js`) lets the seven pins nearest
+> the map centre vote with their `area`, weighted by nearness (none within
+> 250 km: no answer),
+> takes the chunk when its box covers at least a quarter of the view and the
+> country otherwise, and falls back to the language-routed `regionsHref`
+> when there is no answer or either file is missing.
+>
+> HTML surface: every country page not written in English gets an English
+> twin at **`<slug>-en.html`** (Germany: `deutschland-en.html`, a hub over
+> the 16 Land pages; France and Japan: hubs in English over their native
+> chunk pages) whose `<link rel="canonical">` is the majority-language page.
+> Twins link each other and the majority pages by endonym in the back row
+> and are **not** in `sitemap.xml`. Shell pin `app15` → `app16`.
+> `stats.json`, the two GeoJSON files and `history.json` are untouched.
+
 > **v31 amendment (17 Sep 2026, the play question gets its third answer):**
 > The popup's play line asks about a **play area for children**, not an indoor
 > corner, and offers **three** answers — the three mappings of the theme's own

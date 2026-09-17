@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timezone
 
 from . import export, leaderboard, osm, pages, stats, toilet_counts
-from .config import (BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTORY_PATH,
+from .config import (AREAS_PATH, BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTORY_PATH,
                      PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_PAUSE_S,
                      SWEEP_ROUNDS, TOILETS_COUNTS_PATH,
                      TOILETS_COUNTS_PERIOD_DAYS, changing_table_ids_ql,
@@ -19,7 +19,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                  sweep_rounds=None, sweep_pause_s=None, pages_dir=PAGES_DIR,
                  cities=None, history_path=HISTORY_PATH,
                  play_geojson_path=PLAY_GEOJSON_PATH,
-                 counts_path=None, counts_period_days=None):
+                 counts_path=None, counts_period_days=None,
+                 areas_path=AREAS_PATH):
     """One idempotent build: Overpass (per sweep area) -> classify -> GeoJSON +
     play_places.geojson + stats.json + the per-Bundesland pages, plus (on a
     full build) the per-region history and the leaderboard pages rendered from
@@ -226,7 +227,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # sweeps — count and plot it once.
     ct_data = {"elements": osm.dedup_elements(ct_elements)}
     play_data = {"elements": osm.dedup_elements(play_elements)}
-    features = export.build_features(ct_data)
+    features = export.build_features(ct_data, ct_area)
     play_features = export.build_play_features(play_data, ct_data)
     # The key-locked tables ride along in the GeoJSON for the wheelchair chip
     # (v26) and nowhere else: the pages, the leaderboard and the history
@@ -273,8 +274,10 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # gets one page in its own language, France additionally its 13 région
     # pages. The routing and the reasoning live in config.COUNTRY_PAGES and
     # pages.write_all_pages.
+    # areas.json goes next to stats.json: the map footer reads it to name the
+    # area page for the view on screen (CONTRACT.md v32).
     written = pages.write_all_pages(areas, open_features, ct_area, toilets_by_area,
-                                    pages_dir, generated_at)
+                                    pages_dir, generated_at, areas_path=areas_path)
 
     # History + leaderboard, only when the city sweep ran (i.e. a full build).
     # The history append replaces a same-date entry, so a manual re-run after

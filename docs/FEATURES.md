@@ -94,10 +94,30 @@ a hub over 13 per-région pages — English again for `united-states.html` and
 alphabet to sort by), and so on. The routing (including the
 inflected name forms prose needs: "in der Schweiz", "w Polsce") lives in
 `config.COUNTRY_PAGES` and `pipeline/pages_l10n.py`; slugs are the local
-names (`belgie.html`, `cesko.html`, `oesterreich.html`). The map's footer
-"Bundesländer" link is language-routed the same way (`regionsHref` in
-`web/i18n.js`): the Danish UI links danmark.html, the French UI france.html.
-Every page carries a country list linking the others.
+names (`belgie.html`, `cesko.html`, `oesterreich.html`). Every page carries
+a country list linking the others.
+
+**Every country page not written in English has an English twin** at
+`<slug>-en.html` (since 2026-09-17; Germany's is `deutschland-en.html`, a
+hub over the Land pages). The twin's canonical is the majority-language page
+and it is not in the sitemap: it exists for readers, not for search. Why it
+exists: **the map's footer link follows the map view, not the UI language.**
+It names the area page for what is on screen — "Wickeltische in Hamburg"
+when zoomed into Hamburg, "Wickeltische in Deutschland" at country zoom,
+"Pusleborde i Danmark" after a pan north — in the reader's UI language where
+that page exists and in English otherwise, so a reader with an English phone
+in Hamburg gets Germany in English rather than the United Kingdom (which is
+what the old language routing sent them to). Which area is on screen is
+asked of the pins, not of a bounding box: every feature carries the sweep
+`area` that found it (CONTRACT.md v32), and the seven pins nearest the map
+centre vote, weighted by nearness — exact at the borders, where boxes are not (Strasbourg lies
+inside Germany's box, Salzburg inside Bavaria's). The pipeline also writes
+`data/areas.json`, one row per area page with its box; `pickArea` in
+`web/datasource.js` shows the Land, région, state or prefecture when its box
+covers at least a quarter of the view and the country otherwise, and the
+language-routed `regionsHref` in `web/i18n.js` remains the fallback when no
+pin is within 250 km of the centre (open sea, an unswept country) or a file
+is missing.
 
 Which area an object belongs to is recorded during the sweep — it is free,
 since the sweep is already chunked per area, and the GeoJSON carries no region

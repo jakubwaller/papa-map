@@ -4,15 +4,15 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          countWheelchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app15";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app16";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app15";
+         langUrl } from "./i18n.js?v=app16";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app15";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app16";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -81,15 +81,41 @@ function applyI18n() {
   }
   document.getElementById("methods-link").href = t("methodsHref");
   document.getElementById("board-link").href = t("boardHref");
-  // Each language's footer leads to the area page its readers search
-  // for — the Danish UI to danmark.html, the French one to france.html.
-  document.getElementById("regions-link").href = t("regionsHref");
+  // The area link follows the map view, and its label is the target page's
+  // own title; the language's regionsHref is only the fallback (see
+  // updateRegionsLink). Re-pointed here because the data-i18n swap above
+  // just reset the label to the language's generic one.
+  updateRegionsLink();
   // German reads its own app page, every other language the English one.
   document.getElementById("app-link").href = t("appHref");
   // Boot may have resolved a language the markup does not show (a stored
   // choice, or a Czech browser): the control has to agree with the page.
   const sel = document.getElementById("lang-select");
   if (sel && sel.value !== lang) sel.value = lang;
+}
+
+// ---- Footer area link: follows the map view, not the UI language ----
+// Until 2026-09-17 the link went where the language pointed (regionsHref in
+// i18n.js): an English UI in Hamburg got the United Kingdom. Now it names the
+// area on screen — Hamburg when zoomed into Hamburg, Deutschland at country
+// zoom, Danmark after a pan north — in the reader's language where that page
+// exists and in English otherwise (data/areas.json, CONTRACT.md v32; the
+// choice is pickArea/areaLink in datasource.js: the pins nearest the centre
+// say which sweep area is on screen, the area's box whether the reader is
+// looking at a Land or at the country). The language-routed target
+// stays as the fallback for a view with no area under it (open sea, an
+// unswept country) and for a server whose pipeline has not written
+// areas.json yet, so the link never 404s.
+let areaIndex = null;
+function updateRegionsLink() {
+  const el = document.getElementById("regions-link");
+  let link = null;
+  try {
+    const c = map.getCenter().wrap();
+    link = areaLink(pickArea(areaIndex, allFeatures, [c.lng, c.lat], map.getBounds().toArray()), lang);
+  } catch { /* no map yet: the fallback below */ }
+  el.href = link ? link.href : t("regionsHref");
+  el.textContent = link ? link.label : t("regions");
 }
 
 // Names, hours and tag values in the popups originate from OpenStreetMap
@@ -1451,14 +1477,18 @@ async function boot() {
   // Taken whether or not the login went through: a refused consent must not
   // leave an answer waiting to be filed under the next login.
   const intent = takeIntent();
-  const [fc, places, stats] = await Promise.all([
+  const [fc, places, stats, areas] = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
     loadJSON("data/play_places.geojson"),
     loadJSON("data/stats.json"),
+    loadJSON("data/areas.json"),
   ]);
   allFeatures = loadFeatures(fc);
   allPlaces = loadPlaces(places);
   renderStats(stats);
+  areaIndex = Array.isArray(areas) ? areas : null;
+  updateRegionsLink();
+  map.on("moveend", updateRegionsLink);
   renderChips();
   positionZoomCtrl();  // topbar height depends on the rendered strip
   fitHome();           // ...and so does the home view's top padding

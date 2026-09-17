@@ -373,8 +373,10 @@ def test_write_all_pages_writes_each_country_in_its_own_language(tmp_path):
     written = pages.write_all_pages(areas, features, area_by_key, toilets,
                                     str(tmp_path), GEN)
     names = sorted(Path(p).name for p in written)
-    # 16 Länder + index + 3 countries + france.html + 13 régions.
-    assert len(names) == len(set(names)) == 16 + 1 + 3 + 1 + 13
+    # 16 Länder + index + 3 countries + france.html + 13 régions, plus the
+    # English twins of the three non-English country pages (Danmark, Schweiz,
+    # France) and of Germany.
+    assert len(names) == len(set(names)) == 16 + 1 + 3 + 1 + 13 + 4
 
     da = (tmp_path / "danmark.html").read_text(encoding="utf-8")
     assert 'lang="da"' in da
@@ -425,10 +427,12 @@ def test_write_all_pages_without_germany_writes_no_german_pages(tmp_path):
     written = pages.write_all_pages([("Danmark", "2")], [feat(1)],
                                     {("node", 1): "Danmark"},
                                     {"Danmark": 3}, str(tmp_path), GEN)
-    assert [Path(p).name for p in written] == ["danmark.html"]
+    assert [Path(p).name for p in written] == ["danmark.html", "danmark-en.html"]
     da = (tmp_path / "danmark.html").read_text(encoding="utf-8")
     # Alone in the build, the page has no other countries to link.
     assert "PapaMap i andre lande" not in da
+    en = (tmp_path / "danmark-en.html").read_text(encoding="utf-8")
+    assert "PapaMap in other countries" not in en
 
 
 def test_write_all_pages_gives_the_us_and_canada_english_hubs(tmp_path):
@@ -446,8 +450,10 @@ def test_write_all_pages_gives_the_us_and_canada_english_hubs(tmp_path):
                                     str(tmp_path), GEN)
     names = sorted(Path(p).name for p in written)
     # 3 country pages (two of them hubs) + 51 states + 13 provinces; no
-    # German index without the Länder.
+    # German index without the Länder, and no English twins: all three are
+    # written in English already.
     assert len(names) == len(set(names)) == 3 + 51 + 13
+    assert not [n for n in names if n.endswith("-en.html")]
     assert "index.html" not in names
 
     hub = (tmp_path / "united-states.html").read_text(encoding="utf-8")
@@ -544,3 +550,148 @@ def test_help_and_nav_come_before_the_named_places_table():
     countries_pos = html.index("PapaMap in anderen Ländern")
     table_pos = html.index("Orte mit Namen")
     assert help_pos < countries_pos < table_pos
+
+
+# ---- The English fallback layer (17 Sep 2026): every non-English country
+# page gets an English twin; data/areas.json lets the footer link follow the
+# map view.
+
+def _build(tmp_path, areas_path=None):
+    from pipeline.config import FRANCE_REGIONS
+    areas = ([(n, "4") for n in BUNDESLAENDER]
+             + [("Danmark", "2"), ("Switzerland", "2"), ("United Kingdom", "2")]
+             + [(r, "4") for r in FRANCE_REGIONS])
+    features = [feat(1, "Legoland", "accessible", amenity="cafe", lon=9.1, lat=55.7),
+                feat(2, None, "unknown", lon=10.0, lat=53.55),
+                feat(3, "Pub & Co", "unknown", amenity="pub", lon=-0.1, lat=51.5),
+                feat(4, "Crêperie", "female_only", amenity="cafe", lon=-1.7, lat=48.1),
+                feat(5, "Rösti", "unknown", amenity="restaurant", lon=8.5, lat=47.4)]
+    area_by_key = {("node", 1): "Danmark", ("node", 2): "Hamburg",
+                   ("node", 3): "United Kingdom", ("node", 4): "Bretagne",
+                   ("node", 5): "Switzerland"}
+    toilets = {name: 7 for name, _ in areas}
+    written = pages.write_all_pages(areas, features, area_by_key, toilets,
+                                    str(tmp_path), GEN, areas_path=areas_path)
+    return {Path(p).name for p in written}
+
+
+def test_english_twins_are_written_for_every_non_english_country_page(tmp_path):
+    names = _build(tmp_path)
+    assert {"danmark-en.html", "schweiz-en.html", "france-en.html",
+            "deutschland-en.html"} <= names
+    assert "united-kingdom-en.html" not in names   # English already
+    assert "bretagne-en.html" not in names         # régions have no twin
+    assert "hamburg-en.html" not in names          # nor Länder
+
+    en = (tmp_path / "danmark-en.html").read_text(encoding="utf-8")
+    assert 'lang="en"' in en
+    assert "<h1>Changing tables in Denmark</h1>" in en
+    assert "Legoland" in en
+    # Canonical is the Danish page: the twin is a fallback, not a duplicate
+    # Google should rank on its own.
+    assert '<link rel="canonical" href="https://papamap.de/wickeltische/danmark.html">' in en
+    # The language switch in both directions, by endonym.
+    assert '<a href="danmark.html">Dansk</a>' in en
+    da = (tmp_path / "danmark.html").read_text(encoding="utf-8")
+    assert '<a href="danmark-en.html">English</a>' in da
+    assert '<link rel="canonical" href="https://papamap.de/wickeltische/danmark.html">' in da
+    # The twin's country list leads to the English reading of each country,
+    # never to itself.
+    assert 'href="schweiz-en.html"' in en and 'href="united-kingdom.html"' in en
+    assert 'href="deutschland-en.html"' in en and ">Germany<" in en
+    assert 'href="danmark-en.html"' not in en
+    assert 'href="schweiz.html"' not in en
+    assert 'href="../methods-en.html"' in en
+
+    ch = (tmp_path / "schweiz-en.html").read_text(encoding="utf-8")
+    assert "<h1>Changing tables in Switzerland</h1>" in ch
+    assert '<a href="schweiz.html">Deutsch</a>' in ch
+
+
+def test_hub_twins_render_english_copy_over_the_native_chunk_pages(tmp_path):
+    from pipeline.config import FRANCE_REGIONS
+    _build(tmp_path)
+    fr = (tmp_path / "france-en.html").read_text(encoding="utf-8")
+    assert 'lang="en"' in fr
+    assert "<h1>Changing tables in France, by region</h1>" in fr
+    for r in FRANCE_REGIONS:
+        assert f'href="{pages.slugify(r)}.html"' in fr, r
+    assert '<link rel="canonical" href="https://papamap.de/wickeltische/france.html">' in fr
+    assert '<a href="france.html">Français</a>' in fr
+    assert 'href="leaderboard.html"' in fr
+    assert 'href="france-en.html"' not in fr
+    native = (tmp_path / "france.html").read_text(encoding="utf-8")
+    assert '<a href="france-en.html">English</a>' in native
+
+    de = (tmp_path / "deutschland-en.html").read_text(encoding="utf-8")
+    assert "<h1>Changing tables in Germany, by state</h1>" in de
+    for n in BUNDESLAENDER:
+        assert f'href="{pages.slugify(n)}.html"' in de, n
+    assert '<link rel="canonical" href="https://papamap.de/wickeltische/">' in de
+    assert '<a href="./">Deutsch</a>' in de
+    assert "<strong>1</strong> places" in de   # the Hamburg feature
+    index = (tmp_path / "index.html").read_text(encoding="utf-8")
+    assert '<a href="deutschland-en.html">English</a>' in index
+    assert "{" not in de.split("<style>")[0] and "{" not in fr.split("<style>")[0]
+
+
+def test_area_index_maps_every_page_to_its_box_and_english_reading(tmp_path):
+    out = tmp_path / "areas.json"
+    _build(tmp_path, areas_path=str(out))
+    rows = json.loads(out.read_text(encoding="utf-8"))
+    by_href = {r["href"]: r for r in rows}
+    assert set(by_href) >= {"wickeltische/", "wickeltische/hamburg.html",
+                            "wickeltische/danmark.html", "wickeltische/schweiz.html",
+                            "wickeltische/united-kingdom.html",
+                            "wickeltische/france.html", "wickeltische/bretagne.html"}
+    # Every page has a row, even one without a box (a Land with no feature):
+    # the pins decide the area, the box only whether the chunk fills the view.
+    assert by_href["wickeltische/bayern.html"]["bbox"] is None
+    for r in rows:
+        if r["bbox"]:
+            w, s, e, n = r["bbox"]
+            assert w < e and s < n, r["href"]
+        assert set(r) <= {"href", "lang", "label", "bbox", "en", "area", "areas", "parent"}
+        assert ("area" in r) != ("areas" in r), r["href"]
+        if "area" in r:
+            assert r["parent"] in by_href and "areas" in by_href[r["parent"]]
+            assert r["area"] in by_href[r["parent"]]["areas"]
+
+    hh = by_href["wickeltische/hamburg.html"]
+    assert hh["lang"] == "de" and hh["label"] == "Wickeltische in Hamburg"
+    assert hh["area"] == "Hamburg" and hh["parent"] == "wickeltische/"
+    assert by_href["wickeltische/"]["areas"] == sorted(BUNDESLAENDER, key=pages.sort_key)
+    assert by_href["wickeltische/danmark.html"]["areas"] == ["Danmark"]
+    assert by_href["wickeltische/schweiz.html"]["areas"] == ["Switzerland"]
+    assert by_href["wickeltische/bretagne.html"]["area"] == "Bretagne"
+    assert by_href["wickeltische/bretagne.html"]["parent"] == "wickeltische/france.html"
+    assert len(by_href["wickeltische/france.html"]["areas"]) == 13
+    assert hh["en"] == {"href": "wickeltische/deutschland-en.html",
+                        "label": "Changing tables in Germany"}
+    assert hh["bbox"][0] <= 10.0 <= hh["bbox"][2] and hh["bbox"][1] <= 53.55 <= hh["bbox"][3]
+
+    de = by_href["wickeltische/"]
+    assert de["label"] == "Wickeltische in Deutschland" and de["en"] == hh["en"]
+    assert de["bbox"] == hh["bbox"]   # the union of the one Land with a box
+
+    dk = by_href["wickeltische/danmark.html"]
+    assert dk["label"] == "Pusleborde i Danmark"
+    assert dk["en"] == {"href": "wickeltische/danmark-en.html",
+                        "label": "Changing tables in Denmark"}
+    ch = by_href["wickeltische/schweiz.html"]
+    assert ch["label"] == "Wickeltische in der Schweiz"
+    assert ch["en"]["label"] == "Changing tables in Switzerland"
+    # An English page is its own English reading.
+    assert "en" not in by_href["wickeltische/united-kingdom.html"]
+
+    fr = by_href["wickeltische/france.html"]
+    br = by_href["wickeltische/bretagne.html"]
+    assert br["lang"] == "fr" and br["label"] == "Tables à langer en Bretagne"
+    assert br["en"] == fr["en"] == {"href": "wickeltische/france-en.html",
+                                    "label": "Changing tables in France"}
+    assert fr["bbox"] == br["bbox"]   # the hub's box is the union of its chunks
+
+
+def test_area_index_union_skips_chunks_without_a_box():
+    assert pages._union([None, [1, 2, 3, 4], [0, 3, 2, 5]]) == [0, 2, 3, 5]
+    assert pages._union([None]) is None

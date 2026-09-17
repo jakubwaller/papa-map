@@ -3003,3 +3003,120 @@ def board_file(lang: str) -> str:
     every other language follows the leaderboard-<lang>.html convention."""
     return {"de": "rangliste.html", "en": "leaderboard.html"}.get(
         lang, f"leaderboard-{lang}.html")
+
+
+# ---- The English fallback layer (17 Sep 2026) -------------------------------
+# Every country page whose language is not English gets a second render in
+# English under <slug>-en.html, the way index.html has index-en.html. The
+# map's footer link follows the map view now (web/app.js reads
+# data/areas.json), so a reader with the UI in Czech who pans to Germany
+# would land on a German page they cannot read unless there is an English one
+# to fall back to. English only: the 31-language matrix (~1,400 files a
+# night) was considered and declined on 2026-09-17. The majority-language
+# page stays canonical — the variant's canonical points there and it stays
+# out of the sitemap — so nothing changes for search engines.
+#
+# The English country names are config.COUNTRY_LABELS, which are English
+# already bar the two whose sweep label is the endonym ("Deutschland",
+# "Danmark"). Three names take an article, same rule as _english_forms above.
+COUNTRY_NAMES_EN = {**config.COUNTRY_LABELS, "de": "Germany", "dk": "Denmark"}
+_EN_THE = ("Netherlands", "United Kingdom", "United States")
+
+
+def _en_country_forms(name: str) -> tuple:
+    the = name in _EN_THE
+    return (name, f"in the {name}" if the else f"in {name}",
+            f"the {name}" if the else None)
+
+
+# {cc: (name, name_in, name_for)} — the same three forms COUNTRY_PAGES holds
+# per country, in English, for every swept country including Germany.
+COUNTRY_FORMS_EN = {cc: _en_country_forms(n) for cc, n in COUNTRY_NAMES_EN.items()}
+
+# The label of the link from a majority-language page to its English variant.
+# An endonym, like the leaderboard's language switcher: the reader looking
+# for it reads English, not the page.
+ENGLISH_LINK = "English"
+
+# English hub copy for the three chunked countries whose hub is not in
+# English (the US and Canadian hubs are, and serve as their own variant).
+# Germany's hub is the German index at /wickeltische/, hand-written in
+# pages.render_index, so this is also the first hub copy Germany gets.
+HUB_EN = {
+    "de": {
+        "back_hub": "All of Germany",
+        "crumb_hub": "Changing tables in Germany",
+        "siblings_h2": "Other states",
+        "hub_title": "Changing tables in Germany, by state — PapaMap",
+        "hub_desc": ("Changing tables in Germany, state by state: {total} "
+                     "places according to OpenStreetMap; for {unknown} of "
+                     "them nobody has recorded the room."),
+        "hub_h1": "Changing tables in Germany, by state",
+        "hub_intro": ("OpenStreetMap knows <strong>{total}</strong> places "
+                      "with a baby changing table in Germany. For "
+                      "<strong>{unknown}</strong> of them nobody has recorded "
+                      "which room the table is in — so whether a dad can "
+                      "actually reach it. State by state (the pages behind "
+                      "the links are in German):"),
+        "hub_col": "State (Bundesland)",
+        "hub_toilets": "Toilets",
+        "hub_note": ("Alphabetical, not ranked. A ranking would mislead: "
+                     "these numbers mostly measure how thoroughly a state has "
+                     "been mapped, not what it actually provides. The "
+                     "<em>Toilets</em> column counts every public toilet on "
+                     "record, with or without a changing table. What compares "
+                     'honestly is movement — it is on the <a href="'
+                     'leaderboard.html">leaderboard</a>.'),
+    },
+    "fr": {
+        "back_hub": "All of France",
+        "crumb_hub": "Changing tables in France",
+        "siblings_h2": "Other regions",
+        "hub_title": "Changing tables in France, by region — PapaMap",
+        "hub_desc": ("Changing tables in France, region by region: {total} "
+                     "places according to OpenStreetMap; for {unknown} of "
+                     "them nobody has recorded the room."),
+        "hub_h1": "Changing tables in France, by region",
+        "hub_intro": ("OpenStreetMap knows <strong>{total}</strong> places "
+                      "with a baby changing table in France. For "
+                      "<strong>{unknown}</strong> of them nobody has recorded "
+                      "which room the table is in — so whether a dad can "
+                      "actually reach it. Region by region (the pages behind "
+                      "the links are in French):"),
+        "hub_col": "Region",
+        "hub_toilets": "Toilets",
+        "hub_note": ("Alphabetical, not ranked. A ranking would mislead: "
+                     "these numbers mostly measure how thoroughly a region "
+                     "has been mapped, not what it actually provides. The "
+                     "<em>Toilets</em> column counts every public toilet on "
+                     "record, with or without a changing table. What compares "
+                     'honestly is movement — it is on the <a href="'
+                     'leaderboard.html">leaderboard</a>.'),
+    },
+    "jp": {
+        "back_hub": "All of Japan",
+        "crumb_hub": "Changing tables in Japan",
+        "siblings_h2": "Other prefectures",
+        "hub_title": "Changing tables in Japan, by prefecture — PapaMap",
+        "hub_desc": ("Changing tables in Japan, prefecture by prefecture: "
+                     "{total} places according to OpenStreetMap; for "
+                     "{unknown} of them nobody has recorded the room."),
+        "hub_h1": "Changing tables in Japan, by prefecture",
+        "hub_intro": ("OpenStreetMap knows <strong>{total}</strong> places "
+                      "with a baby changing table in Japan. For "
+                      "<strong>{unknown}</strong> of them nobody has recorded "
+                      "which room the table is in — so whether a dad can "
+                      "actually reach it. Prefecture by prefecture, north to "
+                      "south (the pages behind the links are in Japanese):"),
+        "hub_col": "Prefecture",
+        "hub_toilets": "Toilets",
+        "hub_note": ("In prefecture-code order from north to south, not "
+                     "ranked. A ranking would mislead: these numbers mostly "
+                     "measure how thoroughly a prefecture has been mapped, "
+                     "not what it actually provides. The <em>Toilets</em> "
+                     "column counts every public toilet on record, with or "
+                     "without a changing table. What compares honestly is "
+                     'movement — it is on the <a href="leaderboard.html">'
+                     "leaderboard</a>."),
+    },
+}
