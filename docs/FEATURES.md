@@ -237,6 +237,18 @@ in the pipeline and nowhere else (`CONTRACT.md` v26). A pin that already carries
 a room in words the classifier does not read is not asked — that is somebody's
 tag, and MapComplete shows it before letting anyone write over it.
 
+The same popup asks one more thing, on one line under the rooms: *indoor play
+area?*, yes or no. It is the second question a father standing in a café can
+answer without looking anything up, and it is asked only where OSM is silent —
+a recorded play corner shows its blue ring instead, and a recorded "there is
+none" is an answer, never asked again. *Yes* writes `kids_area:indoor=yes`
+together with `kids_area=yes`, *no* writes `kids_area=no`: the mappings the
+site's own MapComplete theme uses for the same question, and values
+`classify.py` already reads, so the ring appears (or stays away) at the next
+build. The two questions are independent taps and independent changesets —
+answering the room leaves the play line standing, and answering the play line
+leaves the room question where it was.
+
 A blue play place asks the other question, *is there a changing table? then tap
 its room*, and the one tap writes both `changing_table=yes` and the room —
 the table is news to OSM there, and the yes without the room would only make
@@ -254,11 +266,14 @@ forgets it here and revokes it at OSM.
 
 ## Play corners
 
-Every feature carries a boolean `play`: true when the object also records an
+Every feature carries a tri-state `play`: true when the object also records an
 indoor place for the kid to play (`kids_area:indoor` or `kids_area` =
 `yes|indoor|designated`, `leisure=indoor_play`, or `leisure=playground` +
-`indoor=yes`). `outdoor`, `no` and `limited` are excluded, and an explicit
-`kids_area:indoor=no` overrules a bare `kids_area=yes`. The map draws it as a
+`indoor=yes`), false when somebody has answered on one of the `kids_area` keys
+and the answer does not pass, null when nobody has answered at all. `outdoor`,
+`no` and `limited` are excluded, and an explicit `kids_area:indoor=no`
+overrules a bare `kids_area=yes`. False and null draw the same — nothing — and
+differ only in whether the popup asks the question (CONTRACT v30). The map draws it as a
 blue halo under the pin and the chip bar gains a filter that narrows to those
 places.
 

@@ -5,7 +5,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from .classify import central_key, classify, has_play_area, wheelchair_state
+from .classify import central_key, classify, has_play_area, play_state, wheelchair_state
 from .osm import element_coords
 
 
@@ -64,8 +64,11 @@ def build_features(ct_data: dict) -> list[dict]:
                 "changing_table": value, "location_raw": location,
                 "status": status,
                 # Free: the sweep already asks for every tag on these objects,
-                # so the play corner costs no extra Overpass query.
-                "play": has_play_area(tags),
+                # so the play corner costs no extra Overpass query. Tri-state
+                # since v30: false is "somebody answered, there is none", null
+                # is "nobody has said". Both draw no ring; only the null gets
+                # the popup's play question.
+                "play": play_state(tags),
                 # Free for the same reason. Tri-state or null, shown verbatim
                 # in the popup; only wheelchair=yes drives a filter.
                 "wheelchair": wheelchair_state(tags),
