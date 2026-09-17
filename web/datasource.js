@@ -476,6 +476,32 @@ export const TABLE_TAGS = ["changing_table", "changing_table:location"];
 export const PLAY_TAGS = ["kids_area", "kids_area:indoor"];
 export const EDIT_TAGS = [...TABLE_TAGS, ...PLAY_TAGS];
 
+// The label each of those tags is printed under, as an i18n key — the popup's
+// own words, never a value this file interpreted. `kids_area` and its
+// `:indoor` sub-key have a label each (v31): they can disagree, and the pair
+// the theme writes for "there is a play area, but outdoors only"
+// (`kids_area=yes` + `kids_area:indoor=no`) read as one label twice over
+// ("Play area: yes · Play area: no", issue #119).
+export const EDIT_TAG_LABEL = {
+  changing_table: "popupTable",
+  "changing_table:location": "popupRoom",
+  kids_area: "tagPlay",
+  "kids_area:indoor": "tagPlayIndoor",
+};
+
+// The confirmation's lines for what OSM now holds: [i18n key, value verbatim],
+// in EDIT_TAGS order. The sub-key's line is dropped where it only repeats the
+// parent's value — the site's own "indoors" answer writes `yes` to both, and
+// that is one fact, not two — so a disagreement between the two keys is the
+// only thing that ever prints two play lines.
+export function editTagLines(tags) {
+  const [parent, sub] = PLAY_TAGS;
+  const repeats = tags?.[parent] != null && tags[parent] === tags[sub];
+  return EDIT_TAGS
+    .filter((k) => tags?.[k] && !(repeats && k === sub))
+    .map((k) => [EDIT_TAG_LABEL[k], tags[k]]);
+}
+
 // Re-read schedule in ms once the tab is back in front. MapComplete uploads
 // within seconds of an answer, so the first read usually settles it; the tail
 // covers a slow upload or a reader who came back before answering.

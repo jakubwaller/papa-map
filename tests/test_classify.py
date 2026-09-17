@@ -1,7 +1,7 @@
 import pytest
 
-from pipeline.classify import (ACCESSIBLE_TOKENS, central_key, classify, tokens,
-                               wheelchair_state)
+from pipeline.classify import (ACCESSIBLE_TOKENS, central_key, classify, play_state,
+                               tokens, wheelchair_state)
 
 
 @pytest.mark.parametrize("token", sorted(ACCESSIBLE_TOKENS))
@@ -111,3 +111,23 @@ def test_central_key_names_the_system_only_when_it_locks_the_table():
     assert central_key({"centralkey": "eurokey", "male": "yes"}) is None
     assert central_key({"centralkey": "no"}) is None
     assert central_key({}) is None
+
+
+def test_a_playground_is_its_own_answer_so_the_popup_never_asks():
+    # v31, issue #119. play_state is what the popup's question hangs on, and
+    # `leisure=playground` is not a kids_area answer — but it does settle the
+    # question, because the object is an outdoor play area. Without this a
+    # playground with a changing table was asked "play area for children?", and
+    # the honest answer ("outdoors only") was not the one a reader in a hurry
+    # would tap.
+    assert play_state({"leisure": "playground"}) is False
+    assert play_state({"leisure": "playground", "indoor": "no"}) is False
+    assert play_state({"leisure": " Playground "}) is False
+    # Indoors it is the ring, not the silence — has_play_area gets there first.
+    assert play_state({"leisure": "playground", "indoor": "yes"}) is True
+    assert play_state({"leisure": "playground", "kids_area:indoor": "yes"}) is True
+    # Nothing else `leisure` says settles anything: a café is still asked.
+    assert play_state({"leisure": "garden"}) is None
+    assert play_state({"amenity": "cafe"}) is None
+    # leisure=indoor_play was already True, by the tag and not by this rule.
+    assert play_state({"leisure": "indoor_play"}) is True

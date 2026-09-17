@@ -7,12 +7,12 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_TAGS, TABLE_TAGS, PLAY_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app14";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app15";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app14";
+         langUrl } from "./i18n.js?v=app15";
 import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         isPlayChoice, playPatch, writeTags } from "./osm.js?v=app14";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app15";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -39,8 +39,9 @@ const CHANGESET_COMMENT = {
   place_none: "Changing table: none (answered on papamap.de)",
   // Keyed by the choice itself, because a play answer says which it was in
   // the comment the way the room answers say it in the tag.
-  play_yes: "Play corner: yes (answered on papamap.de)",
-  play_no: "Play corner: none (answered on papamap.de)",
+  play_yes: "Play area: indoors (answered on papamap.de)",
+  play_outdoor: "Play area: outdoors only (answered on papamap.de)",
+  play_no: "Play area: none (answered on papamap.de)",
 };
 
 // ---- Reading mode: the same three answers, read as a father or as a mother.
@@ -493,21 +494,29 @@ function askHTML(question = "askRoom", busy = false) {
          `${btns}<div class="ask-who">${who}</div></div>`;
 }
 
-// The play-corner question: one line, two buttons, and no login line of its
-// own — it only ever appears under the room question or where that question
-// has just been answered, and both carry it. One row is the whole budget: the
-// asking card measured ~470 px on a 12 mini with six rooms (PR #101), against
-// a map area of ~560 px, and panPopupIntoView() has to keep working.
+// The play question: one line, three buttons, and no login line of its own —
+// it only ever appears under the room question or where that question has just
+// been answered, and both carry it. The question asks about a play area for
+// children and the answers say where it is, because that is what the tags mean:
+// `kids_area=no` is "nowhere for children to play", and a two-button
+// "indoor play area? yes/no" wrote it under a bakery with a garden playground
+// (issue #119). The third pill is the theme's own outdoors-only mapping.
+//
+// Short labels, and the row wraps: the asking card measured ~470 px on a 12
+// mini with six rooms (PR #101), against a map area of ~560 px, and
+// panPopupIntoView() has to keep working.
 //
 // The buttons are `ask-btn` so the one document listener takes them, and
 // their data-room carries the choice rather than a room — the same liberty
 // the play place's "none" already takes.
+const PLAY_LABEL = { play_yes: "askPlayIndoor", play_outdoor: "askPlayOutdoor",
+                     play_no: "askPlayNone" };
 function askPlayHTML(busy = false) {
   const dis = busy ? " disabled" : "";
-  const pill = (choice, label) =>
-    `<button type="button" class="btn ask-btn" data-room="${choice}"${dis}>${esc(t(label))}</button>`;
+  const pill = (choice) =>
+    `<button type="button" class="btn ask-btn" data-room="${choice}"${dis}>${esc(t(PLAY_LABEL[choice]))}</button>`;
   return `<div class="ask-play"><span class="ask-q">${esc(t("askPlay"))}</span>` +
-         `${pill("play_yes", "askPlayYes")}${pill("play_no", "askPlayNo")}</div>`;
+         `<span class="ask-play-btns">${PLAY_CHOICES.map(pill).join("")}</span></div>`;
 }
 
 // A prospect's popup says one thing the pin popups never do: nobody has
@@ -1044,19 +1053,12 @@ async function pollEdit(gen, last) {
 }
 
 // "Changing table: yes · room: unisex_toilet" — the popup's own labels, the
-// tag values verbatim. Goes through textContent, so no escaping here.
-const EDIT_TAG_LABEL = { changing_table: "popupTable", "changing_table:location": "popupRoom",
-                         kids_area: "tagPlay", "kids_area:indoor": "tagPlay" };
-function tagsLabel(tags) {
-  // The two play keys share a label, and a yes writes the same value to both,
-  // so the line would otherwise say "Play area: yes · Play area: yes". One
-  // entry per label-and-value; a genuine disagreement between the two keys
-  // still shows as the two different lines it is.
-  const seen = new Set();
-  return EDIT_TAGS.filter((k) => tags[k])
-    .map((k) => `${t(EDIT_TAG_LABEL[k])}: ${tags[k]}`)
-    .filter((s) => (seen.has(s) ? false : seen.add(s))).join(" · ");
-}
+// tag values verbatim. Which lines there are (and that "Play area: yes ·
+// Indoor play area: no" is two of them) is editTagLines' business, in
+// datasource.js where the tags and their labels live; this only puts the
+// words to it. Goes through textContent, so no escaping here.
+const tagsLabel = (tags) =>
+  editTagLines(tags).map(([label, value]) => `${t(label)}: ${value}`).join(" · ");
 
 const editText = (note) =>
   note.key === "editFound" ? t("editFound", { tags: tagsLabel(note.tags) }) : t(note.key, note.vars ?? {});

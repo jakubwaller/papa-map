@@ -124,11 +124,13 @@ def test_play_area_recognizes_all_three_tagging_patterns():
     assert play({"kids_area": "yes", "kids_area:indoor": "no"}) is False
     assert play({"kids_area": "yes", "kids_area:outdoor": "yes"}) is True
     assert play({"kids_area": "no", "kids_area:indoor": "yes"}) is True
-    # a plain outdoor playground stays out, indoor= is what makes it count.
-    # None, not False: `leisure` is what the object is, not an answer to the
-    # question, so the popup may still ask it (v30).
-    assert play({"leisure": "playground"}) is None
-    assert play({"leisure": "playground", "indoor": "no"}) is None
+    # a plain outdoor playground stays out of the ring, indoor= is what makes
+    # it count. False, not None: the object *is* an outdoor play area, so there
+    # is nothing left to ask a reader standing on it (v31) — a playground with
+    # a changing table used to be asked, and a tap on "none" would have written
+    # kids_area=no onto a playground.
+    assert play({"leisure": "playground"}) is False
+    assert play({"leisure": "playground", "indoor": "no"}) is False
     assert play({}) is None
     # case and whitespace are the mapper's, not ours
     assert play({"kids_area": " Yes "}) is True
@@ -144,12 +146,21 @@ def test_play_is_tri_state_so_an_answered_no_is_not_asked_again():
 
     assert play({"kids_area": "no"}) is False
     assert play({"kids_area:indoor": "no"}) is False
+    # the popup's "outdoors only" (v31): the theme's own pair for "there is a
+    # play area, but outdoors". Answered, no indoor corner, no ring, never
+    # asked again — and, unlike a bare kids_area=no, true about the garden.
+    assert play({"kids_area": "yes", "kids_area:indoor": "no"}) is False
     # a blank value is somebody's tag, the same reading build_play_features
     # gives a blank changing_table=
     assert play({"kids_area": ""}) is False
     # junk on the key is still an answer to the question, just not a usable one
     assert play({"kids_area": "maybe"}) is False
     assert play({"amenity": "cafe"}) is None
+    # A playground the map has as a pin because somebody mapped a changing
+    # table on it: answered by what it is, so the question stays away (v31).
+    assert play({"leisure": "playground", "amenity": "toilets"}) is False
+    # An indoor one is still the ring, not the silence.
+    assert play({"leisure": "playground", "indoor": "yes"}) is True
 
 
 def test_play_features_are_their_own_dataset(load_fixture):
