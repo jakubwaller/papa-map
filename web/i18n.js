@@ -98,6 +98,10 @@ export const STRINGS = {
     addPlace: "+ Ort hinzufügen",
     methods: "Methoden",
     methodsHref: "methods.html",
+    // Fallback only since 2026-09-17: the footer link follows the map view
+    // (app.js updateRegionsLink, data/areas.json) and these two are what it
+    // shows when no area page lies under the view — open sea, an unswept
+    // country — or before the pipeline has written areas.json.
     regions: "Bundesländer",
     regionsHref: "wickeltische/",
     // Every language gets its own generated leaderboard page since the

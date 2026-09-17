@@ -63,6 +63,10 @@ export function loadFeatures(fc) {
       opening_hours: p.opening_hours ?? null,
       osm_url: p.osm_url ?? null,
       mapcomplete_url: p.mapcomplete_url ?? null,
+      // The sweep area that found the object (v32): a Land, a région, a
+      // state, or a whole country. Null from a dataset written before the
+      // property existed, which the footer link treats as "no vote".
+      area: typeof p.area === "string" && p.area ? p.area : null,
     });
   }
   return out;
@@ -523,4 +527,76 @@ export function editOutcome(before, after) {
   const moved = EDIT_TAGS.some(
     (k) => (before.tags?.[k] ?? null) !== (after.tags?.[k] ?? null));
   return { changed: true, tags: moved && Object.keys(tags).length ? tags : null };
+}
+
+// ---- The footer's area link follows the map view (2026-09-17) ----
+// data/areas.json (CONTRACT.md v32): one row per generated area page. A
+// country row names the sweep areas behind it (`areas`), a chunk row — a
+// Land, région, state, prefecture — its one sweep area (`area`) and its
+// country row (`parent`). Which area is on screen is asked of the pins: the
+// few nearest the map centre vote, by nearness, with the `area` the sweep
+// gave them, which is exact where a bounding box is not (Strasbourg lies inside Germany's
+// box, Salzburg inside Bavaria's). The chunk's box then only decides how
+// far in the reader is: the chunk when its box fills a fair share of the
+// view, else the country — a city view is its Land, a country view the
+// country, and a deep link from a Land page (which fits that Land's box,
+// with padding) the Land. Null when no pin is within reach of the centre
+// (open sea, an unswept country), and the caller keeps the language-routed
+// link the footer had before.
+// `view` is [[w, s], [e, n]] as map.getBounds().toArray() gives it.
+export const AREA_VOTERS = 7;
+export const AREA_REACH_KM = 250;
+const CHUNK_FILL = 0.25;
+
+export function nearestAreas(features, lon, lat, k = AREA_VOTERS) {
+  const best = [];   // ascending by km, at most k long
+  for (const f of features ?? []) {
+    if (!f.area || !Number.isFinite(f.lat) || !Number.isFinite(f.lon)) continue;
+    const km = haversineKm(lat, lon, f.lat, f.lon);
+    if (best.length === k && km >= best[k - 1].km) continue;
+    let i = best.length;
+    while (i > 0 && best[i - 1].km > km) i--;
+    best.splice(i, 0, { area: f.area, km });
+    if (best.length > k) best.pop();
+  }
+  return best;
+}
+
+export function pickArea(areas, features, center, view) {
+  const rows = Array.isArray(areas) ? areas : [];
+  if (!rows.length) return null;
+  const near = nearestAreas(features, center[0], center[1]);
+  if (!near.length || near[0].km > AREA_REACH_KM) return null;
+  // Votes weighted by nearness (1 / km, softened): the nearest pin decides
+  // unless a cluster across the border is about as close, and a lone border
+  // pin is not outvoted by a city 200 km away. Ties go to the nearer pin,
+  // which is first.
+  const votes = new Map();
+  for (const n of near) votes.set(n.area, (votes.get(n.area) ?? 0) + 1 / (n.km + 0.2));
+  let winner = null, most = 0;
+  for (const n of near) if (votes.get(n.area) > most) { winner = n.area; most = votes.get(n.area); }
+  const chunk = rows.find((r) => r.area === winner) ?? null;
+  const country = chunk
+    ? rows.find((r) => r.href === chunk.parent) ?? null
+    : rows.find((r) => Array.isArray(r.areas) && r.areas.includes(winner)) ?? null;
+  if (!chunk) return country;
+  if (!country) return chunk;
+  const b = chunk.bbox;
+  if (!view || !Array.isArray(b) || b.length !== 4) return country;
+  const viewArea = (view[1][0] - view[0][0]) * (view[1][1] - view[0][1]);
+  const overlap = Math.max(0, Math.min(b[2], view[1][0]) - Math.max(b[0], view[0][0]))
+    * Math.max(0, Math.min(b[3], view[1][1]) - Math.max(b[1], view[0][1]));
+  return viewArea > 0 && overlap / viewArea >= CHUNK_FILL ? chunk : country;
+}
+
+// The reading of an area for a UI language: the page itself when it is in
+// that language or has no English twin (an English page, a US state), else
+// the twin. A reader with the UI in Czech looking at Hamburg gets
+// deutschland-en.html, not a German page they cannot read. The label is the
+// target page's own h1, so the link says where it leads in the language it
+// leads to.
+export function areaLink(area, lang) {
+  if (!area) return null;
+  if (area.lang === lang || !area.en) return { href: area.href, label: area.label };
+  return { href: area.en.href, label: area.en.label };
 }

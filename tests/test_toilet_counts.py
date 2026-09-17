@@ -21,6 +21,7 @@ def _kwargs(tmp_path, load_fixture, **over):
               play_geojson_path=str(tmp_path / "play.geojson"),
               pages_dir=str(tmp_path / "pages"),
               history_path=str(tmp_path / "history.json"),
+              areas_path=str(tmp_path / "areas.json"),
               counts_path=str(tmp_path / "toilets_counts.json"),
               taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
     kw.update(over)

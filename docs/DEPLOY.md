@@ -99,10 +99,13 @@ half-written file; if taginfo or Overpass is down, the previous JSON stays in pl
 The same run rewrites `web/wickeltische/` — the per-area pages (16 Bundesländer + index,
 one page per other swept country in its own language, and four hubs over chunk pages:
 france.html + 13 régions, united-states.html + 50 states and DC, canada.html + 13
-provinces and territories, nihon.html + 47 prefectures), plus the 32 leaderboard pages. They
-are build output, not repo content, so **a fresh clone serves 404s there until the first
-build runs**: the sitemap lists all 221 of those URLs unconditionally. Run the pipeline once
-after deploying rather than waiting for the nightly cron.
+provinces and territories, nihon.html + 47 prefectures), the English twin of every country
+page not written in English (43 `<slug>-en.html` files, `deutschland-en.html` among them),
+plus the 32 leaderboard pages — and `web/data/areas.json`, the area index the map's footer
+link reads. They are build output, not repo content, so **a fresh clone serves 404s there
+until the first build runs**: the sitemap lists all 221 of those URLs unconditionally (the
+twins are deliberately not in it). Run the pipeline once after deploying rather than waiting
+for the nightly cron — until it runs, the footer link keeps its language-routed fallback.
 
 A full build also maintains `history.json` next to the other generated JSON (the
 per-region daily counts behind `wickeltische/rangliste.html`) — same directory, same
