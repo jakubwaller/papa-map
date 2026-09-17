@@ -229,6 +229,33 @@ export function tablePatch(choice) {
   return { changing_table: "yes", ...roomPatch(choice) };
 }
 
+// The second question a pin can ask: is there an indoor play corner? Two
+// answers, and they are the theme's own mappings (theme/papamap.theme.json,
+// "kids-area"), so the page and MapComplete write the same thing:
+//
+//   yes -> kids_area:indoor=yes plus kids_area=yes. The sub-key is the form
+//          the OSM wiki documents and the one the pipeline settles the
+//          question on; the parent tag rides along the way the theme's
+//          addExtraTags sends it, because `kids_area` alone is what most
+//          objects and most editors carry.
+//   no  -> kids_area=no, alone. The wiki has no `kids_area:indoor=no` that
+//          means "nothing at all" — the theme uses that pair for "there is a
+//          play area, but only outdoors" — and `no` is the most-used value on
+//          the key (2,780 against 1,318 `yes`), so it is what a reader saying
+//          "no play corner here" is understood to mean.
+//
+// Both are values `pipeline/classify.py` already reads: the yes passes
+// has_play_area and draws the blue ring at the next build, the no does not
+// and never will.
+export const PLAY_CHOICES = ["play_yes", "play_no"];
+export const isPlayChoice = (choice) => PLAY_CHOICES.includes(choice);
+
+export function playPatch(choice) {
+  if (choice === "play_yes") return { "kids_area:indoor": "yes", kids_area: "yes" };
+  if (choice === "play_no") return { kids_area: "no" };
+  throw new Error(`unknown play choice ${choice}`);
+}
+
 export const CREATED_BY = "PapaMap";
 
 // `host` is where the answer was given: the live site, or on the sandbox the

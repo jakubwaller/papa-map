@@ -188,6 +188,14 @@ ausdrückliches <code>kids_area:indoor=no</code> gewinnt gegen ein bloßes
 <p>Der Ring ist ein Abzeichen, keine vierte Farbe. Ein Ort ohne diese Tags hat nicht &bdquo;keine
 Spielecke&ldquo;, in OSM steht dazu einfach nichts, und das gilt für fast alle Orte. Deshalb gibt
 es hier kein Grau.</p>
+<p>Genau deshalb fragt das Popup danach: Bei einem Pin, der ohnehin nach dem Raum fragt und zu dem
+in OSM nichts über eine Spielecke steht, steht unter den Räumen eine Zeile <em>Spielecke
+drinnen?</em> mit <em>Ja</em> und <em>Nein</em>. <em>Ja</em> schreibt
+<code>kids_area:indoor=yes</code> zusammen mit <code>kids_area=yes</code>, <em>Nein</em> schreibt
+<code>kids_area=no</code> — unter deinem eigenen OSM-Konto, in einem eigenen Changeset, genau die
+Tags, die auch MapComplete für dieselbe Frage schreibt. Der Ring kommt (oder bleibt weg) beim
+nächsten nächtlichen Build. Wer schon geantwortet hat, wird nicht noch einmal gefragt: Ein
+erfasstes <code>kids_area</code> — ja oder nein — nimmt die Frage weg.</p>
 <p>Auf viel mehr Orte trifft die Regel zu, als Pins haben. Nur
 <span data-stat="play_tables">111</span> davon haben überhaupt ein
 <code>changing_table</code>-Tag. Bei <span data-stat="play_places">701</span> weiteren hat niemand

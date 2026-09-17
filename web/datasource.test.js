@@ -8,7 +8,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          parseBbox, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
-         osmElementFromApi, editOutcome, EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js";
+         osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js";
 
 const feat = (lon, lat, props) => ({
   type: "Feature",
@@ -201,6 +201,27 @@ test("play is strictly boolean — a dataset without the property has none", () 
   for (const p of [undefined, null, "yes", 1, "true", 0, ""])
     assert.equal(loadFeatures({ type: "FeatureCollection",
       features: [feat(9.9, 53.5, { status: "unknown", play: p })] })[0].play, false);
+});
+
+test("play_recorded separates 'no play corner' from 'nobody has said'", () => {
+  // v30: the popup asks the play question only where this is false. true is
+  // both an answered yes (the ring) and an answered no (no ring, no question
+  // — the reader already said so and must not be asked on every visit).
+  const one = (play) => loadFeatures({ type: "FeatureCollection",
+    features: [feat(9.9, 53.5, { status: "unknown", play })] })[0];
+  assert.equal(one(true).play_recorded, true);
+  assert.equal(one(false).play_recorded, true);
+  assert.equal(one(null).play_recorded, false);
+  assert.equal(one(undefined).play_recorded, false);
+  // A dataset from before v30 wrote false for every pin without a corner, so
+  // it reads as answered: the question waits for the next build rather than
+  // appearing on a pin whose reader has already answered it.
+  assert.equal(one(false).play, false);
+  // Junk is not an answer either way — neither ring nor question.
+  for (const p of ["no", 0, ""]) {
+    assert.equal(one(p).play, false, String(p));
+    assert.equal(one(p).play_recorded, false, String(p));
+  }
 });
 
 test("countPlay counts the play corners, never the statuses", () => {
@@ -603,8 +624,13 @@ test("editOutcome does not quote tags the edit left alone", () => {
   assert.deepEqual(editOutcome(before, { gone: true }), { changed: true, tags: null });
 });
 
-test("the edit check names only the two table tags and stops within five minutes", () => {
-  assert.deepEqual(EDIT_TAGS, ["changing_table", "changing_table:location"]);
+test("the edit check names the tags this site can write and stops within five minutes", () => {
+  // The two table tags, and since v30 the play-corner pair the popup's second
+  // question writes. Nothing else: the confirmation quotes an edit back, so
+  // every key here is one the reader was asked about.
+  assert.deepEqual(TABLE_TAGS, ["changing_table", "changing_table:location"]);
+  assert.deepEqual(PLAY_TAGS, ["kids_area", "kids_area:indoor"]);
+  assert.deepEqual(EDIT_TAGS, [...TABLE_TAGS, ...PLAY_TAGS]);
   assert.equal(EDIT_CHECK_DELAYS[0], 0);
   for (let i = 1; i < EDIT_CHECK_DELAYS.length; i++)
     assert.ok(EDIT_CHECK_DELAYS[i] > EDIT_CHECK_DELAYS[i - 1], "ascending");

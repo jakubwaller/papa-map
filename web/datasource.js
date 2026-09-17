@@ -40,6 +40,13 @@ export function loadFeatures(fc) {
       // Strict === true: a dataset written before this property existed leaves
       // it undefined, and "no play corner recorded" must never render as one.
       play: p.play === true,
+      // Has anybody answered the play question here at all (v30)? true both
+      // for a recorded play corner and for a recorded "there is none"; false
+      // only where OSM is silent, which is the one case the popup asks about.
+      // A dataset from before v30 says false for every pin without a corner,
+      // so the question simply does not appear until the next nightly build —
+      // never on a pin whose reader has already answered it.
+      play_recorded: p.play === true || p.play === false,
       // Tri-state or null, straight from the pipeline (v26). Same strictness
       // as play: only the three wiki values pass, so a dataset from before the
       // property, or a junk value, reads as "unrecorded" — never as "no".
@@ -460,7 +467,14 @@ export function osmElementFromApi(json) {
 
 // The two tags the confirmation names, in display order. Displayed verbatim —
 // this file must never map them to a status.
-export const EDIT_TAGS = ["changing_table", "changing_table:location"];
+// The tags an answer through this site can touch, in the two groups the
+// popup's two questions write. A confirmation quotes back the group the
+// answer belongs to — a room says nothing about a play corner — while the
+// MapComplete edit check watches all of them, since the theme asks both
+// questions. The play pair joined in v30.
+export const TABLE_TAGS = ["changing_table", "changing_table:location"];
+export const PLAY_TAGS = ["kids_area", "kids_area:indoor"];
+export const EDIT_TAGS = [...TABLE_TAGS, ...PLAY_TAGS];
 
 // Re-read schedule in ms once the tab is back in front. MapComplete uploads
 // within seconds of an answer, so the first read usually settles it; the tail

@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
-         finishLogin, ROOMS, roomChoices, roomChoicesMore, roomPatch, tablePatch, changesetTags, changesetXml,
+         finishLogin, ROOMS, roomChoices, roomChoicesMore, roomPatch, tablePatch,
+         PLAY_CHOICES, isPlayChoice, playPatch, changesetTags, changesetXml,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY } from "./osm.js";
 
 // ---- Which OSM ----
@@ -143,6 +144,38 @@ test("the play-place patch adds the table as yes, with the same room values", ()
 
 test("the play-place 'no table' answer writes changing_table=no alone, no room", () => {
   assert.deepEqual(tablePatch("none"), { changing_table: "no" });
+});
+
+test("the play-corner answers write the theme's own tags, both values", () => {
+  // yes: the documented sub-key settles it, the parent tag rides along the
+  // way the theme's addExtraTags sends it. Both are values has_play_area()
+  // reads, so tonight's build draws the ring.
+  assert.deepEqual(playPatch("play_yes"), { "kids_area:indoor": "yes", kids_area: "yes" });
+  // no: the bare key alone. kids_area:indoor=no means "there is an area, but
+  // outdoors" in the theme, which is not what the reader was asked.
+  assert.deepEqual(playPatch("play_no"), { kids_area: "no" });
+  assert.throws(() => playPatch("yes"));
+  assert.throws(() => playPatch("none"));
+  // Neither answer touches the changing table: the two questions are separate
+  // taps and a play corner says nothing about a table.
+  for (const c of PLAY_CHOICES) {
+    assert.ok(!("changing_table" in playPatch(c)), c);
+    assert.ok(!("changing_table:location" in playPatch(c)), c);
+  }
+});
+
+test("a play choice is never mistaken for a room, nor a room for a play choice", () => {
+  // app.js routes on this: a true here picks playPatch, a false roomPatch or
+  // tablePatch, and either mix-up would write the wrong key.
+  for (const c of PLAY_CHOICES) assert.ok(isPlayChoice(c), c);
+  for (const c of [...roomChoices("papa"), ...roomChoicesMore(), "none", "", null, undefined])
+    assert.equal(isPlayChoice(c), false, String(c));
+  // and no play choice is a room value the other patches would accept
+  for (const c of PLAY_CHOICES) {
+    assert.ok(!(c in ROOMS), c);
+    assert.throws(() => roomPatch(c), c);
+    assert.throws(() => tablePatch(c), c);
+  }
 });
 
 test("changeset tags name the tool, the hashtag and the host", () => {

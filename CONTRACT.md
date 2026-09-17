@@ -1,5 +1,34 @@
 # papa-map — build contract (v0)
 
+> **v30 amendment (17 Sep 2026, the popup asks about the play corner too):**
+> `play` on a `changing_tables.geojson` feature becomes **tri-state** —
+> `true` (an indoor play corner is recorded, the v9 rule unchanged), `false`
+> (somebody has answered on `kids_area` or `kids_area:indoor` and the answer
+> does not pass: `no`, `limited`, `outdoor`, a blank, junk) and `null` (nobody
+> has answered). Key presence decides the false, not the value, the same
+> reading `build_play_features` gives a blank `changing_table=`. `leisure` is
+> not one of those keys: a playground is what an object *is*, not an answer
+> about a café's corner, so a bare `leisure=playground` stays `null`.
+>
+> Nothing renders differently: the blue halo, the *with play area* chip, the
+> badge and every count still read `play === true`, and false and null both
+> draw nothing (`web/datasource.js` keeps `play: p.play === true`). The
+> difference is the **question**. A pin that asks the room question now also
+> asks *indoor play area?* — one line, two buttons, under the rooms — where
+> `play` is `null`. Answering writes, under the reader's own account and in
+> its own changeset, the mappings of the theme's `kids-area` question:
+> `kids_area:indoor=yes` + `kids_area=yes` for yes, `kids_area=no` for no
+> (`web/osm.js::playPatch`). Both are values `classify.py` already reads, so
+> the ring follows at the next nightly build; the popup never classifies.
+> `EDIT_TAGS` gains the two keys, so the confirmation quotes them back.
+>
+> `web/datasource.js` exposes the distinction as **`play_recorded`** (true for
+> `true` and `false`, false for `null` or a missing property). A dataset from
+> before v30 writes `false` where it now writes `null`, so the question simply
+> does not appear until the next build — never on a pin whose reader has
+> already answered it. `play_places.geojson` is untouched: those places *are*
+> the play corner, and nobody is asked about it there.
+
 > **v29 amendment (15 Sep 2026, the wheelchair chip is remembered):** the chip's state
 > is kept in `localStorage` under **`papamap-wheelchair`** (`"1"` when on, removed when
 > switched off; `web/datasource.js::pickWheelchair`), and the map opens with it as it
@@ -762,7 +791,7 @@ Overpass `out center`). Feature `properties`:
   "changing_table": "yes|limited",
   "location_raw": "raw changing_table:location value or null",
   "status": "accessible|female_only|unknown",
-  "play": "true|false — indoor play area recorded (v9); false also means unrecorded",
+  "play": "true|false|null — indoor play area recorded (v9); false is an answered 'none', null is unanswered (v30)",
   "wheelchair": "yes|limited|no|null — the place's wheelchair tag verbatim (v26); null also means unrecorded",
   "toilets_wheelchair": "yes|limited|no|null — toilets:wheelchair verbatim (v26)",
   "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",
