@@ -587,6 +587,10 @@ def test_english_twins_are_written_for_every_non_english_country_page(tmp_path):
     assert 'lang="en"' in en
     assert "<h1>Changing tables in Denmark</h1>" in en
     assert "Legoland" in en
+    # The sweep label is the endonym; the twin must not leak it into the
+    # CTA, the numbers heading or the breadcrumb (PR #121 review).
+    assert "Open Denmark on the map" in en and "The numbers for Denmark" in en
+    assert '"name": "Denmark"' in en and ">Danmark<" not in en and "for Danmark" not in en
     # Canonical is the Danish page: the twin is a fallback, not a duplicate
     # Google should rank on its own.
     assert '<link rel="canonical" href="https://papamap.de/wickeltische/danmark.html">' in en

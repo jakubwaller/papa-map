@@ -100,7 +100,7 @@ The same run rewrites `web/wickeltische/` — the per-area pages (16 Bundesländ
 one page per other swept country in its own language, and four hubs over chunk pages:
 france.html + 13 régions, united-states.html + 50 states and DC, canada.html + 13
 provinces and territories, nihon.html + 47 prefectures), the English twin of every country
-page not written in English (43 `<slug>-en.html` files, `deutschland-en.html` among them),
+page not written in English (42 `<slug>-en.html` files, `deutschland-en.html` among them),
 plus the 32 leaderboard pages — and `web/data/areas.json`, the area index the map's footer
 link reads. They are build output, not repo content, so **a fresh clone serves 404s there
 until the first build runs**: the sitemap lists all 221 of those URLs unconditionally (the
