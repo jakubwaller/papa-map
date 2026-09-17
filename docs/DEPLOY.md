@@ -342,7 +342,7 @@ request (304), but WebKit re-downloaded the page in a test, so it stays on navig
 pinned files change URL anyway, and the dataset would cost 1.7 MB a load on an iPhone.
 
 **Cloudflare caches the shell too, whatever the pin.** Caddy sends `max-age=3600` for every
-file. Cloudflare keeps `.js` and `.css` files at the edge, `sw.js` included
+file that no more specific matcher claims (`/data/*` and `/ops.html` get 900). Cloudflare keeps `.js` and `.css` files at the edge, `sw.js` included
 (`cf-cache-status: HIT`), and on those responses it rewrites the header to `max-age=14400`. So a
 reader's browser may keep a stale file for four hours, and the service worker's background
 refresh reads that same browser cache. HTML is not edge-cached (`DYNAMIC`) and keeps Caddy's
@@ -382,6 +382,8 @@ curl -s https://DOMAIN/ | grep -c 'areaFallback">49 Länder'              # want
 
 Both or neither. If `area_key` still counts the old set, the build has not run under the new
 variable yet — run it by hand rather than waiting for cron, or the site claims a coverage it
-does not have until the next morning. `/data/*` is meant to get `max-age=900`, but in
-`deploy/papamap.Caddyfile` the site-wide `header Cache-Control` line overrides the `@data` one.
-So it goes out with an hour: allow up to 60 minutes, or add `?x=1` to bust it.
+does not have until the next morning. `/data/*` goes out with `max-age=900`, so allow up
+to 15 minutes, or add `?x=1` to bust it. (Until 2026-09-17 it went out with the hour: the
+site-wide `header Cache-Control` line in `deploy/papamap.Caddyfile` overwrote the `@data`
+one. It is now `header ?Cache-Control`, a default that only applies where nothing more
+specific has.)
