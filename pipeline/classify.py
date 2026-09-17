@@ -109,8 +109,9 @@ def has_play_area(tags: dict) -> bool:
 
 
 # The two keys a reader answers with, in the popup or in the theme. `leisure`
-# is not one of them: a playground is what the object *is*, never an answer to
-# "does this café have a play corner".
+# is not one of them — a playground is what the object *is*, never an answer to
+# "does this café have a play corner" — but it can still settle the question
+# without being an answer: see play_state.
 PLAY_KEYS = ("kids_area", "kids_area:indoor")
 
 
@@ -126,9 +127,20 @@ def play_state(tags: dict) -> bool | None:
     where this is None, so a reader who has already said "no play corner here"
     is not asked again on every visit (v30). Key presence decides, not the
     value: a blank `kids_area=` is somebody's tag, the same reading
-    `build_play_features` gives a blank `changing_table=`."""
+    `build_play_features` gives a blank `changing_table=`.
+
+    One object answers the question by existing: a `leisure=playground` that is
+    not `indoor=yes` is an outdoor play area, so it is False rather than None —
+    there is nothing to ask a reader standing on one (v31)."""
     if has_play_area(tags):
         return True
+    # A playground that is not indoors is itself the answer: the object *is* an
+    # outdoor play area, so "is there a play area for children here?" has
+    # nothing left to ask, and a reader tapping "none" on one would stamp
+    # `kids_area=no` onto a playground (issue #119). `leisure=playground` plus
+    # `indoor=yes` never reaches this line — has_play_area already said True.
+    if _v(tags, "leisure") == "playground":
+        return False
     return False if any(k in tags for k in PLAY_KEYS) else None
 
 

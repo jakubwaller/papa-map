@@ -8,7 +8,9 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          parseBbox, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
-         osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js";
+         osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
+         EDIT_TAG_LABEL, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js";
+import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
   type: "Feature",
@@ -635,4 +637,40 @@ test("the edit check names the tags this site can write and stops within five mi
   for (let i = 1; i < EDIT_CHECK_DELAYS.length; i++)
     assert.ok(EDIT_CHECK_DELAYS[i] > EDIT_CHECK_DELAYS[i - 1], "ascending");
   assert.ok(EDIT_CHECK_DELAYS.at(-1) <= 5 * 60 * 1000);
+});
+
+test("the confirmation gives each play key its own line when the two disagree", () => {
+  // The theme's outdoors-only pair. One label for both keys read as "Play
+  // area: yes · Play area: no", which says nothing (issue #119).
+  assert.deepEqual(editTagLines({ kids_area: "yes", "kids_area:indoor": "no" }),
+    [["tagPlay", "yes"], ["tagPlayIndoor", "no"]]);
+  // The site's own "indoors" answer writes yes to both, and that is one fact:
+  // the sub-key's line is dropped, so the note stays "Play area: yes" as it
+  // has read since v30.
+  assert.deepEqual(editTagLines({ kids_area: "yes", "kids_area:indoor": "yes" }),
+    [["tagPlay", "yes"]]);
+  // "none", and a sub-key somebody set on its own.
+  assert.deepEqual(editTagLines({ kids_area: "no" }), [["tagPlay", "no"]]);
+  assert.deepEqual(editTagLines({ "kids_area:indoor": "yes" }), [["tagPlayIndoor", "yes"]]);
+  // A disagreement the other way round is still two lines.
+  assert.deepEqual(editTagLines({ kids_area: "no", "kids_area:indoor": "yes" }),
+    [["tagPlay", "no"], ["tagPlayIndoor", "yes"]]);
+  // The room answer is untouched, and EDIT_TAGS order is display order.
+  assert.deepEqual(editTagLines({ "changing_table:location": "unisex_toilet", changing_table: "yes" }),
+    [["popupTable", "yes"], ["popupRoom", "unisex_toilet"]]);
+  // Values are verbatim — this file never interprets one.
+  assert.deepEqual(editTagLines({ kids_area: "maybe" }), [["tagPlay", "maybe"]]);
+  assert.deepEqual(editTagLines({}), []);
+  assert.deepEqual(editTagLines(null), []);
+});
+
+test("every tag the confirmation prints has a label, in every language", () => {
+  assert.deepEqual(Object.keys(EDIT_TAG_LABEL), EDIT_TAGS);
+  // Two keys sharing a label is the bug the test above pins; nothing else may
+  // reintroduce it.
+  const labels = Object.values(EDIT_TAG_LABEL);
+  assert.equal(new Set(labels).size, labels.length);
+  for (const lang of LANGS)
+    for (const key of labels)
+      assert.ok(STRINGS[lang][key]?.trim(), `${lang}: ${key}`);
 });
