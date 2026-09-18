@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { locateNative, loadJSONNative, formatDiagnostics, MAX_COLS } from "./native.js";
+import { locateNative, loadJSONNative, formatDiagnostics, MAX_COLS,
+         connectivity } from "./native.js";
 
 // A Geolocation plugin that plays back fixes: [ms, accuracy in metres].
 function fakeGeo(fixes, { permission = "granted" } = {}) {
@@ -301,7 +302,8 @@ test("the note names the path that answered, with the size of what was on the ph
   const fresh = {};
   await loadJSONNative("data/stats.json", fakeIO(), { note: fresh });
   assert.deepEqual({ ...fresh, ms: 0 },
-                   { file: "stats.json", step: "download", ms: 0, online: true, bytes: null });
+                   { file: "stats.json", step: "download", ms: 0, online: true,
+                     onlineFrom: "navigator", bytes: null });
 
   const fell = {};
   await loadJSONNative("data/stats.json", fakeIO({ downloader: false }), { note: fell });
@@ -323,16 +325,64 @@ test("the note names the path that answered, with the size of what was on the ph
   const nothing = {};
   await loadJSONNative("data/stats.json", fakeIO({ net: false }), { note: nothing, ...BRIEF });
   assert.deepEqual({ ...nothing, ms: 0 },
-                   { file: "stats.json", step: "none", ms: 0, online: true, bytes: null });
+                   { file: "stats.json", step: "none", ms: 0, online: true,
+                     onlineFrom: "navigator", bytes: null });
+});
+
+// ---- Is there a network at all ----
+// navigator.onLine answers "yes" in airplane mode on iOS (owner's iPhone,
+// build 20), which is why the loader's instant-offline shortcut never fired
+// there and the reader waited out the whole eight seconds.
+test("the OS's own answer is taken when the plugin is there to give one", async () => {
+  assert.deepEqual(await connectivity({ getStatus: async () => ({ connected: false }) }),
+                   { online: false, from: "native" });
+  assert.deepEqual(
+    await connectivity({ getStatus: async () => ({ connected: true, connectionType: "wifi" }) }),
+    { online: true, from: "native" });
+});
+
+test("with no plugin the page's own idea is used, such as it is", async () => {
+  assert.deepEqual(await connectivity(undefined), { online: true, from: "navigator" });
+  assert.deepEqual(await connectivity({}), { online: true, from: "navigator" },
+                   "a plugin without getStatus is no plugin");
+  assert.deepEqual(await connectivity({ getStatus: async () => ({}) }),
+                   { online: true, from: "navigator" }, "and neither is one that will not say");
+});
+
+test("a status call that never answers is bounded, and counts as online", async () => {
+  const began = Date.now();
+  assert.deepEqual(await connectivity({ getStatus: () => new Promise(() => {}) }, 30),
+                   { online: true, from: "navigator" });
+  assert.ok(Date.now() - began < 2000, "the new question did not become the new wait");
+});
+
+test("a status call that throws is not a reason to call the phone offline", async () => {
+  assert.deepEqual(await connectivity({ getStatus: async () => { throw new Error("nope"); } }, 30),
+                   { online: true, from: "navigator" });
+});
+
+// The point of all of the above: a native "not connected" reaches the loader
+// and stops it asking the network anything at all.
+test("a native offline answer means the loader asks the network nothing", async () => {
+  const io = fakeIO({ files: { [COPY]: { n: 0 } } });   // the network would answer here
+  const { online, from } = await connectivity({ getStatus: async () => ({ connected: false }) });
+  const note = {};
+  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io,
+                                        { online, onlineFrom: from, note }),
+                   { json: { n: 0 }, fromStore: true });
+  assert.deepEqual(io.log, [`read ${COPY}`], "no download, no fetch, no clock");
+  assert.equal(note.onlineFrom, "native");
 });
 
 test("the diagnostics block lines the four files up under the pin", () => {
   const notes = [
-    { file: "changing_tables.geojson", step: "stored", ms: 118, online: false, bytes: 18489463 },
-    { file: "stats.json", step: "none", ms: 20014, online: false, bytes: null },
+    { file: "changing_tables.geojson", step: "stored", ms: 118, online: false,
+      onlineFrom: "native", bytes: 18489463 },
+    { file: "stats.json", step: "none", ms: 20014, online: false,
+      onlineFrom: "native", bytes: null },
   ];
   assert.equal(formatDiagnostics(notes, "appN"), [
-    "appN · online=false",
+    "appN · online=false (native)",
     "changing_tables stored 118ms   18489463 B",
     "stats           none   20014ms no copy",
   ].join("\n"));
@@ -346,9 +396,10 @@ test("the diagnostics block lines the four files up under the pin", () => {
 test("even the widest row the loader can write fits the block", () => {
   const worst = [{
     file: "changing_tables.geojson",   // the longest of the four
-    step: "stored-new",               // the longest of the five steps
+    step: "stored-new",                // the longest of the five steps
     ms: 120014,                        // six digits
     online: false,
+    onlineFrom: "navigator",           // the longer of the two sources
     bytes: 18489463,                   // eight digits
   }];
   const lines = formatDiagnostics(worst, "app23").split("\n");

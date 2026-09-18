@@ -19,7 +19,7 @@ import { isNative, platform, AUTH_REDIRECT, loadJSONNative, locateNative, interc
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount, formatDiagnostics } from "./native.js?v=app23";
+         formatMB, citiesToMount, formatDiagnostics, connectivity } from "./native.js?v=app23";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -1523,6 +1523,10 @@ let fromStore = false;
 // stored copy is. The offline dialog prints them (native.js,
 // formatDiagnostics); on the website nothing ever writes to this.
 const loadNotes = [];
+// What the phone says about the network, asked once a launch (native.js,
+// connectivity) and handed to all four loads. On the website it stays what
+// navigator says, which is all the website ever had.
+let conn = { online: true, from: "navigator" };
 // The shell pin, taken from this module's own URL rather than written out a
 // second place to forget: index.html loads it as app.js?v=appNN.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v") ?? "unpinned";
@@ -1539,7 +1543,8 @@ async function loadJSON(url) {
     // between launches is a poor thing to compare two launches with.
     const note = {};
     loadNotes.push(note);
-    const r = await loadJSONNative(url, undefined, { note });
+    const r = await loadJSONNative(url, undefined,
+                                   { note, online: conn.online, onlineFrom: conn.from });
     if (r?.fromStore) fromStore = true;
     return r?.json ?? null;
   }
@@ -1613,6 +1618,10 @@ async function boot() {
   applyI18n();  // markup default is German — swap before first paint if not
   syncModeButtons();  // ...and the markup default is papa
   if (isNative()) bootNative();
+  // Before the four loads, not during: whether there is a network at all
+  // decides whether any of them should try one, and asking four times would
+  // be four chances to be told something different.
+  if (isNative()) conn = await connectivity();
   const [fc, places, stats, areas] = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
     loadJSON("data/play_places.geojson"),
