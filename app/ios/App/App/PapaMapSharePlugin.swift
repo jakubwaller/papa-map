@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Capacitor
 import WidgetKit
 
@@ -7,6 +8,10 @@ import WidgetKit
 // Group container; nothing comes back to the page, and nothing leaves the
 // phone. Registered in MainViewController, not by macro: an app-target
 // plugin has no package for the Capacitor CLI to discover.
+//
+// It carries one thing the other way: the table a tapped Siri answer left in
+// PendingTable, posted as an opened URL so it arrives at the page down the
+// widget's own path — App's `appUrlOpen`, which web/native.js already reads.
 @objc(PapaMapSharePlugin)
 public class PapaMapSharePlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "PapaMapSharePlugin"
@@ -15,6 +20,34 @@ public class PapaMapSharePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "writeDataset", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setSettings", returnType: CAPPluginReturnPromise),
     ]
+    private var observers: [NSObjectProtocol] = []
+
+    // Three moments, because which one comes first depends on whether the app
+    // was already running when the answer was tapped, and none of them is
+    // reliably last. `consume()` hands the table out once, so the other two
+    // find nothing. Nothing is done here at load time: a plugin's `load` runs
+    // while the bridge is still being built, and this posts to another plugin.
+    override public func load() {
+        for name in [Notification.Name.papaMapPendingTable,
+                     Notification.Name.capacitorViewDidAppear,
+                     UIApplication.didBecomeActiveNotification] {
+            observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.deliverPendingTable()
+            })
+        }
+    }
+
+    deinit {
+        for observer in observers { NotificationCenter.default.removeObserver(observer) }
+    }
+
+    // App's own listener retains the event until the page asks for it
+    // (`retainUntilConsumed`), so a cold start that arrives here before the
+    // WebView has run a line of JavaScript still opens the pin.
+    private func deliverPendingTable() {
+        guard let url = PendingTable.consume() else { return }
+        NotificationCenter.default.post(name: .capacitorOpenURL, object: ["url": url])
+    }
 
     @objc func writeDataset(_ call: CAPPluginCall) {
         guard let json = call.getString("json") else { call.reject("json missing"); return }

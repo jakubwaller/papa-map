@@ -51,6 +51,12 @@ Bundle id `de.papamap.app` on both stores (the other PapaMap, papamap.com, holds
 `com.papamap.app`). URL scheme `papamap://` — `papamap://auth` is the OSM login's return leg,
 `papamap://table?osm=…` opens a pin (the widget, the shortcut).
 
+The widget's tap hands that link to the OS; the Siri answer's tap cannot, because
+`OpenURLIntent` is the universal-link API and drops a custom scheme on the way (docs/FEATURES.md
+has the story). It runs `OpenTableIntent` in the app instead, which leaves the link in
+`PendingTable` — one value, read once and expiring after two minutes — and
+`PapaMapSharePlugin` posts it as an opened URL, so the page sees the widget's own event.
+
 ## Build
 
 ```bash

@@ -529,3 +529,59 @@ test("a declined route falls back to the same route on the web, never to nothing
   await followRoute(web, web, declined, (u) => last.push(u));
   assert.deepEqual(last, [web]);
 });
+
+// ---- The deep link, whoever hands it over ----
+import { onAppUrl, AUTH_REDIRECT } from "./native.js";
+
+// A fake App plugin: it keeps the listeners and plays URLs back through them.
+function fakeApp(launchUrl) {
+  const listeners = {};
+  return {
+    plugin: {
+      addListener: (event, fn) => { (listeners[event] ||= []).push(fn); },
+      getLaunchUrl: async () => (launchUrl ? { url: launchUrl } : null),
+    },
+    open: (url) => { for (const fn of listeners.appUrlOpen ?? []) fn({ url }); },
+  };
+}
+function withApp(app, run) {
+  const before = globalThis.Capacitor;
+  globalThis.Capacitor = { isNativePlatform: () => true, Plugins: { App: app } };
+  try { return run(); } finally { globalThis.Capacitor = before; }
+}
+
+// The page's end of the hand-over. The widget's tap, a cold start and — since
+// the Siri answer's tap lost its URL somewhere in OpenURLIntent (build 20) —
+// PapaMapSharePlugin posting the deep link itself all arrive down this one
+// path, so what it accepts is what the Swift side has to send.
+test("a papamap://table URL opens that table, whoever posted it", async () => {
+  const app = fakeApp();
+  const opened = [];
+  withApp(app.plugin, () => onAppUrl({ auth: () => {}, table: (osm) => opened.push(osm) }));
+  app.open("papamap://table?osm=https://www.openstreetmap.org/node/68609710");
+  assert.deepEqual(opened, ["https://www.openstreetmap.org/node/68609710"]);
+  // Twice is two opens: nothing here dedupes, so the Swift side hands a
+  // tapped answer over exactly once (PendingTable.consume).
+  app.open("papamap://table?osm=https://www.openstreetmap.org/node/1");
+  assert.equal(opened.length, 2);
+});
+
+test("a cold start asks for the launch URL, and only a table opens a pin", async () => {
+  const opened = [];
+  const app = fakeApp("papamap://table?osm=https://www.openstreetmap.org/way/7");
+  withApp(app.plugin, () => onAppUrl({ auth: () => {}, table: (osm) => opened.push(osm) }));
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(opened, ["https://www.openstreetmap.org/way/7"]);
+  // papamap://open is the answer that has no table to show: the app comes up,
+  // the map stays where it was.
+  app.open("papamap://open");
+  assert.equal(opened.length, 1);
+});
+
+test("the OSM login's return leg is not mistaken for a table", () => {
+  const app = fakeApp();
+  const back = [], opened = [];
+  withApp(app.plugin, () => onAppUrl({ auth: (u) => back.push(u), table: (osm) => opened.push(osm) }));
+  app.open(`${AUTH_REDIRECT}?code=abc&state=xyz`);
+  assert.deepEqual([back.length, opened.length], [1, 0]);
+});

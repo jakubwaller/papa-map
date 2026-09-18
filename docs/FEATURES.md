@@ -450,6 +450,17 @@ layout, the build and the signing):
   Papa/Mama setting, so the widget, the shortcut and the app's own button name the same table.
   `status` is read there, never derived.
 
+Both end at the same deep link, `papamap://table?osm=…`, and only the widget's tap takes it
+through the OS. Siri's cannot: `OpenURLIntent` is the universal-link API, and handed the app's
+own scheme iOS brings the app to the front and drops the URL — `application(_:open:)` never
+fires, so the page is never told which table was found. Build 20 did exactly that: Siri said the
+name and the distance, the tap opened the map on wherever it had been, and the same link from
+the widget opened the pin. So the tap runs an intent of the app's own instead (`OpenTableIntent`,
+`openAppWhenRun`, which is what makes `perform()` run inside the app), and that leaves the link
+in a one-value slot the app's plugin empties into Capacitor's own opened-URL path. The slot is
+read once and removed whatever its age, and ignored when it is older than two minutes: a tap
+that never arrived must not open a table on some later morning.
+
 The promises of the page hold unchanged: the position is used on the phone and never sent,
 the dataset comes from papamap.de, and an answer goes to OpenStreetMap under the reader's own
 account — with `host=https://papamap.de/` on the changeset, the OAuth return by

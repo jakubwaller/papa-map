@@ -13,6 +13,7 @@ public enum PapaMap {
     public static let datasetFile = "tables.json"
     public static let modeKey = "mode"      // "papa" | "mama"
     public static let langKey = "lang"      // "de" | "en" (anything else reads as en)
+    public static let pendingTableKey = "pendingTable"  // the Siri hand-over, see PendingTable
 
     public static var container: URL? {
         FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)
@@ -89,6 +90,48 @@ public enum TableStore {
         return lang == "de" ? String(format: "%.1f km", km).replacingOccurrences(of: ".", with: ",")
                             : String(format: "%.1f km", km)
     }
+}
+
+// The hand-over from a tapped Siri answer to the page, and nothing else.
+//
+// `OpenURLIntent` is the universal-link API: handed the app's own
+// `papamap://` URL it brings the app to the front and drops the URL, so
+// `application(_:open:)` never fires and Capacitor's `appUrlOpen` never
+// hears of the table (TestFlight build 20: the widget's pin opened, Siri's
+// did not). `OpenTableIntent` runs in the app process instead and leaves the
+// deep link here; `PapaMapSharePlugin` takes it out and posts it as an
+// opened URL, the very path the widget's tap already takes.
+//
+// Transient by construction, because a slot that outlives its tap is a map
+// that jumps to yesterday's table: one value, read once and removed whatever
+// its age, and ignored when it is older than `maxAge`. Only `papamap:` URLs
+// go in, so nothing else can be handed to the page through it.
+public enum PendingTable {
+    public static let maxAge: TimeInterval = 120
+    private static let urlKey = "url", atKey = "at"
+
+    public static func store(_ url: URL, now: Date = Date()) {
+        guard url.scheme == "papamap" else { return }
+        PapaMap.defaults?.set([urlKey: url.absoluteString, atKey: now.timeIntervalSince1970],
+                              forKey: PapaMap.pendingTableKey)
+        NotificationCenter.default.post(name: .papaMapPendingTable, object: nil)
+    }
+
+    public static func consume(now: Date = Date()) -> URL? {
+        guard let defaults = PapaMap.defaults else { return nil }
+        let row = defaults.dictionary(forKey: PapaMap.pendingTableKey)
+        defaults.removeObject(forKey: PapaMap.pendingTableKey)
+        guard let row, let string = row[urlKey] as? String, let at = row[atKey] as? Double,
+              now.timeIntervalSince1970 - at < maxAge,
+              let url = URL(string: string), url.scheme == "papamap" else { return nil }
+        return url
+    }
+}
+
+public extension Notification.Name {
+    // Posted in the app process the moment a tapped answer stores its table:
+    // the app may already be running, with nothing else about to happen.
+    static let papaMapPendingTable = Notification.Name("PapaMapPendingTableNotification")
 }
 
 // The two languages the phone-side text speaks. The map speaks thirty-two;
