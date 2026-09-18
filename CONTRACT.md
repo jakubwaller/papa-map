@@ -19,6 +19,14 @@
 > Maps' own scheme, so build 19's Route button did nothing but raise iOS's "No
 > Navigation App Installed" on a phone whose owner had deleted Apple Maps.
 > Shell pin `app21` → `app22`.
+> *(18 Sep 2026, later: pin `app22` → `app23` for the store app's dataset
+> loader, which no longer waits on a network without a bound — one budget per
+> load shared by the download and the fallback fetch, eight seconds where a
+> copy is already on the phone and twenty where none is, and nothing asked at
+> all of a phone `navigator.onLine` reports as offline. The offline dialog
+> gained an untranslated diagnostics block naming which of those paths
+> answered (`web/native.js`, `app.js`, `index.html`, `style.css`); no contract
+> change, no file gains or loses a property.)*
 
 > **v35 amendment (18 Sep 2026, no donate link inside the store app):**
 > **HTML surface only** — no data file gains, loses or changes a property.

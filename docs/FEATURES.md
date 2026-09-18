@@ -202,7 +202,10 @@ Three things it deliberately does not do:
      opinion about the reader's maps app is the thing this feature is against.
   4. **Nothing at all:** `google.com/maps/dir/?api=1&destination=…`, handed to
      the OS rather than to the in-app browser, so a universal link can still be
-     caught by an app and only otherwise opens a browser.
+     caught by an app and only otherwise opens a browser. And if any step's URL
+     is one the OS declines to open — a scheme it claimed to know and then
+     refused — that same web URL opens in the in-app browser instead, so the
+     cascade has no branch that ends in nothing happening.
 
   No step names a travel mode. A reader pushing a pram and a reader driving to
   the next town get the same link, and the maps app asks them. The website and
@@ -459,6 +462,52 @@ phone, beside the last good copy, and it replaces that copy only once it has par
 drawn from that file with a network and without one, so a copy that cannot be read shows on the
 first day, not in the basement. (Build 18 handed the 18 MB across the bridge as one string and
 came up in airplane mode with the city and no pins.)
+
+The loader also keeps its own clock — twenty seconds for the download and the fallback fetch
+together, after which the copy on the phone answers. Until build 19 it had no bound at all, and
+that, not the storing, is why builds 18 and 19 both came up in airplane mode with the saved city
+drawn and no pins: a request into a black hole is not refused, it is left unanswered, and iOS and
+WebKit will sit on one for as long as it takes. Measured in the simulator against an address that
+drops packets, the native download took 75 s per file and the four fallback fetches, which WebKit
+serialises per host, took 975 to 1200 s; the map drew at once, because a saved city is read off
+the phone and owes the network nothing, and the pins arrived twenty-one minutes later.
+
+**Letting go is not cancelling.** The download the clock gave up on keeps running, and when it
+lands it is parsed and promoted to the good copy anyway — nothing waits for it, the pins were
+drawn from the phone seconds earlier. That matters more than it sounds: without it, a link merely
+*slow* rather than dead would abandon its download on every single launch, read the same stored
+copy it read last time, and freeze the map on it for good. The service worker the eight seconds
+below come from makes the same call — its timed-out request still stores the response it
+eventually gets. A file that does not parse is deleted instead, never promoted, because `.new` is
+itself a file the loader reads. And it waits for the stored read to finish before it moves
+anything: promoting renames the very two files that read is working through, and on iOS renaming
+onto an existing file means unlinking the old one first — done underneath a reader, that is how a
+link finishing *just* after the clock would end up with no pins at all. A first launch too slow for
+the clock draws an empty map once; the launch after it has the data.
+
+A known rough edge: a reader on a slow-but-working link is told "Offline — the map is showing
+stored data", because `fromStore` is what the toast keys on and the copy is indeed what they are
+looking at. It is not wrong, only unkind. Saying it better means a new string in 32 languages,
+so it waits.
+
+How long that clock runs depends on what the waiting is worth, and a `stat` — not a parse — asks
+the question: is there a copy on the phone at all? If there is, it is read in under a tenth of a
+second and the network is racing something that has already won, so it gets **eight seconds**, the
+same number the website's service worker has always used for the same trade. If there is nothing
+stored, there is nothing to cut to and an empty map helps nobody, so the download keeps the long
+rope. And a reader the OS already reports as offline waits for nothing at all: `navigator.onLine`
+lies in one direction only — a Wi-Fi with no internet still says "online" — so a `false` is worth
+acting on, and the copy is read before any request is made. With no copy there is nothing to
+shortcut to, and that case goes the long way regardless.
+
+At the foot of the offline dialog, **in the app only**, sits a small monospace block: for each of
+the four dataset files, which of the loader's paths actually answered this launch (download,
+fetch, stored, stored-new, none), how long it took, what the OS said about the network, and the
+size of the stored copy — under the shell pin. It is English and untranslated on purpose, because
+it is a TestFlight aid rather than a feature: a tester whose map comes up without pins can say
+which step produced that in one message, instead of one build per guess. Nothing in it is fetched,
+stored or sent; every number is one the app already had in hand. On the website the block is
+empty, and `:empty` keeps it out of the layout.
 
 One thing the app never shows is the Ko-fi link: Apple wants a tip for the developer to go
 through in-app purchase, and the developer account is declared a non-trader because the app has
