@@ -479,8 +479,11 @@ drawn from the phone seconds earlier. That matters more than it sounds: without 
 copy it read last time, and freeze the map on it for good. The service worker the eight seconds
 below come from makes the same call — its timed-out request still stores the response it
 eventually gets. A file that does not parse is deleted instead, never promoted, because `.new` is
-itself a file the loader reads. And a first launch too slow for the clock draws an empty map once;
-the launch after it has the data.
+itself a file the loader reads. And it waits for the stored read to finish before it moves
+anything: promoting renames the very two files that read is working through, and on iOS renaming
+onto an existing file means unlinking the old one first — done underneath a reader, that is how a
+link finishing *just* after the clock would end up with no pins at all. A first launch too slow for
+the clock draws an empty map once; the launch after it has the data.
 
 A known rough edge: a reader on a slow-but-working link is told "Offline — the map is showing
 stored data", because `fromStore` is what the toast keys on and the copy is indeed what they are
@@ -499,7 +502,7 @@ shortcut to, and that case goes the long way regardless.
 
 At the foot of the offline dialog, **in the app only**, sits a small monospace block: for each of
 the four dataset files, which of the loader's paths actually answered this launch (download,
-fetch, stored, stored .new, none), how long it took, what the OS said about the network, and the
+fetch, stored, stored-new, none), how long it took, what the OS said about the network, and the
 size of the stored copy — under the shell pin. It is English and untranslated on purpose, because
 it is a TestFlight aid rather than a feature: a tester whose map comes up without pins can say
 which step produced that in one message, instead of one build per guess. Nothing in it is fetched,

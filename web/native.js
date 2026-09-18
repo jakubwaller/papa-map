@@ -192,7 +192,7 @@ export async function loadJSONNative(url, io = nativeIO(), {
   note.bytes = bytes;
 
   const stored = async () => {
-    for (const [copy, s] of [[path, "stored"], [fresh, "stored .new"]]) {
+    for (const [copy, s] of [[path, "stored"], [fresh, "stored-new"]]) {
       try {
         const json = await io.read(copy);
         step(s);
@@ -213,7 +213,17 @@ export async function loadJSONNative(url, io = nativeIO(), {
   }
 
   const net = budget(bytes == null ? netMs : copyMs);
-  const running = io.download(SITE + url, fresh);
+  // Always a promise, never a throw. A missing Filesystem plugin makes
+  // `fs.downloadFile` a synchronous TypeError, and thrown from out here — it
+  // has to be started before the try, so that the clock can let go of it and
+  // still leave something to hold — it would reject the whole load, and
+  // boot()'s Promise.all with it, rather than fall through to the page's own
+  // fetch the way the comment above this function promises. (`io.size` hides
+  // the same missing plugin behind a null, so nothing upstream would notice.)
+  const running = (async () => io.download(SITE + url, fresh))();
+  // A download the clock let go of, held until the read below is done with the
+  // two files a promotion would move. See the wait at the end.
+  let late = null;
   let json;
   try {
     await net(running);
@@ -224,9 +234,9 @@ export async function loadJSONNative(url, io = nativeIO(), {
   } catch {
     // Two ways to get here, and only one of them leaves work behind: the
     // download may have failed, or the clock may have let go of one that is
-    // still running. The second gets a continuation, or a slow link would
+    // still running. The second is worth coming back to, or a slow link would
     // never refresh the copy at all.
-    if (net.spent()) promoteLate(io, running, fresh, path);
+    if (net.spent()) late = running;
   }
   if (json !== undefined) {
     // A swap that fails costs nothing today and nothing offline: the data is
@@ -247,6 +257,15 @@ export async function loadJSONNative(url, io = nativeIO(), {
     } catch { /* no network, or none that answers */ }
   }
   const hit = await stored();
+  // Only now, and not in the catch above. Promoting moves the very two files
+  // the read has just been working through, and on iOS a rename over an
+  // existing destination is refused, so the ordinary promotion is delete
+  // `path` then rename `.new` onto it. Attached any earlier, a download that
+  // landed while an 18 MB read was in flight — seconds, on a phone — would
+  // unlink one file and consume the other underneath it, and a reader on a
+  // link that finishes just after the clock would get no pins at all: the
+  // exact failure this whole change exists to remove.
+  if (late) promoteLate(io, late, fresh, path);
   if (hit) return hit;
   step("none");
   return null;

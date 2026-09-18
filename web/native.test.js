@@ -261,6 +261,34 @@ test("a late download that does not parse is dropped and the good copy stands", 
   assert.ok(!(`${COPY}.new` in files), "and does not stay to be read as a fallback");
 });
 
+// The promotion moves the very two files the stored read is working through,
+// and on iOS a rename over an existing destination is refused, so the ordinary
+// promotion is: delete `path`, then rename `.new` onto it. Run while an 18 MB
+// read is in flight — seconds, on a phone — that unlinks one file and consumes
+// the other underneath the reader, and a link finishing just after the clock
+// would leave the map with no pins at all: the very failure being fixed here.
+test("a download landing mid-read is promoted only once the read has finished", async () => {
+  const files = { [COPY]: { n: 0 } }, lands = {};
+  const io = slowIO(files, lands);
+  const order = [];
+  const read = io.read, replace = io.replace;
+  io.read = async (p) => {
+    if (p === COPY) {
+      lands.settle({ n: 9 });                               // it lands mid-read
+      await new Promise((r) => setTimeout(r, 20));
+      order.push("the copy was read whole");
+    }
+    return read(p);
+  };
+  io.replace = async (from, to) => { order.push("and only then replaced"); return replace(from, to); };
+
+  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, BRIEF),
+                   { json: { n: 0 }, fromStore: true }, "the reader still got their pins");
+  await new Promise((r) => setTimeout(r, 30));
+  assert.deepEqual(order, ["the copy was read whole", "and only then replaced"]);
+  assert.deepEqual(files[COPY], { n: 9 }, "and the promotion still happened");
+});
+
 test("with the clock already spent the fallback fetch is never issued", async () => {
   const io = fakeIO({ hangs: ["download"], files: { [COPY]: { n: 0 } } });
   await loadJSONNative("data/changing_tables.geojson", io, BRIEF);
@@ -290,7 +318,7 @@ test("the note names the path that answered, with the size of what was on the ph
   await loadJSONNative("data/stats.json",
                        fakeIO({ net: false, files: { "papamap/data/stats.json.new": { n: 2 } } }),
                        { note: half, ...BRIEF });
-  assert.equal(half.step, "stored .new", "the half-swapped file names itself as one");
+  assert.equal(half.step, "stored-new", "the half-swapped file names itself as one");
 
   const nothing = {};
   await loadJSONNative("data/stats.json", fakeIO({ net: false }), { note: nothing, ...BRIEF });
@@ -318,13 +346,13 @@ test("the diagnostics block lines the four files up under the pin", () => {
 test("even the widest row the loader can write fits the block", () => {
   const worst = [{
     file: "changing_tables.geojson",   // the longest of the four
-    step: "stored .new",               // the longest of the five steps
+    step: "stored-new",               // the longest of the five steps
     ms: 120014,                        // six digits
     online: false,
     bytes: 18489463,                   // eight digits
   }];
   const lines = formatDiagnostics(worst, "app23").split("\n");
-  assert.equal(lines[1], "changing_tables stored .new 120014ms 18489463 B");
+  assert.equal(lines[1], "changing_tables stored-new 120014ms 18489463 B");
   for (const line of lines) {
     assert.ok(line.length <= MAX_COLS, `"${line}" is ${line.length} of ${MAX_COLS} columns`);
   }
@@ -333,6 +361,20 @@ test("even the widest row the loader can write fits the block", () => {
 test("a failing downloader with a network there still draws the live map", async () => {
   const io = fakeIO({ downloader: false, files: { [COPY]: { n: 0 } } });
   assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io), { json: { n: 1 }, fromStore: false });
+});
+
+// Not a rejection but a throw, which is what a missing Filesystem plugin gives:
+// `fs.downloadFile` is then undefined and calling it raises on the spot. The
+// download has to be started outside the try that guards it — the clock must be
+// able to let go of it and still leave something to come back to — so it is
+// that start which must not be allowed to throw past the loader and take
+// boot()'s Promise.all down with it. The test above passes either way; this one
+// does not, because its fake is not an async function.
+test("a downloader that is not there at all still lets the page's own fetch draw the map", async () => {
+  const io = fakeIO({ files: { [COPY]: { n: 0 } } });
+  io.download = () => { throw new TypeError("fs.downloadFile is not a function"); };
+  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, BRIEF),
+                   { json: { n: 1 }, fromStore: false });
 });
 
 // ---- externalUrl: which links are told they are opened inside the app ----
