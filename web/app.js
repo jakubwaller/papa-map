@@ -1626,16 +1626,19 @@ function openPin(osmUrl) {
   openPopup(f);
 }
 
-// The five assignments boot() makes once the four files are in hand, factored
-// out so a later background refresh (watchRefresh, below) can make them again
-// without duplicating boot's own body. Never moves the map — no fitHome,
-// no flyTo/jumpTo — because a reader who is not looking at boot's first paint
-// any more should not have their view pulled out from under them for a
-// dataset that is rebuilt once a night. If a popup is open, its object is
-// looked up again by osm_url and, when it still exists, redrawn in place
-// (setHTML, not a fresh openPopup — that would panPopupIntoView and could
-// pan); gone from the new data entirely, the popup is simply closed rather
-// than left showing a table that is no longer there.
+// The five assignments a set of four files turns into on screen — boot()'s
+// own first draw and a later background refresh (watchRefresh, below) both
+// call this rather than each keeping its own copy, so the two can never
+// drift apart. Never moves the map — no fitHome, no flyTo/jumpTo — because a
+// reader who is not looking at boot's first paint any more should not have
+// their view pulled out from under them for a dataset that is rebuilt once a
+// night; boot() calls fitHome() itself, once, after this returns. If a popup
+// is open, its object is looked up again by osm_url and, when it still
+// exists, redrawn in place (setHTML, not a fresh openPopup — that would
+// panPopupIntoView and could pan); gone from the new data entirely, the
+// popup is simply closed rather than left showing a table that is no longer
+// there. Before boot's own first call, `popupObj` is always null — nothing
+// is open yet — so this branch is a no-op the first time through.
 function applyDataset(fc, places, stats, areas) {
   allFeatures = loadFeatures(fc);
   allPlaces = loadPlaces(places);
@@ -1695,18 +1698,18 @@ async function boot() {
     loadJSON("data/stats.json"),
     loadJSON("data/areas.json"),
   ]);
-  const [fc, places, stats, areas] = loaded.map((l) => l.json);
-  allFeatures = loadFeatures(fc);
-  allPlaces = loadPlaces(places);
-  renderStats(stats);
-  areaIndex = Array.isArray(areas) ? areas : null;
-  updateRegionsLink();
-  map.on("moveend", updateRegionsLink);
-  renderChips();
-  positionZoomCtrl();  // topbar height depends on the rendered strip
-  fitHome();           // ...and so does the home view's top padding
+  // dataReady before applyDataset, not after: its own refreshPins() call
+  // reads the flag, and finding it still false here would skip the very
+  // first paint — the count text included, not only the pins.
   dataReady = true;
-  refreshPins();
+  map.on("moveend", updateRegionsLink);   // registered once, here — applyDataset never does
+  applyDataset(...loaded.map((l) => l.json));
+  // Only the topbar's rendered height, which applyDataset's own
+  // renderChips()/positionZoomCtrl() have already settled by the time it
+  // returns — applyDataset itself never calls this, so a later background
+  // refresh (watchRefresh, below) never pulls the view out from under a
+  // reader who has since panned somewhere else.
+  fitHome();
   // On the website `fromStore` is still the service worker's honest "you are
   // looking at old data" signal (X-PapaMap-Source: cache) and the toast fires
   // on it exactly as it always has. In the app the copy draws on every
@@ -1717,7 +1720,8 @@ async function boot() {
   // A return from OSM's consent screen lands here with ?code= and ?state=.
   await completeLogin(location.href);
   if (isNative()) {
-    shareTables();
+    // applyDataset above already shared the tables with the widget and the
+    // shortcut; the settings are boot's own to hand over.
     shareSettings({ mode, lang });
     if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
     watchRefresh(loaded);   // runs on; boot does not wait for it

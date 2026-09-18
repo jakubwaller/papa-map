@@ -78,19 +78,36 @@
 > megabytes, and the dataset is rebuilt once a night, so most launches find
 > no difference at all), `{ ok: true, json: null }` when it found the same
 > thing, `{ ok: false, json: null }` when nothing fresh could be had — the
-> download failed, or what it fetched would not parse. Bounded by the native
-> downloader's own idle timeout (`NET_MS`, 20 s), so a black-holed refresh
-> still settles. With no copy on the phone the loader is unchanged: `NET_MS`
-> for the download, then the page's own fetch, then `null`.
+> download failed, or what it fetched would not parse. Present on every
+> answer but `null` itself — a load with no copy to refresh (`fromStore:
+> false`, the download or the page's own fetch drew fresh data directly)
+> still gets one, the trivial `{ ok: true, json: null }`, so app.js never has
+> to ask which shape it got. Bounded by the native downloader's own idle
+> timeout (`NET_MS`, 20 s), so a black-holed refresh still settles. With no
+> copy on the phone the loader is unchanged: `NET_MS` for the download, then
+> the page's own fetch, then `null`.
+>
+> **The copy just drawn may itself be `.new`** (`path` missing or would not
+> parse, `.new` the only copy there was), and the download the refresh starts
+> writes into that same file — so before it does, the refresh promotes the
+> drawn `.new` to `path` first. Without that, the download's own write would
+> land on the reader's only copy before anything got the chance to compare
+> it, and a response that happened to read the same, or a 200 that was not
+> JSON at all (a captive portal's login page), would delete it outright. A
+> promotion that itself fails skips the download for that launch and reports
+> the refresh failed instead: a good copy already on the phone outranks a
+> chance at a fresher one.
 >
 > `web/app.js` draws from the copies exactly as before, then watches all four
 > `refreshed` promises together (`watchRefresh`); once every one has settled,
-> whichever changed is applied exactly once — `applyDataset`, the same five
-> assignments `boot()` makes, factored out so the two never drift apart. It
-> never moves the map and keeps an open popup open (re-rendered in place by
-> `osm_url`, and only closed if that object is no longer in the new data),
-> and it hands the refreshed dataset to the widget and the Siri shortcut the
-> same way `boot()` does (`shareDataset`). The "Offline" toast, which used to
+> whichever changed is applied exactly once — `applyDataset`, the five
+> assignments a loaded dataset turns into on screen, which `boot()`'s own
+> first draw calls too rather than keeping its own copy, so the two can never
+> drift apart. It never moves the map and keeps an open popup open
+> (re-rendered in place by `osm_url`, and only closed if that object is no
+> longer in the new data), and it hands the refreshed dataset to the widget
+> and the Siri shortcut the same way `boot()` does (`shareDataset`, inside
+> `applyDataset` itself). The "Offline" toast, which used to
 > fire whenever `fromStore` was true — every single launch, under this rule —
 > now fires only once every one of the four refreshes has settled and **not
 > one** found anything fresh; a refresh still running, or one that landed

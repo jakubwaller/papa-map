@@ -210,19 +210,27 @@ test("a copy on the phone draws at once, however long the background refresh tak
   assert.equal(typeof r.refreshed.then, "function", "a promise, not awaited here — it may never settle");
 });
 
-test("only .new on the phone: it is read, and the refresh does not start until that read is done", async () => {
+test("only .new on the phone: it is read, promoted out of .new before anything downloads, and the refresh does not start until that read is done", async () => {
   const files = { [`${COPY}.new`]: { n: 0 } };
   const io = fakeIO({ files, body: { n: 9 } });
   const order = [];
-  const text = io.text, download = io.download;
+  const text = io.text, download = io.download, replace = io.replace;
   io.text = async (p) => { const v = await text(p); order.push(`text ${p}`); return v; };
+  io.replace = async (from, to) => { const v = await replace(from, to); order.push(`replace ${to}`); return v; };
   io.download = async (u, p) => { order.push(`download ${p}`); return download(u, p); };
 
   const r = await loadJSONNative("data/changing_tables.geojson", io);
   assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 0 }, fromStore: true });
-  assert.deepEqual(order, [`text ${COPY}.new`, `download ${COPY}.new`],
-                   "the read of the only copy there is finishes before the download that would overwrite it starts");
-  assert.deepEqual(await r.refreshed, { ok: true, json: { n: 9 } });
+  const refreshed = await r.refreshed;   // waited on before reading `order`: the promotion and the
+                                          // download it guards both run unawaited by loadJSONNative
+                                          // itself, so `order` is only complete once this settles.
+  // The read of the only copy there is finishes, that copy is promoted to
+  // `path` (so the download about to write into `.new` cannot land on it),
+  // and only then does the download itself begin. What follows (a second
+  // text read and a second promotion) is the download's own landing, covered
+  // by the background-refresh tests below.
+  assert.deepEqual(order.slice(0, 3), [`text ${COPY}.new`, `replace ${COPY}`, `download ${COPY}.new`]);
+  assert.deepEqual(refreshed, { ok: true, json: { n: 9 } });
   assert.deepEqual(files[COPY], { n: 9 });
   assert.ok(!(`${COPY}.new` in files));
 });
@@ -232,6 +240,44 @@ test("a copy beats a .new beside it, the same order a promotion respects", async
   const r = await loadJSONNative("data/changing_tables.geojson", io);
   assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 0 }, fromStore: true });
   assert.deepEqual(await r.refreshed, { ok: false, json: null });
+});
+
+// ---- The one copy on the phone is `.new`, and the refresh must not lose it ----
+// The download the refresh starts writes into `fresh` (== `.new`), which in
+// this situation is also the file the copy was just read from. Promoting it
+// to `path` before the download runs is what keeps every rule below —
+// "unchanged, remove `fresh`", "garbage, remove `fresh`" — from deleting the
+// reader's only copy instead of a spare one.
+test(".new-only, the download turns out identical: promoted to path first, then thrown away, not the copy", async () => {
+  const files = { [`${COPY}.new`]: { n: 0 } };
+  const io = fakeIO({ files, body: { n: 0 } });   // the same content, word for word
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 0 }, fromStore: true });
+  assert.deepEqual(await r.refreshed, { ok: true, json: null });
+  assert.deepEqual(files, { [COPY]: { n: 0 } }, "the copy now lives at `path`, and nothing is left at `.new`");
+});
+
+test(".new-only, the download is a 200 that is not JSON: the copy survives at path, reported failed", async () => {
+  const files = { [`${COPY}.new`]: { n: 0 } };
+  const io = fakeIO({ files, body: "garbage" });   // a captive portal's login page, say
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 0 }, fromStore: true });
+  assert.deepEqual(await r.refreshed, { ok: false, json: null });
+  assert.deepEqual(files, { [COPY]: { n: 0 } },
+                   "promoted to `path` before the garbage response could delete the only copy there was");
+});
+
+test(".new-only, the promotion itself fails: no download is risked, and the copy is left exactly where it was", async () => {
+  const files = { [`${COPY}.new`]: { n: 0 } };
+  const io = fakeIO({ files, replaceFails: true });
+  const calls = [];
+  const download = io.download;
+  io.download = async (u, p) => { calls.push(p); return download(u, p); };
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 0 }, fromStore: true });
+  assert.deepEqual(await r.refreshed, { ok: false, json: null });
+  assert.deepEqual(calls, [], "a good copy is worth more than a chance at a fresher one: no download is even tried");
+  assert.deepEqual(files, { [`${COPY}.new`]: { n: 0 } }, "still readable, right where it was");
 });
 
 // ---- The background refresh a stored copy starts ----

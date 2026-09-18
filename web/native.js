@@ -148,11 +148,26 @@ function promoteLate(io, running, fresh, path) {
 // learn "nothing changed" is exactly the cost a nightly-rebuilt dataset
 // should not pay on a phone on every single launch. `oldText` is read by the
 // caller before this is ever invoked, in the course of the read that already
-// has to happen to draw the copy — reading it again after the download lands
-// would, when the only copy on the phone was `.new`, be reading the very file
-// the download just wrote over.
-function backgroundRefresh(io, url, oldText, path, fresh) {
+// has to happen to draw the copy.
+//
+// `drawnFrom` is which file that read came from — `path` ordinarily, but
+// `.new` when that was the only copy there was (`path` missing or would not
+// parse). The download below writes into `fresh` (== `.new`), so when the
+// copy just drawn lives there too, it has to become `path` FIRST, before
+// anything else touches `fresh`: every check past this point — "garbage,
+// remove `fresh`", "unchanged, remove `fresh`" — would otherwise delete the
+// reader's only copy instead of a spare one, on a 200 that turns out to be a
+// captive portal's login page, or simply because tonight's build is byte for
+// byte what a stale `.new` already held. A promotion that itself fails is
+// treated as a reason not to risk the download at all this launch and to
+// report the refresh failed instead: a good copy already on the phone,
+// wherever it is filed, is worth more than a chance at a fresher one.
+function backgroundRefresh(io, url, oldText, path, fresh, drawnFrom) {
   return (async () => {
+    if (drawnFrom === fresh) {
+      try { await io.replace(fresh, path); }
+      catch { return { ok: false, json: null }; }
+    }
     try { await io.download(url, fresh); }
     catch { return { ok: false, json: null }; }
     let text;
@@ -212,15 +227,19 @@ function nativeIO(fs = plugin("Filesystem")) {
 // half keeps the service worker's contract, `{ json, fromStore }`
 // (X-PapaMap-Source); `refreshed` is new, a promise of what the background
 // download found — see `backgroundRefresh` above for its three shapes. It is
-// only ever present when `fromStore` is true: a load that already drew fresh
-// data has nothing left to refresh, so it carries the trivial "nothing
-// changed" answer instead of nothing at all, which keeps app.js from having
-// to ask which shape it got.
+// present on every answer but `null` itself: a load that already drew fresh
+// data (`fromStore: false`, no copy to refresh) has nothing left to ask the
+// network for, so it carries the trivial "nothing changed" answer rather than
+// nothing at all, which keeps app.js from having to ask which shape it got.
 //
 // A copy, when there is one, answers before the download that will refresh it
 // even starts: `.new` is itself a file this can read (the only copy there is,
 // the launch after one too slow for the old clock), and starting the download
 // before that read finishes would let it overwrite the very file being read.
+// `backgroundRefresh` carries that same care one step further for exactly
+// this case — see its own comment for why the drawn copy is promoted out of
+// `.new` before the download is even started, not only read out of the way
+// of it.
 //
 // With nothing stored there is nothing to draw and nothing to shortcut to: the
 // download gets NET_MS, then the page's own fetch shares what is left of that
@@ -265,7 +284,7 @@ export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = 
     return {
       json: hit.json,
       fromStore: true,
-      refreshed: backgroundRefresh(io, SITE + url, hit.text, path, fresh),
+      refreshed: backgroundRefresh(io, SITE + url, hit.text, path, fresh, hit.copy),
     };
   }
 
