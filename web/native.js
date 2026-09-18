@@ -209,8 +209,10 @@ function nativeIO(fs = plugin("Filesystem")) {
 // the pins are the point, and a copy on the phone that is read in 90 ms must
 // not queue behind a request that is never going to be answered.
 //
-// `note` is filled in on the way through and is the diagnostics block's whole
-// source (see formatDiagnostics). It is an out-parameter rather than a return
+// `note` is filled in on the way through: which path answered, how long it
+// took, what was said about the network, how big the stored copy is. The
+// tests read it; the page does not (the TestFlight block that printed it, in
+// builds 20 and 21, is gone). It is an out-parameter rather than a return
 // value so that the { json, fromStore } contract app.js reads — and the `null`
 // that means "nothing anywhere" — are exactly what they were.
 export async function loadJSONNative(url, io = nativeIO(), {
@@ -310,40 +312,6 @@ export async function loadJSONNative(url, io = nativeIO(), {
   if (hit) return hit;
   step("none");
   return null;
-}
-
-// ---- The diagnostics block (the app's offline dialog, TestFlight only) ----
-// Deliberately English, deliberately untranslated, deliberately ugly: this is
-// a line for a bug report, not a feature. It says which of the loader's paths
-// actually produced each file this launch, how long that took, what the OS
-// said about the network, and how big the stored copy is — the four things
-// that would have settled the airplane-mode bug in one message instead of
-// three TestFlight builds. Nothing here is fetched, stored or sent; every
-// number is one the app already had in hand.
-// Every column is only as wide as this launch needs, and the extension goes.
-// The budget is MAX_COLS monospace characters, which is about what a phone
-// shows at this size: a wider line wraps, and a wrapped line hides the very
-// number the block exists to show. The worst case that has to fit is the
-// longest file name, the longest step, six digits of milliseconds and eight
-// of bytes — 47 columns, which is where the single separating space comes
-// from. The test pins that row exactly.
-export const MAX_COLS = 48;
-export function formatDiagnostics(notes, pin) {
-  if (!notes.length) return "";
-  const cell = (pick) => {
-    const w = Math.max(...notes.map((n) => String(pick(n)).length));
-    return (n) => String(pick(n)).padEnd(w);
-  };
-  const name = cell((n) => String(n.file).replace(/\.(geojson|json)$/, ""));
-  const step = cell((n) => n.step);
-  const took = cell((n) => `${n.ms}ms`);
-  const rows = notes.map((n) =>
-    `${name(n)} ${step(n)} ${took(n)} ${n.bytes == null ? "no copy" : `${n.bytes} B`}`);
-  // Which answer the launch acted on is the whole point of the line now: a
-  // reader who waited out the clock with (navigator) on screen is a reader
-  // whose phone lied, and that is a different bug from one with (native).
-  const { online, onlineFrom } = notes[0];
-  return [`${pin} · online=${online} (${onlineFrom})`, ...rows].join("\n");
 }
 
 // ---- Location ----

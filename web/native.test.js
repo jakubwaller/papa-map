@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { locateNative, loadJSONNative, formatDiagnostics, MAX_COLS,
-         connectivity, budget } from "./native.js";
+import { locateNative, loadJSONNative, connectivity, budget } from "./native.js";
 
 // A Geolocation plugin that plays back fixes: [ms, accuracy in metres].
 function fakeGeo(fixes, { permission = "granted" } = {}) {
@@ -307,7 +306,7 @@ test("with the clock already spent the fallback fetch is never issued", async ()
             "a second copy of the dataset, over a metered link, that nobody would wait for");
 });
 
-// ---- The note, and the block the offline dialog prints from it ----
+// ---- The note: which of the loader's paths answered ----
 test("the note names the path that answered, with the size of what was on the phone", async () => {
   const fresh = {};
   await loadJSONNative("data/stats.json", fakeIO(), { note: fresh });
@@ -382,41 +381,6 @@ test("a native offline answer means the loader asks the network nothing", async 
                    { json: { n: 0 }, fromStore: true });
   assert.deepEqual(io.log, [`read ${COPY}`], "no download, no fetch, no clock");
   assert.equal(note.onlineFrom, "native");
-});
-
-test("the diagnostics block lines the four files up under the pin", () => {
-  const notes = [
-    { file: "changing_tables.geojson", step: "stored", ms: 118, online: false,
-      onlineFrom: "native", bytes: 18489463 },
-    { file: "stats.json", step: "none", ms: 20014, online: false,
-      onlineFrom: "native", bytes: null },
-  ];
-  assert.equal(formatDiagnostics(notes, "appN"), [
-    "appN · online=false (native)",
-    "changing_tables stored 118ms   18489463 B",
-    "stats           none   20014ms no copy",
-  ].join("\n"));
-  assert.equal(formatDiagnostics([], "appN"), "", "nothing loaded, nothing to say");
-});
-
-// Nothing wider than a phone: the byte count is the number the block exists to
-// show, and a line that wraps is one that hides it. The case to hold is not a
-// typical launch but the widest row the loader can produce — the longest file
-// name, the longest step, six digits of milliseconds and eight of bytes.
-test("even the widest row the loader can write fits the block", () => {
-  const worst = [{
-    file: "changing_tables.geojson",   // the longest of the four
-    step: "stored-new",                // the longest of the five steps
-    ms: 120014,                        // six digits
-    online: false,
-    onlineFrom: "navigator",           // the longer of the two sources
-    bytes: 18489463,                   // eight digits
-  }];
-  const lines = formatDiagnostics(worst, "appN").split("\n");
-  assert.equal(lines[1], "changing_tables stored-new 120014ms 18489463 B");
-  for (const line of lines) {
-    assert.ok(line.length <= MAX_COLS, `"${line}" is ${line.length} of ${MAX_COLS} columns`);
-  }
 });
 
 test("a failing downloader with a network there still draws the live map", async () => {

@@ -52,6 +52,12 @@
 > was time left, so the download it had just let go of was not kept for
 > promotion and a fallback fetch was issued with no time to hear it. No
 > contract change, no file gains or loses a property.)*
+> *(18 Sep 2026, last of the day: pin `app26` → `app27`. The untranslated
+> diagnostics block at the foot of the app's offline dialog (pins `app23` and
+> `app24` above) is removed, with `formatDiagnostics`, its `<pre>` and its
+> style: it was a TestFlight aid, and it had done its job. The loader's `note`
+> out-parameter stays for the tests. No contract change, no file gains or
+> loses a property.)*
 
 > **v35 amendment (18 Sep 2026, no donate link inside the store app):**
 > **HTML surface only** — no data file gains, loses or changes a property.

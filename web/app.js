@@ -7,19 +7,19 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app26";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app27";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app26";
+         langUrl } from "./i18n.js?v=app27";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app26";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app27";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount, formatDiagnostics, connectivity } from "./native.js?v=app26";
+         formatMB, citiesToMount, connectivity } from "./native.js?v=app27";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -1546,33 +1546,18 @@ whenStyleReady(() => {
 // internet — or a basement with one bar — says "online" all the same.
 let fromStore = false;
 
-// One note per dataset file, filled in by the app's loader: which of its paths
-// answered, how long it took, what the OS said about the network, how big the
-// stored copy is. The offline dialog prints them (native.js,
-// formatDiagnostics); on the website nothing ever writes to this.
-const loadNotes = [];
 // What the phone says about the network, asked once a launch (native.js,
 // connectivity) and handed to all four loads. On the website it stays what
 // navigator says, which is all the website ever had.
 let conn = { online: true, from: "navigator" };
-// The shell pin, taken from this module's own URL rather than written out a
-// second place to forget: index.html loads it as app.js?v=appNN.
-const SHELL_PIN = new URL(import.meta.url).searchParams.get("v") ?? "unpinned";
 
 async function loadJSON(url) {
   // In the app there is no service worker: native.js fetches from
   // papamap.de and keeps the last good copy in the app's data directory,
   // answering the same { json, fromStore } the header below encodes.
   if (isNative()) {
-    // The note is filled in by the loader and read by nothing but the
-    // diagnostics block at the foot of the offline dialog. Listed before the
-    // await, not after: the four loads run together and land in whatever order
-    // the network and the disk settle on, and a block whose rows reshuffle
-    // between launches is a poor thing to compare two launches with.
-    const note = {};
-    loadNotes.push(note);
     const r = await loadJSONNative(url, undefined,
-                                   { note, online: conn.online, onlineFrom: conn.from });
+                                   { online: conn.online, onlineFrom: conn.from });
     if (r?.fromStore) fromStore = true;
     return r?.json ?? null;
   }
@@ -1805,13 +1790,6 @@ async function mountSavedCities() {
 // into the button while a download runs.
 async function renderOfflineList() {
   offlineList.replaceChildren();
-  // Not a feature and not translated: a block a tester can read out or
-  // screenshot when the map comes up without pins, so the next build is
-  // aimed rather than guessed. See formatDiagnostics in native.js. Optional
-  // chaining because it is an aid, and an aid missing from some shell must
-  // not be what stops the city list — the dialog's actual job — from drawing.
-  const diag = document.getElementById("offline-diag");
-  if (diag) diag.textContent = formatDiagnostics(loadNotes, SHELL_PIN);
   const [cat, saved] = await Promise.all([cityCatalogue(), savedCities()]);
   if (!cat?.cities?.length) {
     const li = document.createElement("li");
