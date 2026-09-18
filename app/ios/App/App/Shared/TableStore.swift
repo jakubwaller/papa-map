@@ -104,26 +104,29 @@ public enum TableStore {
 //
 // Transient by construction, because a slot that outlives its tap is a map
 // that jumps to yesterday's table: one value, read once and removed whatever
-// its age, and ignored when it is older than `maxAge`. Only `papamap:` URLs
-// go in, so nothing else can be handed to the page through it.
+// its age, and ignored when it is older than `maxAge`. Only the table link
+// (`papamap://table…`) goes in, so nothing else can be handed to the page
+// through it.
 public enum PendingTable {
     public static let maxAge: TimeInterval = 120
     private static let urlKey = "url", atKey = "at"
 
+    private static func isTableLink(_ url: URL) -> Bool { url.scheme == "papamap" && url.host == "table" }
+
     public static func store(_ url: URL, now: Date = Date()) {
-        guard url.scheme == "papamap" else { return }
+        guard isTableLink(url) else { return }
         PapaMap.defaults?.set([urlKey: url.absoluteString, atKey: now.timeIntervalSince1970],
                               forKey: PapaMap.pendingTableKey)
         NotificationCenter.default.post(name: .papaMapPendingTable, object: nil)
     }
 
     public static func consume(now: Date = Date()) -> URL? {
-        guard let defaults = PapaMap.defaults else { return nil }
-        let row = defaults.dictionary(forKey: PapaMap.pendingTableKey)
+        guard let defaults = PapaMap.defaults,
+              let row = defaults.dictionary(forKey: PapaMap.pendingTableKey) else { return nil }
         defaults.removeObject(forKey: PapaMap.pendingTableKey)
-        guard let row, let string = row[urlKey] as? String, let at = row[atKey] as? Double,
+        guard let string = row[urlKey] as? String, let at = row[atKey] as? Double,
               now.timeIntervalSince1970 - at < maxAge,
-              let url = URL(string: string), url.scheme == "papamap" else { return nil }
+              let url = URL(string: string), isTableLink(url) else { return nil }
         return url
     }
 }
