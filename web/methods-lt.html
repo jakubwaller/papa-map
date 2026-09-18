@@ -194,10 +194,21 @@ nei <code>no</code>, nei <code>limited</code> — wiki tai apibrėžia kaip „�
 tam skirtos vietos“. Kur yra aiškiai nurodyta <code>kids_area:indoor=no</code>, ji nusveria plikas
 <code>kids_area=yes</code>.</p>
 <p>Tai ženkliukas, o ne ketvirtas statusas. Vieta be šių žymų nereiškia, kad joje „nėra žaidimų
-kampelio“ — OSM tiesiog apie tai nieko nesako. Todėl čia nėra nei pilkos spalvos, nei kvietimo
-veikti: su <code>changing_table:location</code> tyla yra reikšminga, nes žinoma, kad stalas
-egzistuoja. Čia beveik kiekvienas objektas tyli, ir tai nereiškia nieko. Jei žinai žaidimų
-kampelį, jį vis tiek verta pridėti &mdash; OSM redaktoriuje, kaip <code>kids_area=yes</code>.</p>
+kampelio“ — OSM tiesiog apie tai nieko nesako. Todėl čia nėra pilkos spalvos.</p>
+<p>Būtent todėl apie tai klausia iššokantis langas. Prie kiekvienos smeigtuko, kur OSM nieko
+nesako apie žaidimų kampelį, nepriklausomai nuo jos spalvos, yra viena eilutė (po patalpomis, ten,
+kur smeigtukas klausia ir patalpos): <em>Žaidimų kampelis vaikams?</em>, su trimis atsakymais.
+<em>viduje</em> įrašo <code>kids_area:indoor=yes</code> kartu su <code>kids_area=yes</code>,
+<em>tik lauke</em> įrašo <code>kids_area=yes</code> kartu su <code>kids_area:indoor=no</code>,
+<em>nėra</em> įrašo <code>kids_area=no</code> &mdash; su tavo pačiu OSM paskyra, atskirame
+changeset'e, lygiai tas pačias žymas, kurias tam pačiam klausimui įrašo MapComplete. Klausimas
+yra apie žaidimų kampelį apskritai, ne tik vidinį: <code>kids_area=no</code> OSM reiškia „čia
+vaikams niekur nėra kur žaisti“, todėl kepykla su žaidimų aikštele sode gauna <em>tik lauke</em>
+vietoj klaidingo ne. Žiedas atsiras (arba liks nerodomas) per kitą naktinį build'ą. Niekas
+neklausiamas du kartus: įrašytas <code>kids_area</code> <em>arba</em>
+<code>kids_area:indoor</code>, kad ir kokia būtų reikšmė, pašalina klausimą. Prie
+<code>leisure=playground</code> be <code>indoor=yes</code> jis niekada neklausiamas &mdash; vieta
+<em>jau yra</em> vieta žaisti, tik ne viduje.</p>
 
 <h2>Žymė Vežimėlis</h2>
 <p>Žymė <em>Vežimėlis</em> rodo tik vietas, kurios OSM turi <code>wheelchair=yes</code>. <code>limited</code> (vienas laiptelis iki 7&nbsp;cm arba reikia pagalbos) ir vien <code>toilets:wheelchair=yes</code> nepakanka; abu vis tiek rodomi iššokančiame lange kartu su <code>wheelchair:description</code>. Vieta be žymos nėra neprieinama, OSM apie ją tiesiog nieko nesako, todėl žymė tik filtruoja ir nieko nespalvina. Mėlynus apskritimus (vietas su žaidimų kampeliu) žymė filtruoja taip pat: lieka tik tie, kurie turi <code>wheelchair=yes</code>.</p>

@@ -197,11 +197,22 @@ számít a <code>no</code> és a <code>limited</code> sem — ezt a wiki úgy ha
 <code>kids_area:indoor=no</code>, az felülírja az önmagában álló <code>kids_area=yes</code>
 címkét.</p>
 <p>Ez egy jelvény, nem egy negyedik státusz. Egy hely e címkék nélkül nem azt jelenti, hogy
-„nincs játszósarka” &mdash; az OSM egyszerűen nem mond róla semmit. Ezért itt nincs szürke szín
-és nincs felhívás sem: a <code>changing_table:location</code> esetében a csend sokatmondó, mert
-az asztal létezéséről tudunk. Itt viszont szinte minden objektum hallgat, és ez nem jelent semmit.
-Ha tudsz egy játszósarokról, nyugodtan add hozzá &mdash; az OSM szerkesztőjében,
-<code>kids_area=yes</code> címkeként.</p>
+„nincs játszósarka” &mdash; az OSM egyszerűen nem mond róla semmit. Ezért itt nincs szürke
+szín.</p>
+<p>Épp ezért kérdezi meg a felugró ablak. Minden pinen, ahol az OSM semmit sem mond a
+játszósarokról, a színétől függetlenül, egy sor jelenik meg (a helyiségek alatt, ott, ahol a pin
+a helyiséget is kérdezi): <em>Játszósarok gyerekeknek?</em>, három válasszal. <em>bent</em> beírja
+a <code>kids_area:indoor=yes</code> és <code>kids_area=yes</code> címkéket, <em>csak kint</em>
+beírja a <code>kids_area=yes</code> és <code>kids_area:indoor=no</code> címkéket, <em>nincs</em>
+beírja a <code>kids_area=no</code> címkét &mdash; a saját OSM-fiókod alatt, önálló changesetben,
+pontosan azokat a címkéket, amelyeket a MapComplete ugyanerre a kérdésre ír. A kérdés a
+játszósarokra általában vonatkozik, nem csak a beltérire: a <code>kids_area=no</code> az OSM-ben
+azt jelenti, hogy „itt sehol nem tudnak játszani a gyerekek”, így egy pékség, amelynek a
+kertjében játszótér van, <em>csak kint</em> választ kap, nem hibás nemet. A gyűrű megjelenik
+(vagy elmarad) a következő éjszakai buildnél. Senkit nem kérdeznek kétszer: egy rögzített
+<code>kids_area</code> <em>vagy</em> <code>kids_area:indoor</code>, bármi is az értéke, elveszi a
+kérdést. Egy <code>leisure=playground</code>-nél <code>indoor=yes</code> nélkül soha nem kérdezi
+meg &mdash; a hely <em>már</em> játszóhely, csak nem beltéri.</p>
 
 <h2>A Kerekesszék csip</h2>
 <p>A <em>Kerekesszék</em> csip csak azokat a helyeket mutatja, amelyeken az OSM-ben <code>wheelchair=yes</code> áll. A <code>limited</code> (egy legfeljebb 7&nbsp;cm-es lépcső, vagy segítség kell) és a <code>toilets:wheelchair=yes</code> önmagában nem elég; mindkettő így is megjelenik a felugró ablakban, a <code>wheelchair:description</code> mellett. Egy címke nélküli hely nem megközelíthetetlen, az OSM egyszerűen nem mond róla semmit, így a csip csak szűr, és semmit sem színez. A kék karikákat (játszósarokkal rendelkező helyek) a csip ugyanígy szűri: csak a <code>wheelchair=yes</code> címkéjűek maradnak.</p>

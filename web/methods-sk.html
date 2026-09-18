@@ -194,10 +194,21 @@ Nepočíta sa ani <code>no</code>, ani <code>limited</code> — wiki tú hodnotu
 &bdquo;hračky sú k dispozícii, ale bez vyhradenej plochy&ldquo;. Ak je niekde výslovne uvedené
 <code>kids_area:indoor=no</code>, má prednosť pred obyčajným <code>kids_area=yes</code>.</p>
 <p>Je to odznak, nie štvrtý stav. Miesto bez týchto tagov nemá &bdquo;žiadny detský
-kútik&ldquo; &mdash; OSM o ňom jednoducho nič nehovorí. Preto tu nie je žiadna sivá a žiadna výzva
-na akciu: pri <code>changing_table:location</code> je mlčanie výpovedné, pretože o existencii pultu
-je isté. Tu mlčí takmer každý objekt, a to neznamená nič. Ak detský kútik poznáš, jeho doplnenie je
-aj tak vítané &mdash; v editore OSM, ako <code>kids_area=yes</code>.</p>
+kútik&ldquo; &mdash; OSM o ňom jednoducho nič nehovorí. Preto tu nie je žiadna sivá.</p>
+<p>Presne preto sa na to pýta popup. Pri každom pine, kde OSM nič nehovorí o detskom kútiku, nech
+má akúkoľvek farbu, je jeden riadok (pod miestnosťami, tam, kde sa pin pýta aj na miestnosť):
+<em>Detský kútik?</em> s tromi odpoveďami. <em>vnútri</em> zapíše
+<code>kids_area:indoor=yes</code> spolu s <code>kids_area=yes</code>, <em>len vonku</em> zapíše
+<code>kids_area=yes</code> spolu s <code>kids_area:indoor=no</code>, <em>žiadny</em> zapíše
+<code>kids_area=no</code> &mdash; pod tvojím vlastným účtom OSM, vo vlastnom changesete, presne
+tie isté tagy, ktoré pre rovnakú otázku zapisuje MapComplete. Otázka sa týka detského kútika
+vôbec, nielen vnútorného: <code>kids_area=no</code> v OSM znamená &bdquo;tu sa deti nemajú kde
+hrať&ldquo;, takže pekáreň s ihriskom na dvore dostane <em>len vonku</em> namiesto nesprávneho
+nie. Krúžok sa objaví (alebo zostane preč) pri ďalšej nočnej stavbe. Nikto sa nepýta dvakrát:
+zaznamenané <code>kids_area</code> <em>alebo</em> <code>kids_area:indoor</code>, nech má
+akúkoľvek hodnotu, otázku odstráni. Pri <code>leisure=playground</code> bez
+<code>indoor=yes</code> sa nepýta vôbec &mdash; miesto <em>už je</em> miestom na hranie, len nie
+vnútri.</p>
 
 <h2>Čip Bezbariérové</h2>
 <p>Čip <em>Bezbariérové</em> ukazuje len miesta, ktoré majú v OSM <code>wheelchair=yes</code>. <code>limited</code> (jeden schod do 7&nbsp;cm alebo potrebná pomoc) a samotné <code>toilets:wheelchair=yes</code> nestačia; oboje sa aj tak zobrazí vo vyskakovacom okne spolu s <code>wheelchair:description</code>. Miesto bez tagu nie je neprístupné, OSM o ňom jednoducho nič nehovorí, takže čip len filtruje a nič nefarbí. Modré krúžky (miesta s detským kútikom) čip filtruje rovnako: zostanú len tie s <code>wheelchair=yes</code>.</p>

@@ -186,6 +186,17 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
 <code>kids_area:indoor=no</code> は、単なる <code>kids_area=yes</code> より優先します。</p>
 <p>輪はバッジであって、4つ目の色ではありません。これらのタグのない場所は「遊び場がない」のではなく、OSMがそれについて
 何も言っていないだけで、ほとんどすべての場所がそうです。だからここに灰色はありません。</p>
+<p>だからこそ、ポップアップがそれを尋ねます。OSMが遊び場について何も記録していないピンでは、色にかかわらず(部屋を
+尋ねるピンでは部屋の項目の下に)1行が表示されます: <em>子どもの遊び場？</em>、3つの回答があります。<em>屋内</em>は
+<code>kids_area:indoor=yes</code>と<code>kids_area=yes</code>を、<em>屋外のみ</em>は<code>kids_area=yes</code>と
+<code>kids_area:indoor=no</code>を、<em>なし</em>は<code>kids_area=no</code>を書き込みます — あなた自身のOSM
+アカウントで、専用のchangesetとして、同じ質問に対してMapCompleteが書き込むのとまったく同じタグです。この質問は
+屋内に限らず遊び場全般についてのものです: OSMで<code>kids_area=no</code>は「ここには子どもが遊べる場所がどこにも
+ない」という意味になるため、庭に遊び場があるパン屋は誤った「なし」ではなく<em>屋外のみ</em>になります。輪は次回の
+夜間ビルドで反映されます(あるいは反映されません)。二度尋ねられることはありません: 値にかかわらず、記録済みの
+<code>kids_area</code><em>または</em><code>kids_area:indoor</code>があれば質問は消えます。
+<code>indoor=yes</code>のない<code>leisure=playground</code>では、そもそも尋ねられません — その場所はすでに
+遊べる場所<em>であり</em>、屋内ではないだけだからです。</p>
 <p>この規則に当てはまる場所は、ピンのある場所よりずっと多くあります。そのうち <code>changing_table</code> タグを
 持つのは <span data-stat="play_tables">111</span> か所だけです。さらに <span data-stat="play_places">701</span>
 か所では、最初の質問 — ここにおむつ交換台はある？ — にまだ誰も答えていません。地図はそれらに色を付けられないので、

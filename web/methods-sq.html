@@ -196,11 +196,22 @@ e përkufizon si «lodra ka, por hapësirë e caktuar jo». Kur ka të pranishme
 <code>kids_area:indoor=no</code> të shprehur qartë, ajo mbizotëron mbi një
 <code>kids_area=yes</code> të thjeshtë.</p>
 <p>Kjo është një distinktiv, jo një status i katërt. Një vend pa këto etiketa nuk «nuk ka
-hapësirë lojërash» &mdash; OSM thjesht nuk thotë asgjë për të. Prandaj këtu s'ka gri dhe s'ka
-thirrje për veprim: te <code>changing_table:location</code> heshtja ka kuptim, sepse dihet me
-siguri se tavolina ekziston. Këtu gati çdo objekt hesht, dhe kjo nuk do të thotë asgjë. Nëse njeh
-një hapësirë lojërash, je i mirëpritur ta shtosh &mdash; në editorin e OSM-së, si
-<code>kids_area=yes</code>.</p>
+hapësirë lojërash» &mdash; OSM thjesht nuk thotë asgjë për të. Prandaj këtu s'ka gri.</p>
+<p>Pikërisht për këtë pyet dritarja kërcyese. Në çdo shenjues ku OSM nuk thotë asgjë për një
+hapësirë lojërash, cilado qoftë ngjyra e tij, ka një rresht (nën dhomat, atje ku shenjuesi pyet
+edhe për dhomën): <em>Hapësirë lojërash për fëmijë?</em>, me tri përgjigje. <em>brenda</em>
+shkruan <code>kids_area:indoor=yes</code> së bashku me <code>kids_area=yes</code>, <em>vetëm
+jashtë</em> shkruan <code>kids_area=yes</code> së bashku me <code>kids_area:indoor=no</code>,
+<em>asnjë</em> shkruan <code>kids_area=no</code> &mdash; nën llogarinë tënde OSM, në një
+changeset të vetin, saktësisht etiketat që MapComplete shkruan për të njëjtën pyetje. Pyetja ka
+të bëjë me hapësirën e lojërave në përgjithësi, jo vetëm të brendshme:
+<code>kids_area=no</code> në OSM do të thotë «këtu fëmijët nuk kanë ku të luajnë», kështu që një
+furrë buke me fushë lojërash në kopsht merr <em>vetëm jashtë</em> në vend të një jo të gabuar.
+Rrethi shfaqet (ose mbetet mungues) në ndërtimin tjetër të natës. Askush nuk pyetet dy herë: një
+<code>kids_area</code> <em>ose</em> <code>kids_area:indoor</code> tashmë e regjistruar, cilado
+qoftë vlera, e heq pyetjen. Te një <code>leisure=playground</code> pa <code>indoor=yes</code>
+nuk pyetet kurrë &mdash; vendi <em>është</em> tashmë një vend për të luajtur, thjesht jo
+brenda.</p>
 
 <h2>Çipi Karrige me rrota</h2>
 <p>Çipi <em>Karrige me rrota</em> tregon vetëm vendet me <code>wheelchair=yes</code> në OSM. <code>limited</code> (një shkallë deri 7&nbsp;cm, ose nevojitet ndihmë) dhe <code>toilets:wheelchair=yes</code> vetëm nuk mjaftojnë; të dyja shfaqen gjithsesi në dritare, bashkë me <code>wheelchair:description</code>. Një vend pa etiketë nuk është i paaksesueshëm, OSM thjesht nuk thotë asgjë, kështu që çipi vetëm filtron dhe nuk ngjyros asgjë. Çipi i filtron njësoj rrathët blu (vendet me kënd lojërash): mbeten vetëm ata me <code>wheelchair=yes</code>.</p>

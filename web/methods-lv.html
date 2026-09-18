@@ -195,10 +195,21 @@ līdz tām. Vieta tiek ieskaitīta, ja OSM ir atzīmēts kaut kas no šī:</p>
 nav īpaši norādītas vietas&ldquo;. Ja skaidri norādīts <code>kids_area:indoor=no</code>, tas ir
 svarīgāks par vienkāršu <code>kids_area=yes</code>.</p>
 <p>Šis ir nozīmīte, nevis ceturtais statuss. Vietai bez šīm birkām nav &bdquo;nekāda rotaļu
-stūrīša&ldquo; &mdash; OSM par to vienkārši neko nesaka. Tāpēc šeit nav ne pelēkas krāsas, ne
-aicinājuma kaut ko darīt: pie <code>changing_table:location</code> klusēšana ir nozīmīga, jo
-zināms, ka galdiņš eksistē. Šeit klusē gandrīz visi objekti, un tas nenozīmē neko. Ja tu zini par
-rotaļu stūrīti, to joprojām var pievienot &mdash; OSM redaktorā, kā <code>kids_area=yes</code>.</p>
+stūrīša&ldquo; &mdash; OSM par to vienkārši neko nesaka. Tāpēc šeit nav pelēkas krāsas.</p>
+<p>Tieši tāpēc uznirstošais logs to jautā. Katrā atzīmē, kur OSM neko nesaka par rotaļu stūrīti,
+neatkarīgi no tās krāsas, ir viena rinda (zem telpām, tur, kur atzīme jautā arī par telpu):
+<em>Rotaļu stūrītis bērniem?</em>, ar trim atbildēm. <em>iekštelpās</em> pieraksta
+<code>kids_area:indoor=yes</code> kopā ar <code>kids_area=yes</code>, <em>tikai ārā</em>
+pieraksta <code>kids_area=yes</code> kopā ar <code>kids_area:indoor=no</code>, <em>nav</em>
+pieraksta <code>kids_area=no</code> &mdash; ar tavu paša OSM kontu, atsevišķā changeset, tieši
+tās pašas birkas, ko tam pašam jautājumam pieraksta MapComplete. Jautājums ir par rotaļu stūrīti
+vispār, ne tikai iekštelpu: <code>kids_area=no</code> OSM nozīmē &bdquo;šeit bērniem nekur nav
+kur spēlēties&ldquo;, tāpēc maiznīca ar rotaļu laukumu dārzā saņem <em>tikai ārā</em> nevis
+kļūdainu nē. Gredzens parādīsies (vai paliks bez tā) nākamajā nakts build. Nevienam nejautā
+divreiz: reģistrēts <code>kids_area</code> <em>vai</em> <code>kids_area:indoor</code>,
+neatkarīgi no vērtības, noņem jautājumu. <code>leisure=playground</code> bez
+<code>indoor=yes</code> to nekad nejautā &mdash; vieta <em>jau ir</em> vieta, kur spēlēties, tikai
+ne iekštelpās.</p>
 
 <h2>Čips Ratiņkrēsls</h2>
 <p>Čips <em>Ratiņkrēsls</em> rāda tikai vietas, kurām OSM ir <code>wheelchair=yes</code>. <code>limited</code> (viens pakāpiens līdz 7&nbsp;cm vai nepieciešama palīdzība) un <code>toilets:wheelchair=yes</code> vien nepietiek; abi tomēr parādās uznirstošajā logā kopā ar <code>wheelchair:description</code>. Vieta bez birkas nav nepieejama, OSM par to vienkārši neko nesaka, tāpēc čips tikai filtrē un neko nekrāso. Zilos apļus (vietas ar rotaļu stūrīti) čips filtrē tāpat: paliek tikai tie, kuriem ir <code>wheelchair=yes</code>.</p>

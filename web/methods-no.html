@@ -194,11 +194,21 @@ heller ikke <code>no</code>, eller <code>limited</code> &mdash; wikien definerer
 finnes, men ikke noe eget område». Der et eksplisitt <code>kids_area:indoor=no</code> finnes,
 vinner det over et rent <code>kids_area=yes</code>.</p>
 <p>Dette er et merke, ikke en fjerde status. Et sted uten disse taggene har ikke «ikke noe
-lekeområde» &mdash; OSM sier rett og slett ingenting om det. Derfor er det ingen grå her og ingen
-oppfordring til handling: ved <code>changing_table:location</code> betyr stillheten noe, fordi
-bordet er kjent for å finnes. Her tier nesten alle objekter, og det betyr ingenting. Kjenner du til
-et lekeområde, er det fortsatt velkomment å legge det til &mdash; i OSM-editoren, som
-<code>kids_area=yes</code>.</p>
+lekeområde» &mdash; OSM sier rett og slett ingenting om det. Derfor er det ingen grå her.</p>
+<p>Nettopp derfor spør popup-vinduet om det. På hvert punkt der OSM ikke sier noe om et
+lekeområde, uansett farge, står det én linje (under rommene, der punktet også spør om rommet):
+<em>Lekeområde for barn?</em>, med tre svar. <em>innendørs</em> skriver
+<code>kids_area:indoor=yes</code> sammen med <code>kids_area=yes</code>, <em>bare utendørs</em>
+skriver <code>kids_area=yes</code> sammen med <code>kids_area:indoor=no</code>, <em>ingen</em>
+skriver <code>kids_area=no</code> &mdash; under din egen OSM-konto, i et eget changeset,
+nøyaktig de samme taggene som MapComplete skriver for samme spørsmål. Spørsmålet handler om et
+lekeområde i det hele tatt, ikke bare innendørs: <code>kids_area=no</code> betyr i OSM «her er det
+ingen steder barn kan leke», så et bakeri med en lekeplass i hagen får <em>bare utendørs</em> i
+stedet for et feil nei. Ringen dukker opp (eller blir borte) ved neste nattlige build. Ingen blir
+spurt to ganger: en registrert <code>kids_area</code> <em>eller</em> <code>kids_area:indoor</code>,
+uansett verdi, fjerner spørsmålet. På en <code>leisure=playground</code> uten
+<code>indoor=yes</code> blir det aldri spurt &mdash; stedet <em>er</em> allerede et sted å leke,
+bare ikke innendørs.</p>
 
 <h2>Chippen Rullestol</h2>
 <p>Chippen <em>Rullestol</em> viser bare steder med <code>wheelchair=yes</code> i OSM. <code>limited</code> (ett trinn på opptil 7&nbsp;cm, eller hjelp trengs) og <code>toilets:wheelchair=yes</code> alene er ikke nok; begge står likevel i popupen sammen med <code>wheelchair:description</code>. Et sted uten taggen er ikke utilgjengelig, OSM sier bare ingenting, så chippen bare filtrerer og farger ingenting. De blå ringene (steder med lekekrok) filtrerer chippen på samme måte: bare de med <code>wheelchair=yes</code> blir igjen.</p>

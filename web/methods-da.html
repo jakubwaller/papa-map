@@ -192,11 +192,21 @@ angiver én af disse:</p>
 &bdquo;legetøj findes, men intet egentligt område&ldquo;. Står der udtrykkeligt
 <code>kids_area:indoor=no</code>, vinder det over et blot <code>kids_area=yes</code>.</p>
 <p>Det er et mærke, ikke en fjerde status. Et sted uden disse tags har ikke &bdquo;intet
-legeområde&ldquo; &mdash; OSM siger bare ingenting om det. Derfor er der ingen grå farve her og
-ingen opgave: ved <code>changing_table:location</code> betyder tavsheden noget, fordi bordet
-beviseligt findes. Her tier næsten alle objekter, og det betyder ingenting. Kender du et
-legeområde, er det stadig velkomment at tilføje det &mdash; i OSM-editoren, som
-<code>kids_area=yes</code>.</p>
+legeområde&ldquo; &mdash; OSM siger bare ingenting om det. Derfor er der ingen grå farve her.</p>
+<p>Det er derfor pop op-vinduet spørger. På hver nål, hvor OSM ikke siger noget om et
+legeområde, uanset farve, står der én linje (under rummene, der hvor nålen også spørger om
+rummet): <em>Legeområde for børn?</em>, med tre svar. <em>indendørs</em> skriver
+<code>kids_area:indoor=yes</code> sammen med <code>kids_area=yes</code>, <em>kun udendørs</em>
+skriver <code>kids_area=yes</code> sammen med <code>kids_area:indoor=no</code>, <em>intet</em>
+skriver <code>kids_area=no</code> &mdash; under din egen OSM-konto, i sit eget changeset, præcis
+de samme tags, som MapComplete skriver for samme spørgsmål. Spørgsmålet handler om et legeområde
+overhovedet, ikke kun et indendørs: <code>kids_area=no</code> betyder i OSM &bdquo;her er der
+ingen steder, børn kan lege&ldquo;, så et bageri med en legeplads i haven får <em>kun
+udendørs</em> i stedet for et forkert nej. Ringen følger med (eller bliver væk) ved næste natlige
+build. Ingen bliver spurgt to gange: et registreret <code>kids_area</code> <em>eller</em>
+<code>kids_area:indoor</code>, uanset værdi, fjerner spørgsmålet. På en
+<code>leisure=playground</code> uden <code>indoor=yes</code> bliver der slet ikke spurgt &mdash;
+stedet <em>er</em> allerede et sted at lege, bare ikke indendørs.</p>
 
 <h2>Chippen Kørestol</h2>
 <p>Chippen <em>Kørestol</em> viser kun steder med <code>wheelchair=yes</code> i OSM. <code>limited</code> (ét trin på op til 7&nbsp;cm, eller hjælp nødvendig) og <code>toilets:wheelchair=yes</code> alene er ikke nok; begge står stadig i popuppen sammen med <code>wheelchair:description</code>. Et sted uden tagget er ikke utilgængeligt, OSM siger bare ingenting, så chippen filtrerer kun og farver intet. De blå ringe (steder med legehjørne) filtrerer chippen på samme måde: kun dem med <code>wheelchair=yes</code> bliver.</p>

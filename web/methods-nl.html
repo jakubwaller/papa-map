@@ -197,10 +197,21 @@ Een plek telt mee als een van deze dingen in OSM staat:</p>
 &ldquo;er is speelgoed, maar geen eigen ruimte&rdquo;. Staat er ergens uitdrukkelijk
 <code>kids_area:indoor=no</code>, dan wint dat van een kaal <code>kids_area=yes</code>.</p>
 <p>Dit is een badge, geen vierde status. Een plek zonder deze tags heeft niet &ldquo;geen
-speelhoek&rdquo; &mdash; OSM zegt er gewoon niets over. Daarom is hier geen grijs en geen opdracht:
-bij <code>changing_table:location</code> is het zwijgen veelzeggend, want de tafel bestaat
-aantoonbaar. Hier zwijgen bijna alle objecten, en dat betekent niets. Ken je een speelhoek, voeg
-hem dan gerust toe &mdash; in de OSM-editor, met <code>kids_area=yes</code>.</p>
+speelhoek&rdquo; &mdash; OSM zegt er gewoon niets over. Daarom is hier geen grijs.</p>
+<p>Daarom vraagt de popup ernaar. Bij elke pin waar OSM niets zegt over een speelhoek, ongeacht
+de kleur, staat één regel (onder de ruimtes, daar waar de pin ook naar de ruimte vraagt):
+<em>Speelhoek voor kinderen?</em>, met drie antwoorden. <em>binnen</em> schrijft
+<code>kids_area:indoor=yes</code> samen met <code>kids_area=yes</code>, <em>alleen buiten</em>
+schrijft <code>kids_area=yes</code> samen met <code>kids_area:indoor=no</code>, <em>geen</em>
+schrijft <code>kids_area=no</code> &mdash; onder je eigen OSM-account, in een eigen changeset,
+precies de tags die MapComplete voor dezelfde vraag schrijft. De vraag gaat over een speelhoek in
+het algemeen, niet alleen een binnen-speelhoek: <code>kids_area=no</code> betekent in OSM
+&ldquo;hier is nergens waar kinderen kunnen spelen&rdquo;, dus een bakker met een speeltuin in de
+tuin krijgt <em>alleen buiten</em> in plaats van een fout nee. De ring verschijnt (of blijft weg)
+bij de volgende nachtelijke build. Niemand wordt twee keer gevraagd: een al vastgelegde
+<code>kids_area</code> <em>of</em> <code>kids_area:indoor</code>, wat de waarde ook is, haalt de
+vraag weg. Bij een <code>leisure=playground</code> zonder <code>indoor=yes</code> wordt het nooit
+gevraagd &mdash; de plek <em>is</em> al een speelplek, alleen niet binnen.</p>
 
 <h2>De chip Rolstoel</h2>
 <p>De chip <em>Rolstoel</em> toont alleen plekken met <code>wheelchair=yes</code> in OSM. <code>limited</code> (één drempel tot 7&nbsp;cm, of hulp nodig) en <code>toilets:wheelchair=yes</code> alleen zijn niet genoeg; beide staan wel in de popup, samen met <code>wheelchair:description</code>. Een plek zonder tag is niet ontoegankelijk, OSM zegt er gewoon niets over, dus de chip filtert alleen en kleurt niets. De blauwe ringen (plekken met een speelhoek) filtert de chip op dezelfde manier: alleen die met <code>wheelchair=yes</code> blijven over.</p>

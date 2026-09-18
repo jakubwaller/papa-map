@@ -194,10 +194,22 @@ obiecuje. <code>no</code> też nie i <code>limited</code> też nie — wiki defi
 &bdquo;są zabawki, ale nie ma wydzielonego miejsca&rdquo;. Jeśli gdzieś jest wyraźne
 <code>kids_area:indoor=no</code>, ma ono pierwszeństwo przed samym <code>kids_area=yes</code>.</p>
 <p>To odznaka, a nie czwarty status. Jeśli miejsce nie ma tych tagów, to nie znaczy, że nie ma
-kącika zabaw — OSM po prostu nic o nim nie mówi. Dlatego nie ma tu szarości ani zadania do
-wykonania: przy <code>changing_table:location</code> milczenie jest wymowne, bo wiadomo, że
-przewijak istnieje. Tutaj milczy prawie każdy obiekt, a to nie znaczy nic. Jeśli znasz jakiś
-kącik zabaw, i tak warto go dodać &mdash; w edytorze OSM, jako <code>kids_area=yes</code>.</p>
+kącika zabaw — OSM po prostu nic o nim nie mówi. Dlatego nie ma tu szarości.</p>
+<p>Właśnie dlatego pyta o to popup. Na każdej pinezce, przy której OSM nic nie mówi o kąciku
+zabaw, niezależnie od jej koloru, pojawia się jedna linijka (pod pomieszczeniami, tam gdzie
+pinezka pyta też o pomieszczenie): <em>Kącik zabaw dla dzieci?</em>, z trzema odpowiedziami.
+<em>w środku</em> zapisuje <code>kids_area:indoor=yes</code> razem z <code>kids_area=yes</code>,
+<em>tylko na zewnątrz</em> zapisuje <code>kids_area=yes</code> razem z
+<code>kids_area:indoor=no</code>, <em>brak</em> zapisuje <code>kids_area=no</code> &mdash; pod
+Twoim własnym kontem OSM, w osobnym changesecie, dokładnie te same tagi, które dla tego samego
+pytania zapisuje MapComplete. Pytanie dotyczy kącika zabaw w ogóle, nie tylko wewnętrznego:
+<code>kids_area=no</code> w OSM znaczy &bdquo;nigdzie tu dzieci nie mogą się bawić&rdquo;, więc
+piekarnia z placem zabaw w ogródku dostaje <em>tylko na zewnątrz</em> zamiast fałszywego braku.
+Obwódka pojawi się (albo nie) przy najbliższym nocnym budowaniu. Nikt nie jest pytany dwa razy:
+zapisane <code>kids_area</code> <em>lub</em> <code>kids_area:indoor</code>, niezależnie od
+wartości, usuwa pytanie. Na <code>leisure=playground</code> bez <code>indoor=yes</code> pytanie w
+ogóle się nie pojawia &mdash; to miejsce <em>już jest</em> miejscem do zabawy, tylko nie w
+środku.</p>
 
 <h2>Chip Wózek</h2>
 <p>Chip <em>Wózek</em> pokazuje tylko miejsca z <code>wheelchair=yes</code> w OSM. <code>limited</code> (jeden stopień do 7&nbsp;cm lub potrzebna pomoc) i samo <code>toilets:wheelchair=yes</code> nie wystarczają; oba i tak widać w dymku, razem z <code>wheelchair:description</code>. Miejsce bez tagu nie jest niedostępne, OSM po prostu nic o nim nie mówi, więc chip tylko filtruje i niczego nie koloruje. Niebieskie kółka (miejsca z kącikiem zabaw) chip filtruje tak samo: zostają tylko te z <code>wheelchair=yes</code>.</p>

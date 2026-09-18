@@ -197,11 +197,22 @@ Tampoc compta <code>no</code>, ni <code>limited</code> — el wiki defineix aque
 &ldquo;hi ha joguines disponibles, però no hi ha cap zona designada&rdquo;. Quan hi ha un
 <code>kids_area:indoor=no</code> explícit, aquest guanya a un simple <code>kids_area=yes</code>.</p>
 <p>Això és un distintiu, no un quart estat. Un lloc sense aquestes etiquetes no vol dir que
-&ldquo;no tingui racó de jocs&rdquo; — OSM simplement no en diu res. Per això aquí no hi ha gris ni
-crida a l'acció: amb <code>changing_table:location</code> el silenci vol dir alguna cosa, perquè
-se sap que el canviador existeix. Aquí gairebé tots els objectes callen, i això no vol dir res. Si
-coneixes un racó de jocs, afegir-lo és sempre benvingut — a l'editor d'OSM, com a
-<code>kids_area=yes</code>.</p>
+&ldquo;no tingui racó de jocs&rdquo; — OSM simplement no en diu res. Per això aquí no hi ha
+gris.</p>
+<p>Per això mateix ho pregunta el desplegable. A cada pin on OSM no diu res sobre un racó de
+jocs, sigui quin sigui el seu color, hi ha una línia (sota les sales, allà on el pin també
+pregunta per la sala): <em>Racó de jocs per a infants?</em>, amb tres respostes. <em>a dins</em>
+escriu <code>kids_area:indoor=yes</code> juntament amb <code>kids_area=yes</code>, <em>només a
+fora</em> escriu <code>kids_area=yes</code> juntament amb <code>kids_area:indoor=no</code>,
+<em>cap</em> escriu <code>kids_area=no</code> &mdash; amb el teu propi compte d'OSM, en un
+changeset propi, exactament les mateixes etiquetes que escriu MapComplete per a la mateixa
+pregunta. La pregunta és sobre un racó de jocs en general, no només interior:
+<code>kids_area=no</code> vol dir a OSM &ldquo;aquí els nens no tenen on jugar&rdquo;, així que un
+forn amb un parc al jardí rep <em>només a fora</em> en lloc d'un no fals. L'anell apareix (o es
+manté absent) a la propera construcció nocturna. Ningú es pregunta dues vegades: un
+<code>kids_area</code> <em>o</em> <code>kids_area:indoor</code> ja registrat, sigui quin sigui el
+valor, treu la pregunta. En un <code>leisure=playground</code> sense <code>indoor=yes</code> mai
+es pregunta &mdash; el lloc <em>ja és</em> un lloc per jugar, només que no a dins.</p>
 
 <h2>El xip Cadira de rodes</h2>
 <p>El xip <em>Cadira de rodes</em> només mostra llocs amb <code>wheelchair=yes</code> a OSM. <code>limited</code> (un graó de fins a 7&nbsp;cm, o cal ajuda) i <code>toilets:wheelchair=yes</code> tot sol no són suficients; tots dos apareixen igualment a la finestra, amb <code>wheelchair:description</code>. Un lloc sense l'etiqueta no és inaccessible, OSM simplement no en diu res, així que el xip només filtra i no acoloreix res. El xip filtra igual els cercles blaus (llocs amb racó de joc): només queden els que tenen <code>wheelchair=yes</code>.</p>

@@ -192,10 +192,21 @@ om något av det här står i OSM:</p>
 &rdquo;leksaker finns, men ingen egen yta&rdquo;. Står det någonstans uttryckligen
 <code>kids_area:indoor=no</code>, vinner det över ett ensamt <code>kids_area=yes</code>.</p>
 <p>Det här är ett märke, inte en fjärde status. En plats utan de här taggarna har inte &rdquo;ingen
-lekhörna&rdquo; — OSM säger helt enkelt ingenting om den. Därför finns här inget grått och ingen
-uppgift: vid <code>changing_table:location</code> är tystnaden talande, eftersom bordet bevisligen
-finns. Här tiger nästan alla objekt, och det betyder ingenting. Den som känner till en lekhörna får
-gärna lägga in den ändå — i OSM-editorn, med <code>kids_area=yes</code>.</p>
+lekhörna&rdquo; — OSM säger helt enkelt ingenting om den. Därför finns här inget grått.</p>
+<p>Det är precis därför popup-fönstret frågar om det. Vid varje nål där OSM inte säger något om
+en lekhörna, oavsett färg, finns det en rad (under rummen, där nålen även frågar om rummet):
+<em>Lekhörna för barn?</em>, med tre svar. <em>inomhus</em> skriver
+<code>kids_area:indoor=yes</code> tillsammans med <code>kids_area=yes</code>, <em>bara
+utomhus</em> skriver <code>kids_area=yes</code> tillsammans med
+<code>kids_area:indoor=no</code>, <em>ingen</em> skriver <code>kids_area=no</code> &mdash; under
+ditt eget OSM-konto, i ett eget changeset, exakt samma taggar som MapComplete skriver för samma
+fråga. Frågan gäller en lekhörna överhuvudtaget, inte bara en inomhus:
+<code>kids_area=no</code> betyder i OSM &rdquo;här finns ingenstans för barn att leka&rdquo;, så
+ett bageri med en lekplats i trädgården får <em>bara utomhus</em> i stället för ett felaktigt nej.
+Ringen dyker upp (eller uteblir) vid nästa nattliga build. Ingen blir tillfrågad två gånger: ett
+registrerat <code>kids_area</code> <em>eller</em> <code>kids_area:indoor</code>, oavsett värde,
+tar bort frågan. På en <code>leisure=playground</code> utan <code>indoor=yes</code> ställs den
+aldrig &mdash; platsen <em>är</em> redan ett ställe att leka på, bara inte inomhus.</p>
 
 <h2>Chippet Rullstol</h2>
 <p>Chippet <em>Rullstol</em> visar bara platser med <code>wheelchair=yes</code> i OSM. <code>limited</code> (ett steg på upp till 7&nbsp;cm, eller hjälp behövs) och <code>toilets:wheelchair=yes</code> ensamt räcker inte; båda står ändå i popupen tillsammans med <code>wheelchair:description</code>. En plats utan taggen är inte otillgänglig, OSM säger bara inget, så chippet filtrerar bara och färgar inget. De blå ringarna (platser med lekhörna) filtrerar chippet på samma sätt: bara de med <code>wheelchair=yes</code> blir kvar.</p>

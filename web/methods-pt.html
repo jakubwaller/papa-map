@@ -196,11 +196,21 @@ Também não contam <code>no</code> nem <code>limited</code> — a wiki define e
 «há brinquedos disponíveis, mas sem zona designada». Quando existe um <code>kids_area:indoor=no</code>
 explícito, este prevalece sobre um simples <code>kids_area=yes</code>.</p>
 <p>Isto é um distintivo, não um quarto estado. Um local sem estas tags não «não tem cantinho de
-brincar» — o OSM simplesmente não diz nada sobre isso. Por isso não há cinzento aqui nem apelo à
-ação: com <code>changing_table:location</code> o silêncio é significativo, porque se sabe que o
-fraldário existe. Aqui quase todos os objetos estão em silêncio, e isso não significa nada. Se
-conheces um cantinho de brincar, adicioná-lo continua a ser bem-vindo — no editor do OSM, como
-<code>kids_area=yes</code>.</p>
+brincar» — o OSM simplesmente não diz nada sobre isso. Por isso não há cinzento aqui.</p>
+<p>É por isso mesmo que o popup pergunta. Em cada pin onde o OSM não diz nada sobre um cantinho
+de brincar, seja qual for a sua cor, há uma linha (por baixo das salas, onde o pin também
+pergunta pela sala): <em>Cantinho de brincar?</em>, com três respostas. <em>interior</em> escreve
+<code>kids_area:indoor=yes</code> junto com <code>kids_area=yes</code>, <em>só no exterior</em>
+escreve <code>kids_area=yes</code> junto com <code>kids_area:indoor=no</code>, <em>nenhum</em>
+escreve <code>kids_area=no</code> &mdash; sob a tua própria conta OSM, num changeset próprio,
+exatamente as tags que o MapComplete escreve para a mesma pergunta. A pergunta é sobre um
+cantinho de brincar em geral, não só interior: <code>kids_area=no</code> significa no OSM «aqui
+não há onde as crianças brincarem», por isso uma padaria com um parque infantil no quintal recebe
+<em>só no exterior</em> em vez de um não errado. O anel aparece (ou continua ausente) na próxima
+construção noturna. Ninguém é perguntado duas vezes: um <code>kids_area</code> <em>ou</em>
+<code>kids_area:indoor</code> já registado, seja qual for o valor, retira a pergunta. Num
+<code>leisure=playground</code> sem <code>indoor=yes</code> nunca é perguntado &mdash; o local
+<em>já é</em> um sítio para brincar, só que não interior.</p>
 
 <h2>O chip Cadeira de rodas</h2>
 <p>O chip <em>Cadeira de rodas</em> mostra só locais com <code>wheelchair=yes</code> no OSM. <code>limited</code> (um degrau até 7&nbsp;cm, ou ajuda necessária) e <code>toilets:wheelchair=yes</code> por si só não chegam; ambos aparecem na mesma na janela, com <code>wheelchair:description</code>. Um local sem a etiqueta não é inacessível, o OSM simplesmente nada diz, por isso o chip só filtra e nada colore. O chip filtra da mesma forma os círculos azuis (locais com zona de brincar): só ficam os que têm <code>wheelchair=yes</code>.</p>
