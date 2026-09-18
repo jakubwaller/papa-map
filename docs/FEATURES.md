@@ -430,3 +430,9 @@ drawn from that file with a network and without one, so a copy that cannot be re
 first day, not in the basement. (Build 18 handed the 18 MB across the bridge as one string and
 came up in airplane mode with the city and no pins.)
 
+One thing the app's page does not carry is the Ko-fi link in the footer. `app/shell.mjs` cuts
+it out of the bundled `index.html`, and the build fails if it cannot find it: Apple wants a tip
+for the developer to go through in-app purchase, and the developer account is declared a
+non-trader because the app has no purchase and no donate button. The website keeps its link —
+on the country and leaderboard pages too, which the app opens in the in-app browser (issue #124).
+
