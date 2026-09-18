@@ -7,12 +7,18 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app17";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app18";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app17";
-import { endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
+         langUrl } from "./i18n.js?v=app18";
+import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app17";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app18";
+// The store app's seam (app/). On the website isNative() is false and every
+// branch below that asks it takes the path the page always took.
+import { isNative, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks, directionsUri,
+         nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
+         downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
+         formatMB, citiesToMount } from "./native.js?v=app18";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -29,7 +35,13 @@ const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 // Which OSM this page writes to: the live API on papamap.de, the sandbox
 // anywhere else — a dev server cannot put a test answer on the real map
 // (osm.js says what it can do to the sandbox).
-const osm = endpoints(location);
+// The app runs under its own origin, so the hostname test says sandbox;
+// it is the live client, coming back by the papamap://auth URL the OS
+// routes to it (native.js) — the same client id, a second redirect URI on
+// the registration.
+// host: the changeset's `host` tag stays the site's address — the redirect is
+// only the OAuth return leg, and papamap://auth is no provenance for an edit.
+const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT, host: LIVE.redirect } : endpoints(location);
 const ROOM_LABEL = { both: "roomBoth", male: "roomMale", female: "roomFemale",
                      unisex: "roomUnisex", wheelchair: "roomWheelchair", dedicated: "roomDedicated",
                      room: "roomRoom", sales: "roomSales", outdoor: "roomOutdoor" };
@@ -490,7 +502,7 @@ function popupHTML(f) {
   // itself; beside the in-page question it is the other way, in plain dress.
   if (mcUrl)
     links.push(`<a class="btn${asks ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
-  links.push(`<a class="btn" href="${esc(geoUri(f.lat, f.lon, f.name || ""))}">${esc(t("popupDirections"))}</a>`);
+  links.push(`<a class="btn" href="${esc(directionsUri(f.lat, f.lon, f.name || "", geoUri(f.lat, f.lon, f.name || "")))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -585,7 +597,7 @@ function placeHTML(p) {
         osmUrl = safeUrl(p.osm_url);
   if (mcUrl)
     links.push(`<a class="btn${p.changing_table ? " primary" : ""}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
-  links.push(`<a class="btn" href="${esc(geoUri(p.lat, p.lon, p.name || ""))}">${esc(t("popupDirections"))}</a>`);
+  links.push(`<a class="btn" href="${esc(directionsUri(p.lat, p.lon, p.name || "", geoUri(p.lat, p.lon, p.name || "")))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -740,6 +752,7 @@ function wheelchairChip(count) {
       if (wheelchairOnly) localStorage.setItem(WHEELCHAIR_KEY, "1");
       else localStorage.removeItem(WHEELCHAIR_KEY);
     } catch { /* blocked storage: this visit only */ }
+    shareTables();
     // The strip is rebuilt, not toggled: the status badges count over the
     // chip's universe, so they change with it (renderChips reads the state).
     renderChips();
@@ -905,16 +918,34 @@ function toast(msg, { ms = 4000, onTap = null } = {}) {
   toastTimer = setTimeout(hide, ms);
 }
 
-document.getElementById("locate").addEventListener("click", () => {
-  if (!navigator.geolocation) { toast(t("toastNoGeo")); return; }
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const at = [pos.coords.longitude, pos.coords.latitude];
+// One position, as a promise: the browser's API on the page, the
+// Geolocation plugin in the app (it asks the OS permission itself). Either
+// way the fix stays in memory and is used for one view or one search.
+function locate() {
+  if (isNative()) return locateNative();
+  return new Promise((ok, fail) => {
+    if (!navigator.geolocation) { fail(new Error("nogeo")); return; }
+    navigator.geolocation.getCurrentPosition((pos) => ok(pos.coords), fail,
+      { enableHighAccuracy: true, timeout: 10000 });
+  });
+}
+const hasGeo = () => isNative() || !!navigator.geolocation;
+// A fix takes a second or three and until it lands nothing on the map moves:
+// the tapped button pulses (style.css, [aria-busy]) so the tap reads as heard.
+function locateFrom(btn) {
+  btn.setAttribute("aria-busy", "true");
+  return locate().finally(() => btn.removeAttribute("aria-busy"));
+}
+
+document.getElementById("locate").addEventListener("click", (e) => {
+  if (!hasGeo()) { toast(t("toastNoGeo")); return; }
+  locateFrom(e.currentTarget).then(
+    (coords) => {
+      const at = [coords.longitude, coords.latitude];
       showYou(at);
       map.flyTo({ center: at, zoom: Math.max(map.getZoom(), 14) });
     },
     () => toast(t("toastGeoFail")),
-    { enableHighAccuracy: true, timeout: 10000 },
   );
 });
 
@@ -927,12 +958,12 @@ document.getElementById("locate").addEventListener("click", () => {
 //
 // "Usable" is the current reading's own verdict, so the same tap sends a father
 // to the nearest open room and a mother to the nearest room of either kind.
-document.getElementById("nearest").addEventListener("click", () => {
-  if (!navigator.geolocation) { toast(t("toastNoGeo")); return; }
+document.getElementById("nearest").addEventListener("click", (e) => {
+  if (!hasGeo()) { toast(t("toastNoGeo")); return; }
   if (!dataReady) { toast(t("countNoData")); return; }
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const { latitude: lat, longitude: lon } = pos.coords;
+  locateFrom(e.currentTarget).then(
+    (coords) => {
+      const { latitude: lat, longitude: lon } = coords;
       showYou([lon, lat]);
       const hit = nearestUsable(allFeatures, lat, lon, mode, wheelchairOnly);
       if (!hit) { toast(t("toastNearestNone")); return; }
@@ -958,7 +989,6 @@ document.getElementById("nearest").addEventListener("click", () => {
       }));
     },
     () => toast(t("toastGeoFail")),
-    { enableHighAccuracy: true, timeout: 10000 },
   );
 });
 
@@ -1180,7 +1210,7 @@ function rememberView() {
 // verifiable (storage blocked: some privacy settings, some webviews) the
 // login does not start, and the reader is told rather than left with a
 // button that does nothing.
-const goLogin = (intent) => startLogin(osm, intent).then((went) => { if (!went) toast(t("loginFailed")); });
+const goLogin = (intent) => startLogin(osm, intent, isNative() ? nativeNavigate : undefined).then((went) => { if (!went) toast(t("loginFailed")); });
 
 // Answers on their way to OSM, by object. A pin closed and reopened during
 // the round trip renders its question again; it must not take a second
@@ -1395,6 +1425,7 @@ for (const m of MODES) {
     if (mode === m) return;
     mode = m;
     try { localStorage.setItem("papamap-mode", mode); } catch { /* blocked storage: this page only */ }
+    shareSettings({ mode, lang });
     // A ?mode= param would override the stored choice on the next reload —
     // drop it once the reader has chosen in-page, exactly as ?lang= does.
     if (new URLSearchParams(location.search).has("mode")) {
@@ -1410,6 +1441,7 @@ langSelect.addEventListener("change", () => {
   lang = LANGS.includes(langSelect.value) ? langSelect.value : DEFAULT_LANG;
   localStorage.setItem("papamap-lang", lang);
   fitLangSelect();
+  shareSettings({ mode, lang });
   // A ?lang= param would override the stored choice on reload — drop it.
   if (new URLSearchParams(location.search).has("lang")) {
     const url = new URL(location.href);
@@ -1455,7 +1487,10 @@ function whenStyleReady(fn) {
   map.on("load", go);
 }
 
-whenStyleReady(() => { styleReady = true; addTableLayer(); refreshPins(); });
+whenStyleReady(() => {
+  styleReady = true; addTableLayer(); refreshPins();
+  if (isNative()) mountSavedCities();
+});
 
 // Set when any dataset file was answered by the service worker's stored copy.
 // That header is the only honest "you are looking at old data" signal there
@@ -1464,6 +1499,14 @@ whenStyleReady(() => { styleReady = true; addTableLayer(); refreshPins(); });
 let fromStore = false;
 
 async function loadJSON(url) {
+  // In the app there is no service worker: native.js fetches from
+  // papamap.de and keeps the last good copy in the app's data directory,
+  // answering the same { json, fromStore } the header below encodes.
+  if (isNative()) {
+    const r = await loadJSONNative(url);
+    if (r?.fromStore) fromStore = true;
+    return r?.json ?? null;
+  }
   try {
     const r = await fetch(url);
     if (r.headers.get("X-PapaMap-Source") === "cache") fromStore = true;
@@ -1473,21 +1516,67 @@ async function loadJSON(url) {
   }
 }
 
-async function boot() {
-  applyI18n();  // markup default is German — swap before first paint if not
-  syncModeButtons();  // ...and the markup default is papa
-  // A return from OSM's consent screen lands here with ?code= and ?state=.
-  const login = await finishLogin(osm, location.href).catch(() => ({ failed: true }));
-  if (login) {
+// What the widget and the Siri shortcut search (native.js, shareDataset): the
+// tables under the wheelchair chip's reading, through the same pinFeatures the
+// app's own nearest button uses — so all three name the same table. The Swift
+// side never learns the chip exists; it is handed the narrowed rows.
+function shareTables() {
+  if (isNative()) shareDataset(pinFeatures(allFeatures, wheelchairOnly));
+}
+
+// The return from OSM's consent screen: ?code= and ?state= on the page's own
+// URL, or the papamap://auth URL the OS hands the app (native.js). Exchanges
+// the code, stores the login, and files the answer that was waiting.
+async function completeLogin(href) {
+  const login = await finishLogin(osm, href).catch(() => ({ failed: true }));
+  if (login && href === location.href) {
     const url = new URL(location.href);
     for (const k of ["code", "state", "error", "error_description"]) url.searchParams.delete(k);
     history.replaceState(null, "", url);
-    if (login.token) setLogin(login.token, await userName(osm, login.token).catch(() => null));
-    else if (login.failed) toast(t("loginFailed"));
   }
+  if (login?.token) setLogin(login.token, await userName(osm, login.token).catch(() => null));
+  else if (login?.failed) toast(t("loginFailed"));
   // Taken whether or not the login went through: a refused consent must not
   // leave an answer waiting to be filed under the next login.
   const intent = takeIntent();
+  // The answer given before the login round trip: land on its pin and file it.
+  if (intent && login?.token) {
+    const kind = intent.kind === "place" ? "place" : "table";
+    const obj = (kind === "place" ? allPlaces : allFeatures).find((x) => x.osm_url === intent.osm_url);
+    if (obj) {
+      map.jumpTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
+      reopen(kind, obj);
+      // Checked again against the dataset just loaded, not the one the tap
+      // was made on: had the nightly build landed during the consent round
+      // trip with somebody else's room on this object, the popup now shows
+      // that room and the stored answer stays unfiled rather than writing
+      // over it.
+      const open = isPlayChoice(intent.choice)
+        ? !obj.play_recorded
+        : kind === "place" ? !obj.changing_table
+                           : obj.status === "unknown" && !obj.location_raw;
+      if (open) answer(kind, obj, intent.choice, login.token);
+    }
+  }
+  if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line names the login
+}
+
+// A pin by its OSM URL — the widget's and the shortcut's deep link
+// (papamap://table?osm=…). Before the data is here the request waits.
+let pendingPin = null;
+function openPin(osmUrl) {
+  if (!osmUrl) return;
+  if (!dataReady) { pendingPin = osmUrl; return; }
+  const f = allFeatures.find((x) => x.osm_url === osmUrl);
+  if (!f) return;
+  map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+  openPopup(f);
+}
+
+async function boot() {
+  applyI18n();  // markup default is German — swap before first paint if not
+  syncModeButtons();  // ...and the markup default is papa
+  if (isNative()) bootNative();
   const [fc, places, stats, areas] = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
     loadJSON("data/play_places.geojson"),
@@ -1509,24 +1598,12 @@ async function boot() {
   // an earlier visit. The stats line already names the build date it is
   // showing, so the two together say exactly how stale "stored" is.
   if (fromStore && allFeatures.length) toast(t("toastOffline"));
-  // The answer given before the login round trip: land on its pin and file it.
-  if (intent && login?.token) {
-    const kind = intent.kind === "place" ? "place" : "table";
-    const obj = (kind === "place" ? allPlaces : allFeatures).find((x) => x.osm_url === intent.osm_url);
-    if (obj) {
-      map.jumpTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
-      reopen(kind, obj);
-      // Checked again against the dataset just loaded, not the one the tap
-      // was made on: had the nightly build landed during the consent round
-      // trip with somebody else's room on this object, the popup now shows
-      // that room and the stored answer stays unfiled rather than writing
-      // over it.
-      const open = isPlayChoice(intent.choice)
-        ? !obj.play_recorded
-        : kind === "place" ? !obj.changing_table
-                           : obj.status === "unknown" && !obj.location_raw;
-      if (open) answer(kind, obj, intent.choice, login.token);
-    }
+  // A return from OSM's consent screen lands here with ?code= and ?state=.
+  await completeLogin(location.href);
+  if (isNative()) {
+    shareTables();
+    shareSettings({ mode, lang });
+    if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
   }
   // A phone that dropped the tab while the reader was in MapComplete comes
   // back to a reloaded page: pick the check up where it was. (Only with its
@@ -1543,6 +1620,175 @@ async function boot() {
     armEditCheck();
   }
 }
+
+// ---- The store app (app/): what the shell adds around this same page ----
+// Everything here runs only under Capacitor. The website never reaches it.
+const offlineBtn = document.getElementById("offline");
+const offlineDialog = document.getElementById("offline-dialog");
+const offlineList = document.getElementById("offline-list");
+
+let nativeScripts = Promise.resolve();   // declared before the call site below
+function bootNative() {
+  interceptLinks();                  // site pages and OSM open in the system browser
+  document.getElementById("app-link").hidden = true;   // this is the app
+  offlineBtn.hidden = false;
+  onAppUrl({ auth: (url) => completeLogin(url), table: openPin });
+  nativeScripts = Promise.all([loadScript("vendor/pmtiles.js"), loadScript("vendor/protomaps/basemaps.js")]);
+}
+
+// The two vendored libraries the offline cities need, loaded only here so
+// the website's shell stays what it was.
+function loadScript(src) {
+  return new Promise((ok, fail) => {
+    const el = document.createElement("script");
+    el.src = src; el.onload = ok; el.onerror = fail;
+    document.head.append(el);
+  });
+}
+
+// ---- Offline cities: a PMTiles extract per city, rendered under the pins ----
+// The Protomaps layers sit between the raster basemap and the pins. Outside
+// the extract they draw nothing, so the online map shows through; inside,
+// the city is vector, sharp at any zoom, and there with no signal. Once a
+// city is saved it is used whether or not there is a network: the reader
+// sees one map for their city, not one look online and another offline.
+const mounted = new Set();
+let pmProtocol = null;
+
+function ensureProtocol() {
+  if (pmProtocol || !globalThis.pmtiles) return;
+  pmProtocol = new pmtiles.Protocol();
+  maplibregl.addProtocol("pmtiles", pmProtocol.tile);
+  // The tokens stay literal: new URL() would percent-encode the braces.
+  map.setGlyphs(new URL("vendor/protomaps/fonts/", location.href).href + "{fontstack}/{range}.pbf");
+  map.setSprite(new URL("vendor/protomaps/sprites/light", location.href).href);
+}
+
+const pinLayerBelow = () =>
+  map.getStyle().layers.find((l) => l.source === SRC || l.source === PLACES)?.id;
+
+// A mounted city is its whole archive in memory (native.js, citySource), so
+// not every saved city is mounted: only the ones the view is on, two at most
+// (citiesToMount). Six saved cities at launch were several hundred MB in the
+// WebView — iOS kills the app for that, and deleting a city needs the app.
+const mounting = new Set();
+// The slugs the latest view asked for, and the ones whose file would not
+// read this session (lost, corrupt): those are not tried again on every map
+// move — a fresh download clears the mark.
+let wanted = new Set();
+const unreadable = new Set();
+async function mountCity(city) {
+  if (mounted.has(city.slug) || mounting.has(city.slug) || unreadable.has(city.slug) || !styleReady) return;
+  ensureProtocol();
+  if (!pmProtocol) return;
+  mounting.add(city.slug);
+  try {
+    const src = await citySource(city.slug);
+    // The read takes a while for 80 MB and the view may have moved on: a city
+    // nobody is looking at any more is dropped here, before it is held.
+    if (!wanted.has(city.slug)) return;
+    pmProtocol.add(new pmtiles.PMTiles(src));
+    map.addSource(`city-${city.slug}`, { type: "vector", url: `pmtiles://${city.slug}` });
+    const before = pinLayerBelow();
+    for (const l of cityLayers(city.slug, lang)) map.addLayer(l, before);
+    mounted.add(city.slug);
+  } catch (e) {
+    unreadable.add(city.slug);
+    throw e;
+  } finally {
+    mounting.delete(city.slug);
+  }
+}
+
+function unmountCity(slug) {
+  for (const l of map.getStyle().layers)
+    if (l.id.startsWith(`city-${slug}-`)) map.removeLayer(l.id);
+  if (map.getSource(`city-${slug}`)) map.removeSource(`city-${slug}`);
+  pmProtocol?.tiles.delete(slug);   // the archive is in memory; let it go
+  mounted.delete(slug);
+}
+
+let savedList = [];
+function syncCities() {
+  if (!styleReady) return;
+  const b = map.getBounds(), c = map.getCenter();
+  const want = citiesToMount(savedList, [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
+                             { lat: c.lat, lon: c.lng }, map.getZoom());
+  if (!want) return;   // zoomed out: leave what is mounted alone
+  wanted = new Set(want.map((x) => x.slug));
+  for (const slug of [...mounted]) if (!want.some((x) => x.slug === slug)) unmountCity(slug);
+  for (const city of want) mountCity(city).catch(() => {});
+}
+
+async function mountSavedCities() {
+  await nativeScripts.catch(() => {});   // the map's load event can beat the two scripts
+  savedList = await savedCities();
+  map.on("moveend", syncCities);
+  syncCities();
+}
+
+// The dialog: every city in the catalogue, nearest to the map's centre
+// first, with its size; saved ones can be deleted. Progress is written
+// into the button while a download runs.
+async function renderOfflineList() {
+  offlineList.replaceChildren();
+  const [cat, saved] = await Promise.all([cityCatalogue(), savedCities()]);
+  if (!cat?.cities?.length) {
+    const li = document.createElement("li");
+    li.textContent = t("offlineNoList");
+    offlineList.append(li);
+    return;
+  }
+  const c = map.getCenter();
+  const savedBy = new Map(saved.map((x) => [x.slug, x]));
+  const cities = [...cat.cities].sort((a, b) => {
+    const ca = bboxCentre(a.bbox), cb = bboxCentre(b.bbox);
+    return kmBetween(c.lat, c.lng, ca.lat, ca.lon) - kmBetween(c.lat, c.lng, cb.lat, cb.lon);
+  });
+  for (const city of cities) {
+    const li = document.createElement("li");
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = city.name;
+    const small = document.createElement("small");
+    small.textContent = savedBy.has(city.slug) ? t("offlineSaved") : `${formatMB(city.bytes, NUMBER_LOCALE[lang])} MB`;
+    name.append(small);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    if (savedBy.has(city.slug)) {
+      btn.className = "saved";
+      btn.textContent = t("offlineDelete");
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        unmountCity(city.slug);
+        savedList = await deleteCity(city.slug);
+        renderOfflineList();
+      });
+    } else {
+      btn.textContent = t("offlineLoad", { mb: formatMB(city.bytes, NUMBER_LOCALE[lang]) });
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        try {
+          savedList = await downloadCity(city, (p) => { btn.textContent = t("offlineLoading", { pct: Math.round(p * 100) }); });
+          unreadable.delete(city.slug);
+          syncCities();
+          toast(t("offlineDone", { city: city.name }));
+        } catch {
+          toast(t("offlineFailed"));
+        }
+        renderOfflineList();
+      });
+    }
+    li.append(name, btn);
+    offlineList.append(li);
+  }
+}
+
+offlineBtn.addEventListener("click", () => {
+  offlineDialog.showModal();
+  renderOfflineList();
+});
+document.getElementById("offline-close").addEventListener("click", () => offlineDialog.close());
 
 boot();
 window.addEventListener("resize", positionZoomCtrl);

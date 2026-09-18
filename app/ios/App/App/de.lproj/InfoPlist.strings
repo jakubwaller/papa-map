@@ -1,0 +1,2 @@
+"NSLocationWhenInUseUsageDescription" = "Für den Standort-Knopf und den nächsten Wickeltisch. Die Position bleibt auf dem Handy: gesucht wird in den Daten, die schon da sind.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "PapaMap nutzt die Position nur, solange die App offen ist: für den Standort-Knopf und den nächsten Wickeltisch. Sie bleibt auf dem Handy und wird nie im Hintergrund abgefragt.";

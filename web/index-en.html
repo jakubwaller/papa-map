@@ -182,7 +182,7 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app17" />
+  <link rel="stylesheet" href="style.css?v=app18" />
 </head>
 <body>
   <div id="map"></div>
@@ -201,6 +201,14 @@
     <button id="nearest" type="button" aria-label="Nächsten nutzbaren Wickeltisch finden" title="Nächsten nutzbaren Wickeltisch finden" data-i18n-aria="ariaNearest">
       <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M21.5 2.5L2.8 9.6a.6.6 0 000 1.1l7.6 3 3 7.6a.6.6 0 001.1 0l7.1-18.7a.6.6 0 00-.1-.1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <!-- Store app only (web/native.js): the website has no offline basemap,
+         tile.openstreetmap.org's policy forbids caching it. app.js unhides it
+         under Capacitor. -->
+    <button id="offline" type="button" hidden aria-label="Stadt offline speichern" title="Stadt offline speichern" data-i18n-aria="ariaOffline">
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3v11M7.5 9.5L12 14l4.5-4.5M4 17v2.5h16V17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
   </div>
@@ -314,9 +322,18 @@
     <button id="add-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
   </dialog>
 
+  <!-- Offline cities (store app only): the list is filled by app.js from
+       papamap.de/tiles/index.json, nearest city first. -->
+  <dialog id="offline-dialog">
+    <h3 data-i18n="offlineTitle">Stadt offline speichern</h3>
+    <p data-i18n="offlineIntro">Der Stadtplan deiner Stadt bleibt auf dem Handy — auch ohne Netz. Die Wickeltische sind ohnehin da; hier kommt die Karte darunter dazu.</p>
+    <ul id="offline-list" class="offline-list"></ul>
+    <button id="offline-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
+  </dialog>
+
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app17"></script>
+  <script type="module" src="app.js?v=app18"></script>
 </body>
 </html>

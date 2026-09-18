@@ -15,6 +15,12 @@ services:
       # build output lives in web-data/ and is mounted back into the tree at the
       # URL it is served from, because web/ itself is read-only to the pipeline.
       - ./web-data/wickeltische:/srv/wickeltische:ro
+      # The store app's offline city basemaps (pipeline/tiles.py, weekly):
+      # 62 PMTiles files plus index.json, about 3 GB, served with CORS
+      # headers (the Caddyfile) because the app fetches the catalogue from
+      # its own origin. web/tiles/ is tracked (.gitkeep) for the same reason
+      # as web/private/: /srv is read-only, the mountpoint must exist.
+      - ./web-data/tiles:/srv/tiles:ro
       # The private ops page and the auth snippet that gates it. Both host
       # directories must exist before `up` (Docker would create them as
       # root; the ops service below writes as the host user), see
@@ -56,6 +62,20 @@ services:
     # of its backends for hours while answering the very same host over IPv6,
     # and every query from this container died with "Network is unreachable"
     # although nothing was wrong with the queries.
+    network_mode: host
+
+  # The weekly city basemaps for the store app: `docker compose run --build
+  # --rm tiles`, Sundays at 12:00 (docs/DEPLOY.md). Same image as the build
+  # (it carries the pmtiles binary); writes web-data/tiles/*.pmtiles and
+  # index.json, which the papamap service above serves at /tiles/. Host
+  # network like the build: outbound only, and IPv6.
+  tiles:
+    build: .
+    profiles: ["tools"]
+    command: ["python", "-m", "pipeline.tiles", "--out", "/out/tiles"]
+    user: "1000:1000"
+    volumes:
+      - ./web-data:/out
     network_mode: host
 
   # The daily ops check: `docker compose run --build --rm ops` at 05:30

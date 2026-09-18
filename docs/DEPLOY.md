@@ -58,6 +58,26 @@ If Caddy runs in a container, bind-mount the site into it first (add
 `- /path/to/papa-map/web:/srv/papa-map:ro` to the caddy service's `volumes:` and point
 `root` at `/srv/papa-map`), then `caddy reload`.
 
+## Weekly city basemaps (store app)
+
+The store app (`app/`) lets a reader keep a whole city's basemap on the phone. The files are
+PMTiles extracts of the Protomaps daily build, one per leaderboard city (`pipeline/tiles.py`),
+written to `web-data/tiles/` and served at `/tiles/` (the compose file mounts the directory,
+the Caddyfile adds the CORS header the app needs). Weekly is plenty for a basemap, and the
+Protomaps bucket is meant for extracts rather than for daily hammering:
+
+```cron
+0 12 * * 0 cd /path/to/papa-map && docker compose run --build --rm tiles >> tiles.log 2>&1
+```
+
+About 3 GB on disk for the 62 cities at zoom 14 (Hamburg is 24 MB), roughly a minute per city
+over the network — the whole run is well under two hours. `mkdir -p web-data/tiles` before the
+first run so the host user owns it (the service runs as 1000:1000). One city by hand:
+`docker compose run --build --rm tiles python -m pipeline.tiles --out /out/tiles --only hamburg`.
+The image carries the `pmtiles` binary (Dockerfile, pinned and checksummed), so the host needs
+nothing new. After the first run, `curl -sI https://papamap.de/tiles/index.json | grep -i
+access-control` must show `*`; the Caddyfile change needs the container restart described above.
+
 ## Daily data refresh
 
 `crontab -e`, matching the live schedule:

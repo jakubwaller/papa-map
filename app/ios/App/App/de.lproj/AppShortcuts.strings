@@ -1,0 +1,5 @@
+/* Siri phrases, German. Keys are the English phrases in NearestTableIntent.swift. */
+"Nearest changing table in ${applicationName}" = "Nächster Wickeltisch in ${applicationName}";
+"Where can I change the baby in ${applicationName}" = "Wo kann ich wickeln in ${applicationName}";
+"Find a changing table in ${applicationName}" = "Wickeltisch finden in ${applicationName}";
+"Nearest changing table" = "Nächster Wickeltisch";

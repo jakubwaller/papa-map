@@ -393,3 +393,31 @@ Every Overpass answer is checked for freshness (`osm3s.timestamp_osm_base`,
 database is skipped, because a region quietly computed from months-old data is
 a data bug on the map and a fake mover on the leaderboard.
 
+## The store app
+
+`app/` is the same map in a native shell (Capacitor) for the App Store and Google Play — the
+very same `web/` tree, with `web/native.js` as the only seam; on the website every export of
+it is inert. It exists for the three things a web page cannot do (`app/README.md` has the
+layout, the build and the signing):
+
+- **A city offline.** The website may not keep a basemap (see *Offline* above: the OSMF tile
+  policy), so the app brings its own: a PMTiles extract of the Protomaps daily build per
+  leaderboard city, cut weekly by `pipeline/tiles.py` and listed in `tiles/index.json`
+  (CONTRACT.md v33). A saved city is drawn as vector layers under the pins, with or without a
+  network. A mounted city is its whole file in memory, which is why only the cities the view is
+  on are mounted, two at most (`citiesToMount`) — six saved cities read at launch would have
+  iOS kill the app, and deleting a city needs the app.
+- **"Nearest changing table" from Siri and Spotlight**, and
+- **a home-screen widget** with the nearest table the reader can reach, its distance and its
+  pin's colour. Both run in Swift over a compact copy of the tables the app writes into its App
+  Group container — already narrowed by the wheelchair chip and read with the reader's
+  Papa/Mama setting, so the widget, the shortcut and the app's own button name the same table.
+  `status` is read there, never derived.
+
+The promises of the page hold unchanged: the position is used on the phone and never sent,
+the dataset comes from papamap.de, and an answer goes to OpenStreetMap under the reader's own
+account — with `host=https://papamap.de/` on the changeset, the OAuth return by
+`papamap://auth` being the only difference. Location in the app comes from a short position
+watch rather than one "current position" request: iOS holds the latter back for seconds until
+it likes the accuracy; the first fix good to 100 m wins, after three seconds the best seen.
+

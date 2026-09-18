@@ -1,5 +1,29 @@
 # papa-map — build contract (v0)
 
+> **v33 amendment (18 Sep 2026, the store app and its city basemaps):**
+> a second, weekly pipeline (`pipeline/tiles.py`, the `tiles` compose service)
+> writes **`tiles/<slug>.pmtiles`** — one PMTiles extract of the Protomaps
+> daily build per leaderboard city (`CITY_AREAS_BY_COUNTRY`, 62), `maxzoom`
+> 14 — and **`tiles/index.json`**, the catalogue: `generated` (ISO, UTC),
+> `build` (the Protomaps build the extracts were cut from), `source` (the
+> attribution line), **`cities`** — one row per city *whose file is there*:
+> `slug`, `name`, `cc` (ISO country, lower case), `bbox` (`[w, s, e, n]`),
+> `bytes`, `maxzoom` — and **`failed`**, the slugs whose extract did not come
+> through this run (their previous file, if any, stays listed and served).
+> Only the store app reads it (`web/native.js`: `cityCatalogue`,
+> `downloadCity`); the website has no offline basemap and never requests
+> `/tiles/`. The catalogue is served with `Access-Control-Allow-Origin: *`,
+> as are `/data/*.geojson` and `/data/*.json`, because the app is this same
+> shell under its own origin; the `.pmtiles` files are **not** — the app
+> fetches them with the native downloader, which knows no CORS. The app hands the Swift side (widget, Siri) a compact
+> copy of the tables — rows of `[lat, lon, status, name, osm_url]`, already
+> narrowed by the wheelchair chip — and `status` is read there, never
+> derived, as everywhere else. A changeset filed from the app carries
+> `host=https://papamap.de/` like one from the site. Shell pin `app17` →
+> `app18`; `native.js` joins the pinned shell.
+> The two GeoJSON files, `stats.json`, `areas.json` and `history.json` are
+> untouched.
+
 > **v32 amendment (17 Sep 2026, the footer link follows the map view):**
 > every `changing_tables.geojson` feature gains **`area`** — the sweep area
 > that found the object (`"Hamburg"`, `"Bretagne"`, `"Florida"`,
