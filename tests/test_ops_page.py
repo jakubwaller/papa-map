@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime, timezone
 
 from pipeline import ops, ops_page
@@ -93,6 +94,31 @@ def test_page_shows_warning_groups_not_every_line():
     assert "500 warnings, 1 distinct" in html
     assert "500 × WARN https://m/api" in html
     assert html.count("gave up after 3 attempts") == 1
+
+
+def test_warns_and_code_wrap_instead_of_forcing_the_page_wider():
+    """A stale-mirror or CJK-name WARN line is a monospace <li> with a full
+    URL in it, and a URL of 120+ chars has no space to wrap on — unlike the
+    tables (wrapped in .scroll, which scrolls sideways on its own), the
+    warnings list has nothing to contain it, so the whole page widened past
+    the phone viewport instead (real bug, iPhone screenshot: headings cut off
+    at the left edge). overflow-wrap: anywhere is what makes an unbreakable
+    token break inside its own box; this pins the rule in the CSS and checks
+    that a long unspaced line still reaches the page whole, unshortened."""
+    assert re.search(r"ul\.warns\s*\{[^}]*overflow-wrap:\s*anywhere", ops_page.OPS_STYLE)
+    assert re.search(r"code\s*\{[^}]*overflow-wrap:\s*anywhere", ops_page.OPS_STYLE)
+
+    long_url = "https://overpass-mirror.example/" + "a" * 140
+    cjk = "警告：東京都渋谷区のマッピングデータベースが64日前のものです、同期に失敗しました"
+    log = (FINISHED_BUILD.rsplit("{'features'", 1)[0]
+           + f"  WARN {long_url}: database is 64 days old — skipping mirror\n"
+           + f"  WARN {cjk}\n"
+           "{'features': 1931, 'pages': 45}\n")
+    html = render(build=ops_page.parse_build_log(log))
+    # The fix is layout-only: the long line still reaches the page whole,
+    # not truncated or otherwise altered.
+    assert long_url in html
+    assert cjk in html
 
 
 # ---- history.json ----------------------------------------------------------

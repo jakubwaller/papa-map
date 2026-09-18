@@ -44,8 +44,17 @@ OPS_STYLE = """\
   .bad { color: var(--red); font-weight: 600; }
   .warn { color: var(--amber); font-weight: 600; }
   ul.anomalies li { color: var(--red); }
+  /* A mirror's WARN line carries a full URL and sometimes CJK text from an
+     OSM name; wrapped in a monospace <li> with nothing to break on, a single
+     120+ char token would otherwise force the whole page wider than a phone
+     screen instead of the list item alone. overflow-wrap: anywhere breaks
+     such a token at any character, only when normal wrapping runs out of
+     spaces to break on. */
   ul.warns { font-size: 0.85rem; font-family: ui-monospace, Menlo, monospace;
-             padding-left: 1.2rem; }
+             padding-left: 1.2rem; overflow-wrap: anywhere; }
+  /* The failed-build line quotes the exception message verbatim; a long
+     traceback line (a file path, say) is the same hazard as a WARN line. */
+  code { overflow-wrap: anywhere; }
   .kpis { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1rem 0; }
   .kpi { flex: 1 1 9rem; border: 1px solid var(--line); border-radius: 6px;
          padding: 0.5rem 0.7rem; }
