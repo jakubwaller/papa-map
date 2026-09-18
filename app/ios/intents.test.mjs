@@ -45,7 +45,12 @@ test("the hand-over slot is emptied before it is judged, so a stale tap cannot w
   assert.ok(removed > 0 && judged > removed,
             "read once and removed whatever its age, and only then checked for freshness");
   assert.match(store, /public static let maxAge/);
-  assert.match(store, /guard url\.scheme == "papamap"/, "only the app's own links go in");
+  assert.match(store, /func isTableLink\(_ url: URL\) -> Bool \{ url\.scheme == "papamap" && url\.host == "table" \}/,
+               "only the app's own table link goes in, not any papamap: URL");
+  assert.match(store, /guard isTableLink\(url\) else \{ return \}/,
+               "store rejects anything that isn't the table link before it ever reaches the slot");
+  assert.match(consume, /let url = URL\(string: string\), isTableLink\(url\) else \{ return nil \}/,
+               "consume re-checks the link it reads back, not just what store once wrote");
 });
 
 test("the plugin listens on every moment that can be the first, and delivers as an opened URL", () => {

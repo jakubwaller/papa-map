@@ -10,6 +10,7 @@
 		0596E55727FD5DE1A23118AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8ED5D290B1D8B98A508BAD9 /* Foundation.framework */; };
 		106D63B995A04C73DEDEF9A3 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E91E50A59E02195346BD341B /* SwiftUI.framework */; };
 		2154B1D6EC28F1CCD097676C /* TableStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23441C9FFEE7740149D15F50 /* TableStore.swift */; };
+		41D4F41D472CFA1A60C29160 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E8C95C670FB2BF17895954FE /* PrivacyInfo.xcprivacy */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
@@ -83,6 +84,7 @@
 		BB322657027E0435A89F1A31 /* LocationOnce.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LocationOnce.swift; path = Shared/LocationOnce.swift; sourceTree = "<group>"; };
 		CF528F34F9FE1DDA90E4D556 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		D13747F105D5A488D31E84E1 /* NearestTableIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NearestTableIntent.swift; path = Intents/NearestTableIntent.swift; sourceTree = "<group>"; };
+		E8C95C670FB2BF17895954FE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E91E50A59E02195346BD341B /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		F811EBD1BFA9E8DD3497DD35 /* de */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -168,6 +170,7 @@
 				23E4EC9B81ACA6BC57D3C5E3 /* PapaMapWidget.swift */,
 				71C15FC030695EBD0CC2BA64 /* Info.plist */,
 				2FA67DA1D2DAB307A146690C /* PapaMapWidget.entitlements */,
+				E8C95C670FB2BF17895954FE /* PrivacyInfo.xcprivacy */,
 			);
 			name = PapaMapWidget;
 			path = PapaMapWidget;
@@ -285,6 +288,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41D4F41D472CFA1A60C29160 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
