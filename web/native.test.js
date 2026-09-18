@@ -97,6 +97,7 @@ function fakeIO({ net = true, downloader = true, files = {}, body = { n: 1 }, re
       if (replaceFails) throw new Error("rename failed");
       files[to] = files[from]; delete files[from];
     },
+    remove: async (path) => { io.log.push(`remove ${path}`); delete files[path]; },
     get: async () => { io.log.push("get"); if (!net) throw new Error("offline"); return body; },
   };
   return io;
@@ -127,6 +128,21 @@ test("a download that does not parse never replaces the good copy", async () => 
   assert.deepEqual(r, { json: { n: 0 }, fromStore: true });
   assert.deepEqual(io.files[COPY], { n: 0 });
   assert.ok(!io.log.includes(`replace ${COPY}`));
+  assert.ok(!(`${COPY}.new` in io.files), "the 18 MB that did not parse are not left in the backup");
+});
+
+test("a swap that fails loses nothing: today's map is drawn, and offline the .new file is the copy", async () => {
+  const files = {};
+  const r = await loadJSONNative("data/changing_tables.geojson", fakeIO({ files, replaceFails: true }));
+  assert.deepEqual(r, { json: { n: 1 }, fromStore: false });
+  // The next launch, in airplane mode: `path` was never written, `.new` was.
+  const off = await loadJSONNative("data/changing_tables.geojson", fakeIO({ net: false, files }));
+  assert.deepEqual(off, { json: { n: 1 }, fromStore: true });
+});
+
+test("offline, the good copy is preferred to a .new beside it", async () => {
+  const io = fakeIO({ net: false, files: { [COPY]: { n: 0 }, [`${COPY}.new`]: "garbage" } });
+  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io), { json: { n: 0 }, fromStore: true });
 });
 
 test("a failing downloader with a network there still draws the live map", async () => {

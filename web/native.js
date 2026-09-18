@@ -45,11 +45,15 @@ function nativeIO(fs = plugin("Filesystem")) {
       if (!r.ok) throw new Error(`${path}: ${r.status}`);
       return r.json();
     },
-    // rename() does not promise to overwrite on both platforms.
+    // rename() does not promise to overwrite on both platforms, so where it
+    // refuses, the old copy goes first. Between those two calls the only copy
+    // is the .new one — which is why the loader reads that too.
     replace: async (from, to) => {
-      try { await fs.deleteFile({ path: to, directory: DIR }); } catch { /* first copy */ }
-      await fs.rename({ from, to, directory: DIR, toDirectory: DIR });
+      const move = () => fs.rename({ from, to, directory: DIR, toDirectory: DIR });
+      try { await move(); }
+      catch { await fs.deleteFile({ path: to, directory: DIR }).catch(() => {}); await move(); }
     },
+    remove: (path) => fs.deleteFile({ path, directory: DIR }).catch(() => {}),
     get: async (url) => {
       const r = await fetch(url, { cache: "no-store" });
       if (!r.ok) throw new Error(String(r.status));
@@ -70,16 +74,28 @@ function nativeIO(fs = plugin("Filesystem")) {
 export async function loadJSONNative(url, io = nativeIO()) {
   const name = url.split("/").pop().split("?")[0];
   const path = `${DATA_PATH}/${name}`;
+  const fresh = `${path}.new`;
+  let json;
   try {
-    await io.download(SITE + url, `${path}.new`);
-    const json = await io.read(`${path}.new`);
-    await io.replace(`${path}.new`, path);
+    await io.download(SITE + url, fresh);
+    // Only a file this launch downloaded is thrown away for not parsing: with
+    // no network, a .new from an earlier launch may be the one copy there is.
+    try { json = await io.read(fresh); }
+    catch { await io.remove(fresh); }
+  } catch { /* no network, or no downloader */ }
+  if (json !== undefined) {
+    // A swap that fails costs nothing today and nothing offline: the data is
+    // in hand, and the .new file it sits in is read below when `path` is not.
+    await io.replace(fresh, path).catch(() => {});
     return { json, fromStore: false };
-  } catch { /* no network, or no downloader: the two below */ }
+  }
   try { return { json: await io.get(SITE + url), fromStore: false }; }
   catch { /* no network */ }
-  try { return { json: await io.read(path), fromStore: true }; }
-  catch { return null; }
+  for (const copy of [path, fresh]) {
+    try { return { json: await io.read(copy), fromStore: true }; }
+    catch { /* the other one */ }
+  }
+  return null;
 }
 
 // ---- Location ----
@@ -211,6 +227,8 @@ const SAVED_KEY = "papamap-offline-cities";
 // Kept like the dataset (as papamap/data/index.json), so the list of cities
 // opens without a network too — to delete one, if nothing else.
 export async function cityCatalogue() {
+  // Build 18 kept it under another name; that copy is nobody's any more.
+  nativeIO().remove(`${DATA_PATH}/tiles-index.json`);
   return (await loadJSONNative("tiles/index.json"))?.json ?? null;
 }
 
