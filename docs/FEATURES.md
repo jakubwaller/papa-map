@@ -424,3 +424,9 @@ account — with `host=https://papamap.de/` on the changeset, the OAuth return b
 watch rather than one "current position" request: iOS holds the latter back for seconds until
 it likes the accuracy; the first fix good to 100 m wins, after three seconds the best seen.
 
+One thing the app's page does not carry is the Ko-fi link in the footer. `app/shell.mjs` cuts
+it out of the bundled `index.html`, and the build fails if it cannot find it: Apple wants a tip
+for the developer to go through in-app purchase, and the developer account is declared a
+non-trader because the app has no purchase and no donate button. The website keeps its link —
+on the country and leaderboard pages too, which the app opens in the in-app browser (issue #124).
+
