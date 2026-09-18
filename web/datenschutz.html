@@ -125,8 +125,8 @@
      Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>App: Anmeldung bei OpenStreetMap</h2>
   <p>Die Anmeldung läuft wie auf der Website (OAuth 2 mit PKCE), mit einem Unterschied: Die
-     Anmeldeseite von openstreetmap.org öffnet die App im System-Browser Ihres Geräts — damit Sie
-     dort Ihre eigene OSM-Sitzung nutzen — und OSM schickt Sie anschließend über die Adresse
+     Anmeldeseite von openstreetmap.org öffnet die App in einer Browser-Ansicht des Systems, in
+     die sie selbst nicht hineinsehen kann, und OSM schickt Sie anschließend über die Adresse
      <code>papamap://auth</code> in die App zurück. Ihr Passwort sieht die App nie. Ihre Antwort
      schreibt die App direkt an api.openstreetmap.org, als Änderungssatz unter Ihrem eigenen
      OSM-Konto und Namen; es gelten die
@@ -136,7 +136,10 @@
   <h2>App: Links auf andere Seiten</h2>
   <p>Jeder Link, der die Karte verlässt — die Seiten dieser Website, openstreetmap.org,
      MapComplete, StreetComplete — öffnet im System-Browser Ihres Geräts, in einer Ansicht
-     innerhalb der App. Ab dort gilt die Datenschutzerklärung des jeweiligen Angebots; für die
+     innerhalb der App. Die Seiten dieser Website merken sich für die Dauer dieser Ansicht, dass
+     sie aus der App geöffnet wurden (Schlüssel <code>papamap-in-app</code> im Session Storage),
+     und blenden dann den Spendenlink aus; der Eintrag verfällt, wenn Sie die Ansicht schließen
+     (§ 25 Abs. 2 Nr. 2 TDDDG). Ab dort gilt die Datenschutzerklärung des jeweiligen Angebots; für die
      Seiten dieser Website gilt diese Erklärung.</p>
   <h2>App: Apple (App Store und TestFlight)</h2>
   <p>Die Verteilung über den App Store und über TestFlight ist Sache von Apple. Apple ist dafür
