@@ -27,6 +27,16 @@
 > gained an untranslated diagnostics block naming which of those paths
 > answered (`web/native.js`, `app.js`, `index.html`, `style.css`); no contract
 > change, no file gains or loses a property.)*
+> *(18 Sep 2026, later still: pin `app23` → `app24`. That "nothing asked at
+> all of a phone reported as offline" never fired on a phone: `navigator.onLine`
+> is `true` in airplane mode in the app's WKWebView (build 20), so the answer
+> now comes from **`@capacitor/network`** (NWPathMonitor) where the plugin
+> exists, asked once a launch before the four loads and bounded to 400 ms, with
+> `navigator.onLine` the fallback everywhere else — the website is unchanged.
+> The diagnostics block names which source answered, `online=false (native)`
+> against `(navigator)`. `web/native.js`, `app.js`; new dependency
+> `@capacitor/network` (8.x). No contract change, no file gains or loses a
+> property.)*
 
 > **v35 amendment (18 Sep 2026, no donate link inside the store app):**
 > **HTML surface only** — no data file gains, loses or changes a property.

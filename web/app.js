@@ -7,19 +7,19 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app23";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app24";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app23";
+         langUrl } from "./i18n.js?v=app24";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app23";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app24";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount, formatDiagnostics, connectivity } from "./native.js?v=app23";
+         formatMB, citiesToMount, formatDiagnostics, connectivity } from "./native.js?v=app24";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own

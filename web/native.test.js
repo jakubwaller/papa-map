@@ -402,7 +402,7 @@ test("even the widest row the loader can write fits the block", () => {
     onlineFrom: "navigator",           // the longer of the two sources
     bytes: 18489463,                   // eight digits
   }];
-  const lines = formatDiagnostics(worst, "app23").split("\n");
+  const lines = formatDiagnostics(worst, "appN").split("\n");
   assert.equal(lines[1], "changing_tables stored-new 120014ms 18489463 B");
   for (const line of lines) {
     assert.ok(line.length <= MAX_COLS, `"${line}" is ${line.length} of ${MAX_COLS} columns`);
