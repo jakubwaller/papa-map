@@ -5,10 +5,12 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          isWheelchairOk, countWheelchair, pinFeatures, placeFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
-         parseBbox, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, nearestAreas, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
-         osmElementFromApi, editOutcome, EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js";
+         osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
+         EDIT_TAG_LABEL, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js";
+import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
   type: "Feature",
@@ -201,6 +203,27 @@ test("play is strictly boolean — a dataset without the property has none", () 
   for (const p of [undefined, null, "yes", 1, "true", 0, ""])
     assert.equal(loadFeatures({ type: "FeatureCollection",
       features: [feat(9.9, 53.5, { status: "unknown", play: p })] })[0].play, false);
+});
+
+test("play_recorded separates 'no play corner' from 'nobody has said'", () => {
+  // v30: the popup asks the play question only where this is false. true is
+  // both an answered yes (the ring) and an answered no (no ring, no question
+  // — the reader already said so and must not be asked on every visit).
+  const one = (play) => loadFeatures({ type: "FeatureCollection",
+    features: [feat(9.9, 53.5, { status: "unknown", play })] })[0];
+  assert.equal(one(true).play_recorded, true);
+  assert.equal(one(false).play_recorded, true);
+  assert.equal(one(null).play_recorded, false);
+  assert.equal(one(undefined).play_recorded, false);
+  // A dataset from before v30 wrote false for every pin without a corner, so
+  // it reads as answered: the question waits for the next build rather than
+  // appearing on a pin whose reader has already answered it.
+  assert.equal(one(false).play, false);
+  // Junk is not an answer either way — neither ring nor question.
+  for (const p of ["no", 0, ""]) {
+    assert.equal(one(p).play, false, String(p));
+    assert.equal(one(p).play_recorded, false, String(p));
+  }
 });
 
 test("countPlay counts the play corners, never the statuses", () => {
@@ -603,10 +626,146 @@ test("editOutcome does not quote tags the edit left alone", () => {
   assert.deepEqual(editOutcome(before, { gone: true }), { changed: true, tags: null });
 });
 
-test("the edit check names only the two table tags and stops within five minutes", () => {
-  assert.deepEqual(EDIT_TAGS, ["changing_table", "changing_table:location"]);
+test("the edit check names the tags this site can write and stops within five minutes", () => {
+  // The two table tags, and since v30 the play-corner pair the popup's second
+  // question writes. Nothing else: the confirmation quotes an edit back, so
+  // every key here is one the reader was asked about.
+  assert.deepEqual(TABLE_TAGS, ["changing_table", "changing_table:location"]);
+  assert.deepEqual(PLAY_TAGS, ["kids_area", "kids_area:indoor"]);
+  assert.deepEqual(EDIT_TAGS, [...TABLE_TAGS, ...PLAY_TAGS]);
   assert.equal(EDIT_CHECK_DELAYS[0], 0);
   for (let i = 1; i < EDIT_CHECK_DELAYS.length; i++)
     assert.ok(EDIT_CHECK_DELAYS[i] > EDIT_CHECK_DELAYS[i - 1], "ascending");
   assert.ok(EDIT_CHECK_DELAYS.at(-1) <= 5 * 60 * 1000);
+});
+
+test("the confirmation gives each play key its own line when the two disagree", () => {
+  // The theme's outdoors-only pair. One label for both keys read as "Play
+  // area: yes · Play area: no", which says nothing (issue #119).
+  assert.deepEqual(editTagLines({ kids_area: "yes", "kids_area:indoor": "no" }),
+    [["tagPlay", "yes"], ["tagPlayIndoor", "no"]]);
+  // The site's own "indoors" answer writes yes to both, and that is one fact:
+  // the sub-key's line is dropped, so the note stays "Play area: yes" as it
+  // has read since v30.
+  assert.deepEqual(editTagLines({ kids_area: "yes", "kids_area:indoor": "yes" }),
+    [["tagPlay", "yes"]]);
+  // "none", and a sub-key somebody set on its own.
+  assert.deepEqual(editTagLines({ kids_area: "no" }), [["tagPlay", "no"]]);
+  assert.deepEqual(editTagLines({ "kids_area:indoor": "yes" }), [["tagPlayIndoor", "yes"]]);
+  // A disagreement the other way round is still two lines.
+  assert.deepEqual(editTagLines({ kids_area: "no", "kids_area:indoor": "yes" }),
+    [["tagPlay", "no"], ["tagPlayIndoor", "yes"]]);
+  // The room answer is untouched, and EDIT_TAGS order is display order.
+  assert.deepEqual(editTagLines({ "changing_table:location": "unisex_toilet", changing_table: "yes" }),
+    [["popupTable", "yes"], ["popupRoom", "unisex_toilet"]]);
+  // Values are verbatim — this file never interprets one.
+  assert.deepEqual(editTagLines({ kids_area: "maybe" }), [["tagPlay", "maybe"]]);
+  assert.deepEqual(editTagLines({}), []);
+  assert.deepEqual(editTagLines(null), []);
+});
+
+test("every tag the confirmation prints has a label, in every language", () => {
+  assert.deepEqual(Object.keys(EDIT_TAG_LABEL), EDIT_TAGS);
+  // Two keys sharing a label is the bug the test above pins; nothing else may
+  // reintroduce it.
+  const labels = Object.values(EDIT_TAG_LABEL);
+  assert.equal(new Set(labels).size, labels.length);
+  for (const lang of LANGS)
+    for (const key of labels)
+      assert.ok(STRINGS[lang][key]?.trim(), `${lang}: ${key}`);
+});
+
+// ---- Footer area link follows the map view (17 Sep 2026) ----
+const DE_EN = { href: "wickeltische/deutschland-en.html", label: "Changing tables in Germany" };
+const AREAS = [
+  { href: "wickeltische/", lang: "de", label: "Wickeltische in Deutschland", bbox: [5.5, 47.1, 15.4, 56.6],
+    en: DE_EN, areas: ["Bayern", "Hamburg", "Schleswig-Holstein"] },
+  { href: "wickeltische/hamburg.html", lang: "de", label: "Wickeltische in Hamburg", bbox: [8.4, 53.3, 10.4, 53.8],
+    en: DE_EN, area: "Hamburg", parent: "wickeltische/" },
+  { href: "wickeltische/schleswig-holstein.html", lang: "de", label: "Wickeltische in Schleswig-Holstein",
+    bbox: [7.8, 53.3, 11.4, 55.1], en: DE_EN, area: "Schleswig-Holstein", parent: "wickeltische/" },
+  { href: "wickeltische/bayern.html", lang: "de", label: "Wickeltische in Bayern", bbox: null,
+    en: DE_EN, area: "Bayern", parent: "wickeltische/" },
+  { href: "wickeltische/danmark.html", lang: "da", label: "Pusleborde i Danmark", bbox: [8.0, 54.5, 15.3, 57.8],
+    en: { href: "wickeltische/danmark-en.html", label: "Changing tables in Denmark" }, areas: ["Danmark"] },
+  { href: "wickeltische/france.html", lang: "fr", label: "Tables à langer en France", bbox: [-5, 41.3, 9.6, 51.1],
+    en: { href: "wickeltische/france-en.html", label: "Changing tables in France" }, areas: ["Grand Est"] },
+  { href: "wickeltische/grand-est.html", lang: "fr", label: "Tables à langer dans le Grand Est", bbox: [3.4, 47.4, 8.3, 50.2],
+    en: { href: "wickeltische/france-en.html", label: "Changing tables in France" }, area: "Grand Est", parent: "wickeltische/france.html" },
+  { href: "wickeltische/florida.html", lang: "en", label: "Changing tables in Florida", bbox: [-87.7, 24.4, -79.9, 31.1],
+    area: "Florida", parent: "wickeltische/united-states.html" },
+  { href: "wickeltische/united-kingdom.html", lang: "en", label: "Changing tables in the United Kingdom",
+    bbox: [-8.7, 49.8, 1.8, 60.9], areas: ["United Kingdom"] },
+];
+const pin = (lon, lat, area) => ({ lon, lat, area, status: "unknown" });
+const PINS = [
+  pin(9.99, 53.55, "Hamburg"), pin(10.01, 53.56, "Hamburg"), pin(10.03, 53.54, "Hamburg"),
+  pin(9.44, 54.79, "Schleswig-Holstein"),                    // Flensburg
+  pin(12.57, 55.68, "Danmark"), pin(12.6, 55.7, "Danmark"),
+  pin(7.75, 48.58, "Grand Est"), pin(7.74, 48.59, "Grand Est"),   // Strasbourg
+  pin(7.85, 48.0, "Baden-Württemberg"),                      // Freiburg, no row
+  pin(11.58, 48.14, "Bayern"),
+  pin(-0.1, 51.5, "United Kingdom"),
+  pin(-82.4, 28.0, "Florida"),
+  pin(13.4, 52.5, null),                                     // a pin without an area never votes
+];
+
+test("nearestAreas returns the k nearest pins that carry an area, nearest first", () => {
+  const near = nearestAreas(PINS, 10.0, 53.55, 3);
+  assert.deepEqual(near.map((n) => n.area), ["Hamburg", "Hamburg", "Hamburg"]);
+  assert.ok(near[0].km <= near[1].km && near[1].km <= near[2].km);
+  assert.deepEqual(nearestAreas(PINS, 13.4, 52.5, 1).map((n) => n.area), ["Hamburg"]);  // the null pin is skipped
+  assert.deepEqual(nearestAreas([], 10, 53), []);
+  assert.deepEqual(nearestAreas(null, 10, 53), []);
+});
+
+test("pickArea asks the nearest pins which area is on screen, then the box how far in the reader is", () => {
+  const at = (lon, lat, view) => pickArea(AREAS, PINS, [lon, lat], view)?.href ?? null;
+  // Zoomed into Hamburg: the view lies inside Hamburg's box.
+  assert.equal(at(10.0, 53.55, [[9.8, 53.45], [10.2, 53.65]]), "wickeltische/hamburg.html");
+  // The Land page's own deep link fits its box with padding: still Hamburg.
+  assert.equal(at(9.4, 53.55, [[8.2, 53.2], [10.6, 53.9]]), "wickeltische/hamburg.html");
+  // Country zoom with Hamburg pins nearest the centre: the Land is a sliver
+  // of the view, so the country.
+  assert.equal(at(10.0, 53.55, [[6.0, 47.5], [15.0, 58.5]]), "wickeltische/");
+  // Strasbourg lies inside Germany's box, but its pins say Grand Est.
+  assert.equal(at(7.75, 48.58, [[7.7, 48.55], [7.8, 48.61]]), "wickeltische/grand-est.html");
+  assert.equal(at(7.75, 48.58, [[2.0, 44.0], [12.0, 52.0]]), "wickeltische/france.html");
+  // A Land whose row has no box (no feature last night) resolves to its country.
+  assert.equal(at(11.58, 48.14, [[11.5, 48.1], [11.7, 48.2]]), "wickeltische/");
+  // A pan north: Denmark, a country without chunks.
+  assert.equal(at(12.6, 55.7, [[12.4, 55.6], [12.8, 55.8]]), "wickeltische/danmark.html");
+  // Flensburg at the Danish border: its pin votes Schleswig-Holstein.
+  assert.equal(at(9.44, 54.79, [[9.4, 54.77], [9.48, 54.81]]), "wickeltische/schleswig-holstein.html");
+  // An area with no row at all (Baden-Württemberg here) is no answer.
+  assert.equal(at(7.85, 48.0, [[7.8, 47.95], [7.9, 48.05]]), null);
+  // A US state page is English and its own reading.
+  assert.equal(at(-82.4, 28.0, [[-82.5, 27.9], [-82.3, 28.1]]), "wickeltische/florida.html");
+  // Open sea beyond reach of any pin, or no index, or no pins: null.
+  assert.equal(at(-30, 45, [[-31, 44], [-29, 46]]), null);
+  assert.equal(pickArea(null, PINS, [10, 53.55], null), null);
+  assert.equal(pickArea([], PINS, [10, 53.55], null), null);
+  assert.equal(pickArea(AREAS, [], [10, 53.55], null), null);
+  // No view yet: the country, never a chunk.
+  assert.equal(at(10.0, 53.55, null), "wickeltische/");
+});
+
+test("pickArea weighs the voters by nearness, so a close cluster outvotes one nearer pin and a far city never does", () => {
+  // Five Danish pins just over the border outvote the one nearer German pin...
+  const pins = [pin(9.45, 54.80, "Schleswig-Holstein"),
+                ...[1, 2, 3, 4, 5].map((i) => pin(9.45 + i * 0.01, 54.83, "Danmark"))];
+  assert.equal(pickArea(AREAS, pins, [9.45, 54.81], [[9.4, 54.78], [9.6, 54.86]]).href, "wickeltische/danmark.html");
+  // ...while Hamburg's three pins, 150 km off, do not outvote it.
+  const far = [pins[0], ...[1, 2, 3].map((i) => pin(10.0 + i * 0.01, 53.55, "Hamburg"))];
+  assert.equal(pickArea(AREAS, far, [9.45, 54.81], [[9.4, 54.78], [9.6, 54.86]]).href, "wickeltische/schleswig-holstein.html");
+});
+
+test("areaLink reads the page in the UI language, else its English twin", () => {
+  const hh = AREAS[1];
+  assert.deepEqual(areaLink(hh, "de"), { href: "wickeltische/hamburg.html", label: "Wickeltische in Hamburg" });
+  assert.deepEqual(areaLink(hh, "en"), { href: "wickeltische/deutschland-en.html", label: "Changing tables in Germany" });
+  assert.deepEqual(areaLink(hh, "cs"), { href: "wickeltische/deutschland-en.html", label: "Changing tables in Germany" });
+  // An English page is its own English reading, for every UI language.
+  assert.deepEqual(areaLink(AREAS.find((a) => a.area === "Florida"), "de"), { href: "wickeltische/florida.html", label: "Changing tables in Florida" });
+  assert.equal(areaLink(null, "de"), null);
 });

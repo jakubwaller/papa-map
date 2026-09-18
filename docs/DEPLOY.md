@@ -119,10 +119,13 @@ half-written file; if taginfo or Overpass is down, the previous JSON stays in pl
 The same run rewrites `web/wickeltische/` — the per-area pages (16 Bundesländer + index,
 one page per other swept country in its own language, and four hubs over chunk pages:
 france.html + 13 régions, united-states.html + 50 states and DC, canada.html + 13
-provinces and territories, nihon.html + 47 prefectures), plus the 32 leaderboard pages. They
-are build output, not repo content, so **a fresh clone serves 404s there until the first
-build runs**: the sitemap lists all 221 of those URLs unconditionally. Run the pipeline once
-after deploying rather than waiting for the nightly cron.
+provinces and territories, nihon.html + 47 prefectures), the English twin of every country
+page not written in English (42 `<slug>-en.html` files, `deutschland-en.html` among them),
+plus the 32 leaderboard pages — and `web/data/areas.json`, the area index the map's footer
+link reads. They are build output, not repo content, so **a fresh clone serves 404s there
+until the first build runs**: the sitemap lists all 221 of those URLs unconditionally (the
+twins are deliberately not in it). Run the pipeline once after deploying rather than waiting
+for the nightly cron — until it runs, the footer link keeps its language-routed fallback.
 
 A full build also maintains `history.json` next to the other generated JSON (the
 per-region daily counts behind `wickeltische/rangliste.html`) — same directory, same
@@ -362,7 +365,7 @@ request (304), but WebKit re-downloaded the page in a test, so it stays on navig
 pinned files change URL anyway, and the dataset would cost 1.7 MB a load on an iPhone.
 
 **Cloudflare caches the shell too, whatever the pin.** Caddy sends `max-age=3600` for every
-file. Cloudflare keeps `.js` and `.css` files at the edge, `sw.js` included
+file that no more specific matcher claims (`/data/*` and `/ops.html` get 900). Cloudflare keeps `.js` and `.css` files at the edge, `sw.js` included
 (`cf-cache-status: HIT`), and on those responses it rewrites the header to `max-age=14400`. So a
 reader's browser may keep a stale file for four hours, and the service worker's background
 refresh reads that same browser cache. HTML is not edge-cached (`DYNAMIC`) and keeps Caddy's
@@ -402,6 +405,8 @@ curl -s https://DOMAIN/ | grep -c 'areaFallback">49 Länder'              # want
 
 Both or neither. If `area_key` still counts the old set, the build has not run under the new
 variable yet — run it by hand rather than waiting for cron, or the site claims a coverage it
-does not have until the next morning. `/data/*` is meant to get `max-age=900`, but in
-`deploy/papamap.Caddyfile` the site-wide `header Cache-Control` line overrides the `@data` one.
-So it goes out with an hour: allow up to 60 minutes, or add `?x=1` to bust it.
+does not have until the next morning. `/data/*` goes out with `max-age=900`, so allow up
+to 15 minutes, or add `?x=1` to bust it. (Until 2026-09-17 it went out with the hour: the
+site-wide `header Cache-Control` line in `deploy/papamap.Caddyfile` overwrote the `@data`
+one. It is now `header ?Cache-Control`, a default that only applies where nothing more
+specific has.)

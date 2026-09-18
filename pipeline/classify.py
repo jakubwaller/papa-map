@@ -108,6 +108,42 @@ def has_play_area(tags: dict) -> bool:
     return leisure == "playground" and _v(tags, "indoor") == "yes"
 
 
+# The two keys a reader answers with, in the popup or in the theme. `leisure`
+# is not one of them — a playground is what the object *is*, never an answer to
+# "does this café have a play corner" — but it can still settle the question
+# without being an answer: see play_state.
+PLAY_KEYS = ("kids_area", "kids_area:indoor")
+
+
+def play_state(tags: dict) -> bool | None:
+    """True / False / None for the play corner, the way `wheelchair_state` is
+    tri-state: True when `has_play_area` passes, False when somebody has
+    answered on one of PLAY_KEYS and the answer does not pass (`kids_area=no`,
+    `kids_area:indoor=no`, `limited`), None when nobody has answered at all.
+
+    The False and the None render the same — no blue ring either way, because
+    neither is a table and a missing play corner is not a state worth drawing.
+    The difference is the *question*: the popup asks the play question only
+    where this is None, so a reader who has already said "no play corner here"
+    is not asked again on every visit (v30). Key presence decides, not the
+    value: a blank `kids_area=` is somebody's tag, the same reading
+    `build_play_features` gives a blank `changing_table=`.
+
+    One object answers the question by existing: a `leisure=playground` that is
+    not `indoor=yes` is an outdoor play area, so it is False rather than None —
+    there is nothing to ask a reader standing on one (v31)."""
+    if has_play_area(tags):
+        return True
+    # A playground that is not indoors is itself the answer: the object *is* an
+    # outdoor play area, so "is there a play area for children here?" has
+    # nothing left to ask, and a reader tapping "none" on one would stamp
+    # `kids_area=no` onto a playground (issue #119). `leisure=playground` plus
+    # `indoor=yes` never reaches this line — has_play_area already said True.
+    if _v(tags, "leisure") == "playground":
+        return False
+    return False if any(k in tags for k in PLAY_KEYS) else None
+
+
 def wheelchair_state(tags: dict, key: str = "wheelchair") -> str | None:
     """`yes` | `limited` | `no` from the `wheelchair` tag (or, with
     key="toilets:wheelchair", from that one), None when unrecorded or junk.

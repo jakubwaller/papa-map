@@ -186,6 +186,19 @@ those. A place counts if OSM has one of these tags:</p>
 <p>The ring is a badge, not a fourth colour. A place without these tags doesn't "have no play
 area", OSM just says nothing about it, and that is true for almost every place. So there is no
 grey here.</p>
+<p>Which is why the popup asks. On a pin that is already asking which room the table is in, and
+where OSM says nothing about a play area, one line sits under the rooms: <em>Play area for
+children?</em>, with three answers. <em>indoors</em> writes <code>kids_area:indoor=yes</code>
+together with <code>kids_area=yes</code>, <em>outdoors only</em> writes <code>kids_area=yes</code>
+together with <code>kids_area:indoor=no</code>, <em>none</em> writes <code>kids_area=no</code> —
+under your own OSM account, in a changeset of its own, exactly the tags MapComplete writes for the
+same question. The question is about a play area at all, not only an indoor one:
+<code>kids_area=no</code> means "there is nowhere for children to play here" in OSM, so a bakery
+with a playground in the garden gets <em>outdoors only</em> rather than a false no. The ring
+follows (or stays away) at the next nightly build. Nobody is asked twice: a recorded
+<code>kids_area</code> <em>or</em> <code>kids_area:indoor</code>, whatever the value, takes the
+question away. On a <code>leisure=playground</code> without <code>indoor=yes</code> it is never
+asked at all — the place <em>is</em> somewhere for children to play, just not indoors.</p>
 <p>Many more places pass this rule than have a pin. Only
 <span data-stat="play_tables">111</span> of them carry a <code>changing_table</code> tag at all.
 At <span data-stat="play_places">701</span> more, nobody has answered the first question: is there

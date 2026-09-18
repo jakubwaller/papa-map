@@ -4,21 +4,21 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          countWheelchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         EDIT_TAGS, EDIT_CHECK_DELAYS } from "./datasource.js?v=app14";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app18";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app14";
+         langUrl } from "./i18n.js?v=app18";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         writeTags } from "./osm.js?v=app14";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app18";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks, directionsUri,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB } from "./native.js?v=app14";
+         formatMB } from "./native.js?v=app18";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -47,6 +47,11 @@ const CHANGESET_COMMENT = {
   table: "Changing table: which room (answered on papamap.de)",
   place: "Changing table: added, with its room (answered on papamap.de)",
   place_none: "Changing table: none (answered on papamap.de)",
+  // Keyed by the choice itself, because a play answer says which it was in
+  // the comment the way the room answers say it in the tag.
+  play_yes: "Play area: indoors (answered on papamap.de)",
+  play_outdoor: "Play area: outdoors only (answered on papamap.de)",
+  play_no: "Play area: none (answered on papamap.de)",
 };
 
 // ---- Reading mode: the same three answers, read as a father or as a mother.
@@ -86,15 +91,52 @@ function applyI18n() {
   }
   document.getElementById("methods-link").href = t("methodsHref");
   document.getElementById("board-link").href = t("boardHref");
-  // Each language's footer leads to the area page its readers search
-  // for — the Danish UI to danmark.html, the French one to france.html.
-  document.getElementById("regions-link").href = t("regionsHref");
+  // The area link follows the map view, and its label is the target page's
+  // own title; the language's regionsHref is only the fallback (see
+  // updateRegionsLink). Re-pointed here because the data-i18n swap above
+  // just reset the label to the language's generic one.
+  updateRegionsLink();
   // German reads its own app page, every other language the English one.
   document.getElementById("app-link").href = t("appHref");
   // Boot may have resolved a language the markup does not show (a stored
   // choice, or a Czech browser): the control has to agree with the page.
   const sel = document.getElementById("lang-select");
   if (sel && sel.value !== lang) sel.value = lang;
+}
+
+// ---- Footer area link: follows the map view, not the UI language ----
+// Until 2026-09-17 the link went where the language pointed (regionsHref in
+// i18n.js): an English UI in Hamburg got the United Kingdom. Now it names the
+// area on screen — Hamburg when zoomed into Hamburg, Deutschland at country
+// zoom, Danmark after a pan north — in the reader's language where that page
+// exists and in English otherwise (data/areas.json, CONTRACT.md v32; the
+// choice is pickArea/areaLink in datasource.js: the pins nearest the centre
+// say which sweep area is on screen, the area's box whether the reader is
+// looking at a Land or at the country). The language-routed target
+// stays as the fallback for a view with no area under it (open sea, an
+// unswept country) and for a server whose pipeline has not written
+// areas.json yet, so the link never 404s.
+let areaIndex = null;
+function updateRegionsLink() {
+  const el = document.getElementById("regions-link");
+  let link = null;
+  try {
+    // Wrap the centre and shift the view by the same amount: past a
+    // continuous pan over ±180° getBounds() runs on past 180 while the
+    // area boxes never do, and the two must share a frame for the overlap.
+    const raw = map.getCenter(), c = raw.wrap(), dx = c.lng - raw.lng;
+    const view = map.getBounds().toArray().map(([x, y]) => [x + dx, y]);
+    link = areaLink(pickArea(areaIndex, allFeatures, [c.lng, c.lat], view), lang);
+  } catch { /* no map yet: the fallback below */ }
+  const label = link ? link.label : t("regions");
+  el.href = link ? link.href : t("regionsHref");
+  if (el.textContent === label) return;
+  el.textContent = label;
+  // "Bundesländer" → "Wickeltische in Schleswig-Holstein" can wrap the nav
+  // row at phone width, and the zoom control sits under the topbar's
+  // measured height (positionZoomCtrl) — re-seat it whenever the label
+  // changes, the same hazard the stats strip already handles.
+  positionZoomCtrl();
 }
 
 // Names, hours and tag values in the popups originate from OpenStreetMap
@@ -444,6 +486,13 @@ function popupHTML(f) {
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
   if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
   if (asks) rows.push(askHTML("askRoom", inFlight.has(f.osm_url)));
+  // The second question, asked of the same reader in the same visit: OSM says
+  // nothing about a play corner here (play_recorded false — an answered "no"
+  // is an answer and is never asked again). It lives outside the .ask block on
+  // purpose, so answering the room takes that question down and leaves this
+  // one standing — which is what a reader who has just filed a room sees.
+  if (!f.play_recorded && (asks || roomAnswered.has(f.osm_url)))
+    rows.push(askPlayHTML(inFlight.has(f.osm_url)));
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
@@ -490,6 +539,31 @@ function askHTML(question = "askRoom", busy = false) {
     : esc(t("askLoginHint"));
   return `<div class="ask"><div class="ask-q">${esc(t(question))}</div>` +
          `${btns}<div class="ask-who">${who}</div></div>`;
+}
+
+// The play question: one line, three buttons, and no login line of its own —
+// it only ever appears under the room question or where that question has just
+// been answered, and both carry it. The question asks about a play area for
+// children and the answers say where it is, because that is what the tags mean:
+// `kids_area=no` is "nowhere for children to play", and a two-button
+// "indoor play area? yes/no" wrote it under a bakery with a garden playground
+// (issue #119). The third pill is the theme's own outdoors-only mapping.
+//
+// Short labels, and the row wraps: the asking card measured ~470 px on a 12
+// mini with six rooms (PR #101), against a map area of ~560 px, and
+// panPopupIntoView() has to keep working.
+//
+// The buttons are `ask-btn` so the one document listener takes them, and
+// their data-room carries the choice rather than a room — the same liberty
+// the play place's "none" already takes.
+const PLAY_LABEL = { play_yes: "askPlayIndoor", play_outdoor: "askPlayOutdoor",
+                     play_no: "askPlayNone" };
+function askPlayHTML(busy = false) {
+  const dis = busy ? " disabled" : "";
+  const pill = (choice) =>
+    `<button type="button" class="btn ask-btn" data-room="${choice}"${dis}>${esc(t(PLAY_LABEL[choice]))}</button>`;
+  return `<div class="ask-play"><span class="ask-q">${esc(t("askPlay"))}</span>` +
+         `<span class="ask-play-btns">${PLAY_CHOICES.map(pill).join("")}</span></div>`;
 }
 
 // A prospect's popup says one thing the pin popups never do: nobody has
@@ -1037,12 +1111,12 @@ async function pollEdit(gen, last) {
 }
 
 // "Changing table: yes · room: unisex_toilet" — the popup's own labels, the
-// tag values verbatim. Goes through textContent, so no escaping here.
-const EDIT_TAG_LABEL = { changing_table: "popupTable", "changing_table:location": "popupRoom" };
-function tagsLabel(tags) {
-  return EDIT_TAGS.filter((k) => tags[k])
-    .map((k) => `${t(EDIT_TAG_LABEL[k])}: ${tags[k]}`).join(" · ");
-}
+// tag values verbatim. Which lines there are (and that "Play area: yes ·
+// Indoor play area: no" is two of them) is editTagLines' business, in
+// datasource.js where the tags and their labels live; this only puts the
+// words to it. Goes through textContent, so no escaping here.
+const tagsLabel = (tags) =>
+  editTagLines(tags).map(([label, value]) => `${t(label)}: ${value}`).join(" · ");
 
 const editText = (note) =>
   note.key === "editFound" ? t("editFound", { tags: tagsLabel(note.tags) }) : t(note.key, note.vars ?? {});
@@ -1135,6 +1209,12 @@ const goLogin = (intent) => startLogin(osm, intent, isNative() ? nativeNavigate 
 // and the popup would blame a stranger for the reader's own first one.
 const inFlight = new Set();
 
+// Pins whose room was answered here, this visit. The dataset still says the
+// room is unknown — that is tonight's build's to change — so this is what
+// keeps the play question on a popup that is reopened right after the room
+// went in, where the room question itself is rightly gone.
+const roomAnswered = new Set();
+
 // One path for both pin kinds: a grey table gets its room, a play place gets
 // the table and the room. The kind rides along in the login intent so the
 // return leg knows which dataset to look the object up in.
@@ -1161,24 +1241,45 @@ async function answer(kind, obj, choice, freshToken = null) {
     // Inside the try: a choice that is not one of ours (a stale or edited
     // intent from storage) fails like any other answer, with a note, rather
     // than as an unhandled rejection the reader never sees.
-    const patch = kind === "place" ? tablePatch(choice) : roomPatch(choice);
+    const play = isPlayChoice(choice);
+    const patch = play ? playPatch(choice)
+      : kind === "place" ? tablePatch(choice) : roomPatch(choice);
     // "none" only ever arrives for a place, and it gets its own changeset
-    // comment — the room comment would claim a room was named.
-    const comment = kind === "place" && choice === "none" ? CHANGESET_COMMENT.place_none : CHANGESET_COMMENT[kind];
+    // comment — the room comment would claim a room was named. A play answer
+    // names itself.
+    const comment = play ? CHANGESET_COMMENT[choice]
+      : kind === "place" && choice === "none" ? CHANGESET_COMMENT.place_none : CHANGESET_COMMENT[kind];
     const out = await writeTags(osm, token, osmRef(obj.osm_url), patch, comment);
     // The popup's tag row and the question's absence both read from the
-    // object, so the one in memory learns the answer. A pin's status and a
-    // place's colour do not move — that is the pipeline's to say, tonight.
-    obj.changing_table = out.tags.changing_table;
-    obj.location_raw = out.tags["changing_table:location"];
-    // Everything that was true only while the question was open goes: the
-    // question itself (.ask — querySelector would take the headline alone
-    // and leave the buttons standing, sandbox test 13 Sep 2026) and the
-    // context lines marked .ask-ctx: a pin's "room unknown" headline in
-    // either reading, a play place's "OSM says nothing" and "been here?".
-    el?.querySelectorAll(".ask, .ask-ctx").forEach((x) => x.remove());
+    // object, so the one in memory learns the answer. A pin's status, a
+    // place's colour and the blue play ring do not move — that is the
+    // pipeline's to say, tonight.
+    if (play) {
+      // Answered is answered, whichever way: the question does not come back
+      // when this popup is reopened. Only its own line goes; a room question
+      // still waiting above it stays.
+      obj.play_recorded = true;
+      el?.querySelector(".ask-play")?.remove();
+    } else {
+      obj.changing_table = out.tags.changing_table;
+      obj.location_raw = out.tags["changing_table:location"];
+      roomAnswered.add(obj.osm_url);
+      // Everything that was true only while the question was open goes: the
+      // question itself (.ask — querySelector would take the headline alone
+      // and leave the buttons standing, sandbox test 13 Sep 2026) and the
+      // context lines marked .ask-ctx: a pin's "room unknown" headline in
+      // either reading, a play place's "OSM says nothing" and "been here?".
+      // .ask-play is neither, and stays.
+      el?.querySelectorAll(".ask, .ask-ctx").forEach((x) => x.remove());
+    }
+    // Whatever survived the sweep is the other question, and it was quieted
+    // for this round trip, not answered: give it its buttons back.
+    btns.forEach((b) => { if (b.isConnected) b.disabled = false; });
+    // Quoted back: the group this answer wrote. A room answer names the table
+    // and its room, a play answer the play corner — never the other question's
+    // tags, which this tap did not touch.
     const tags = {};
-    for (const k of EDIT_TAGS) if (out.tags[k]) tags[k] = out.tags[k];
+    for (const k of (play ? PLAY_TAGS : TABLE_TAGS)) if (out.tags[k]) tags[k] = out.tags[k];
     setEditNote(rec, "found", "editFound", tags);
   } catch (err) {
     btns.forEach((b) => { b.disabled = false; });
@@ -1433,8 +1534,10 @@ async function completeLogin(href) {
       // trip with somebody else's room on this object, the popup now shows
       // that room and the stored answer stays unfiled rather than writing
       // over it.
-      const open = kind === "place" ? !obj.changing_table
-                                    : obj.status === "unknown" && !obj.location_raw;
+      const open = isPlayChoice(intent.choice)
+        ? !obj.play_recorded
+        : kind === "place" ? !obj.changing_table
+                           : obj.status === "unknown" && !obj.location_raw;
       if (open) answer(kind, obj, intent.choice, login.token);
     }
   }
@@ -1457,14 +1560,18 @@ async function boot() {
   applyI18n();  // markup default is German — swap before first paint if not
   syncModeButtons();  // ...and the markup default is papa
   if (isNative()) bootNative();
-  const [fc, places, stats] = await Promise.all([
+  const [fc, places, stats, areas] = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
     loadJSON("data/play_places.geojson"),
     loadJSON("data/stats.json"),
+    loadJSON("data/areas.json"),
   ]);
   allFeatures = loadFeatures(fc);
   allPlaces = loadPlaces(places);
   renderStats(stats);
+  areaIndex = Array.isArray(areas) ? areas : null;
+  updateRegionsLink();
+  map.on("moveend", updateRegionsLink);
   renderChips();
   positionZoomCtrl();  // topbar height depends on the rendered strip
   fitHome();           // ...and so does the home view's top padding

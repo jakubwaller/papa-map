@@ -142,7 +142,7 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     summary = run_pipeline(
         geojson_path=str(geojson), stats_path=str(stats),
         play_geojson_path=str(play_geojson),
-        overpass_fetch=fake_overpass, pages_dir=str(tmp_path / "pages"),
+        overpass_fetch=fake_overpass, pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
         history_path=str(tmp_path / "history.json"),
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
     )
@@ -158,7 +158,7 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     # sweep the areas are disjoint, so summing is the correct total.
     assert summary == {"features": 7, "play_places": 3, "play_places_no": 0, "ct_objects": 9,
                        "toilets_total": 51, "global_source": "taginfo",
-                       "pages": 18 + len(leaderboard.L)}
+                       "pages": 18 + 2 + len(leaderboard.L)}  # +2: English twins of Germany and Denmark
     # Still two object queries per area, not three: the play half rides along
     # in the changing_table sweep instead of costing its own Overpass slot.
     assert fake_overpass.areas_seen == ([a for a in SWEEP for _ in (1, 2)]
@@ -197,7 +197,7 @@ def test_key_locked_tables_ride_in_the_geojson_but_in_no_count(tmp_path, load_fi
     geojson_path = tmp_path / "ct.geojson"
     run_pipeline(
         geojson_path=str(geojson_path), stats_path=str(tmp_path / "stats.json"),
-        pages_dir=str(tmp_path / "pages"), history_path=str(history_path),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"), history_path=str(history_path),
         overpass_fetch=_fake_overpass(load_fixture, ct=ct),
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
     feats = json.loads(geojson_path.read_text(encoding="utf-8"))["features"]
@@ -215,7 +215,7 @@ def test_single_area_build_keeps_its_own_name(tmp_path, load_fixture):
     run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
         areas=[("Hamburg", "4")], display_area="Hamburg",
-        pages_dir=str(tmp_path / "pages"),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
         overpass_fetch=_fake_overpass(load_fixture),
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
     )
@@ -229,7 +229,7 @@ def test_single_area_build_keeps_its_own_name(tmp_path, load_fixture):
 def test_run_is_idempotent(tmp_path, load_fixture):
     kwargs = dict(geojson_path=str(tmp_path / "ct.geojson"),
                   stats_path=str(tmp_path / "stats.json"),
-                  pages_dir=str(tmp_path / "pages"),
+                  pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
                   history_path=str(tmp_path / "history.json"),
                   overpass_fetch=_fake_overpass(load_fixture),
                   taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
@@ -246,7 +246,7 @@ def test_taginfo_down_keeps_previous_global_block(tmp_path, load_fixture, capsys
                      encoding="utf-8")
     summary = run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
-        overpass_fetch=_fake_overpass(load_fixture), pages_dir=str(tmp_path / "pages"),
+        overpass_fetch=_fake_overpass(load_fixture), pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
         history_path=str(tmp_path / "history.json"),
         taginfo_fetch=_taginfo_down, now=NOW,
     )
@@ -297,7 +297,7 @@ def test_failed_area_is_retried_in_a_later_round(tmp_path, load_fixture):
         geojson_path=str(tmp_path / "ct.geojson"),
         stats_path=str(tmp_path / "stats.json"),
         overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
-        pages_dir=str(tmp_path / "pages"),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
         history_path=str(tmp_path / "history.json"), now=NOW, sweep_pause_s=0)
     assert summary["features"] == 7  # nothing lost, Bayern landed on round 2
     # failed ct, then both queries
@@ -323,7 +323,7 @@ def test_taginfo_down_with_no_previous_stats_degrades_to_null(tmp_path, load_fix
     stats = tmp_path / "stats.json"
     summary = run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
-        overpass_fetch=_fake_overpass(load_fixture), pages_dir=str(tmp_path / "pages"),
+        overpass_fetch=_fake_overpass(load_fixture), pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
         history_path=str(tmp_path / "history.json"),
         taginfo_fetch=_taginfo_down, now=NOW,
     )
@@ -337,7 +337,7 @@ def test_full_build_writes_history_and_leaderboard(tmp_path, load_fixture):
     run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"),
         stats_path=str(tmp_path / "stats.json"),
-        pages_dir=str(tmp_path / "pages"), history_path=str(history_path),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"), history_path=str(history_path),
         overpass_fetch=_fake_overpass(load_fixture),
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
     history = json.loads(history_path.read_text(encoding="utf-8"))
@@ -373,7 +373,7 @@ def test_ring_build_files_each_neighbour_under_its_english_name(
     summary = run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
         play_geojson_path=str(tmp_path / "play.geojson"),
-        pages_dir=str(tmp_path / "pages"), history_path=str(history_path),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"), history_path=str(history_path),
         overpass_fetch=fake_overpass,
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
     assert fake_overpass.areas_seen == ([a for a in RING_SWEEP for _ in (1, 2)]
@@ -393,7 +393,9 @@ def test_ring_build_files_each_neighbour_under_its_english_name(
     # belgium.html — the page is written in Dutch, for the people who search
     # "verschoontafel", and its slug follows its own headline.
     written = sorted(p.name for p in (tmp_path / "pages").glob("*.html"))
-    assert summary["pages"] == len(written) == 25 + len(leaderboard.L)
+    # 25 native pages + the English twins of Germany and the 8 non-English
+    # neighbours (the UK is its own English reading).
+    assert summary["pages"] == len(written) == 25 + 9 + len(leaderboard.L)
     for name in ("danmark", "belgie", "nederland", "oesterreich", "schweiz",
                  "cesko", "polska", "sverige"):
         assert f"{name}.html" in written, name
@@ -414,7 +416,7 @@ def test_city_sweep_failure_degrades_to_warn(tmp_path, load_fixture, capsys):
     summary = run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"),
         stats_path=str(tmp_path / "stats.json"),
-        pages_dir=str(tmp_path / "pages"), history_path=str(history_path),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"), history_path=str(history_path),
         overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
         now=NOW, sweep_rounds=2, sweep_pause_s=0)
     assert summary["features"] == 7
@@ -655,7 +657,7 @@ def test_a_retried_area_does_not_double_count_its_toilets(tmp_path, load_fixture
         geojson_path=str(tmp_path / "ct.geojson"),
         stats_path=str(tmp_path / "stats.json"),
         overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
-        pages_dir=str(tmp_path / "pages"),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
         history_path=str(tmp_path / "history.json"), now=NOW, sweep_pause_s=0)
     assert summary["toilets_total"] == 51
     # Bayern really was swept twice — otherwise the assertion above is vacuous.
@@ -678,7 +680,7 @@ def test_a_half_answered_count_query_is_an_error_not_a_zero(tmp_path, load_fixtu
                      stats_path=str(tmp_path / "stats.json"),
                      overpass_fetch=truncated,
                      taginfo_fetch=_fake_taginfo(load_fixture),
-                     pages_dir=str(tmp_path / "pages"),
+                     pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
                      history_path=str(tmp_path / "history.json"),
                      now=NOW, sweep_rounds=2, sweep_pause_s=0)
 
@@ -691,7 +693,7 @@ def test_per_land_toilet_counts_reach_the_bundesland_pages(tmp_path, load_fixtur
                  stats_path=str(tmp_path / "stats.json"),
                  overpass_fetch=_fake_overpass(load_fixture),
                  taginfo_fetch=_fake_taginfo(load_fixture),
-                 pages_dir=str(tmp_path / "pages"),
+                 pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
                  history_path=str(tmp_path / "history.json"), now=NOW)
     page = (tmp_path / "pages" / "bayern.html").read_text(encoding="utf-8")
     assert "3 öffentliche Toiletten" in page
@@ -784,7 +786,7 @@ def test_wave_two_build_files_states_and_provinces_under_their_countries(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
         play_geojson_path=str(tmp_path / "play.geojson"),
         overpass_fetch=fake, taginfo_fetch=_fake_taginfo(load_fixture),
-        pages_dir=str(tmp_path / "pages"),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
         history_path=str(tmp_path / "history.json"), now=NOW)
     expected = [(n, "4") for n, _ in config.US_STATES] + [(n, "4") for n, _ in config.CANADA_PROVINCES]
     assert fake.areas_seen == [a for a in expected for _ in (1, 2)]  # no cities: partial build
@@ -830,9 +832,9 @@ def test_japan_build_writes_japanese_hub_and_prefecture_pages(tmp_path, load_fix
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(stats),
         play_geojson_path=str(tmp_path / "play.geojson"),
         overpass_fetch=fake, taginfo_fetch=_fake_taginfo(load_fixture),
-        pages_dir=str(tmp_path / "pages"),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
         history_path=str(tmp_path / "history.json"), now=NOW)
-    assert summary["pages"] == 1 + 47
+    assert summary["pages"] == 1 + 47 + 1   # nihon.html, 47 prefectures, nihon-en.html
     assert json.loads(stats.read_text(encoding="utf-8"))["area_key"] == "jp"
     names = {p.name for p in (tmp_path / "pages").iterdir()}
     assert {"nihon.html", "tokyo.html", "hokkaido.html", "okinawa.html"} <= names

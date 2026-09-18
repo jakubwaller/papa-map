@@ -229,6 +229,57 @@ export function tablePatch(choice) {
   return { changing_table: "yes", ...roomPatch(choice) };
 }
 
+// The second question a pin can ask: is there a play area for children? Three
+// answers, and they are the theme's own mappings (theme/papamap.theme.json,
+// "kids-area"), so the page and MapComplete write the same thing:
+//
+//   indoors      -> kids_area:indoor=yes plus kids_area=yes. The sub-key is
+//                   the form the OSM wiki documents and the one the pipeline
+//                   settles the question on; the parent tag rides along the
+//                   way the theme's addExtraTags sends it, because
+//                   `kids_area` alone is what most objects and most editors
+//                   carry.
+//   outdoors only-> kids_area=yes plus kids_area:indoor=no. A bakery with a
+//                   garden playground and no corner inside: there *is* a play
+//                   area, and saying so is not the same as saying there is
+//                   none. The pair is the theme's third mapping verbatim.
+//   none         -> kids_area=no, alone. The wiki reads that as "nowhere for
+//                   children to play", which is now exactly what the reader
+//                   was asked — the two-button question this replaces asked
+//                   about the corner *indoors* and wrote the answer to the
+//                   whole place (issue #119).
+//
+// All three are values `pipeline/classify.py` already reads: the first passes
+// has_play_area and draws the blue ring at the next build, the other two do
+// not and never will.
+export const PLAY_CHOICES = ["play_yes", "play_outdoor", "play_no"];
+export const isPlayChoice = (choice) => PLAY_CHOICES.includes(choice);
+
+// Both keys of the question, in the order a confirmation names them. A play
+// answer claims the pair, not just the keys its own patch happens to write:
+// see guardKeys.
+export const PLAY_KEYS = ["kids_area", "kids_area:indoor"];
+
+export function playPatch(choice) {
+  if (choice === "play_yes") return { "kids_area:indoor": "yes", kids_area: "yes" };
+  if (choice === "play_outdoor") return { kids_area: "yes", "kids_area:indoor": "no" };
+  if (choice === "play_no") return { kids_area: "no" };
+  throw new Error(`unknown play choice ${choice}`);
+}
+
+// What the "taken" check below has to find empty before it writes. The patch's
+// own keys, plus — for a play answer — the whole of PLAY_KEYS, because the two
+// keys are one statement: a `kids_area:indoor=yes` tagged since last night's
+// build is somebody's answer to this very question, and a "none" written over
+// it would leave the object saying both things at once (issue #119). Derived
+// from the patch rather than passed in, so no caller can forget it.
+export function guardKeys(patch) {
+  const keys = Object.keys(patch);
+  return keys.some((k) => PLAY_KEYS.includes(k))
+    ? [...new Set([...keys, ...PLAY_KEYS])]
+    : keys;
+}
+
 export const CREATED_BY = "PapaMap";
 
 // `host` is where the answer was given: the live site, or on the sandbox the
@@ -303,10 +354,11 @@ export async function writeTags(cfg, token, ref, patch, comment, fetchFn = fetch
   const el = elementFromApi(await read.json());
   if (!el) throw httpError(read.status, "read");
   // The popup's gate saw a snapshot up to a day old. If somebody has answered
-  // since — a room on the live object, a changing_table on the play place —
-  // that answer is theirs, and this tap does not write over it (CONTRACT.md
-  // v25). Reported as the conflict it is, before any changeset is opened.
-  if (Object.keys(patch).some((k) => el.tags[k])) throw httpError(409, "taken");
+  // since — a room on the live object, a changing_table on the play place,
+  // either kids_area key under a play answer — that answer is theirs, and this
+  // tap does not write over it (CONTRACT.md v25). Reported as the conflict it
+  // is, before any changeset is opened.
+  if (guardKeys(patch).some((k) => el.tags[k])) throw httpError(409, "taken");
 
   const open = await fetchFn(`${cfg.api}/changeset/create`,
     { method: "PUT", headers: xml, body: changesetXml(changesetTags(comment, cfg.redirect)), signal: bounded() });

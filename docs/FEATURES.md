@@ -94,10 +94,30 @@ a hub over 13 per-région pages — English again for `united-states.html` and
 alphabet to sort by), and so on. The routing (including the
 inflected name forms prose needs: "in der Schweiz", "w Polsce") lives in
 `config.COUNTRY_PAGES` and `pipeline/pages_l10n.py`; slugs are the local
-names (`belgie.html`, `cesko.html`, `oesterreich.html`). The map's footer
-"Bundesländer" link is language-routed the same way (`regionsHref` in
-`web/i18n.js`): the Danish UI links danmark.html, the French UI france.html.
-Every page carries a country list linking the others.
+names (`belgie.html`, `cesko.html`, `oesterreich.html`). Every page carries
+a country list linking the others.
+
+**Every country page not written in English has an English twin** at
+`<slug>-en.html` (since 2026-09-17; Germany's is `deutschland-en.html`, a
+hub over the Land pages). The twin's canonical is the majority-language page
+and it is not in the sitemap: it exists for readers, not for search. Why it
+exists: **the map's footer link follows the map view, not the UI language.**
+It names the area page for what is on screen — "Wickeltische in Hamburg"
+when zoomed into Hamburg, "Wickeltische in Deutschland" at country zoom,
+"Pusleborde i Danmark" after a pan north — in the reader's UI language where
+that page exists and in English otherwise, so a reader with an English phone
+in Hamburg gets Germany in English rather than the United Kingdom (which is
+what the old language routing sent them to). Which area is on screen is
+asked of the pins, not of a bounding box: every feature carries the sweep
+`area` that found it (CONTRACT.md v32), and the seven pins nearest the map
+centre vote, weighted by nearness — exact at the borders, where boxes are not (Strasbourg lies
+inside Germany's box, Salzburg inside Bavaria's). The pipeline also writes
+`data/areas.json`, one row per area page with its box; `pickArea` in
+`web/datasource.js` shows the Land, région, state or prefecture when its box
+covers at least a quarter of the view and the country otherwise, and the
+language-routed `regionsHref` in `web/i18n.js` remains the fallback when no
+pin is within 250 km of the centre (open sea, an unswept country) or a file
+is missing.
 
 Which area an object belongs to is recorded during the sweep — it is free,
 since the sweep is already chunked per area, and the GeoJSON carries no region
@@ -237,6 +257,23 @@ in the pipeline and nowhere else (`CONTRACT.md` v26). A pin that already carries
 a room in words the classifier does not read is not asked — that is somebody's
 tag, and MapComplete shows it before letting anyone write over it.
 
+The same popup asks one more thing, on one line under the rooms: *play area for
+children?* — *indoors*, *outdoors only*, *none*. It is the second question a
+father standing in a café can answer without looking anything up, and it is
+asked only where OSM is silent: a recorded play corner shows its blue ring
+instead, a recorded answer of any kind is never asked again, and a
+`leisure=playground` is not asked at all, because the object itself is the
+answer. *Indoors* writes `kids_area:indoor=yes` together with `kids_area=yes`,
+*outdoors only* writes `kids_area=yes` together with `kids_area:indoor=no`,
+*none* writes `kids_area=no`: the three mappings the site's own MapComplete
+theme uses for the same question, and values `classify.py` already reads, so
+the ring appears (or stays away) at the next build. The third answer is what
+makes the first two honest — `kids_area=no` is OSM's "nowhere for children to
+play", and a two-button *indoor play area? yes/no* wrote it under bakeries with
+a garden playground (issue #119, v31). The two questions are independent taps
+and independent changesets — answering the room leaves the play line standing,
+and answering the play line leaves the room question where it was.
+
 A blue play place asks the other question, *is there a changing table? then tap
 its room*, and the one tap writes both `changing_table=yes` and the room —
 the table is news to OSM there, and the yes without the room would only make
@@ -254,11 +291,16 @@ forgets it here and revokes it at OSM.
 
 ## Play corners
 
-Every feature carries a boolean `play`: true when the object also records an
+Every feature carries a tri-state `play`: true when the object also records an
 indoor place for the kid to play (`kids_area:indoor` or `kids_area` =
 `yes|indoor|designated`, `leisure=indoor_play`, or `leisure=playground` +
-`indoor=yes`). `outdoor`, `no` and `limited` are excluded, and an explicit
-`kids_area:indoor=no` overrules a bare `kids_area=yes`. The map draws it as a
+`indoor=yes`), false when somebody has answered on one of the `kids_area` keys
+and the answer does not pass — or when the object is an outdoor
+`leisure=playground`, which answers the question by being one (v31) — null when
+nobody has answered at all. `outdoor`,
+`no` and `limited` are excluded, and an explicit `kids_area:indoor=no`
+overrules a bare `kids_area=yes`. False and null draw the same — nothing — and
+differ only in whether the popup asks the question (CONTRACT v30). The map draws it as a
 blue halo under the pin and the chip bar gains a filter that narrows to those
 places.
 

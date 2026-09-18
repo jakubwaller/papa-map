@@ -548,6 +548,22 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    should recede (the amenity subtitle, the "away" caption). */
 .popup .ask-btn-none { color: var(--muted); }
 .popup .ask-btn-none:hover { border-color: var(--line); color: var(--muted-2); }
+/* The play-corner question: one line under the room question, the words then
+   Yes and No. No login line of its own — the row above already says whose
+   name the answer goes under, and the card's height budget (~470 px against a
+   12 mini's ~560 px of map) has room for a row, not a second block. A
+   language whose words do not fit beside the pills wraps rather than clips. */
+.popup .ask-play {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft);
+}
+.popup .ask-play .ask-q { margin-bottom: 0; flex: 1 1 auto; }
+/* Three answers since v31, so they wrap as a group: either the whole row fits
+   beside the question or the three drop under it together, never two up and
+   one alone. 12px of padding rather than 14 buys the German row (drinnen /
+   nur draußen / keine) its place on one line at 375px. */
+.popup .ask-play .ask-play-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
+.popup .ask-play .ask-btn { flex: 0 0 auto; padding: 6px 12px; }
 .popup .ask-who { margin-top: 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted-2); }
 .popup .linkish {
   border: 0; background: none; padding: 0; font: inherit;

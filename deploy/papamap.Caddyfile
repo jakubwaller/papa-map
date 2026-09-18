@@ -64,7 +64,14 @@
 	@tiles path /tiles/*.pmtiles
 	header @tiles Cache-Control "public, max-age=86400"
 	header @tiles Content-Type application/vnd.pmtiles
-	header Cache-Control "public, max-age=3600"
+	# The site-wide hour is a *default*: `?` sets the header only if nothing
+	# has set it already. Caddy sorts same-directive `header` routes so the
+	# ones carrying a matcher run first, and a plain `header` is a Set — so
+	# written without the `?` this line overwrote the 900 above and /data/*
+	# and /ops.html went out with an hour (measured on the live site). With
+	# the `?` every matcher-specific TTL wins and none has to be excluded
+	# here.
+	header ?Cache-Control "public, max-age=3600"
 	# Go's mime table has no .webmanifest and the alpine image ships no
 	# /etc/mime.types, so without this the manifest goes out as text/plain.
 	# Chrome installs the app anyway; the type is what the spec asks for.

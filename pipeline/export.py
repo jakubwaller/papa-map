@@ -5,7 +5,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from .classify import central_key, classify, has_play_area, wheelchair_state
+from .classify import central_key, classify, has_play_area, play_state, wheelchair_state
 from .osm import element_coords
 
 
@@ -30,7 +30,7 @@ def _mapcomplete_url(osm_type, osm_id, lat, lon):
             f"&z=18&lat={lat}&lon={lon}#{osm_type}/{osm_id}")
 
 
-def build_features(ct_data: dict) -> list[dict]:
+def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]:
     """GeoJSON features for changing_table=yes/limited objects with usable
     coordinates. `no` and junk values are dropped here (stats still see them).
 
@@ -40,7 +40,15 @@ def build_features(ct_data: dict) -> list[dict]:
     and run.py hands only the `key: null` features to the area pages and the
     leaderboard, so no count anywhere grows by them. Their `status` is the
     room rule alone — the door is what the key locks, not the room behind
-    it."""
+    it.
+
+    `area_by_key` ({(osm_type, id): sweep area name}, run.py's ct_area) puts
+    the sweep area that found each object on the feature (v32) — the one
+    exact answer to "which Land / country is this pin in", which the map's
+    footer link needs and no bounding box can give (Strasbourg lies inside
+    Germany's box, Salzburg inside Bavaria's). Same authority as the pages
+    and the leaderboard, so the three can never disagree."""
+    area_by_key = area_by_key or {}
     features = []
     for el in ct_data.get("elements", []):
         tags = el.get("tags") or {}
@@ -64,8 +72,11 @@ def build_features(ct_data: dict) -> list[dict]:
                 "changing_table": value, "location_raw": location,
                 "status": status,
                 # Free: the sweep already asks for every tag on these objects,
-                # so the play corner costs no extra Overpass query.
-                "play": has_play_area(tags),
+                # so the play corner costs no extra Overpass query. Tri-state
+                # since v30: false is "somebody answered, there is none", null
+                # is "nobody has said". Both draw no ring; only the null gets
+                # the popup's play question.
+                "play": play_state(tags),
                 # Free for the same reason. Tri-state or null, shown verbatim
                 # in the popup; only wheelchair=yes drives a filter.
                 "wheelchair": wheelchair_state(tags),
@@ -77,6 +88,7 @@ def build_features(ct_data: dict) -> list[dict]:
                 "opening_hours": tags.get("opening_hours"),
                 "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
                 "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),
+                "area": area_by_key.get((osm_type, osm_id)),
             },
         })
     return features

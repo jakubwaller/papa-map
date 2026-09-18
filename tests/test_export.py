@@ -55,7 +55,7 @@ def test_feature_properties_match_data_contract(load_fixture):
         "osm_type": "node", "osm_id": 1, "name": "Hauptbahnhof WC",
         "amenity": "toilets", "changing_table": "yes",
         "location_raw": "male_toilet", "status": "accessible",
-        "play": False,
+        "play": None,
         "wheelchair": None, "toilets_wheelchair": None,
         "wheelchair_description": None, "key": None,
         "fee": "yes", "opening_hours": "24/7",
@@ -64,6 +64,7 @@ def test_feature_properties_match_data_contract(load_fixture):
                             "https://raw.githubusercontent.com/jakubwaller/papa-map/"
                             "main/theme/papamap.theme.json"
                             "&z=18&lat=53.5528&lon=10.0065#node/1"),
+        "area": None,
     }
     assert feats[2]["name"] is None
     assert feats[3]["location_raw"] is None
@@ -96,8 +97,8 @@ def test_play_area_is_a_property_not_a_status(load_fixture):
     feats = {f["properties"]["osm_id"]: f["properties"]
              for f in build_features(load_fixture("overpass_changing_tables.json"))}
     assert feats[3]["play"] is True    # cafe with kids_area=yes
-    assert feats[7]["play"] is False   # restaurant with kids_area=no
-    assert feats[1]["play"] is False   # no kids_area tag at all
+    assert feats[7]["play"] is False   # restaurant with kids_area=no — answered
+    assert feats[1]["play"] is None    # no kids_area tag at all — unanswered
     # the badge never moves a pin's color
     assert feats[3]["status"] == "unknown"
 
@@ -124,12 +125,43 @@ def test_play_area_recognizes_all_three_tagging_patterns():
     assert play({"kids_area": "yes", "kids_area:indoor": "no"}) is False
     assert play({"kids_area": "yes", "kids_area:outdoor": "yes"}) is True
     assert play({"kids_area": "no", "kids_area:indoor": "yes"}) is True
-    # a plain outdoor playground stays out, indoor= is what makes it count
+    # a plain outdoor playground stays out of the ring, indoor= is what makes
+    # it count. False, not None: the object *is* an outdoor play area, so there
+    # is nothing left to ask a reader standing on it (v31) — a playground with
+    # a changing table used to be asked, and a tap on "none" would have written
+    # kids_area=no onto a playground.
     assert play({"leisure": "playground"}) is False
     assert play({"leisure": "playground", "indoor": "no"}) is False
-    assert play({}) is False
+    assert play({}) is None
     # case and whitespace are the mapper's, not ours
     assert play({"kids_area": " Yes "}) is True
+
+
+def test_play_is_tri_state_so_an_answered_no_is_not_asked_again():
+    # v30. False is "somebody answered and there is no indoor play corner",
+    # None is "nobody has answered" — the popup asks only the None.
+    def play(tags):
+        el = {"type": "node", "id": 1, "lat": 53.5, "lon": 10.0,
+              "tags": {"changing_table": "yes", **tags}}
+        return build_features({"elements": [el]})[0]["properties"]["play"]
+
+    assert play({"kids_area": "no"}) is False
+    assert play({"kids_area:indoor": "no"}) is False
+    # the popup's "outdoors only" (v31): the theme's own pair for "there is a
+    # play area, but outdoors". Answered, no indoor corner, no ring, never
+    # asked again — and, unlike a bare kids_area=no, true about the garden.
+    assert play({"kids_area": "yes", "kids_area:indoor": "no"}) is False
+    # a blank value is somebody's tag, the same reading build_play_features
+    # gives a blank changing_table=
+    assert play({"kids_area": ""}) is False
+    # junk on the key is still an answer to the question, just not a usable one
+    assert play({"kids_area": "maybe"}) is False
+    assert play({"amenity": "cafe"}) is None
+    # A playground the map has as a pin because somebody mapped a changing
+    # table on it: answered by what it is, so the question stays away (v31).
+    assert play({"leisure": "playground", "amenity": "toilets"}) is False
+    # An indoor one is still the ring, not the silence.
+    assert play({"leisure": "playground", "indoor": "yes"}) is True
 
 
 def test_play_features_are_their_own_dataset(load_fixture):
@@ -255,3 +287,15 @@ def test_atomic_write_keeps_old_file_when_rename_fails(tmp_path, monkeypatch):
         write_json_atomic({"new": True}, str(out))
     # the served file is only ever touched by the rename
     assert json.loads(out.read_text(encoding="utf-8")) == {"old": True}
+
+
+def test_features_carry_the_sweep_area_that_found_them(load_fixture):
+    # v32: the footer link asks the pins which area they are in; the mapping
+    # is run.py's ct_area, the same authority as the pages and the
+    # leaderboard. An object the mapping does not know keeps null.
+    feats = {f["properties"]["osm_id"]: f["properties"]
+             for f in build_features(load_fixture("overpass_changing_tables.json"),
+                                     {("node", 1): "Hamburg", ("node", 2): "Danmark"})}
+    assert feats[1]["area"] == "Hamburg"
+    assert feats[2]["area"] == "Danmark"
+    assert feats[3]["area"] is None

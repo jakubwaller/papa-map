@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
-         finishLogin, ROOMS, roomChoices, roomChoicesMore, roomPatch, tablePatch, changesetTags, changesetXml,
+         finishLogin, ROOMS, roomChoices, roomChoicesMore, roomPatch, tablePatch,
+         PLAY_CHOICES, PLAY_KEYS, isPlayChoice, playPatch, guardKeys, changesetTags, changesetXml,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY } from "./osm.js";
 
 // ---- Which OSM ----
@@ -145,6 +146,45 @@ test("the play-place 'no table' answer writes changing_table=no alone, no room",
   assert.deepEqual(tablePatch("none"), { changing_table: "no" });
 });
 
+test("the play answers write the theme's own tags, all three values", () => {
+  // indoors: the documented sub-key settles it, the parent tag rides along the
+  // way the theme's addExtraTags sends it. Both are values has_play_area()
+  // reads, so tonight's build draws the ring.
+  assert.deepEqual(playPatch("play_yes"), { "kids_area:indoor": "yes", kids_area: "yes" });
+  // outdoors only: the theme's third mapping, verbatim. There *is* a play
+  // area — the ring stays away because it is not indoors, not because the
+  // place has nothing (issue #119).
+  assert.deepEqual(playPatch("play_outdoor"), { kids_area: "yes", "kids_area:indoor": "no" });
+  // none: the bare key alone, which the wiki reads as "nowhere for children to
+  // play" — now what the reader was actually asked.
+  assert.deepEqual(playPatch("play_no"), { kids_area: "no" });
+  assert.throws(() => playPatch("yes"));
+  assert.throws(() => playPatch("none"));
+  // The three are distinct, and no two write the same pair.
+  const written = PLAY_CHOICES.map((c) => JSON.stringify(Object.entries(playPatch(c)).sort()));
+  assert.equal(new Set(written).size, PLAY_CHOICES.length);
+  // Neither answer touches the changing table: the two questions are separate
+  // taps and a play corner says nothing about a table.
+  for (const c of PLAY_CHOICES) {
+    assert.ok(!("changing_table" in playPatch(c)), c);
+    assert.ok(!("changing_table:location" in playPatch(c)), c);
+  }
+});
+
+test("a play choice is never mistaken for a room, nor a room for a play choice", () => {
+  // app.js routes on this: a true here picks playPatch, a false roomPatch or
+  // tablePatch, and either mix-up would write the wrong key.
+  for (const c of PLAY_CHOICES) assert.ok(isPlayChoice(c), c);
+  for (const c of [...roomChoices("papa"), ...roomChoicesMore(), "none", "", null, undefined])
+    assert.equal(isPlayChoice(c), false, String(c));
+  // and no play choice is a room value the other patches would accept
+  for (const c of PLAY_CHOICES) {
+    assert.ok(!(c in ROOMS), c);
+    assert.throws(() => roomPatch(c), c);
+    assert.throws(() => tablePatch(c), c);
+  }
+});
+
 test("changeset tags name the tool, the hashtag and the host", () => {
   const tags = changesetTags("A room answered");
   assert.equal(tags.created_by, CREATED_BY);
@@ -225,6 +265,23 @@ test("writeTags: read, open, write with the patch on top of the existing tags, c
   assert.ok(calls[1].body.includes(`<tag k="created_by" v="${CREATED_BY}"/>`));
 });
 
+test("a play answer claims both kids_area keys, not just the ones it writes", () => {
+  // The guard the 409 is derived from. `play_no` writes `kids_area` alone, so
+  // testing the patch's own keys let a stranger's `kids_area:indoor=yes` —
+  // tagged after last night's build — survive underneath a `kids_area=no`
+  // (issue #119). Every play answer guards the pair.
+  for (const c of PLAY_CHOICES) {
+    assert.deepEqual([...guardKeys(playPatch(c))].sort(), [...PLAY_KEYS].sort(), c);
+  }
+  // A room answer is unchanged: it claims exactly what it writes.
+  assert.deepEqual(guardKeys(roomPatch("female")), ["changing_table:location"]);
+  assert.deepEqual(guardKeys(tablePatch("none")), ["changing_table"]);
+  assert.deepEqual(guardKeys(tablePatch("unisex")), ["changing_table", "changing_table:location"]);
+  // The pair is the pipeline's PLAY_KEYS and datasource.js's PLAY_TAGS, in
+  // the same order; three files, one list.
+  assert.deepEqual(PLAY_KEYS, ["kids_area", "kids_area:indoor"]);
+});
+
 test("writeTags: a room somebody tagged since last night's build is theirs — 409, no changeset", async () => {
   // The grey pin's gate saw yesterday's snapshot; the live object has a room.
   let api = scriptedApi([
@@ -241,6 +298,42 @@ test("writeTags: a room somebody tagged since last night's build is theirs — 4
   await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, tablePatch("unisex"), "c", api.fetchFn),
     (e) => e.status === 409 && e.step === "taken");
   assert.equal(api.calls.length, 1);
+});
+
+test("writeTags: a play answer is refused by the other kids_area key too", async () => {
+  // Somebody tagged `kids_area:indoor=yes` after last night's build — nothing
+  // the reader's "none" would overwrite, and yet the object would be left
+  // saying both at once, with the ring still drawn. The room question refuses
+  // a stranger's answer the same way (CONTRACT v25, guard widened in v31).
+  let api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 5, lat: 1, lon: 2,
+                                        tags: { amenity: "cafe", "kids_area:indoor": "yes" } }] } },
+  ]);
+  await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, playPatch("play_no"), "c", api.fetchFn),
+    (e) => e.status === 409 && e.step === "taken");
+  assert.equal(api.calls.length, 1, "nothing after the read: no changeset was opened");
+  // And the other way round: a bare `kids_area` stops the outdoors answer.
+  api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 5, lat: 1, lon: 2,
+                                        tags: { kids_area: "no" } }] } },
+  ]);
+  await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, playPatch("play_outdoor"), "c", api.fetchFn),
+    (e) => e.status === 409 && e.step === "taken");
+  assert.equal(api.calls.length, 1);
+  // An object nobody has answered on still writes, both keys in one changeset.
+  api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 5, lat: 1, lon: 2,
+                                        tags: { amenity: "bakery" } }] } },
+    { status: 200, text: "1234" },
+    { status: 200, text: "6" },
+    { status: 200 },
+  ]);
+  const out = await writeTags(SANDBOX, "tok", { type: "node", id: "42" }, playPatch("play_outdoor"), "c", api.fetchFn);
+  assert.deepEqual(out.tags, { amenity: "bakery", kids_area: "yes", "kids_area:indoor": "no" });
+  assert.equal(api.calls.filter((c) => c.url.endsWith("/changeset/create")).length, 1,
+    "one answer, one changeset");
+  assert.ok(api.calls[2].body.includes('<tag k="kids_area" v="yes"/>'));
+  assert.ok(api.calls[2].body.includes('<tag k="kids_area:indoor" v="no"/>'));
 });
 
 test("writeTags: a connection that drops during the write still closes the changeset", async () => {

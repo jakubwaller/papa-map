@@ -23,5 +23,6 @@ ENV PAPAMAP_GEOJSON_PATH=/out/changing_tables.geojson \
     PAPAMAP_PAGES_DIR=/out/wickeltische \
     PAPAMAP_HISTORY_PATH=/out/history.json \
     PAPAMAP_TOILETS_COUNTS_PATH=/out/toilets_counts.json \
+    PAPAMAP_AREAS_PATH=/out/areas.json \
     PMTILES_BIN=/usr/local/bin/pmtiles
 CMD ["python", "-m", "pipeline.run"]

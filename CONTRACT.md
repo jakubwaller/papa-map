@@ -1,5 +1,117 @@
 # papa-map — build contract (v0)
 
+> **v32 amendment (17 Sep 2026, the footer link follows the map view):**
+> every `changing_tables.geojson` feature gains **`area`** — the sweep area
+> that found the object (`"Hamburg"`, `"Bretagne"`, `"Florida"`,
+> `"Danmark"`), from the same `ct_area` mapping the pages and the leaderboard
+> count by; `null` for an object no sweep area claims. It is the one exact
+> answer to "which Land or country is this pin in": a bounding box has
+> Strasbourg in Germany and Salzburg in Bavaria. And the pipeline writes a
+> fourth JSON, **`data/areas.json`**: a list of rows, one per generated area
+> page. Every row has `href` (site-relative: `wickeltische/hamburg.html`,
+> `wickeltische/` for the German index), `lang` (the page's language),
+> `label` (its own h1, "Wickeltische in Hamburg"), `bbox` (`[w, s, e, n]` in
+> the padded form the pages' own `?bbox=` links use, or `null` when the area
+> has no object or straddles the antimeridian; a hub's box is the union of
+> its chunks') and, unless the page is English already, `en`
+> (`{href, label}`): the English reading for a reader whose UI language is
+> not `lang` — a country's English twin, or for a chunk the twin of its
+> country. A country row carries **`areas`**, the sweep area names behind
+> it (Germany: the 16 Länder; Denmark: `["Danmark"]`); a chunk row — Land,
+> région, state, prefecture — carries **`area`**, its one sweep area, and
+> **`parent`**, the `href` of its country row. The frontend
+> (`pickArea`/`areaLink` in `web/datasource.js`) lets the seven pins nearest
+> the map centre vote with their `area`, weighted by nearness (none within
+> 250 km: no answer),
+> takes the chunk when its box covers at least a quarter of the view and the
+> country otherwise, and falls back to the language-routed `regionsHref`
+> when there is no answer or either file is missing.
+>
+> HTML surface: every country page not written in English gets an English
+> twin at **`<slug>-en.html`** (Germany: `deutschland-en.html`, a hub over
+> the 16 Land pages; France and Japan: hubs in English over their native
+> chunk pages) whose `<link rel="canonical">` is the majority-language page.
+> Twins link each other and the majority pages by endonym in the back row
+> and are **not** in `sitemap.xml`. Shell pin `app15` → `app16` (→ `app17` with the
+> review fixes the same day).
+> `stats.json`, the two GeoJSON files and `history.json` are untouched.
+
+> **v31 amendment (17 Sep 2026, the play question gets its third answer):**
+> The popup's play line asks about a **play area for children**, not an indoor
+> corner, and offers **three** answers — the three mappings of the theme's own
+> `kids-area` question: *indoors* → `kids_area:indoor=yes` + `kids_area=yes`
+> (v30, unchanged), *outdoors only* → `kids_area=yes` + `kids_area:indoor=no`,
+> *none* → `kids_area=no`. v30 asked about the corner indoors and wrote the
+> answer to the whole place: a bakery with a playground in the garden got a
+> `kids_area=no`, which OSM reads as "nowhere for children to play"
+> (issue #119). The third answer is what makes the other two truthful, and it
+> is the theme's pair verbatim — the page and MapComplete still write the same
+> thing for the same tap.
+>
+> **`play` gains a source that is nobody's answer:** an object with
+> `leisure=playground` and no `indoor=yes` is **`false`**, where v30 said
+> `null` ("a bare `leisure=playground` stays `null`", superseded here). The
+> object *is* an outdoor play area, so there is nothing left to ask a reader
+> standing on one — and v30's question, asked on a playground that carries a
+> changing table, invited a `kids_area=no` on a playground. This is a
+> classification rule (`pipeline/classify.py::play_state`), **not a shape
+> change**: `play` is the same tri-state property with the same three values,
+> read by the same `play === true`, and `play_recorded` follows as before. The
+> only thing that moves is which pins ask the question.
+>
+> **The confirmation gives `kids_area:indoor` its own label.** Both keys shared
+> `tagPlay`, so the outdoors-only pair rendered as "Play area: yes · Play area:
+> no". `EDIT_TAG_LABEL` now maps it to `tagPlayIndoor`, and moves from
+> `web/app.js` to `web/datasource.js` beside the tag lists it keys (superseding
+> v25's pointer to its old home) together with `editTagLines()`, which builds
+> the confirmation's `[label, value]` lines and drops the sub-key's line where
+> it only repeats the parent's value. So the site's own *indoors* answer still
+> reads "Play area: yes", and the theme's outdoors-only pair reads "Play area:
+> yes · Indoor play area: no". Still displayed, never interpreted.
+>
+> **A play answer's "taken" check covers both keys** (`web/osm.js::guardKeys`).
+> It tested the patch's own keys, so a `kids_area:indoor=yes` tagged since last
+> night's build survived underneath a "none" — self-contradicting, ring still
+> drawn, and v25's "that answer is theirs" broken inside the staleness window.
+> A play answer now claims `PLAY_TAGS` whole, before any changeset is opened.
+>
+> Shell pin `app14` → `app15`. In 32 languages `askPlay` is reworded,
+> `askPlayYes`/`askPlayNo` become `askPlayIndoor`/`askPlayNone`, and
+> `askPlayOutdoor` and `tagPlayIndoor` are new. `theme/papamap.theme.json` is
+> untouched — the three mappings were already there, and this is the popup
+> catching up with them.
+
+> **v30 amendment (17 Sep 2026, the popup asks about the play corner too):**
+> `play` on a `changing_tables.geojson` feature becomes **tri-state** —
+> `true` (an indoor play corner is recorded, the v9 rule unchanged), `false`
+> (somebody has answered on `kids_area` or `kids_area:indoor` and the answer
+> does not pass: `no`, `limited`, `outdoor`, a blank, junk) and `null` (nobody
+> has answered). Key presence decides the false, not the value, the same
+> reading `build_play_features` gives a blank `changing_table=`. `leisure` is
+> not one of those keys: a playground is what an object *is*, not an answer
+> about a café's corner, so a bare `leisure=playground` stays `null`.
+>
+> Nothing renders differently: the blue halo, the *with play area* chip, the
+> badge and every count still read `play === true`, and false and null both
+> draw nothing (`web/datasource.js` keeps `play: p.play === true`). The
+> difference is the **question**. A pin that asks the room question now also
+> asks *indoor play area?* — one line, two buttons, under the rooms — where
+> `play` is `null`. Answering writes, under the reader's own account and in
+> its own changeset, the mappings of the theme's `kids-area` question:
+> `kids_area:indoor=yes` + `kids_area=yes` for yes, `kids_area=no` for no
+> (`web/osm.js::playPatch`). Both are values `classify.py` already reads, so
+> the ring follows at the next nightly build; the popup never classifies.
+> The keys the site can write split into `TABLE_TAGS` + `PLAY_TAGS`, and `EDIT_TAGS`
+> is the two of them: a confirmation quotes back the group the answer wrote, while
+> the MapComplete edit check watches all four.
+>
+> `web/datasource.js` exposes the distinction as **`play_recorded`** (true for
+> `true` and `false`, false for `null` or a missing property). A dataset from
+> before v30 writes `false` where it now writes `null`, so the question simply
+> does not appear until the next build — never on a pin whose reader has
+> already answered it. `play_places.geojson` is untouched: those places *are*
+> the play corner, and nobody is asked about it there.
+
 > **v29 amendment (15 Sep 2026, the wheelchair chip is remembered):** the chip's state
 > is kept in `localStorage` under **`papamap-wheelchair`** (`"1"` when on, removed when
 > switched off; `web/datasource.js::pickWheelchair`), and the map opens with it as it
@@ -762,7 +874,7 @@ Overpass `out center`). Feature `properties`:
   "changing_table": "yes|limited",
   "location_raw": "raw changing_table:location value or null",
   "status": "accessible|female_only|unknown",
-  "play": "true|false — indoor play area recorded (v9); false also means unrecorded",
+  "play": "true|false|null — indoor play area recorded (v9); false is an answered 'none' or an outdoor leisure=playground (v30, v31), null is unanswered",
   "wheelchair": "yes|limited|no|null — the place's wheelchair tag verbatim (v26); null also means unrecorded",
   "toilets_wheelchair": "yes|limited|no|null — toilets:wheelchair verbatim (v26)",
   "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",
