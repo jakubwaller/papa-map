@@ -166,7 +166,10 @@ def run(out_dir: Path, only: list[str] | None = None, build: str | None = None) 
         try:
             subprocess.run(cmd, check=True, timeout=1800)
             tmp.replace(out_dir / f"{slug}.pmtiles")   # atomic: a download never sees a half file
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        # OSError too: a missing or unexecutable PMTILES_BIN, or a full disk on
+        # the rename, is one more city in `failed`, not the end of the run with
+        # index.json left unwritten.
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
             log.error("%s failed: %s", slug, exc)
             failed.append(slug)
             tmp.unlink(missing_ok=True)

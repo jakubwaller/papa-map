@@ -36,7 +36,7 @@ public struct Table: Equatable {
         switch status {
         case "accessible": return "#009e73"
         case "female_only": return mode == "mama" ? "#009e73" : "#d55e00"
-        default: return mode == "mama" ? "#e69f00" : "#8a8f93"
+        default: return mode == "mama" ? "#e69f00" : "#3d4247"   // BUCKET_COLOR.ask, datasource.js
         }
     }
 

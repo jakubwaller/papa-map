@@ -361,7 +361,7 @@ export async function writeTags(cfg, token, ref, patch, comment, fetchFn = fetch
   if (guardKeys(patch).some((k) => el.tags[k])) throw httpError(409, "taken");
 
   const open = await fetchFn(`${cfg.api}/changeset/create`,
-    { method: "PUT", headers: xml, body: changesetXml(changesetTags(comment, cfg.redirect)), signal: bounded() });
+    { method: "PUT", headers: xml, body: changesetXml(changesetTags(comment, cfg.host ?? cfg.redirect)), signal: bounded() });
   if (!open.ok) throw httpError(open.status, "changeset");
   const changeset = (await open.text()).trim();
 

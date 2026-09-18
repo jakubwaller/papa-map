@@ -18,7 +18,7 @@ import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, g
 import { isNative, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks, directionsUri,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB } from "./native.js?v=app18";
+         formatMB, citiesToMount } from "./native.js?v=app18";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -39,7 +39,9 @@ const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 // it is the live client, coming back by the papamap://auth URL the OS
 // routes to it (native.js) — the same client id, a second redirect URI on
 // the registration.
-const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT } : endpoints(location);
+// host: the changeset's `host` tag stays the site's address — the redirect is
+// only the OAuth return leg, and papamap://auth is no provenance for an edit.
+const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT, host: LIVE.redirect } : endpoints(location);
 const ROOM_LABEL = { both: "roomBoth", male: "roomMale", female: "roomFemale",
                      unisex: "roomUnisex", wheelchair: "roomWheelchair", dedicated: "roomDedicated",
                      room: "roomRoom", sales: "roomSales", outdoor: "roomOutdoor" };
@@ -750,6 +752,7 @@ function wheelchairChip(count) {
       if (wheelchairOnly) localStorage.setItem(WHEELCHAIR_KEY, "1");
       else localStorage.removeItem(WHEELCHAIR_KEY);
     } catch { /* blocked storage: this visit only */ }
+    shareTables();
     // The strip is rebuilt, not toggled: the status badges count over the
     // chip's universe, so they change with it (renderChips reads the state).
     renderChips();
@@ -1513,6 +1516,14 @@ async function loadJSON(url) {
   }
 }
 
+// What the widget and the Siri shortcut search (native.js, shareDataset): the
+// tables under the wheelchair chip's reading, through the same pinFeatures the
+// app's own nearest button uses — so all three name the same table. The Swift
+// side never learns the chip exists; it is handed the narrowed rows.
+function shareTables() {
+  if (isNative()) shareDataset(pinFeatures(allFeatures, wheelchairOnly));
+}
+
 // The return from OSM's consent screen: ?code= and ?state= on the page's own
 // URL, or the papamap://auth URL the OS hands the app (native.js). Exchanges
 // the code, stores the login, and files the answer that was waiting.
@@ -1590,7 +1601,7 @@ async function boot() {
   // A return from OSM's consent screen lands here with ?code= and ?state=.
   await completeLogin(location.href);
   if (isNative()) {
-    shareDataset(allFeatures);
+    shareTables();
     shareSettings({ mode, lang });
     if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
   }
@@ -1656,16 +1667,26 @@ function ensureProtocol() {
 const pinLayerBelow = () =>
   map.getStyle().layers.find((l) => l.source === SRC || l.source === PLACES)?.id;
 
+// A mounted city is its whole archive in memory (native.js, citySource), so
+// not every saved city is mounted: only the ones the view is on, two at most
+// (citiesToMount). Six saved cities at launch were several hundred MB in the
+// WebView — iOS kills the app for that, and deleting a city needs the app.
+const mounting = new Set();
 async function mountCity(city) {
-  if (mounted.has(city.slug) || !styleReady) return;
+  if (mounted.has(city.slug) || mounting.has(city.slug) || !styleReady) return;
   ensureProtocol();
   if (!pmProtocol) return;
-  const src = await citySource(city.slug);
-  pmProtocol.add(new pmtiles.PMTiles(src));
-  map.addSource(`city-${city.slug}`, { type: "vector", url: `pmtiles://${city.slug}` });
-  const before = pinLayerBelow();
-  for (const l of cityLayers(city.slug, lang)) map.addLayer(l, before);
-  mounted.add(city.slug);
+  mounting.add(city.slug);
+  try {
+    const src = await citySource(city.slug);
+    pmProtocol.add(new pmtiles.PMTiles(src));
+    map.addSource(`city-${city.slug}`, { type: "vector", url: `pmtiles://${city.slug}` });
+    const before = pinLayerBelow();
+    for (const l of cityLayers(city.slug, lang)) map.addLayer(l, before);
+    mounted.add(city.slug);
+  } finally {
+    mounting.delete(city.slug);
+  }
 }
 
 function unmountCity(slug) {
@@ -1676,9 +1697,22 @@ function unmountCity(slug) {
   mounted.delete(slug);
 }
 
+let savedList = [];
+function syncCities() {
+  if (!styleReady) return;
+  const b = map.getBounds(), c = map.getCenter();
+  const want = citiesToMount(savedList, [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
+                             { lat: c.lat, lon: c.lng }, map.getZoom());
+  if (!want) return;   // zoomed out: leave what is mounted alone
+  for (const slug of [...mounted]) if (!want.some((x) => x.slug === slug)) unmountCity(slug);
+  for (const city of want) mountCity(city).catch(() => {});
+}
+
 async function mountSavedCities() {
   await nativeScripts.catch(() => {});   // the map's load event can beat the two scripts
-  for (const c of await savedCities()) mountCity(c).catch(() => {});
+  savedList = await savedCities();
+  map.on("moveend", syncCities);
+  syncCities();
 }
 
 // The dialog: every city in the catalogue, nearest to the map's centre
@@ -1715,7 +1749,7 @@ async function renderOfflineList() {
       btn.addEventListener("click", async () => {
         btn.disabled = true;
         unmountCity(city.slug);
-        await deleteCity(city.slug);
+        savedList = await deleteCity(city.slug);
         renderOfflineList();
       });
     } else {
@@ -1723,8 +1757,8 @@ async function renderOfflineList() {
       btn.addEventListener("click", async () => {
         btn.disabled = true;
         try {
-          await downloadCity(city, (p) => { btn.textContent = t("offlineLoading", { pct: Math.round(p * 100) }); });
-          await mountCity(city);
+          savedList = await downloadCity(city, (p) => { btn.textContent = t("offlineLoading", { pct: Math.round(p * 100) }); });
+          syncCities();
           toast(t("offlineDone", { city: city.name }));
         } catch {
           toast(t("offlineFailed"));

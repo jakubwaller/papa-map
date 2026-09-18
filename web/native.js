@@ -270,6 +270,21 @@ export function kmBetween(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 export const bboxCentre = ([w, s, e, n]) => ({ lat: (s + n) / 2, lon: (w + e) / 2 });
-export const inBbox = ([w, s, e, n], lat, lon) => lon >= w && lon <= e && lat >= s && lat <= n;
+
+// Which saved cities to hold in memory for a view: the ones whose extract the
+// view touches, nearest to its centre first, MAX_MOUNTED at most — each is a
+// whole archive in an ArrayBuffer. Below MOUNT_ZOOM the answer is null, "no
+// opinion": a continent-wide view touches every city, and unmounting on the
+// way out only to re-read 80 MB on the way back in would be worse.
+const MOUNT_ZOOM = 9, MAX_MOUNTED = 2;
+export function citiesToMount(saved, [w, s, e, n], centre, zoom) {
+  if (zoom < MOUNT_ZOOM) return null;
+  return saved
+    .filter(({ bbox: [cw, cs, ce, cn] }) => cw <= e && ce >= w && cs <= n && cn >= s)
+    .map((c) => ({ c, km: kmBetween(centre.lat, centre.lon, bboxCentre(c.bbox).lat, bboxCentre(c.bbox).lon) }))
+    .sort((a, b) => a.km - b.km)
+    .slice(0, MAX_MOUNTED)
+    .map(({ c }) => c);
+}
 export const formatMB = (bytes, locale) =>
   new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(bytes / 1e6);
