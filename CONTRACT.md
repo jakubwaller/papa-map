@@ -42,6 +42,10 @@
 > entirely (`app/shell.mjs`). A reader on the open web sees exactly what they
 > saw before, and with JavaScript off nothing changes at all. Shell pin
 > `app20` → `app21`; `in-app.js` joins the pinned shell and the sw precache.
+> *(18 Sep 2026, later: pin `app21` → `app22` for the store app's dataset
+> loader, which now shares one 20 s budget between its download and its
+> fallback fetch rather than waiting on either without a bound — `web/native.js`
+> only; no contract change, no file gains or loses a property.)*
 
 > **v34 amendment (18 Sep 2026, the play question on every pin):**
 > the popup's play line (v30, three answers since v31) is asked on **every**

@@ -36,9 +36,53 @@ const TILES_PATH = "papamap/tiles";
 // version handed 18 MB of GeoJSON across the bridge as one string, to write it
 // and again to read it, and swallowed whatever went wrong: build 18 came up in
 // airplane mode with the saved city and no pins (iPhone, 2026-09-18).
+//
+// Every wait between launch and the first pin is one of the two network calls
+// below, and neither iOS nor WebKit bounds one usefully. A request into a
+// black hole — airplane mode, a Wi-Fi with no route out, a captive portal —
+// does not fail: it sits on a connect timeout. Measured against an address
+// that drops packets (iPhone 17 simulator, iOS 27, 18 Sep 2026): the native
+// downloader took 75.2 s per file, and the page's own fetch, which WebKit
+// serialises per host, took 975 s, 1050 s, 1125 s and 1200 s for the four
+// files. boot() waits for all of them, so the map drew — a saved city is read
+// off the phone and owes the network nothing — and the pins came 1283 s
+// later. That is what build 18 and build 19 did in airplane mode, and why a
+// port that answers RST (a stopped local mirror) never reproduced it: refused
+// is not unreachable.
+//
+// So the page keeps its own clock, NET_MS, and does not ask the OS for
+// permission to stop waiting. A download slower than that budget is given up
+// in favour of the copy on the phone: yesterday's tables now beat today's
+// tables in twenty minutes, and the toast says which of the two is on screen.
+// Letting go is not cancelling — the native download runs on, into the `.new`
+// file the loader reads, so a first launch too slow for the clock draws an
+// empty map once and the launch after it has the data. The iOS timeouts below
+// are idle timeouts, not total ones, so they never cut a download that is
+// still arriving.
+const NET_MS = 20000;
+
+// One clock per load, shared by both attempts rather than granted to each —
+// the fallback must not start a fresh budget after the download has spent one.
+// The deadline is fixed when the load begins; the timer is per call, so that
+// it is always cleared and never outlives the answer.
+function budget(ms) {
+  const until = Date.now() + ms;
+  return (p) => {
+    let timer;
+    const over = new Promise((_, fail) => {
+      timer = setTimeout(() => fail(new Error("timed out")), Math.max(0, until - Date.now()));
+    });
+    return Promise.race([p, over]).finally(() => clearTimeout(timer));
+  };
+}
+
 function nativeIO(fs = plugin("Filesystem")) {
   return {
-    download: (url, path) => fs.downloadFile({ url, path, directory: DIR, recursive: true }),
+    // The same bound said again where the OS can act on it: the page stops
+    // waiting either way, and these keep the abandoned task from holding the
+    // connection — a fetch left queued is one the next launch waits behind.
+    download: (url, path) => fs.downloadFile({ url, path, directory: DIR, recursive: true,
+                                               connectTimeout: NET_MS, readTimeout: NET_MS }),
     read: async (path) => {
       const { uri } = await fs.getUri({ path, directory: DIR });
       const r = await fetch(cap().convertFileSrc(uri));
@@ -55,7 +99,7 @@ function nativeIO(fs = plugin("Filesystem")) {
     },
     remove: (path) => fs.deleteFile({ path, directory: DIR }).catch(() => {}),
     get: async (url) => {
-      const r = await fetch(url, { cache: "no-store" });
+      const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(NET_MS) });
       if (!r.ok) throw new Error(String(r.status));
       return r.json();
     },
@@ -71,13 +115,18 @@ function nativeIO(fs = plugin("Filesystem")) {
 // day and not in the basement. The download lands beside the good copy and
 // replaces it only once it has parsed. Should the downloader itself fail with
 // a network there, the page's own fetch still draws the map — without a copy.
-export async function loadJSONNative(url, io = nativeIO()) {
+//
+// Neither network call is waited on for longer than `ms` between them: the
+// pins are the point, and a copy on the phone that is read in 90 ms must not
+// queue behind a request that is never going to be answered.
+export async function loadJSONNative(url, io = nativeIO(), ms = NET_MS) {
   const name = url.split("/").pop().split("?")[0];
   const path = `${DATA_PATH}/${name}`;
   const fresh = `${path}.new`;
+  const net = budget(ms);
   let json;
   try {
-    await io.download(SITE + url, fresh);
+    await net(io.download(SITE + url, fresh));
     // Only a file this launch downloaded is thrown away for not parsing: with
     // no network, a .new from an earlier launch may be the one copy there is.
     try { json = await io.read(fresh); }
@@ -89,8 +138,8 @@ export async function loadJSONNative(url, io = nativeIO()) {
     await io.replace(fresh, path).catch(() => {});
     return { json, fromStore: false };
   }
-  try { return { json: await io.get(SITE + url), fromStore: false }; }
-  catch { /* no network */ }
+  try { return { json: await net(io.get(SITE + url)), fromStore: false }; }
+  catch { /* no network, or none that answers */ }
   for (const copy of [path, fresh]) {
     try { return { json: await io.read(copy), fromStore: true }; }
     catch { /* the other one */ }

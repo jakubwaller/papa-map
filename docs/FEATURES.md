@@ -460,6 +460,17 @@ drawn from that file with a network and without one, so a copy that cannot be re
 first day, not in the basement. (Build 18 handed the 18 MB across the bridge as one string and
 came up in airplane mode with the city and no pins.)
 
+The loader also keeps its own clock — twenty seconds for the download and the fallback fetch
+together, after which the copy on the phone answers. Until build 19 it had no bound at all, and
+that, not the storing, is why builds 18 and 19 both came up in airplane mode with the saved city
+drawn and no pins: a request into a black hole is not refused, it is left unanswered, and iOS and
+WebKit will sit on one for as long as it takes. Measured in the simulator against an address that
+drops packets, the native download took 75 s per file and the four fallback fetches, which WebKit
+serialises per host, took 975 to 1200 s; the map drew at once, because a saved city is read off
+the phone and owes the network nothing, and the pins arrived twenty-one minutes later. Letting go
+is not cancelling, so a first launch too slow for the clock draws an empty map once and the
+launch after it has the data.
+
 One thing the app never shows is the Ko-fi link: Apple wants a tip for the developer to go
 through in-app purchase, and the developer account is declared a non-trader because the app has
 no purchase and no donate button. On the app's own page the link is not there at all —

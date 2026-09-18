@@ -78,11 +78,19 @@ test("zoomed out there is no opinion, so nothing is unmounted or read", () => {
 
 // The phone's files and the network, played back: `net` is whether papamap.de
 // answers, `files` what is on the phone. Every call is logged.
-function fakeIO({ net = true, downloader = true, files = {}, body = { n: 1 }, replaceFails = false } = {}) {
+//
+// `hangs` names the calls that neither answer nor refuse, which is what a
+// phone with no route out actually gives: the request sits on a connect
+// timeout. Every other case here settles, and that is precisely why the
+// loader's unbounded waits went unnoticed until a phone met them.
+function fakeIO({ net = true, downloader = true, files = {}, body = { n: 1 }, replaceFails = false,
+                  hangs = [] } = {}) {
+  const forever = () => new Promise(() => {});
   const io = {
     log: [], files,
     download: async (url, path) => {
       io.log.push(`download ${path}`);
+      if (hangs.includes("download")) return forever();
       if (!net || !downloader) throw new Error("download failed");
       files[path] = body;
     },
@@ -98,7 +106,12 @@ function fakeIO({ net = true, downloader = true, files = {}, body = { n: 1 }, re
       files[to] = files[from]; delete files[from];
     },
     remove: async (path) => { io.log.push(`remove ${path}`); delete files[path]; },
-    get: async () => { io.log.push("get"); if (!net) throw new Error("offline"); return body; },
+    get: async () => {
+      io.log.push("get");
+      if (hangs.includes("get")) return forever();
+      if (!net) throw new Error("offline");
+      return body;
+    },
   };
   return io;
 }
@@ -143,6 +156,32 @@ test("a swap that fails loses nothing: today's map is drawn, and offline the .ne
 test("offline, the good copy is preferred to a .new beside it", async () => {
   const io = fakeIO({ net: false, files: { [COPY]: { n: 0 }, [`${COPY}.new`]: "garbage" } });
   assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io), { json: { n: 0 }, fromStore: true });
+});
+
+// The bug behind build 18 and build 19: in airplane mode neither call comes
+// back, and boot() waited on both of them — 1283 s on the bench — while the
+// copy on the phone sat there readable in under a tenth of a second. Without
+// the loader's own clock these two never finish at all.
+test("a network that never answers does not hold the stored copy back", async () => {
+  const io = fakeIO({ hangs: ["download", "get"], files: { [COPY]: { n: 0 } } });
+  const started = Date.now();
+  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, 30),
+                   { json: { n: 0 }, fromStore: true });
+  assert.ok(Date.now() - started < 2000, "the loader stopped waiting, the phone answered");
+});
+
+test("a page fetch that never answers is let go too, and shares the one budget", async () => {
+  // The downloader refuses at once; the fallback is the call that hangs, and
+  // it must not be granted a fresh clock of its own.
+  const io = fakeIO({ downloader: false, hangs: ["get"], files: { [COPY]: { n: 0 } } });
+  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, 30),
+                   { json: { n: 0 }, fromStore: true });
+  assert.deepEqual(io.log, [`download ${COPY}.new`, "get", `read ${COPY}`]);
+});
+
+test("a network that never answers and nothing stored is null, not a wait", async () => {
+  assert.equal(await loadJSONNative("data/stats.json", fakeIO({ hangs: ["download", "get"] }), 30),
+               null);
 });
 
 test("a failing downloader with a network there still draws the live map", async () => {
