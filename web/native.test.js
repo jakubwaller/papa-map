@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { locateNative, loadJSONNative, formatDiagnostics, MAX_COLS,
-         connectivity } from "./native.js";
+         connectivity, budget } from "./native.js";
 
 // A Geolocation plugin that plays back fixes: [ms, accuracy in metres].
 function fakeGeo(fixes, { permission = "granted" } = {}) {
@@ -288,6 +288,16 @@ test("a download landing mid-read is promoted only once the read has finished", 
   await new Promise((r) => setTimeout(r, 30));
   assert.deepEqual(order, ["the copy was read whole", "and only then replaced"]);
   assert.deepEqual(files[COPY], { n: 9 }, "and the promotion still happened");
+});
+
+// A timer can go off a millisecond before Date.now() reaches the deadline it
+// was set for. The clock that let go must still say it is spent, or the
+// download it let go of is forgotten and a fetch nobody can hear is issued.
+test("a clock whose timer has fired is spent, whatever the wall clock reads", async () => {
+  const net = budget(10, () => 0);                          // a wall clock that never moves
+  assert.equal(net.spent(), false, "not before the timer");
+  await assert.rejects(net(new Promise(() => {})), /timed out/);
+  assert.equal(net.spent(), true, "the timer going off is the budget being spent");
 });
 
 test("with the clock already spent the fallback fetch is never issued", async () => {
