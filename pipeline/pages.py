@@ -307,11 +307,52 @@ STYLE = """\
   td.zero { color: var(--muted); }
   ul.laender { columns: 2; list-style: none; padding: 0; font-size: 0.95rem; }
   ul.laender li { margin: 0.25rem 0; break-inside: avoid; }
+  /* Read inside the store app's in-app browser: no donate line. in-app.js
+     puts the class on <html>, wrap_donate below writes the span. */
+  .in-app .donate { display: none; }
 """
+
+# That script, loaded from the head of every page this module and the
+# leaderboard render — classic and blocking, so the class is on <html> before
+# the first paint and the line is never shown and then taken away. No ?v= pin
+# on it here: these pages are regenerated nightly under plain URLs of their
+# own, and pinning would put the shell's version number into the pipeline.
+IN_APP_JS = f'<script src="{UP}in-app.js"></script>'
 
 # The German footer, kept under its old name — the leaderboard's German page
 # imports it.
 FOOTER = L["de"]["footer"]
+
+# Every generated footer ends its donate sentence with the Ko-fi link, and the
+# store app may not show one: it opens these pages in an in-app browser
+# (SFSafariViewController, a Custom Tab), which is still inside the app, and
+# Apple wants a tip for the developer to go through in-app purchase (guideline
+# 3.1.1) — the developer account is declared a non-trader on the ground that
+# there is no purchase and no donate link anywhere in the app (issue #124).
+#
+# So the link is wrapped here, at render time, rather than by hand in the ~50
+# footers of the two string tables: one rule to keep true instead of fifty,
+# and a footer that has drifted out of this shape fails the build rather than
+# shipping the link into the app. The full stop goes inside the wrap — it ends
+# the link's own sentence, and hiding the <a> alone would leave it dangling;
+# Japanese ends it with the ideographic 。, which is the kind of thing fifty
+# hand-edits get wrong and one regex with a guard does not.
+_DONATE = re.compile(r'<a href="https://ko-fi\.com/[^"]*"[^>]*>[^<]*</a>[.。]')
+
+
+def wrap_donate(footer: str) -> str:
+    out, n = _DONATE.subn(
+        lambda m: f'<span class="donate">{m.group(0)}</span>', footer)
+    if n != 1:
+        raise ValueError(f"footer: expected one Ko-fi link to wrap, found {n}")
+    if out.count("ko-fi.com") != 1:
+        raise ValueError("footer: a Ko-fi link is left outside the donate span")
+    return out
+
+
+def footer_html(template: str) -> str:
+    """One rendered footer: the donate link wrapped, then the usual {up}."""
+    return wrap_donate(template).format(up=UP)
 
 
 # The social card. Until 2026-08-25 the generated pages carried no og:* at
@@ -359,6 +400,7 @@ def _head(title: str, description: str, canonical: str, lang: str = "de",
 <link rel="canonical" href="{esc(canonical)}">
 {_og(title, description, canonical, lang, base_url)}
 {ICON}
+{IN_APP_JS}
 <style>
 {STYLE}</style>
 </head>
@@ -543,7 +585,7 @@ def render_area(page: dict, generated_at: str, base_url: str = SITE_BASE_URL,
                 f'{_status_cells(g["statuses"], lang)}</tr>\n')
         parts.append("</table>\n</div>\n")
 
-    parts.append(t["footer"].format(up=UP))
+    parts.append(footer_html(t["footer"]))
     parts.append("\n</body>\n</html>\n")
     return "".join(parts)
 
@@ -608,7 +650,7 @@ def render_index(summaries, generated_at: str, base_url: str = SITE_BASE_URL,
         "Spalte <em>Toiletten</em> zählt alle erfassten öffentlichen Toiletten, mit oder "
         "ohne Wickeltisch.</p>\n")
     parts.append(_countries_section(countries, "de", own_href="./"))
-    parts.append(FOOTER.format(up=UP))
+    parts.append(footer_html(FOOTER))
     parts.append("\n</body>\n</html>\n")
     return "".join(parts)
 
@@ -657,7 +699,7 @@ def render_hub(cc: str, lang: str, slug: str, region_summaries,
     parts.append(f'<h2>{esc(t["help_h2"])}</h2>\n')
     parts.append(f'<p>{t["help"].format(up=UP, methods=t["methods"])}</p>\n')
     parts.append(_countries_section(countries, lang, own_href=own_href))
-    parts.append(t["footer"].format(up=UP))
+    parts.append(footer_html(t["footer"]))
     parts.append("\n</body>\n</html>\n")
     return "".join(parts)
 

@@ -149,3 +149,35 @@ test("a failing downloader with a network there still draws the live map", async
   const io = fakeIO({ downloader: false, files: { [COPY]: { n: 0 } } });
   assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io), { json: { n: 1 }, fromStore: false });
 });
+
+// ---- externalUrl: which links are told they are opened inside the app ----
+import { externalUrl, SITE } from "./native.js";
+
+test("a page of the site is flagged, wherever the link came from", () => {
+  assert.equal(externalUrl("methods.html"), `${SITE}methods.html?app=1`);
+  assert.equal(externalUrl("wickeltische/hamburg.html"),
+               `${SITE}wickeltische/hamburg.html?app=1`);
+  assert.equal(externalUrl("https://papamap.de/wickeltische/"),
+               `${SITE}wickeltische/?app=1`);
+});
+
+test("the query and the fragment the link carried survive", () => {
+  assert.equal(externalUrl("?bbox=9.7,53.4,10.3,53.8"),
+               `${SITE}?bbox=9.7%2C53.4%2C10.3%2C53.8&app=1`);
+  assert.equal(externalUrl("methods.html#contribute"),
+               `${SITE}methods.html?app=1#contribute`);
+  assert.equal(externalUrl("wickeltische/rangliste.html?sort=share#top"),
+               `${SITE}wickeltische/rangliste.html?sort=share&app=1#top`);
+});
+
+test("nobody else's URL is touched", () => {
+  for (const url of ["https://www.openstreetmap.org/node/1?x=2#map=19/53/9",
+                     "https://mapcomplete.org/papamap.html?lat=53#welcome",
+                     "https://ko-fi.com/jakubwaller"]) {
+    assert.equal(externalUrl(url), url);
+  }
+});
+
+test("a flag already there is not doubled", () => {
+  assert.equal(externalUrl("methods.html?app=1"), `${SITE}methods.html?app=1`);
+});

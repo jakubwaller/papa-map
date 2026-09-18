@@ -531,3 +531,25 @@ def test_city_membership_is_scoped_to_the_citys_country():
                      ("node", 4): "Berlin"}          # node 3: not swept at all
     assert leaderboard.city_membership(cities, city_ids, region_by_key) == {
         ("node", 1): "Birmingham", ("node", 4): "Berlin"}
+
+
+def test_every_leaderboard_footer_wraps_exactly_one_donate_link():
+    """Same rule as the area pages (tests/test_pages.py): the store app opens
+    this page in an in-app browser too, so its Ko-fi link has to be hideable
+    in every language."""
+    for lang, tab in leaderboard.L.items():
+        out = pages.wrap_donate(tab["footer"])
+        assert out.count('<span class="donate">') == 1, lang
+        assert out.count("ko-fi.com") == 1, lang
+
+
+def test_the_rendered_page_carries_the_span_and_the_script_that_hides_it():
+    history = {"v": 1, "days": [
+        day("2026-08-07", regions={"Bayern": [1, 0, 9]}),
+        day("2026-08-14", regions={"Bayern": [3, 0, 7]}),
+    ]}
+    html = leaderboard.render_leaderboard(
+        "de", leaderboard.leaderboard_data(history))
+    assert '<span class="donate">' in html
+    assert '<script src="../in-app.js"></script>' in html
+    assert html.index("in-app.js") < html.index("<body>")

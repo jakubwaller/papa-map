@@ -441,6 +441,11 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 #attribution a { color: var(--muted); text-decoration: none; }
 #attribution a:hover { text-decoration: underline; }
+/* This page read inside the store app's in-app browser (web/in-app.js): no
+   donate link, and no dangling " · " where it was either — the separator is
+   inside the span. The app's own bundled copy of the page has that span cut
+   out instead (app/shell.mjs). */
+.in-app .donate { display: none; }
 
 /* ---------- Popup ---------- */
 .maplibregl-popup-content {

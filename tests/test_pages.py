@@ -2,7 +2,9 @@ import json
 from pathlib import Path
 import re
 
-from pipeline import leaderboard, pages
+import pytest
+
+from pipeline import leaderboard, pages, pages_l10n
 from pipeline.config import BUNDESLAENDER, PAGES_BASE_PATH
 
 
@@ -699,3 +701,61 @@ def test_area_index_maps_every_page_to_its_box_and_english_reading(tmp_path):
 def test_area_index_union_skips_chunks_without_a_box():
     assert pages._union([None, [1, 2, 3, 4], [0, 3, 2, 5]]) == [0, 2, 3, 5]
     assert pages._union([None]) is None
+
+
+# ---- The donate line the store app may not show (issue #124) ----
+
+def test_every_page_footer_wraps_exactly_one_donate_link():
+    """The app opens these pages in an in-app browser, which is still inside
+    the app, so the Ko-fi link has to be hideable — one span per footer, in
+    all ~30 languages, written by the renderer rather than by hand."""
+    for lang, strings in pages_l10n.L.items():
+        out = pages.wrap_donate(strings["footer"])
+        assert out.count('<span class="donate">') == 1, lang
+        assert out.count("ko-fi.com") == 1, lang
+        span = out[out.index('<span class="donate">'):out.index("</span>")]
+        assert "ko-fi.com" in span, lang
+        # The sentence's own full stop rides inside the span — Japanese's is
+        # 。, and a hidden link must not leave punctuation behind.
+        assert re.search(r"</a>[.。]</span>", out), lang
+
+
+def test_a_footer_that_lost_its_shape_fails_the_build():
+    with pytest.raises(ValueError, match="found 0"):
+        pages.wrap_donate('<p class="muted">Gebaut von einem Papa.</p>')
+    two = pages_l10n.L["de"]["footer"] + '<a href="https://ko-fi.com/x">x</a>.'
+    with pytest.raises(ValueError, match="found 2"):
+        pages.wrap_donate(two)
+    # A link the pattern does not recognise is left outside the span, which is
+    # exactly what must not ship quietly.
+    odd = pages_l10n.L["de"]["footer"] + '<a href="https://ko-fi.com/x">x</a>'
+    with pytest.raises(ValueError, match="outside the donate span"):
+        pages.wrap_donate(odd)
+
+
+def test_the_german_index_wraps_its_donate_link_too():
+    """wickeltische/ is where the app's regions button lands a German reader
+    and one tap from every Bundesland page; it renders its footer on its own."""
+    summaries = [pages.summarize(n, [feat(i)], 10 * i)
+                 for i, n in enumerate(BUNDESLAENDER)]
+    html = pages.render_index(summaries, GEN)
+    assert html.count("ko-fi.com") == 1
+    assert re.search(r'<span class="donate"><a href="https://ko-fi\.com/[^<]*</a>\.</span>', html)
+    assert html.index("in-app.js") < html.index("<body>")
+
+
+def test_no_renderer_formats_a_footer_past_the_wrap():
+    """Every footer goes through footer_html; a renderer that calls .format on
+    one directly ships the link unwrapped, and no string-table test sees it."""
+    from pathlib import Path
+    for src in Path(pages.__file__).parent.glob("*.py"):
+        assert not re.search(r'(FOOTER|\["footer"\])\.format\(', src.read_text()), src.name
+
+
+def test_rendered_pages_carry_the_span_and_the_script_that_hides_it():
+    _, html = render_one([feat(1, "Café Mitte", "accessible", amenity="cafe")])
+    assert '<span class="donate">' in html
+    assert '<script src="../in-app.js"></script>' in html
+    assert ".in-app .donate { display: none; }" in html
+    # The head, before the first paint — not after the footer it hides.
+    assert html.index("in-app.js") < html.index("<body>")

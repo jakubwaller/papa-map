@@ -10,7 +10,8 @@ from .config import (AREA_COUNTRY, BUNDESLAENDER, CANADA_PROVINCES,
                      HISTORY_MAX_DAYS, PAGES_BASE_PATH, SITE_BASE_URL)
 from .export import write_text_atomic
 from .leaderboard_strings import DE_FILE, EN_FILE, L
-from .pages import ICON, STYLE, UP, _og, esc, slugify, sort_key
+from .pages import (ICON, IN_APP_JS, STYLE, UP, _og, esc, footer_html,
+                    slugify, sort_key)
 
 # Per-region history and the leaderboard pages built from it.
 #
@@ -321,6 +322,7 @@ def _head(lang: str, tab: dict, base_url: str, base_path: str) -> str:
 {alternates}
 <link rel="alternate" hreflang="x-default" href="{esc(url("de"))}">
 {ICON}
+{IN_APP_JS}
 <style>
 {STYLE}{SORT_STYLE}</style>
 </head>
@@ -559,7 +561,7 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
             n=lands, r=fr_regions, c=len(countries), names=names, list=listed))
         parts.append(_table(data["regions"], tab["col_name_region"], tab, lang))
 
-    parts.append(tab["footer"].format(up=UP))
+    parts.append(footer_html(tab["footer"]))
     if data["cities"] or data["regions"]:
         parts.append(SORT_JS)
     parts.append("\n</body>\n</html>\n")

@@ -11,7 +11,7 @@
 //   - keep a whole city's basemap on the phone (a PMTiles extract downloaded
 //     from papamap.de/tiles/, rendered with the Protomaps style over the
 //     usual raster tiles — offline, or simply always, once it is there);
-//   - log in to OSM through the system browser and come back by URL;
+//   - log in to OSM through the in-app browser and come back by URL;
 //   - hand the tables to the iOS widget and the Siri shortcut (PapaMapShare,
 //     a plugin of the app's own, app/ios/App/App/PapaMapSharePlugin.swift).
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
@@ -139,9 +139,23 @@ export async function locateNative(geo = plugin("Geolocation"),
 // ---- Links ----
 // A WKWebView opens target=_blank nowhere and a relative link to methods.html
 // would 404 inside the bundle: every link that leaves the map goes to the
-// system browser, the website's pages included.
+// in-app browser (SFSafariViewController, a Custom Tab), the website's pages
+// included.
+//
+// Which is still inside the app, so a page of ours opened here is told so:
+// ?app=1, and web/in-app.js hides the Ko-fi link the app may not show (issue
+// #124; the bundled page has it cut out, app/shell.mjs). Our own origin only
+// — osm.org, MapComplete and the rest get the URL the reader clicked, and an
+// unknown flag on a foreign URL is nobody's business. Query and fragment
+// survive: the country links carry ?bbox=, the methods link a #section.
+export function externalUrl(url, site = SITE) {
+  const u = new URL(url, site);
+  if (u.origin === new URL(site).origin) u.searchParams.set("app", "1");
+  return u.href;
+}
+
 export function openExternal(url) {
-  const abs = /^https?:/.test(url) ? url : new URL(url, SITE).href;
+  const abs = externalUrl(url);
   const b = plugin("Browser");
   if (b) b.open({ url: abs }); else window.open(abs, "_blank", "noopener");
 }
@@ -169,12 +183,13 @@ export function directionsUri(lat, lon, label, geo) {
   return `maps://?q=${encodeURIComponent(label || "")}&ll=${at}&daddr=${at}`;
 }
 
-// ---- OSM login through the system browser ----
+// ---- OSM login through the in-app browser ----
 // The page's flow (osm.js) is unchanged: PKCE in sessionStorage, the intent
 // too, and the consent screen is a URL. The two differences are where the
-// URL opens (the system browser, so the reader's OSM session is theirs, not
-// a WebView's) and how the code comes back (the papamap://auth URL, which
-// the OS routes to the app; App's appUrlOpen delivers it here).
+// URL opens (the in-app browser: a browser view of the OS's own, which the
+// app cannot read into, so the password never passes through a WebView of
+// ours) and how the code comes back (the papamap://auth URL, which the OS
+// routes to the app; App's appUrlOpen delivers it here).
 export function nativeNavigate(url) {
   plugin("Browser").open({ url });
 }
