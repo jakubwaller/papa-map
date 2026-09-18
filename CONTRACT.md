@@ -45,6 +45,13 @@
 > and bounds of the canvas minus that covered strip, via a new pure helper
 > `visibleMapView` in `web/datasource.js`; no data file gains, loses or
 > changes a property, and `pickArea`'s own rule is unchanged.)*
+> *(18 Sep 2026, and again: pin `app25` → `app26` for the app loader's clock
+> (`budget` in `web/native.js`), which now counts itself spent the moment its
+> own timer fires rather than only when `Date.now()` has reached the deadline.
+> A timer can fire a millisecond early; asked then, the old clock said there
+> was time left, so the download it had just let go of was not kept for
+> promotion and a fallback fetch was issued with no time to hear it. No
+> contract change, no file gains or loses a property.)*
 
 > **v35 amendment (18 Sep 2026, no donate link inside the store app):**
 > **HTML surface only** — no data file gains, loses or changes a property.

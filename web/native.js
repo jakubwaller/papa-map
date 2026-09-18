@@ -80,17 +80,27 @@ const NET_MS = 20000, COPY_MS = 8000;
 // the fallback must not start a fresh budget after the download has spent one.
 // The deadline is fixed when the load begins; the timer is per call, so that
 // it is always cleared and never outlives the answer.
-function budget(ms) {
-  const until = Date.now() + ms;
+// `now` is a parameter for the test that holds the wall clock back.
+export function budget(ms, now = Date.now) {
+  const until = now() + ms;
+  // The clock's own timer going off IS the budget being spent, whatever the
+  // wall clock reads at that moment. A timer can fire a millisecond before
+  // Date.now() reaches the deadline it was set for, and asked then, a clock
+  // that only compared the two would say there was time left: the download it
+  // had just let go of would not be kept for promotion, and a fallback fetch
+  // would be issued with nothing left to hear it in. (Seen as a test failing
+  // once in a while on CI, 18 Sep 2026; on a phone it is a refresh skipped.)
+  let fired = false;
   const race = (p) => {
     let timer;
     const over = new Promise((_, fail) => {
-      timer = setTimeout(() => fail(new Error("timed out")), Math.max(0, until - Date.now()));
+      timer = setTimeout(() => { fired = true; fail(new Error("timed out")); },
+                         Math.max(0, until - now()));
     });
     return Promise.race([p, over]).finally(() => clearTimeout(timer));
   };
   // Asked rather than starting a race there is no time left to hear the end of.
-  race.spent = () => Date.now() >= until;
+  race.spent = () => fired || now() >= until;
   return race;
 }
 
