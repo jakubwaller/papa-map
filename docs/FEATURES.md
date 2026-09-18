@@ -424,3 +424,9 @@ account — with `host=https://papamap.de/` on the changeset, the OAuth return b
 watch rather than one "current position" request: iOS holds the latter back for seconds until
 it likes the accuracy; the first fix good to 100 m wins, after three seconds the best seen.
 
+The app keeps the dataset the way it keeps a city: the native downloader puts the file on the
+phone, beside the last good copy, and it replaces that copy only once it has parsed. The map is
+drawn from that file with a network and without one, so a copy that cannot be read shows on the
+first day, not in the basement. (Build 18 handed the 18 MB across the bridge as one string and
+came up in airplane mode with the city and no pins.)
+
