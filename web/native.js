@@ -186,10 +186,10 @@ export function directionsUri(lat, lon, label, geo) {
 // ---- OSM login through the in-app browser ----
 // The page's flow (osm.js) is unchanged: PKCE in sessionStorage, the intent
 // too, and the consent screen is a URL. The two differences are where the
-// URL opens (the in-app browser, which shares the reader's own Safari/Chrome
-// session rather than keeping a WebView's) and how the code comes back (the
-// papamap://auth URL, which the OS routes to the app; App's appUrlOpen
-// delivers it here).
+// URL opens (the in-app browser: a browser view of the OS's own, which the
+// app cannot read into, so the password never passes through a WebView of
+// ours) and how the code comes back (the papamap://auth URL, which the OS
+// routes to the app; App's appUrlOpen delivers it here).
 export function nativeNavigate(url) {
   plugin("Browser").open({ url });
 }
