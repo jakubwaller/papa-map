@@ -7,18 +7,18 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app18";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app19";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app18";
+         langUrl } from "./i18n.js?v=app19";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app18";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app19";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks, directionsUri,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app18";
+         formatMB, citiesToMount } from "./native.js?v=app19";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -488,20 +488,24 @@ function popupHTML(f) {
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
   if (f.opening_hours) rows.push(`<div class="row">${esc(t("popupHours"))}: ${esc(f.opening_hours)}</div>`);
   if (asks) rows.push(askHTML("askRoom", inFlight.has(f.osm_url)));
-  // The second question, asked of the same reader in the same visit: OSM says
-  // nothing about a play corner here (play_recorded false — an answered "no"
-  // is an answer and is never asked again). It lives outside the .ask block on
-  // purpose, so answering the room takes that question down and leaves this
-  // one standing — which is what a reader who has just filed a room sees.
-  if (!f.play_recorded && (asks || roomAnswered.has(f.osm_url)))
-    rows.push(askPlayHTML(inFlight.has(f.osm_url)));
+  // The second question, on every pin where OSM says nothing about a play
+  // area (play_recorded false — an answered "no" is an answer and is never
+  // asked again), whatever the pin's colour: a father who notices the play
+  // corner of a café whose room is long on record has the same answer in hand
+  // as one standing on a grey pin (v34; v30 asked only where the room was
+  // asked too). It lives outside the .ask block on purpose, so answering the
+  // room takes that question down and leaves this one standing. Where the room
+  // question is not above it, it says itself whose name the answer goes under.
+  if (!f.play_recorded)
+    rows.push(askPlayHTML(inFlight.has(f.osm_url), !asks));
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
   // MapComplete is the primary action only where the page cannot answer
-  // itself; beside the in-page question it is the other way, in plain dress.
+  // itself; beside an in-page question, either one, it is the other way, in
+  // plain dress.
   if (mcUrl)
-    links.push(`<a class="btn${asks ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+    links.push(`<a class="btn${asks || !f.play_recorded ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   links.push(`<a class="btn" href="${esc(directionsUri(f.lat, f.lon, f.name || "", geoUri(f.lat, f.lon, f.name || "")))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
@@ -535,17 +539,25 @@ function askHTML(question = "askRoom", busy = false) {
     (question === "askTable"
       ? `<div class="ask-btns ask-btns-none">${pill("none", "roomNone", " ask-btn-none")}</div>`
       : "");
+  return `<div class="ask"><div class="ask-q">${esc(t(question))}</div>` +
+         `${btns}${askWhoHTML()}</div>`;
+}
+
+// Who the answer will be filed as — or, before the first login, that it will
+// be. One line for both questions; a popup shows it once.
+function askWhoHTML() {
   const user = getUser();
   const who = user
     ? `${esc(t("askAs", { user }))} · <button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button>`
     : esc(t("askLoginHint"));
-  return `<div class="ask"><div class="ask-q">${esc(t(question))}</div>` +
-         `${btns}<div class="ask-who">${who}</div></div>`;
+  return `<div class="ask-who">${who}</div>`;
 }
 
-// The play question: one line, three buttons, and no login line of its own —
-// it only ever appears under the room question or where that question has just
-// been answered, and both carry it. The question asks about a play area for
+// The play question: one line, three buttons. Under the room question it has
+// no login line of its own — the block above carries it; alone on a pin whose
+// room is on record (`who`) it brings the line along, so nobody taps a pill
+// without having read that the answer goes to OSM under a name.
+// The question asks about a play area for
 // children and the answers say where it is, because that is what the tags mean:
 // `kids_area=no` is "nowhere for children to play", and a two-button
 // "indoor play area? yes/no" wrote it under a bakery with a garden playground
@@ -560,12 +572,13 @@ function askHTML(question = "askRoom", busy = false) {
 // the play place's "none" already takes.
 const PLAY_LABEL = { play_yes: "askPlayIndoor", play_outdoor: "askPlayOutdoor",
                      play_no: "askPlayNone" };
-function askPlayHTML(busy = false) {
+function askPlayHTML(busy = false, who = false) {
   const dis = busy ? " disabled" : "";
   const pill = (choice) =>
     `<button type="button" class="btn ask-btn" data-room="${choice}"${dis}>${esc(t(PLAY_LABEL[choice]))}</button>`;
   return `<div class="ask-play"><span class="ask-q">${esc(t("askPlay"))}</span>` +
-         `<span class="ask-play-btns">${PLAY_CHOICES.map(pill).join("")}</span></div>`;
+         `<span class="ask-play-btns">${PLAY_CHOICES.map(pill).join("")}</span>` +
+         `${who ? askWhoHTML() : ""}</div>`;
 }
 
 // A prospect's popup says one thing the pin popups never do: nobody has
@@ -1218,12 +1231,6 @@ const goLogin = (intent) => startLogin(osm, intent, isNative() ? nativeNavigate 
 // and the popup would blame a stranger for the reader's own first one.
 const inFlight = new Set();
 
-// Pins whose room was answered here, this visit. The dataset still says the
-// room is unknown — that is tonight's build's to change — so this is what
-// keeps the play question on a popup that is reopened right after the room
-// went in, where the room question itself is rightly gone.
-const roomAnswered = new Set();
-
 // One path for both pin kinds: a grey table gets its room, a play place gets
 // the table and the room. The kind rides along in the login intent so the
 // return leg knows which dataset to look the object up in.
@@ -1272,7 +1279,6 @@ async function answer(kind, obj, choice, freshToken = null) {
     } else {
       obj.changing_table = out.tags.changing_table;
       obj.location_raw = out.tags["changing_table:location"];
-      roomAnswered.add(obj.osm_url);
       // Everything that was true only while the question was open goes: the
       // question itself (.ask — querySelector would take the headline alone
       // and leave the buttons standing, sandbox test 13 Sep 2026) and the
