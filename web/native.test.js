@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { locateNative } from "./native.js";
+import { locateNative, loadJSONNative } from "./native.js";
 
 // A Geolocation plugin that plays back fixes: [ms, accuracy in metres].
 function fakeGeo(fixes, { permission = "granted" } = {}) {
@@ -74,4 +74,62 @@ test("a view over several cities keeps the two nearest its centre", () => {
 
 test("zoomed out there is no opinion, so nothing is unmounted or read", () => {
   assert.equal(citiesToMount([HH, MUC], [-10, 35, 30, 60], { lat: 50, lon: 10 }, 5), null);
+});
+
+// The phone's files and the network, played back: `net` is whether papamap.de
+// answers, `files` what is on the phone. Every call is logged.
+function fakeIO({ net = true, downloader = true, files = {}, body = { n: 1 }, replaceFails = false } = {}) {
+  const io = {
+    log: [], files,
+    download: async (url, path) => {
+      io.log.push(`download ${path}`);
+      if (!net || !downloader) throw new Error("download failed");
+      files[path] = body;
+    },
+    read: async (path) => {
+      io.log.push(`read ${path}`);
+      if (!(path in files)) throw new Error("no such file");
+      if (files[path] === "garbage") throw new SyntaxError("not JSON");
+      return files[path];
+    },
+    replace: async (from, to) => {
+      io.log.push(`replace ${to}`);
+      if (replaceFails) throw new Error("rename failed");
+      files[to] = files[from]; delete files[from];
+    },
+    get: async () => { io.log.push("get"); if (!net) throw new Error("offline"); return body; },
+  };
+  return io;
+}
+const COPY = "papamap/data/changing_tables.geojson";
+
+test("online: the download becomes the copy, and the map is drawn from that very file", async () => {
+  const io = fakeIO();
+  const r = await loadJSONNative("data/changing_tables.geojson?v=1", io);
+  assert.deepEqual(r, { json: { n: 1 }, fromStore: false });
+  assert.deepEqual(io.files, { [COPY]: { n: 1 } });
+  assert.deepEqual(io.log, [`download ${COPY}.new`, `read ${COPY}.new`, `replace ${COPY}`]);
+});
+
+test("offline: the stored copy, and it says so", async () => {
+  const io = fakeIO({ net: false, files: { [COPY]: { n: 0 } } });
+  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io), { json: { n: 0 }, fromStore: true });
+});
+
+test("offline with nothing stored is null, not a throw", async () => {
+  assert.equal(await loadJSONNative("data/stats.json", fakeIO({ net: false })), null);
+});
+
+test("a download that does not parse never replaces the good copy", async () => {
+  const io = fakeIO({ body: "garbage", files: { [COPY]: { n: 0 } } });
+  io.get = async () => { throw new Error("same garbage"); };
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual(r, { json: { n: 0 }, fromStore: true });
+  assert.deepEqual(io.files[COPY], { n: 0 });
+  assert.ok(!io.log.includes(`replace ${COPY}`));
+});
+
+test("a failing downloader with a network there still draws the live map", async () => {
+  const io = fakeIO({ downloader: false, files: { [COPY]: { n: 0 } } });
+  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io), { json: { n: 1 }, fromStore: false });
 });

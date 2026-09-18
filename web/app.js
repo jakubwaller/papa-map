@@ -1795,6 +1795,8 @@ offlineBtn.addEventListener("click", () => {
   renderOfflineList();
 });
 document.getElementById("offline-close").addEventListener("click", () => offlineDialog.close());
+// As on the add dialog: a tap on the backdrop (the dialog element itself) closes.
+offlineDialog.addEventListener("click", (e) => { if (e.target === offlineDialog) offlineDialog.close(); });
 
 boot();
 window.addEventListener("resize", positionZoomCtrl);
