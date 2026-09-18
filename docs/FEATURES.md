@@ -502,7 +502,7 @@ request is made. Asking that question properly took two goes. `navigator.onLine`
 source and is simply wrong on iOS — build 20 came up in airplane mode reporting **online=true**
 inside the app's WKWebView, so the shortcut never fired and the reader sat through all eight
 seconds while four files already on the phone did nothing. The answer now comes from
-`@capacitor/network`, which reads `NWPathMonitor`, the OS's own idea of whether there is a path;
+`@capacitor/network`, which asks the OS (`SCNetworkReachability` on iOS, `ConnectivityManager` on Android);
 `navigator.onLine` is the fallback where the plugin is not there, which is every browser. The
 question is asked **once** a launch, before the four loads, and bounded to 400 ms of its own —
 a new question must not become the new unbounded wait — and no answer in time counts as online,

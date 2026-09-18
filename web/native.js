@@ -102,8 +102,10 @@ function budget(ms) {
 // mode on the owner's iPhone reporting **online=true** in the app's WKWebView,
 // so the shortcut it guards never fired and the reader waited out the whole
 // eight seconds while four files that were already on the phone sat there.
-// The Network plugin answers from NWPathMonitor — the OS's own idea of whether
-// there is a path — and that is the one that knows.
+// The Network plugin asks the OS instead: SCNetworkReachability on iOS (at
+// 8.0.1 — a reachability check on the zero address, not NWPathMonitor),
+// ConnectivityManager on Android, where "connected" means a VALIDATED network
+// and can therefore be false for a launch on a network still being checked.
 //
 // Bounded like everything else here: a plugin call that never comes back must
 // not become the new unbounded wait. No answer in time is not treated as
