@@ -748,8 +748,15 @@ def test_no_renderer_formats_a_footer_past_the_wrap():
     """Every footer goes through footer_html; a renderer that calls .format on
     one directly ships the link unwrapped, and no string-table test sees it."""
     from pathlib import Path
+    # Both quote styles for the dict lookup, ["footer"] and ['footer'].
+    footer_ref = r"""FOOTER|\[["']footer["']\]"""
     for src in Path(pages.__file__).parent.glob("*.py"):
-        assert not re.search(r'(FOOTER|\["footer"\])\.format\(', src.read_text()), src.name
+        text = src.read_text(encoding="utf-8")
+        assert not re.search(rf"(?:{footer_ref})\.format\(", text), src.name
+        # A cheap alias check: `x = FOOTER` (or the dict lookup), then
+        # `x.format(` anywhere in the file — the same bug under another name.
+        for alias in re.findall(rf"(\w+)\s*=\s*(?:{footer_ref})\b", text):
+            assert f"{alias}.format(" not in text, f"{src.name}: {alias}"
 
 
 def test_rendered_pages_carry_the_span_and_the_script_that_hides_it():

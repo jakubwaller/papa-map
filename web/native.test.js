@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { locateNative, loadJSONNative, budget } from "./native.js";
+import { locateNative, loadJSONNative, loadDatasetNative, budget } from "./native.js";
 
 // A Geolocation plugin that plays back fixes: [ms, accuracy in metres].
 function fakeGeo(fixes, { permission = "granted" } = {}) {
@@ -324,6 +324,159 @@ test("a background refresh never rejects, even when the downloader throws synchr
   assert.deepEqual(r.json, { n: 0 });
   await assert.doesNotReject(r.refreshed);
   assert.deepEqual(await r.refreshed, { ok: false, json: null });
+});
+
+// ---- loadDatasetNative: data/stats.json as the canary for the other three ----
+// Unlike fakeIO above, downloads here are answered per PATH, not by one
+// net/downloader flag for the whole phone: these tests need "stats.json
+// downloads fine, play_places.geojson does not" within the very same launch,
+// which a single flag cannot express.
+function fakeDatasetIO({ files = {}, bodies = {}, fail = [] } = {}) {
+  const asText = (v) => (typeof v === "string" ? v : JSON.stringify(v));
+  const io = {
+    log: [], files,
+    download: async (url, path) => {
+      io.log.push(`download ${path}`);
+      if (fail.includes(path)) throw new Error("download failed");
+      files[path] = bodies[path] ?? { n: 1 };
+    },
+    read: async (path) => {
+      io.log.push(`read ${path}`);
+      if (!(path in files)) throw new Error("no such file");
+      if (files[path] === "garbage") throw new SyntaxError("not JSON");
+      return files[path];
+    },
+    text: async (path) => {
+      io.log.push(`text ${path}`);
+      if (!(path in files)) throw new Error("no such file");
+      return asText(files[path]);
+    },
+    replace: async (from, to) => {
+      io.log.push(`replace ${to}`);
+      files[to] = files[from]; delete files[from];
+    },
+    remove: async (path) => { io.log.push(`remove ${path}`); delete files[path]; },
+    get: async () => { io.log.push("get"); throw new Error("no fallback needed in these tests"); },
+  };
+  return io;
+}
+
+const DSTATS = "papamap/data/stats.json";
+const DTABLES = "papamap/data/changing_tables.geojson";
+const DPLACES = "papamap/data/play_places.geojson";
+const DAREAS = "papamap/data/areas.json";
+// The order boot() actually asks for them in (app.js) — stats third, not
+// first, so loadDatasetNative has to find the canary by name, not position.
+const DURLS = ["data/changing_tables.geojson", "data/play_places.geojson", "data/stats.json", "data/areas.json"];
+
+test("stats unchanged: the three big files settle without ever being downloaded", async () => {
+  const files = { [DSTATS]: { g: 1 }, [DTABLES]: { t: 1 }, [DPLACES]: { p: 1 }, [DAREAS]: { a: 1 } };
+  const io = fakeDatasetIO({ files, bodies: { [`${DSTATS}.new`]: { g: 1 } } });   // same content
+  const results = await loadDatasetNative(DURLS, io);
+  assert.deepEqual(results.map((r) => r.fromStore), [true, true, true, true]);
+  assert.deepEqual(await Promise.all(results.map((r) => r.refreshed)), [
+    { ok: true, json: null }, { ok: true, json: null }, { ok: true, json: null }, { ok: true, json: null },
+  ]);
+  assert.deepEqual(io.log.filter((l) => l.startsWith("download")), [`download ${DSTATS}.new`],
+                   "one request total: the canary's own");
+  assert.deepEqual(files, { [DSTATS]: { g: 1 }, [DTABLES]: { t: 1 }, [DPLACES]: { p: 1 }, [DAREAS]: { a: 1 } });
+});
+
+test("stats changed: the three big files download, and stats promotes only once all three have settled ok", async () => {
+  const files = { [DSTATS]: { g: 1 }, [DTABLES]: { t: 1 }, [DPLACES]: { p: 1 }, [DAREAS]: { a: 1 } };
+  const io = fakeDatasetIO({
+    files,
+    bodies: { [`${DSTATS}.new`]: { g: 2 }, [`${DTABLES}.new`]: { t: 2 },
+              [`${DPLACES}.new`]: { p: 2 }, [`${DAREAS}.new`]: { a: 2 } },
+  });
+  const results = await loadDatasetNative(DURLS, io);
+  assert.deepEqual(await Promise.all(results.map((r) => r.refreshed)), [
+    { ok: true, json: { t: 2 } }, { ok: true, json: { p: 2 } }, { ok: true, json: { g: 2 } }, { ok: true, json: { a: 2 } },
+  ]);
+  assert.deepEqual(files, { [DSTATS]: { g: 2 }, [DTABLES]: { t: 2 }, [DPLACES]: { p: 2 }, [DAREAS]: { a: 2 } });
+  // The canary downloads before any of the three, and promotes itself only
+  // after every one of them has already promoted (or dropped) its own.
+  const statsDownloadAt = io.log.indexOf(`download ${DSTATS}.new`);
+  const statsReplaceAt = io.log.lastIndexOf(`replace ${DSTATS}`);
+  for (const p of [DTABLES, DPLACES, DAREAS]) {
+    assert.ok(io.log.indexOf(`download ${p}.new`) > statsDownloadAt, `${p} downloads after the canary`);
+    assert.ok(io.log.indexOf(`replace ${p}`) < statsReplaceAt, `${p} promotes before the canary does`);
+  }
+});
+
+test("one of the three fails: stats.json is withheld, its .new thrown away, and a retry tries again", async () => {
+  const files = { [DSTATS]: { g: 1 }, [DTABLES]: { t: 1 }, [DPLACES]: { p: 1 }, [DAREAS]: { a: 1 } };
+  const io = fakeDatasetIO({
+    files,
+    bodies: { [`${DSTATS}.new`]: { g: 2 }, [`${DTABLES}.new`]: { t: 2 }, [`${DAREAS}.new`]: { a: 2 } },
+    fail: [`${DPLACES}.new`],
+  });
+  const results = await loadDatasetNative(DURLS, io);
+  const settled = await Promise.all(results.map((r) => r.refreshed));
+  assert.deepEqual(settled[1], { ok: false, json: null }, "play_places failed outright");
+  assert.deepEqual(settled[2], { ok: false, json: null },
+                   "stats withheld: one of the three files it gates did not settle ok");
+  assert.deepEqual(files[DSTATS], { g: 1 }, "the stored stats.json is untouched");
+  assert.ok(!(`${DSTATS}.new` in files),
+            "the downloaded-but-unpromoted stats.json is discarded, not left to be read as a copy");
+  // The invariant this protects: the stored stats.json is never newer than
+  // any stored copy of the other three. changing_tables and areas are free
+  // to promote themselves the moment their own download succeeds, same as
+  // any other file — only the canary's own promotion waits on all three.
+  assert.deepEqual(files[DTABLES], { t: 2 });
+  assert.deepEqual(files[DAREAS], { a: 2 });
+
+  // Next launch: stats.json on the phone still reads g:1, still differs from
+  // what tonight's build actually holds, so it is asked about again rather
+  // than being read as settled.
+  const io2 = fakeDatasetIO({
+    files,
+    bodies: { [`${DSTATS}.new`]: { g: 2 }, [`${DTABLES}.new`]: { t: 2 },
+              [`${DPLACES}.new`]: { p: 2 }, [`${DAREAS}.new`]: { a: 2 } },
+  });
+  const again = await loadDatasetNative(DURLS, io2);
+  const againSettled = await Promise.all(again.map((r) => r.refreshed));
+  assert.ok(againSettled.every((r) => r.ok !== false), "this time all three succeed");
+  assert.deepEqual(files[DSTATS], { g: 2 }, "and stats.json finally promotes");
+});
+
+test("stats.json's own download fails: the three others settle failed with no download attempt at all", async () => {
+  const files = { [DSTATS]: { g: 1 }, [DTABLES]: { t: 1 }, [DPLACES]: { p: 1 }, [DAREAS]: { a: 1 } };
+  const io = fakeDatasetIO({ files, fail: [`${DSTATS}.new`] });
+  const results = await loadDatasetNative(DURLS, io);
+  assert.deepEqual(await Promise.all(results.map((r) => r.refreshed)), [
+    { ok: false, json: null }, { ok: false, json: null }, { ok: false, json: null }, { ok: false, json: null },
+  ]);
+  assert.deepEqual(io.log.filter((l) => l.startsWith("download")), [`download ${DSTATS}.new`],
+                   "the app's offline launch: one request, not four");
+  assert.deepEqual(files, { [DSTATS]: { g: 1 }, [DTABLES]: { t: 1 }, [DPLACES]: { p: 1 }, [DAREAS]: { a: 1 } });
+});
+
+test("no stored stats.json, but the big files have copies: they refresh exactly as before, ungated", async () => {
+  const files = { [DTABLES]: { t: 1 }, [DPLACES]: { p: 1 }, [DAREAS]: { a: 1 } };   // no stats.json anywhere
+  const io = fakeDatasetIO({
+    files,
+    bodies: { [`${DSTATS}.new`]: { g: 1 }, [`${DTABLES}.new`]: { t: 2 },
+              [`${DPLACES}.new`]: { p: 1 }, [`${DAREAS}.new`]: { a: 2 } },
+  });
+  const results = await loadDatasetNative(DURLS, io);
+  assert.deepEqual(results.map((r) => r.fromStore), [true, true, false, true],
+                   "stats has nothing to draw and takes the no-copy long path; the rest draw as usual");
+  const settled = await Promise.all(results.map((r) => r.refreshed));
+  assert.deepEqual(settled[0], { ok: true, json: { t: 2 } }, "changing_tables refreshed on its own");
+  assert.deepEqual(settled[1], { ok: true, json: null }, "play_places refreshed and found nothing new");
+  assert.ok(io.log.includes(`download ${DTABLES}.new`) && io.log.includes(`download ${DAREAS}.new`),
+            "neither waited on stats to say anything");
+});
+
+test("nothing stored anywhere: every file takes the no-copy path, same as loadJSONNative alone", async () => {
+  const io = fakeDatasetIO({
+    bodies: { [`${DSTATS}.new`]: { g: 1 }, [`${DTABLES}.new`]: { t: 1 },
+              [`${DPLACES}.new`]: { p: 1 }, [`${DAREAS}.new`]: { a: 1 } },
+  });
+  const results = await loadDatasetNative(DURLS, io);
+  assert.deepEqual(results.map((r) => r.fromStore), [false, false, false, false]);
+  assert.deepEqual(results.map((r) => r.json), [{ t: 1 }, { p: 1 }, { g: 1 }, { a: 1 }]);
 });
 
 // ---- The note: which of the loader's paths answered ----

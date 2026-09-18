@@ -611,13 +611,18 @@ export function areaLink(area, lang) {
 // takes points in (the map container's); coveredTop is the height of that
 // frame the top bar hides, the same number web/app.js's positionZoomCtrl
 // measures as topbar.offsetHeight; unproject is a (point: [x, y]) => {lng,
-// lat} function, `map.unproject` on a live map. A coveredTop that swallows
-// the whole canvas, or that isn't a finite positive number, is nonsense and
-// falls back to 0 — the pre-fix, whole-canvas centre — rather than guessing.
+// lat} function, `map.unproject` on a live map. A coveredTop that isn't a
+// finite positive number is nonsense and falls back to 0 — the pre-fix,
+// whole-canvas centre — rather than guessing. One that reaches or exceeds
+// the canvas's own height is clamped at half of it instead, the same limit
+// fitHome and the card pan hold their own topbar height to: a bar that
+// covers everything still leaves a visible bottom half to centre on, rather
+// than snapping back to the whole canvas's centre as if nothing were
+// covered at all.
 export function visibleMapView(canvasSize, coveredTop, unproject) {
   const { width, height } = canvasSize ?? {};
-  const top = Number.isFinite(coveredTop) && coveredTop > 0 && coveredTop < height
-    ? coveredTop : 0;
+  const top = Number.isFinite(coveredTop) && coveredTop > 0
+    ? Math.min(coveredTop, height / 2) : 0;
   const cx = width / 2, cy = top + (height - top) / 2;
   const center = unproject([cx, cy]);
   const nw = unproject([0, top]);

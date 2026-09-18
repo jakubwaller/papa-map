@@ -68,8 +68,17 @@ npx cap open android  # Android Studio
 ```
 
 Needs Node 20+, Xcode 26+ (from the Mac App Store; App Store Connect refuses older SDKs), and for Android a JDK 17 and Android
-Studio. `npx cap sync` regenerates `ios/App/CapApp-SPM/` from `package.json`, which is why
-that directory is not committed.
+Studio. `npx cap sync` regenerates `ios/App/CapApp-SPM/Package.swift` from whatever plugins it
+finds actually installed under `node_modules` — and that file **is** committed (only
+`CapApp-SPM/symlinks/` is not), because Xcode reads it straight out of the checkout, not out of
+a build step.
+
+**Run `npm ci` before every `npx cap sync`.** A sync run over a stale `node_modules` — one
+missing a plugin `package.json` already lists, say after a merge that added one — silently
+rewrites `Package.swift` to match what is actually installed and drops that plugin from it,
+with nothing to say so until a Swift build fails on a missing symbol. `app/plugins.test.mjs`
+holds `Package.swift`'s Capacitor plugin packages to `package.json`'s `@capacitor/*` plugin
+dependencies, so a dropped plugin fails CI instead.
 
 ### iOS: signed on the runner, no Mac needed
 

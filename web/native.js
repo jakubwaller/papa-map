@@ -162,11 +162,29 @@ function promoteLate(io, running, fresh, path) {
 // treated as a reason not to risk the download at all this launch and to
 // report the refresh failed instead: a good copy already on the phone,
 // wherever it is filed, is worth more than a chance at a fresher one.
-function backgroundRefresh(io, url, oldText, path, fresh, drawnFrom) {
+//
+// `gate`, when given, is data/stats.json's own verdict on whether tonight's
+// build differs at all — see loadDatasetNative below, which is the only
+// caller that ever passes one. It is awaited AFTER the `drawnFrom === fresh`
+// self-heal above (that one is filesystem housekeeping, nothing to do with
+// the network, and must happen whatever the canary says) but BEFORE the
+// download: `"changed"` proceeds exactly as an ungated file would, and
+// `"unchanged"` / `"failed"` settle without ever calling `io.download` at
+// all — which is the whole saving, since these are the files that cost
+// megabytes. `hold`, when true, is stats.json refusing to promote itself:
+// it downloads and compares exactly as usual, but leaves a changed answer
+// sitting at `fresh` rather than replacing `path` with it, because
+// loadDatasetNative has to hear from the three gated files first — see the
+// invariant in its own comment.
+function backgroundRefresh(io, url, oldText, path, fresh, drawnFrom, { gate = null, hold = false } = {}) {
   return (async () => {
     if (drawnFrom === fresh) {
       try { await io.replace(fresh, path); }
       catch { return { ok: false, json: null }; }
+    }
+    if (gate) {
+      const g = await gate;
+      if (g !== "changed") return { ok: g === "unchanged", json: null };
     }
     try { await io.download(url, fresh); }
     catch { return { ok: false, json: null }; }
@@ -180,7 +198,7 @@ function backgroundRefresh(io, url, oldText, path, fresh, drawnFrom) {
       await io.remove(fresh);
       return { ok: true, json: null };
     }
-    await io.replace(fresh, path).catch(() => {});
+    if (!hold) await io.replace(fresh, path).catch(() => {});
     return { ok: true, json };
   })().catch(() => ({ ok: false, json: null }));   // belt and braces: see loadJSONNative's own note on a throw from io.download
 }
@@ -253,7 +271,7 @@ function nativeIO(fs = plugin("Filesystem")) {
 // an out-parameter rather than a return value so that the { json, fromStore }
 // contract app.js reads — and the `null` that means "nothing anywhere" —
 // are exactly what they were.
-export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = NET_MS } = {}) {
+export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = NET_MS, gate = null, hold = false } = {}) {
   const name = url.split("/").pop().split("?")[0];
   const path = `${DATA_PATH}/${name}`;
   const fresh = `${path}.new`;
@@ -284,7 +302,7 @@ export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = 
     return {
       json: hit.json,
       fromStore: true,
-      refreshed: backgroundRefresh(io, SITE + url, hit.text, path, fresh, hit.copy),
+      refreshed: backgroundRefresh(io, SITE + url, hit.text, path, fresh, hit.copy, { gate, hold }),
     };
   }
 
@@ -341,6 +359,92 @@ export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = 
   if (late) promoteLate(io, late, fresh, path);
   step("none");
   return null;
+}
+
+// A stored copy exists (`path`, or `.new` alone), or it doesn't — the same
+// question `loadJSONNative`'s own `stored()` asks, asked here on its own so
+// loadDatasetNative can answer it WITHOUT paying for a copy's whole no-copy
+// path (which can run for the full netMs budget) just to learn there was
+// nothing to gate on. A local file read, never the network.
+async function hasStoredCopy(io, path, fresh) {
+  for (const copy of [path, fresh]) {
+    try { JSON.parse(await io.text(copy)); return true; }
+    catch { /* try the other one */ }
+  }
+  return false;
+}
+
+// data/stats.json is a kilobyte and change; changing_tables.geojson and
+// play_places.geojson are megabytes; all four are written by the same
+// nightly build in the same second. So a launch that already has a stored
+// copy of everything refreshes stats.json FIRST, and downloads the other
+// three only when stats.json's own raw text turns out to differ — the one
+// signal any of them is worth asking about at all. A launch that finds
+// nothing new pays for one small request instead of four large ones.
+//
+// The invariant this keeps, and nowhere else does: the stored stats.json is
+// never newer than any stored copy of the other three. Each of the three
+// promotes itself exactly as it always has, the moment its own download
+// differs — nothing here changes that, and one succeeding does not wait on
+// another. Only stats.json's OWN promotion is held back (`hold`, above) until
+// all three have settled ok — changed or unchanged, either counts — and only
+// then is its `.new` swapped in; if any of the three failed, that `.new` is
+// thrown away instead, so the next launch reads last night's stats.json
+// again, finds it still differs from tonight's, and tries the whole thing
+// over. Without this, a single failed big download on an otherwise fine
+// night would leave the phone a day behind with nothing to notice: every
+// later launch would read the already-promoted stats.json, find it
+// unchanged, and never ask for the big files again.
+//
+// Accepted edge: a phone that happens to refresh in the exact second the
+// nightly build is still being written can draw a new stats.json against
+// still-old big files. It is indistinguishable from an ordinary missed
+// refresh and catches up the same way, the following night.
+//
+// A URL among `urls` that isn't named stats.json — or no stored stats.json
+// at all, so there is no canary yet to compare against (first launch, or a
+// copy that went missing) — means nothing here applies: every file, stats
+// included, loads exactly as loadJSONNative alone always has, none of them
+// waiting on any of the others.
+export async function loadDatasetNative(urls, io = nativeIO(), opts = {}) {
+  const statsAt = urls.findIndex((u) => u.split("/").pop().split("?")[0] === "stats.json");
+  if (statsAt === -1) return Promise.all(urls.map((u) => loadJSONNative(u, io, opts)));
+
+  const name = urls[statsAt].split("/").pop().split("?")[0];
+  const path = `${DATA_PATH}/${name}`;
+  const fresh = `${path}.new`;
+
+  if (!(await hasStoredCopy(io, path, fresh)))
+    return Promise.all(urls.map((u) => loadJSONNative(u, io, opts)));
+
+  const stats = await loadJSONNative(urls[statsAt], io, { ...opts, hold: true });
+  // `held` is stats.json's own download+compare, already running; reassigning
+  // `stats.refreshed` below must not lose the handle to it.
+  const held = stats.refreshed;
+  const gate = held.then((r) => (r.ok === false ? "failed" : r.json != null ? "changed" : "unchanged"));
+
+  // `loadJSONNative` itself resolves fast — a stored copy answers before its
+  // own download even starts — so `otherLoaded` (unlike `.refreshed` below)
+  // says nothing about whether any of the three actually finished.
+  const otherUrls = urls.filter((_, i) => i !== statsAt);
+  const otherLoaded = await Promise.all(otherUrls.map((u) => loadJSONNative(u, io, { ...opts, gate })));
+
+  stats.refreshed = (async () => {
+    const r = await held;
+    if (r.json == null) return r;   // unchanged, or the canary's own download failed: nothing held to promote
+    const results = await Promise.all(otherLoaded.map((x) => x.refreshed));
+    if (results.every((x) => x.ok !== false)) {
+      await io.replace(fresh, path).catch(() => {});
+      return r;
+    }
+    // One of the three failed: the copy on the phone must not learn tonight's
+    // stats.json without tonight's big files to back it up.
+    await io.remove(fresh);
+    return { ok: false, json: null };
+  })();
+
+  let k = 0;
+  return urls.map((u, i) => (i === statsAt ? stats : otherLoaded[k++]));
 }
 
 // ---- Location ----
@@ -605,7 +709,13 @@ const SAVED_KEY = "papamap-offline-cities";
 // opens without a network too — to delete one, if nothing else.
 export async function cityCatalogue() {
   // Build 18 kept it under another name; that copy is nobody's any more.
-  nativeIO().remove(`${DATA_PATH}/tiles-index.json`);
+  // Never awaited — a slow delete must not hold the catalogue back — and
+  // guarded twice over: `remove()` already swallows a rejected delete, but a
+  // missing Filesystem plugin makes `fs.deleteFile` throw synchronously,
+  // before there is even a promise to swallow, and that must not reject
+  // this whole load.
+  try { nativeIO().remove(`${DATA_PATH}/tiles-index.json`).catch(() => {}); }
+  catch { /* no Filesystem plugin */ }
   return (await loadJSONNative("tiles/index.json"))?.json ?? null;
 }
 

@@ -535,6 +535,42 @@ that landed and matched what was already drawn, says nothing. What used to be on
 (`fromStore`) is now a small wait for four promises to settle and a check that none of them
 brought anything back.
 
+**The fourth file is the canary for the other three.** `data/stats.json` is about a kilobyte,
+against 18.5 MB raw for `changing_tables.geojson` and 3.3 MB for `play_places.geojson`, and the
+same nightly build writes all four in the same second — so a launch that already has every file
+on the phone used to redownload the two big ones (and `areas.json`) every single time, just to
+learn nothing had changed. Now a launch with a stored copy of `stats.json` refreshes *that* file
+first, and downloads the other three only when its raw text turns out to differ from what was
+stored. A launch with nothing new costs one small request instead of four; one with a real
+nightly build still refreshes every file, exactly as before.
+
+`loadDatasetNative` (`web/native.js`) owns this ordering — `web/app.js`'s `loadJSON` stays the
+website's own plain fetch, and a new `loadDataset` picks between it and `loadDatasetNative` on
+`isNative()`, still the only branch, handing `boot()` and `watchRefresh` back exactly `loadJSON`'s
+`{ json, refreshed }` shape per file either way. `loadJSONNative` itself gains two options a plain
+load never sets: `gate`, a promise the stored-copy branch awaits *after* its own drawn-from-`.new`
+self-heal but *before* starting a download — `"changed"` proceeds exactly as an ungated file
+would, `"unchanged"` and `"failed"` each settle without ever calling the downloader at all — and
+`hold`, which downloads and compares as usual but leaves a changed answer sitting at `.new`
+rather than promoting it, because stats.json is not allowed to promote itself until the three
+files it gates have had their own say.
+
+The invariant this keeps, and nowhere else has to: **the stored stats.json is never newer than
+any stored copy of the other three.** Each of the three still promotes itself the moment its own
+download differs, independently of the other two, same as it always has — only stats.json's own
+promotion waits until all three have settled ok, changed or unchanged either counting, and is
+thrown away instead if any one of them failed, so the next launch reads last night's stats.json
+again, finds it still differs from tonight's, and tries the whole thing over. Without that wait, a
+single failed big download on an otherwise ordinary night would leave the phone a day behind with
+nothing to notice: every later launch would read the already-promoted stats.json, find it
+unchanged, and never ask for the big files again. A file with no stored copy of its own always
+takes the long path regardless of what the canary says, and a launch with no stored stats.json at
+all to compare against gates nothing — every file, stats.json included, loads exactly as it did
+before this existed. The one edge accepted rather than closed: a phone that happens to refresh in
+the exact second the nightly build is still being written can draw a new stats.json against
+still-old big files; it is indistinguishable from an ordinary missed refresh and catches up the
+same way, the following night.
+
 Nothing about any of this is sent anywhere or written down; the state that decides it lives in
 memory for the length of one launch.
 
