@@ -296,6 +296,9 @@ test("a declined route falls back to the same route on the web, never to nothing
   await followRoute(`comgooglemaps://?daddr=${AT}`, web,
     { openUrl: async ({ url }) => { opened.push(url); return { completed: true }; } }, (u) => shown.push(u));
   assert.deepEqual([opened, shown], [[`comgooglemaps://?daddr=${AT}`], [web]]);
-  // The web URL itself declined: nothing left to try, and the caller hears of it.
-  await assert.rejects(followRoute(web, web, declined, (u) => shown.push(u)), /not opened/);
+  // The web URL itself declined (a phone with no navigation app at all): the
+  // in-app browser still shows it — a tap is never answered with nothing.
+  const last = [];
+  await followRoute(web, web, declined, (u) => last.push(u));
+  assert.deepEqual(last, [web]);
 });

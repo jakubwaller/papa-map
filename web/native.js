@@ -295,7 +295,9 @@ export async function openRouteUrl(url, launcher = plugin("AppLauncher")) {
 // on exactly the phone this cascade exists for.
 export async function followRoute(url, web, launcher = plugin("AppLauncher"), external = openExternal) {
   try { await openRouteUrl(url, launcher); }
-  catch { if (url !== web) external(web); else throw new Error(`not opened: ${url}`); }
+  // Also when `url` is the web URL itself: the in-app browser is another
+  // mechanism than openUrl and can show what the OS would not hand over.
+  catch { external(web); }
 }
 
 // ---- OSM login through the in-app browser ----
