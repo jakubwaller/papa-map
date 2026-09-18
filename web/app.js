@@ -1672,18 +1672,29 @@ const pinLayerBelow = () =>
 // (citiesToMount). Six saved cities at launch were several hundred MB in the
 // WebView — iOS kills the app for that, and deleting a city needs the app.
 const mounting = new Set();
+// The slugs the latest view asked for, and the ones whose file would not
+// read this session (lost, corrupt): those are not tried again on every map
+// move — a fresh download clears the mark.
+let wanted = new Set();
+const unreadable = new Set();
 async function mountCity(city) {
-  if (mounted.has(city.slug) || mounting.has(city.slug) || !styleReady) return;
+  if (mounted.has(city.slug) || mounting.has(city.slug) || unreadable.has(city.slug) || !styleReady) return;
   ensureProtocol();
   if (!pmProtocol) return;
   mounting.add(city.slug);
   try {
     const src = await citySource(city.slug);
+    // The read takes a while for 80 MB and the view may have moved on: a city
+    // nobody is looking at any more is dropped here, before it is held.
+    if (!wanted.has(city.slug)) return;
     pmProtocol.add(new pmtiles.PMTiles(src));
     map.addSource(`city-${city.slug}`, { type: "vector", url: `pmtiles://${city.slug}` });
     const before = pinLayerBelow();
     for (const l of cityLayers(city.slug, lang)) map.addLayer(l, before);
     mounted.add(city.slug);
+  } catch (e) {
+    unreadable.add(city.slug);
+    throw e;
   } finally {
     mounting.delete(city.slug);
   }
@@ -1704,6 +1715,7 @@ function syncCities() {
   const want = citiesToMount(savedList, [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
                              { lat: c.lat, lon: c.lng }, map.getZoom());
   if (!want) return;   // zoomed out: leave what is mounted alone
+  wanted = new Set(want.map((x) => x.slug));
   for (const slug of [...mounted]) if (!want.some((x) => x.slug === slug)) unmountCity(slug);
   for (const city of want) mountCity(city).catch(() => {});
 }
@@ -1758,6 +1770,7 @@ async function renderOfflineList() {
         btn.disabled = true;
         try {
           savedList = await downloadCity(city, (p) => { btn.textContent = t("offlineLoading", { pct: Math.round(p * 100) }); });
+          unreadable.delete(city.slug);
           syncCities();
           toast(t("offlineDone", { city: city.name }));
         } catch {

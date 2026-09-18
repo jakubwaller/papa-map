@@ -12,9 +12,10 @@
 > through this run (their previous file, if any, stays listed and served).
 > Only the store app reads it (`web/native.js`: `cityCatalogue`,
 > `downloadCity`); the website has no offline basemap and never requests
-> `/tiles/`. Both are served with `Access-Control-Allow-Origin: *`, as are
-> `/data/*.geojson` and `/data/*.json`, because the app is this same shell
-> under its own origin. The app hands the Swift side (widget, Siri) a compact
+> `/tiles/`. The catalogue is served with `Access-Control-Allow-Origin: *`,
+> as are `/data/*.geojson` and `/data/*.json`, because the app is this same
+> shell under its own origin; the `.pmtiles` files are **not** — the app
+> fetches them with the native downloader, which knows no CORS. The app hands the Swift side (widget, Siri) a compact
 > copy of the tables — rows of `[lat, lon, status, name, osm_url]`, already
 > narrowed by the wheelchair chip — and `status` is read there, never
 > derived, as everywhere else. A changeset filed from the app carries
