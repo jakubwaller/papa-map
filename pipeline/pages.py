@@ -650,7 +650,7 @@ def render_index(summaries, generated_at: str, base_url: str = SITE_BASE_URL,
         "Spalte <em>Toiletten</em> zählt alle erfassten öffentlichen Toiletten, mit oder "
         "ohne Wickeltisch.</p>\n")
     parts.append(_countries_section(countries, "de", own_href="./"))
-    parts.append(FOOTER.format(up=UP))
+    parts.append(footer_html(FOOTER))
     parts.append("\n</body>\n</html>\n")
     return "".join(parts)
 

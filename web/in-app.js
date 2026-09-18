@@ -28,21 +28,34 @@
 (function () {
   var KEY = "papamap-in-app";
 
+  // → [hide the line?, is it remembered?]
   function inApp(search, storage) {
-    var seen = false;
+    var seen = false, kept = false;
     try {
       seen = !!storage && storage.getItem(KEY) === "1";
     } catch (e) { /* no storage to read: treat as not seen */ }
-    if (new URLSearchParams(search).get("app") !== "1" && !seen) return false;
+    if (new URLSearchParams(search).get("app") !== "1" && !seen) return [false, false];
     try {
-      if (storage) storage.setItem(KEY, "1");
+      if (storage) { storage.setItem(KEY, "1"); kept = true; }
     } catch (e) { /* nothing to remember it with; this load still hides it */ }
-    return true;
+    return [true, kept];
   }
 
   var store = null;
   try { store = window.sessionStorage; } catch (e) { /* blocked */ }
-  if (inApp(window.location.search, store)) {
-    document.documentElement.classList.add("in-app");
-  }
+  var answer = inApp(window.location.search, store);
+  if (!answer[0]) return;
+  document.documentElement.classList.add("in-app");
+
+  // Once the session remembers, the flag leaves the address: a link shared or
+  // copied out of the in-app browser must not hide the line for whoever opens
+  // it in a browser of their own. Without storage it stays, or a reload would
+  // bring the line back.
+  try {
+    var url = new URL(window.location.href);
+    if (answer[1] && url.searchParams.get("app") === "1") {
+      url.searchParams.delete("app");
+      window.history.replaceState(window.history.state, "", url.href);
+    }
+  } catch (e) { /* an address that cannot be rewritten is only less tidy */ }
 })();

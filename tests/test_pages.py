@@ -733,6 +733,25 @@ def test_a_footer_that_lost_its_shape_fails_the_build():
         pages.wrap_donate(odd)
 
 
+def test_the_german_index_wraps_its_donate_link_too():
+    """wickeltische/ is where the app's regions button lands a German reader
+    and one tap from every Bundesland page; it renders its footer on its own."""
+    summaries = [pages.summarize(n, [feat(i)], 10 * i)
+                 for i, n in enumerate(BUNDESLAENDER)]
+    html = pages.render_index(summaries, GEN)
+    assert html.count("ko-fi.com") == 1
+    assert re.search(r'<span class="donate"><a href="https://ko-fi\.com/[^<]*</a>\.</span>', html)
+    assert html.index("in-app.js") < html.index("<body>")
+
+
+def test_no_renderer_formats_a_footer_past_the_wrap():
+    """Every footer goes through footer_html; a renderer that calls .format on
+    one directly ships the link unwrapped, and no string-table test sees it."""
+    from pathlib import Path
+    for src in Path(pages.__file__).parent.glob("*.py"):
+        assert not re.search(r'(FOOTER|\["footer"\])\.format\(', src.read_text()), src.name
+
+
 def test_rendered_pages_carry_the_span_and_the_script_that_hides_it():
     _, html = render_one([feat(1, "Café Mitte", "accessible", amenity="cafe")])
     assert '<span class="donate">' in html

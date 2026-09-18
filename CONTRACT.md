@@ -14,7 +14,8 @@
 > papamap.de only** (query and fragment preserved, nobody else's URL touched),
 > and `web/in-app.js` turns that flag — or the `sessionStorage` key
 > `papamap-in-app` it leaves behind for the rest of the in-app browsing
-> session — into the class on `<html>`, before the first paint. Why: the app
+> session — into the class on `<html>`, before the first paint, and takes the
+> flag out of the address once the key is set, so a shared link carries none. Why: the app
 > opens the website's pages in an in-app browser, which is still inside the
 > app, and the app may show no donate link (App Store 3.1.1, the non-trader
 > declaration; issue #124). The bundled page still has the span cut out

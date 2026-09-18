@@ -23,11 +23,13 @@ function fakeStorage({ blocked = false } = {}) {
   };
 }
 
-// One page load in that session: `search` is the URL's query.
-function load(search, storage, { noStorage = false } = {}) {
+// One page load in that session: `search` is the URL's query. `seen` collects
+// the address the script left behind.
+function load(search, storage, { noStorage = false, seen = {} } = {}) {
   const classes = new Set();
   const win = {
-    location: { search },
+    location: { search, href: "https://papamap.de/wickeltische/bremen.html" + search + "#top" },
+    history: { state: null, replaceState: (_s, _t, href) => { seen.href = href; } },
     get sessionStorage() {
       if (noStorage) throw new Error("no storage in this context");
       return storage;
@@ -35,6 +37,7 @@ function load(search, storage, { noStorage = false } = {}) {
   };
   const ctx = {
     window: win,
+    URL,
     URLSearchParams,
     document: { documentElement: { classList: { add: (c) => classes.add(c) } } },
   };
@@ -42,6 +45,20 @@ function load(search, storage, { noStorage = false } = {}) {
   vm.runInContext(SRC, ctx);
   return classes.has("in-app");
 }
+
+test("the flag leaves the address once the session remembers it", () => {
+  const seen = {};
+  assert.equal(load("?bbox=9,53,10,54&app=1", fakeStorage(), { seen }), true);
+  assert.equal(seen.href, "https://papamap.de/wickeltische/bremen.html?bbox=9%2C53%2C10%2C54#top");
+  // Nothing to remember it with: the flag stays, or a reload shows the line.
+  const blocked = {};
+  assert.equal(load("?app=1", fakeStorage({ blocked: true }), { seen: blocked }), true);
+  assert.equal(blocked.href, undefined);
+  // An ordinary visit is never rewritten.
+  const plain = {};
+  assert.equal(load("?bbox=9,53,10,54", fakeStorage(), { seen: plain }), false);
+  assert.equal(plain.href, undefined);
+});
 
 test("the flagged load is marked, an ordinary visit is not", () => {
   assert.equal(load("?app=1", fakeStorage()), true);

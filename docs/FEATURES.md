@@ -441,7 +441,9 @@ inside an in-app browser that is still the app (issue #124). So `openExternal` m
 it opens on our own origin, and only those, with `?app=1`; `web/in-app.js`, loaded blocking from
 the head of each of those pages, reads the flag, remembers it in `sessionStorage` for the rest
 of that in-app browsing session and puts `.in-app` on `<html>` before the first paint, under
-which the CSS hides the donate span. Every generated footer gets that span at render time
+which the CSS hides the donate span; once the session remembers, the script takes the flag out
+of the address again, so a link shared out of the in-app browser does not hide the line for
+whoever opens it. Every generated footer gets that span at render time
 (`wrap_donate` in `pipeline/pages.py`, one rule over ~50 hand-written footers, raising rather
 than shipping the link). A reader on the open web sees exactly what they saw before, and with
 JavaScript off nothing happens at all.
