@@ -410,6 +410,16 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 #add-dialog .btn code { font-size: 11px; }
 #add-dialog .dialog-foot { margin: 4px 0 0; font-size: 12.5px; }
+/* The app's diagnostics block. Empty on the website, where :empty keeps it out
+   of the layout rather than leaving a gap under the city list. */
+#offline-diag {
+  margin: 10px 0 0;
+  font: 400 10.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+#offline-diag:empty { display: none; }
+
 #add-dialog .close, #offline-dialog .close, #route-dialog .close {
   position: absolute;
   top: 8px;

@@ -51,15 +51,30 @@ const TILES_PATH = "papamap/tiles";
 // is not unreachable.
 //
 // So the page keeps its own clock, NET_MS, and does not ask the OS for
-// permission to stop waiting. A download slower than that budget is given up
-// in favour of the copy on the phone: yesterday's tables now beat today's
-// tables in twenty minutes, and the toast says which of the two is on screen.
+// permission to stop waiting. How long that clock runs depends on what the
+// waiting is worth, which is to say on whether there is anything to fall back
+// to — a `stat` answers that before a byte is parsed:
+//
+//   COPY_MS  a copy is on the phone. It is read in under a tenth of a second,
+//            so the network is racing something that has already won:
+//            yesterday's tables now beat today's tables in twenty minutes, and
+//            the toast says which of the two is on screen. Eight seconds is
+//            the website's own number for exactly this trade (`sw.js`,
+//            DATA_TIMEOUT_MS) — one rule for both, already explained in
+//            FEATURES.md, rather than a second magic number beside it.
+//   NET_MS   nothing is stored. There is nothing to cut to, an empty map helps
+//            nobody, and this is somebody's first launch — so the download
+//            gets the long rope and the old failure path.
+//
+// And a reader the OS already knows is offline waits for nothing at all: the
+// copy is read at once (see below).
+//
 // Letting go is not cancelling — the native download runs on, into the `.new`
 // file the loader reads, so a first launch too slow for the clock draws an
 // empty map once and the launch after it has the data. The iOS timeouts below
 // are idle timeouts, not total ones, so they never cut a download that is
 // still arriving.
-const NET_MS = 20000;
+const NET_MS = 20000, COPY_MS = 8000;
 
 // One clock per load, shared by both attempts rather than granted to each —
 // the fallback must not start a fresh budget after the download has spent one.
@@ -98,6 +113,13 @@ function nativeIO(fs = plugin("Filesystem")) {
       catch { await fs.deleteFile({ path: to, directory: DIR }).catch(() => {}); await move(); }
     },
     remove: (path) => fs.deleteFile({ path, directory: DIR }).catch(() => {}),
+    // Is there a copy, and how big — asked of the file system, not of a parse
+    // of 18 MB. Null means "not there", which is the only distinction the
+    // loader needs before it decides how long to wait.
+    size: async (path) => {
+      try { return (await fs.stat({ path, directory: DIR })).size ?? null; }
+      catch { return null; }
+    },
     get: async (url) => {
       const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(NET_MS) });
       if (!r.ok) throw new Error(String(r.status));
@@ -116,14 +138,51 @@ function nativeIO(fs = plugin("Filesystem")) {
 // replaces it only once it has parsed. Should the downloader itself fail with
 // a network there, the page's own fetch still draws the map — without a copy.
 //
-// Neither network call is waited on for longer than `ms` between them: the
-// pins are the point, and a copy on the phone that is read in 90 ms must not
-// queue behind a request that is never going to be answered.
-export async function loadJSONNative(url, io = nativeIO(), ms = NET_MS) {
+// Neither network call is waited on for longer than one budget between them:
+// the pins are the point, and a copy on the phone that is read in 90 ms must
+// not queue behind a request that is never going to be answered.
+//
+// `note` is filled in on the way through and is the diagnostics block's whole
+// source (see formatDiagnostics). It is an out-parameter rather than a return
+// value so that the { json, fromStore } contract app.js reads — and the `null`
+// that means "nothing anywhere" — are exactly what they were.
+export async function loadJSONNative(url, io = nativeIO(), {
+  note = {}, copyMs = COPY_MS, netMs = NET_MS,
+  online = globalThis.navigator?.onLine !== false,
+} = {}) {
   const name = url.split("/").pop().split("?")[0];
   const path = `${DATA_PATH}/${name}`;
   const fresh = `${path}.new`;
-  const net = budget(ms);
+  const began = Date.now();
+
+  // One stat, before anything is read or fetched: it decides both how long the
+  // network gets and whether it is asked at all.
+  const bytes = (await io.size(path)) ?? (await io.size(fresh));
+  Object.assign(note, { file: name, step: "none", ms: 0, online, bytes });
+  const step = (s) => { note.step = s; note.ms = Date.now() - began; };
+
+  const stored = async () => {
+    for (const [copy, s] of [[path, "stored"], [fresh, "stored .new"]]) {
+      try {
+        const json = await io.read(copy);
+        step(s);
+        return { json, fromStore: true };
+      } catch { /* the other one */ }
+    }
+    return null;
+  };
+
+  // A reader the OS already says is offline is not made to wait for a network
+  // to prove it. navigator.onLine lies in one direction only — a Wi-Fi with no
+  // internet still reports "online" — so a false is worth acting on and a true
+  // is worth nothing, which is the way round this needs it. With no copy there
+  // is nothing to shortcut to, so that case goes the long way regardless.
+  if (!online && bytes != null) {
+    const hit = await stored();
+    if (hit) return hit;
+  }
+
+  const net = budget(bytes == null ? netMs : copyMs);
   let json;
   try {
     await net(io.download(SITE + url, fresh));
@@ -136,15 +195,43 @@ export async function loadJSONNative(url, io = nativeIO(), ms = NET_MS) {
     // A swap that fails costs nothing today and nothing offline: the data is
     // in hand, and the .new file it sits in is read below when `path` is not.
     await io.replace(fresh, path).catch(() => {});
+    step("download");
     return { json, fromStore: false };
   }
-  try { return { json: await net(io.get(SITE + url)), fromStore: false }; }
-  catch { /* no network, or none that answers */ }
-  for (const copy of [path, fresh]) {
-    try { return { json: await io.read(copy), fromStore: true }; }
-    catch { /* the other one */ }
-  }
+  try {
+    const fetched = await net(io.get(SITE + url));
+    step("fetch");
+    return { json: fetched, fromStore: false };
+  } catch { /* no network, or none that answers */ }
+  const hit = await stored();
+  if (hit) return hit;
+  step("none");
   return null;
+}
+
+// ---- The diagnostics block (the app's offline dialog, TestFlight only) ----
+// Deliberately English, deliberately untranslated, deliberately ugly: this is
+// a line for a bug report, not a feature. It says which of the loader's paths
+// actually produced each file this launch, how long that took, what the OS
+// said about the network, and how big the stored copy is — the four things
+// that would have settled the airplane-mode bug in one message instead of
+// three TestFlight builds. Nothing here is fetched, stored or sent; every
+// number is one the app already had in hand.
+// Every column is only as wide as this launch needs, and the extension goes:
+// a phone screen is about 48 monospace characters across, and a line wider
+// than the dialog hides the one number the whole block exists to show.
+export function formatDiagnostics(notes, pin) {
+  if (!notes.length) return "";
+  const cell = (pick) => {
+    const w = Math.max(...notes.map((n) => String(pick(n)).length));
+    return (n) => String(pick(n)).padEnd(w);
+  };
+  const name = cell((n) => n.file.replace(/\.(geojson|json)$/, ""));
+  const step = cell((n) => n.step);
+  const took = cell((n) => `${n.ms}ms`);
+  const rows = notes.map((n) =>
+    `${name(n)}  ${step(n)}  ${took(n)}  ${n.bytes == null ? "no copy" : `${n.bytes} B`}`);
+  return [`${pin} · online=${notes[0].online}`, ...rows].join("\n");
 }
 
 // ---- Location ----
