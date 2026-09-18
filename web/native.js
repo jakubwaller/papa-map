@@ -60,9 +60,39 @@ export async function loadJSONNative(url) {
 // ---- Location ----
 // The plugin asks the OS permission itself and answers with the same shape
 // as the browser's coords. app.js keeps one locate() for both worlds.
-export async function locateNative() {
-  const p = await plugin("Geolocation").getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
-  return p.coords;
+//
+// Not getCurrentPosition: on iOS that is Core Location's requestLocation(),
+// which holds the answer back until it is satisfied with the accuracy —
+// several seconds on a phone that has not used GPS lately (build 13 on an
+// iPhone 12 mini, 2026-09-18). A watch hands fixes over as they come, the
+// Wi-Fi one first: the first fix good to GOOD_M wins, after SOFT_MS the best
+// one seen (or the next to arrive), and at HARD_MS it is over either way.
+const GOOD_M = 100, SOFT_MS = 3000, HARD_MS = 10000;
+export async function locateNative(geo = plugin("Geolocation"),
+                                   { good = GOOD_M, soft = SOFT_MS, hard = HARD_MS } = {}) {
+  const perm = await geo.checkPermissions();   // rejects when location services are off
+  if (perm.location !== "granted" && (await geo.requestPermissions()).location !== "granted") {
+    throw new Error("denied");
+  }
+  return new Promise((ok, fail) => {
+    let best = null, late = false, done = false, watch = null;
+    const finish = (coords, err) => {
+      if (done) return;
+      done = true;
+      clearTimeout(softTimer);
+      clearTimeout(hardTimer);
+      Promise.resolve(watch).then((id) => id != null && geo.clearWatch({ id })).catch(() => {});
+      if (coords) ok(coords); else fail(err ?? new Error("timeout"));
+    };
+    const softTimer = setTimeout(() => { late = true; if (best) finish(best); }, soft);
+    const hardTimer = setTimeout(() => finish(best), hard);
+    watch = geo.watchPosition({ enableHighAccuracy: true, timeout: hard }, (p, err) => {
+      if (!p?.coords) { if (err && !best) finish(null, err); return; }
+      if (!best || p.coords.accuracy < best.accuracy) best = p.coords;
+      if (late || best.accuracy <= good) finish(best);
+    });
+    Promise.resolve(watch).catch((e) => finish(null, e));
+  });
 }
 
 // ---- Links ----

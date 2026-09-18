@@ -927,10 +927,16 @@ function locate() {
   });
 }
 const hasGeo = () => isNative() || !!navigator.geolocation;
+// A fix takes a second or three and until it lands nothing on the map moves:
+// the tapped button pulses (style.css, [aria-busy]) so the tap reads as heard.
+function locateFrom(btn) {
+  btn.setAttribute("aria-busy", "true");
+  return locate().finally(() => btn.removeAttribute("aria-busy"));
+}
 
-document.getElementById("locate").addEventListener("click", () => {
+document.getElementById("locate").addEventListener("click", (e) => {
   if (!hasGeo()) { toast(t("toastNoGeo")); return; }
-  locate().then(
+  locateFrom(e.currentTarget).then(
     (coords) => {
       const at = [coords.longitude, coords.latitude];
       showYou(at);
@@ -949,10 +955,10 @@ document.getElementById("locate").addEventListener("click", () => {
 //
 // "Usable" is the current reading's own verdict, so the same tap sends a father
 // to the nearest open room and a mother to the nearest room of either kind.
-document.getElementById("nearest").addEventListener("click", () => {
+document.getElementById("nearest").addEventListener("click", (e) => {
   if (!hasGeo()) { toast(t("toastNoGeo")); return; }
   if (!dataReady) { toast(t("countNoData")); return; }
-  locate().then(
+  locateFrom(e.currentTarget).then(
     (coords) => {
       const { latitude: lat, longitude: lon } = coords;
       showYou([lon, lat]);

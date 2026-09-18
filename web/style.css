@@ -335,6 +335,11 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 #zoom-ctrl button:hover { border-color: var(--green); color: var(--green-strong); }
 #locate, #nearest, #offline { display: flex; align-items: center; justify-content: center; }
+#locate[aria-busy], #nearest[aria-busy] { animation: locating .7s ease-in-out infinite alternate; }
+@keyframes locating { to { opacity: .4; } }
+@media (prefers-reduced-motion: reduce) {
+  #locate[aria-busy], #nearest[aria-busy] { animation: none; opacity: .6; }
+}
 #offline[hidden] { display: none; }
 
 /* You-are-here dot (single DOM marker, added on demand) */

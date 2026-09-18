@@ -30,6 +30,8 @@ app/
   package.json          Capacitor and its plugins (Filesystem, Geolocation, Browser, App, Preferences)
   capacitor.config.json appId de.papamap.app, webDir www
   build-www.js          copies the shell from ../web into www/ (no sw.js, no site pages)
+  assets/               icon and splash sources (the site's glyph on #009e73); every size under
+                        ios/ and android/ comes from `npx @capacitor/assets generate --ios --android`
   ios/App/              the Xcode project (SPM, no CocoaPods)
     App/                AppDelegate, MainViewController (registers the plugin), Info.plist,
                         PapaMapSharePlugin.swift, Shared/ (TableStore, LocationOnce),
