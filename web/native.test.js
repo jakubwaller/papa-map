@@ -181,3 +181,124 @@ test("nobody else's URL is touched", () => {
 test("a flag already there is not doubled", () => {
   assert.equal(externalUrl("methods.html?app=1"), `${SITE}methods.html?app=1`);
 });
+
+// ---- Directions on iOS: the cascade ----
+// Only step 2 (Apple Maps) can be seen in a simulator and only steps 1, 3 and 4
+// matter on the phone this was written for, so the decision is a pure function
+// and this is where it is actually checked. `has` is what the OS answered.
+import fs from "node:fs";
+import { routePlan, planRoute, openRouteUrl, followRoute, routeWebUrl, NAV_APPS, ROUTE_SCHEMES } from "./native.js";
+
+const has = (...schemes) => (s) => schemes.includes(s);
+const RATHAUS = [53.550341, 9.992196];
+const AT = "53.550341,9.992196";
+
+test("the reader's own default navigation app comes first", () => {
+  // Every other app in the world installed: the chosen one still wins.
+  assert.deepEqual(routePlan(...RATHAUS, "Rathaus", has(...ROUTE_SCHEMES)),
+                   { open: `geo-navigation:///directions?destination=${AT}` });
+});
+
+test("no default: Apple Maps, exactly the URL build 19 sent", () => {
+  assert.deepEqual(routePlan(...RATHAUS, "Rathaus", has("maps", "comgooglemaps", "waze")),
+                   { open: `maps://?q=Rathaus&ll=${AT}&daddr=${AT}` });
+});
+
+test("Apple Maps deleted and one navigation app installed: open it, don't ask", () => {
+  assert.deepEqual(routePlan(...RATHAUS, "Rathaus", has("comgooglemaps")),
+                   { open: `comgooglemaps://?daddr=${AT}` });
+  assert.deepEqual(routePlan(...RATHAUS, "Rathaus", has("waze")),
+                   { open: `waze://?ll=${AT}&navigate=yes` });
+  assert.deepEqual(routePlan(...RATHAUS, "Rathaus", has("om")),
+                   { open: `om://map?v=1&ll=${AT}&n=Rathaus` });
+});
+
+test("several installed and no default: the reader is asked, in NAV_APPS order", () => {
+  const plan = routePlan(...RATHAUS, "", has("om", "waze", "comgooglemaps"));
+  assert.equal(plan.open, undefined);
+  assert.deepEqual(plan.choose.map((c) => c.name), ["Google Maps", "Waze", "Organic Maps"]);
+  assert.equal(plan.choose[2].url, `om://map?v=1&ll=${AT}`);   // no name, no &n=
+});
+
+test("nothing installed at all: the open web, and the destination only", () => {
+  const plan = routePlan(...RATHAUS, "Rathaus", () => false);
+  assert.equal(plan.open, `https://www.google.com/maps/dir/?api=1&destination=${AT}`);
+});
+
+test("no travel mode is forced by any of them", () => {
+  const seen = [];
+  for (const s of ROUTE_SCHEMES) seen.push(routePlan(...RATHAUS, "Rathaus", has(s)).open);
+  seen.push(routePlan(...RATHAUS, "Rathaus", () => false).open);
+  for (const url of seen)
+    assert.doesNotMatch(url, /directionsmode|travelmode|dirflg|[?&]type=/, url);
+});
+
+test("a name with an ampersand or a space cannot break the URL", () => {
+  const plan = routePlan(...RATHAUS, "Kai & Co", has("om"));
+  assert.equal(plan.open, `om://map?v=1&ll=${AT}&n=Kai%20%26%20Co`);
+  assert.equal(routePlan(...RATHAUS, "Kai & Co", has("maps")).open,
+               `maps://?q=Kai%20%26%20Co&ll=${AT}&daddr=${AT}`);
+});
+
+test("planRoute asks the OS about every scheme, once, and nothing else", async () => {
+  const asked = [];
+  const launcher = {
+    canOpenUrl: async ({ url }) => { asked.push(url); return { value: url === "waze://" }; },
+    openUrl: async () => ({ completed: true }),
+  };
+  const plan = await planRoute(...RATHAUS, "Rathaus", launcher);
+  assert.deepEqual(asked.sort(), ROUTE_SCHEMES.map((s) => `${s}://`).sort());
+  assert.deepEqual(plan, { open: `waze://?ll=${AT}&navigate=yes` });
+});
+
+test("a scheme the OS refuses to answer for counts as absent, not as an error", async () => {
+  const launcher = {
+    canOpenUrl: async ({ url }) => {
+      if (url === "maps://") throw new Error("not in LSApplicationQueriesSchemes");
+      return { value: url === "comgooglemaps://" };
+    },
+  };
+  assert.deepEqual(await planRoute(...RATHAUS, "", launcher), { open: `comgooglemaps://?daddr=${AT}` });
+});
+
+test("with no AppLauncher at all planRoute fails, so the caller can follow the href", async () => {
+  await assert.rejects(planRoute(...RATHAUS, "", undefined), /AppLauncher/);
+});
+
+test("every scheme the cascade can ask about is declared to iOS", () => {
+  const plist = fs.readFileSync(new URL("../app/ios/App/App/Info.plist", import.meta.url), "utf8");
+  const block = /<key>LSApplicationQueriesSchemes<\/key>\s*<array>([\s\S]*?)<\/array>/.exec(plist);
+  assert.ok(block, "Info.plist declares no LSApplicationQueriesSchemes");
+  const declared = [...block[1].matchAll(/<string>([^<]+)<\/string>/g)].map((m) => m[1]);
+  // canOpenURL answers "no" for anything unlisted, which would read here as
+  // "the reader does not have that app" — silently, and wrongly.
+  assert.deepEqual([...ROUTE_SCHEMES].sort(), [...declared].sort());
+  assert.deepEqual(NAV_APPS.map((a) => a.scheme).filter((s) => !declared.includes(s)), []);
+});
+
+test("an open the OS declines counts as a failure, not as done", async () => {
+  // AppLauncher resolves { completed: false } rather than rejecting.
+  const declined = { openUrl: async () => ({ completed: false }) };
+  await assert.rejects(openRouteUrl("maps://?daddr=1,2", declined), /not opened/);
+  await openRouteUrl("maps://?daddr=1,2", { openUrl: async () => ({ completed: true }) });
+});
+
+test("a declined route falls back to the same route on the web, never to nothing", async () => {
+  const web = routeWebUrl(...RATHAUS);
+  assert.equal(web, `https://www.google.com/maps/dir/?api=1&destination=${AT}`);
+  assert.equal(routePlan(...RATHAUS, "", () => false).open, web);
+  const shown = [];
+  const declined = { openUrl: async () => ({ completed: false }) };
+  await followRoute(`comgooglemaps://?daddr=${AT}`, web, declined, (u) => shown.push(u));
+  assert.deepEqual(shown, [web]);
+  // An open that works shows nothing else.
+  const opened = [];
+  await followRoute(`comgooglemaps://?daddr=${AT}`, web,
+    { openUrl: async ({ url }) => { opened.push(url); return { completed: true }; } }, (u) => shown.push(u));
+  assert.deepEqual([opened, shown], [[`comgooglemaps://?daddr=${AT}`], [web]]);
+  // The web URL itself declined (a phone with no navigation app at all): the
+  // in-app browser still shows it — a tap is never answered with nothing.
+  const last = [];
+  await followRoute(web, web, declined, (u) => last.push(u));
+  assert.deepEqual(last, [web]);
+});

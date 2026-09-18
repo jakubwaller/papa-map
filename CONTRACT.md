@@ -1,5 +1,25 @@
 # papa-map — build contract (v0)
 
+> **v36 amendment (18 Sep 2026, the Route button on iOS):** **no shape change** — no data
+> file gains, loses or changes a property, and `STATUSES` is untouched. The
+> popup's Route anchor now carries **`data-route="<lat>,<lon>"`** and
+> **`data-route-label`** beside the `href` it always had; the `href` is
+> unchanged on every platform (a `geo:` URI on the web and on Android, Apple
+> Maps on iOS) and is still what a tap follows everywhere except inside the
+> iOS app, where `web/app.js` catches the tap and `web/native.js`'s
+> `routePlan` decides: `geo-navigation:` (the reader's chosen default
+> navigation app) → `maps:` (Apple Maps) → a single installed navigation app
+> by its own scheme → a chooser dialog (`#route-dialog`, new, i18n key
+> `routeTitle` in all 32 languages) → the Google Maps directions URL on the
+> open web. A URL the OS declines to open falls back to that same web URL in
+> the in-app browser. Nothing is remembered between taps. New dependency
+> `@capacitor/app-launcher` (8.x, matching Capacitor 8) and a new
+> `LSApplicationQueriesSchemes` array in `app/ios/App/App/Info.plist`, which
+> `web/native.test.js` holds to `ROUTE_SCHEMES` exactly. Why: `maps:` is Apple
+> Maps' own scheme, so build 19's Route button did nothing but raise iOS's "No
+> Navigation App Installed" on a phone whose owner had deleted Apple Maps.
+> Shell pin `app21` → `app22`.
+
 > **v35 amendment (18 Sep 2026, no donate link inside the store app):**
 > **HTML surface only** — no data file gains, loses or changes a property.
 > Every generated page (the area pages, their hubs and the leaderboard, in all

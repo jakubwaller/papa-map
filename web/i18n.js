@@ -275,6 +275,7 @@ export const STRINGS = {
     offlineDone: "{city} ist jetzt offline da.",
     offlineFailed: "Laden fehlgeschlagen — später noch einmal versuchen.",
     offlineNoList: "Die Liste der Städte konnte nicht geladen werden.",
+    routeTitle: "Route öffnen in …",
   },
   en: {
     title: "PapaMap — Changing tables dads can reach",
@@ -431,6 +432,7 @@ export const STRINGS = {
     offlineDone: "{city} is now available offline.",
     offlineFailed: "Download failed — try again later.",
     offlineNoList: "The list of cities could not be loaded.",
+    routeTitle: "Open route in …",
   },
   da: {
     title: "PapaMap — pusleborde, en far kan nå",
@@ -584,6 +586,7 @@ export const STRINGS = {
     offlineDone: "{city} er nu tilgængelig offline.",
     offlineFailed: "Hentning mislykkedes — prøv igen senere.",
     offlineNoList: "Listen over byer kunne ikke hentes.",
+    routeTitle: "Åbn rute i …",
   },
 
   // Nederlands — added 19 Aug 2026 with the UK and France; the Netherlands and Flanders.
@@ -735,6 +738,7 @@ export const STRINGS = {
     offlineDone: "{city} is nu offline beschikbaar.",
     offlineFailed: "Downloaden mislukt — probeer het later opnieuw.",
     offlineNoList: "De lijst met steden kon niet worden geladen.",
+    routeTitle: "Route openen in …",
   },
   // Français — added 19 Aug 2026 with the UK and France; France, Wallonia and Romandy.
   fr: {
@@ -884,6 +888,7 @@ export const STRINGS = {
     offlineDone: "{city} est maintenant disponible hors ligne.",
     offlineFailed: "Téléchargement échoué — réessaie plus tard.",
     offlineNoList: "La liste des villes n'a pas pu être chargée.",
+    routeTitle: "Ouvrir l’itinéraire dans …",
   },
   // Italiano — added 19 Aug 2026 with the UK and France; Ticino and the Italian-speaking Grisons.
   it: {
@@ -1033,6 +1038,7 @@ export const STRINGS = {
     offlineDone: "{city} è ora disponibile offline.",
     offlineFailed: "Download non riuscito — riprova più tardi.",
     offlineNoList: "Impossibile caricare l'elenco delle città.",
+    routeTitle: "Apri il percorso in …",
   },
   // Čeština — added 19 Aug 2026 with the UK and France; Czechia.
   cs: {
@@ -1182,6 +1188,7 @@ export const STRINGS = {
     offlineDone: "{city} je teď dostupné offline.",
     offlineFailed: "Stažení se nezdařilo — zkus to později znovu.",
     offlineNoList: "Seznam měst se nepodařilo načíst.",
+    routeTitle: "Otevřít trasu v …",
   },
   // Polski — added 19 Aug 2026 with the UK and France; Poland.
   pl: {
@@ -1331,6 +1338,7 @@ export const STRINGS = {
     offlineDone: "{city} jest teraz dostępne offline.",
     offlineFailed: "Pobieranie nie powiodło się — spróbuj później.",
     offlineNoList: "Nie udało się wczytać listy miast.",
+    routeTitle: "Otwórz trasę w …",
   },
   // Svenska — added 19 Aug 2026 with the UK and France; Sweden.
   sv: {
@@ -1480,6 +1488,7 @@ export const STRINGS = {
     offlineDone: "{city} finns nu offline.",
     offlineFailed: "Hämtningen misslyckades — försök igen senare.",
     offlineNoList: "Listan över städer kunde inte hämtas.",
+    routeTitle: "Öppna rutt i …",
   },
   bs: {
     title: "PapaMap — Stolovi za previjanje do kojih tata može doći",
@@ -1628,6 +1637,7 @@ export const STRINGS = {
     offlineDone: "{city} je sada dostupan offline.",
     offlineFailed: "Preuzimanje nije uspjelo — pokušaj kasnije.",
     offlineNoList: "Lista gradova nije mogla biti učitana.",
+    routeTitle: "Otvori rutu u …",
   },
   ca: {
     title: "PapaMap — Canviadors a l'abast d'un pare",
@@ -1776,6 +1786,7 @@ export const STRINGS = {
     offlineDone: "{city} ara és disponible fora de línia.",
     offlineFailed: "La baixada ha fallat — torna-ho a provar més tard.",
     offlineNoList: "No s'ha pogut carregar la llista de ciutats.",
+    routeTitle: "Obre la ruta a …",
   },
   et: {
     title: "PapaMap — mähkimislauad, kuhu isa jõuab",
@@ -1924,6 +1935,7 @@ export const STRINGS = {
     offlineDone: "{city} on nüüd võrguühenduseta saadaval.",
     offlineFailed: "Allalaadimine ebaõnnestus — proovi hiljem uuesti.",
     offlineNoList: "Linnade loendit ei õnnestunud laadida.",
+    routeTitle: "Ava marsruut rakenduses …",
   },
   es: {
     title: "PapaMap — Cambiadores a los que un papá llega",
@@ -2072,6 +2084,7 @@ export const STRINGS = {
     offlineDone: "{city} ya está disponible sin conexión.",
     offlineFailed: "La descarga ha fallado — inténtalo más tarde.",
     offlineNoList: "No se pudo cargar la lista de ciudades.",
+    routeTitle: "Abrir la ruta en …",
   },
   hr: {
     title: "PapaMap — stolovi za previjanje dostupni tati",
@@ -2220,6 +2233,7 @@ export const STRINGS = {
     offlineDone: "{city} je sada dostupan offline.",
     offlineFailed: "Preuzimanje nije uspjelo — pokušaj kasnije.",
     offlineNoList: "Popis gradova nije bilo moguće učitati.",
+    routeTitle: "Otvori rutu u …",
   },
   is: {
     title: "PapaMap — Skiptiborð sem pabbar komast að",
@@ -2368,6 +2382,7 @@ export const STRINGS = {
     offlineDone: "{city} er nú aðgengileg án nettengingar.",
     offlineFailed: "Niðurhal mistókst — reyndu aftur síðar.",
     offlineNoList: "Ekki tókst að sækja listann yfir borgir.",
+    routeTitle: "Opna leiðina í …",
   },
   lv: {
     title: "PapaMap — Pārtinamie galdiņi, kuriem tēti var piekļūt",
@@ -2516,6 +2531,7 @@ export const STRINGS = {
     offlineDone: "{city} tagad ir pieejama bezsaistē.",
     offlineFailed: "Lejupielāde neizdevās — mēģini vēlāk vēlreiz.",
     offlineNoList: "Neizdevās ielādēt pilsētu sarakstu.",
+    routeTitle: "Atvērt maršrutu lietotnē …",
   },
   lt: {
     title: "PapaMap — pervystymo stalai, kuriuos tėtis gali pasiekti",
@@ -2664,6 +2680,7 @@ export const STRINGS = {
     offlineDone: "{city} dabar pasiekiamas neprisijungus.",
     offlineFailed: "Atsisiųsti nepavyko — pabandyk vėliau.",
     offlineNoList: "Nepavyko įkelti miestų sąrašo.",
+    routeTitle: "Atidaryti maršrutą programoje …",
   },
   hu: {
     title: "PapaMap — Pelenkázóasztalok, amikhez egy apa is hozzáfér",
@@ -2812,6 +2829,7 @@ export const STRINGS = {
     offlineDone: "{city} mostantól offline is elérhető.",
     offlineFailed: "A letöltés nem sikerült — próbáld újra később.",
     offlineNoList: "A városok listáját nem sikerült betölteni.",
+    routeTitle: "Útvonal megnyitása itt: …",
   },
   no: {
     title: "PapaMap — stellebord en pappa når",
@@ -2960,6 +2978,7 @@ export const STRINGS = {
     offlineDone: "{city} er nå tilgjengelig offline.",
     offlineFailed: "Nedlastingen mislyktes — prøv igjen senere.",
     offlineNoList: "Listen over byer kunne ikke lastes.",
+    routeTitle: "Åpne rute i …",
   },
   pt: {
     title: "PapaMap — Fraldários a que um pai consegue chegar",
@@ -3108,6 +3127,7 @@ export const STRINGS = {
     offlineDone: "{city} está agora disponível offline.",
     offlineFailed: "A transferência falhou — tenta mais tarde.",
     offlineNoList: "Não foi possível carregar a lista de cidades.",
+    routeTitle: "Abrir a rota em …",
   },
   ro: {
     title: "PapaMap — Mese de înfășat la care ajunge un tată",
@@ -3256,6 +3276,7 @@ export const STRINGS = {
     offlineDone: "{city} este acum disponibil offline.",
     offlineFailed: "Descărcarea a eșuat — încearcă din nou mai târziu.",
     offlineNoList: "Lista orașelor nu a putut fi încărcată.",
+    routeTitle: "Deschide ruta în …",
   },
   sq: {
     title: "PapaMap — Tavolina ndërrimi që i arrin dot një baba",
@@ -3404,6 +3425,7 @@ export const STRINGS = {
     offlineDone: "{city} tani është i disponueshëm offline.",
     offlineFailed: "Shkarkimi dështoi — provo më vonë.",
     offlineNoList: "Lista e qyteteve nuk u ngarkua dot.",
+    routeTitle: "Hap itinerarin në …",
   },
   sk: {
     title: "PapaMap — Prebaľovacie pulty, ku ktorým sa otec dostane",
@@ -3552,6 +3574,7 @@ export const STRINGS = {
     offlineDone: "{city} je teraz dostupné offline.",
     offlineFailed: "Sťahovanie zlyhalo — skús to neskôr znova.",
     offlineNoList: "Zoznam miest sa nepodarilo načítať.",
+    routeTitle: "Otvoriť trasu v …",
   },
   sl: {
     title: "PapaMap — previjalne mize, ki jih doseže oče",
@@ -3700,6 +3723,7 @@ export const STRINGS = {
     offlineDone: "{city} je zdaj na voljo brez povezave.",
     offlineFailed: "Prenos ni uspel — poskusi znova pozneje.",
     offlineNoList: "Seznama mest ni bilo mogoče naložiti.",
+    routeTitle: "Odpri pot v …",
   },
   fi: {
     title: "PapaMap — hoitopöydät, joille isä pääsee",
@@ -3848,6 +3872,7 @@ export const STRINGS = {
     offlineDone: "{city} on nyt käytettävissä offline-tilassa.",
     offlineFailed: "Lataus epäonnistui — yritä myöhemmin uudelleen.",
     offlineNoList: "Kaupunkien luetteloa ei voitu ladata.",
+    routeTitle: "Avaa reitti sovelluksessa …",
   },
   el: {
     title: "PapaMap — Αλλαξιέρες που φτάνει ένας μπαμπάς",
@@ -3996,6 +4021,7 @@ export const STRINGS = {
     offlineDone: "Η πόλη {city} είναι τώρα διαθέσιμη εκτός σύνδεσης.",
     offlineFailed: "Η λήψη απέτυχε — δοκίμασε ξανά αργότερα.",
     offlineNoList: "Δεν ήταν δυνατή η φόρτωση της λίστας πόλεων.",
+    routeTitle: "Άνοιγμα διαδρομής σε …",
   },
   be: {
     title: "PapaMap — сталы для спавівання, да якіх можа дабрацца тата",
@@ -4144,6 +4170,7 @@ export const STRINGS = {
     offlineDone: "{city} цяпер даступны афлайн.",
     offlineFailed: "Спампаваць не ўдалося — паспрабуй пазней.",
     offlineNoList: "Не ўдалося загрузіць спіс гарадоў.",
+    routeTitle: "Адкрыць маршрут у …",
   },
   bg: {
     title: "PapaMap — маси за повиване, до които татко може да стигне",
@@ -4292,6 +4319,7 @@ export const STRINGS = {
     offlineDone: "{city} вече е наличен офлайн.",
     offlineFailed: "Изтеглянето не успя — опитай отново по-късно.",
     offlineNoList: "Списъкът с градове не можа да се зареди.",
+    routeTitle: "Отваряне на маршрута в …",
   },
   mk: {
     title: "PapaMap — Маси за пеленање до кои татковците можат да стигнат",
@@ -4440,6 +4468,7 @@ export const STRINGS = {
     offlineDone: "{city} сега е достапен офлајн.",
     offlineFailed: "Преземањето не успеа — обиди се повторно подоцна.",
     offlineNoList: "Списокот на градови не можеше да се вчита.",
+    routeTitle: "Отвори ја рутата во …",
   },
   sr: {
     title: "PapaMap — Столови за превијање доступни татама",
@@ -4588,6 +4617,7 @@ export const STRINGS = {
     offlineDone: "{city} је сада доступан офлајн.",
     offlineFailed: "Преузимање није успело — покушај касније.",
     offlineNoList: "Листа градова није могла да се учита.",
+    routeTitle: "Отвори руту у …",
   },
   uk: {
     title: "PapaMap — пеленальні столики, до яких дістанеться тато",
@@ -4736,6 +4766,7 @@ export const STRINGS = {
     offlineDone: "{city} тепер доступне офлайн.",
     offlineFailed: "Завантаження не вдалося — спробуй пізніше.",
     offlineNoList: "Не вдалося завантажити список міст.",
+    routeTitle: "Відкрити маршрут у …",
   },
 
   // Japanese (2026-09-05): the first page language outside Europe, added with
@@ -4888,5 +4919,6 @@ export const STRINGS = {
     offlineDone: "{city}はオフラインで使えるようになりました。",
     offlineFailed: "ダウンロードに失敗しました。あとでもう一度お試しください。",
     offlineNoList: "都市の一覧を読み込めませんでした。",
+    routeTitle: "経路を開くアプリ …",
   },
 };

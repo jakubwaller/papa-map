@@ -177,10 +177,127 @@ export function interceptLinks(doc = document) {
 
 // Directions: iOS has no geo: handler, Apple Maps answers maps://; Android
 // hands geo: to whichever maps app the reader chose.
+//
+// This is still what the Route button's href says on every platform, and on
+// the web and on Android it is still what a tap follows. In the iOS app the
+// tap is caught and routePlan() below decides instead; the href is what is
+// left when that cannot run at all.
+const coords = (lat, lon) => `${lat.toFixed(6)},${lon.toFixed(6)}`;
+const appleMapsUri = (at, label) =>
+  `maps://?q=${encodeURIComponent(label || "")}&ll=${at}&daddr=${at}`;
+
 export function directionsUri(lat, lon, label, geo) {
   if (platform() !== "ios") return geo;
-  const at = `${lat.toFixed(6)},${lon.toFixed(6)}`;
-  return `maps://?q=${encodeURIComponent(label || "")}&ll=${at}&daddr=${at}`;
+  return appleMapsUri(coords(lat, lon), label);
+}
+
+// ---- Directions on iOS: the cascade ----
+// The map does not choose a maps app for the reader. On Android and on the
+// web that costs nothing — geo: is a question for the OS. iOS has no geo:
+// handler, so the choice has to be made here, and it is made in this order:
+//
+//   1. `geo-navigation:` — the reader's OWN default navigation app. iOS 18.4
+//      in the EU and 26.2 in Japan let them pick one, and Apple's instruction
+//      to the app that wants to BE that default is to answer
+//      `geo-navigation:///directions?source=&destination=&waypoint=`, where a
+//      value is an address, a place name or a comma-separated lat,lon pair
+//      (developer.apple.com/documentation/mapkit/preparing-your-app-to-be-the-
+//      default-navigation-app). Apple documents the receiving end only. That a
+//      CALLING app reaches the chosen app by opening that URL is read off
+//      MapKit itself — MKMapItem builds a `geo-navigation://` URL for default
+//      navigation — and off the apps already calling it that way. Where no app
+//      claims the scheme, canOpenUrl says no and this step costs nothing.
+//   2. `maps:` — Apple Maps, exactly the URL every build up to 19 sent.
+//   3. Whatever navigation app is in fact installed, by its own documented
+//      scheme. Exactly one: open it. More than one: ask, once, and remember
+//      nothing — the app is allowed to find out what is installed, not to
+//      acquire an opinion about it.
+//   4. Nothing at all: the Google Maps directions URL on the open web, handed
+//      to the OS rather than to the in-app browser, so a universal link can
+//      still be caught by an app and only otherwise opens a browser.
+//
+// Why at all: `maps://` is Apple Maps' own scheme, and setting another app as
+// the default navigation app does not change that. On a phone whose owner had
+// deleted Apple Maps, build 19's Route button produced iOS's "No Navigation
+// App Installed" alert and nothing else (an iPhone in Germany, Sep 2026).
+//
+// No travel mode is forced anywhere in here. The reader may be pushing a pram
+// or driving to the next town, and guessing which would be the same mistake in
+// smaller print as picking their maps app for them.
+
+// Only schemes whose owners document them. Every one of these has to be listed
+// in LSApplicationQueriesSchemes in app/ios/App/App/Info.plist as well: iOS
+// answers canOpenURL for nothing else, and it answers silently — an unlisted
+// scheme comes back as "cannot open", which here reads as "the reader does not
+// have that app".
+export const NAV_APPS = [
+  { scheme: "comgooglemaps", name: "Google Maps",
+    url: (at) => `comgooglemaps://?daddr=${at}` },
+  { scheme: "waze", name: "Waze",
+    url: (at) => `waze://?ll=${at}&navigate=yes` },
+  // om://route wants a source AND a `type=`, which is a travel mode. The map
+  // URL puts the pin on Organic Maps' screen and leaves both to the reader.
+  { scheme: "om", name: "Organic Maps",
+    url: (at, label) => `om://map?v=1&ll=${at}${label ? `&n=${encodeURIComponent(label)}` : ""}` },
+];
+
+export const ROUTE_SCHEMES = ["geo-navigation", "maps", ...NAV_APPS.map((a) => a.scheme)];
+
+// The whole decision, as a function of what the OS says it can open: either
+// one URL to open, or the choices to put in front of the reader. No I/O, no
+// DOM, no Capacitor — which is what makes steps 1, 3 and 4 testable off a
+// phone, where only step 2 can ever be seen.
+export function routePlan(lat, lon, label, canOpen) {
+  const at = coords(lat, lon);
+  if (canOpen("geo-navigation"))
+    return { open: `geo-navigation:///directions?destination=${at}` };
+  if (canOpen("maps")) return { open: appleMapsUri(at, label) };
+  const installed = NAV_APPS.filter((a) => canOpen(a.scheme));
+  if (installed.length === 1) return { open: installed[0].url(at, label) };
+  if (installed.length > 1)
+    return { choose: installed.map((a) => ({ name: a.name, url: a.url(at, label) })) };
+  return { open: routeWebUrl(lat, lon) };
+}
+
+// Step 4's URL, and what app.js falls back on when the OS declines a URL from
+// any other step: it needs no app at all, so it cannot fail the same way.
+export function routeWebUrl(lat, lon) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${coords(lat, lon)}`;
+}
+
+// The questions iOS will answer, asked at once, and the plan they make. A
+// scheme it refuses to answer for counts as absent — which is also what it
+// answers for an app that is genuinely not there.
+export async function planRoute(lat, lon, label, launcher = plugin("AppLauncher")) {
+  if (!launcher) throw new Error("no AppLauncher");
+  const yes = new Set();
+  await Promise.all(ROUTE_SCHEMES.map(async (s) => {
+    try { if ((await launcher.canOpenUrl({ url: `${s}://` })).value) yes.add(s); }
+    catch { /* not askable: treat as not installed */ }
+  }));
+  return routePlan(lat, lon, label, (s) => yes.has(s));
+}
+
+// To the OS, not to the in-app browser: an https URL here is meant to reach an
+// app through its universal link if the phone has one.
+//
+// AppLauncher does not reject when iOS declines a URL, it resolves
+// `{ completed: false }` — which has to count as a failure here, or the tap
+// does nothing at all and nobody hears of it.
+export async function openRouteUrl(url, launcher = plugin("AppLauncher")) {
+  if (!launcher) throw new Error("no AppLauncher");
+  const r = await launcher.openUrl({ url });
+  if (r?.completed === false) throw new Error(`not opened: ${url}`);
+}
+
+// Open it, and if the OS will not, show the same route on the web in the
+// in-app browser — not the anchor's href, which on iOS is maps:// and fails
+// on exactly the phone this cascade exists for.
+export async function followRoute(url, web, launcher = plugin("AppLauncher"), external = openExternal) {
+  try { await openRouteUrl(url, launcher); }
+  // Also when `url` is the web URL itself: the in-app browser is another
+  // mechanism than openUrl and can show what the OS would not hand over.
+  catch { external(web); }
 }
 
 // ---- OSM login through the in-app browser ----

@@ -177,6 +177,36 @@ Three things it deliberately does not do:
   uses, and no third party learns where they are standing. Only the
   *destination's* coordinates travel in that link. The openstreetmap.org link
   stays beside it for desktop browsers, which mostly ignore `geo:`.
+
+  iOS has no `geo:` handler at all, so there the app has to make the choice —
+  and it makes it in the reader's favour, in this order (`routePlan` in
+  `web/native.js`, a pure function with its own tests):
+
+  1. **`geo-navigation:`** — the navigation app the reader *chose* in Settings →
+     Apps → Default Apps → Navigation (iOS 18.4 in the EU, 26.2 in Japan). Apple
+     documents this scheme for the app that wants to *be* the default; that a
+     caller reaches the chosen app by opening
+     `geo-navigation:///directions?destination=<lat>,<lon>` is read off MapKit,
+     which builds exactly that URL for default navigation, and off the apps
+     already calling it that way. If nothing claims the scheme, `canOpenUrl`
+     says no and the cascade moves on.
+  2. **`maps:`** — Apple Maps, the URL every build up to 19 sent and the only
+     one it sent. That was the bug: `maps:` is Apple Maps' *own* scheme, so an
+     iPhone whose owner deleted Apple Maps answered the Route button with
+     iOS's "No Navigation App Installed" alert, and setting Google Maps as the
+     default navigation app did not change that.
+  3. **Whatever is installed**, by each app's own documented scheme — Google
+     Maps, Waze, Organic Maps, declared in `LSApplicationQueriesSchemes` because
+     iOS answers `canOpenURL` for nothing else. Exactly one: it opens. Several:
+     a small dialog asks, once, and *nothing is remembered* — acquiring an
+     opinion about the reader's maps app is the thing this feature is against.
+  4. **Nothing at all:** `google.com/maps/dir/?api=1&destination=…`, handed to
+     the OS rather than to the in-app browser, so a universal link can still be
+     caught by an app and only otherwise opens a browser.
+
+  No step names a travel mode. A reader pushing a pram and a reader driving to
+  the next town get the same link, and the maps app asks them. The website and
+  the Android app are untouched: there `geo:` still does all of this by itself.
 - **It does not claim to know how far you will walk.** The distance is
   straight-line and the toast says so — "1,2 km Luftlinie" — because routing
   needs a server this project does not have.

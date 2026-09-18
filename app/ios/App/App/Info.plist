@@ -35,6 +35,21 @@
 			</array>
 		</dict>
 	</array>
+	<!-- The Route button's cascade (web/native.js): iOS answers canOpenURL
+	     for a scheme listed here and for no other, and it answers "no" rather
+	     than complaining — an app left off this list reads as one the reader
+	     does not have. `geo-navigation` is the reader's own default navigation
+	     app (iOS 18.4 in the EU, 26.2 in Japan), `maps` is Apple Maps, the rest
+	     are the navigation apps the cascade can name. Nothing is asked about
+	     that the map would not offer to open. -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>geo-navigation</string>
+		<string>maps</string>
+		<string>comgooglemaps</string>
+		<string>waze</string>
+		<string>om</string>
+	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<!-- Never requested: the app asks for "when in use" only. The key is here

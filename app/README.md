@@ -27,7 +27,9 @@ the app's own plugin (`PapaMapSharePlugin.swift`), via an App Group container.
 
 ```
 app/
-  package.json          Capacitor and its plugins (Filesystem, Geolocation, Browser, App, Preferences)
+  package.json          Capacitor and its plugins (Filesystem, Geolocation, Browser, App,
+                        Preferences, AppLauncher — the last one only so the Route button
+                        can ask iOS which navigation apps exist, docs/FEATURES.md)
   capacitor.config.json appId de.papamap.app, webDir www
   build-www.js          copies the shell from ../web into www/ (no sw.js, no site pages)
   shell.mjs             the one edit to the copied index.html: the donate span — the Ko-fi
