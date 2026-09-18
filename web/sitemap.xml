@@ -3707,8 +3707,21 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/app.html"/>
   </url>
 
-  <!-- German-only by design, so no alternates. -->
+  <!-- Impressum is German-only by design, so no alternates. Datenschutz got an
+       English twin on 2026-09-18, for testers outside Germany — same two-
+       alternate pattern as the app page above. -->
   <url><loc>https://papamap.de/impressum.html</loc></url>
-  <url><loc>https://papamap.de/datenschutz.html</loc></url>
+  <url>
+    <loc>https://papamap.de/datenschutz.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/datenschutz.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/datenschutz-en.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/datenschutz.html"/>
+  </url>
+  <url>
+    <loc>https://papamap.de/datenschutz-en.html</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://papamap.de/datenschutz.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://papamap.de/datenschutz-en.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://papamap.de/datenschutz.html"/>
+  </url>
 
 </urlset>

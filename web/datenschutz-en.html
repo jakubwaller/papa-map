@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /><title>Privacy Policy — PapaMap</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="canonical" href="https://papamap.de/datenschutz-en.html" />
+<link rel="alternate" hreflang="de" href="https://papamap.de/datenschutz.html" />
+<link rel="alternate" hreflang="en" href="https://papamap.de/datenschutz-en.html" />
+<link rel="alternate" hreflang="x-default" href="https://papamap.de/datenschutz.html" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="style.css" /></head>
+<body style="padding:20px;max-width:700px;margin:auto">
+  <p class="back langs"><a href="datenschutz.html" hreflang="de" lang="de">Deutsch</a> &middot; <strong lang="en">English</strong></p>
+  <h1>Privacy Policy</h1>
+  <p>This is a convenience translation of PapaMap's <a href="datenschutz.html" hreflang="de" lang="de">German privacy
+     policy</a>. In case of any discrepancy, the German version is authoritative.</p>
+  <h2>Controller</h2>
+  <p>Jakub Waller, c/o IP-Management #11204, Ludwig-Erhard-Str. 18, 20459 Hamburg, Germany, email:
+     <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a></p>
+  <h2>Principle</h2>
+  <p>This website is a static map: no accounts, no forms, no analytics or tracking cookies, no
+     server-side database of visitor data.</p>
+  <h2>Hosting / server logs</h2>
+  <p>The website is hosted on a privately operated server. Accessing it processes technically
+     necessary data (IP address, timestamp, requested address). Legal basis:
+     Art. 6(1)(f) GDPR.</p>
+  <h2>Cloudflare (delivery &amp; protection)</h2>
+  <p>Delivery runs through Cloudflare, Inc. (content delivery &amp; DDoS protection). Cloudflare
+     processes visitors' IP addresses to deliver and protect the site, and may set a technically
+     necessary anti-bot cookie — no profiling, no consent required. Cloudflare is certified under
+     the EU-US Data Privacy Framework; a data processing agreement (DPA) is in place.</p>
+  <h2>Map data (OpenStreetMap)</h2>
+  <p>The map loads map tiles from tile.openstreetmap.org; this transmits your IP address to the
+     OpenStreetMap Foundation (<a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">OSMF Privacy Policy</a>).
+     The map software (MapLibre) is served from this server, not from a third party.</p>
+  <h2>Location (locating feature)</h2>
+  <p>The two locate buttons request your location through the browser's Geolocation interface —
+     only after your explicit permission, which you can revoke at any time. Your position is
+     processed exclusively in your browser: the search for the nearest usable changing table runs
+     against the map data that has already been loaded anyway. Your location is not transmitted to
+     this server or to any third party, not stored and not logged. The “Directions” button opens a
+     <code>geo:</code> link with the changing table's coordinates — which map app receives it is
+     decided by your device; your own location is not part of that link.</p>
+  <h2>Language setting (local storage)</h2>
+  <p>If you choose a language via the language switcher, that choice is stored in your browser's
+     local storage (key <code>papamap-lang</code>); the same applies to whether you read the map
+     from a dad's or a mum's point of view (key <code>papamap-mode</code>) and whether the
+     "Wheelchair" filter is on (key <code>papamap-wheelchair</code>) — purely functional, without
+     tracking, only on your device, deletable via your browser data
+     (§ 25(2) no. 2 TDDDG, Germany's Telecommunications Digital Services Data Protection Act).</p>
+  <h2>Offline storage (service worker)</h2>
+  <p>So the map also works without a network connection, a service worker stores the page itself
+     and the changing-table data in your browser's cache — purely functional, without tracking,
+     only on your device, deletable via your browser data (§ 25(2) no. 2 TDDDG). No data is
+     transmitted to this server or to any third party in the process. <strong>Map tiles are
+     explicitly not stored</strong> — tile.openstreetmap.org's terms of use prohibit that. Without a
+     network connection, the map therefore shows the stored changing tables with no map background.</p>
+  <h2>Links to OSM editors</h2>
+  <p>Links to MapComplete, StreetComplete and openstreetmap.org lead to external services; there you
+     edit data under your own OSM account, subject to their privacy policies — nothing about this
+     runs through this website.</p>
+  <h2>Answering on the map: signing in to OpenStreetMap (OAuth 2)</h2>
+  <p>If you tap one of the room buttons in a grey pin, you are redirected once to openstreetmap.org
+     and sign in there with your OSM account (OAuth 2 with PKCE; this website never sees your
+     password). OSM returns an access token to the site, which is kept in your browser's local
+     storage (key <code>papamap-osm-token</code>, plus your OSM display name under
+     <code>papamap-osm-user</code>), until you tap "Log out" in the pin or delete your browser data
+     (§ 25(2) no. 2 TDDDG). Your answer is written by the browser directly to
+     api.openstreetmap.org, as a changeset under your own OSM account and name, marked with
+     <code>created_by=PapaMap</code>; the
+     <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">OSMF Privacy Policy</a> applies.
+     This server learns nothing of it: the token, the account and the answer never pass through
+     papamap.de, and PapaMap stores no edits. The map remains fully usable without signing in.</p>
+  <h2>Checking back after an edit (OSM API)</h2>
+  <p>If you tap "Answer on MapComplete" in a pin, the site queries api.openstreetmap.org for that
+     one object's current tags a few times over the following minutes, to show you your change.
+     This transmits your IP address to the OpenStreetMap Foundation (see above, OSMF Privacy
+     Policy); your OSM account is not involved. Which object is being checked is remembered by the
+     browser in session storage (key <code>papamap-edit-check</code>) and discarded when the tab is
+     closed — purely functional, only on your device (§ 25(2) no. 2 TDDDG).</p>
+  <h2>The app (iPhone, iPad)</h2>
+  <p>PapaMap is also available as an app, distributed through the App Store and through TestFlight.
+     The app is the same map in a native shell. The same principle applies: no account with us, no
+     analytics, tracking or advertising components, no crash-reporting system of our own, no push
+     notifications. The app itself talks to two servers — papamap.de for the changing-table data
+     and the offline cities, openstreetmap.org for map tiles and for your answers. On top of that
+     comes whatever you open through a link, and Apple's role in distribution; both are covered
+     further below. The following sections describe what is different or additional in the app;
+     otherwise the above applies accordingly.</p>
+  <h2>App: data from papamap.de</h2>
+  <p>On startup, the app loads the changing-table data from papamap.de and keeps a copy in the
+     app's own data directory, so the map shows pins even without a network connection. These are
+     ordinary requests for fixed files; the server sees the same thing as during a website visit
+     (see "Hosting / server logs" and "Cloudflare" above). The requests contain no information
+     about you personally and no location. The copy stays only on your device — apart from a device
+     backup (iCloud or computer), if you have set one up (§ 25(2) no. 2 TDDDG).</p>
+  <h2>App: map data and offline cities</h2>
+  <p>The app, too, loads map tiles from tile.openstreetmap.org; this transmits your IP address to
+     the OpenStreetMap Foundation (see above). The tiles loaded are those of the map section
+     currently shown — that is, the section you are looking at, not your coordinates. In addition,
+     you can use "Save a city offline" to download a city's map section to your device. The file
+     comes from papamap.de; as with any file request, the request tells the server which city was
+     chosen. Which cities are saved is remembered by the app on the device (key
+     <code>papamap-offline-cities</code>). A saved city is drawn by the app from the file on the
+     device; without a network connection, no tiles at all are requested. "Delete" in the same
+     dialog removes a city again.</p>
+  <h2>App: location</h2>
+  <p>The locate button, the search for the nearest changing table, the Siri Shortcut and the
+     home-screen widget request your location through iOS — only after your explicit permission
+     ("While Using the App"), which you can revoke at any time in iOS Settings. Your position is
+     processed exclusively on your device: the search for the nearest usable changing table runs
+     against the data that is already on the device anyway. Your location is not transmitted to
+     this server or to any third party, not stored and not logged — not from the widget and not
+     from the Shortcut either. The widget recalculates the nearest changing table on the device at
+     regular intervals as long as it sits on the home screen or the lock screen. After you tap the
+     locate button, the map shows your surroundings; it then loads the tiles for that section from
+     tile.openstreetmap.org as described above.</p>
+  <h2>App: widget and Siri Shortcut</h2>
+  <p>So that the widget and the Shortcut name the same changing table as the map, the app keeps a
+     shortened copy of the changing-table data (coordinates, status, name, OSM link) as well as
+     your two settings — dad or mum view and language — in a shared area on the device that only
+     the app and its widget can read. Both stay, apart from a device backup (iCloud or computer),
+     on the device (§ 25(2) no. 2 TDDDG). Siri and Shortcuts are a feature of iOS; how Apple
+     processes a spoken request is governed by Apple's own privacy policy.</p>
+  <h2>App: settings on the device</h2>
+  <p>The app stores the same functional keys as the website — language (<code>papamap-lang</code>),
+     dad or mum view (<code>papamap-mode</code>), the "Wheelchair" filter
+     (<code>papamap-wheelchair</code>) and, after signing in, the access token and your OSM display
+     name (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>) — just in the app's own
+     storage instead of the browser's. Purely functional, without tracking, only on your device —
+     and, like everything the app stores, in a device backup (iCloud or computer), if you have set
+     one up (§ 25(2) no. 2 TDDDG).</p>
+  <h2>App: signing in to OpenStreetMap</h2>
+  <p>Sign-in works as on the website (OAuth 2 with PKCE), with one difference: openstreetmap.org's
+     sign-in page opens the app in the system's in-app browser view, which the app itself cannot
+     see into, and OSM then sends you back into the app via the address
+     <code>papamap://auth</code>. The app never sees your password. Your answer is written by the
+     app directly to api.openstreetmap.org, as a changeset under your own OSM account and name;
+     the <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">OSMF Privacy Policy</a>
+     applies. This server learns nothing of it. The map remains fully usable without signing in.</p>
+  <h2>App: links to other pages</h2>
+  <p>Every link that leaves the map — the pages of this website, openstreetmap.org, MapComplete,
+     StreetComplete — opens in your device's system browser, inside a view within the app. When the
+     app opens a page of this website, it appends <code>?app=1</code> to its address; this only
+     indicates that the request comes from the app, and, like any requested address, it appears in
+     the server log (see above). The map and the country and leaderboard pages then remember, for
+     the duration of that view, that they were opened from the app (key
+     <code>papamap-in-app</code> in session storage), and hide the donation link accordingly; the
+     entry expires when you close the view (§ 25(2) no. 2 TDDDG). From that point on, the privacy
+     policy of the respective service applies; this policy applies to the pages of this website.</p>
+  <h2>App: Apple (App Store and TestFlight)</h2>
+  <p>Distribution through the App Store and through TestFlight is Apple's responsibility. Apple is
+     independently responsible for this and processes the data involved under its own privacy
+     policy. From the App Store we receive metrics and crash reports only in aggregated form, and
+     only insofar as you have agreed to share them with developers on your device. If you take part
+     in a test through TestFlight, Apple provides us, under its own terms, with crash data and — if
+     you send feedback — that feedback along with the details Apple supplies with it, such as the
+     email address you were invited with. We use this exclusively for troubleshooting (Art. 6(1)(f)
+     GDPR). The app itself sends us none of this.</p>
+  <h2>App: withdrawal and deletion</h2>
+  <p>You withdraw location sharing in iOS Settings under PapaMap; you delete saved cities with
+     "Delete" in the "Save a city offline" dialog; you sign out of OpenStreetMap with "Log out" in
+     the pin. If you delete the app, everything it stored on the device disappears with it: the
+     copy of the changing-table data, the offline cities, the settings and the access token.
+     Whatever of that lives in a device backup you have set up is managed by iOS; it disappears
+     with that backup. What you have written to OpenStreetMap stays there — that is the whole
+     point.</p>
+  <h2>Contact by email or form</h2>
+  <p>When you contact us by email, the details you provide are processed only to handle your
+     enquiry (Art. 6(1)(f) GDPR) and are not passed on.</p>
+  <p>The contact form linked from the Impressum is on <a href="https://buergerwecker.de/kontakt?projekt=papamap">buergerwecker.de</a>,
+     another website of the same operator; its <a href="https://buergerwecker.de/datenschutz">privacy
+     policy</a> applies to processing there. This website itself collects and stores nothing in the
+     process.</p>
+  <h2>Your rights</h2>
+  <p>Access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction (Art. 18), data
+     portability (Art. 20), objection (Art. 21 GDPR). Contact:
+     <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a>.</p>
+  <p style="margin-top:30px">Last updated: 18 September 2026</p>
+  <p><a href="./?lang=en">← Back to the map</a></p>
+</body></html>
