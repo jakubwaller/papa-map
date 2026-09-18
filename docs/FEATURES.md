@@ -532,15 +532,10 @@ nothing to shortcut to, and that case goes the long way regardless.
 
 The state is read on the device and used there. Nothing about it is sent anywhere or written down.
 
-At the foot of the offline dialog, **in the app only**, sits a small monospace block: for each of
-the four dataset files, which of the loader's paths actually answered this launch (download,
-fetch, stored, stored-new, none), how long it took, what the OS said about the network **and which
-source said it** (`online=false (native)` against `(navigator)` — the difference between a phone
-that knew and a phone that lied), and the size of the stored copy — under the shell pin. It is English and untranslated on purpose, because
-it is a TestFlight aid rather than a feature: a tester whose map comes up without pins can say
-which step produced that in one message, instead of one build per guess. Nothing in it is fetched,
-stored or sent; every number is one the app already had in hand. On the website the block is
-empty, and `:empty` keeps it out of the layout.
+TestFlight builds 20 and 21 printed, at the foot of the offline dialog, which of the loader's
+paths had answered for each file and what the OS had said about the network. That block settled
+the airplane-mode bug and was then removed; the loader still fills in the same note, which is what
+its tests read.
 
 One thing the app never shows is the Ko-fi link: Apple wants a tip for the developer to go
 through in-app purchase, and the developer account is declared a non-trader because the app has
