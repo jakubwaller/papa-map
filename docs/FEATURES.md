@@ -257,10 +257,13 @@ in the pipeline and nowhere else (`CONTRACT.md` v26). A pin that already carries
 a room in words the classifier does not read is not asked — that is somebody's
 tag, and MapComplete shows it before letting anyone write over it.
 
-The same popup asks one more thing, on one line under the rooms: *play area for
-children?* — *indoors*, *outdoors only*, *none*. It is the second question a
-father standing in a café can answer without looking anything up, and it is
-asked only where OSM is silent: a recorded play corner shows its blue ring
+The popup asks one more thing, on one line: *play area for children?* —
+*indoors*, *outdoors only*, *none*. It is the second question a father standing
+in a café can answer without looking anything up, and it is asked on every pin,
+green and red included (v34: at first only under the room question, until the
+first play corner noticed in a café whose room was long on record had nowhere
+to go but MapComplete). Alone on such a pin it carries the login line itself.
+It is asked only where OSM is silent: a recorded play corner shows its blue ring
 instead, a recorded answer of any kind is never asked again, and a
 `leisure=playground` is not asked at all, because the object itself is the
 answer. *Indoors* writes `kids_area:indoor=yes` together with `kids_area=yes`,

@@ -1,5 +1,19 @@
 # papa-map — build contract (v0)
 
+> **v34 amendment (18 Sep 2026, the play question on every pin):**
+> the popup's play line (v30, three answers since v31) is asked on **every**
+> `changing_tables.geojson` pin whose `play` is `null` (`play_recorded`
+> false), whatever its `status` — v30 asked it only where the room question
+> was asked too, or had just been answered. A reader who notices a play corner
+> in a café whose room is long on record could not say so without the
+> MapComplete detour. Where no room question stands above it, the play line
+> carries the login line itself ("Log in once with OSM…" / "Logged in as …"),
+> so a tap never leads to a consent screen unannounced. The write, the guard
+> over both keys, the changeset comments and the confirmation are v31's,
+> unchanged; a play place still never asks it, and a recorded answer of either
+> value still takes it away. **No shape change** — no file gains or loses a
+> property. Shell pin `app18` → `app19`.
+
 > **v33 amendment (18 Sep 2026, the store app and its city basemaps):**
 > a second, weekly pipeline (`pipeline/tiles.py`, the `tiles` compose service)
 > writes **`tiles/<slug>.pmtiles`** — one PMTiles extract of the Protomaps
