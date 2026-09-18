@@ -94,6 +94,37 @@ function budget(ms) {
   return race;
 }
 
+// ---- Is there a network at all? ----
+// Asked once a launch, before the four loads, because the answer decides
+// whether any of them talks to the network.
+//
+// `navigator.onLine` is not an answer on iOS. Build 20 came up in airplane
+// mode on the owner's iPhone reporting **online=true** in the app's WKWebView,
+// so the shortcut it guards never fired and the reader waited out the whole
+// eight seconds while four files that were already on the phone sat there.
+// The Network plugin asks the OS instead: SCNetworkReachability on iOS (at
+// 8.0.1 — a reachability check on the zero address, not NWPathMonitor),
+// ConnectivityManager on Android, where "connected" means a VALIDATED network
+// and can therefore be false for a launch on a network still being checked.
+//
+// Bounded like everything else here: a plugin call that never comes back must
+// not become the new unbounded wait. No answer in time is not treated as
+// offline, because a wrong "offline" costs the reader a refresh they could
+// have had, while a wrong "online" only costs them the clock they used to wait
+// anyway. And "connected" is not "reachable": a Wi-Fi with no way out still
+// reports connected, which is exactly what the eight seconds are still there
+// for.
+const STATUS_MS = 400;
+export async function connectivity(net = plugin("Network"), ms = STATUS_MS) {
+  if (net?.getStatus) {
+    try {
+      const { connected } = await budget(ms)(net.getStatus());
+      if (typeof connected === "boolean") return { online: connected, from: "native" };
+    } catch { /* no answer inside the bound, or a plugin that would not say */ }
+  }
+  return { online: globalThis.navigator?.onLine !== false, from: "navigator" };
+}
+
 // A download the clock let go of, finished on its own time.
 //
 // Without this, a link too slow to make the budget would refresh the copy on
@@ -174,7 +205,7 @@ function nativeIO(fs = plugin("Filesystem")) {
 // that means "nothing anywhere" — are exactly what they were.
 export async function loadJSONNative(url, io = nativeIO(), {
   note = {}, copyMs = COPY_MS, netMs = NET_MS,
-  online = globalThis.navigator?.onLine !== false,
+  online = globalThis.navigator?.onLine !== false, onlineFrom = "navigator",
 } = {}) {
   const name = url.split("/").pop().split("?")[0];
   const path = `${DATA_PATH}/${name}`;
@@ -183,7 +214,7 @@ export async function loadJSONNative(url, io = nativeIO(), {
   // Filled in before the first await, so a note the caller is holding is a
   // whole row from the moment the load starts: the dialog can be opened while
   // the four are still in flight and still print four lines.
-  Object.assign(note, { file: name, step: "none", ms: 0, online, bytes: null });
+  Object.assign(note, { file: name, step: "none", ms: 0, online, onlineFrom, bytes: null });
   const step = (s) => { note.step = s; note.ms = Date.now() - began; };
 
   // One stat, before anything is read or fetched: it decides both how long the
@@ -298,7 +329,11 @@ export function formatDiagnostics(notes, pin) {
   const took = cell((n) => `${n.ms}ms`);
   const rows = notes.map((n) =>
     `${name(n)} ${step(n)} ${took(n)} ${n.bytes == null ? "no copy" : `${n.bytes} B`}`);
-  return [`${pin} · online=${notes[0].online}`, ...rows].join("\n");
+  // Which answer the launch acted on is the whole point of the line now: a
+  // reader who waited out the clock with (navigator) on screen is a reader
+  // whose phone lied, and that is a different bug from one with (native).
+  const { online, onlineFrom } = notes[0];
+  return [`${pin} · online=${online} (${onlineFrom})`, ...rows].join("\n");
 }
 
 // ---- Location ----

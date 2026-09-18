@@ -27,7 +27,7 @@ the app's own plugin (`PapaMapSharePlugin.swift`), via an App Group container.
 
 ```
 app/
-  package.json          Capacitor and its plugins (Filesystem, Geolocation, Browser, App,
+  package.json          Capacitor and its plugins (Filesystem, Geolocation, Browser, App, Network,
                         Preferences, AppLauncher — the last one only so the Route button
                         can ask iOS which navigation apps exist, docs/FEATURES.md)
   capacitor.config.json appId de.papamap.app, webDir www

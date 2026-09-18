@@ -495,15 +495,29 @@ the question: is there a copy on the phone at all? If there is, it is read in un
 second and the network is racing something that has already won, so it gets **eight seconds**, the
 same number the website's service worker has always used for the same trade. If there is nothing
 stored, there is nothing to cut to and an empty map helps nobody, so the download keeps the long
-rope. And a reader the OS already reports as offline waits for nothing at all: `navigator.onLine`
-lies in one direction only — a Wi-Fi with no internet still says "online" — so a `false` is worth
-acting on, and the copy is read before any request is made. With no copy there is nothing to
-shortcut to, and that case goes the long way regardless.
+rope.
+
+And a phone that is not on a network at all waits for nothing: the copy is read before a single
+request is made. Asking that question properly took two goes. `navigator.onLine` was the obvious
+source and is simply wrong on iOS — build 20 came up in airplane mode reporting **online=true**
+inside the app's WKWebView, so the shortcut never fired and the reader sat through all eight
+seconds while four files already on the phone did nothing. The answer now comes from
+`@capacitor/network`, which asks the OS (`SCNetworkReachability` on iOS, `ConnectivityManager` on Android);
+`navigator.onLine` is the fallback where the plugin is not there, which is every browser. The
+question is asked **once** a launch, before the four loads, and bounded to 400 ms of its own —
+a new question must not become the new unbounded wait — and no answer in time counts as online,
+since a wrong "offline" costs a refresh that was available while a wrong "online" costs only the
+clock the reader was waiting anyway. "Connected" is still not "reachable": a Wi-Fi with no way out
+reports connected, and that is what the eight seconds remain for. With no copy stored there is
+nothing to shortcut to, and that case goes the long way regardless.
+
+The state is read on the device and used there. Nothing about it is sent anywhere or written down.
 
 At the foot of the offline dialog, **in the app only**, sits a small monospace block: for each of
 the four dataset files, which of the loader's paths actually answered this launch (download,
-fetch, stored, stored-new, none), how long it took, what the OS said about the network, and the
-size of the stored copy — under the shell pin. It is English and untranslated on purpose, because
+fetch, stored, stored-new, none), how long it took, what the OS said about the network **and which
+source said it** (`online=false (native)` against `(navigator)` — the difference between a phone
+that knew and a phone that lied), and the size of the stored copy — under the shell pin. It is English and untranslated on purpose, because
 it is a TestFlight aid rather than a feature: a tester whose map comes up without pins can say
 which step produced that in one message, instead of one build per guess. Nothing in it is fetched,
 stored or sent; every number is one the app already had in hand. On the website the block is
