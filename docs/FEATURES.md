@@ -477,65 +477,71 @@ watch rather than one "current position" request: iOS holds the latter back for 
 it likes the accuracy; the first fix good to 100 m wins, after three seconds the best seen.
 
 The app keeps the dataset the way it keeps a city: the native downloader puts the file on the
-phone, beside the last good copy, and it replaces that copy only once it has parsed. The map is
-drawn from that file with a network and without one, so a copy that cannot be read shows on the
-first day, not in the basement. (Build 18 handed the 18 MB across the bridge as one string and
-came up in airplane mode with the city and no pins.)
+phone, beside the last good copy, and it replaces that copy only once it has parsed. (Build 18
+handed the 18 MB across the bridge as one string and came up in airplane mode with the city and
+no pins.)
 
-The loader also keeps its own clock — twenty seconds for the download and the fallback fetch
-together, after which the copy on the phone answers. Until build 19 it had no bound at all, and
-that, not the storing, is why builds 18 and 19 both came up in airplane mode with the saved city
-drawn and no pins: a request into a black hole is not refused, it is left unanswered, and iOS and
-WebKit will sit on one for as long as it takes. Measured in the simulator against an address that
-drops packets, the native download took 75 s per file and the four fallback fetches, which WebKit
-serialises per host, took 975 to 1200 s; the map drew at once, because a saved city is read off
-the phone and owes the network nothing, and the pins arrived twenty-one minutes later.
+**The website and the app no longer share one rule.** `sw.js` still runs the trade the site has
+always run: the network gets eight seconds, and a stored copy answers after that (see *Offline*
+above). The app draws from its stored copy **first, always, on every single launch** — no clock in
+front of the pins, no question asked of the network at all — and refreshes it behind that draw.
+The two used to be one rule, explained once; they no longer can be, because the question the old
+app rule turned on — "is there a network right now?" — has no trustworthy answer on iOS.
 
-**Letting go is not cancelling.** The download the clock gave up on keeps running, and when it
-lands it is parsed and promoted to the good copy anyway — nothing waits for it, the pins were
-drawn from the phone seconds earlier. That matters more than it sounds: without it, a link merely
-*slow* rather than dead would abandon its download on every single launch, read the same stored
-copy it read last time, and freeze the map on it for good. The service worker the eight seconds
-below come from makes the same call — its timed-out request still stores the response it
-eventually gets. A file that does not parse is deleted instead, never promoted, because `.new` is
-itself a file the loader reads. And it waits for the stored read to finish before it moves
-anything: promoting renames the very two files that read is working through, and on iOS renaming
-onto an existing file means unlinking the old one first — done underneath a reader, that is how a
-link finishing *just* after the clock would end up with no pins at all. A first launch too slow for
-the clock draws an empty map once; the launch after it has the data.
+`navigator.onLine` was the first thing tried and is simply wrong there: build 20 came up in
+airplane mode reporting **online=true** inside the app's WKWebView, so a shortcut keyed on it never
+fired. `@capacitor/network` (`SCNetworkReachability`) was tried next, asked once a launch before
+the four loads — and TestFlight build 21, on the owner's own iPhone, still spent the full eight
+seconds in airplane mode: the loader's own diagnostic note read `online=true (native)`. The cause
+was an auto-connect VPN profile — iOS reports the network reachable through
+`SCNetworkReachability`'s on-demand flags even with no route out at all when such a profile is
+active, and the plugin read those flags as connected. Turning the VPN off made the wait vanish.
+Since no answer to "is there a network" that iOS can give is trustworthy — not on that phone, and
+not on anyone else's with the same kind of VPN setup — the loader stopped asking it anything. The
+only question worth asking is "is there a copy", and reading either answers that or it doesn't,
+with nothing put to the network at all.
 
-A known rough edge: a reader on a slow-but-working link is told "Offline — the map is showing
-stored data", because `fromStore` is what the toast keys on and the copy is indeed what they are
-looking at. It is not wrong, only unkind. Saying it better means a new string in 32 languages,
-so it waits.
+So `loadJSONNative` (`web/native.js`) reads the stored copy — `path`, or `.new` when that is the
+only copy there is (the launch after one too slow to finish downloading) — and returns it before
+the download that will refresh it is even started. That ordering is deliberate, not incidental: an
+earlier version of this change started the download first and had it race the read, and when the
+only copy on the phone was `.new`, the download's own write could land on top of the very file the
+read was still working through. The refresh runs on regardless, and when it lands it is compared —
+as raw text, not parsed objects, since these files run to several megabytes and the dataset is
+rebuilt once a night, so most launches find no difference at all — against what was drawn. A file
+that reads differently is promoted and handed back for the page to redraw with; one that reads the
+same is quietly dropped; one that does not parse is dropped and reported as a failure, the same
+"never trust a `.new` that has not proved itself" rule the old loader always kept. None of this
+blocks the pins from drawing, because none of it runs before they do.
 
-How long that clock runs depends on what the waiting is worth, and a `stat` — not a parse — asks
-the question: is there a copy on the phone at all? If there is, it is read in under a tenth of a
-second and the network is racing something that has already won, so it gets **eight seconds**, the
-same number the website's service worker has always used for the same trade. If there is nothing
-stored, there is nothing to cut to and an empty map helps nobody, so the download keeps the long
-rope.
+**Letting go is not cancelling**, and that much survives verbatim from before — it now describes
+the refresh rather than a clock-abandoned first download, and it *also* still describes the one
+case where there genuinely is no copy to fall back to (a first launch): the download the page stops
+waiting for keeps running, and when it lands it is parsed and promoted anyway. Without it, a link
+merely *slow* rather than dead would abandon its download on every single launch and never
+actually finish one. The service worker's eight seconds make the same call — its timed-out request
+still stores the response it eventually gets. A file that does not parse is deleted instead, never
+promoted, because `.new` is itself a file the loader reads. A first launch too slow for the twenty
+seconds it is given (`NET_MS`; the page's own fetch shares what is left of that same budget) draws
+an empty map once; the launch after it has the data.
 
-And a phone that is not on a network at all waits for nothing: the copy is read before a single
-request is made. Asking that question properly took two goes. `navigator.onLine` was the obvious
-source and is simply wrong on iOS — build 20 came up in airplane mode reporting **online=true**
-inside the app's WKWebView, so the shortcut never fired and the reader sat through all eight
-seconds while four files already on the phone did nothing. The answer now comes from
-`@capacitor/network`, which asks the OS (`SCNetworkReachability` on iOS, `ConnectivityManager` on Android);
-`navigator.onLine` is the fallback where the plugin is not there, which is every browser. The
-question is asked **once** a launch, before the four loads, and bounded to 400 ms of its own —
-a new question must not become the new unbounded wait — and no answer in time counts as online,
-since a wrong "offline" costs a refresh that was available while a wrong "online" costs only the
-clock the reader was waiting anyway. "Connected" is still not "reachable": a Wi-Fi with no way out
-reports connected, and that is what the eight seconds remain for. With no copy stored there is
-nothing to shortcut to, and that case goes the long way regardless.
+The known rough edge this removes: a reader on a slow-but-working link used to be told "Offline —
+the map is showing stored data" on every visit that happened to read the copy, which was not wrong
+but was unkind and, under the new rule, would have become permanent — `fromStore` is true on
+*every* app launch now, copy-first. The toast is rebuilt on a fact that is actually rare rather
+than universal: it shows only once the background refresh for every one of the four files has
+settled and **not one of them** found anything fresh at all — a refresh still in flight, or one
+that landed and matched what was already drawn, says nothing. What used to be one boolean
+(`fromStore`) is now a small wait for four promises to settle and a check that none of them
+brought anything back.
 
-The state is read on the device and used there. Nothing about it is sent anywhere or written down.
+Nothing about any of this is sent anywhere or written down; the state that decides it lives in
+memory for the length of one launch.
 
 TestFlight builds 20 and 21 printed, at the foot of the offline dialog, which of the loader's
 paths had answered for each file and what the OS had said about the network. That block settled
-the airplane-mode bug and was then removed; the loader still fills in the same note, which is what
-its tests read.
+the airplane-mode bug and was then removed; the loader still fills in a note of which of its own
+paths answered, which is what its tests read.
 
 One thing the app never shows is the Ko-fi link: Apple wants a tip for the developer to go
 through in-app purchase, and the developer account is declared a non-trader because the app has
