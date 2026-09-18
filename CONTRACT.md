@@ -120,6 +120,44 @@
 > `@capacitor/network` dependency (`app/package.json`,
 > `app/ios/App/CapApp-SPM/Package.swift`, `app/android`). No data file gains,
 > loses or changes a property; `{ json, fromStore }` is exactly what it was.)*
+> *(18 Sep 2026, once more: pin `app28` → `app29`. Every launch that already
+> has all four files on the phone used to redownload every one of them just
+> to learn nothing had changed — `changing_tables.geojson` is 18.5 MB raw,
+> `play_places.geojson` 3.3 MB, and the dataset is rebuilt once a night. Now
+> `data/stats.json` (about a kilobyte, written by the same nightly build in
+> the same second as the other three) is the canary: a launch with a stored
+> copy of it refreshes THAT first, and downloads the other three only when
+> its raw text differs from what was stored. Nothing new either way costs one
+> small request instead of four. `loadDatasetNative` (`web/native.js`) owns
+> the ordering; `loadJSONNative` gains two options, `gate` (await this before
+> downloading; `"changed"` proceeds as before, `"unchanged"`/`"failed"` settle
+> without a request) and `hold` (download and compare as usual, but leave a
+> changed answer sitting at `.new` rather than promoting it). The invariant
+> this keeps: the stored stats.json is never newer than any stored copy of
+> the other three. Each of the three still promotes itself the moment its own
+> download differs, same as always and independently of the other two — only
+> stats.json's OWN promotion is held back until all three have settled ok
+> (changed or unchanged, either counts), and thrown away instead if any of
+> them failed, so the next launch reads last night's stats.json again, finds
+> it still differs, and tries the whole thing over. Without this, one failed
+> big download on an otherwise fine night would leave the phone a day behind
+> with nothing to notice. A file with no stored copy of its own, or a launch
+> with no stored stats.json to compare against at all, takes the long path
+> exactly as before — nothing here gates a first launch. Accepted edge: a
+> phone that refreshes in the exact second the nightly build is still being
+> written can draw a new stats.json against still-old big files; it catches
+> up the next night. A second, rarer way to the same edge: killed while
+> stats.json's own `.new` is held (downloaded, not yet promoted) and its
+> `path` copy has since gone unreadable, the next launch self-heals `path`
+> out of that `.new` before its own download even runs, compares against a
+> stats.json that already reads as last night's build, finds no difference,
+> and never asks the three at all — same consequence, one night behind, and
+> it self-heals the following night. `web/app.js`'s `loadJSON` stays the
+> website's own fetch, unchanged; a new `loadDataset` picks between it and
+> `loadDatasetNative` on
+> `isNative()`, the only branch, and hands `boot()`/`watchRefresh` back
+> exactly loadJSON's `{ json, refreshed }` shape per file. No data file
+> gains, loses or changes a property.)*
 
 > **v35 amendment (18 Sep 2026, no donate link inside the store app):**
 > **HTML surface only** — no data file gains, loses or changes a property.

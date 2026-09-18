@@ -790,9 +790,18 @@ test("visibleMapView with a top bar covering a third moves the centre down by a 
 
 test("visibleMapView falls back to the canvas centre when the covered height is nonsense", () => {
   const plain = visibleMapView({ width: 300, height: 600 }, 0, fakeUnproject);
-  for (const coveredTop of [600, 700, -50, NaN, undefined, "a lot"]) {
+  for (const coveredTop of [-50, NaN, undefined, "a lot"]) {
     assert.deepEqual(
       visibleMapView({ width: 300, height: 600 }, coveredTop, fakeUnproject), plain,
+      `coveredTop ${coveredTop}`);
+  }
+});
+
+test("visibleMapView clamps a bar covering the whole canvas at half its height, not zero", () => {
+  const half = visibleMapView({ width: 300, height: 600 }, 300, fakeUnproject);
+  for (const coveredTop of [600, 700, 10000]) {
+    assert.deepEqual(
+      visibleMapView({ width: 300, height: 600 }, coveredTop, fakeUnproject), half,
       `coveredTop ${coveredTop}`);
   }
 });

@@ -16,10 +16,12 @@ services:
       # URL it is served from, because web/ itself is read-only to the pipeline.
       - ./web-data/wickeltische:/srv/wickeltische:ro
       # The store app's offline city basemaps (pipeline/tiles.py, weekly):
-      # 62 PMTiles files plus index.json, about 3 GB, served with CORS
-      # headers (the Caddyfile) because the app fetches the catalogue from
-      # its own origin. web/tiles/ is tracked (.gitkeep) for the same reason
-      # as web/private/: /srv is read-only, the mountpoint must exist.
+      # 62 PMTiles files plus index.json, about 3 GB. Only index.json is
+      # served with CORS headers (the Caddyfile), because the app fetches
+      # the catalogue from its own origin; the .pmtiles files go through the
+      # native downloader instead, which knows no CORS (CONTRACT.md v33).
+      # web/tiles/ is tracked (.gitkeep) for the same reason as web/private/:
+      # /srv is read-only, the mountpoint must exist.
       - ./web-data/tiles:/srv/tiles:ro
       # The private ops page and the auth snippet that gates it. Both host
       # directories must exist before `up` (Docker would create them as

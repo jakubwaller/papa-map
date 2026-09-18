@@ -7,19 +7,19 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app28";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app29";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app28";
+         langUrl } from "./i18n.js?v=app29";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app28";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app29";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
-import { isNative, platform, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks,
+import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app28";
+         formatMB, citiesToMount } from "./native.js?v=app29";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -1550,16 +1550,10 @@ whenStyleReady(() => {
 let fromStore = false;
 
 // On the website: papamap.de, the service worker's stored copy on a failure
-// (X-PapaMap-Source: cache). In the app: the stored copy first, always, with
-// a background download refreshing it — native.js's loadJSONNative and its
-// `refreshed` promise (see watchRefresh). `refreshed` is undefined on the
-// website, where there is nothing more to ask once loadJSON has answered.
+// (X-PapaMap-Source: cache). `refreshed` is always null here — there is
+// nothing more to ask once fetch has answered; the app's own loader
+// (loadDataset, below) is the one that hands back a real promise for it.
 async function loadJSON(url) {
-  if (isNative()) {
-    const r = await loadJSONNative(url);
-    if (r?.fromStore) fromStore = true;
-    return { json: r?.json ?? null, refreshed: r?.refreshed ?? null };
-  }
   try {
     const r = await fetch(url);
     if (r.headers.get("X-PapaMap-Source") === "cache") fromStore = true;
@@ -1567,6 +1561,25 @@ async function loadJSON(url) {
   } catch {
     return { json: null, refreshed: null };
   }
+}
+
+// boot()'s four files, in the order it always asked for them. On the website
+// each is its own request, as always (loadJSON). In the app, `urls` goes
+// straight to native.js's loadDatasetNative, which does the app's own thing
+// with them: data/stats.json (about 1 KB, rewritten by the same nightly
+// build in the same second as the other three) refreshes first, and the
+// three big files are downloaded only when its raw text turns out to
+// differ — see loadDatasetNative's own comment for the gate and the
+// invariant it keeps. The shape handed back — `{ json, refreshed }` per
+// url, in the same order — is exactly loadJSON's, so watchRefresh and
+// applyDataset below never have to ask which loader answered.
+async function loadDataset(urls) {
+  if (isNative()) {
+    const results = await loadDatasetNative(urls);
+    if (results.some((r) => r?.fromStore)) fromStore = true;
+    return results.map((r) => ({ json: r?.json ?? null, refreshed: r?.refreshed ?? null }));
+  }
+  return Promise.all(urls.map(loadJSON));
 }
 
 // What the widget and the Siri shortcut search (native.js, shareDataset): the
@@ -1692,11 +1705,11 @@ async function boot() {
   applyI18n();  // markup default is German — swap before first paint if not
   syncModeButtons();  // ...and the markup default is papa
   if (isNative()) bootNative();
-  const loaded = await Promise.all([
-    loadJSON("data/changing_tables.geojson"),
-    loadJSON("data/play_places.geojson"),
-    loadJSON("data/stats.json"),
-    loadJSON("data/areas.json"),
+  const loaded = await loadDataset([
+    "data/changing_tables.geojson",
+    "data/play_places.geojson",
+    "data/stats.json",
+    "data/areas.json",
   ]);
   // dataReady before applyDataset, not after: its own refreshPins() call
   // reads the flag, and finding it still false here would skip the very
@@ -1798,6 +1811,13 @@ const mounting = new Set();
 // move — a fresh download clears the mark.
 let wanted = new Set();
 const unreadable = new Set();
+// A read failure is retried a few times before a city is written off —
+// syncCities calls mountCity again on every moveend, and one transient read
+// (issue #124) used to mark a saved city unreadable on the very first of
+// those and hide its vector map for the rest of the session. A slug's count
+// resets to zero the moment it mounts.
+const MAX_CITY_FAILURES = 3;
+const failures = new Map();
 async function mountCity(city) {
   if (mounted.has(city.slug) || mounting.has(city.slug) || unreadable.has(city.slug) || !styleReady) return;
   ensureProtocol();
@@ -1813,8 +1833,16 @@ async function mountCity(city) {
     const before = pinLayerBelow();
     for (const l of cityLayers(city.slug, lang)) map.addLayer(l, before);
     mounted.add(city.slug);
+    failures.delete(city.slug);
   } catch (e) {
-    unreadable.add(city.slug);
+    const n = (failures.get(city.slug) ?? 0) + 1;
+    if (n >= MAX_CITY_FAILURES) {
+      failures.delete(city.slug);
+      unreadable.add(city.slug);
+      toast(t("offlineFailed"));
+    } else {
+      failures.set(city.slug, n);
+    }
     throw e;
   } finally {
     mounting.delete(city.slug);
@@ -1882,6 +1910,13 @@ async function renderOfflineList() {
       btn.addEventListener("click", async () => {
         btn.disabled = true;
         unmountCity(city.slug);
+        // A mountCity(city) already in flight (its own await past, deleting
+        // this very city) reads `wanted` again before it adds anything back —
+        // without this, it could re-add a city just deleted out from under it.
+        wanted.delete(city.slug);
+        // A deleted city starts fresh if it is ever saved again — its old
+        // failure count belongs to a file that no longer exists.
+        failures.delete(city.slug);
         savedList = await deleteCity(city.slug);
         renderOfflineList();
       });
@@ -1892,6 +1927,7 @@ async function renderOfflineList() {
         try {
           savedList = await downloadCity(city, (p) => { btn.textContent = t("offlineLoading", { pct: Math.round(p * 100) }); });
           unreadable.delete(city.slug);
+          failures.delete(city.slug);
           syncCities();
           toast(t("offlineDone", { city: city.name }));
         } catch {
