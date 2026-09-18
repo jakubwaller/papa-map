@@ -16,7 +16,9 @@
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
-			<array><string>CA92.1</string></array>
+			<!-- CA92.1 for the app's own defaults, 1C8F.1 for the App Group suite
+			     it shares with the widget (TableStore.swift). -->
+			<array><string>CA92.1</string><string>1C8F.1</string></array>
 		</dict>
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
