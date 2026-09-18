@@ -30,31 +30,72 @@ const DIR = "DATA";              // Directory.Data: the app's own, backed up, no
 const DATA_PATH = "papamap/data";
 const TILES_PATH = "papamap/tiles";
 
-async function writeText(path, text) {
-  await plugin("Filesystem").writeFile({ path, data: text, directory: DIR, encoding: "utf8", recursive: true });
-}
-async function readText(path) {
-  const r = await plugin("Filesystem").readFile({ path, directory: DIR, encoding: "utf8" });
-  return r.data;
+// The dataset's copy on the phone, written and read the way the city files
+// are, because that way is known to work on a phone: the native downloader
+// puts the file there and the page reads it back as a local URL. The first
+// version handed 18 MB of GeoJSON across the bridge as one string, to write it
+// and again to read it, and swallowed whatever went wrong: build 18 came up in
+// airplane mode with the saved city and no pins (iPhone, 2026-09-18).
+function nativeIO(fs = plugin("Filesystem")) {
+  return {
+    download: (url, path) => fs.downloadFile({ url, path, directory: DIR, recursive: true }),
+    read: async (path) => {
+      const { uri } = await fs.getUri({ path, directory: DIR });
+      const r = await fetch(cap().convertFileSrc(uri));
+      if (!r.ok) throw new Error(`${path}: ${r.status}`);
+      return r.json();
+    },
+    // rename() does not promise to overwrite on both platforms, so where it
+    // refuses, the old copy goes first. Between those two calls the only copy
+    // is the .new one — which is why the loader reads that too.
+    replace: async (from, to) => {
+      const move = () => fs.rename({ from, to, directory: DIR, toDirectory: DIR });
+      try { await move(); }
+      catch { await fs.deleteFile({ path: to, directory: DIR }).catch(() => {}); await move(); }
+    },
+    remove: (path) => fs.deleteFile({ path, directory: DIR }).catch(() => {}),
+    get: async (url) => {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error(String(r.status));
+      return r.json();
+    },
+  };
 }
 
 // The site's loadJSON, done the app's way: papamap.de first, the stored copy
 // when the network fails. Same contract as the service worker's
 // X-PapaMap-Source header — { json, fromStore }.
-export async function loadJSONNative(url) {
+//
+// One read path, online and off: a launch with a network reads the very file
+// a launch without one will, so a copy that cannot be read shows on the first
+// day and not in the basement. The download lands beside the good copy and
+// replaces it only once it has parsed. Should the downloader itself fail with
+// a network there, the page's own fetch still draws the map — without a copy.
+export async function loadJSONNative(url, io = nativeIO()) {
   const name = url.split("/").pop().split("?")[0];
   const path = `${DATA_PATH}/${name}`;
+  const fresh = `${path}.new`;
+  let json;
   try {
-    const r = await fetch(SITE + url, { cache: "no-store" });
-    if (!r.ok) throw new Error(String(r.status));
-    const text = await r.text();
-    const json = JSON.parse(text);
-    writeText(path, text).catch(() => {});   // a full disk must not cost the live map
+    await io.download(SITE + url, fresh);
+    // Only a file this launch downloaded is thrown away for not parsing: with
+    // no network, a .new from an earlier launch may be the one copy there is.
+    try { json = await io.read(fresh); }
+    catch { await io.remove(fresh); }
+  } catch { /* no network, or no downloader */ }
+  if (json !== undefined) {
+    // A swap that fails costs nothing today and nothing offline: the data is
+    // in hand, and the .new file it sits in is read below when `path` is not.
+    await io.replace(fresh, path).catch(() => {});
     return { json, fromStore: false };
-  } catch {
-    try { return { json: JSON.parse(await readText(path)), fromStore: true }; }
-    catch { return null; }
   }
+  try { return { json: await io.get(SITE + url), fromStore: false }; }
+  catch { /* no network */ }
+  for (const copy of [path, fresh]) {
+    try { return { json: await io.read(copy), fromStore: true }; }
+    catch { /* the other one */ }
+  }
+  return null;
 }
 
 // ---- Location ----
@@ -183,17 +224,12 @@ export function shareSettings({ mode, lang }) {
 // downloader (no CORS, no range requests) into the app's data dir.
 const SAVED_KEY = "papamap-offline-cities";
 
+// Kept like the dataset (as papamap/data/index.json), so the list of cities
+// opens without a network too — to delete one, if nothing else.
 export async function cityCatalogue() {
-  try {
-    const r = await fetch(SITE + "tiles/index.json", { cache: "no-store" });
-    if (!r.ok) throw new Error(String(r.status));
-    const text = await r.text();
-    writeText(`${DATA_PATH}/tiles-index.json`, text).catch(() => {});
-    return JSON.parse(text);
-  } catch {
-    try { return JSON.parse(await readText(`${DATA_PATH}/tiles-index.json`)); }
-    catch { return null; }
-  }
+  // Build 18 kept it under another name; that copy is nobody's any more.
+  nativeIO().remove(`${DATA_PATH}/tiles-index.json`);
+  return (await loadJSONNative("tiles/index.json"))?.json ?? null;
 }
 
 export async function savedCities() {

@@ -410,7 +410,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 #add-dialog .btn code { font-size: 11px; }
 #add-dialog .dialog-foot { margin: 4px 0 0; font-size: 12.5px; }
-#add-dialog .close {
+#add-dialog .close, #offline-dialog .close {
   position: absolute;
   top: 8px;
   right: 10px;
@@ -421,7 +421,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   cursor: pointer;
   padding: 4px 8px;
 }
-#add-dialog .close:hover { color: var(--ink); }
+#add-dialog .close:hover, #offline-dialog .close:hover { color: var(--ink); }
 
 /* ---------- Attribution ---------- */
 #attribution {

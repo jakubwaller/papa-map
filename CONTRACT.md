@@ -13,6 +13,9 @@
 > unchanged; a play place still never asks it, and a recorded answer of either
 > value still takes it away. **No shape change** — no file gains or loses a
 > property. Shell pin `app18` → `app19`.
+> *(18 Sep 2026, later: pin `app19` → `app20` for the store app's dataset copy
+> and the offline dialog — `web/native.js`, `app.js`, `style.css`; no contract
+> change.)*
 
 > **v33 amendment (18 Sep 2026, the store app and its city basemaps):**
 > a second, weekly pipeline (`pipeline/tiles.py`, the `tiles` compose service)

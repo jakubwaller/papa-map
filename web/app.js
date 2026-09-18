@@ -7,18 +7,18 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app19";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app20";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app19";
+         langUrl } from "./i18n.js?v=app20";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app19";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app20";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks, directionsUri,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app19";
+         formatMB, citiesToMount } from "./native.js?v=app20";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -503,9 +503,12 @@ function popupHTML(f) {
         osmUrl = safeUrl(f.osm_url);
   // MapComplete is the primary action only where the page cannot answer
   // itself; beside an in-page question, either one, it is the other way, in
-  // plain dress.
+  // plain dress. Not on a grey pin that does not ask (a room in words the
+  // classifier does not read): there MapComplete is the only way to the room,
+  // and the play line under it must not take that away.
+  const mcOnly = f.status === "unknown" && !asks;
   if (mcUrl)
-    links.push(`<a class="btn${asks || !f.play_recorded ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+    links.push(`<a class="btn${!mcOnly && (asks || !f.play_recorded) ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   links.push(`<a class="btn" href="${esc(directionsUri(f.lat, f.lon, f.name || "", geoUri(f.lat, f.lon, f.name || "")))}">${esc(t("popupDirections"))}</a>`);
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
@@ -1795,6 +1798,8 @@ offlineBtn.addEventListener("click", () => {
   renderOfflineList();
 });
 document.getElementById("offline-close").addEventListener("click", () => offlineDialog.close());
+// As on the add dialog: a tap on the backdrop (the dialog element itself) closes.
+offlineDialog.addEventListener("click", (e) => { if (e.target === offlineDialog) offlineDialog.close(); });
 
 boot();
 window.addEventListener("resize", positionZoomCtrl);
