@@ -4,9 +4,10 @@
 // pages and the legal pages stay on the website and open in the system
 // browser, and sw.js is left out on purpose — a service worker does not run
 // under the app's own scheme, and the app keeps its offline copy itself.
-import { cpSync, mkdirSync, rmSync, existsSync } from "node:fs";
+import { cpSync, mkdirSync, rmSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { appShell } from "./shell.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const web = join(here, "..", "web");
@@ -26,4 +27,6 @@ for (const f of FILES) {
   cpSync(src, join(www, f));
 }
 for (const d of DIRS) cpSync(join(web, d), join(www, d), { recursive: true });
+// The page itself is the one file that differs from the website: shell.mjs.
+writeFileSync(join(www, "index.html"), appShell(readFileSync(join(web, "index.html"), "utf8")));
 console.log(`www/ built from ${web}`);
