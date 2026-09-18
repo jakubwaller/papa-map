@@ -146,8 +146,15 @@
 > exactly as before — nothing here gates a first launch. Accepted edge: a
 > phone that refreshes in the exact second the nightly build is still being
 > written can draw a new stats.json against still-old big files; it catches
-> up the next night. `web/app.js`'s `loadJSON` stays the website's own fetch,
-> unchanged; a new `loadDataset` picks between it and `loadDatasetNative` on
+> up the next night. A second, rarer way to the same edge: killed while
+> stats.json's own `.new` is held (downloaded, not yet promoted) and its
+> `path` copy has since gone unreadable, the next launch self-heals `path`
+> out of that `.new` before its own download even runs, compares against a
+> stats.json that already reads as last night's build, finds no difference,
+> and never asks the three at all — same consequence, one night behind, and
+> it self-heals the following night. `web/app.js`'s `loadJSON` stays the
+> website's own fetch, unchanged; a new `loadDataset` picks between it and
+> `loadDatasetNative` on
 > `isNative()`, the only branch, and hands `boot()`/`watchRefresh` back
 > exactly loadJSON's `{ json, refreshed }` shape per file. No data file
 > gains, loses or changes a property.)*

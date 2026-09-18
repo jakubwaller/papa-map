@@ -744,19 +744,55 @@ def test_the_german_index_wraps_its_donate_link_too():
     assert html.index("in-app.js") < html.index("<body>")
 
 
+# Both quote styles for the dict lookup, ["footer"] and ['footer'], shared by
+# the guard below and its own self-test. Unanchored on the left on purpose:
+# it names the tail end of any dict lookup, `STRINGS["footer"]` as much as a
+# bare `["footer"]`, because the direct .format() guard below only ever
+# greps for it as a substring and does not care what the dict is called.
+FOOTER_REF = r"""FOOTER|\[["']footer["']\]"""
+# The alias guard's RHS, unlike FOOTER_REF alone, has to admit that leading
+# dict name too — an assignment `f = STRINGS["footer"]` does not start with
+# `[`, `STRINGS` sits in front of it.
+ALIAS_RHS = rf"\w*(?:{FOOTER_REF})"
+
+
 def test_no_renderer_formats_a_footer_past_the_wrap():
     """Every footer goes through footer_html; a renderer that calls .format on
     one directly ships the link unwrapped, and no string-table test sees it."""
     from pathlib import Path
-    # Both quote styles for the dict lookup, ["footer"] and ['footer'].
-    footer_ref = r"""FOOTER|\[["']footer["']\]"""
     for src in Path(pages.__file__).parent.glob("*.py"):
         text = src.read_text(encoding="utf-8")
-        assert not re.search(rf"(?:{footer_ref})\.format\(", text), src.name
-        # A cheap alias check: `x = FOOTER` (or the dict lookup), then
+        assert not re.search(rf"(?:{FOOTER_REF})\.format\(", text), src.name
+        # A cheap alias check: `x = FOOTER` (or `x = STRINGS["footer"]`), then
         # `x.format(` anywhere in the file — the same bug under another name.
-        for alias in re.findall(rf"(\w+)\s*=\s*(?:{footer_ref})\b", text):
+        # (?!\w), not \b: the dict-lookup alternative ends in `]`, a non-word
+        # character, and \b never matches between two non-word characters —
+        # `f = STRINGS["footer"]` followed by a newline or end of file would
+        # never be found, and the alias check would silently do nothing for
+        # that whole spelling.
+        for alias in re.findall(rf"(\w+)\s*=\s*{ALIAS_RHS}(?!\w)", text):
             assert f"{alias}.format(" not in text, f"{src.name}: {alias}"
+
+
+def test_footer_guard_regexes_actually_match_what_they_claim_to():
+    """The two guards above are only as good as their regexes; prove each one
+    matches every spelling it is meant to catch, so a future edit that breaks
+    one fails loudly here instead of the guard quietly matching nothing."""
+    format_re = rf"(?:{FOOTER_REF})\.format\("
+    assert re.search(format_re, "FOOTER.format(x)")
+    assert re.search(format_re, 't["footer"].format(x)')
+    assert re.search(format_re, "t['footer'].format(x)")
+
+    alias_re = rf"(\w+)\s*=\s*{ALIAS_RHS}(?!\w)"
+    for sample, want in [
+        ('f = STRINGS["footer"]', "f"),
+        ("f = STRINGS['footer']\n", "f"),
+        ("x = FOOTER", "x"),
+        ("footer = FOOTER\n", "footer"),
+    ]:
+        m = re.search(alias_re, sample)
+        assert m, sample
+        assert m.group(1) == want, sample
 
 
 def test_rendered_pages_carry_the_span_and_the_script_that_hides_it():

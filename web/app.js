@@ -1914,6 +1914,9 @@ async function renderOfflineList() {
         // this very city) reads `wanted` again before it adds anything back —
         // without this, it could re-add a city just deleted out from under it.
         wanted.delete(city.slug);
+        // A deleted city starts fresh if it is ever saved again — its old
+        // failure count belongs to a file that no longer exists.
+        failures.delete(city.slug);
         savedList = await deleteCity(city.slug);
         renderOfflineList();
       });
@@ -1924,6 +1927,7 @@ async function renderOfflineList() {
         try {
           savedList = await downloadCity(city, (p) => { btn.textContent = t("offlineLoading", { pct: Math.round(p * 100) }); });
           unreadable.delete(city.slug);
+          failures.delete(city.slug);
           syncCities();
           toast(t("offlineDone", { city: city.name }));
         } catch {

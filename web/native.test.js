@@ -479,6 +479,57 @@ test("nothing stored anywhere: every file takes the no-copy path, same as loadJS
   assert.deepEqual(results.map((r) => r.json), [{ t: 1 }, { p: 1 }, { g: 1 }, { a: 1 }]);
 });
 
+// A gated file with no stored copy at all answers `null` from loadJSONNative
+// (the ordinary no-copy path with nothing to fall back to), not an object —
+// and it is exactly this shape loadDatasetNative has to read the failure of
+// without crashing on `null.refreshed`.
+test("a gated file with no copy at all, whose download also fails, settles the canary rather than crashing it", async () => {
+  const files = { [DSTATS]: { g: 1 }, [DPLACES]: { p: 1 }, [DAREAS]: { a: 1 } };   // changing_tables never stored
+  const io = fakeDatasetIO({
+    files,
+    bodies: { [`${DSTATS}.new`]: { g: 2 }, [`${DPLACES}.new`]: { p: 2 }, [`${DAREAS}.new`]: { a: 2 } },
+    fail: [`${DTABLES}.new`],
+  });
+  const results = await loadDatasetNative(DURLS, io);
+  assert.equal(results[0], null, "changing_tables: no copy, failed download — null, same as loadJSONNative alone");
+  const statsResult = results[2];
+  await assert.doesNotReject(statsResult.refreshed, "a null sibling must never turn into an unhandled rejection");
+  assert.deepEqual(await statsResult.refreshed, { ok: false, json: null });
+  assert.deepEqual(files[DSTATS], { g: 1 }, "stats.json withheld: one of the three it gates never settled ok");
+  assert.ok(!(`${DSTATS}.new` in files), "the downloaded-but-unpromoted stats.json is discarded");
+  // Unaffected by their sibling's outright failure, the other two still
+  // promote themselves exactly as they would on their own.
+  assert.deepEqual(await results[1].refreshed, { ok: true, json: { p: 2 } });
+  assert.deepEqual(files[DPLACES], { p: 2 });
+  assert.deepEqual(await results[3].refreshed, { ok: true, json: { a: 2 } });
+  assert.deepEqual(files[DAREAS], { a: 2 });
+});
+
+test("gate unchanged cleans up a stale .new beside a copy drawn from path, never one drawn from .new itself", async () => {
+  const files = {
+    [DSTATS]: { g: 1 },
+    [DTABLES]: { t: 1 }, [`${DTABLES}.new`]: "stale-partial",   // an earlier, interrupted launch's leftover
+    [DPLACES]: { p: 1 },
+    [`${DAREAS}.new`]: { a: 1 },   // areas has no `path` copy at all — drawn from `.new` itself
+  };
+  const io = fakeDatasetIO({ files, bodies: { [`${DSTATS}.new`]: { g: 1 } } });   // stats unchanged
+  const results = await loadDatasetNative(DURLS, io);
+  assert.deepEqual(await Promise.all(results.map((r) => r.refreshed)), [
+    { ok: true, json: null }, { ok: true, json: null }, { ok: true, json: null }, { ok: true, json: null },
+  ]);
+  // Drawn from `path`: the download that used to overwrite or remove the
+  // stale `.new` beside it never runs once the file is gated shut, so it is
+  // swept up here instead — left alone, it would sit forever.
+  assert.ok(!(`${DTABLES}.new` in files), "the stale .new is cleaned up");
+  assert.deepEqual(files[DTABLES], { t: 1 }, "the copy itself is untouched");
+  assert.ok(!io.log.includes(`download ${DTABLES}.new`), "gated shut: never downloaded");
+  // Drawn from `.new` itself: the self-heal already promoted it to `path`
+  // before the gate was ever asked, so there is nothing stray left to clean,
+  // and nothing here tries to remove the copy that self-heal just made.
+  assert.deepEqual(files[DAREAS], { a: 1 });
+  assert.ok(!(`${DAREAS}.new` in files));
+});
+
 // ---- The note: which of the loader's paths answered ----
 test("the note names the path that answered, with the size of what was on the phone", async () => {
   const fresh = {};

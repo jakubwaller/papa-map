@@ -569,7 +569,13 @@ all to compare against gates nothing — every file, stats.json included, loads 
 before this existed. The one edge accepted rather than closed: a phone that happens to refresh in
 the exact second the nightly build is still being written can draw a new stats.json against
 still-old big files; it is indistinguishable from an ordinary missed refresh and catches up the
-same way, the following night.
+same way, the following night. A second, rarer way to the same edge: the app killed while
+stats.json's own `.new` is held (downloaded, but not yet promoted — the three gated files hadn't
+all settled ok yet) *and* its `path` copy has since gone unreadable. The next launch self-heals
+`path` straight out of that `.new` before its own download even runs, so the download it then
+does compares against a stats.json that already reads as last night's build, finds no difference,
+and never asks the three at all. Same consequence as the edge above: at most one night behind, and
+it self-heals the following night, once a genuinely new build makes the comparison differ again.
 
 Nothing about any of this is sent anywhere or written down; the state that decides it lives in
 memory for the length of one launch.

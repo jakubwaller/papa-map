@@ -184,7 +184,19 @@ function backgroundRefresh(io, url, oldText, path, fresh, drawnFrom, { gate = nu
     }
     if (gate) {
       const g = await gate;
-      if (g !== "changed") return { ok: g === "unchanged", json: null };
+      if (g !== "changed") {
+        // A `.new` left over from an earlier, interrupted launch — the copy
+        // just drawn came from `path`, so it is not that file's own — used
+        // to be overwritten or removed by the download this gate just
+        // skipped; gated shut, nothing else will ever touch it. Only when
+        // the drawn copy came from `path`: drawn from `.new` itself, the
+        // self-heal above has already moved it to `path`, and there is
+        // nothing stray left at `fresh` to clean up. Best effort, and never
+        // asked when the gate says "failed" — a stale `.new` is nobody's
+        // priority on a launch that could not even reach the network.
+        if (g === "unchanged" && drawnFrom === path) await io.remove(fresh).catch(() => {});
+        return { ok: g === "unchanged", json: null };
+      }
     }
     try { await io.download(url, fresh); }
     catch { return { ok: false, json: null }; }
@@ -401,6 +413,17 @@ async function hasStoredCopy(io, path, fresh) {
 // still-old big files. It is indistinguishable from an ordinary missed
 // refresh and catches up the same way, the following night.
 //
+// A second, rarer way to the same edge: the app killed while stats.json's
+// own `.new` is held (downloaded, not yet promoted — the three gated files
+// hadn't all settled ok yet) AND its `path` copy has since gone unreadable.
+// The next launch self-heals `path` straight out of that `.new` before its
+// own download even starts (the `drawnFrom === fresh` step above), so the
+// download it then runs compares against a stats.json that already reads as
+// last night's build — finds no difference, and never asks the three at
+// all. Same consequence as the edge above: at most one night behind, and it
+// self-heals the following night, when a genuinely new build makes the
+// comparison differ again.
+//
 // A URL among `urls` that isn't named stats.json — or no stored stats.json
 // at all, so there is no canary yet to compare against (first launch, or a
 // copy that went missing) — means nothing here applies: every file, stats
@@ -432,7 +455,14 @@ export async function loadDatasetNative(urls, io = nativeIO(), opts = {}) {
   stats.refreshed = (async () => {
     const r = await held;
     if (r.json == null) return r;   // unchanged, or the canary's own download failed: nothing held to promote
-    const results = await Promise.all(otherLoaded.map((x) => x.refreshed));
+    // A gated file with no stored copy at all, whose own no-copy path found
+    // nothing at all, answers `null` — not an object carrying a `.refreshed`
+    // of its own — and counts as failed here exactly as an outright download
+    // failure would. `x?.refreshed` alone is not enough: that would leave
+    // `undefined` in `results` for that file, and the `.ok` read below would
+    // throw on it just the same as `null.refreshed` does.
+    const results = await Promise.all(
+      otherLoaded.map((x) => (x ? x.refreshed : Promise.resolve({ ok: false, json: null }))));
     if (results.every((x) => x.ok !== false)) {
       await io.replace(fresh, path).catch(() => {});
       return r;
@@ -441,7 +471,7 @@ export async function loadDatasetNative(urls, io = nativeIO(), opts = {}) {
     // stats.json without tonight's big files to back it up.
     await io.remove(fresh);
     return { ok: false, json: null };
-  })();
+  })().catch(() => ({ ok: false, json: null }));   // never rejects — see backgroundRefresh's own note
 
   let k = 0;
   return urls.map((u, i) => (i === statsAt ? stats : otherLoaded[k++]));
