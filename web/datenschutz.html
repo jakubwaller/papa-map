@@ -80,13 +80,15 @@
      Wickeltisch-Daten und die Offline-Städte, openstreetmap.org für Kartenkacheln und für Ihre
      Antworten. Hinzu kommt, was Sie über einen Link öffnen, und Apples Rolle bei der Verteilung;
      beides steht weiter unten. Die folgenden Abschnitte beschreiben, was in der App anders oder
-     zusätzlich passiert; sonst gilt das oben Gesagte unverändert.</p>
+     zusätzlich passiert; sonst gilt das oben Gesagte entsprechend.</p>
   <h2>App: Daten von papamap.de</h2>
   <p>Beim Start lädt die App die Wickeltisch-Daten von papamap.de und legt eine Kopie im eigenen
      Datenverzeichnis der App ab, damit die Karte auch ohne Netz Pins zeigt. Das sind gewöhnliche
      Abrufe fester Dateien; dabei sieht der Server dasselbe wie bei einem Website-Besuch (siehe
      „Hosting / Server-Logs“ und „Cloudflare“ oben). Die Abrufe enthalten keine Angaben zu Ihrer
-     Person und keinen Standort. Die Kopie liegt nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+     Person und keinen Standort. Die Kopie liegt nur auf Ihrem Gerät —
+     abgesehen von einer Gerätesicherung (iCloud oder Computer), falls Sie eine eingerichtet haben
+     (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>App: Kartenmaterial und Offline-Städte</h2>
   <p>Auch die App lädt Kartenkacheln von tile.openstreetmap.org; dabei wird Ihre IP-Adresse an die
      OpenStreetMap Foundation übertragen (siehe oben). Geladen werden die Kacheln des gerade
@@ -113,8 +115,8 @@
   <p>Damit das Widget und der Kurzbefehl denselben Wickeltisch nennen wie die Karte, legt die App
      eine verkürzte Kopie der Wickeltisch-Daten (Koordinaten, Zustand, Name, OSM-Link) sowie Ihre
      beiden Einstellungen — Papa- oder Mama-Sicht und Sprache — in einem gemeinsamen Bereich auf
-     dem Gerät ab, den nur die App und ihr Widget lesen können. Beides bleibt auf dem Gerät
-     (§ 25 Abs. 2 Nr. 2 TDDDG). Siri und Kurzbefehle sind eine Funktion von iOS; wie Apple eine
+     dem Gerät ab, den nur die App und ihr Widget lesen können. Beides bleibt, von einer
+     solchen Gerätesicherung abgesehen, auf dem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG). Siri und Kurzbefehle sind eine Funktion von iOS; wie Apple eine
      gesprochene Anfrage verarbeitet, richtet sich nach Apples Datenschutzbestimmungen.</p>
   <h2>App: Einstellungen auf dem Gerät</h2>
   <p>Die App speichert dieselben funktionalen Schlüssel wie die Website — Sprache
@@ -136,7 +138,7 @@
   <h2>App: Links auf andere Seiten</h2>
   <p>Jeder Link, der die Karte verlässt — die Seiten dieser Website, openstreetmap.org,
      MapComplete, StreetComplete — öffnet im System-Browser Ihres Geräts, in einer Ansicht
-     innerhalb der App. Die Seiten dieser Website merken sich für die Dauer dieser Ansicht, dass
+     innerhalb der App. Die Karte sowie die Länder- und Ranglistenseiten dieser Website merken sich für die Dauer dieser Ansicht, dass
      sie aus der App geöffnet wurden (Schlüssel <code>papamap-in-app</code> im Session Storage),
      und blenden dann den Spendenlink aus; der Eintrag verfällt, wenn Sie die Ansicht schließen
      (§ 25 Abs. 2 Nr. 2 TDDDG). Ab dort gilt die Datenschutzerklärung des jeweiligen Angebots; für die
@@ -156,7 +158,8 @@
      löschen Sie im Dialog „Stadt offline speichern“ mit „Löschen“; von OpenStreetMap melden Sie
      sich im Pin mit „Abmelden“ ab. Löschen Sie die App, verschwindet damit alles, was sie auf dem
      Gerät abgelegt hat: die Kopie der Wickeltisch-Daten, die Offline-Städte, die Einstellungen und
-     das Zugriffstoken. Was Sie zu OpenStreetMap geschrieben haben, bleibt dort — das ist der Sinn
+     das Zugriffstoken. Was davon in einer Gerätesicherung liegt, die Sie eingerichtet haben,
+     verwaltet iOS; es verschwindet mit dieser Sicherung. Was Sie zu OpenStreetMap geschrieben haben, bleibt dort — das ist der Sinn
      der Sache.</p>
   <h2>Kontakt per E-Mail oder Formular</h2>
   <p>Bei Kontakt per E-Mail werden die übermittelten Angaben nur zur Bearbeitung des Anliegens
