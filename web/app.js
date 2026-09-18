@@ -16,7 +16,7 @@ import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, g
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks,
-         directionsUri, planRoute, openRouteUrl,
+         directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
          formatMB, citiesToMount } from "./native.js?v=app22";
@@ -1822,10 +1822,10 @@ const routeDialog = document.getElementById("route-dialog");
 const routeList = document.getElementById("route-list");
 
 // More than one and no default: one button per app, in the dialog style the
-// offline list already uses. `fallback` is the anchor's own href, for the case
-// where handing the URL to the OS fails — the WebView still knows what to do
-// with a maps: or om: URL, and doing nothing at all is the one bad answer.
-function showRouteChoices(choices, fallback) {
+// offline list already uses. `web` is the same route on the open web, for the
+// case where the OS declines the app's URL — doing nothing at all is the one
+// bad answer.
+function showRouteChoices(choices, web) {
   routeList.replaceChildren();
   for (const c of choices) {
     const li = document.createElement("li"), btn = document.createElement("button");
@@ -1833,8 +1833,7 @@ function showRouteChoices(choices, fallback) {
     btn.textContent = c.name;
     btn.addEventListener("click", () => {
       routeDialog.close();
-      try { openRouteUrl(c.url).catch(() => { location.href = c.url; }); }
-      catch { location.href = fallback; }
+      followRoute(c.url, web).catch(() => {});
     });
     li.append(btn);
     routeList.append(li);
@@ -1849,10 +1848,13 @@ document.addEventListener("click", (e) => {
   const href = a.getAttribute("href");
   const [lat, lon] = a.dataset.route.split(",").map(Number);
   planRoute(lat, lon, a.dataset.routeLabel || "").then(
-    (plan) => (plan.open ? openRouteUrl(plan.open) : showRouteChoices(plan.choose, href)),
+    (plan) => {
+      const web = routeWebUrl(lat, lon);
+      return plan.open ? followRoute(plan.open, web) : showRouteChoices(plan.choose, web);
+    },
     // No AppLauncher in this build, or the bridge failed: it is still a link.
     () => { location.href = href; },
-  ).catch(() => { location.href = href; });
+  ).catch(() => {});
 });
 document.getElementById("route-close").addEventListener("click", () => routeDialog.close());
 routeDialog.addEventListener("click", (e) => { if (e.target === routeDialog) routeDialog.close(); });

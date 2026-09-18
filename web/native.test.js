@@ -187,7 +187,7 @@ test("a flag already there is not doubled", () => {
 // matter on the phone this was written for, so the decision is a pure function
 // and this is where it is actually checked. `has` is what the OS answered.
 import fs from "node:fs";
-import { routePlan, planRoute, NAV_APPS, ROUTE_SCHEMES } from "./native.js";
+import { routePlan, planRoute, openRouteUrl, followRoute, routeWebUrl, NAV_APPS, ROUTE_SCHEMES } from "./native.js";
 
 const has = (...schemes) => (s) => schemes.includes(s);
 const RATHAUS = [53.550341, 9.992196];
@@ -274,4 +274,28 @@ test("every scheme the cascade can ask about is declared to iOS", () => {
   // "the reader does not have that app" — silently, and wrongly.
   assert.deepEqual([...ROUTE_SCHEMES].sort(), [...declared].sort());
   assert.deepEqual(NAV_APPS.map((a) => a.scheme).filter((s) => !declared.includes(s)), []);
+});
+
+test("an open the OS declines counts as a failure, not as done", async () => {
+  // AppLauncher resolves { completed: false } rather than rejecting.
+  const declined = { openUrl: async () => ({ completed: false }) };
+  await assert.rejects(openRouteUrl("maps://?daddr=1,2", declined), /not opened/);
+  await openRouteUrl("maps://?daddr=1,2", { openUrl: async () => ({ completed: true }) });
+});
+
+test("a declined route falls back to the same route on the web, never to nothing", async () => {
+  const web = routeWebUrl(...RATHAUS);
+  assert.equal(web, `https://www.google.com/maps/dir/?api=1&destination=${AT}`);
+  assert.equal(routePlan(...RATHAUS, "", () => false).open, web);
+  const shown = [];
+  const declined = { openUrl: async () => ({ completed: false }) };
+  await followRoute(`comgooglemaps://?daddr=${AT}`, web, declined, (u) => shown.push(u));
+  assert.deepEqual(shown, [web]);
+  // An open that works shows nothing else.
+  const opened = [];
+  await followRoute(`comgooglemaps://?daddr=${AT}`, web,
+    { openUrl: async ({ url }) => { opened.push(url); return { completed: true }; } }, (u) => shown.push(u));
+  assert.deepEqual([opened, shown], [[`comgooglemaps://?daddr=${AT}`], [web]]);
+  // The web URL itself declined: nothing left to try, and the caller hears of it.
+  await assert.rejects(followRoute(web, web, declined, (u) => shown.push(u)), /not opened/);
 });

@@ -1,6 +1,6 @@
 # papa-map — build contract (v0)
 
-> **(18 Sep 2026, the Route button on iOS):** **no shape change** — no data
+> **v36 amendment (18 Sep 2026, the Route button on iOS):** **no shape change** — no data
 > file gains, loses or changes a property, and `STATUSES` is untouched. The
 > popup's Route anchor now carries **`data-route="<lat>,<lon>"`** and
 > **`data-route-label`** beside the `href` it always had; the `href` is
@@ -11,7 +11,8 @@
 > navigation app) → `maps:` (Apple Maps) → a single installed navigation app
 > by its own scheme → a chooser dialog (`#route-dialog`, new, i18n key
 > `routeTitle` in all 32 languages) → the Google Maps directions URL on the
-> open web. Nothing is remembered between taps. New dependency
+> open web. A URL the OS declines to open falls back to that same web URL in
+> the in-app browser. Nothing is remembered between taps. New dependency
 > `@capacitor/app-launcher` (8.x, matching Capacitor 8) and a new
 > `LSApplicationQueriesSchemes` array in `app/ios/App/App/Info.plist`, which
 > `web/native.test.js` holds to `ROUTE_SCHEMES` exactly. Why: `maps:` is Apple

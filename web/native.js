@@ -256,7 +256,13 @@ export function routePlan(lat, lon, label, canOpen) {
   if (installed.length === 1) return { open: installed[0].url(at, label) };
   if (installed.length > 1)
     return { choose: installed.map((a) => ({ name: a.name, url: a.url(at, label) })) };
-  return { open: `https://www.google.com/maps/dir/?api=1&destination=${at}` };
+  return { open: routeWebUrl(lat, lon) };
+}
+
+// Step 4's URL, and what app.js falls back on when the OS declines a URL from
+// any other step: it needs no app at all, so it cannot fail the same way.
+export function routeWebUrl(lat, lon) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${coords(lat, lon)}`;
 }
 
 // The questions iOS will answer, asked at once, and the plan they make. A
@@ -274,9 +280,22 @@ export async function planRoute(lat, lon, label, launcher = plugin("AppLauncher"
 
 // To the OS, not to the in-app browser: an https URL here is meant to reach an
 // app through its universal link if the phone has one.
-export function openRouteUrl(url, launcher = plugin("AppLauncher")) {
+//
+// AppLauncher does not reject when iOS declines a URL, it resolves
+// `{ completed: false }` — which has to count as a failure here, or the tap
+// does nothing at all and nobody hears of it.
+export async function openRouteUrl(url, launcher = plugin("AppLauncher")) {
   if (!launcher) throw new Error("no AppLauncher");
-  return launcher.openUrl({ url });
+  const r = await launcher.openUrl({ url });
+  if (r?.completed === false) throw new Error(`not opened: ${url}`);
+}
+
+// Open it, and if the OS will not, show the same route on the web in the
+// in-app browser — not the anchor's href, which on iOS is maps:// and fails
+// on exactly the phone this cascade exists for.
+export async function followRoute(url, web, launcher = plugin("AppLauncher"), external = openExternal) {
+  try { await openRouteUrl(url, launcher); }
+  catch { if (url !== web) external(web); else throw new Error(`not opened: ${url}`); }
 }
 
 // ---- OSM login through the in-app browser ----
