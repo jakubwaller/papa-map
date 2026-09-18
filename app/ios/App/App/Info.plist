@@ -37,6 +37,12 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- Never requested: the app asks for "when in use" only. The key is here
+	     because the Geolocation plugin links the "always" API and App Store
+	     Connect wants a purpose string for every API a binary references
+	     (ITMS-90683 on build 13, 2026-09-18). -->
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>PapaMap only uses the position while the app is open, for the locate button and the nearest changing table. It stays on the phone and is never asked for in the background.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>For the locate button and the nearest changing table. The position stays on the phone: the search runs over the data already here.</string>
 	<key>CFBundleLocalizations</key>

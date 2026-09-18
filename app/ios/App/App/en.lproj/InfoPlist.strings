@@ -1,1 +1,2 @@
 "NSLocationWhenInUseUsageDescription" = "For the locate button and the nearest changing table. The position stays on the phone: the search runs over the data already here.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "PapaMap only uses the position while the app is open, for the locate button and the nearest changing table. It stays on the phone and is never asked for in the background.";
