@@ -43,9 +43,12 @@ permissions:
   contents: read
 
 jobs:
+  # macos-26 for its Xcode 26: App Store Connect refuses an upload built with an
+  # older SDK ("must be built with the iOS 26 SDK or later", 2026-09-18), and
+  # the unsigned build uses the same image so it proves the same compiler.
   ios:
     if: github.event.action != 'labeled' && (inputs.task || 'build') == 'build'
-    runs-on: macos-15
+    runs-on: macos-26
     defaults:
       run:
         working-directory: app
@@ -129,7 +132,7 @@ jobs:
 
   testflight:
     if: inputs.task == 'testflight' || (github.event.action == 'labeled' && github.event.label.name == 'testflight')
-    runs-on: macos-15
+    runs-on: macos-26
     defaults:
       run:
         working-directory: app

@@ -55,7 +55,7 @@ npx cap open ios      # Xcode
 npx cap open android  # Android Studio
 ```
 
-Needs Node 20+, Xcode 16+ (from the Mac App Store), and for Android a JDK 17 and Android
+Needs Node 20+, Xcode 26+ (from the Mac App Store; App Store Connect refuses older SDKs), and for Android a JDK 17 and Android
 Studio. `npx cap sync` regenerates `ios/App/CapApp-SPM/` from `package.json`, which is why
 that directory is not committed.
 
