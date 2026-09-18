@@ -193,10 +193,21 @@ se ni <code>no</code>, ni <code>limited</code> — wiki tu vrijednost definira k
 dostupne, ali nema određenog prostora«. Kad postoji izričit <code>kids_area:indoor=no</code>, on
 nadjačava goli <code>kids_area=yes</code>.</p>
 <p>Ovo je oznaka, a ne četvrti status. Mjesto bez ovih oznaka nema »nikakav dječji kutak« —
-OSM o njemu jednostavno ništa ne govori. Zato ovdje nema sive boje ni poziva na akciju: kod
-<code>changing_table:location</code> šutnja nešto znači, jer se zna da stol postoji. Ovdje šuti
-gotovo svaki objekt, a to ne znači ništa. Ako znaš za dječji kutak, slobodno ga dodaj &mdash; u OSM
-uređivaču, kao <code>kids_area=yes</code>.</p>
+OSM o njemu jednostavno ništa ne govori. Zato ovdje nema sive boje.</p>
+<p>Upravo zato skočni prozor pita o tome. Na svakom pinu gdje OSM ne govori ništa o dječjem
+kutku, bez obzira na boju, postoji jedan redak (ispod prostorija, tamo gdje pin pita i za
+prostoriju): <em>Dječji kutak?</em>, s tri odgovora. <em>unutra</em> upisuje
+<code>kids_area:indoor=yes</code> zajedno s <code>kids_area=yes</code>, <em>samo vani</em>
+upisuje <code>kids_area=yes</code> zajedno s <code>kids_area:indoor=no</code>, <em>nema</em>
+upisuje <code>kids_area=no</code> &mdash; pod tvojim vlastitim OSM računom, u vlastitom
+changesetu, točno one oznake koje MapComplete upisuje za isto pitanje. Pitanje se odnosi na
+dječji kutak općenito, ne samo zatvoreni: <code>kids_area=no</code> u OSM-u znači »ovdje djeca
+nemaju gdje igrati«, pa pekarnica s igralištem u vrtu dobiva <em>samo vani</em> umjesto krivog
+ne. Kružić se pojavljuje (ili ostaje odsutan) kod sljedeće noćne izgradnje. Nitko se ne pita
+dvaput: upisan <code>kids_area</code> <em>ili</em> <code>kids_area:indoor</code>, bez obzira na
+vrijednost, uklanja pitanje. Na <code>leisure=playground</code> bez <code>indoor=yes</code>
+pitanje se uopće ne postavlja &mdash; mjesto <em>već je</em> mjesto za igru, samo ne u
+zatvorenom.</p>
 
 <h2>Čip Kolica</h2>
 <p>Čip <em>Kolica</em> prikazuje samo mjesta koja u OSM-u imaju <code>wheelchair=yes</code>. <code>limited</code> (jedna stuba do 7&nbsp;cm ili potrebna pomoć) i sam <code>toilets:wheelchair=yes</code> nisu dovoljni; oboje ipak stoji u skočnom prozoru, zajedno s <code>wheelchair:description</code>. Mjesto bez oznake nije nepristupačno, OSM o njemu jednostavno ništa ne kaže, pa čip samo filtrira i ništa ne boji. Plave kružiće (mjesta s kutićem za igru) čip filtrira na isti način: ostaju samo ona s <code>wheelchair=yes</code>.</p>

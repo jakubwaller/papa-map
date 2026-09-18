@@ -194,11 +194,21 @@ lupaa. Ei myöskään <code>no</code>, eikä <code>limited</code> — wiki mää
 "leluja on saatavilla, mutta ei omaa aluetta". Jos kohteessa on nimenomainen
 <code>kids_area:indoor=no</code>, se voittaa paljaan <code>kids_area=yes</code>-tagin.</p>
 <p>Tämä on tunnus, ei neljäs status. Paikka, jolta nämä tagit puuttuvat, ei tarkoita, ettei siellä
-olisi leikkinurkkaa — OSM ei vain sano siitä mitään. Siksi tässä ei ole harmaata eikä
-toimintakehotusta: kohdassa <code>changing_table:location</code> hiljaisuus on merkityksellistä,
-koska pöydän tiedetään olevan olemassa. Täällä lähes jokainen kohde on hiljaa, eikä se tarkoita
-mitään. Jos tiedät leikkinurkasta, sen lisääminen on silti tervetullutta &mdash;
-OSM-editorissa, tagilla <code>kids_area=yes</code>.</p>
+olisi leikkinurkkaa — OSM ei vain sano siitä mitään. Siksi tässä ei ole harmaata.</p>
+<p>Juuri siksi ponnahdusikkuna kysyy sitä. Jokaisessa nastassa, jossa OSM ei kerro mitään
+leikkinurkasta, väristä riippumatta, on yksi rivi (huoneiden alla, siellä missä nasta kysyy myös
+huonetta): <em>Leikkinurkka lapsille?</em>, kolmella vastauksella. <em>sisällä</em> kirjoittaa
+<code>kids_area:indoor=yes</code> yhdessä <code>kids_area=yes</code>:n kanssa, <em>vain
+ulkona</em> kirjoittaa <code>kids_area=yes</code> yhdessä <code>kids_area:indoor=no</code>:n
+kanssa, <em>ei ole</em> kirjoittaa <code>kids_area=no</code> &mdash; omalla OSM-tililläsi, omassa
+changesetissa, täsmälleen samat tagit kuin MapComplete kirjoittaa samasta kysymyksestä. Kysymys
+koskee leikkinurkkaa ylipäätään, ei vain sisätiloissa olevaa: <code>kids_area=no</code> tarkoittaa
+OSM:ssä "täällä ei ole lapsille missään leikkipaikkaa", joten leipomo, jonka pihalla on
+leikkipuisto, saa vastaukseksi <em>vain ulkona</em> väärän ei:n sijaan. Rengas ilmestyy (tai jää
+pois) seuraavassa yöllisessä rakennuksessa. Keneltäkään ei kysytä kahdesti: tallennettu
+<code>kids_area</code> <em>tai</em> <code>kids_area:indoor</code>, arvosta riippumatta, poistaa
+kysymyksen. <code>leisure=playground</code>-kohteessa ilman <code>indoor=yes</code>-tagia sitä ei
+kysytä lainkaan &mdash; paikka <em>on</em> jo leikkipaikka, ei vain sisällä.</p>
 
 <h2>Pyörätuoli-nappi</h2>
 <p><em>Pyörätuoli</em>-nappi näyttää vain paikat, joilla on OSM:ssä <code>wheelchair=yes</code>. <code>limited</code> (yksi enintään 7&nbsp;cm:n porras tai apua tarvitaan) ja pelkkä <code>toilets:wheelchair=yes</code> eivät riitä; molemmat näkyvät silti ponnahdusikkunassa yhdessä <code>wheelchair:description</code>-tekstin kanssa. Paikka ilman tagia ei ole esteellinen, OSM ei vain sano mitään, joten nappi vain suodattaa eikä värjää mitään. Nappi suodattaa siniset renkaat (paikat, joissa on leikkinurkka) samalla tavalla: jäljelle jäävät vain ne, joilla on <code>wheelchair=yes</code>.</p>

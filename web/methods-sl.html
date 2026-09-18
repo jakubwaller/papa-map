@@ -192,10 +192,21 @@ Ne šteje se niti <code>no</code> niti <code>limited</code> — wiki slednjega d
 &bdquo;igrače so na voljo, a brez določenega prostora&ldquo;. Kjer je izrecno naveden
 <code>kids_area:indoor=no</code>, ta zmaga nad golim <code>kids_area=yes</code>.</p>
 <p>To je značka, ne četrto stanje. Kraj brez teh tagov nima &bdquo;nič igralnega
-kotička&ldquo; &mdash; OSM o tem preprosto ne pove nič. Zato tu ni sive barve in ni poziva k
-dejanju: pri <code>changing_table:location</code> je molk pomenljiv, ker je znano, da miza
-obstaja. Tu molči skoraj vsak objekt, in to ne pomeni nič. Če igralni kotiček poznaš, ga vseeno
-lahko dodaš &mdash; v urejevalniku OSM, kot <code>kids_area=yes</code>.</p>
+kotička&ldquo; &mdash; OSM o tem preprosto ne pove nič. Zato tu ni sive barve.</p>
+<p>Zato ravno pojavno okno vpraša o tem. Pri vsakem zaznamku, kjer OSM ne pove ničesar o
+igralnem kotičku, ne glede na barvo, je ena vrstica (pod prostori, tam, kjer zaznamek vpraša
+tudi za prostor): <em>Igralni kotiček za otroke?</em>, s tremi odgovori. <em>v notranjosti</em>
+zapiše <code>kids_area:indoor=yes</code> skupaj z <code>kids_area=yes</code>, <em>samo zunaj</em>
+zapiše <code>kids_area=yes</code> skupaj z <code>kids_area:indoor=no</code>, <em>ni ga</em>
+zapiše <code>kids_area=no</code> &mdash; pod tvojim lastnim računom OSM, v svojem changesetu,
+natanko iste tage, kot jih za isto vprašanje zapiše MapComplete. Vprašanje se nanaša na igralni
+kotiček na splošno, ne le na notranjega: <code>kids_area=no</code> v OSM pomeni &bdquo;tu se
+otroci nimajo kje igrati&ldquo;, zato pekarna z igriščem na vrtu dobi <em>samo zunaj</em> namesto
+napačnega ne. Obroč se pojavi (ali ostane odsoten) pri naslednji nočni gradnji. Nikogar ne
+vprašajo dvakrat: zabeležen <code>kids_area</code> <em>ali</em> <code>kids_area:indoor</code>, ne
+glede na vrednost, umakne vprašanje. Pri <code>leisure=playground</code> brez
+<code>indoor=yes</code> vprašanja sploh ni &mdash; kraj <em>je</em> že kraj za igro, samo ne v
+notranjosti.</p>
 
 <h2>Čip Invalidski voziček</h2>
 <p>Čip <em>Invalidski voziček</em> prikazuje le kraje, ki imajo v OSM <code>wheelchair=yes</code>. <code>limited</code> (ena stopnica do 7&nbsp;cm ali potrebna pomoč) in sam <code>toilets:wheelchair=yes</code> ne zadoščata; oboje je vseeno v pojavnem oknu, skupaj z <code>wheelchair:description</code>. Kraj brez oznake ni nedostopen, OSM o njem preprosto ničesar ne pove, zato čip le filtrira in ničesar ne barva. Modre kroge (kraje s kotičkom za igro) čip filtrira enako: ostanejo le tisti z <code>wheelchair=yes</code>.</p>

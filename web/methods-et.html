@@ -192,10 +192,21 @@ mängualaga kohaks, kui OSM registreerib mõne järgnevatest:</p>
 &bdquo;mänguasjad on saadaval, aga selleks ette nähtud ala pole&ldquo;. Kui on selgelt märgitud
 <code>kids_area:indoor=no</code>, on see tugevam kui lihtne <code>kids_area=yes</code>.</p>
 <p>See on märk, mitte neljas staatus. Kohal ilma nende siltideta pole &bdquo;mänguala puudub&ldquo;
-&mdash; OSM lihtsalt ei ütle selle kohta midagi. Seepärast pole siin halli ega üleskutset midagi
-teha: sildi <code>changing_table:location</code> puhul on vaikimine kõnekas, sest laud on teadaolevalt
-olemas. Siin on vait peaaegu kõik objektid, ja see ei tähenda mitte midagi. Kui sa mänguala tead,
-on selle lisamine ikkagi teretulnud &mdash; OSM-i redaktoris, sildiga <code>kids_area=yes</code>.</p>
+&mdash; OSM lihtsalt ei ütle selle kohta midagi. Seepärast pole siin halli.</p>
+<p>Just seepärast küsibki hüpikaken selle kohta. Igal nõelal, kus OSM ei ütle mänguala kohta
+midagi, olenemata selle värvist, on üks rida (ruumide all, seal, kus nõel küsib ka ruumi kohta):
+<em>Mänguala lastele?</em>, kolme vastusega. <em>sees</em> kirjutab
+<code>kids_area:indoor=yes</code> koos <code>kids_area=yes</code>-ga, <em>ainult õues</em>
+kirjutab <code>kids_area=yes</code> koos <code>kids_area:indoor=no</code>-ga, <em>pole</em>
+kirjutab <code>kids_area=no</code> &mdash; sinu enda OSM-i konto alt, omaette changeset'is,
+täpselt samad sildid, mida kirjutab MapComplete sama küsimuse jaoks. Küsimus puudutab mänguala
+üleüldiselt, mitte ainult siseruumides olevat: <code>kids_area=no</code> tähendab OSM-is
+&bdquo;siin pole lastel kuskil mängida&ldquo;, seega saab pagariäri, kus on aias mänguväljak,
+vastuseks <em>ainult õues</em>, mitte valet ei. Rõngas ilmub (või jääb ilmumata) järgmise öise
+ehitusega. Kelleltki ei küsita kaks korda: salvestatud <code>kids_area</code> <em>või</em>
+<code>kids_area:indoor</code>, olenemata väärtusest, võtab küsimuse ära.
+<code>leisure=playground</code> puhul ilma <code>indoor=yes</code>-ta ei küsita seda üldse
+&mdash; koht <em>on</em> juba mängukoht, lihtsalt mitte sees.</p>
 
 <h2>Kiip Ratastool</h2>
 <p>Kiip <em>Ratastool</em> näitab ainult kohti, millel on OSM-is <code>wheelchair=yes</code>. <code>limited</code> (üks kuni 7&nbsp;cm aste või abi vajalik) ja ainult <code>toilets:wheelchair=yes</code> ei ole piisavad; mõlemad on siiski hüpikaknas koos <code>wheelchair:description</code>-ga. Sildita koht ei ole ligipääsmatu, OSM lihtsalt ei ütle midagi, seega kiip ainult filtreerib ega värvi midagi. Siniseid rõngaid (mängunurgaga kohad) filtreerib kiip samamoodi: alles jäävad ainult need, millel on <code>wheelchair=yes</code>.</p>

@@ -191,10 +191,21 @@ gera <code>no</code> og <code>limited</code> ekki heldur — wiki-síðan skilgr
 sem „leikföng eru til staðar, en ekkert afmarkað svæði". Þar sem <code>kids_area:indoor=no</code>
 er sett skýrt fram gildir það umfram bert <code>kids_area=yes</code>.</p>
 <p>Þetta er merki, ekki fjórða staðan. Staður án þessara merkinga er ekki þar með sagður „hafa
-ekkert leiksvæði" — OSM segir einfaldlega ekkert um það. Þess vegna er hér hvorki grátt né hvatning
-til aðgerða: hjá <code>changing_table:location</code> er þögnin merkingarbær, því vitað er að
-borðið sé til. Hér þegir næstum sérhvert fyrirbæri, og það þýðir ekkert. Ef þú þekkir leiksvæði er
-samt velkomið að bæta því við — í OSM-ritlinum, sem <code>kids_area=yes</code>.</p>
+ekkert leiksvæði" — OSM segir einfaldlega ekkert um það. Þess vegna er hér ekkert grátt.</p>
+<p>Þess vegna spyr sprettigluggi um það. Á hverjum punkti þar sem OSM segir ekkert um leiksvæði,
+sama hvaða lit hann hefur, er ein lína (undir herbergjunum, þar sem punkturinn spyr líka um
+herbergið): <em>Leiksvæði fyrir börn?</em>, með þremur svörum. <em>inni</em> skrifar
+<code>kids_area:indoor=yes</code> ásamt <code>kids_area=yes</code>, <em>aðeins úti</em> skrifar
+<code>kids_area=yes</code> ásamt <code>kids_area:indoor=no</code>, <em>ekkert</em> skrifar
+<code>kids_area=no</code> &mdash; undir þínum eigin OSM-aðgangi, í sérstökum changeset,
+nákvæmlega sömu merkingar og MapComplete skrifar fyrir sömu spurningu. Spurningin snýst um
+leiksvæði almennt, ekki bara innandyra: <code>kids_area=no</code> þýðir í OSM „hér er hvergi hægt
+fyrir börn að leika sér“, svo bakarí með leikvelli í garðinum fær <em>aðeins úti</em> í stað
+rangs nei. Hringurinn birtist (eða heldur áfram að vanta) við næstu næturlegu smíði. Enginn er
+spurður tvisvar: skráð <code>kids_area</code> <em>eða</em> <code>kids_area:indoor</code>, sama
+hvert gildið er, fjarlægir spurninguna. Á <code>leisure=playground</code> án
+<code>indoor=yes</code> er aldrei spurt &mdash; staðurinn <em>er</em> nú þegar staður til að leika
+sér, bara ekki innandyra.</p>
 
 <h2>Flísin Hjólastóll</h2>
 <p>Flísin <em>Hjólastóll</em> sýnir aðeins staði með <code>wheelchair=yes</code> í OSM. <code>limited</code> (eitt þrep allt að 7&nbsp;cm, eða aðstoð þarf) og <code>toilets:wheelchair=yes</code> eitt sér duga ekki; hvort tveggja birtist samt í sprettiglugganum ásamt <code>wheelchair:description</code>. Staður án merkisins er ekki óaðgengilegur, OSM segir bara ekkert, svo flísin síar aðeins og litar ekkert. Flísin síar bláu hringina (staði með leikhorni) á sama hátt: aðeins þeir með <code>wheelchair=yes</code> verða eftir.</p>

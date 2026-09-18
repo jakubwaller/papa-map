@@ -194,10 +194,21 @@ Tampoco <code>no</code>, ni <code>limited</code> — la wiki define ese como «h
 ninguna zona reservada». Cuando hay un <code>kids_area:indoor=no</code> explícito, gana sobre un
 <code>kids_area=yes</code> a secas.</p>
 <p>Esto es una insignia, no un cuarto estado. Un lugar sin estas etiquetas no «no tiene zona de
-juegos» — es que OSM no dice nada al respecto. Por eso aquí no hay gris ni llamada a la acción: con
-<code>changing_table:location</code> el silencio significa algo, porque se sabe que el cambiador
-existe. Aquí callan casi todos los objetos, y eso no significa nada. Si conoces una zona de juegos,
-añadirla sigue siendo bienvenido — en el editor de OSM, como <code>kids_area=yes</code>.</p>
+juegos» — es que OSM no dice nada al respecto. Por eso aquí no hay gris.</p>
+<p>Por eso lo pregunta el popup. En cada pin donde OSM no dice nada sobre una zona de juegos, sea
+cual sea su color, hay una línea (debajo de las salas, donde el pin también pregunta por la
+sala): <em>¿Zona de juegos para niños?</em>, con tres respuestas. <em>interior</em> escribe
+<code>kids_area:indoor=yes</code> junto con <code>kids_area=yes</code>, <em>solo exterior</em>
+escribe <code>kids_area=yes</code> junto con <code>kids_area:indoor=no</code>, <em>ninguna</em>
+escribe <code>kids_area=no</code> &mdash; con tu propia cuenta de OSM, en su propio changeset,
+exactamente las mismas etiquetas que escribe MapComplete para la misma pregunta. La pregunta es
+sobre una zona de juegos en general, no solo interior: <code>kids_area=no</code> significa en OSM
+«aquí no hay ningún sitio donde jueguen los niños», así que una panadería con un parque infantil
+en el jardín recibe <em>solo exterior</em> en lugar de un no falso. El anillo aparece (o se queda
+ausente) en la siguiente construcción nocturna. A nadie se le pregunta dos veces: un
+<code>kids_area</code> <em>o</em> <code>kids_area:indoor</code> ya registrado, sea cual sea el
+valor, retira la pregunta. En un <code>leisure=playground</code> sin <code>indoor=yes</code>
+nunca se pregunta &mdash; el lugar <em>ya es</em> un sitio para jugar, solo que no interior.</p>
 
 <h2>El chip Silla de ruedas</h2>
 <p>El chip <em>Silla de ruedas</em> muestra solo lugares con <code>wheelchair=yes</code> en OSM. <code>limited</code> (un escalón de hasta 7&nbsp;cm, o se necesita ayuda) y <code>toilets:wheelchair=yes</code> por sí solo no bastan; ambos aparecen igualmente en la ventana, junto con <code>wheelchair:description</code>. Un lugar sin la etiqueta no es inaccesible, OSM simplemente no dice nada, así que el chip solo filtra y no colorea nada. El chip filtra igual los círculos azules (lugares con zona de juegos): solo quedan los que tienen <code>wheelchair=yes</code>.</p>

@@ -193,10 +193,20 @@ Nepočítá se ani <code>no</code>, ani <code>limited</code> — wiki ho definuj
 dispozici, ale žádná vyhrazená plocha&ldquo;. Pokud je někde výslovně
 <code>kids_area:indoor=no</code>, vyhrává to nad pouhým <code>kids_area=yes</code>.</p>
 <p>Je to odznak, ne čtvrtý stav. Místo bez těchto tagů nemá &bdquo;žádný dětský
-koutek&ldquo; &mdash; OSM o něm prostě nic neříká. Proto tu není žádná šedá a žádný úkol: u
-<code>changing_table:location</code> je mlčení výmluvné, protože pult prokazatelně existuje. Tady
-mlčí skoro všechny objekty, a to neznamená nic. Kdo dětský koutek zná, klidně ho doplní &mdash; v
-editoru OSM, tagem <code>kids_area=yes</code>.</p>
+koutek&ldquo; &mdash; OSM o něm prostě nic neříká. Proto tu není žádná šedá.</p>
+<p>Přesně proto se na to ptá popup. U každého pinu, kde OSM neříká nic o dětském koutku, ať má
+jakoukoli barvu, je pod pokoji jeden řádek (tam, kde se pin ptá i na pokoj): <em>Dětský
+koutek?</em> se třemi odpověďmi. <em>uvnitř</em> zapíše <code>kids_area:indoor=yes</code> spolu s
+<code>kids_area=yes</code>, <em>jen venku</em> zapíše <code>kids_area=yes</code> spolu s
+<code>kids_area:indoor=no</code>, <em>žádný</em> zapíše <code>kids_area=no</code> &mdash; pod
+tvým vlastním účtem OSM, ve vlastním changesetu, přesně ty tagy, které pro stejnou otázku zapisuje
+MapComplete. Otázka se týká dětského koutku vůbec, ne jen vnitřního: <code>kids_area=no</code> v
+OSM znamená &bdquo;tady si děti nemají kde hrát&ldquo;, takže pekařství s hřištěm na zahrádce
+dostane <em>jen venku</em> místo chybného ne. Kroužek se objeví (nebo zůstane pryč) při příští
+noční stavbě. Nikdo se neptá dvakrát: zaznamenané <code>kids_area</code> <em>nebo</em>
+<code>kids_area:indoor</code>, ať s jakoukoli hodnotou, otázku odstraní. U
+<code>leisure=playground</code> bez <code>indoor=yes</code> se neptá vůbec &mdash; místo
+<em>je</em> už místem na hraní, jen ne uvnitř.</p>
 
 <h2>Chip Bezbariérové</h2>
 <p>Chip <em>Bezbariérové</em> ukazuje jen místa, která mají v OSM <code>wheelchair=yes</code>. <code>limited</code> (jeden schod do 7&nbsp;cm nebo nutná pomoc) a samotné <code>toilets:wheelchair=yes</code> nestačí; obojí se přesto zobrazí ve vyskakovacím okně spolu s <code>wheelchair:description</code>. Místo bez tagu není nepřístupné, OSM o něm prostě nic neříká, takže chip jen filtruje a nic nebarví. Modré kroužky (místa s dětským koutkem) chip filtruje stejně: zůstanou jen ta s <code>wheelchair=yes</code>.</p>

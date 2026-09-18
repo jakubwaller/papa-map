@@ -197,10 +197,22 @@ inelul. Nici <code>no</code>, nici <code>limited</code> nu contează — wiki de
 <code>kids_area:indoor=no</code>, aceasta are prioritate față de un simplu
 <code>kids_area=yes</code>.</p>
 <p>Aceasta e o insignă, nu o a patra stare. Un loc fără aceste etichete nu „nu are zonă de joacă”
-— OSM pur și simplu nu spune nimic despre asta. Deci aici nu există gri și nici un îndemn la
-acțiune: la <code>changing_table:location</code> tăcerea înseamnă ceva, pentru că se știe sigur că
-masa există. Aici tac aproape toate obiectele, iar asta nu înseamnă nimic. Dacă știi o zonă de
-joacă, adăugarea ei tot e binevenită — în editorul OSM, ca <code>kids_area=yes</code>.</p>
+— OSM pur și simplu nu spune nimic despre asta. Deci aici nu există gri.</p>
+<p>Tocmai de aceea întreabă popup-ul despre asta. La fiecare marcaj unde OSM nu spune nimic
+despre o zonă de joacă, indiferent de culoare, apare o linie (sub camere, acolo unde marcajul
+întreabă și despre cameră): <em>Zonă de joacă pentru copii?</em>, cu trei răspunsuri. <em>în
+interior</em> scrie <code>kids_area:indoor=yes</code> împreună cu <code>kids_area=yes</code>,
+<em>doar afară</em> scrie <code>kids_area=yes</code> împreună cu
+<code>kids_area:indoor=no</code>, <em>niciuna</em> scrie <code>kids_area=no</code> &mdash; sub
+propriul tău cont OSM, într-un changeset separat, exact aceleași etichete pe care le scrie
+MapComplete pentru aceeași întrebare. Întrebarea se referă la o zonă de joacă în general, nu doar
+la una interioară: <code>kids_area=no</code> înseamnă în OSM „aici copiii nu au unde să se joace”,
+deci o brutărie cu un loc de joacă în curte primește <em>doar afară</em> în loc de un nu greșit.
+Inelul apare (sau rămâne absent) la următoarea construcție de peste noapte. Nimeni nu este
+întrebat de două ori: un <code>kids_area</code> <em>sau</em> <code>kids_area:indoor</code> deja
+înregistrat, indiferent de valoare, elimină întrebarea. La un <code>leisure=playground</code> fără
+<code>indoor=yes</code> nu se întreabă niciodată &mdash; locul <em>este</em> deja un loc de joacă,
+doar că nu interior.</p>
 
 <h2>Cipul Scaun rulant</h2>
 <p>Cipul <em>Scaun rulant</em> arată doar locurile cu <code>wheelchair=yes</code> în OSM. <code>limited</code> (o treaptă de cel mult 7&nbsp;cm sau e nevoie de ajutor) și <code>toilets:wheelchair=yes</code> singur nu ajung; ambele apar totuși în fereastră, împreună cu <code>wheelchair:description</code>. Un loc fără etichetă nu este inaccesibil, OSM pur și simplu nu spune nimic, așa că cipul doar filtrează și nu colorează nimic. Cipul filtrează la fel cercurile albastre (locuri cu colț de joacă): rămân doar cele cu <code>wheelchair=yes</code>.</p>

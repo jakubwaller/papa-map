@@ -197,10 +197,22 @@ promet. <code>no</code> non plus, ni <code>limited</code> &mdash; le wiki défin
 <code>kids_area:indoor=no</code> explicite est présent, il l'emporte sur un simple
 <code>kids_area=yes</code>.</p>
 <p>C'est un badge, pas un quatrième statut. Un lieu sans ces tags n'est pas pour autant « sans coin
-jeux » &mdash; OSM n'en dit tout simplement rien. Il n'y a donc ici ni gris ni appel à contribuer :
-avec <code>changing_table:location</code>, le silence est parlant, parce qu'on sait que la table
-existe. Ici presque tous les objets se taisent, et cela ne veut rien dire. Si tu connais un coin
-jeux, ajoute-le quand même &mdash; dans l'éditeur OSM, avec <code>kids_area=yes</code>.</p>
+jeux » &mdash; OSM n'en dit tout simplement rien. Il n'y a donc ici pas de gris.</p>
+<p>C'est justement pour ça que le popup pose la question. Sur chaque marqueur où OSM ne dit rien
+d'un coin jeux, quelle que soit sa couleur, une ligne apparaît (sous les pièces, là où le marqueur
+demande aussi la pièce) : <em>Coin jeux pour enfants&nbsp;?</em>, avec trois réponses. <em>à
+l'intérieur</em> écrit <code>kids_area:indoor=yes</code> avec <code>kids_area=yes</code>,
+<em>dehors seulement</em> écrit <code>kids_area=yes</code> avec <code>kids_area:indoor=no</code>,
+<em>aucun</em> écrit <code>kids_area=no</code> &mdash; sous ton propre compte OSM, dans un
+changeset à part, exactement les tags que MapComplete écrit pour la même question. La question
+porte sur un coin jeux en général, pas seulement intérieur : <code>kids_area=no</code> veut dire
+« il n'y a nulle part où jouer ici » dans OSM, donc une boulangerie avec une aire de jeux dans le
+jardin reçoit <em>dehors seulement</em> plutôt qu'un faux non. L'anneau apparaît (ou reste absent)
+au prochain build nocturne. Personne n'est interrogé deux fois : un <code>kids_area</code>
+<em>ou</em> <code>kids_area:indoor</code> déjà renseigné, quelle que soit la valeur, retire la
+question. Sur un <code>leisure=playground</code> sans <code>indoor=yes</code>, elle n'est jamais
+posée du tout &mdash; l'endroit <em>est</em> déjà un endroit où jouer, juste pas à
+l'intérieur.</p>
 
 <h2>La puce Fauteuil roulant</h2>
 <p>La puce <em>Fauteuil roulant</em> n'affiche que les lieux portant <code>wheelchair=yes</code> dans OSM. <code>limited</code> (une marche de 7&nbsp;cm au plus, ou de l'aide nécessaire) et <code>toilets:wheelchair=yes</code> seul ne suffisent pas ; les deux figurent tout de même dans la fenêtre, avec <code>wheelchair:description</code>. Un lieu sans ce tag n'est pas inaccessible, OSM n'en dit simplement rien : la puce filtre, elle ne colore rien. La puce filtre de la même façon les cercles bleus (lieux avec coin jeux) : seuls restent ceux qui portent <code>wheelchair=yes</code>.</p>
