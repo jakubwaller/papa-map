@@ -72,6 +72,88 @@
      Objekt geprüft wird, merkt sich der Browser im Session Storage (Schlüssel
      <code>papamap-edit-check</code>) und verwirft es beim Schließen des Tabs — rein funktional,
      nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+  <h2>Die App (iPhone, iPad)</h2>
+  <p>PapaMap gibt es zusätzlich als App, verteilt über den App Store und über TestFlight. Die App
+     ist dieselbe Karte in einer nativen Hülle. Es gilt derselbe Grundsatz: kein Konto bei uns,
+     keine Analyse-, Tracking- oder Werbebausteine, keine Absturzberichte an uns, keine
+     Push-Nachrichten. Die App spricht mit zwei Servern — papamap.de für die Wickeltisch-Daten und
+     die Offline-Städte, openstreetmap.org für Kartenkacheln und für Ihre Antworten. Die folgenden
+     Abschnitte beschreiben, was in der App anders oder zusätzlich passiert; sonst gilt das oben
+     Gesagte unverändert.</p>
+  <h2>App: Daten von papamap.de</h2>
+  <p>Beim Start lädt die App die Wickeltisch-Daten von papamap.de und legt eine Kopie im eigenen
+     Datenverzeichnis der App ab, damit die Karte auch ohne Netz Pins zeigt. Das sind gewöhnliche
+     Abrufe fester Dateien; dabei sieht der Server dasselbe wie bei einem Website-Besuch (siehe
+     „Hosting / Server-Logs“ und „Cloudflare“ oben). Die Abrufe enthalten keine Angaben zu Ihrer
+     Person und keinen Standort. Die Kopie liegt nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+  <h2>App: Kartenmaterial und Offline-Städte</h2>
+  <p>Auch die App lädt Kartenkacheln von tile.openstreetmap.org; dabei wird Ihre IP-Adresse an die
+     OpenStreetMap Foundation übertragen (siehe oben). Geladen werden die Kacheln des gerade
+     angezeigten Kartenausschnitts — also der Ausschnitt, den Sie ansehen, nicht Ihre Koordinaten.
+     Zusätzlich können Sie über „Stadt offline speichern“ den Kartenausschnitt einer Stadt auf das
+     Gerät laden. Die Datei kommt von papamap.de; der Abruf nennt dem Server, wie jeder Dateiabruf,
+     die gewählte Stadt. Welche Städte gespeichert sind, merkt sich die App auf dem Gerät
+     (Schlüssel <code>papamap-offline-cities</code>). Eine gespeicherte Stadt zeichnet die App aus
+     der Datei auf dem Gerät; ohne Netz werden gar keine Kacheln abgerufen. Mit „Löschen“ im selben
+     Dialog entfernen Sie eine Stadt wieder.</p>
+  <h2>App: Standort</h2>
+  <p>Der Standort-Knopf, die Suche nach dem nächsten Wickeltisch, der Siri-Kurzbefehl und das
+     Home-Bildschirm-Widget fragen Ihren Standort über iOS ab — erst nach Ihrer ausdrücklichen
+     Erlaubnis („Beim Verwenden der App“), die Sie in den iOS-Einstellungen jederzeit widerrufen
+     können. Die Position wird ausschließlich auf Ihrem Gerät verarbeitet: Die Suche nach dem
+     nächsten nutzbaren Wickeltisch läuft gegen die Daten, die ohnehin schon auf dem Gerät liegen.
+     Der Standort wird nicht an diesen Server und nicht an Dritte übertragen, nicht gespeichert und
+     nicht protokolliert — auch nicht aus dem Widget und nicht aus dem Kurzbefehl heraus. Das
+     Widget rechnet den nächsten Wickeltisch in regelmäßigen Abständen auf dem Gerät neu, solange
+     es auf dem Home-Bildschirm oder dem Sperrbildschirm liegt. Nach einem Tipp auf den
+     Standort-Knopf zeigt die Karte Ihre Umgebung; die Kacheln für diesen Ausschnitt lädt sie dann
+     wie oben beschrieben von tile.openstreetmap.org.</p>
+  <h2>App: Widget und Siri-Kurzbefehl</h2>
+  <p>Damit das Widget und der Kurzbefehl denselben Wickeltisch nennen wie die Karte, legt die App
+     eine verkürzte Kopie der Wickeltisch-Daten (Koordinaten, Zustand, Name, OSM-Link) sowie Ihre
+     beiden Einstellungen — Papa- oder Mama-Sicht und Sprache — in einem gemeinsamen Bereich auf
+     dem Gerät ab, den nur die App und ihr Widget lesen können. Beides bleibt auf dem Gerät
+     (§ 25 Abs. 2 Nr. 2 TDDDG). Siri und Kurzbefehle sind eine Funktion von iOS; wie Apple eine
+     gesprochene Anfrage verarbeitet, richtet sich nach Apples Datenschutzbestimmungen.</p>
+  <h2>App: Einstellungen auf dem Gerät</h2>
+  <p>Die App speichert dieselben funktionalen Schlüssel wie die Website — Sprache
+     (<code>papamap-lang</code>), Papa- oder Mama-Sicht (<code>papamap-mode</code>), den Filter
+     „Barrierefrei“ (<code>papamap-wheelchair</code>) und, nach einer Anmeldung, das Zugriffstoken
+     und Ihren OSM-Anzeigenamen (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>) —
+     nur eben im Speicher der App statt im Browser. Rein funktional, ohne Tracking, nur auf Ihrem
+     Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+  <h2>App: Anmeldung bei OpenStreetMap</h2>
+  <p>Die Anmeldung läuft wie auf der Website (OAuth 2 mit PKCE), mit einem Unterschied: Die
+     Anmeldeseite von openstreetmap.org öffnet die App im System-Browser Ihres Geräts — damit Sie
+     dort Ihre eigene OSM-Sitzung nutzen — und OSM schickt Sie anschließend über die Adresse
+     <code>papamap://auth</code> in die App zurück. Ihr Passwort sieht die App nie. Ihre Antwort
+     schreibt die App direkt an api.openstreetmap.org, als Änderungssatz unter Ihrem eigenen
+     OSM-Konto und Namen; es gelten die
+     <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">Datenschutzbestimmungen der
+     OSMF</a>. Dieser Server erfährt davon nichts. Ohne Anmeldung bleibt die Karte vollständig
+     nutzbar.</p>
+  <h2>App: Links auf andere Seiten</h2>
+  <p>Jeder Link, der die Karte verlässt — die Seiten dieser Website, openstreetmap.org,
+     MapComplete, StreetComplete — öffnet im System-Browser Ihres Geräts, in einer Ansicht
+     innerhalb der App. Ab dort gilt die Datenschutzerklärung des jeweiligen Angebots; für die
+     Seiten dieser Website gilt diese Erklärung.</p>
+  <h2>App: Apple (App Store und TestFlight)</h2>
+  <p>Die Verteilung über den App Store und über TestFlight ist Sache von Apple. Apple ist dafür
+     eigenständig verantwortlich und verarbeitet die dabei anfallenden Daten nach seinen eigenen
+     Datenschutzbestimmungen. Aus dem App Store erhalten wir Kennzahlen und Absturzberichte nur in
+     zusammengefasster Form und nur, soweit Sie auf Ihrem Gerät dem Teilen mit Entwicklern
+     zugestimmt haben. Nehmen Sie an einem Test über TestFlight teil, übermittelt Apple uns nach
+     seinen Bedingungen Absturzdaten und — wenn Sie eine Rückmeldung senden — diese Rückmeldung
+     samt den Angaben, die Apple dazu mitliefert, etwa der E-Mail-Adresse, mit der Sie eingeladen
+     wurden. Wir verwenden das ausschließlich zur Fehlersuche (Art. 6 Abs. 1 lit. f DSGVO). Die App
+     selbst sendet uns nichts davon.</p>
+  <h2>App: Widerruf und Löschen</h2>
+  <p>Die Standortfreigabe widerrufen Sie in den iOS-Einstellungen bei PapaMap; gespeicherte Städte
+     löschen Sie im Dialog „Stadt offline speichern“ mit „Löschen“; von OpenStreetMap melden Sie
+     sich im Pin mit „Abmelden“ ab. Löschen Sie die App, verschwindet damit alles, was sie auf dem
+     Gerät abgelegt hat: die Kopie der Wickeltisch-Daten, die Offline-Städte, die Einstellungen und
+     das Zugriffstoken. Was Sie zu OpenStreetMap geschrieben haben, bleibt dort — das ist der Sinn
+     der Sache.</p>
   <h2>Kontakt per E-Mail oder Formular</h2>
   <p>Bei Kontakt per E-Mail werden die übermittelten Angaben nur zur Bearbeitung des Anliegens
      verarbeitet (Art. 6 Abs. 1 lit. f DSGVO) und nicht weitergegeben.</p>
@@ -83,5 +165,6 @@
   <p>Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung (Art. 18),
      Datenübertragbarkeit (Art. 20), Widerspruch (Art. 21 DSGVO). Kontakt:
      <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a>.</p>
-  <p style="margin-top:30px"><a href="./">← Zur Karte</a></p>
+  <p style="margin-top:30px">Stand: 18. September 2026</p>
+  <p><a href="./">← Zur Karte</a></p>
 </body></html>
