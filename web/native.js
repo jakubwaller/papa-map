@@ -37,44 +37,37 @@ const TILES_PATH = "papamap/tiles";
 // and again to read it, and swallowed whatever went wrong: build 18 came up in
 // airplane mode with the saved city and no pins (iPhone, 2026-09-18).
 //
-// Every wait between launch and the first pin is one of the two network calls
-// below, and neither iOS nor WebKit bounds one usefully. A request into a
-// black hole — airplane mode, a Wi-Fi with no route out, a captive portal —
-// does not fail: it sits on a connect timeout. Measured against an address
-// that drops packets (iPhone 17 simulator, iOS 27, 18 Sep 2026): the native
-// downloader took 75.2 s per file, and the page's own fetch, which WebKit
-// serialises per host, took 975 s, 1050 s, 1125 s and 1200 s for the four
-// files. boot() waits for all of them, so the map drew — a saved city is read
-// off the phone and owes the network nothing — and the pins came 1283 s
-// later. That is what build 18 and build 19 did in airplane mode, and why a
-// port that answers RST (a stopped local mirror) never reproduced it: refused
-// is not unreachable.
+// Every wait for the network is one of two calls, and neither iOS nor WebKit
+// bounds one usefully: a request into a black hole — airplane mode, a Wi-Fi
+// with no route out, a captive portal — does not fail, it sits on a connect
+// timeout. Measured against an address that drops packets (iPhone 17
+// simulator, iOS 27, 18 Sep 2026): the native downloader took 75.2 s per
+// file, and the page's own fetch, which WebKit serialises per host, took
+// 975 s, 1050 s, 1125 s and 1200 s for the four files. So the page keeps its
+// own clock, NET_MS, rather than trust either of those calls to give up on
+// their own; the timeouts it hands the native downloader below are idle
+// timeouts, not total ones, so they never cut a download that is still
+// arriving.
 //
-// So the page keeps its own clock, NET_MS, and does not ask the OS for
-// permission to stop waiting. How long that clock runs depends on what the
-// waiting is worth, which is to say on whether there is anything to fall back
-// to — a `stat` answers that before a byte is parsed:
+// A copy already on the phone answers at once, on every launch — no clock in
+// front of the pins, and no question asked of the network first. Build 21
+// (TestFlight, the owner's iPhone) still spent the old eight-second wait in
+// airplane mode: the loader's own note read `online=true (native)`, because
+// an auto-connect VPN profile made iOS report the network reachable even
+// with no route out (SCNetworkReachability answers the on-demand flags the
+// profile sets, and the plugin the old code asked read those as connected).
+// Turning the VPN off made the wait disappear. So no answer iOS can give to
+// "is there a network" is trustworthy — not on that phone, and not on anyone
+// else's with the same kind of profile — and the only question worth asking
+// at all is "is there a copy", which reading it either answers or doesn't,
+// with nothing asked of the network. The copy draws, and a download for
+// whatever is newer runs behind it (see `loadJSONNative` and
+// `backgroundRefresh` below).
 //
-//   COPY_MS  a copy is on the phone. It is read in under a tenth of a second,
-//            so the network is racing something that has already won:
-//            yesterday's tables now beat today's tables in twenty minutes, and
-//            the toast says which of the two is on screen. Eight seconds is
-//            the website's own number for exactly this trade (`sw.js`,
-//            DATA_TIMEOUT_MS) — one rule for both, already explained in
-//            FEATURES.md, rather than a second magic number beside it.
-//   NET_MS   nothing is stored. There is nothing to cut to, an empty map helps
-//            nobody, and this is somebody's first launch — so the download
-//            gets the long rope and the old failure path.
-//
-// And a reader the OS already knows is offline waits for nothing at all: the
-// copy is read at once (see below).
-//
-// Letting go is not cancelling — the native download runs on, into the `.new`
-// file the loader reads, so a first launch too slow for the clock draws an
-// empty map once and the launch after it has the data. The iOS timeouts below
-// are idle timeouts, not total ones, so they never cut a download that is
-// still arriving.
-const NET_MS = 20000, COPY_MS = 8000;
+// With nothing stored — a first launch — there is nothing to draw and
+// nothing to shortcut to, so that case keeps the old long rope: NET_MS for
+// the download, then the page's own fetch, then nothing.
+const NET_MS = 20000;
 
 // One clock per load, shared by both attempts rather than granted to each —
 // the fallback must not start a fresh budget after the download has spent one.
@@ -104,38 +97,9 @@ export function budget(ms, now = Date.now) {
   return race;
 }
 
-// ---- Is there a network at all? ----
-// Asked once a launch, before the four loads, because the answer decides
-// whether any of them talks to the network.
-//
-// `navigator.onLine` is not an answer on iOS. Build 20 came up in airplane
-// mode on the owner's iPhone reporting **online=true** in the app's WKWebView,
-// so the shortcut it guards never fired and the reader waited out the whole
-// eight seconds while four files that were already on the phone sat there.
-// The Network plugin asks the OS instead: SCNetworkReachability on iOS (at
-// 8.0.1 — a reachability check on the zero address, not NWPathMonitor),
-// ConnectivityManager on Android, where "connected" means a VALIDATED network
-// and can therefore be false for a launch on a network still being checked.
-//
-// Bounded like everything else here: a plugin call that never comes back must
-// not become the new unbounded wait. No answer in time is not treated as
-// offline, because a wrong "offline" costs the reader a refresh they could
-// have had, while a wrong "online" only costs them the clock they used to wait
-// anyway. And "connected" is not "reachable": a Wi-Fi with no way out still
-// reports connected, which is exactly what the eight seconds are still there
-// for.
-const STATUS_MS = 400;
-export async function connectivity(net = plugin("Network"), ms = STATUS_MS) {
-  if (net?.getStatus) {
-    try {
-      const { connected } = await budget(ms)(net.getStatus());
-      if (typeof connected === "boolean") return { online: connected, from: "native" };
-    } catch { /* no answer inside the bound, or a plugin that would not say */ }
-  }
-  return { online: globalThis.navigator?.onLine !== false, from: "navigator" };
-}
-
-// A download the clock let go of, finished on its own time.
+// A download the clock let go of, finished on its own time — only reachable
+// from the no-copy path below, where the download itself is the only thing
+// that will ever become tomorrow's stored copy.
 //
 // Without this, a link too slow to make the budget would refresh the copy on
 // no launch at all: every launch would abandon the download, read the same
@@ -158,19 +122,73 @@ function promoteLate(io, running, fresh, path) {
   ).catch(() => {});
 }
 
+// The background refresh a stored copy starts once it has already drawn (see
+// loadJSONNative below): runs on its own time and settles into exactly one of
+// three answers, and never rejects — whatever the network did is a fact for
+// the caller to read, not a reason to fail its own await.
+//
+//   { ok: true,  json }        a fresh file landed and reads differently from
+//                               what the copy just drew.
+//   { ok: true,  json: null }  it landed and reads the same — the ordinary
+//                               night: the dataset is rebuilt once a day, so
+//                               most launches see no change at all.
+//   { ok: false, json: null }  nothing fresh could be had: the download
+//                               failed, or what it fetched would not parse.
+//
+// Bounded by the same clock the rest of this file trusts: io.download() (see
+// nativeIO below) hands the native downloader connectTimeout/readTimeout of
+// NET_MS each — an idle timeout, not a total one — so a host that never
+// answers at all, the black hole this whole file is written against, still
+// fails within NET_MS of going quiet and this settles within it. A host that
+// answers slowly but keeps answering can run longer; nothing here cuts a
+// download that is still arriving.
+//
+// Compared as raw text, not parsed objects: these files run to several
+// megabytes, and parsing — or worse, JSON.stringifying — that much just to
+// learn "nothing changed" is exactly the cost a nightly-rebuilt dataset
+// should not pay on a phone on every single launch. `oldText` is read by the
+// caller before this is ever invoked, in the course of the read that already
+// has to happen to draw the copy — reading it again after the download lands
+// would, when the only copy on the phone was `.new`, be reading the very file
+// the download just wrote over.
+function backgroundRefresh(io, url, oldText, path, fresh) {
+  return (async () => {
+    try { await io.download(url, fresh); }
+    catch { return { ok: false, json: null }; }
+    let text;
+    try { text = await io.text(fresh); }
+    catch { await io.remove(fresh); return { ok: false, json: null }; }
+    let json;
+    try { json = JSON.parse(text); }
+    catch { await io.remove(fresh); return { ok: false, json: null }; }   // this launch wrote it, and it is not JSON
+    if (text === oldText) {
+      await io.remove(fresh);
+      return { ok: true, json: null };
+    }
+    await io.replace(fresh, path).catch(() => {});
+    return { ok: true, json };
+  })().catch(() => ({ ok: false, json: null }));   // belt and braces: see loadJSONNative's own note on a throw from io.download
+}
+
 function nativeIO(fs = plugin("Filesystem")) {
+  const local = async (path, as) => {
+    const { uri } = await fs.getUri({ path, directory: DIR });
+    const r = await fetch(cap().convertFileSrc(uri));
+    if (!r.ok) throw new Error(`${path}: ${r.status}`);
+    return as === "text" ? r.text() : r.json();
+  };
   return {
     // The same bound said again where the OS can act on it: the page stops
     // waiting either way, and these keep the abandoned task from holding the
     // connection — a fetch left queued is one the next launch waits behind.
     download: (url, path) => fs.downloadFile({ url, path, directory: DIR, recursive: true,
                                                connectTimeout: NET_MS, readTimeout: NET_MS }),
-    read: async (path) => {
-      const { uri } = await fs.getUri({ path, directory: DIR });
-      const r = await fetch(cap().convertFileSrc(uri));
-      if (!r.ok) throw new Error(`${path}: ${r.status}`);
-      return r.json();
-    },
+    // Parsed, for the paths that need the object itself.
+    read: (path) => local(path, "json"),
+    // Raw, for the one path that only needs to know whether two files say the
+    // same thing (backgroundRefresh) — a string compare, not a parse of
+    // several megabytes of JSON on every launch.
+    text: (path) => local(path, "text"),
     // rename() does not promise to overwrite on both platforms, so where it
     // refuses, the old copy goes first. Between those two calls the only copy
     // is the .new one — which is why the loader reads that too.
@@ -180,13 +198,6 @@ function nativeIO(fs = plugin("Filesystem")) {
       catch { await fs.deleteFile({ path: to, directory: DIR }).catch(() => {}); await move(); }
     },
     remove: (path) => fs.deleteFile({ path, directory: DIR }).catch(() => {}),
-    // Is there a copy, and how big — asked of the file system, not of a parse
-    // of 18 MB. Null means "not there", which is the only distinction the
-    // loader needs before it decides how long to wait.
-    size: async (path) => {
-      try { return (await fs.stat({ path, directory: DIR })).size ?? null; }
-      catch { return null; }
-    },
     get: async (url) => {
       const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(NET_MS) });
       if (!r.ok) throw new Error(String(r.status));
@@ -195,74 +206,80 @@ function nativeIO(fs = plugin("Filesystem")) {
   };
 }
 
-// The site's loadJSON, done the app's way: papamap.de first, the stored copy
-// when the network fails. Same contract as the service worker's
-// X-PapaMap-Source header — { json, fromStore }.
+// The site's loadJSON, done the app's way: the stored copy first if one is on
+// the phone — drawn at once, no network question, no clock — refreshed
+// behind it; papamap.de itself if there is no copy to draw. The synchronous
+// half keeps the service worker's contract, `{ json, fromStore }`
+// (X-PapaMap-Source); `refreshed` is new, a promise of what the background
+// download found — see `backgroundRefresh` above for its three shapes. It is
+// only ever present when `fromStore` is true: a load that already drew fresh
+// data has nothing left to refresh, so it carries the trivial "nothing
+// changed" answer instead of nothing at all, which keeps app.js from having
+// to ask which shape it got.
 //
-// One read path, online and off: a launch with a network reads the very file
-// a launch without one will, so a copy that cannot be read shows on the first
-// day and not in the basement. The download lands beside the good copy and
-// replaces it only once it has parsed. Should the downloader itself fail with
-// a network there, the page's own fetch still draws the map — without a copy.
+// A copy, when there is one, answers before the download that will refresh it
+// even starts: `.new` is itself a file this can read (the only copy there is,
+// the launch after one too slow for the old clock), and starting the download
+// before that read finishes would let it overwrite the very file being read.
 //
-// Neither network call is waited on for longer than one budget between them:
-// the pins are the point, and a copy on the phone that is read in 90 ms must
-// not queue behind a request that is never going to be answered.
+// With nothing stored there is nothing to draw and nothing to shortcut to: the
+// download gets NET_MS, then the page's own fetch shares what is left of that
+// budget, and only then does the load answer null — a first launch that slow
+// draws an empty map once, and the download, let go of but not cancelled,
+// still lands and becomes tomorrow's copy (`promoteLate`).
 //
 // `note` is filled in on the way through: which path answered, how long it
-// took, what was said about the network, how big the stored copy is. The
-// tests read it; the page does not (the TestFlight block that printed it, in
-// builds 20 and 21, is gone). It is an out-parameter rather than a return
-// value so that the { json, fromStore } contract app.js reads — and the `null`
-// that means "nothing anywhere" — are exactly what they were.
-export async function loadJSONNative(url, io = nativeIO(), {
-  note = {}, copyMs = COPY_MS, netMs = NET_MS,
-  online = globalThis.navigator?.onLine !== false, onlineFrom = "navigator",
-} = {}) {
+// took, how big the stored copy was. The tests read it; the page does not
+// (the TestFlight block that printed it, in builds 20 and 21, is gone). It is
+// an out-parameter rather than a return value so that the { json, fromStore }
+// contract app.js reads — and the `null` that means "nothing anywhere" —
+// are exactly what they were.
+export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = NET_MS } = {}) {
   const name = url.split("/").pop().split("?")[0];
   const path = `${DATA_PATH}/${name}`;
   const fresh = `${path}.new`;
   const began = Date.now();
   // Filled in before the first await, so a note the caller is holding is a
-  // whole row from the moment the load starts: the dialog can be opened while
-  // the four are still in flight and still print four lines.
-  Object.assign(note, { file: name, step: "none", ms: 0, online, onlineFrom, bytes: null });
+  // whole row from the moment the load starts.
+  Object.assign(note, { file: name, step: "none", ms: 0, bytes: null });
   const step = (s) => { note.step = s; note.ms = Date.now() - began; };
 
-  // One stat, before anything is read or fetched: it decides both how long the
-  // network gets and whether it is asked at all.
-  const bytes = (await io.size(path)) ?? (await io.size(fresh));
-  note.bytes = bytes;
-
+  // `path` first, `.new` only when `path` is missing or will not parse — the
+  // same order a late promotion has to respect, and for the same reason: a
+  // corrupt `path` must not shadow a good `.new` sitting beside it.
   const stored = async () => {
     for (const [copy, s] of [[path, "stored"], [fresh, "stored-new"]]) {
       try {
-        const json = await io.read(copy);
+        const text = await io.text(copy);
+        const json = JSON.parse(text);
         step(s);
-        return { json, fromStore: true };
+        return { json, text, copy };
       } catch { /* the other one */ }
     }
     return null;
   };
 
-  // A reader the OS already says is offline is not made to wait for a network
-  // to prove it. navigator.onLine lies in one direction only — a Wi-Fi with no
-  // internet still reports "online" — so a false is worth acting on and a true
-  // is worth nothing, which is the way round this needs it. With no copy there
-  // is nothing to shortcut to, so that case goes the long way regardless.
-  if (!online && bytes != null) {
-    const hit = await stored();
-    if (hit) return hit;
+  const hit = await stored();
+  if (hit) {
+    note.bytes = hit.text.length;
+    return {
+      json: hit.json,
+      fromStore: true,
+      refreshed: backgroundRefresh(io, SITE + url, hit.text, path, fresh),
+    };
   }
 
-  const net = budget(bytes == null ? netMs : copyMs);
+  // No copy anywhere: today's long path, unchanged in every particular but
+  // the network question this file no longer asks first.
+  const net = budget(netMs);
   // Always a promise, never a throw. A missing Filesystem plugin makes
   // `fs.downloadFile` a synchronous TypeError, and thrown from out here — it
   // has to be started before the try, so that the clock can let go of it and
   // still leave something to hold — it would reject the whole load, and
   // boot()'s Promise.all with it, rather than fall through to the page's own
-  // fetch the way the comment above this function promises. (`io.size` hides
-  // the same missing plugin behind a null, so nothing upstream would notice.)
+  // fetch the way the comment above this function promises. (`io.text` above
+  // hides the same missing plugin behind a throw that `stored()` already
+  // reads as "no copy".)
   const running = (async () => io.download(SITE + url, fresh))();
   // A download the clock let go of, held until the read below is done with the
   // two files a promotion would move. See the wait at the end.
@@ -286,7 +303,7 @@ export async function loadJSONNative(url, io = nativeIO(), {
     // in hand, and the .new file it sits in is read below when `path` is not.
     await io.replace(fresh, path).catch(() => {});
     step("download");
-    return { json, fromStore: false };
+    return { json, fromStore: false, refreshed: Promise.resolve({ ok: true, json: null }) };
   }
   // With the budget gone there is no time left to hear a second request, and
   // issuing one anyway is not free: the race below would reject on the next
@@ -296,20 +313,13 @@ export async function loadJSONNative(url, io = nativeIO(), {
     try {
       const fetched = await net(io.get(SITE + url));
       step("fetch");
-      return { json: fetched, fromStore: false };
+      return { json: fetched, fromStore: false, refreshed: Promise.resolve({ ok: true, json: null }) };
     } catch { /* no network, or none that answers */ }
   }
-  const hit = await stored();
-  // Only now, and not in the catch above. Promoting moves the very two files
-  // the read has just been working through, and on iOS a rename over an
-  // existing destination is refused, so the ordinary promotion is delete
-  // `path` then rename `.new` onto it. Attached any earlier, a download that
-  // landed while an 18 MB read was in flight — seconds, on a phone — would
-  // unlink one file and consume the other underneath it, and a reader on a
-  // link that finishes just after the clock would get no pins at all: the
-  // exact failure this whole change exists to remove.
+  // Only now, and not in the catch above. `late`, if there is one, is left to
+  // promoteLate rather than awaited: the pins already drew from the copy or
+  // not at all, and this call is done either way.
   if (late) promoteLate(io, late, fresh, path);
-  if (hit) return hit;
   step("none");
   return null;
 }

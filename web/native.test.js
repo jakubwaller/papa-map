@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { locateNative, loadJSONNative, connectivity, budget } from "./native.js";
+import { locateNative, loadJSONNative, budget } from "./native.js";
 
 // A Geolocation plugin that plays back fixes: [ms, accuracy in metres].
 function fakeGeo(fixes, { permission = "granted" } = {}) {
@@ -86,6 +86,11 @@ test("zoomed out there is no opinion, so nothing is unmounted or read", () => {
 function fakeIO({ net = true, downloader = true, files = {}, body = { n: 1 }, replaceFails = false,
                   hangs = [] } = {}) {
   const forever = () => new Promise(() => {});
+  // Raw text, the way a real file on the phone is: an object round-trips
+  // through JSON.stringify, and the "garbage" sentinel is left exactly as it
+  // is — a bare word, not valid JSON — so JSON.parse rejects it the way a
+  // truncated download would be.
+  const asText = (v) => (typeof v === "string" ? v : JSON.stringify(v));
   const io = {
     log: [], files,
     download: async (url, path) => {
@@ -100,15 +105,17 @@ function fakeIO({ net = true, downloader = true, files = {}, body = { n: 1 }, re
       if (files[path] === "garbage") throw new SyntaxError("not JSON");
       return files[path];
     },
+    text: async (path) => {
+      io.log.push(`text ${path}`);
+      if (!(path in files)) throw new Error("no such file");
+      return asText(files[path]);
+    },
     replace: async (from, to) => {
       io.log.push(`replace ${to}`);
       if (replaceFails) throw new Error("rename failed");
       files[to] = files[from]; delete files[from];
     },
     remove: async (path) => { io.log.push(`remove ${path}`); delete files[path]; },
-    // The stat the loader asks before it decides how long to wait. Not logged:
-    // it is bookkeeping, and the log assertions above are about the I/O.
-    size: async (path) => (path in files ? JSON.stringify(files[path]).length : null),
     get: async () => {
       io.log.push("get");
       if (hangs.includes("get")) return forever();
@@ -119,174 +126,185 @@ function fakeIO({ net = true, downloader = true, files = {}, body = { n: 1 }, re
   return io;
 }
 const COPY = "papamap/data/changing_tables.geojson";
-// Both of the loader's clocks, wound down to test length.
-const BRIEF = { copyMs: 30, netMs: 30 };
+// The no-copy path's own clock, wound down to test length.
+const BRIEF = { netMs: 30 };
 
-test("online: the download becomes the copy, and the map is drawn from that very file", async () => {
+test("no copy, online: the download becomes the copy, and the map is drawn from that very file", async () => {
   const io = fakeIO();
   const r = await loadJSONNative("data/changing_tables.geojson?v=1", io);
-  assert.deepEqual(r, { json: { n: 1 }, fromStore: false });
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 1 }, fromStore: false });
+  assert.deepEqual(await r.refreshed, { ok: true, json: null }, "already fresh: nothing left to refresh");
   assert.deepEqual(io.files, { [COPY]: { n: 1 } });
-  assert.deepEqual(io.log, [`download ${COPY}.new`, `read ${COPY}.new`, `replace ${COPY}`]);
+  assert.deepEqual(io.log, [`text ${COPY}`, `text ${COPY}.new`, `download ${COPY}.new`,
+                            `read ${COPY}.new`, `replace ${COPY}`]);
 });
 
-test("offline: the stored copy, and it says so", async () => {
-  const io = fakeIO({ net: false, files: { [COPY]: { n: 0 } } });
-  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io), { json: { n: 0 }, fromStore: true });
-});
-
-test("offline with nothing stored is null, not a throw", async () => {
+test("no copy, offline: null, not a throw", async () => {
   assert.equal(await loadJSONNative("data/stats.json", fakeIO({ net: false })), null);
 });
 
-test("a download that does not parse never replaces the good copy", async () => {
-  const io = fakeIO({ body: "garbage", files: { [COPY]: { n: 0 } } });
-  io.get = async () => { throw new Error("same garbage"); };
-  const r = await loadJSONNative("data/changing_tables.geojson", io);
-  assert.deepEqual(r, { json: { n: 0 }, fromStore: true });
-  assert.deepEqual(io.files[COPY], { n: 0 });
-  assert.ok(!io.log.includes(`replace ${COPY}`));
-  assert.ok(!(`${COPY}.new` in io.files), "the 18 MB that did not parse are not left in the backup");
-});
-
-test("a swap that fails loses nothing: today's map is drawn, and offline the .new file is the copy", async () => {
-  const files = {};
-  const r = await loadJSONNative("data/changing_tables.geojson", fakeIO({ files, replaceFails: true }));
-  assert.deepEqual(r, { json: { n: 1 }, fromStore: false });
-  // The next launch, in airplane mode: `path` was never written, `.new` was.
-  const off = await loadJSONNative("data/changing_tables.geojson", fakeIO({ net: false, files }));
-  assert.deepEqual(off, { json: { n: 1 }, fromStore: true });
-});
-
-test("offline, the good copy is preferred to a .new beside it", async () => {
-  const io = fakeIO({ net: false, files: { [COPY]: { n: 0 }, [`${COPY}.new`]: "garbage" } });
-  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io), { json: { n: 0 }, fromStore: true });
-});
-
-// The bug behind build 18 and build 19: in airplane mode neither call comes
-// back, and boot() waited on both of them — 1283 s on the bench — while the
-// copy on the phone sat there readable in under a tenth of a second. Without
-// the loader's own clock these two never finish at all.
-test("a network that never answers does not hold the stored copy back", async () => {
-  const io = fakeIO({ hangs: ["download", "get"], files: { [COPY]: { n: 0 } } });
-  const started = Date.now();
-  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, BRIEF),
-                   { json: { n: 0 }, fromStore: true });
-  assert.ok(Date.now() - started < 2000, "the loader stopped waiting, the phone answered");
-});
-
-test("a page fetch that never answers is let go too, and shares the one budget", async () => {
-  // The downloader refuses at once; the fallback is the call that hangs, and
-  // it must not be granted a fresh clock of its own.
-  const io = fakeIO({ downloader: false, hangs: ["get"], files: { [COPY]: { n: 0 } } });
-  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, BRIEF),
-                   { json: { n: 0 }, fromStore: true });
-  assert.deepEqual(io.log, [`download ${COPY}.new`, "get", `read ${COPY}`]);
-});
-
-test("a network that never answers and nothing stored is null, not a wait", async () => {
-  assert.equal(await loadJSONNative("data/stats.json", fakeIO({ hangs: ["download", "get"] }), BRIEF),
-               null);
-});
-
-// A phone the OS already calls offline is asked nothing: waiting for a request
-// to fail is waiting, and the copy is right there. (The reverse is not true —
-// a Wi-Fi with no internet still reports onLine, so only `false` is acted on.)
-test("offline by the OS's own account: the copy answers and the network is not asked", async () => {
-  const note = {};
-  // The network would answer here; onLine says there is none, and that settles it.
-  const io = fakeIO({ files: { [COPY]: { n: 0 } } });
-  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, { online: false, note }),
-                   { json: { n: 0 }, fromStore: true });
-  assert.deepEqual(io.log, [`read ${COPY}`], "no download, no fetch, no wait");
-  assert.equal(note.step, "stored");
-  assert.equal(note.online, false);
-});
-
-test("offline with nothing stored still tries: there is nothing to shortcut to", async () => {
+test("no copy, offline, still tries: there is nothing to shortcut to", async () => {
   const io = fakeIO({ net: false });
-  assert.equal(await loadJSONNative("data/stats.json", io, { online: false, ...BRIEF }), null);
+  assert.equal(await loadJSONNative("data/stats.json", io, BRIEF), null);
   assert.ok(io.log.includes("download papamap/data/stats.json.new"),
             "the shortcut needs a copy to cut to; without one the long way is the only way");
 });
 
-test("the clock is short when a copy can answer and long when nothing can", async () => {
-  const clocks = { copyMs: 20, netMs: 600 };
-  let began = Date.now();
-  await loadJSONNative("data/changing_tables.geojson",
-                       fakeIO({ hangs: ["download", "get"], files: { [COPY]: { n: 0 } } }), clocks);
-  const withCopy = Date.now() - began;
-
-  began = Date.now();
-  assert.equal(await loadJSONNative("data/changing_tables.geojson",
-                                    fakeIO({ hangs: ["download", "get"] }), clocks), null);
-  const withNothing = Date.now() - began;
-
-  assert.ok(withCopy < 300, `a copy on the phone is not made to wait (${withCopy} ms)`);
-  assert.ok(withNothing >= 550,
-            `with nothing stored the download keeps its long rope (${withNothing} ms)`);
+test("no copy: a swap that fails loses nothing today, and offline the .new file is the copy", async () => {
+  const files = {};
+  const r = await loadJSONNative("data/changing_tables.geojson", fakeIO({ files, replaceFails: true }));
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 1 }, fromStore: false });
+  // The next launch, in airplane mode: `path` was never written, `.new` was.
+  const off = await loadJSONNative("data/changing_tables.geojson", fakeIO({ net: false, files }));
+  assert.deepEqual({ json: off.json, fromStore: off.fromStore }, { json: { n: 1 }, fromStore: true });
 });
 
-// A download the page stopped waiting for is not a download that stopped. On a
-// link too slow to make the clock, every launch would otherwise abandon it,
-// read the same `path` again and never refresh — the copy would freeze for
-// good — so the one that was let go is promoted when it lands.
-function slowIO(files, lands) {
-  const io = fakeIO({ files });
-  io.download = async (_url, p) => {
-    io.log.push(`download ${p}`);
-    files[p] = await new Promise((settle) => { lands.settle = settle; });
-  };
-  return io;
-}
-
-test("a download the clock let go of becomes the copy when it finally lands", async () => {
-  const files = { [COPY]: { n: 0 } }, lands = {};
-  const io = slowIO(files, lands);
-  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, BRIEF),
-                   { json: { n: 0 }, fromStore: true }, "the phone answered while it ran");
-  lands.settle({ n: 9 });
-  await new Promise((r) => setTimeout(r, 30));
-  assert.deepEqual(files[COPY], { n: 9 }, "and the next launch has today's data");
-  assert.ok(!(`${COPY}.new` in files), "nothing left beside it");
+// The bug behind build 18 and build 19: in airplane mode neither call comes
+// back. Without the loader's own clock, the no-copy path never finishes at all.
+test("no copy, a network that never answers is null, not an unbounded wait", async () => {
+  const started = Date.now();
+  assert.equal(await loadJSONNative("data/stats.json", fakeIO({ hangs: ["download", "get"] }), BRIEF), null);
+  assert.ok(Date.now() - started < 2000, "the loader stopped waiting");
 });
 
-test("a late download that does not parse is dropped and the good copy stands", async () => {
-  const files = { [COPY]: { n: 0 } }, lands = {};
-  const io = slowIO(files, lands);
+test("no copy: a page fetch that never answers is let go too, and shares the one budget", async () => {
+  // The downloader refuses at once; the fallback is the call that hangs, and
+  // it must not be granted a fresh clock of its own.
+  const io = fakeIO({ downloader: false, hangs: ["get"] });
+  assert.equal(await loadJSONNative("data/stats.json", io, BRIEF), null);
+  assert.ok(!io.log.includes(`replace papamap/data/stats.json`));
+});
+
+test("no copy: with the clock already spent the fallback fetch is never issued", async () => {
+  const io = fakeIO({ hangs: ["download"] });
   await loadJSONNative("data/changing_tables.geojson", io, BRIEF);
-  lands.settle("garbage");
-  await new Promise((r) => setTimeout(r, 30));
-  assert.deepEqual(files[COPY], { n: 0 }, "a file that does not parse replaces nothing");
-  assert.ok(!(`${COPY}.new` in files), "and does not stay to be read as a fallback");
+  assert.ok(!io.log.includes("get"),
+            "a second copy of the dataset, over a metered link, that nobody would wait for");
 });
 
-// The promotion moves the very two files the stored read is working through,
-// and on iOS a rename over an existing destination is refused, so the ordinary
-// promotion is: delete `path`, then rename `.new` onto it. Run while an 18 MB
-// read is in flight — seconds, on a phone — that unlinks one file and consumes
-// the other underneath the reader, and a link finishing just after the clock
-// would leave the map with no pins at all: the very failure being fixed here.
-test("a download landing mid-read is promoted only once the read has finished", async () => {
-  const files = { [COPY]: { n: 0 } }, lands = {};
-  const io = slowIO(files, lands);
-  const order = [];
-  const read = io.read, replace = io.replace;
-  io.read = async (p) => {
-    if (p === COPY) {
-      lands.settle({ n: 9 });                               // it lands mid-read
-      await new Promise((r) => setTimeout(r, 20));
-      order.push("the copy was read whole");
-    }
-    return read(p);
-  };
-  io.replace = async (from, to) => { order.push("and only then replaced"); return replace(from, to); };
+// Not a rejection but a throw, which is what a missing Filesystem plugin gives:
+// `fs.downloadFile` is then undefined and calling it raises on the spot. The
+// download has to be started outside the try that guards it — the clock must
+// be able to let go of it and still leave something to come back to — so it
+// is that start which must not be allowed to throw past the loader and take
+// boot()'s Promise.all down with it.
+test("no copy, no downloader at all: the page's own fetch still draws the map", async () => {
+  const io = fakeIO();
+  io.download = () => { throw new TypeError("fs.downloadFile is not a function"); };
+  const r = await loadJSONNative("data/changing_tables.geojson", io, BRIEF);
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 1 }, fromStore: false });
+});
 
-  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, BRIEF),
-                   { json: { n: 0 }, fromStore: true }, "the reader still got their pins");
-  await new Promise((r) => setTimeout(r, 30));
-  assert.deepEqual(order, ["the copy was read whole", "and only then replaced"]);
-  assert.deepEqual(files[COPY], { n: 9 }, "and the promotion still happened");
+// ---- A copy on the phone draws first, on every launch ----
+// The core of "copy first": no clock, no network question, in front of the
+// pins — build 21 spent the old eight-second wait in airplane mode because
+// `navigator.onLine`-by-way-of-the-Network-plugin read `online=true (native)`
+// there, an auto-connect VPN profile making iOS say the network was reachable
+// with no route out. There is no longer any such question to get wrong.
+test("a copy on the phone draws at once, however long the background refresh takes", async () => {
+  const io = fakeIO({ hangs: ["download"], files: { [COPY]: { n: 0 } } });
+  const started = Date.now();
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 0 }, fromStore: true });
+  assert.ok(Date.now() - started < 200, "the copy did not wait on the network at all");
+  assert.equal(typeof r.refreshed.then, "function", "a promise, not awaited here — it may never settle");
+});
+
+test("only .new on the phone: it is read, and the refresh does not start until that read is done", async () => {
+  const files = { [`${COPY}.new`]: { n: 0 } };
+  const io = fakeIO({ files, body: { n: 9 } });
+  const order = [];
+  const text = io.text, download = io.download;
+  io.text = async (p) => { const v = await text(p); order.push(`text ${p}`); return v; };
+  io.download = async (u, p) => { order.push(`download ${p}`); return download(u, p); };
+
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 0 }, fromStore: true });
+  assert.deepEqual(order, [`text ${COPY}.new`, `download ${COPY}.new`],
+                   "the read of the only copy there is finishes before the download that would overwrite it starts");
+  assert.deepEqual(await r.refreshed, { ok: true, json: { n: 9 } });
+  assert.deepEqual(files[COPY], { n: 9 });
+  assert.ok(!(`${COPY}.new` in files));
+});
+
+test("a copy beats a .new beside it, the same order a promotion respects", async () => {
+  const io = fakeIO({ net: false, files: { [COPY]: { n: 0 }, [`${COPY}.new`]: "garbage" } });
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 0 }, fromStore: true });
+  assert.deepEqual(await r.refreshed, { ok: false, json: null });
+});
+
+// ---- The background refresh a stored copy starts ----
+test("a background refresh that finds something new promotes it and hands it back", async () => {
+  const files = { [COPY]: { n: 0 } };
+  const io = fakeIO({ files, body: { n: 9 } });
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual(r.json, { n: 0 }, "the copy drew first");
+  assert.deepEqual(await r.refreshed, { ok: true, json: { n: 9 } });
+  assert.deepEqual(files[COPY], { n: 9 }, "and is now the copy on the phone");
+  assert.ok(!(`${COPY}.new` in files));
+});
+
+test("a background refresh that finds the same thing again reports unchanged, and nothing redraws", async () => {
+  const files = { [COPY]: { n: 0 } };
+  const io = fakeIO({ files, body: { n: 0 } });
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual(await r.refreshed, { ok: true, json: null });
+  assert.deepEqual(files[COPY], { n: 0 }, "the copy is untouched");
+  assert.ok(!(`${COPY}.new` in files), "and nothing is left beside it");
+});
+
+test("a background refresh the network refuses reports failed and leaves the copy alone", async () => {
+  const files = { [COPY]: { n: 0 } };
+  const io = fakeIO({ files, net: false });
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual(await r.refreshed, { ok: false, json: null });
+  assert.deepEqual(files, { [COPY]: { n: 0 } });
+});
+
+test("a background refresh that downloads garbage is dropped, never promoted", async () => {
+  const files = { [COPY]: { n: 0 } };
+  const io = fakeIO({ files, body: "garbage" });
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual(await r.refreshed, { ok: false, json: null });
+  assert.deepEqual(files, { [COPY]: { n: 0 } },
+                   "the file that did not parse never replaces a good copy");
+});
+
+test("a background refresh never rejects, even when the downloader throws synchronously", async () => {
+  const io = fakeIO({ files: { [COPY]: { n: 0 } } });
+  io.download = () => { throw new TypeError("fs.downloadFile is not a function"); };
+  const r = await loadJSONNative("data/changing_tables.geojson", io);
+  assert.deepEqual(r.json, { n: 0 });
+  await assert.doesNotReject(r.refreshed);
+  assert.deepEqual(await r.refreshed, { ok: false, json: null });
+});
+
+// ---- The note: which of the loader's paths answered ----
+test("the note names the path that answered, with the size of what was on the phone", async () => {
+  const fresh = {};
+  await loadJSONNative("data/stats.json", fakeIO(), { note: fresh });
+  assert.deepEqual({ ...fresh, ms: 0 }, { file: "stats.json", step: "download", ms: 0, bytes: null });
+
+  const fell = {};
+  await loadJSONNative("data/stats.json", fakeIO({ downloader: false }), { note: fell });
+  assert.equal(fell.step, "fetch");
+
+  const kept = {};
+  const copy = { "papamap/data/stats.json": { n: 0 } };
+  await loadJSONNative("data/stats.json", fakeIO({ files: copy }), { note: kept });
+  assert.equal(kept.step, "stored");
+  assert.equal(kept.bytes, JSON.stringify({ n: 0 }).length);
+
+  const half = {};
+  await loadJSONNative("data/stats.json",
+                       fakeIO({ files: { "papamap/data/stats.json.new": { n: 2 } } }),
+                       { note: half });
+  assert.equal(half.step, "stored-new", "the half-swapped file names itself as one");
+
+  const nothing = {};
+  await loadJSONNative("data/stats.json", fakeIO({ net: false }), { note: nothing, ...BRIEF });
+  assert.deepEqual({ ...nothing, ms: 0 }, { file: "stats.json", step: "none", ms: 0, bytes: null });
 });
 
 // A timer can go off a millisecond before Date.now() reaches the deadline it
@@ -297,109 +315,6 @@ test("a clock whose timer has fired is spent, whatever the wall clock reads", as
   assert.equal(net.spent(), false, "not before the timer");
   await assert.rejects(net(new Promise(() => {})), /timed out/);
   assert.equal(net.spent(), true, "the timer going off is the budget being spent");
-});
-
-test("with the clock already spent the fallback fetch is never issued", async () => {
-  const io = fakeIO({ hangs: ["download"], files: { [COPY]: { n: 0 } } });
-  await loadJSONNative("data/changing_tables.geojson", io, BRIEF);
-  assert.ok(!io.log.includes("get"),
-            "a second copy of the dataset, over a metered link, that nobody would wait for");
-});
-
-// ---- The note: which of the loader's paths answered ----
-test("the note names the path that answered, with the size of what was on the phone", async () => {
-  const fresh = {};
-  await loadJSONNative("data/stats.json", fakeIO(), { note: fresh });
-  assert.deepEqual({ ...fresh, ms: 0 },
-                   { file: "stats.json", step: "download", ms: 0, online: true,
-                     onlineFrom: "navigator", bytes: null });
-
-  const fell = {};
-  await loadJSONNative("data/stats.json", fakeIO({ downloader: false }), { note: fell });
-  assert.equal(fell.step, "fetch");
-
-  const kept = {};
-  const copy = { "papamap/data/stats.json": { n: 0 } };
-  await loadJSONNative("data/stats.json", fakeIO({ net: false, files: copy }),
-                       { note: kept, ...BRIEF });
-  assert.equal(kept.step, "stored");
-  assert.equal(kept.bytes, JSON.stringify({ n: 0 }).length);
-
-  const half = {};
-  await loadJSONNative("data/stats.json",
-                       fakeIO({ net: false, files: { "papamap/data/stats.json.new": { n: 2 } } }),
-                       { note: half, ...BRIEF });
-  assert.equal(half.step, "stored-new", "the half-swapped file names itself as one");
-
-  const nothing = {};
-  await loadJSONNative("data/stats.json", fakeIO({ net: false }), { note: nothing, ...BRIEF });
-  assert.deepEqual({ ...nothing, ms: 0 },
-                   { file: "stats.json", step: "none", ms: 0, online: true,
-                     onlineFrom: "navigator", bytes: null });
-});
-
-// ---- Is there a network at all ----
-// navigator.onLine answers "yes" in airplane mode on iOS (owner's iPhone,
-// build 20), which is why the loader's instant-offline shortcut never fired
-// there and the reader waited out the whole eight seconds.
-test("the OS's own answer is taken when the plugin is there to give one", async () => {
-  assert.deepEqual(await connectivity({ getStatus: async () => ({ connected: false }) }),
-                   { online: false, from: "native" });
-  assert.deepEqual(
-    await connectivity({ getStatus: async () => ({ connected: true, connectionType: "wifi" }) }),
-    { online: true, from: "native" });
-});
-
-test("with no plugin the page's own idea is used, such as it is", async () => {
-  assert.deepEqual(await connectivity(undefined), { online: true, from: "navigator" });
-  assert.deepEqual(await connectivity({}), { online: true, from: "navigator" },
-                   "a plugin without getStatus is no plugin");
-  assert.deepEqual(await connectivity({ getStatus: async () => ({}) }),
-                   { online: true, from: "navigator" }, "and neither is one that will not say");
-});
-
-test("a status call that never answers is bounded, and counts as online", async () => {
-  const began = Date.now();
-  assert.deepEqual(await connectivity({ getStatus: () => new Promise(() => {}) }, 30),
-                   { online: true, from: "navigator" });
-  assert.ok(Date.now() - began < 2000, "the new question did not become the new wait");
-});
-
-test("a status call that throws is not a reason to call the phone offline", async () => {
-  assert.deepEqual(await connectivity({ getStatus: async () => { throw new Error("nope"); } }, 30),
-                   { online: true, from: "navigator" });
-});
-
-// The point of all of the above: a native "not connected" reaches the loader
-// and stops it asking the network anything at all.
-test("a native offline answer means the loader asks the network nothing", async () => {
-  const io = fakeIO({ files: { [COPY]: { n: 0 } } });   // the network would answer here
-  const { online, from } = await connectivity({ getStatus: async () => ({ connected: false }) });
-  const note = {};
-  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io,
-                                        { online, onlineFrom: from, note }),
-                   { json: { n: 0 }, fromStore: true });
-  assert.deepEqual(io.log, [`read ${COPY}`], "no download, no fetch, no clock");
-  assert.equal(note.onlineFrom, "native");
-});
-
-test("a failing downloader with a network there still draws the live map", async () => {
-  const io = fakeIO({ downloader: false, files: { [COPY]: { n: 0 } } });
-  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io), { json: { n: 1 }, fromStore: false });
-});
-
-// Not a rejection but a throw, which is what a missing Filesystem plugin gives:
-// `fs.downloadFile` is then undefined and calling it raises on the spot. The
-// download has to be started outside the try that guards it — the clock must be
-// able to let go of it and still leave something to come back to — so it is
-// that start which must not be allowed to throw past the loader and take
-// boot()'s Promise.all down with it. The test above passes either way; this one
-// does not, because its fake is not an async function.
-test("a downloader that is not there at all still lets the page's own fetch draw the map", async () => {
-  const io = fakeIO({ files: { [COPY]: { n: 0 } } });
-  io.download = () => { throw new TypeError("fs.downloadFile is not a function"); };
-  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, BRIEF),
-                   { json: { n: 1 }, fromStore: false });
 });
 
 // ---- externalUrl: which links are told they are opened inside the app ----

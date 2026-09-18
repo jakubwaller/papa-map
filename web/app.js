@@ -7,19 +7,19 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app27";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app28";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app27";
+         langUrl } from "./i18n.js?v=app28";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app27";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app28";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount, connectivity } from "./native.js?v=app27";
+         formatMB, citiesToMount } from "./native.js?v=app28";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -1540,33 +1540,32 @@ whenStyleReady(() => {
   if (isNative()) mountSavedCities();
 });
 
-// Set when any dataset file was answered by the service worker's stored copy.
-// That header is the only honest "you are looking at old data" signal there
-// is: navigator.onLine reports the machine's interface, and a Wi-Fi with no
-// internet — or a basement with one bar — says "online" all the same.
+// Set when any dataset file was answered by the service worker's stored copy
+// (the website) or the app's own stored copy (the app, always — copy-first
+// draws from it on every launch). On the website that header is the only
+// honest "you are looking at old data" signal there is: navigator.onLine
+// reports the machine's interface, and a Wi-Fi with no internet — or a
+// basement with one bar — says "online" all the same. In the app it no
+// longer decides the offline toast by itself; see watchRefresh below.
 let fromStore = false;
 
-// What the phone says about the network, asked once a launch (native.js,
-// connectivity) and handed to all four loads. On the website it stays what
-// navigator says, which is all the website ever had.
-let conn = { online: true, from: "navigator" };
-
+// On the website: papamap.de, the service worker's stored copy on a failure
+// (X-PapaMap-Source: cache). In the app: the stored copy first, always, with
+// a background download refreshing it — native.js's loadJSONNative and its
+// `refreshed` promise (see watchRefresh). `refreshed` is undefined on the
+// website, where there is nothing more to ask once loadJSON has answered.
 async function loadJSON(url) {
-  // In the app there is no service worker: native.js fetches from
-  // papamap.de and keeps the last good copy in the app's data directory,
-  // answering the same { json, fromStore } the header below encodes.
   if (isNative()) {
-    const r = await loadJSONNative(url, undefined,
-                                   { online: conn.online, onlineFrom: conn.from });
+    const r = await loadJSONNative(url);
     if (r?.fromStore) fromStore = true;
-    return r?.json ?? null;
+    return { json: r?.json ?? null, refreshed: r?.refreshed ?? null };
   }
   try {
     const r = await fetch(url);
     if (r.headers.get("X-PapaMap-Source") === "cache") fromStore = true;
-    return r.ok ? await r.json() : null;
+    return { json: r.ok ? await r.json() : null, refreshed: null };
   } catch {
-    return null;
+    return { json: null, refreshed: null };
   }
 }
 
@@ -1627,20 +1626,76 @@ function openPin(osmUrl) {
   openPopup(f);
 }
 
+// The five assignments boot() makes once the four files are in hand, factored
+// out so a later background refresh (watchRefresh, below) can make them again
+// without duplicating boot's own body. Never moves the map — no fitHome,
+// no flyTo/jumpTo — because a reader who is not looking at boot's first paint
+// any more should not have their view pulled out from under them for a
+// dataset that is rebuilt once a night. If a popup is open, its object is
+// looked up again by osm_url and, when it still exists, redrawn in place
+// (setHTML, not a fresh openPopup — that would panPopupIntoView and could
+// pan); gone from the new data entirely, the popup is simply closed rather
+// than left showing a table that is no longer there.
+function applyDataset(fc, places, stats, areas) {
+  allFeatures = loadFeatures(fc);
+  allPlaces = loadPlaces(places);
+  renderStats(stats);
+  areaIndex = Array.isArray(areas) ? areas : null;
+  updateRegionsLink();
+  renderChips();
+  positionZoomCtrl();   // topbar height depends on the rendered strip
+  refreshPins();
+  if (isNative()) shareTables();   // the widget and the shortcut search this same data
+  if (popupObj) {
+    const list = popupObj.kind === "place" ? allPlaces : allFeatures;
+    const obj = list.find((o) => o.osm_url === popupObj.obj.osm_url);
+    if (obj) {
+      popupObj = { kind: popupObj.kind, obj };
+      if (popup) {
+        popup.setHTML(popupObj.kind === "place" ? placeHTML(obj) : popupHTML(obj));
+        attachEditNote();
+      }
+    } else if (popup) {
+      popup.remove();
+      popup = null;
+      popupObj = null;
+    }
+  }
+}
+
+// The app's background refresh, watched once boot has already drawn: waits
+// for all four of loadJSON's `refreshed` promises together, not as each lands
+// — a redraw on the first of four and another on the second would flicker,
+// and the toast below has to see all four before it can say anything. Applies
+// whatever changed exactly once (applyDataset, above), keeping whichever
+// files did not change or did not answer as they were drawn. The reassurance
+// toast a stale copy used to get from `fromStore` alone — true on every
+// single app launch under copy-first, so it stopped meaning anything — is
+// replaced by this: it fires only once every one of the four refreshes has
+// settled and NOT ONE of them found anything fresh at all, which is the one
+// condition that actually says "this is old data and nothing newer could be
+// had". A background refresh that is still running, or that succeeded even
+// with nothing changed, says nothing.
+async function watchRefresh(loaded) {
+  const results = await Promise.all(loaded.map((l) => l.refreshed));
+  if (results.some((r) => r?.json != null)) {
+    const [fc, places, stats, areas] = results.map((r, i) => r?.json ?? loaded[i].json);
+    applyDataset(fc, places, stats, areas);
+  }
+  if (allFeatures.length && results.every((r) => !r || r.ok === false)) toast(t("toastOffline"));
+}
+
 async function boot() {
   applyI18n();  // markup default is German — swap before first paint if not
   syncModeButtons();  // ...and the markup default is papa
   if (isNative()) bootNative();
-  // Before the four loads, not during: whether there is a network at all
-  // decides whether any of them should try one, and asking four times would
-  // be four chances to be told something different.
-  if (isNative()) conn = await connectivity();
-  const [fc, places, stats, areas] = await Promise.all([
+  const loaded = await Promise.all([
     loadJSON("data/changing_tables.geojson"),
     loadJSON("data/play_places.geojson"),
     loadJSON("data/stats.json"),
     loadJSON("data/areas.json"),
   ]);
+  const [fc, places, stats, areas] = loaded.map((l) => l.json);
   allFeatures = loadFeatures(fc);
   allPlaces = loadPlaces(places);
   renderStats(stats);
@@ -1652,16 +1707,20 @@ async function boot() {
   fitHome();           // ...and so does the home view's top padding
   dataReady = true;
   refreshPins();
-  // Reassurance, not an error: the map works, the data is simply the copy from
-  // an earlier visit. The stats line already names the build date it is
-  // showing, so the two together say exactly how stale "stored" is.
-  if (fromStore && allFeatures.length) toast(t("toastOffline"));
+  // On the website `fromStore` is still the service worker's honest "you are
+  // looking at old data" signal (X-PapaMap-Source: cache) and the toast fires
+  // on it exactly as it always has. In the app the copy draws on every
+  // launch, so this would fire every time; watchRefresh below carries the
+  // app's own version of this toast instead, once the background refresh has
+  // had its say.
+  if (!isNative() && fromStore && allFeatures.length) toast(t("toastOffline"));
   // A return from OSM's consent screen lands here with ?code= and ?state=.
   await completeLogin(location.href);
   if (isNative()) {
     shareTables();
     shareSettings({ mode, lang });
     if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
+    watchRefresh(loaded);   // runs on; boot does not wait for it
   }
   // A phone that dropped the tab while the reader was in MapComplete comes
   // back to a reloaded page: pick the check up where it was. (Only with its
