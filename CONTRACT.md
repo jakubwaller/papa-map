@@ -37,6 +37,14 @@
 > against `(navigator)`. `web/native.js`, `app.js`; new dependency
 > `@capacitor/network` (8.x). No contract change, no file gains or loses a
 > property.)*
+> *(18 Sep 2026, and once more: pin `app24` → `app25` for the footer area link,
+> which picked its area from the map canvas's own centre — including the
+> strip underneath the (translucent) top bar, roughly the top third of a
+> phone screen — so a reader looking at northern Germany could be told
+> Denmark. `updateRegionsLink` (`web/app.js`) now feeds `pickArea` the centre
+> and bounds of the canvas minus that covered strip, via a new pure helper
+> `visibleMapView` in `web/datasource.js`; no data file gains, loses or
+> changes a property, and `pickArea`'s own rule is unchanged.)*
 
 > **v35 amendment (18 Sep 2026, no donate link inside the store app):**
 > **HTML surface only** — no data file gains, loses or changes a property.

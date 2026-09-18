@@ -5,7 +5,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          isWheelchairOk, countWheelchair, pinFeatures, placeFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, nearestAreas, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
@@ -768,4 +768,31 @@ test("areaLink reads the page in the UI language, else its English twin", () => 
   // An English page is its own English reading, for every UI language.
   assert.deepEqual(areaLink(AREAS.find((a) => a.area === "Florida"), "de"), { href: "wickeltische/florida.html", label: "Changing tables in Florida" });
   assert.equal(areaLink(null, "de"), null);
+});
+
+// A fake unproject standing in for map.unproject: north is up (lat falls as
+// the pixel y grows), and lng tracks x directly — enough to check the
+// geometry without MapLibre.
+const fakeUnproject = ([x, y]) => ({ lng: x, lat: -y });
+
+test("visibleMapView with no covered top bar matches the canvas's own centre", () => {
+  const { center, bounds } = visibleMapView({ width: 300, height: 600 }, 0, fakeUnproject);
+  assert.deepEqual(center, [150, -300]);
+  assert.deepEqual(bounds, [[0, -600], [300, -0]]);
+});
+
+test("visibleMapView with a top bar covering a third moves the centre down by a sixth of the height", () => {
+  const { center } = visibleMapView({ width: 300, height: 600 }, 200, fakeUnproject);
+  // No bar: centre at y=300 (lat -300). A 200px bar (a third of 600) pushes
+  // the visible midpoint to y=400 (lat -400) — a sixth of 600 further south.
+  assert.deepEqual(center, [150, -400]);
+});
+
+test("visibleMapView falls back to the canvas centre when the covered height is nonsense", () => {
+  const plain = visibleMapView({ width: 300, height: 600 }, 0, fakeUnproject);
+  for (const coveredTop of [600, 700, -50, NaN, undefined, "a lot"]) {
+    assert.deepEqual(
+      visibleMapView({ width: 300, height: 600 }, coveredTop, fakeUnproject), plain,
+      `coveredTop ${coveredTop}`);
+  }
 });

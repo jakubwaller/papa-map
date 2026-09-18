@@ -107,11 +107,19 @@ when zoomed into Hamburg, "Wickeltische in Deutschland" at country zoom,
 "Pusleborde i Danmark" after a pan north — in the reader's UI language where
 that page exists and in English otherwise, so a reader with an English phone
 in Hamburg gets Germany in English rather than the United Kingdom (which is
-what the old language routing sent them to). Which area is on screen is
-asked of the pins, not of a bounding box: every feature carries the sweep
-`area` that found it (CONTRACT.md v32), and the seven pins nearest the map
-centre vote, weighted by nearness — exact at the borders, where boxes are not (Strasbourg lies
-inside Germany's box, Salzburg inside Bavaria's). The pipeline also writes
+what the old language routing sent them to). "On screen" means what the
+reader can actually see, not the map canvas: the canvas extends underneath
+the (translucent) top bar, roughly the top third of a phone screen, so since
+2026-09-18 the centre and view fed to the vote below are of the canvas minus
+that covered strip (`visibleMapView` in `web/datasource.js`, fed from
+`web/app.js`'s `updateRegionsLink`) — before that fix a reader with northern
+Germany filling their visible map could be told Denmark, because the canvas
+centre sat a third of a screen further north than anything on screen. Which
+area is on screen is asked of the pins, not of a bounding box: every feature
+carries the sweep `area` that found it (CONTRACT.md v32), and the seven pins
+nearest the visible centre vote, weighted by nearness — exact at the
+borders, where boxes are not (Strasbourg lies inside Germany's box, Salzburg
+inside Bavaria's). The pipeline also writes
 `data/areas.json`, one row per area page with its box; `pickArea` in
 `web/datasource.js` shows the Land, région, state or prefecture when its box
 covers at least a quarter of the view and the country otherwise, and the
