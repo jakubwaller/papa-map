@@ -374,7 +374,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #toast.show.tap { pointer-events: auto; cursor: pointer; }
 
 /* ---------- Add-a-place dialog ---------- */
-#add-dialog, #offline-dialog {
+#add-dialog, #offline-dialog, #route-dialog {
   max-width: min(92vw, 430px);
   border: none;
   border-radius: 14px;
@@ -383,9 +383,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   font-family: var(--ui);
   color: var(--ink);
 }
-#add-dialog::backdrop, #offline-dialog::backdrop { background: rgba(15, 25, 20, .45); }
-#add-dialog h3, #offline-dialog h3 { margin: 0 0 6px; font-size: 17px; padding-right: 22px; }
-#add-dialog p, #offline-dialog p { margin: 0 0 12px; font-size: 13px; color: var(--muted-2); line-height: 1.5; }
+#add-dialog::backdrop, #offline-dialog::backdrop, #route-dialog::backdrop { background: rgba(15, 25, 20, .45); }
+#add-dialog h3, #offline-dialog h3, #route-dialog h3 { margin: 0 0 6px; font-size: 17px; padding-right: 22px; }
+#add-dialog p, #offline-dialog p, #route-dialog p { margin: 0 0 12px; font-size: 13px; color: var(--muted-2); line-height: 1.5; }
 #add-dialog .btn {
   display: block;
   padding: 11px 14px;
@@ -410,7 +410,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 #add-dialog .btn code { font-size: 11px; }
 #add-dialog .dialog-foot { margin: 4px 0 0; font-size: 12.5px; }
-#add-dialog .close, #offline-dialog .close {
+#add-dialog .close, #offline-dialog .close, #route-dialog .close {
   position: absolute;
   top: 8px;
   right: 10px;
@@ -421,7 +421,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   cursor: pointer;
   padding: 4px 8px;
 }
-#add-dialog .close:hover, #offline-dialog .close:hover { color: var(--ink); }
+#add-dialog .close:hover, #offline-dialog .close:hover, #route-dialog .close:hover { color: var(--ink); }
 
 /* ---------- Attribution ---------- */
 #attribution {
@@ -688,3 +688,16 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 .offline-list button.saved { background: #fff; color: var(--muted-2); border-color: var(--line); }
 .offline-list button:disabled { opacity: .6; cursor: default; }
+
+/* The route chooser's apps: the add dialog's big tap targets, as buttons —
+   they open an app rather than navigate, so none of them is an <a>. */
+.route-list { list-style: none; margin: 0; padding: 0; }
+.route-list button {
+  display: block; width: 100%; margin-bottom: 9px;
+  padding: 11px 14px; border-radius: 12px;
+  border: 1px solid var(--line); background: none; color: var(--ink);
+  font: inherit; font-family: var(--ui); font-size: 13.5px; font-weight: 600;
+  text-align: left; cursor: pointer;
+}
+.route-list button:hover { border-color: var(--green); }
+.route-list li:last-child button { margin-bottom: 0; }

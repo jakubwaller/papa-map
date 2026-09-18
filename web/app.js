@@ -7,18 +7,19 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app21";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app22";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app21";
+         langUrl } from "./i18n.js?v=app22";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app21";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app22";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
-import { isNative, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks, directionsUri,
+import { isNative, platform, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks,
+         directionsUri, planRoute, openRouteUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app21";
+         formatMB, citiesToMount } from "./native.js?v=app22";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -457,6 +458,16 @@ function wheelchairRows(o) {
   return rows;
 }
 
+// The Route button, the same one in both popups. Its href is what a tap
+// follows everywhere but the iOS app: a geo: URI on the web and on Android,
+// Apple Maps on iOS. data-route carries the destination for the iOS cascade
+// at the end of this file, which catches the tap instead and asks the phone
+// what it can actually open — an iPhone without Apple Maps answers nothing
+// to maps://, and iOS says so with an alert of its own.
+const routeButton = (lat, lon, name) =>
+  `<a class="btn" href="${esc(directionsUri(lat, lon, name, geoUri(lat, lon, name)))}"` +
+  ` data-route="${esc(`${lat},${lon}`)}" data-route-label="${esc(name)}">${esc(t("popupDirections"))}</a>`;
+
 function popupHTML(f) {
   const s = viewFor(f.status, mode);
   // The two-tap answer, on the pins nobody has answered for. Not on a pin that
@@ -509,7 +520,7 @@ function popupHTML(f) {
   const mcOnly = f.status === "unknown" && !asks;
   if (mcUrl)
     links.push(`<a class="btn${!mcOnly && (asks || !f.play_recorded) ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
-  links.push(`<a class="btn" href="${esc(directionsUri(f.lat, f.lon, f.name || "", geoUri(f.lat, f.lon, f.name || "")))}">${esc(t("popupDirections"))}</a>`);
+  links.push(routeButton(f.lat, f.lon, f.name || ""));
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -613,7 +624,7 @@ function placeHTML(p) {
         osmUrl = safeUrl(p.osm_url);
   if (mcUrl)
     links.push(`<a class="btn${p.changing_table ? " primary" : ""}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
-  links.push(`<a class="btn" href="${esc(directionsUri(p.lat, p.lon, p.name || "", geoUri(p.lat, p.lon, p.name || "")))}">${esc(t("popupDirections"))}</a>`);
+  links.push(routeButton(p.lat, p.lon, p.name || ""));
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -1800,6 +1811,51 @@ offlineBtn.addEventListener("click", () => {
 document.getElementById("offline-close").addEventListener("click", () => offlineDialog.close());
 // As on the add dialog: a tap on the backdrop (the dialog element itself) closes.
 offlineDialog.addEventListener("click", (e) => { if (e.target === offlineDialog) offlineDialog.close(); });
+
+// ---- The Route button in the iOS app ----
+// Everywhere else the anchor is an anchor and the OS does the choosing. Here
+// the tap is caught and native.js's cascade answers instead: the reader's own
+// default navigation app first, then Apple Maps, then whichever navigation app
+// is installed, and the web as the last resort. Nothing is stored — the next
+// tap asks the phone again, so installing a maps app tomorrow is enough.
+const routeDialog = document.getElementById("route-dialog");
+const routeList = document.getElementById("route-list");
+
+// More than one and no default: one button per app, in the dialog style the
+// offline list already uses. `fallback` is the anchor's own href, for the case
+// where handing the URL to the OS fails — the WebView still knows what to do
+// with a maps: or om: URL, and doing nothing at all is the one bad answer.
+function showRouteChoices(choices, fallback) {
+  routeList.replaceChildren();
+  for (const c of choices) {
+    const li = document.createElement("li"), btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = c.name;
+    btn.addEventListener("click", () => {
+      routeDialog.close();
+      try { openRouteUrl(c.url).catch(() => { location.href = c.url; }); }
+      catch { location.href = fallback; }
+    });
+    li.append(btn);
+    routeList.append(li);
+  }
+  routeDialog.showModal();
+}
+
+document.addEventListener("click", (e) => {
+  const a = e.target.closest?.("a[data-route]");
+  if (!a || !isNative() || platform() !== "ios") return;
+  e.preventDefault();
+  const href = a.getAttribute("href");
+  const [lat, lon] = a.dataset.route.split(",").map(Number);
+  planRoute(lat, lon, a.dataset.routeLabel || "").then(
+    (plan) => (plan.open ? openRouteUrl(plan.open) : showRouteChoices(plan.choose, href)),
+    // No AppLauncher in this build, or the bridge failed: it is still a link.
+    () => { location.href = href; },
+  ).catch(() => { location.href = href; });
+});
+document.getElementById("route-close").addEventListener("click", () => routeDialog.close());
+routeDialog.addEventListener("click", (e) => { if (e.target === routeDialog) routeDialog.close(); });
 
 boot();
 window.addEventListener("resize", positionZoomCtrl);
