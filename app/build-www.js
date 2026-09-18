@@ -24,9 +24,11 @@ mkdirSync(www, { recursive: true });
 for (const f of FILES) {
   const src = join(web, f);
   if (!existsSync(src)) throw new Error(`missing ${src}`);
-  cpSync(src, join(www, f));
+  // The page itself is the one file that differs from the website (shell.mjs).
+  // It is never copied as it is: a build that fails there leaves no page
+  // behind for a later `cap sync` to bundle.
+  if (f === "index.html") writeFileSync(join(www, f), appShell(readFileSync(src, "utf8")));
+  else cpSync(src, join(www, f));
 }
 for (const d of DIRS) cpSync(join(web, d), join(www, d), { recursive: true });
-// The page itself is the one file that differs from the website: shell.mjs.
-writeFileSync(join(www, "index.html"), appShell(readFileSync(join(web, "index.html"), "utf8")));
 console.log(`www/ built from ${web}`);
