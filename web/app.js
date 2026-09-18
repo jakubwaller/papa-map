@@ -4,22 +4,22 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          countWheelchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app24";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app25";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app24";
+         langUrl } from "./i18n.js?v=app25";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app24";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app25";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount, formatDiagnostics, connectivity } from "./native.js?v=app24";
+         formatMB, citiesToMount, formatDiagnostics, connectivity } from "./native.js?v=app25";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -119,16 +119,30 @@ function applyI18n() {
 // stays as the fallback for a view with no area under it (open sea, an
 // unswept country) and for a server whose pipeline has not written
 // areas.json yet, so the link never 404s.
+// Until 2026-09-18 "on screen" meant the map canvas, which extends under the
+// (translucent) top bar — on a phone the canvas centre sits a third of a
+// screen further into the map than anything the reader can see, and named
+// Denmark for a screen full of northern Germany. visibleMapView (datasource.js)
+// works out the centre and bounds of the part of the canvas the top bar
+// doesn't cover; the ±180° wrap dance below is unchanged, just fed from that
+// visible centre instead of map.getCenter()/getBounds().
 let areaIndex = null;
 function updateRegionsLink() {
   const el = document.getElementById("regions-link");
   let link = null;
   try {
+    const canvas = map.getContainer();
+    const { center: rawCenter, bounds: rawBounds } = visibleMapView(
+      { width: canvas.clientWidth, height: canvas.clientHeight },
+      topbar.offsetHeight,
+      (p) => map.unproject(p));
     // Wrap the centre and shift the view by the same amount: past a
-    // continuous pan over ±180° getBounds() runs on past 180 while the
-    // area boxes never do, and the two must share a frame for the overlap.
-    const raw = map.getCenter(), c = raw.wrap(), dx = c.lng - raw.lng;
-    const view = map.getBounds().toArray().map(([x, y]) => [x + dx, y]);
+    // continuous pan over ±180° unproject() runs on past 180 the same way
+    // getCenter() used to, while the area boxes never do, and the two must
+    // share a frame for the overlap.
+    const raw = new maplibregl.LngLat(rawCenter[0], rawCenter[1]);
+    const c = raw.wrap(), dx = c.lng - raw.lng;
+    const view = rawBounds.map(([x, y]) => [x + dx, y]);
     link = areaLink(pickArea(areaIndex, allFeatures, [c.lng, c.lat], view), lang);
   } catch { /* no map yet: the fallback below */ }
   const label = link ? link.label : t("regions");
@@ -867,8 +881,22 @@ function renderStats(stats) {
 document.getElementById("zoom-in").addEventListener("click", () => map.zoomIn());
 document.getElementById("zoom-out").addEventListener("click", () => map.zoomOut());
 
+// The area link's visible centre is measured from this same topbar height
+// (updateRegionsLink's coveredTop), so anything that moves the zoom control
+// — the stats strip collapsing, a mode or language change reflowing the
+// tagline or the strip, a resize — has to refresh the area link too, not
+// just the control. updateRegionsLink can itself change the topbar height
+// (a long label wraps the nav row) and calls back here to re-seat the
+// control, so the two would ping-pong forever without a guard: syncingLink
+// caps it at one bounce, settling for whatever height the nested call finds
+// rather than asking the outer call to go again.
+let syncingLink = false;
 function positionZoomCtrl() {
   zoomCtrl.style.top = topbar.offsetHeight + 10 + "px";
+  if (!syncingLink) {
+    syncingLink = true;
+    try { updateRegionsLink(); } finally { syncingLink = false; }
+  }
 }
 
 // ---- Stats strip collapse (mobile only) ----

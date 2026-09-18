@@ -600,3 +600,27 @@ export function areaLink(area, lang) {
   if (area.lang === lang || !area.en) return { href: area.href, label: area.label };
   return { href: area.en.href, label: area.en.label };
 }
+
+// pickArea's centre and view have to be what the reader can actually SEE, not
+// the map canvas's own centre: the canvas extends underneath the (partly
+// transparent) top bar, so on a phone the canvas centre sits a third of a
+// screen further into the map than anything visible, and can name the wrong
+// country outright. This is the pure geometry for that — no DOM, no MapLibre,
+// so it is unit-testable without a map — used by updateRegionsLink in
+// web/app.js. canvasSize is {width, height} in the CSS-pixel frame `unproject`
+// takes points in (the map container's); coveredTop is the height of that
+// frame the top bar hides, the same number web/app.js's positionZoomCtrl
+// measures as topbar.offsetHeight; unproject is a (point: [x, y]) => {lng,
+// lat} function, `map.unproject` on a live map. A coveredTop that swallows
+// the whole canvas, or that isn't a finite positive number, is nonsense and
+// falls back to 0 — the pre-fix, whole-canvas centre — rather than guessing.
+export function visibleMapView(canvasSize, coveredTop, unproject) {
+  const { width, height } = canvasSize ?? {};
+  const top = Number.isFinite(coveredTop) && coveredTop > 0 && coveredTop < height
+    ? coveredTop : 0;
+  const cx = width / 2, cy = top + (height - top) / 2;
+  const center = unproject([cx, cy]);
+  const nw = unproject([0, top]);
+  const se = unproject([width, height]);
+  return { center: [center.lng, center.lat], bounds: [[nw.lng, se.lat], [se.lng, nw.lat]] };
+}
