@@ -82,13 +82,39 @@ const NET_MS = 20000, COPY_MS = 8000;
 // it is always cleared and never outlives the answer.
 function budget(ms) {
   const until = Date.now() + ms;
-  return (p) => {
+  const race = (p) => {
     let timer;
     const over = new Promise((_, fail) => {
       timer = setTimeout(() => fail(new Error("timed out")), Math.max(0, until - Date.now()));
     });
     return Promise.race([p, over]).finally(() => clearTimeout(timer));
   };
+  // Asked rather than starting a race there is no time left to hear the end of.
+  race.spent = () => Date.now() >= until;
+  return race;
+}
+
+// A download the clock let go of, finished on its own time.
+//
+// Without this, a link too slow to make the budget would refresh the copy on
+// no launch at all: every launch would abandon the download, read the same
+// `path` it read last time, and the map would freeze on it indefinitely. The
+// service worker the eight seconds come from does the opposite — its
+// timed-out request still stores the response it eventually gets (sw.js) —
+// and so does this.
+//
+// Validated before it is promoted, because `.new` is itself a file the loader
+// reads: one that does not parse must never stand in for a good copy. Nothing
+// here is awaited; the pins were drawn from the phone seconds ago.
+function promoteLate(io, running, fresh, path) {
+  running.then(
+    async () => {
+      try { await io.read(fresh); }
+      catch { await io.remove(fresh); return; }   // this launch wrote it, and it is not JSON
+      await io.replace(fresh, path);
+    },
+    () => {},   // the download failed: whatever was already on the phone is left alone
+  ).catch(() => {});
 }
 
 function nativeIO(fs = plugin("Filesystem")) {
@@ -154,12 +180,16 @@ export async function loadJSONNative(url, io = nativeIO(), {
   const path = `${DATA_PATH}/${name}`;
   const fresh = `${path}.new`;
   const began = Date.now();
+  // Filled in before the first await, so a note the caller is holding is a
+  // whole row from the moment the load starts: the dialog can be opened while
+  // the four are still in flight and still print four lines.
+  Object.assign(note, { file: name, step: "none", ms: 0, online, bytes: null });
+  const step = (s) => { note.step = s; note.ms = Date.now() - began; };
 
   // One stat, before anything is read or fetched: it decides both how long the
   // network gets and whether it is asked at all.
   const bytes = (await io.size(path)) ?? (await io.size(fresh));
-  Object.assign(note, { file: name, step: "none", ms: 0, online, bytes });
-  const step = (s) => { note.step = s; note.ms = Date.now() - began; };
+  note.bytes = bytes;
 
   const stored = async () => {
     for (const [copy, s] of [[path, "stored"], [fresh, "stored .new"]]) {
@@ -183,14 +213,21 @@ export async function loadJSONNative(url, io = nativeIO(), {
   }
 
   const net = budget(bytes == null ? netMs : copyMs);
+  const running = io.download(SITE + url, fresh);
   let json;
   try {
-    await net(io.download(SITE + url, fresh));
+    await net(running);
     // Only a file this launch downloaded is thrown away for not parsing: with
     // no network, a .new from an earlier launch may be the one copy there is.
     try { json = await io.read(fresh); }
     catch { await io.remove(fresh); }
-  } catch { /* no network, or no downloader */ }
+  } catch {
+    // Two ways to get here, and only one of them leaves work behind: the
+    // download may have failed, or the clock may have let go of one that is
+    // still running. The second gets a continuation, or a slow link would
+    // never refresh the copy at all.
+    if (net.spent()) promoteLate(io, running, fresh, path);
+  }
   if (json !== undefined) {
     // A swap that fails costs nothing today and nothing offline: the data is
     // in hand, and the .new file it sits in is read below when `path` is not.
@@ -198,11 +235,17 @@ export async function loadJSONNative(url, io = nativeIO(), {
     step("download");
     return { json, fromStore: false };
   }
-  try {
-    const fetched = await net(io.get(SITE + url));
-    step("fetch");
-    return { json: fetched, fromStore: false };
-  } catch { /* no network, or none that answers */ }
+  // With the budget gone there is no time left to hear a second request, and
+  // issuing one anyway is not free: the race below would reject on the next
+  // tick while the fetch went on transferring a second copy of the dataset
+  // nobody would read, over the metered link the download is still using.
+  if (!net.spent()) {
+    try {
+      const fetched = await net(io.get(SITE + url));
+      step("fetch");
+      return { json: fetched, fromStore: false };
+    } catch { /* no network, or none that answers */ }
+  }
   const hit = await stored();
   if (hit) return hit;
   step("none");
@@ -217,20 +260,25 @@ export async function loadJSONNative(url, io = nativeIO(), {
 // that would have settled the airplane-mode bug in one message instead of
 // three TestFlight builds. Nothing here is fetched, stored or sent; every
 // number is one the app already had in hand.
-// Every column is only as wide as this launch needs, and the extension goes:
-// a phone screen is about 48 monospace characters across, and a line wider
-// than the dialog hides the one number the whole block exists to show.
+// Every column is only as wide as this launch needs, and the extension goes.
+// The budget is MAX_COLS monospace characters, which is about what a phone
+// shows at this size: a wider line wraps, and a wrapped line hides the very
+// number the block exists to show. The worst case that has to fit is the
+// longest file name, the longest step, six digits of milliseconds and eight
+// of bytes — 47 columns, which is where the single separating space comes
+// from. The test pins that row exactly.
+export const MAX_COLS = 48;
 export function formatDiagnostics(notes, pin) {
   if (!notes.length) return "";
   const cell = (pick) => {
     const w = Math.max(...notes.map((n) => String(pick(n)).length));
     return (n) => String(pick(n)).padEnd(w);
   };
-  const name = cell((n) => n.file.replace(/\.(geojson|json)$/, ""));
+  const name = cell((n) => String(n.file).replace(/\.(geojson|json)$/, ""));
   const step = cell((n) => n.step);
   const took = cell((n) => `${n.ms}ms`);
   const rows = notes.map((n) =>
-    `${name(n)}  ${step(n)}  ${took(n)}  ${n.bytes == null ? "no copy" : `${n.bytes} B`}`);
+    `${name(n)} ${step(n)} ${took(n)} ${n.bytes == null ? "no copy" : `${n.bytes} B`}`);
   return [`${pin} · online=${notes[0].online}`, ...rows].join("\n");
 }
 

@@ -470,9 +470,22 @@ drawn and no pins: a request into a black hole is not refused, it is left unansw
 WebKit will sit on one for as long as it takes. Measured in the simulator against an address that
 drops packets, the native download took 75 s per file and the four fallback fetches, which WebKit
 serialises per host, took 975 to 1200 s; the map drew at once, because a saved city is read off
-the phone and owes the network nothing, and the pins arrived twenty-one minutes later. Letting go
-is not cancelling, so a first launch too slow for the clock draws an empty map once and the
-launch after it has the data.
+the phone and owes the network nothing, and the pins arrived twenty-one minutes later.
+
+**Letting go is not cancelling.** The download the clock gave up on keeps running, and when it
+lands it is parsed and promoted to the good copy anyway — nothing waits for it, the pins were
+drawn from the phone seconds earlier. That matters more than it sounds: without it, a link merely
+*slow* rather than dead would abandon its download on every single launch, read the same stored
+copy it read last time, and freeze the map on it for good. The service worker the eight seconds
+below come from makes the same call — its timed-out request still stores the response it
+eventually gets. A file that does not parse is deleted instead, never promoted, because `.new` is
+itself a file the loader reads. And a first launch too slow for the clock draws an empty map once;
+the launch after it has the data.
+
+A known rough edge: a reader on a slow-but-working link is told "Offline — the map is showing
+stored data", because `fromStore` is what the toast keys on and the copy is indeed what they are
+looking at. It is not wrong, only unkind. Saying it better means a new string in 32 languages,
+so it waits.
 
 How long that clock runs depends on what the waiting is worth, and a `stat` — not a parse — asks
 the question: is there a copy on the phone at all? If there is, it is read in under a tenth of a

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { locateNative, loadJSONNative, formatDiagnostics } from "./native.js";
+import { locateNative, loadJSONNative, formatDiagnostics, MAX_COLS } from "./native.js";
 
 // A Geolocation plugin that plays back fixes: [ms, accuracy in metres].
 function fakeGeo(fixes, { permission = "granted" } = {}) {
@@ -227,6 +227,47 @@ test("the clock is short when a copy can answer and long when nothing can", asyn
             `with nothing stored the download keeps its long rope (${withNothing} ms)`);
 });
 
+// A download the page stopped waiting for is not a download that stopped. On a
+// link too slow to make the clock, every launch would otherwise abandon it,
+// read the same `path` again and never refresh — the copy would freeze for
+// good — so the one that was let go is promoted when it lands.
+function slowIO(files, lands) {
+  const io = fakeIO({ files });
+  io.download = async (_url, p) => {
+    io.log.push(`download ${p}`);
+    files[p] = await new Promise((settle) => { lands.settle = settle; });
+  };
+  return io;
+}
+
+test("a download the clock let go of becomes the copy when it finally lands", async () => {
+  const files = { [COPY]: { n: 0 } }, lands = {};
+  const io = slowIO(files, lands);
+  assert.deepEqual(await loadJSONNative("data/changing_tables.geojson", io, BRIEF),
+                   { json: { n: 0 }, fromStore: true }, "the phone answered while it ran");
+  lands.settle({ n: 9 });
+  await new Promise((r) => setTimeout(r, 30));
+  assert.deepEqual(files[COPY], { n: 9 }, "and the next launch has today's data");
+  assert.ok(!(`${COPY}.new` in files), "nothing left beside it");
+});
+
+test("a late download that does not parse is dropped and the good copy stands", async () => {
+  const files = { [COPY]: { n: 0 } }, lands = {};
+  const io = slowIO(files, lands);
+  await loadJSONNative("data/changing_tables.geojson", io, BRIEF);
+  lands.settle("garbage");
+  await new Promise((r) => setTimeout(r, 30));
+  assert.deepEqual(files[COPY], { n: 0 }, "a file that does not parse replaces nothing");
+  assert.ok(!(`${COPY}.new` in files), "and does not stay to be read as a fallback");
+});
+
+test("with the clock already spent the fallback fetch is never issued", async () => {
+  const io = fakeIO({ hangs: ["download"], files: { [COPY]: { n: 0 } } });
+  await loadJSONNative("data/changing_tables.geojson", io, BRIEF);
+  assert.ok(!io.log.includes("get"),
+            "a second copy of the dataset, over a metered link, that nobody would wait for");
+});
+
 // ---- The note, and the block the offline dialog prints from it ----
 test("the note names the path that answered, with the size of what was on the phone", async () => {
   const fresh = {};
@@ -264,15 +305,29 @@ test("the diagnostics block lines the four files up under the pin", () => {
   ];
   assert.equal(formatDiagnostics(notes, "appN"), [
     "appN · online=false",
-    "changing_tables  stored  118ms    18489463 B",
-    "stats            none    20014ms  no copy",
+    "changing_tables stored 118ms   18489463 B",
+    "stats           none   20014ms no copy",
   ].join("\n"));
-  // Nothing wider than a phone: the byte count is the number the block exists
-  // to show, and a clipped line hides exactly that.
-  for (const line of formatDiagnostics(notes, "appN").split("\n")) {
-    assert.ok(line.length <= 48, `"${line}" is ${line.length} characters`);
-  }
   assert.equal(formatDiagnostics([], "appN"), "", "nothing loaded, nothing to say");
+});
+
+// Nothing wider than a phone: the byte count is the number the block exists to
+// show, and a line that wraps is one that hides it. The case to hold is not a
+// typical launch but the widest row the loader can produce — the longest file
+// name, the longest step, six digits of milliseconds and eight of bytes.
+test("even the widest row the loader can write fits the block", () => {
+  const worst = [{
+    file: "changing_tables.geojson",   // the longest of the four
+    step: "stored .new",               // the longest of the five steps
+    ms: 120014,                        // six digits
+    online: false,
+    bytes: 18489463,                   // eight digits
+  }];
+  const lines = formatDiagnostics(worst, "app23").split("\n");
+  assert.equal(lines[1], "changing_tables stored .new 120014ms 18489463 B");
+  for (const line of lines) {
+    assert.ok(line.length <= MAX_COLS, `"${line}" is ${line.length} of ${MAX_COLS} columns`);
+  }
 });
 
 test("a failing downloader with a network there still draws the live map", async () => {

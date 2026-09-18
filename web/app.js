@@ -1533,10 +1533,13 @@ async function loadJSON(url) {
   // answering the same { json, fromStore } the header below encodes.
   if (isNative()) {
     // The note is filled in by the loader and read by nothing but the
-    // diagnostics block at the foot of the offline dialog.
+    // diagnostics block at the foot of the offline dialog. Listed before the
+    // await, not after: the four loads run together and land in whatever order
+    // the network and the disk settle on, and a block whose rows reshuffle
+    // between launches is a poor thing to compare two launches with.
     const note = {};
-    const r = await loadJSONNative(url, undefined, { note });
     loadNotes.push(note);
+    const r = await loadJSONNative(url, undefined, { note });
     if (r?.fromStore) fromStore = true;
     return r?.json ?? null;
   }
@@ -1767,9 +1770,11 @@ async function renderOfflineList() {
   offlineList.replaceChildren();
   // Not a feature and not translated: a block a tester can read out or
   // screenshot when the map comes up without pins, so the next build is
-  // aimed rather than guessed. See formatDiagnostics in native.js.
-  document.getElementById("offline-diag").textContent =
-    formatDiagnostics(loadNotes, SHELL_PIN);
+  // aimed rather than guessed. See formatDiagnostics in native.js. Optional
+  // chaining because it is an aid, and an aid missing from some shell must
+  // not be what stops the city list — the dialog's actual job — from drawing.
+  const diag = document.getElementById("offline-diag");
+  if (diag) diag.textContent = formatDiagnostics(loadNotes, SHELL_PIN);
   const [cat, saved] = await Promise.all([cityCatalogue(), savedCities()]);
   if (!cat?.cities?.length) {
     const li = document.createElement("li");
