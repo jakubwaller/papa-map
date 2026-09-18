@@ -116,7 +116,7 @@
      eine verkürzte Kopie der Wickeltisch-Daten (Koordinaten, Zustand, Name, OSM-Link) sowie Ihre
      beiden Einstellungen — Papa- oder Mama-Sicht und Sprache — in einem gemeinsamen Bereich auf
      dem Gerät ab, den nur die App und ihr Widget lesen können. Beides bleibt, von einer
-     solchen Gerätesicherung abgesehen, auf dem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG). Siri und Kurzbefehle sind eine Funktion von iOS; wie Apple eine
+     Gerätesicherung (iCloud oder Computer) abgesehen, auf dem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG). Siri und Kurzbefehle sind eine Funktion von iOS; wie Apple eine
      gesprochene Anfrage verarbeitet, richtet sich nach Apples Datenschutzbestimmungen.</p>
   <h2>App: Einstellungen auf dem Gerät</h2>
   <p>Die App speichert dieselben funktionalen Schlüssel wie die Website — Sprache
@@ -124,7 +124,8 @@
      „Barrierefrei“ (<code>papamap-wheelchair</code>) und, nach einer Anmeldung, das Zugriffstoken
      und Ihren OSM-Anzeigenamen (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>) —
      nur eben im Speicher der App statt im Browser. Rein funktional, ohne Tracking, nur auf Ihrem
-     Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+     Gerät — und, wie alles, was die App ablegt, in einer Gerätesicherung (iCloud oder Computer),
+     falls Sie eine eingerichtet haben (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>App: Anmeldung bei OpenStreetMap</h2>
   <p>Die Anmeldung läuft wie auf der Website (OAuth 2 mit PKCE), mit einem Unterschied: Die
      Anmeldeseite von openstreetmap.org öffnet die App in einer Browser-Ansicht des Systems, in
@@ -138,9 +139,12 @@
   <h2>App: Links auf andere Seiten</h2>
   <p>Jeder Link, der die Karte verlässt — die Seiten dieser Website, openstreetmap.org,
      MapComplete, StreetComplete — öffnet im System-Browser Ihres Geräts, in einer Ansicht
-     innerhalb der App. Die Karte sowie die Länder- und Ranglistenseiten dieser Website merken sich für die Dauer dieser Ansicht, dass
-     sie aus der App geöffnet wurden (Schlüssel <code>papamap-in-app</code> im Session Storage),
-     und blenden dann den Spendenlink aus; der Eintrag verfällt, wenn Sie die Ansicht schließen
+     innerhalb der App. Öffnet die App eine Seite dieser Website, hängt sie an deren Adresse den
+     Zusatz <code>?app=1</code> an; er sagt nur, dass der Aufruf aus der App kommt, und steht wie
+     jede abgerufene Adresse im Server-Log (siehe oben). Die Karte sowie die Länder- und
+     Ranglistenseiten merken sich daraufhin für die Dauer dieser Ansicht, dass sie aus der App
+     geöffnet wurden (Schlüssel <code>papamap-in-app</code> im Session Storage), und blenden dann
+     den Spendenlink aus; der Eintrag verfällt, wenn Sie die Ansicht schließen
      (§ 25 Abs. 2 Nr. 2 TDDDG). Ab dort gilt die Datenschutzerklärung des jeweiligen Angebots; für die
      Seiten dieser Website gilt diese Erklärung.</p>
   <h2>App: Apple (App Store und TestFlight)</h2>
