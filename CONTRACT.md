@@ -1,5 +1,27 @@
 # papa-map — build contract (v0)
 
+> **v35 amendment (18 Sep 2026, no donate link inside the store app):**
+> **HTML surface only** — no data file gains, loses or changes a property.
+> Every generated page (the area pages, their hubs and the leaderboard, in all
+> ~30 page languages) now wraps its Ko-fi link and the punctuation that ends
+> its sentence in **`<span class="donate">`**, written at render time by
+> `pages.wrap_donate`, which raises rather than emit a footer it does not
+> recognise; loads **`in-app.js`** from the site root in its `<head>` (classic,
+> blocking, unpinned — these pages are nightly output under plain URLs); and
+> carries `.in-app .donate { display: none; }` in its inline `<style>`. The
+> same span is in `web/index.html` and its generated twin. The frontend's half:
+> `native.js`'s `openExternal` appends **`?app=1`** to the URLs it opens **on
+> papamap.de only** (query and fragment preserved, nobody else's URL touched),
+> and `web/in-app.js` turns that flag — or the `sessionStorage` key
+> `papamap-in-app` it leaves behind for the rest of the in-app browsing
+> session — into the class on `<html>`, before the first paint. Why: the app
+> opens the website's pages in an in-app browser, which is still inside the
+> app, and the app may show no donate link (App Store 3.1.1, the non-trader
+> declaration; issue #124). The bundled page still has the span cut out
+> entirely (`app/shell.mjs`). A reader on the open web sees exactly what they
+> saw before, and with JavaScript off nothing changes at all. Shell pin
+> `app20` → `app21`; `in-app.js` joins the pinned shell and the sw precache.
+
 > **v34 amendment (18 Sep 2026, the play question on every pin):**
 > the popup's play line (v30, three answers since v31) is asked on **every**
 > `changing_tables.geojson` pin whose `play` is `null` (`play_recorded`

@@ -187,7 +187,14 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app20" />
+  <link rel="stylesheet" href="style.css?v=app21" />
+
+  <!-- Classic and blocking, in the head on purpose: it puts the .in-app class
+       on <html> before the first paint when the store app opened this page in
+       its in-app browser (?app=1), and the donate span in the footer is
+       hidden under that class. web/in-app.js says why the app may not show a
+       donate link at all. -->
+  <script src="in-app.js?v=app21"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -307,8 +314,12 @@
        wraps to two lines on a phone. The Ko-fi label stays one word (its sentence lives in the
        title / aria-label) so that line two is only the coffee link plus the maker credit;
        checked at 375px and 360px. The credit is the same English line as the Bürgerwecker
-       footer, left untranslated on purpose, like "OpenStreetMap contributors". -->
-  <div id="attribution">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="ops.html" title="Build and dataset status">Status</a> · <a href="https://ko-fi.com/jakubwaller" target="_blank" rel="noopener" title="Kaffee spendieren" data-i18n="kofi" data-i18n-aria="ariaKofi">☕ Kaffee</a> · <a href="https://jakubwaller.eu" rel="author">Made with ♥ in Hamburg by Jakub Waller</a></div>
+       footer, left untranslated on purpose, like "OpenStreetMap contributors".
+       The coffee link and the separator in front of it are one span: the store
+       app hides it (.in-app, in-app.js) or cuts it out of its own copy of this
+       file (app/shell.mjs), and dropping the <a> alone would leave a dangling
+       "·". -->
+  <div id="attribution">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="ops.html" title="Build and dataset status">Status</a><span class="donate"> · <a href="https://ko-fi.com/jakubwaller" target="_blank" rel="noopener" title="Kaffee spendieren" data-i18n="kofi" data-i18n-aria="ariaKofi">☕ Kaffee</a></span> · <a href="https://jakubwaller.eu" rel="author">Made with ♥ in Hamburg by Jakub Waller</a></div>
 
   <!-- Add-a-place dialog: everything lands in OpenStreetMap, not here -->
   <dialog id="add-dialog">
@@ -339,6 +350,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app20"></script>
+  <script type="module" src="app.js?v=app21"></script>
 </body>
 </html>

@@ -430,9 +430,19 @@ drawn from that file with a network and without one, so a copy that cannot be re
 first day, not in the basement. (Build 18 handed the 18 MB across the bridge as one string and
 came up in airplane mode with the city and no pins.)
 
-One thing the app's page does not carry is the Ko-fi link in the footer. `app/shell.mjs` cuts
-it out of the bundled `index.html`, and the build fails if it cannot find it: Apple wants a tip
-for the developer to go through in-app purchase, and the developer account is declared a
-non-trader because the app has no purchase and no donate button. The website keeps its link —
-on the country and leaderboard pages too, which the app opens in the in-app browser (issue #124).
+One thing the app never shows is the Ko-fi link: Apple wants a tip for the developer to go
+through in-app purchase, and the developer account is declared a non-trader because the app has
+no purchase and no donate button. On the app's own page the link is not there at all —
+`app/shell.mjs` cuts the whole `<span class="donate">` out of the bundled `index.html`,
+separator included, and the build fails if it cannot find it or leaves a Ko-fi URL behind. But
+the app also opens the website's pages — a country page, the leaderboard, the methods, and the
+map itself when a reader taps "back to the map" — and those are the website's, link and all,
+inside an in-app browser that is still the app (issue #124). So `openExternal` marks every URL
+it opens on our own origin, and only those, with `?app=1`; `web/in-app.js`, loaded blocking from
+the head of each of those pages, reads the flag, remembers it in `sessionStorage` for the rest
+of that in-app browsing session and puts `.in-app` on `<html>` before the first paint, under
+which the CSS hides the donate span. Every generated footer gets that span at render time
+(`wrap_donate` in `pipeline/pages.py`, one rule over ~50 hand-written footers, raising rather
+than shipping the link). A reader on the open web sees exactly what they saw before, and with
+JavaScript off nothing happens at all.
 

@@ -7,18 +7,18 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app20";
+         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app21";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app20";
+         langUrl } from "./i18n.js?v=app21";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app20";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app21";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, AUTH_REDIRECT, loadJSONNative, locateNative, interceptLinks, directionsUri,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app20";
+         formatMB, citiesToMount } from "./native.js?v=app21";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -1638,7 +1638,7 @@ const offlineList = document.getElementById("offline-list");
 
 let nativeScripts = Promise.resolve();   // declared before the call site below
 function bootNative() {
-  interceptLinks();                  // site pages and OSM open in the system browser
+  interceptLinks();                  // site pages and OSM open in the in-app browser
   document.getElementById("app-link").hidden = true;   // this is the app
   offlineBtn.hidden = false;
   onAppUrl({ auth: (url) => completeLogin(url), table: openPin });
