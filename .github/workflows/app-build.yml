@@ -1,12 +1,22 @@
 # The store app (app/), compiled where Xcode and the Android SDK exist: on
-# GitHub's runners, not on a laptop. Unsigned builds only — they prove the
-# Swift, the project file and the Gradle setup compile. Signing and the
-# upload to App Store Connect / Play come later, with the account's keys as
-# repository secrets. Public repo, so the macOS minutes are free.
+# GitHub's runners, not on a laptop. Public repo, so the macOS minutes are free.
+#
+# Every push to a PR gets the two unsigned builds — they prove the Swift, the
+# project file and the Gradle setup compile. The signed ones are asked for:
+#
+#   testflight   archive, sign, upload to App Store Connect (TestFlight)
+#   apple-setup  once per account: bundle ids, App Groups capability, the
+#                distribution certificate for app/ios/distribution.csr
+#
+# Ask from the Actions tab (Run workflow → task) or by putting the label of
+# that name on a pull request, which builds that PR's branch. The label route
+# exists because a workflow can only be dispatched once its file is on main;
+# secrets never reach a fork's PR, so a label on one signs nothing.
 name: App build
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
     paths:
       - "app/**"
       - "web/**"
@@ -18,9 +28,15 @@ on:
       - "web/**"
       - ".github/workflows/app-build.yml"
   workflow_dispatch:
+    inputs:
+      task:
+        description: "What to run"
+        type: choice
+        default: build
+        options: [build, testflight, apple-setup]
 
 concurrency:
-  group: app-build-${{ github.ref }}
+  group: app-build-${{ github.ref }}-${{ github.event.label.name || inputs.task || 'build' }}
   cancel-in-progress: true
 
 permissions:
@@ -28,6 +44,7 @@ permissions:
 
 jobs:
   ios:
+    if: github.event.action != 'labeled' && (inputs.task || 'build') == 'build'
     runs-on: macos-15
     defaults:
       run:
@@ -61,6 +78,7 @@ jobs:
           retention-days: 7
 
   android:
+    if: github.event.action != 'labeled' && (inputs.task || 'build') == 'build'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -80,3 +98,131 @@ jobs:
       - run: npm run build
       - run: npx cap sync android
       - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug --no-daemon
+
+  # Once per Apple account, and harmless to repeat: every step looks before it
+  # makes. The certificate comes back as an artifact (public material, it is in
+  # every .ipa); its private key never left the machine that wrote the CSR, and
+  # the two meet again in the IOS_DIST_P12 secret.
+  apple-setup:
+    if: inputs.task == 'apple-setup' || (github.event.action == 'labeled' && github.event.label.name == 'apple-setup')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node ios/asc.mjs ids
+      - run: node ios/asc.mjs cert ios/distribution.csr "$RUNNER_TEMP/distribution.cer"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: distribution-certificate
+          path: ${{ runner.temp }}/distribution.cer
+          if-no-files-found: ignore
+          retention-days: 7
+
+  testflight:
+    if: inputs.task == 'testflight' || (github.event.action == 'labeled' && github.event.label.name == 'testflight')
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: app
+    env:
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync ios
+      - name: Distribution certificate into a throwaway keychain
+        env:
+          IOS_DIST_P12: ${{ secrets.IOS_DIST_P12 }}
+          IOS_DIST_P12_PASSWORD: ${{ secrets.IOS_DIST_P12_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          PW="$(uuidgen)"
+          echo "$IOS_DIST_P12" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security create-keychain -p "$PW" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$PW" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/dist.p12" -P "$IOS_DIST_P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -k "$PW" "$KEYCHAIN" > /dev/null
+          security list-keychain -d user -s "$KEYCHAIN"
+          rm "$RUNNER_TEMP/dist.p12"
+      - name: Fresh App Store profiles
+        run: |
+          node ios/asc.mjs profiles "$RUNNER_TEMP/profiles"
+          # Xcode 16 moved the directory; older tools still read the first one.
+          for d in "$HOME/Library/MobileDevice/Provisioning Profiles" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$d" && cp "$RUNNER_TEMP"/profiles/*.mobileprovision "$d/"
+          done
+      - name: API key where xcodebuild can read it
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          printf '%s' "$ASC_API_KEY_P8" > "$RUNNER_TEMP/keys/AuthKey_$ASC_KEY_ID.p8"
+      - name: Resolve Swift packages
+        run: xcodebuild -resolvePackageDependencies -project ios/App/App.xcodeproj -scheme App
+      # The build number is the run number: App Store Connect refuses a number
+      # it has seen, and this one only goes up.
+      - name: Archive
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/PapaMap.xcarchive" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            -derivedDataPath ios/DerivedData | tee ios/xcodebuild.log | grep -E "error:|ARCHIVE (SUCCEEDED|FAILED)" || true
+          # No log artifact here, unlike the unsigned build: a signed log names
+          # the team and the certificate, the job log masks them, a zip does not.
+          grep -q "ARCHIVE SUCCEEDED" ios/xcodebuild.log || { tail -40 ios/xcodebuild.log; exit 1; }
+      - name: Export and upload to App Store Connect
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>de.papamap.app</key><string>PapaMap CI de.papamap.app</string>
+              <key>de.papamap.app.widget</key><string>PapaMap CI de.papamap.app.widget</string>
+            </dict>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          set -o pipefail
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/PapaMap.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_$ASC_KEY_ID.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" | tee ios/export.log
+          grep -q "EXPORT SUCCEEDED" ios/export.log
+      - name: Forget the keys
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
+          rm -rf "$RUNNER_TEMP/keys"

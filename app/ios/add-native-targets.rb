@@ -89,6 +89,19 @@ unless widget
   bf.settings = { "ATTRIBUTES" => ["RemoveHeadersOnCopy"] }
 end
 
+# Release is what the runner archives for TestFlight (.github/workflows/
+# app-build.yml): signed by hand with the distribution certificate and the
+# profiles ios/asc.mjs fetches under these names. Debug stays automatic, so a
+# Mac with Xcode and the team selected still builds to a phone.
+[app, widget].each do |t|
+  release = t.build_configurations.find { |c| c.name == "Release" }
+  release.build_settings.merge!(
+    "CODE_SIGN_STYLE" => "Manual",
+    "CODE_SIGN_IDENTITY" => "Apple Distribution",
+    "PROVISIONING_PROFILE_SPECIFIER" => "PapaMap CI #{release.build_settings["PRODUCT_BUNDLE_IDENTIFIER"]}",
+  )
+end
+
 # A shared "App" scheme, so xcodebuild on a machine that never opened the
 # project in Xcode (the GitHub runner) has something to build. Xcode itself
 # would generate one on first open, but as a per-user file that is not in git.
