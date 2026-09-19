@@ -39,6 +39,12 @@
      this server or to any third party, not stored and not logged. The “Directions” button opens a
      <code>geo:</code> link with the changing table's coordinates — which map app receives it is
      decided by your device; your own location is not part of that link.</p>
+  <p>If you have shared your location through one of the two buttons and a changing table whose
+     room nobody has recorded yet lies no more than 75 m away, a small note at the bottom edge asks
+     whether you know the room. For this the site keeps the last position it determined in working
+     memory for a few minutes; it is neither stored nor transmitted. If you close the note, the
+     browser remembers in local storage (key <code>papamap-card-dismissed</code>) for which places
+     it should no longer appear — purely functional, only on your device (§ 25(2) no. 2 TDDDG).</p>
   <h2>Language setting (local storage)</h2>
   <p>If you choose a language via the language switcher, that choice is stored in your browser's
      local storage (key <code>papamap-lang</code>); the same applies to whether you read the map
@@ -76,6 +82,28 @@
      Policy); your OSM account is not involved. Which object is being checked is remembered by the
      browser in session storage (key <code>papamap-edit-check</code>) and discarded when the tab is
      closed — purely functional, only on your device (§ 25(2) no. 2 TDDDG).</p>
+  <h2>My PapaMap: your own answers and saved places</h2>
+  <p>The "My PapaMap" dialog shows how many rooms you have answered yourself. If you are signed in
+     to OpenStreetMap, the site requests the public list of your own changesets from
+     api.openstreetmap.org when the dialog opens — the same list anyone can see in your OSM
+     profile — and counts, on your device, those made through PapaMap or through MapComplete's
+     PapaMap theme. The request names your OSM display name but sends no access token; it
+     transmits your IP address to the OpenStreetMap Foundation (see above). The number, position
+     and date of these changesets are kept by the browser in local storage (key
+     <code>papamap-my-answers</code>) so they need not be loaded again each time; they are deleted
+     when you log out. This server learns nothing of it, and PapaMap compares you with nobody:
+     there is no ranking of people.</p>
+  <p>The star in a pin saves a place. The list (OSM link, the place's name and coordinates, the
+     time) is kept exclusively in your browser's local storage (key <code>papamap-saved</code>)
+     until you remove the place in the dialog or delete your browser data. Purely functional, only
+     on your device (§ 25(2) no. 2 TDDDG).</p>
+  <h2>Sharing a place</h2>
+  <p>The share button in a pin hands the place's name and a link to papamap.de to your device's
+     share function. Which app or person the link goes to is entirely your decision; that app's
+     own terms apply to it. Where the device offers no share function, the site copies the link to
+     the clipboard. Whoever opens such a link requests papamap.de with <code>?osm=…</code>
+     appended; it names only the place and, like any requested address, appears in the server log
+     (see above).</p>
   <h2>The app (iPhone, iPad)</h2>
   <p>PapaMap is also available as an app, distributed through the App Store and through TestFlight.
      The app is the same map in a native shell. The same principle applies: no account with us, no
@@ -103,13 +131,14 @@
      device; without a network connection, no tiles at all are requested. "Delete" in the same
      dialog removes a city again.</p>
   <h2>App: location</h2>
-  <p>The locate button, the search for the nearest changing table, the Siri Shortcut and the
-     home-screen widget request your location through iOS — only after your explicit permission
+  <p>The locate button, the search for the nearest changing table, the Siri Shortcut, the
+     home-screen widget and the "Nearest changing table" control in Control Center (also on the
+     Lock Screen or the Action button) request your location through iOS — only after your explicit permission
      ("While Using the App"), which you can revoke at any time in iOS Settings. Your position is
      processed exclusively on your device: the search for the nearest usable changing table runs
      against the data that is already on the device anyway. Your location is not transmitted to
-     this server or to any third party, not stored and not logged — not from the widget and not
-     from the Shortcut either. The widget recalculates the nearest changing table on the device at
+     this server or to any third party, not stored and not logged — not from the widget, the
+     Shortcut or Control Center either. The widget recalculates the nearest changing table on the device at
      regular intervals as long as it sits on the home screen or the lock screen. After you tap the
      locate button, the map shows your surroundings; it then loads the tiles for that section from
      tile.openstreetmap.org as described above.</p>
@@ -124,8 +153,10 @@
   <p>The app stores the same functional keys as the website — language (<code>papamap-lang</code>),
      dad or mum view (<code>papamap-mode</code>), the "Wheelchair" filter
      (<code>papamap-wheelchair</code>) and, after signing in, the access token and your OSM display
-     name (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>) — just in the app's own
-     storage instead of the browser's. Purely functional, without tracking, only on your device —
+     name (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>), plus the saved places
+     (<code>papamap-saved</code>), your own answers (<code>papamap-my-answers</code>) and the
+     closed room notes (<code>papamap-card-dismissed</code>) — just in the app's own storage
+     instead of the browser's. Purely functional, without tracking, only on your device —
      and, like everything the app stores, in a device backup (iCloud or computer), if you have set
      one up (§ 25(2) no. 2 TDDDG).</p>
   <h2>App: signing in to OpenStreetMap</h2>
@@ -159,7 +190,8 @@
   <p>You withdraw location sharing in iOS Settings under PapaMap; you delete saved cities with
      "Delete" in the "Save a city offline" dialog; you sign out of OpenStreetMap with "Log out" in
      the pin. If you delete the app, everything it stored on the device disappears with it: the
-     copy of the changing-table data, the offline cities, the settings and the access token.
+     copy of the changing-table data, the offline cities, the settings, the saved places, the list
+     of your own answers and the access token.
      Whatever of that lives in a device backup you have set up is managed by iOS; it disappears
      with that backup. What you have written to OpenStreetMap stays there — that is the whole
      point.</p>
@@ -176,6 +208,6 @@
      <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a>.</p>
   <p>You also have the right to lodge a complaint with a data protection supervisory authority
      (Art. 77 GDPR), for example the one where you live.</p>
-  <p style="margin-top:30px">Last updated: 18 September 2026</p>
+  <p style="margin-top:30px">Last updated: 19 September 2026</p>
   <p><a href="./?lang=en">← Back to the map</a></p>
 </body></html>
