@@ -83,13 +83,23 @@ export function buildFeatureGrid(features) {
 // The nearest gridded feature to (lat, lon) within maxKm, or null. Rings
 // outward from the answer's own cell only as far as maxKm could possibly
 // reach, so a small search radius (the common case: a 50 m PapaMap answer)
-// touches a handful of cells, never the whole grid.
+// touches a handful of cells, never the whole grid. Latitude and longitude
+// need separate ring counts: a degree of longitude is only GRID_DEG*KM_PER_DEG
+// wide at the equator, and shrinks by cos(lat) moving toward the poles — the
+// same ring count in both directions under-covers east-west the further
+// north or south the search is (at 70°N, two rings reached ~3.8 km east-west
+// while still correctly reaching 5 km north-south, before this).
 function nearestInGrid(lat, lon, grid, maxKm) {
   const [baseLa, baseLo] = cellOf(lat, lon);
-  const rings = Math.max(1, Math.ceil(maxKm / (GRID_DEG * KM_PER_DEG)) + 1);
+  const latRings = Math.max(1, Math.ceil(maxKm / (GRID_DEG * KM_PER_DEG)) + 1);
+  // Clamped well short of 0 so a search vanishingly close to a pole (no
+  // sweep area is, but the formula should not blow up regardless) still
+  // gets a finite, generous ring count rather than dividing by ~0.
+  const lonScale = Math.max(Math.cos((lat * Math.PI) / 180), 0.01);
+  const lonRings = Math.max(1, Math.ceil(maxKm / (GRID_DEG * KM_PER_DEG * lonScale)) + 1);
   let best = null, bestKm = Infinity;
-  for (let dLa = -rings; dLa <= rings; dLa++) {
-    for (let dLo = -rings; dLo <= rings; dLo++) {
+  for (let dLa = -latRings; dLa <= latRings; dLa++) {
+    for (let dLo = -lonRings; dLo <= lonRings; dLo++) {
       const bucket = grid.get(`${baseLa + dLa},${baseLo + dLo}`);
       if (!bucket) continue;
       for (const f of bucket) {
@@ -304,14 +314,46 @@ export function pageBoundary(list, fullPage = 100) {
 // for a while, or who also makes a lot of unrelated edits (the API filters
 // by user, not by tag, so every one of those counts against the same page
 // budget), that is not their whole history. `cursor` is `{oldest_scanned,
-// done}`, kept in the cache record: `oldest_scanned` is how far back a
-// `time=EPOCH,<oldest_scanned>` scan has reached across every open combined,
-// `done` once a page has come back short — the true beginning of the
-// reader's OSM history, not just this session's budget running out.
+// done, floor}`, kept in the cache record: `oldest_scanned` is how far back
+// a `time=EPOCH,<oldest_scanned>` scan has reached across every open
+// combined, `done` once a page has come back short — the true beginning of
+// the reader's OSM history, not just this session's budget running out —
+// or once the walk reaches `floor` (below). `floor` is null on an ordinary
+// backfill (the walk must reach the real beginning); reopenGap sets it when
+// this cursor is standing in for an unfinished top-up instead (below).
 export function advanceBackfillCursor(cursor, page) {
   const boundary = pageBoundary(page);
-  if (!boundary) return { oldest_scanned: cursor?.oldest_scanned ?? null, done: true };
-  return { oldest_scanned: boundary, done: false };
+  if (!boundary) return { oldest_scanned: cursor?.oldest_scanned ?? null, done: true, floor: null };
+  // Reached (or passed) the floor: everything below it was already known
+  // before this cursor was reopened to close a gap, so there is nothing
+  // further to walk — see reopenGap.
+  if (cursor?.floor && boundary <= cursor.floor) return { oldest_scanned: boundary, done: true, floor: null };
+  return { oldest_scanned: boundary, done: false, floor: cursor?.floor ?? null };
+}
+
+// A top-up (web/app.js's fetchMyAnswers) always starts unbounded at the very
+// top of the reader's changesets, so it always learns the true newest ones
+// in its first page regardless of budget — but if its budget runs out before
+// it pages all the way back down to the cache's own OLD watermark, the
+// stretch between where it stopped (`before`) and that old watermark
+// (`oldWatermark`) has not been examined at all, and must not simply vanish
+// the moment the watermark advances past it on the next open. This reopens
+// the backfill cursor there instead of at the true beginning: `floor` is set
+// to `oldWatermark` only when `previousBackfill` had already finished
+// (`done`) — only then is everything below `oldWatermark` actually already
+// known, so the reopened walk can stop there rather than needlessly
+// re-walking history it already has. When the previous backfill had NOT
+// finished, there is no safe floor to give it (below `oldWatermark` may
+// still be genuinely unscanned) and the walk must reach the real beginning,
+// same as an ordinary backfill.
+//
+// Known simplification: if a second gap opens while an earlier one is still
+// being closed, this reopens at the newer gap's own point and the older,
+// still-unfinished stretch between the two is not separately tracked — a
+// reader would need to leave more than a page's worth of new changesets
+// between nearly every single dialog open for that to matter in practice.
+export function reopenGap(before, oldWatermark, previousBackfill) {
+  return { oldest_scanned: before, done: false, floor: previousBackfill?.done ? oldWatermark : null };
 }
 
 // ---- Saved places (device only, papamap-saved) ----
@@ -332,4 +374,17 @@ export function addSaved(list, place) {
 
 export function removeSaved(list, osm) {
   return (list ?? []).filter((r) => r.osm !== osm);
+}
+
+// ---- May a background refresh's result still be applied? ----
+// A reader can log out — or into a different account — while a changesets
+// fetch is still in flight (the logout button lives inside this very
+// dialog); the privacy page's own promise ("deleted on logout") has to hold
+// even then. `startGeneration` is what the generation counter read at the
+// moment the refresh began; `currentGeneration` is what it reads now, after
+// the fetch has resolved. Kept as its own tested function, trivial as the
+// comparison is, so "may this still be applied" is one decision rather than
+// a comparison re-typed at every call site that needs it.
+export function refreshApplies(startGeneration, currentGeneration) {
+  return startGeneration === currentGeneration;
 }

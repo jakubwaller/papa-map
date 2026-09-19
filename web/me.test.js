@@ -8,8 +8,8 @@ import {
   sentenceParts, greyNearby, circleBounds,
   MAPCOMPLETE_THEME, isOwnChangeset, changesetAnswer, extractAnswers,
   mergeAnswers, newestClosedAt, oldestClosedAt,
-  EPOCH, changesetsUrl, pageBoundary, advanceBackfillCursor,
-  SAVED_MAX, isSaved, addSaved, removeSaved,
+  EPOCH, changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap,
+  SAVED_MAX, isSaved, addSaved, removeSaved, refreshApplies,
 } from "./me.js";
 
 // ---- The game sentence's percentage: must read stats.json's local block the
@@ -279,6 +279,41 @@ test("buildFeatureGrid + answerArea matches a brute-force nearest-feature scan",
   }
 });
 
+// A degree of longitude is only ~111 km at the equator and shrinks by
+// cos(lat) toward the poles — the grid's ring search has to widen east-west
+// to compensate, or it under-covers the requested radius the further north
+// (or south) the search is. 70°N with a 5 km radius (the cap) is exactly the
+// case that used to reach only ~3.8 km east-west before the ring count
+// accounted for cos(lat).
+test("buildFeatureGrid + answerArea still matches a brute-force scan near 70°N, at the 5 km cap", () => {
+  const rnd = (seed) => { let s = seed >>> 0; return () => {
+    s = (s * 1664525 + 1013904223) >>> 0; return s / 0xffffffff;
+  }; };
+  const next = rnd(70);
+  // Scattered mostly east-west of the search points (a narrow latitude band,
+  // a wide longitude one) — exactly the direction the bug under-covered.
+  const features = Array.from({ length: 300 }, (_, i) => ({
+    area: `area-${i % 7}`,
+    lat: 69.9 + next() * 0.2,     // 69.9..70.1
+    lon: 20 + next() * 4,         // 20..24 — several degrees of longitude
+  }));
+  const grid = buildFeatureGrid(features);
+  const bruteForce = (lat, lon, maxKm) => {
+    let best = null, bestKm = Infinity;
+    for (const f of features) {
+      const km = haversineKm(lat, lon, f.lat, f.lon);
+      if (km < bestKm) { bestKm = km; best = f; }
+    }
+    return best && bestKm <= maxKm ? best.area : null;
+  };
+  for (let i = 0; i < 50; i++) {
+    const lat = 69.9 + next() * 0.2, lon = 20 + next() * 4;
+    const gridResult = answerArea({ lat, lon, radius_m: 5000 }, grid);
+    const expected = bruteForce(lat, lon, 5);
+    assert.equal(gridResult, expected, `at (${lat},${lon}) r=5000 near 70°N`);
+  }
+});
+
 // ---- Paging ----
 test("changesetsUrl: display_name always, time= only when there is a bound to give", () => {
   const api = "https://api.openstreetmap.org/api/0.6";
@@ -322,7 +357,45 @@ test("advanceBackfillCursor: walks the cursor back a page, marks done on a short
   assert.equal(c2.done, true);
   assert.equal(c2.oldest_scanned, c1.oldest_scanned, "the cursor stops moving once done");
   const c3 = advanceBackfillCursor(null, []);
-  assert.deepEqual(c3, { oldest_scanned: null, done: true });
+  assert.deepEqual(c3, { oldest_scanned: null, done: true, floor: null });
+});
+
+// ---- Closing a gap the top-up could not finish within its own budget ----
+test("reopenGap: floors at the old watermark only when the previous backfill had actually finished", () => {
+  const finished = { oldest_scanned: "2020-01-01T00:00:00Z", done: true, floor: null };
+  const g1 = reopenGap("2026-08-01T00:00:00Z", "2026-06-01T00:00:00Z", finished);
+  assert.deepEqual(g1, { oldest_scanned: "2026-08-01T00:00:00Z", done: false, floor: "2026-06-01T00:00:00Z" });
+
+  // The previous backfill had not finished: there is nothing safe to floor
+  // at, so the reopened walk still has to reach the real beginning.
+  const unfinished = { oldest_scanned: "2024-03-01T00:00:00Z", done: false, floor: null };
+  const g2 = reopenGap("2026-08-01T00:00:00Z", "2026-06-01T00:00:00Z", unfinished);
+  assert.deepEqual(g2, { oldest_scanned: "2026-08-01T00:00:00Z", done: false, floor: null });
+
+  // No previous backfill at all (a reader's first-ever top-up gap): same as
+  // "not finished" — no floor to give it.
+  const g3 = reopenGap("2026-08-01T00:00:00Z", "2026-06-01T00:00:00Z", null);
+  assert.equal(g3.floor, null);
+});
+
+test("advanceBackfillCursor: a floor stops the reopened walk early, without re-walking known history", () => {
+  const cursor = reopenGap("2026-08-01T00:00:00Z", "2026-06-01T00:00:00Z",
+    { oldest_scanned: "2020-01-01T00:00:00Z", done: true, floor: null });
+  // A full page whose oldest entry (+1s from pageBoundary) lands at or below
+  // the floor: the gap is closed, and there is nothing left below it to
+  // fetch a second time.
+  const page = Array.from({ length: 100 }, (_, i) =>
+    ({ created_at: `2026-06-${String(30 - i).padStart(2, "0")}T00:00:00Z` }));
+  const next = advanceBackfillCursor(cursor, page);
+  assert.equal(next.done, true);
+  assert.equal(next.floor, null);
+
+  // Not there yet: still walking, the floor carries forward unchanged.
+  const shortOfFloor = Array.from({ length: 100 }, (_, i) =>
+    ({ created_at: `2026-07-${String(30 - i).padStart(2, "0")}T00:00:00Z` }));
+  const stillGoing = advanceBackfillCursor(cursor, shortOfFloor);
+  assert.equal(stillGoing.done, false);
+  assert.equal(stillGoing.floor, "2026-06-01T00:00:00Z");
 });
 
 // ---- Saved places ----
@@ -356,4 +429,14 @@ test("addSaved: a missing name is stored as empty, never undefined in the record
   const list = addSaved([], { osm: "x", lon: 0, lat: 0 });
   assert.equal(list[0].name, "");
   assert.ok(list[0].saved_at);
+});
+
+// ---- A background refresh's result must not outlive the login it started under ----
+test("refreshApplies: only when the generation has not moved since the refresh began", () => {
+  assert.equal(refreshApplies(3, 3), true);
+  // logout() or a fresh login bumps the generation while the fetch was in
+  // flight: the result it eventually brings back is stale and must not be
+  // written.
+  assert.equal(refreshApplies(3, 4), false);
+  assert.equal(refreshApplies(0, 0), true);
 });

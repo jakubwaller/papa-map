@@ -234,7 +234,39 @@
 > rebuilt `allFeatures` on every refresh but never re-evaluated a standing
 > room card, so `roomCardFeature` could still name an object the new dataset
 > had dropped for up to the card's own five minutes; it now calls
-> `evaluateRoomCard()` too, the same recomputation every other trigger uses.
+> `evaluateRoomCard()` too — but only when `roomCardFeature` is already set,
+> to retarget or drop the standing card, never to raise one that is not
+> showing: `evaluateRoomCard` reads only `lastFix`, with no memory of a pan
+> that dismissed the card without touching the fix itself, and calling it
+> unconditionally would have resurrected exactly that.
+>
+> **Round 2 review, same files again.** `web/app.js`'s `refreshMyAnswers`
+> captured `user`/`cache` and awaited up to five sequential 15 s requests
+> before unconditionally writing the result — a `logout()` during that
+> window (the logout button lives inside this very dialog) cleared
+> `papamap-my-answers` and the in-flight refresh then wrote the previous
+> account's changesets straight back, breaking the Datenschutz page's own
+> "gelöscht beim Abmelden". A generation counter, `myAnswersGeneration`,
+> bumped by `logout()` and by a fresh login, is read before the fetch starts
+> and checked again after — `me.js`'s new `refreshApplies(start, current)`,
+> a tested seam rather than a comparison re-typed at each call site — before
+> the result ever touches storage or the in-memory cache; `logout()` also
+> aborts the fetch outright via one shared `AbortController`, so it does not
+> keep running for nothing. Separately, the top-up pass (part 2, above) used
+> to advance the watermark to the newest answer on its very first page
+> regardless of budget — if more than a budget's worth of changesets sat
+> between the old watermark and the new one, the unscanned stretch in
+> between was gone for good the moment the watermark moved past it. `me.js`'s
+> new `reopenGap(before, oldWatermark, previousBackfill)` reopens the
+> backfill cursor at the point the top-up actually reached instead, with a
+> `floor` at the old watermark so a previously-*finished* backfill does not
+> have to re-walk history it already has; a still-unfinished one gets no
+> floor and keeps walking to the real beginning, same as always. (Known,
+> accepted simplification: a second gap opening before the first has closed
+> reopens the cursor at the newer point without separately remembering the
+> older, still-unfinished stretch — a reader would need to leave more than a
+> page's worth of new changesets between nearly every dialog open for that
+> to matter.)
 
 > **v38 amendment (19 Sep 2026, share a pin, and the room card):** **no shape
 > change** — no data file gains, loses or changes a property, and `STATUSES`

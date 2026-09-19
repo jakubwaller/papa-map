@@ -22,7 +22,7 @@ import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, g
 import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
-         changesetsUrl, pageBoundary, advanceBackfillCursor } from "./me.js?v=app33";
+         changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies } from "./me.js?v=app33";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -277,6 +277,13 @@ window._papamap = map;
 let allFeatures = [];                                     // flattened GeoJSON
 let allPlaces = [];                                       // play-area prospects
 let myFeatureGrid = null;   // buildFeatureGrid(allFeatures) — "Mein PapaMap"'s own nearest lookup
+// osm_url -> object, one Map each rather than an allFeatures.find/allPlaces.find
+// per lookup: the saved-places list alone can be up to 200 rows, each wanting
+// a colour and a fly-to target, which was 200 O(n) scans of ~26k features
+// apiece. Rebuilt alongside myFeatureGrid, wherever else allFeatures/allPlaces
+// themselves are rebuilt.
+let featuresByOsmUrl = new Map();
+let placesByOsmUrl = new Map();
 let visible = new Set(STATUS_DEFS.map((d) => d.value));   // toggled-on statuses
 let playOnly = false;                                     // narrow to play corners
 // narrow to wheelchair=yes (v26), remembered on the device
@@ -1442,8 +1449,7 @@ function setEditNote(rec, cls, key, tags = null, vars = null) {
 
 function toastEditNote() {
   const note = editNote;
-  const obj = (note.kind === "place" ? allPlaces : allFeatures)
-    .find((o) => o.osm_url === note.osm_url);
+  const obj = (note.kind === "place" ? placesByOsmUrl : featuresByOsmUrl).get(note.osm_url);
   toast(editText(note), {
     ms: 8000,
     onTap: obj ? () => reopen(note.kind, obj) : null,
@@ -1658,6 +1664,13 @@ function logout() {
   // Without this a login right after logout waited out the five-minute
   // throttle before fetching anything — "0 Antworten" until it did.
   myAnswersFetchedAt = 0;
+  // A refresh already in flight when this runs must not write its result
+  // back once it lands — bumping invalidates it (refreshMyAnswers checks
+  // this via refreshApplies before touching storage or the in-memory cache)
+  // — and aborting its own requests stops it outrunning the check for no
+  // reason.
+  myAnswersGeneration++;
+  myAnswersAbort?.abort();
   if (token) revoke(osm, token);
   if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line changes
 }
@@ -1904,7 +1917,12 @@ async function completeLogin(href) {
     for (const k of ["code", "state", "error", "error_description"]) url.searchParams.delete(k);
     history.replaceState(null, "", url);
   }
-  if (login?.token) setLogin(login.token, await userName(osm, login.token).catch(() => null));
+  if (login?.token) {
+    setLogin(login.token, await userName(osm, login.token).catch(() => null));
+    // A refresh started under a previous login (or no login at all, on a
+    // shared device) must not write its result under this one's name.
+    myAnswersGeneration++;
+  }
   else if (login?.failed) toast(t("loginFailed"));
   // Taken whether or not the login went through: a refused consent must not
   // leave an answer waiting to be filed under the next login.
@@ -1912,7 +1930,7 @@ async function completeLogin(href) {
   // The answer given before the login round trip: land on its pin and file it.
   if (intent && login?.token) {
     const kind = intent.kind === "place" ? "place" : "table";
-    const obj = (kind === "place" ? allPlaces : allFeatures).find((x) => x.osm_url === intent.osm_url);
+    const obj = (kind === "place" ? placesByOsmUrl : featuresByOsmUrl).get(intent.osm_url);
     if (obj) {
       map.jumpTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
       reopen(kind, obj);
@@ -1945,14 +1963,14 @@ let pendingPin = null;
 function openPin(osmUrl) {
   if (!osmUrl) return;
   if (!dataReady) { pendingPin = osmUrl; return; }
-  const f = allFeatures.find((x) => x.osm_url === osmUrl);
+  const f = featuresByOsmUrl.get(osmUrl);
   if (f) {
     map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
     openPopup(f);
     stripOsmParam();
     return;
   }
-  const p = allPlaces.find((x) => x.osm_url === osmUrl);
+  const p = placesByOsmUrl.get(osmUrl);
   if (p) {
     map.jumpTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
     openPlacePopup(p);
@@ -1993,6 +2011,10 @@ function applyDataset(fc, places, stats, areas) {
   // lazily on first use, so a background refresh's new dataset is what the
   // next answer gets attributed against too.
   myFeatureGrid = buildFeatureGrid(allFeatures);
+  featuresByOsmUrl = new Map();
+  for (const f of allFeatures) if (f.osm_url) featuresByOsmUrl.set(f.osm_url, f);
+  placesByOsmUrl = new Map();
+  for (const p of allPlaces) if (p.osm_url) placesByOsmUrl.set(p.osm_url, p);
   renderStats(stats);
   areaIndex = Array.isArray(areas) ? areas : null;
   updateRegionsLink();
@@ -2001,8 +2023,8 @@ function applyDataset(fc, places, stats, areas) {
   refreshPins();
   if (isNative()) shareTables();   // the widget and the shortcut search this same data
   if (popupObj) {
-    const list = popupObj.kind === "place" ? allPlaces : allFeatures;
-    const obj = list.find((o) => o.osm_url === popupObj.obj.osm_url);
+    const byUrl = popupObj.kind === "place" ? placesByOsmUrl : featuresByOsmUrl;
+    const obj = byUrl.get(popupObj.obj.osm_url);
     if (obj) {
       popupObj = { kind: popupObj.kind, obj };
       if (popup) {
@@ -2015,13 +2037,14 @@ function applyDataset(fc, places, stats, areas) {
       popupObj = null;
     }
   }
-  // A background refresh can drop the very object the room card is standing
-  // on (or bring back one the reader dismissed and that got re-added under
-  // the same id) — evaluateRoomCard recomputes it from scratch, the same
-  // call every other trigger already makes, so a card that has now been
-  // sitting for up to five minutes never outlives the dataset it was named
-  // from.
-  evaluateRoomCard();
+  // A background refresh can drop the very object a STANDING room card is
+  // named after — only re-evaluate when one is actually up, to retarget or
+  // drop it, never to raise one that is not showing: evaluateRoomCard reads
+  // only lastFix, with no memory of whether the reader panned away from the
+  // fix's own spot in the meantime (hideRoomCard, the moveend handler below,
+  // clears roomCardFeature but not lastFix itself) or closed the card
+  // outright, and calling it unconditionally here would resurrect either.
+  if (roomCardFeature) evaluateRoomCard();
 }
 
 // The app's background refresh, watched once boot has already drawn: waits
@@ -2392,7 +2415,7 @@ function toggleStar(btn) {
   let next;
   if (already) next = removeSaved(savedPlaces, osm);
   else {
-    const obj = allFeatures.find((x) => x.osm_url === osm) || allPlaces.find((x) => x.osm_url === osm);
+    const obj = featuresByOsmUrl.get(osm) || placesByOsmUrl.get(osm);
     if (!obj) return;
     next = addSaved(savedPlaces, { osm, name: btn.dataset.name || "", lon: obj.lon, lat: obj.lat });
   }
@@ -2412,9 +2435,9 @@ function toggleStar(btn) {
 // this case).
 function openSavedPlace(row) {
   meDialog.close();
-  const f = allFeatures.find((x) => x.osm_url === row.osm);
+  const f = featuresByOsmUrl.get(row.osm);
   if (f) { map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }); openPin(row.osm); return; }
-  const p = allPlaces.find((x) => x.osm_url === row.osm);
+  const p = placesByOsmUrl.get(row.osm);
   if (p) { map.flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) }); openPlacePopup(p); return; }
   map.flyTo({ center: [row.lon, row.lat], zoom: Math.max(map.getZoom(), 16) });
 }
@@ -2423,9 +2446,9 @@ function openSavedPlace(row) {
 // still has it (a table's status, a play place's blue), a plain outline when
 // it does not — never a status this project did not actually classify.
 function savedDotClass(osmUrl) {
-  const f = allFeatures.find((x) => x.osm_url === osmUrl);
+  const f = featuresByOsmUrl.get(osmUrl);
   if (f) return viewFor(f.status, mode).cls;
-  return allPlaces.some((x) => x.osm_url === osmUrl) ? "play" : "neutral";
+  return placesByOsmUrl.has(osmUrl) ? "play" : "neutral";
 }
 
 function renderSavedList() {
@@ -2485,6 +2508,17 @@ const MY_ANSWERS_PAGES = 5;
 const MY_ANSWERS_REFRESH_MS = 5 * 60 * 1000;   // at most one refresh per open, and per five minutes
 let myAnswers = null;         // { user, answers, backfill } once loaded/fetched this page load
 let myAnswersFetchedAt = 0;
+// Bumped by logout() and by a fresh login (possibly as another user) — a
+// refresh started before either must not write its result once it lands:
+// the privacy page's own promise ("beim Abmelden werden sie gelöscht") has
+// to hold even for a fetch already running when the reader logs out mid-
+// dialog (the logout button lives inside this very dialog).
+let myAnswersGeneration = 0;
+// The one AbortController a running refresh's requests can be cancelled
+// through — logout() aborts it too, not just outrunning it via the
+// generation check, so a reader closing the loop does not leave a request
+// quietly finishing in the background for nothing.
+let myAnswersAbort = null;
 
 function loadMyAnswersRaw(user) {
   try {
@@ -2529,9 +2563,16 @@ function recordMyAnswer(changesetId, lon, lat) {
 // any failure (offline, a timeout, a dead mirror, a non-OK response, bad
 // JSON) — swallowed here so the caller can simply stop rather than surface
 // an error the spec says never to show for this.
-async function fetchChangesetPage(url) {
+// `outerSignal`, when given, aborts this request too — refreshMyAnswers
+// passes the one AbortController logout() can reach, so a reader who logs
+// out mid-refresh does not leave a request quietly finishing in the
+// background with nothing left to hand its answer to.
+async function fetchChangesetPage(url, outerSignal) {
   try {
-    const r = await fetch(url, { signal: AbortSignal.timeout?.(15000) });
+    const timeout = AbortSignal.timeout?.(15000);
+    const signal = timeout && outerSignal && AbortSignal.any
+      ? AbortSignal.any([timeout, outerSignal]) : (outerSignal ?? timeout);
+    const r = await fetch(url, { signal });
     if (!r.ok) return null;
     const list = (await r.json())?.changesets;
     return Array.isArray(list) ? list : null;
@@ -2546,41 +2587,50 @@ async function fetchChangesetPage(url) {
 // 1. Top-up — what's new since the cache's own newest record (`since`). On
 //    a first-ever open the cache is empty and this pass is skipped outright:
 //    with no watermark to top up from it would only repeat pass 2's own
-//    first call.
+//    first call. Its very first call is always unbounded at the top, so it
+//    always learns the true newest changesets regardless of budget — if the
+//    budget runs out before it pages all the way back down to `since`, the
+//    stretch it did not reach must not just vanish the next time `since`
+//    advances past it: reopenGap (web/me.js) reopens the backfill cursor
+//    there instead, with a floor so a previously-finished backfill does not
+//    have to re-walk territory it already covered.
 // 2. Backfill — continues from `backfill.oldest_scanned` (or the start of
 //    OSM's own history, on a first-ever open) with whatever budget the
 //    top-up did not spend, so a reader who has answered a lot, or who also
 //    makes a lot of unrelated edits, is not stuck forever on the newest 500.
-//    Stops for good (`done: true`) once a page comes back short.
+//    Stops for good (`done: true`) once a page comes back short, or once it
+//    reaches its own floor (a gap reopenGap gave it).
 //
 // Either pass can spend its whole share of the budget without reaching the
 // end of what it is asking for; the next open picks up exactly where this
 // one left off (the top-up from the cache's new watermark, the backfill
 // from its advanced cursor).
-async function fetchMyAnswers(user, cache) {
+async function fetchMyAnswers(user, cache, signal) {
   let answers = cache.answers ?? [];
-  let backfill = cache.backfill ?? { oldest_scanned: null, done: false };
+  let backfill = cache.backfill ?? { oldest_scanned: null, done: false, floor: null };
   let pagesUsed = 0;
 
   if (answers.length) {
     const since = newestClosedAt(answers);
     let before = null;
+    let reachedWatermark = false;
     while (pagesUsed < MY_ANSWERS_PAGES) {
-      const page = await fetchChangesetPage(changesetsUrl(osm.api, user, since, before));
+      const page = await fetchChangesetPage(changesetsUrl(osm.api, user, since, before), signal);
       pagesUsed++;
       if (page === null) return { answers, backfill };   // network failure: keep what we have
-      if (!page.length) break;
+      if (!page.length) { reachedWatermark = true; break; }
       answers = mergeAnswers(answers, extractAnswers(page));
       before = pageBoundary(page);
-      if (!before) break;   // caught up to the cache's own watermark
+      if (!before) { reachedWatermark = true; break; }   // caught up to the cache's own watermark
     }
+    if (!reachedWatermark && before) backfill = reopenGap(before, since, backfill);
   }
 
   while (!backfill.done && pagesUsed < MY_ANSWERS_PAGES) {
     const url = backfill.oldest_scanned
       ? changesetsUrl(osm.api, user, null, backfill.oldest_scanned)
       : changesetsUrl(osm.api, user, null, null);
-    const page = await fetchChangesetPage(url);
+    const page = await fetchChangesetPage(url, signal);
     pagesUsed++;
     if (page === null) break;
     answers = mergeAnswers(answers, extractAnswers(page));
@@ -2596,8 +2646,17 @@ async function refreshMyAnswers() {
   const user = getUser();
   if (!user || Date.now() - myAnswersFetchedAt < MY_ANSWERS_REFRESH_MS) return;
   myAnswersFetchedAt = Date.now();
+  const generation = myAnswersGeneration;
   const cache = ensureMyAnswers(user);
-  const { answers, backfill } = await fetchMyAnswers(user, cache);
+  myAnswersAbort = new AbortController();
+  const { answers, backfill } = await fetchMyAnswers(user, cache, myAnswersAbort.signal);
+  // The reader may have logged out (or into a different account) while this
+  // was in flight — refreshApplies (web/me.js) is the one place that decides
+  // whether a result may still be applied. Discarded silently otherwise:
+  // never write a previous account's changesets back after logout cleared
+  // them, and never mutate the in-memory cache/re-render under the new
+  // account's name either.
+  if (!refreshApplies(generation, myAnswersGeneration)) return;
   cache.answers = answers;
   cache.backfill = backfill;
   writeMyAnswersRaw(user, answers, backfill);
