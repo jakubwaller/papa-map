@@ -187,6 +187,14 @@ export const ROOMS = {
   outdoor: "outdoor",
 };
 
+// The i18n key each choice's label lives under, in web/i18n.js — the answer
+// buttons' own words. Colocated with ROOMS rather than with the buttons that
+// render it, so roomLabelKeys below reuses it instead of re-deriving a key
+// from the choice name a second way.
+export const ROOM_LABEL = { both: "roomBoth", male: "roomMale", female: "roomFemale",
+                             unisex: "roomUnisex", wheelchair: "roomWheelchair", dedicated: "roomDedicated",
+                             room: "roomRoom", sales: "roomSales", outdoor: "roomOutdoor" };
+
 // Which rooms a reader can vouch for. A mother has seen the women's room and
 // whatever is open to everyone; the men's room is not hers to answer for, and
 // "both" would be a guess about it. A father gets the full set: "both" is his
@@ -212,6 +220,40 @@ export function roomChoicesMore() {
 export function roomPatch(choice) {
   if (!(choice in ROOMS)) throw new Error(`unknown room choice ${choice}`);
   return { "changing_table:location": ROOMS[choice] };
+}
+
+// The single OSM tokens ROOMS uses, inverted for a lookup back from a tag
+// value to the choice that writes it. "both" is left out on purpose: its
+// value is the two-token combination roomLabelKeys handles separately below,
+// never a token that appears on its own.
+const TOKEN_TO_CHOICE = Object.fromEntries(
+  Object.entries(ROOMS).filter(([choice]) => choice !== "both").map(([choice, value]) => [value, choice]));
+
+// The reader's-language display for a raw `changing_table:location` value —
+// display only, never a classifier: pipeline/classify.py's token matching is
+// the one place this project's colour comes from, and this function does not
+// touch it. Splits on ";" the way the tag's multi-value reads and OSM writes
+// it, trims stray spaces around a ";" a human editor left, and drops
+// duplicates and empties. Each part comes back as either `{ key }`, an i18n
+// key into web/i18n.js (the answer buttons' own labels, via ROOM_LABEL, so
+// the popup and the buttons that wrote the tag always agree), or `{ raw }`
+// verbatim — a token this project's vocabulary does not have a label for,
+// which the reader must still see rather than have swallowed.
+//
+// Token matching is EXACT, never substring, the same rule classify.py lives
+// by: "female_toilet" contains "male_toilet", so a substring test would read
+// a women's-only room as the mixed one. The pair {female_toilet, male_toilet},
+// in either order and only that pair, is what a reader calls "both" — it
+// collapses to the one label rather than printing two.
+export function roomLabelKeys(raw) {
+  if (!raw) return [];
+  const tokens = [...new Set(raw.split(";").map((s) => s.trim()).filter(Boolean))];
+  if (tokens.length === 2 && tokens.includes("female_toilet") && tokens.includes("male_toilet"))
+    return [{ key: ROOM_LABEL.both }];
+  return tokens.map((tok) => {
+    const choice = TOKEN_TO_CHOICE[tok];
+    return choice ? { key: ROOM_LABEL[choice] } : { raw: tok };
+  });
 }
 
 // The play-place answer. There the table is news to OSM, so the yes travels

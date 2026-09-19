@@ -7,19 +7,21 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js?v=app29";
+         TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
+         EDIT_CHECK_DELAYS } from "./datasource.js?v=app31";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app29";
+         langUrl } from "./i18n.js?v=app31";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app29";
+         ROOM_LABEL, roomLabelKeys,
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app31";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app29";
+         formatMB, citiesToMount } from "./native.js?v=app31";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -43,9 +45,6 @@ const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 // host: the changeset's `host` tag stays the site's address — the redirect is
 // only the OAuth return leg, and papamap://auth is no provenance for an edit.
 const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT, host: LIVE.redirect } : endpoints(location);
-const ROOM_LABEL = { both: "roomBoth", male: "roomMale", female: "roomFemale",
-                     unisex: "roomUnisex", wheelchair: "roomWheelchair", dedicated: "roomDedicated",
-                     room: "roomRoom", sales: "roomSales", outdoor: "roomOutdoor" };
 const CHANGESET_COMMENT = {
   table: "Changing table: which room (answered on papamap.de)",
   place: "Changing table: added, with its room (answered on papamap.de)",
@@ -472,6 +471,15 @@ function wheelchairRows(o) {
   return rows;
 }
 
+// The room, in the reader's own language, for the two popups and the edit
+// confirmation alike: roomLabelKeys (osm.js) does the splitting and the exact
+// token matching, this only turns its parts into words — t() for a key,
+// verbatim for a token the vocabulary does not know. Never escaped here: one
+// call site puts it in HTML and escapes the whole line itself, the other
+// feeds it to textContent, where escaping a second time would show a reader
+// "&amp;" instead of "&".
+const roomLabel = (raw) => roomLabelKeys(raw).map((p) => (p.key ? t(p.key) : p.raw)).join(", ");
+
 // The Route button, the same one in both popups. Its href is what a tap
 // follows everywhere but the iOS app: a geo: URI on the web and on Android,
 // Apple Maps on iOS. data-route carries the destination for the iOS cascade
@@ -497,14 +505,21 @@ function popupHTML(f) {
   // her sentence — "usually one you can reach" is the one thing her amber
   // pin has to say, and her two rows of pills leave the room for it.
   // "Changing table: yes" goes for the same reason — every pin that asks
-  // says it — and comes back for `limited`, or once a room is on record.
+  // says it — and is never printed again: every pin here has a changing
+  // table, so once the question is answered the line would say nothing.
+  // `limited`, or whatever else OSM holds, is real information and stays,
+  // alongside the room where one is on record.
   const short = asks && mode !== "mama";
   const rows = [
     `<div class="status ${s.cls}${asks ? " ask-ctx" : ""}">${esc(t(short ? s.labelKey : s.metaKey))}</div>`,
   ];
-  if (f.changing_table !== "yes" || f.location_raw)
-    rows.push(`<div class="row">${esc(t("popupTable"))}: <b>${esc(f.changing_table)}</b>` +
-      (f.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(f.location_raw)}` : "") + `</div>`);
+  const tableValue = printableTableValue(f.changing_table);
+  if (tableValue || f.location_raw) {
+    const parts = [];
+    if (tableValue) parts.push(`${esc(t("popupTable"))}: <b>${esc(tableValue)}</b>`);
+    if (f.location_raw) parts.push(`${esc(t("popupRoom"))}: ${esc(roomLabel(f.location_raw))}`);
+    rows.push(`<div class="row">${parts.join(" · ")}</div>`);
+  }
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
   rows.push(...wheelchairRows(f));
   // Only ever seen under the wheelchair chip: the door needs a central key.
@@ -618,10 +633,24 @@ function askPlayHTML(busy = false, who = false) {
 // in this session the popup reads like a pin's: the tags, no question.
 function placeHTML(p) {
   const rows = [];
-  if (p.changing_table)
-    rows.push(`<div class="row">${esc(t("popupTable"))}: <b>${esc(p.changing_table)}</b>` +
-      (p.location_raw ? ` · ${esc(t("popupRoom"))}: ${esc(p.location_raw)}` : "") + `</div>`);
-  else
+  if (p.changing_table) {
+    // "Changing table: yes" is dropped here too (v37): a place card that has
+    // a room to show has already answered the question this card would
+    // otherwise ask below, and "yes" beside it adds nothing beyond that.
+    // But "yes" alone, with no room to stand in for it, still prints — a
+    // place with a truthy changing_table always has an answered question
+    // (the else-branch below is the only "OSM says nothing" line, and it is
+    // keyed on changing_table being absent), so dropping "yes" unconditionally
+    // would risk a headline row with nothing in it at all. Today every path
+    // that sets changing_table on a place also sets a room (tablePatch), so
+    // this is only ever exercised by a future path that doesn't; it is still
+    // worth being honest about. `limited` (or anything else) always stays.
+    const tableValue = p.location_raw ? printableTableValue(p.changing_table) : p.changing_table;
+    const parts = [];
+    if (tableValue) parts.push(`${esc(t("popupTable"))}: <b>${esc(tableValue)}</b>`);
+    if (p.location_raw) parts.push(`${esc(t("popupRoom"))}: ${esc(roomLabel(p.location_raw))}`);
+    rows.push(`<div class="row">${parts.join(" · ")}</div>`);
+  } else
     // ask-ctx marks the line that is true only while the question is open —
     // "about a changing table, OSM says nothing" — so answer() can sweep it
     // with the .ask block. No styling of its own. ("Been here? Then you know"
@@ -1158,7 +1187,14 @@ async function pollEdit(gen, last) {
   if (out.changed) {
     clearEditTimers();
     writeEdit(null);
-    setEditNote(rec, "found", out.tags ? "editFound" : "editFoundPlain", out.tags);
+    // editFoundPlain, not editFound, whenever there is nothing printable to
+    // quote — out.tags is non-null but printableEditTagLines(out.tags) can
+    // still come back empty when the only change is `changing_table=yes`
+    // (the theme's standalone table question, answered on a play place with
+    // no room to show instead): tagsLabel would otherwise render an empty
+    // line, and the toast would read "…OSM: . …".
+    const printable = out.tags && printableEditTagLines(out.tags).length > 0;
+    setEditNote(rec, "found", printable ? "editFound" : "editFoundPlain", out.tags);
   } else if (last) {
     // The record stays: coming back to the tab re-arms the reads until the
     // TTL runs out, for the reader who returned once before answering — but
@@ -1174,13 +1210,21 @@ async function pollEdit(gen, last) {
   }
 }
 
-// "Changing table: yes · room: unisex_toilet" — the popup's own labels, the
-// tag values verbatim. Which lines there are (and that "Play area: yes ·
-// Indoor play area: no" is two of them) is editTagLines' business, in
-// datasource.js where the tags and their labels live; this only puts the
-// words to it. Goes through textContent, so no escaping here.
+// "Room: unisex toilet" — the popup's own labels, in the reader's language
+// where roomLabel has one, the tag value verbatim otherwise. Which lines
+// there are (and that "Play area: yes · Indoor play area: no" is two of
+// them) is printableEditTagLines' business, in datasource.js where the tags
+// and their labels live; this only puts the words to it, at render time, the
+// way the two popups do — editTagLines itself still hands back "yes" and the
+// raw room token unchanged. "Changing table: yes" is dropped the same way it
+// is in the popups (v37): the line would only repeat what every object here
+// already has — pollEdit asks the same question to pick editFound over
+// editFoundPlain, so the two can never disagree about whether there is
+// anything here to show. Goes through textContent, so no escaping here.
 const tagsLabel = (tags) =>
-  editTagLines(tags).map(([label, value]) => `${t(label)}: ${value}`).join(" · ");
+  printableEditTagLines(tags)
+    .map(([label, value]) => `${t(label)}: ${label === "popupRoom" ? roomLabel(value) : value}`)
+    .join(" · ");
 
 const editText = (note) =>
   note.key === "editFound" ? t("editFound", { tags: tagsLabel(note.tags) }) : t(note.key, note.vars ?? {});

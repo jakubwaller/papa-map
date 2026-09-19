@@ -1,9 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
-         finishLogin, ROOMS, roomChoices, roomChoicesMore, roomPatch, tablePatch,
+         finishLogin, ROOMS, ROOM_LABEL, roomChoices, roomChoicesMore, roomPatch, tablePatch,
+         roomLabelKeys,
          PLAY_CHOICES, PLAY_KEYS, isPlayChoice, playPatch, guardKeys, changesetTags, changesetXml,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY } from "./osm.js";
+import { STRINGS, LANGS } from "./i18n.js";
 
 // ---- Which OSM ----
 
@@ -97,6 +99,54 @@ test("room values are the theme's vocabulary, which is what classify.py reads", 
   for (const v of Object.values(ROOMS))
     for (const tok of v.split(";")) assert.ok(known.has(tok), tok);
   assert.equal(ROOMS.both, "female_toilet;male_toilet");
+});
+
+test("every room choice has a label, and roomLabelKeys names no other key", () => {
+  assert.deepEqual(Object.keys(ROOM_LABEL).sort(), Object.keys(ROOMS).sort());
+  for (const [choice, key] of Object.entries(ROOM_LABEL))
+    assert.equal(key, `room${choice[0].toUpperCase()}${choice.slice(1)}`, choice);
+});
+
+test("every ROOM_LABEL key resolves in STRINGS, in every language", () => {
+  // The same guard datasource.test.js runs for EDIT_TAG_LABEL: a key with no
+  // string in some language would print that key's own name to a reader
+  // instead of a word, in that language only — easy to miss without this.
+  for (const lang of LANGS)
+    for (const key of Object.values(ROOM_LABEL))
+      assert.ok(STRINGS[lang][key]?.trim(), `${lang}: ${key}`);
+});
+
+test("roomLabelKeys turns a raw changing_table:location into display parts", () => {
+  // Null/empty: no parts, not a crash.
+  assert.deepEqual(roomLabelKeys(null), []);
+  assert.deepEqual(roomLabelKeys(undefined), []);
+  assert.deepEqual(roomLabelKeys(""), []);
+  // The single tokens, each its own label.
+  assert.deepEqual(roomLabelKeys("female_toilet"), [{ key: "roomFemale" }]);
+  assert.deepEqual(roomLabelKeys("wheelchair_toilet"), [{ key: "roomWheelchair" }]);
+  // Exact matching, never substring: "female_toilet" contains "male_toilet",
+  // but it is not the men's room and must never come back as one.
+  assert.notDeepEqual(roomLabelKeys("female_toilet"), [{ key: "roomMale" }]);
+  assert.deepEqual(roomLabelKeys("male_toilet"), [{ key: "roomMale" }]);
+  // The pair, either order, collapses to the one "both" label.
+  assert.deepEqual(roomLabelKeys("female_toilet;male_toilet"), [{ key: "roomBoth" }]);
+  assert.deepEqual(roomLabelKeys("male_toilet;female_toilet"), [{ key: "roomBoth" }]);
+  // Whitespace around a ";" a human editor left.
+  assert.deepEqual(roomLabelKeys(" female_toilet ; male_toilet "), [{ key: "roomBoth" }]);
+  // A known token beside one this vocabulary does not have — the unknown
+  // token comes back verbatim, not swallowed.
+  assert.deepEqual(roomLabelKeys("female_toilet;attic"),
+    [{ key: "roomFemale" }, { raw: "attic" }]);
+  // An unknown token alone.
+  assert.deepEqual(roomLabelKeys("attic"), [{ raw: "attic" }]);
+  // A triple: the "both" pair is only ever exactly {female_toilet,
+  // male_toilet} — a third token beside it means three parts, not "both" plus
+  // one more.
+  assert.deepEqual(roomLabelKeys("female_toilet;male_toilet;wheelchair_toilet"),
+    [{ key: "roomFemale" }, { key: "roomMale" }, { key: "roomWheelchair" }]);
+  // Duplicated tokens collapse.
+  assert.deepEqual(roomLabelKeys("female_toilet;female_toilet"), [{ key: "roomFemale" }]);
+  assert.deepEqual(roomLabelKeys("attic;attic"), [{ raw: "attic" }]);
 });
 
 test("a mother is not asked about the men's room; a father gets every answer", () => {
