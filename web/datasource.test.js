@@ -5,7 +5,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          isWheelchairOk, countWheelchair, pinFeatures, placeFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, areaKeysFor, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, localAnswered, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
@@ -904,6 +904,68 @@ test("areaKeysFor: a chunk's own one area, a country's several, nothing for null
   assert.deepEqual(areaKeysFor(hh), new Set(["Hamburg"]));
   assert.deepEqual(areaKeysFor(de), new Set(["Bayern", "Hamburg", "Schleswig-Holstein"]));
   assert.deepEqual(areaKeysFor(null), new Set());
+});
+
+// ---- The count "Mein PapaMap" shows has to match exactly what the label names ----
+// Live bug (19 Sep 2026, PR #147 hotfix, CONTRACT.md v40): an English reader
+// over Hamburg saw "Changing tables in Germany: 31 % answered" — Hamburg's
+// own number (131 tables) under the whole country's name, because
+// areaLink's fallback for a chunk with no page in the reader's language
+// points at the PARENT's twin while areaKeysFor(row) taken alone still
+// named only the chunk.
+test("areaForLabel: a German reader over a chunk gets the chunk's own label and keys", () => {
+  const hh = AREAS.find((a) => a.href === "wickeltische/hamburg.html");
+  assert.deepEqual(areaForLabel(hh, "de", AREAS),
+    { label: "Wickeltische in Hamburg", keys: new Set(["Hamburg"]) });
+});
+
+test("areaForLabel: a reader whose language the chunk has no page in gets the PARENT's label AND its keys — never the chunk's own smaller ones under the country's name", () => {
+  const hh = AREAS.find((a) => a.href === "wickeltische/hamburg.html");
+  const result = areaForLabel(hh, "en", AREAS);
+  assert.equal(result.label, "Changing tables in Germany");
+  assert.deepEqual(result.keys, new Set(["Bayern", "Hamburg", "Schleswig-Holstein"]));
+  // Any language the chunk has no page in falls back the same way.
+  assert.deepEqual(areaForLabel(hh, "cs", AREAS).keys, new Set(["Bayern", "Hamburg", "Schleswig-Holstein"]));
+});
+
+test("areaForLabel: a French région, in French and in English, per what areas.json actually holds", () => {
+  const grandEst = AREAS.find((a) => a.href === "wickeltische/grand-est.html");
+  assert.deepEqual(areaForLabel(grandEst, "fr", AREAS),
+    { label: "Tables à langer dans le Grand Est", keys: new Set(["Grand Est"]) });
+  const enResult = areaForLabel(grandEst, "en", AREAS);
+  assert.equal(enResult.label, "Changing tables in France");
+  assert.deepEqual(enResult.keys, new Set(["Grand Est"]));   // this fixture's France row has only one région behind it
+});
+
+test("areaForLabel: an unchunked country never redirects to a 'parent' — there isn't one", () => {
+  const dk = AREAS.find((a) => a.href === "wickeltische/danmark.html");
+  assert.deepEqual(areaForLabel(dk, "da", AREAS), { label: "Pusleborde i Danmark", keys: new Set(["Danmark"]) });
+  // A Czech reader gets the English twin's label, but it is still Denmark's
+  // OWN twin (a country row's `en` never points at something bigger) — the
+  // keys stay Denmark's.
+  assert.deepEqual(areaForLabel(dk, "cs", AREAS),
+    { label: "Changing tables in Denmark", keys: new Set(["Danmark"]) });
+});
+
+test("areaForLabel: a chunk with no twin of its own (a US state) never falls back, in any language", () => {
+  const florida = AREAS.find((a) => a.area === "Florida");
+  assert.deepEqual(areaForLabel(florida, "en", AREAS),
+    { label: "Changing tables in Florida", keys: new Set(["Florida"]) });
+  // No `en` field at all on this fixture row: areaLink has nothing to fall
+  // back to, so a German reader still gets Florida's own (English) label —
+  // untranslated, but the right area, matching CONTRACT.md v32.
+  assert.deepEqual(areaForLabel(florida, "de", AREAS),
+    { label: "Changing tables in Florida", keys: new Set(["Florida"]) });
+});
+
+test("areaForLabel: no row, or a parent that cannot be found, degrades rather than throwing", () => {
+  assert.deepEqual(areaForLabel(null, "de", AREAS), { label: null, keys: new Set() });
+  const orphan = { href: "wickeltische/orphan.html", lang: "xx", label: "Orphan",
+                   en: { href: "wickeltische/parent-en.html", label: "Parent" },
+                   area: "Orphan", parent: "wickeltische/does-not-exist.html" };
+  // The row claims a parent, but no row in the index has that href: falls
+  // back to the chunk's own area rather than an empty score.
+  assert.deepEqual(areaForLabel(orphan, "en", AREAS), { label: "Parent", keys: new Set(["Orphan"]) });
 });
 
 // A fake unproject standing in for map.unproject: north is up (lat falls as

@@ -517,24 +517,30 @@ data that already exists somewhere; none of it is a new thing PapaMap keeps
 about anyone.
 
 The headline is a game: "Wickeltische in Hamburg: 31 % beantwortet, 2
-davon sind von dir, 8 graue Pins im Umkreis von 1 km" — and both the area
-and its own name are whichever the footer link already shows: the same
-`pickArea` pick the "Wickeltische in Hamburg" link makes from the pins
-nearest the map centre (CONTRACT.md v32), and the exact same label text
-(`currentAreaLink.label` — the row's own `label`, or its `en.label` for a
-reader whose UI language the row isn't written in — never a bare sweep-area
-key on its own). `web/app.js` keeps that exact pick (`currentArea`/
-`currentAreaLink`) rather than choosing a second time with different
-inputs, so the two can never name different places, and panning from
-Hamburg to Berlin before opening the dialog gets Berlin. The percentage is
-counted live over every table the pipeline put in that area — every loaded
-feature, never the chip-filtered subset a reader happens to be looking at —
-never a second dataset of its own. Only when `pickArea` finds nothing at
-all (open sea, zoomed out past any area's reach) does the sentence fall
-back to the site's own whole-sweep numbers, the same ones the stats strip
-renders (`localAnswered`, `web/datasource.js` — one place "how many tables
-are answered" comes from `stats.json`'s `local` block, so the strip and
-that one fallback sentence cannot drift apart either). A second clause says
+davon sind von dir, 8 graue Pins im Umkreis von 1 km" — and the area is
+whichever one the footer link already shows: the same `pickArea` pick the
+"Wickeltische in Hamburg" link makes from the pins nearest the map centre
+(CONTRACT.md v32). `web/app.js` keeps that exact pick (`currentArea`)
+rather than choosing a second time with different inputs, so the two can
+never name different places, and panning from Hamburg to Berlin before
+opening the dialog gets Berlin. **The label and the count are decided
+together, by one function** — `areaForLabel(currentArea, lang, areaIndex)`
+in `web/datasource.js` (CONTRACT.md v40) — because they do not always agree
+with `currentArea` alone: a chunk (a Land, a région, a prefecture) with no
+page of its own in the reader's language shows the *parent country's* label
+(`areaLink`'s own rule, CONTRACT.md v32) — an English reader over Hamburg
+sees "Changing tables in Germany" — and the count then has to run over that
+whole country too, not just the one chunk `currentArea` still is, or the
+label would be naming an area the number never actually counted. The
+percentage itself is counted live over every table the pipeline put in
+whichever area that turns out to be — every loaded feature, never the
+chip-filtered subset a reader happens to be looking at — never a second
+dataset of its own. Only when `pickArea` finds nothing at all (open sea,
+zoomed out past any area's reach) does the sentence fall back to the site's
+own whole-sweep numbers, the same ones the stats strip renders
+(`localAnswered`, `web/datasource.js` — one place "how many tables are
+answered" comes from `stats.json`'s `local` block, so the strip and that
+one fallback sentence cannot drift apart either). A second clause says
 how many of the reader's own OSM changesets land in that same area — each
 attributed by the nearest loaded feature within the changeset's own search
 radius (below) — worded as an invitation rather than a zero when there are

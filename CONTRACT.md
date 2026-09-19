@@ -1,5 +1,34 @@
 # papa-map — build contract (v0)
 
+> **v40 amendment (19 Sep 2026, "Mein PapaMap" scores exactly the area it
+> names): no shape change.** **Corrects v39 below**, whose own text says the
+> count runs "by `f.area` membership in the row's own area keys:
+> `areaKeysFor(row)` is one key for a chunk" — true only for a reader whose
+> UI language the chunk actually has a page in. Live bug, found after v39
+> shipped: `https://papamap.de/?bbox=9.95,53.53,10.03,53.57` read in English
+> said *"Changing tables in Germany: 31 % answered"* — 31 % is Hamburg's own
+> figure (131 tables), not Germany's (6,242 tables, 20 %). `areaLink`'s own
+> rule (CONTRACT.md v32) sends a chunk with no page of its own in the
+> reader's language to its **parent country's** twin label — Hamburg has no
+> English page, so an English reader's footer link already read "Changing
+> tables in Germany" — while `areaKeysFor(currentArea)` kept scoring only
+> the one chunk `currentArea` still was. Fixed in one place so label and
+> count cannot diverge again: `web/datasource.js`'s new `areaForLabel(row,
+> lang, rows)` returns `{label, keys}` together — the chunk's own label and
+> `areaKeysFor(row)` when the reader's language has a page for it, otherwise
+> the parent country's label (looked up in `rows`, the full `areas.json`
+> list, by the chunk's own `parent` href) *and* `areaKeysFor(parent)`. A
+> country row's own `en` fallback is unaffected (it is still that same
+> country, just in English) and a chunk with no `en` at all (a US state, a
+> Canadian province) never falls back either way, so neither ever hit this.
+> `web/app.js`'s `meAreaNumbers` calls it in place of the two separate reads
+> v39 had; `currentAreaLink`, which existed only to feed that second read,
+> is gone — the footer link's own display is unaffected, still built from
+> `areaLink(currentArea, lang)` directly. Same bug, same fix, for France's
+> régions and Japan's prefectures, checked against a live `areas.json`: both
+> chunk rows fall back to their country's own twin the same way Germany's
+> Länder do. Shell pin `app33` → `app34`.
+>
 > **v39 amendment (19 Sep 2026, "Mein PapaMap"): no shape change** — no data
 > file gains, loses or changes a property, and classification stays exactly
 > where it was: nothing here derives a `status`, and PapaMap continues to
