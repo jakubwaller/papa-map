@@ -726,6 +726,38 @@ export function areaKeysFor(row) {
   return new Set(Array.isArray(row.areas) ? row.areas : []);
 }
 
+// "Mein PapaMap"'s own game sentence (CONTRACT.md v40) has to score exactly
+// the area its printed label names — never areaKeysFor(row) taken on its
+// own, which is the chunk's own one area regardless of which label
+// areaLink(row, lang) actually chose to show. A chunk (Land, région, state,
+// prefecture) carries no page of its own in a language it was not generated
+// in — only the parent COUNTRY has a real English twin (CONTRACT.md v32:
+// "the twin for a country, the country's twin for a chunk") — so
+// areaLink(row, lang) for a reader whose language the chunk doesn't have
+// falls back to that PARENT's twin: a Land, région or prefecture whose label
+// has fallen back this way is showing "Germany"/"France"/"Japan" while
+// areaKeysFor(row) still names only the one chunk — an English reader over
+// Hamburg saw "Changing tables in Germany: 31 % answered", Hamburg's own
+// number (131 tables) under the whole country's name, where Germany's real
+// figure is 20 % of 6,242. A US state or Canadian
+// province carries no `en` twin at all (their own chunk pages are already in
+// English) and so never falls back — areaLink returns the chunk's own label
+// for every reader regardless, and areaKeysFor(row) is already right there.
+// `rows` is the full areas.json list, needed to look the parent country row
+// up by its `parent` href once a fallback to it is detected; with no match
+// (a stale areas.json, a row missing its `parent`) this degrades to the
+// chunk's own area rather than an empty score.
+export function areaForLabel(row, lang, rows) {
+  if (!row) return { label: null, keys: new Set() };
+  const link = areaLink(row, lang);
+  const fellBackToParentTwin = row.area && row.lang !== lang && !!row.en;
+  if (fellBackToParentTwin) {
+    const parent = (Array.isArray(rows) ? rows : []).find((r) => r.href === row.parent);
+    if (parent) return { label: link.label, keys: areaKeysFor(parent) };
+  }
+  return { label: link.label, keys: areaKeysFor(row) };
+}
+
 // pickArea's centre and view have to be what the reader can actually SEE, not
 // the map canvas's own centre: the canvas extends underneath the (partly
 // transparent) top bar, so on a phone the canvas centre sits a third of a

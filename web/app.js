@@ -4,32 +4,32 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          countWheelchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, areaKeysFor, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance, localAnswered,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh } from "./datasource.js?v=app33";
+         isFixFresh } from "./datasource.js?v=app34";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app33";
+         langUrl } from "./i18n.js?v=app34";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app33";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app34";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
 import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
-         changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies } from "./me.js?v=app33";
+         changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies } from "./me.js?v=app34";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app33";
+         formatMB, citiesToMount } from "./native.js?v=app34";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -137,13 +137,15 @@ function applyI18n() {
 // doesn't cover; the ±180° wrap dance below is unchanged, just fed from that
 // visible centre instead of map.getCenter()/getBounds().
 let areaIndex = null;
-// The exact area row pickArea chose for the footer link, and its resolved
-// {href, label} — "Mein PapaMap"'s own game sentence (renderMeSentence,
-// below) reuses both rather than picking a second time with different
-// inputs, so the dialog can never name a different place than the header
-// link on screen (CONTRACT.md v39). Kept in sync by every updateRegionsLink
-// call: a pan, a language change, a mode change, the first draw.
-let currentArea = null, currentAreaLink = null;
+// The exact area row pickArea chose for the footer link — "Mein PapaMap"'s
+// own game sentence (renderMeSentence, below) reuses it rather than picking
+// a second time with different inputs, so the dialog can never name a
+// different place than the header link on screen (CONTRACT.md v39; the
+// label and the count it is scored over are then decided together by
+// areaForLabel, CONTRACT.md v40, not by re-deriving a link here). Kept in
+// sync by every updateRegionsLink call: a pan, a language change, a mode
+// change, the first draw.
+let currentArea = null;
 function updateRegionsLink() {
   const el = document.getElementById("regions-link");
   let link = null;
@@ -161,8 +163,8 @@ function updateRegionsLink() {
     const c = raw.wrap(), dx = c.lng - raw.lng;
     const view = rawBounds.map(([x, y]) => [x + dx, y]);
     currentArea = pickArea(areaIndex, allFeatures, [c.lng, c.lat], view);
-    link = currentAreaLink = areaLink(currentArea, lang);
-  } catch { currentArea = null; currentAreaLink = null; }
+    link = areaLink(currentArea, lang);
+  } catch { currentArea = null; }
   const label = link ? link.label : t("regions");
   el.href = link ? link.href : t("regionsHref");
   if (el.textContent === label) return;
@@ -2673,14 +2675,16 @@ async function refreshMyAnswers() {
 // the same ones the stats strip renders (localAnswered/answeredPercent).
 function meAreaNumbers() {
   if (currentArea) {
-    // The exact text the footer link shows — currentAreaLink is
-    // areaLink(currentArea, lang), the same call updateRegionsLink made for
-    // it — never a bare sweep-area key on its own: "Wickeltische in
-    // Hamburg" for a chunk, "Wickeltische in Deutschland" for a country,
-    // whichever pickArea chose, so the dialog and the link read identically
-    // (CONTRACT.md v39).
-    const area = currentAreaLink?.label ?? null;
-    const keys = areaKeysFor(currentArea);
+    // The number counted has to match exactly the area the printed label
+    // names — areaForLabel (web/datasource.js, CONTRACT.md v40) is the one
+    // place that decides both together, so they cannot diverge. A chunk
+    // (Land, région, prefecture) shown to a reader whose language it has no
+    // page of its own in falls back to the PARENT country's label
+    // (areaLink's own rule, CONTRACT.md v32) — areaKeysFor(currentArea)
+    // alone would still only be that one chunk's own area, scoring Hamburg's
+    // 131 tables under "Changing tables in Germany". `areaIndex` is the full
+    // areas.json list, needed to look the parent row up when that happens.
+    const { label: area, keys } = areaForLabel(currentArea, lang, areaIndex);
     return { area, percent: areaPercent(allFeatures, keys), keys };
   }
   const l = lastStats?.local;
