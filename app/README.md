@@ -1,7 +1,7 @@
 # PapaMap, the store app
 
 The map at [papamap.de](https://papamap.de) in a native shell for the App Store and Google
-Play — [Capacitor](https://capacitorjs.com) around the very same `web/` tree, plus the three
+Play — [Capacitor](https://capacitorjs.com) around the very same `web/` tree, plus the four
 things a website cannot do:
 
 1. **A city offline.** The reader downloads their city's basemap (a PMTiles extract of the
@@ -15,6 +15,13 @@ things a website cannot do:
 3. **A home-screen widget** (`ios/App/PapaMapWidget/`), small, medium and lock-screen: the
    nearest table the reader can reach, with its distance and the pin's colour; tapping opens
    the pin.
+4. **A button in Control Center** (`ios/App/PapaMapWidget/NearestTableControl.swift`, iOS 18):
+   one tap and the app stands on the nearest reachable pin. The same control can be dragged
+   onto the Lock Screen and bound to the Action button, which is the whole point — the nappy
+   emergency is the moment the home screen is two taps too far away. It carries no distance:
+   Control Center is drawn from a process with no fresh position, and a number quietly hours
+   old is worse than none. The Siri shortcut is assignable to the Action button as well,
+   through Settings → Action Button → Shortcut.
 
 Everything the page promises still holds: the position is used on the phone and never sent,
 the dataset comes from papamap.de, answers go to OpenStreetMap under the reader's own account.
@@ -38,9 +45,14 @@ app/
                         ios/ and android/ comes from `npx @capacitor/assets generate --ios --android`
   ios/App/              the Xcode project (SPM, no CocoaPods)
     App/                AppDelegate, MainViewController (registers the plugin), Info.plist,
-                        PapaMapSharePlugin.swift, Shared/ (TableStore, LocationOnce),
-                        Intents/NearestTableIntent.swift, de.lproj/ (Siri phrases, permission text)
-    PapaMapWidget/      the widget extension
+                        PapaMapSharePlugin.swift, Shared/ (TableStore, LocationOnce,
+                        NearestLookup — the lookup Siri and the control share),
+                        Intents/ (NearestTableIntent, OpenNearestTableIntent),
+                        de.lproj/ (Siri phrases, permission text)
+    PapaMapWidget/      the widget extension: the widget and the Control Center button. It
+                        compiles Shared/ and Intents/OpenNearestTableIntent.swift too — the
+                        button's intent has to exist in both, because the extension declares
+                        it and the app is where it runs
   ios/add-native-targets.rb  registers the Swift files and the widget target with the project
   ios/asc.mjs           App Store Connect API for the runner: bundle ids, certificate, profiles
   ios/distribution.csr  the request the distribution certificate was signed from (no secret in it)
@@ -56,6 +68,13 @@ The widget's tap hands that link to the OS; the Siri answer's tap cannot, becaus
 has the story). It runs `OpenTableIntent` in the app instead, which leaves the link in
 `PendingTable` — one value, read once and expiring after two minutes — and
 `PapaMapSharePlugin` posts it as an opened URL, so the page sees the widget's own event.
+
+The Control Center button takes that same road for a second reason: `OpenNearestTableIntent`
+sets `openAppWhenRun`, so it is performed in the app — the only process allowed to ask for the
+position at all, since a control's own gets a cached fix at best and can put up no permission
+dialog. It looks the table up there and leaves the link in the same slot. Nothing in `web/`
+knows the control exists, and every way of finding nothing — no dataset yet, location refused,
+nothing usable near — ends with the app open on the map rather than a tap that did nothing.
 
 ## Build
 

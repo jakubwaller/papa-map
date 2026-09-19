@@ -11,23 +11,25 @@ struct NearestTableIntent: AppIntent {
     static var description = IntentDescription("Finds the nearest changing table you can actually reach.")
     static var openAppWhenRun: Bool = false
 
+    // The lookup is NearestLookup's, shared with the Control Center button, so
+    // that the two surfaces can never drift into answering differently. What
+    // stays here is the speaking: one sentence per outcome.
     func perform() async throws -> some IntentResult & ProvidesDialog & OpensIntent {
         let lang = TableStore.lang
-        let tables = TableStore.load()
-        guard !tables.isEmpty else {
+        switch await NearestLookup.run(mode: TableStore.mode) {
+        case .noData:
             return .result(opensIntent: OpenTableIntent(),
                            dialog: IntentDialog(stringLiteral: L.noData(lang: lang)))
-        }
-        guard let loc = await LocationOnce().request() else {
+        case .noLocation:
             return .result(opensIntent: OpenTableIntent(),
                            dialog: IntentDialog(stringLiteral: L.noLocation(lang: lang)))
-        }
-        guard let hit = TableStore.nearest(to: loc, mode: TableStore.mode, in: tables) else {
+        case .noneUsable:
             return .result(opensIntent: OpenTableIntent(),
                            dialog: IntentDialog(stringLiteral: L.none(lang: lang)))
+        case .found(let hit):
+            return .result(opensIntent: OpenTableIntent(link: hit.table.deepLink),
+                           dialog: IntentDialog(stringLiteral: L.nearestFound(hit, mode: TableStore.mode, lang: lang)))
         }
-        return .result(opensIntent: OpenTableIntent(link: hit.table.deepLink),
-                       dialog: IntentDialog(stringLiteral: L.nearestFound(hit, mode: TableStore.mode, lang: lang)))
     }
 }
 

@@ -139,6 +139,14 @@ struct FamilyView: View {
 struct PapaMapWidgetBundle: WidgetBundle {
     var body: some Widget {
         PapaMapWidget()
+        // Controls arrived in iOS 18. The project's floor is 18 as well, so
+        // the guard is what says which feature that floor is for — and the
+        // one thing that keeps the home-screen widget shipping if it is ever
+        // lowered again, because an unguarded control would take the whole
+        // bundle down with it on an older phone.
+        if #available(iOS 18.0, *) {
+            NearestTableControl()
+        }
     }
 }
 

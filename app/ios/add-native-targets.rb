@@ -33,9 +33,10 @@ def add_variant(group, target, name, langs)
   target.resources_build_phase.add_file_reference(vg, true) unless target.resources_build_phase.files_references.include?(vg)
 end
 
-# --- The app target: plugin, view controller, shared store, intent, resources
+# --- The app target: plugin, view controller, shared store, intents, resources
 %w[PapaMapSharePlugin.swift MainViewController.swift
-   Shared/TableStore.swift Shared/LocationOnce.swift Intents/NearestTableIntent.swift].each do |f|
+   Shared/TableStore.swift Shared/LocationOnce.swift Shared/NearestLookup.swift
+   Intents/NearestTableIntent.swift Intents/OpenNearestTableIntent.swift].each do |f|
   add_file(app_group, app, f)
 end
 add_file(app_group, app, "PrivacyInfo.xcprivacy", kind: :resource)
@@ -53,13 +54,10 @@ proj.root_object.known_regions |= %w[en de Base]
 widget = proj.targets.find { |t| t.name == "PapaMapWidget" }
 unless widget
   widget = proj.new_target(:app_extension, "PapaMapWidget", :ios, "18.0")
-  wgroup = proj.main_group.new_group("PapaMapWidget", "PapaMapWidget")
-  add_file(wgroup, widget, "PapaMapWidget.swift")
+  proj.main_group.new_group("PapaMapWidget", "PapaMapWidget")
+  wgroup = proj.main_group["PapaMapWidget"]
   wgroup.new_file("Info.plist")
   wgroup.new_file("PapaMapWidget.entitlements")
-  # Shared with the app: the same two files, compiled into both targets.
-  shared_store = app_group.files.find { |f| f.path == "Shared/TableStore.swift" }
-  widget.source_build_phase.add_file_reference(shared_store, true)
   widget.frameworks_build_phase.add_file_reference(proj.frameworks_group.new_file("System/Library/Frameworks/WidgetKit.framework", :sdk_root))
   widget.frameworks_build_phase.add_file_reference(proj.frameworks_group.new_file("System/Library/Frameworks/SwiftUI.framework", :sdk_root))
   widget.build_configurations.each do |c|
@@ -87,6 +85,22 @@ unless widget
   embed.dst_path = ""
   bf = embed.add_file_reference(widget.product_reference, true)
   bf.settings = { "ATTRIBUTES" => ["RemoveHeadersOnCopy"] }
+end
+
+# The extension's own files, and outside the block above on purpose: the
+# target is in the checked-in project already, so anything added to it later
+# has to be registered on every run and not only on the run that created it.
+wgroup = proj.main_group["PapaMapWidget"] or abort "no PapaMapWidget group"
+%w[PapaMapWidget.swift NearestTableControl.swift].each { |f| add_file(wgroup, widget, f) }
+add_file(wgroup, widget, "PrivacyInfo.xcprivacy", kind: :resource)
+# Compiled into both targets: the store and its strings, the one position, the
+# lookup the two surfaces share — and the intent the control's button runs,
+# which has to exist in the app as well, because that is the process
+# `openAppWhenRun` performs it in.
+%w[Shared/TableStore.swift Shared/LocationOnce.swift Shared/NearestLookup.swift
+   Intents/OpenNearestTableIntent.swift].each do |f|
+  ref = app_group.files.find { |x| x.path == f } or abort "no #{f} in the App group"
+  widget.source_build_phase.add_file_reference(ref, true) unless widget.source_build_phase.files_references.include?(ref)
 end
 
 # Release is what the runner archives for TestFlight (.github/workflows/
