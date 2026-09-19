@@ -41,8 +41,9 @@
      decided by your device; your own location is not part of that link.</p>
   <p>If you have shared your location through one of the two buttons and a changing table whose
      room nobody has recorded yet lies no more than 75 m away, a small note at the bottom edge asks
-     whether you know the room. For this the site keeps the last position it determined in working
-     memory for a few minutes; it is neither stored nor transmitted. If you close the note, the
+     whether you know the room. For this the site goes on using the last position it determined for a
+     few minutes; it lives only in the open page's working memory and is neither stored nor
+     transmitted. If you close the note, the
      browser remembers in local storage (key <code>papamap-card-dismissed</code>) for which places
      it should no longer appear — purely functional, only on your device (§ 25(2) no. 2 TDDDG).</p>
   <h2>Language setting (local storage)</h2>
@@ -83,7 +84,7 @@
      browser in session storage (key <code>papamap-edit-check</code>) and discarded when the tab is
      closed — purely functional, only on your device (§ 25(2) no. 2 TDDDG).</p>
   <h2>My PapaMap: your own answers and saved places</h2>
-  <p>The "My PapaMap" dialog shows how many rooms you have answered yourself. If you are signed in
+  <p>The "My PapaMap" dialog shows how many answers you have given yourself. If you are signed in
      to OpenStreetMap, the site requests the public list of your own changesets from
      api.openstreetmap.org when the dialog opens — the same list anyone can see in your OSM
      profile — and counts, on your device, those made through PapaMap or through MapComplete's
@@ -100,8 +101,8 @@
   <h2>Sharing a place</h2>
   <p>The share button in a pin hands the place's name and a link to papamap.de to your device's
      share function. Which app or person the link goes to is entirely your decision; that app's
-     own terms apply to it. Where the device offers no share function, the site copies the link to
-     the clipboard. Whoever opens such a link requests papamap.de with <code>?osm=…</code>
+     own terms apply to it. Where the device offers no share function, or it fails, the site copies the
+     link to the clipboard. Whoever opens such a link requests papamap.de with <code>?osm=…</code>
      appended; it names only the place and, like any requested address, appears in the server log
      (see above).</p>
   <h2>The app (iPhone, iPad)</h2>

@@ -41,8 +41,9 @@
      Ihr eigener Standort steht nicht in diesem Link.</p>
   <p>Haben Sie Ihren Standort über eine der beiden Schaltflächen freigegeben und liegt höchstens
      75 m entfernt ein Wickeltisch, dessen Raum noch niemand eingetragen hat, fragt ein kleiner
-     Hinweis am unteren Rand, ob Sie den Raum kennen. Dafür behält die Seite die zuletzt ermittelte
-     Position einige Minuten im Arbeitsspeicher; sie wird weder gespeichert noch übertragen.
+     Hinweis am unteren Rand, ob Sie den Raum kennen. Dafür verwendet die Seite die zuletzt ermittelte
+     Position noch einige Minuten lang; sie liegt nur im Arbeitsspeicher der geöffneten Seite und
+     wird weder gespeichert noch übertragen.
      Schließen Sie den Hinweis, merkt sich der Browser im Local Storage (Schlüssel
      <code>papamap-card-dismissed</code>), für welche Orte er nicht mehr erscheinen soll — rein
      funktional, nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
@@ -85,7 +86,7 @@
      <code>papamap-edit-check</code>) und verwirft es beim Schließen des Tabs — rein funktional,
      nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>Mein PapaMap: eigene Antworten und gemerkte Orte</h2>
-  <p>Der Dialog „Mein PapaMap“ zeigt, wie viele Räume Sie selbst beantwortet haben. Sind Sie bei
+  <p>Der Dialog „Mein PapaMap“ zeigt, wie viele Antworten Sie selbst gegeben haben. Sind Sie bei
      OpenStreetMap angemeldet, ruft die Seite dafür beim Öffnen des Dialogs bei
      api.openstreetmap.org die öffentliche Liste Ihrer eigenen Änderungssätze ab — dieselbe Liste,
      die jeder in Ihrem OSM-Profil einsehen kann — und zählt auf Ihrem Gerät diejenigen, die über
@@ -103,8 +104,8 @@
   <h2>Einen Ort teilen</h2>
   <p>Der Teilen-Knopf in einem Pin übergibt den Namen des Ortes und einen Link auf papamap.de an
      die Teilen-Funktion Ihres Geräts. An welche App oder Person der Link geht, entscheiden allein
-     Sie; für diese App gelten deren eigene Bestimmungen. Bietet das Gerät keine Teilen-Funktion,
-     kopiert die Seite den Link in die Zwischenablage. Wer einen solchen Link öffnet, ruft
+     Sie; für diese App gelten deren eigene Bestimmungen. Bietet das Gerät keine Teilen-Funktion
+     oder schlägt sie fehl, kopiert die Seite den Link in die Zwischenablage. Wer einen solchen Link öffnet, ruft
      papamap.de mit dem Zusatz <code>?osm=…</code> auf; er nennt nur den Ort und steht wie jede
      abgerufene Adresse im Server-Log (siehe oben).</p>
   <h2>Die App (iPhone, iPad)</h2>
