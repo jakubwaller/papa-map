@@ -499,6 +499,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 #me-dialog .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
 .me-saved h4 { margin: 4px 0 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
+.me-tips h4 { margin: 14px 0 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
+.tips-list { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.tips-list li { margin-bottom: 5px; }
 .saved-list { list-style: none; margin: 0; padding: 0; max-height: 40vh; overflow-y: auto; }
 .saved-list li.saved-row {
   display: flex; align-items: center; gap: 8px;

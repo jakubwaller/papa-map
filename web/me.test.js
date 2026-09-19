@@ -1,12 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readdirSync, existsSync } from "node:fs";
 import { CREATED_BY } from "./osm.js";
 import { haversineKm } from "./datasource.js";
 import {
   answeredPercent, areaAnswered, areaPercent,
   buildFeatureGrid, answerArea, answersInArea, totalAnswers,
   sentenceParts, greyNearby, circleBounds,
-  MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, changesetAnswer, extractAnswers,
+  MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, appTips, SIRI_LANGS, changesetAnswer, extractAnswers,
   mergeAnswers, newestClosedAt, oldestClosedAt,
   EPOCH, changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap,
   SAVED_MAX, isSaved, addSaved, removeSaved, refreshApplies,
@@ -457,4 +458,23 @@ test("refreshApplies: only when the generation has not moved since the refresh b
   // written.
   assert.equal(refreshApplies(3, 4), false);
   assert.equal(refreshApplies(0, 0), true);
+});
+
+test("appTips: the iOS app only, and Siri only where the app ships phrases", () => {
+  assert.deepEqual(appTips("ios", "de"), ["tipControl", "tipWidget", "tipSiri"]);
+  assert.deepEqual(appTips("ios", "en"), ["tipControl", "tipWidget", "tipSiri"]);
+  // Siri answers in the phone's language; a French phrase was never registered.
+  assert.deepEqual(appTips("ios", "fr"), ["tipControl", "tipWidget"]);
+  // Neither the website nor the Android app has a control, a widget or phrases.
+  assert.deepEqual(appTips("web", "de"), []);
+  assert.deepEqual(appTips("android", "de"), []);
+});
+
+test("SIRI_LANGS is exactly the languages the app has App Shortcut phrases in", () => {
+  // English lives in the intent itself; every other language is a .lproj folder.
+  const dir = new URL("../app/ios/App/App/", import.meta.url);
+  const shipped = readdirSync(dir)
+    .filter((d) => d.endsWith(".lproj") && existsSync(new URL(`${d}/AppShortcuts.strings`, dir)))
+    .map((d) => d.replace(".lproj", ""));
+  assert.deepEqual([...SIRI_LANGS].sort(), [...new Set(["en", ...shipped])].sort());
 });

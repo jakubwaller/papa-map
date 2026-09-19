@@ -182,14 +182,14 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app35" />
+  <link rel="stylesheet" href="style.css?v=app36" />
 
   <!-- Classic and blocking, in the head on purpose: it puts the .in-app class
        on <html> before the first paint when the store app opened this page in
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app35"></script>
+  <script src="in-app.js?v=app36"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -352,9 +352,11 @@
     <button id="offline-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
   </dialog>
 
-  <!-- Route chooser (store app, iOS only): shown when the phone has several
-       navigation apps and no chosen default. app.js fills the list; on every
-       other platform this dialog is never opened. -->
+  <!-- Route chooser, iOS only, in two places. In the store app: shown when the
+       phone has several navigation apps and no chosen default. On the website
+       in an iPhone's or iPad's browser: always, because a web page cannot ask
+       iOS for that default (webRouteChoices). app.js fills the list; Android
+       and desktops never open it. -->
   <dialog id="route-dialog">
     <h3 data-i18n="routeTitle">Route öffnen in …</h3>
     <ul id="route-list" class="route-list"></ul>
@@ -388,12 +390,17 @@
       <h4 data-i18n="meSavedHeading">Gemerkte Orte</h4>
       <ul id="me-saved-list" class="saved-list"></ul>
     </div>
+    <!-- iOS app only (me.js appTips); hidden everywhere else. -->
+    <div id="me-tips" class="me-tips" hidden>
+      <h4 data-i18n="meTipsHeading">Mehr aus der App</h4>
+      <ul id="me-tips-list" class="tips-list"></ul>
+    </div>
     <button id="me-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
   </dialog>
 
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app35"></script>
+  <script type="module" src="app.js?v=app36"></script>
 </body>
 </html>

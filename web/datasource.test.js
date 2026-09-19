@@ -571,7 +571,8 @@ test("webRouteHref: geo: only where something answers it", () => {
   assert.deepEqual(ios.choose, webRouteChoices(53.5503, 9.992, "Café A&B"));
   assert.deepEqual(ios.choose.map((c) => c.name), ["Google Maps", "Apple Maps", "Waze"]);
   assert.ok(ios.choose.every((c) => c.url.startsWith("https://")));
-  assert.equal(ios.href, ios.choose[0].url);
+  // Never a provider's link before the reader chose one (Datenschutz).
+  assert.equal(ios.href, "#");
   assert.equal(ios.external, false);
   assert.equal(ios.choose[0].url, "https://www.google.com/maps/dir/?api=1&destination=53.550300,9.992000");
   // q is only a label once ll names the place; alone it is a search.

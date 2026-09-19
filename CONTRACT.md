@@ -1,5 +1,22 @@
 # papa-map — build contract (v0)
 
+> **v42 amendment (19 Sep 2026, "Mehr aus der App"): no shape change.** The
+> iOS app's "Mein PapaMap" dialog gains a block that names what iOS keeps on
+> its own screens and nobody would guess a map app has: the Control Center
+> control, the home-screen widget, the Siri phrase. `appTips(platform, lang)`
+> (`web/me.js`) returns the i18n keys to print — nothing off iOS, and
+> `tipSiri` only in `SIRI_LANGS` (`de`, `en`), the languages the app ships
+> App Shortcut phrases in; a test ties that list to the `.lproj` folders. The
+> first "nearest" that finds a table is followed, once, by `toastTip`, whose
+> tap opens the dialog; one new device key, `papamap-tip-seen`, set when the
+> toast is shown, named in both Datenschutz pages. Five new i18n keys in all
+> 32 languages (`meTipsHeading`, `tipControl`, `tipWidget`, `tipSiri`,
+> `toastTip`); only German and English name iOS's own buttons. **Tightens
+> v41:** the iPhone website Route anchor's fallback `href` is `#`, not the
+> first provider's link, so no provider's URL opens before the reader has
+> chosen one, even if the dialog never catches the tap. Shell pin `app35` →
+> `app36`.
+>
 > **v41 amendment (19 Sep 2026, three findings from TestFlight build 24): no
 > shape change.** **Corrects v39 below** on which changesets count as the
 > reader's own. v39 says a MapComplete hand-off is marked `theme: "papamap"`;

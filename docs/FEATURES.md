@@ -611,6 +611,29 @@ dialog lists them newest first, with tonight's pin colour when the place is
 still on the map and a plain dot when it is not, and the distance from
 wherever the reader last stood.
 
+### "Mehr aus der App": the features iOS hides
+
+The Control Center control, the home-screen widget and the Siri phrase are all
+reached from iOS's own screens, never from the map, so a reader who is not told
+never finds them (the owner, on TestFlight build 24: "I'd probably never guess
+from such an app"). Three answers were agreed, and an onboarding carousel was
+not one of them — it stands between a parent and the map on the first launch,
+and it needs 32 translations of text people swipe past.
+
+- **The store screenshots carry most of it**: one feature per picture.
+- **A block at the foot of "Mein PapaMap", iOS app only** (`appTips`,
+  `web/me.js`): three plain lines. German and English name iOS's own buttons
+  ("Steuerelement hinzufügen"); the other 30 languages stay general and quote
+  the control by the English name it carries there, because the native side
+  is German and English only. The Siri line shows in German and English
+  alone: Siri answers in the phone's language, and the app ships phrases in
+  those two (`SIRI_LANGS`, tied by a test to the `.lproj` folders).
+- **One toast, once** (`toastTip`): after the first "nearest" that found a
+  table — the moment the reader has just done by hand what the control does
+  in one tap — and after the "x m away" toast has had its four seconds. A tap
+  opens the dialog. The flag (`papamap-tip-seen`) is set when it is shown,
+  not when it is tapped: a hint that returns until it is obeyed is an advert.
+
 ## The store app
 
 `app/` is the same map in a native shell (Capacitor) for the App Store and Google Play — the

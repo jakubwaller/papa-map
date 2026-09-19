@@ -504,8 +504,7 @@ export function geoUri(lat, lon, label) {
 //     the reader instead: `choose`, one https link per maps app. Every one is
 //     a universal link — the app where it is installed, the same route in
 //     the browser where it is not — so none of them can be a dead link, the
-//     way `comgooglemaps://` or `om://` would be from a web page. `href` is
-//     the first of them, for the tap that the dialog never catches. (An iPad
+//     way `comgooglemaps://` or `om://` would be from a web page. (An iPad
 //     asking for the desktop site says "Macintosh"; the touch points are
 //     what tell it from a Mac.)
 //   Everything else: openstreetmap.org's own directions with the destination
@@ -528,8 +527,10 @@ export function webRouteChoices(lat, lon, label) {
 export function webRouteHref(lat, lon, label, ua = "", touchPoints = 0) {
   if (/Android/i.test(ua)) return { href: geoUri(lat, lon, label), external: false };
   if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1)) {
-    const choose = webRouteChoices(lat, lon, label);
-    return { href: choose[0].url, external: false, choose };
+    // The href is what is left if the dialog never catches the tap, and it
+    // must not be one of the three: the Datenschutz says no provider's link
+    // opens before the reader has chosen one. "#" keeps them on the map.
+    return { href: "#", external: false, choose: webRouteChoices(lat, lon, label) };
   }
   const at = `${lat.toFixed(6)},${lon.toFixed(6)}`;
   return { href: `https://www.openstreetmap.org/directions?to=${encodeURIComponent(at)}`, external: true };
