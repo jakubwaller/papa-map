@@ -480,6 +480,14 @@ export const TABLE_TAGS = ["changing_table", "changing_table:location"];
 export const PLAY_TAGS = ["kids_area", "kids_area:indoor"];
 export const EDIT_TAGS = [...TABLE_TAGS, ...PLAY_TAGS];
 
+// "Changing table: yes" says nothing a reader does not already know — every
+// pin and every place card that reaches this function has one — so the pin
+// popup, the play-place card and the edit confirmation all print the value
+// only when it says something else: "limited", or whatever other value OSM
+// holds. One rule instead of three inline conditions, so the three render
+// sites cannot drift apart on it. Returns the value to print, or null.
+export const printableTableValue = (value) => (value && value !== "yes" ? value : null);
+
 // The label each of those tags is printed under, as an i18n key — the popup's
 // own words, never a value this file interpreted. `kids_area` and its
 // `:indoor` sub-key have a label each (v31): they can disagree, and the pair

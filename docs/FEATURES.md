@@ -292,11 +292,17 @@ toilet, a separate room — and the men's room is left to a father to answer.
 Three rarer rooms (a hallway, the shop floor, outdoors) sit behind a *more* link
 in either reading.
 
-What OSM holds afterwards is quoted in the popup, and that is all that changes:
-the pin keeps its colour until the nightly build, because classification lives
-in the pipeline and nowhere else (`CONTRACT.md` v26). A pin that already carries
-a room in words the classifier does not read is not asked — that is somebody's
-tag, and MapComplete shows it before letting anyone write over it.
+What OSM holds afterwards is shown in the popup in the reader's own language —
+`roomLabelKeys` (`web/osm.js`) reuses the answer buttons' own labels, token by
+token, and a token the vocabulary does not know is shown verbatim rather than
+swallowed — and that is all that changes: the pin keeps its colour until the
+nightly build, because classification lives in the pipeline and nowhere else
+(`CONTRACT.md` v26). A pin that already carries a room in words the classifier
+does not read is not asked — that is somebody's tag, and MapComplete shows it
+before letting anyone write over it. "Changing table: yes" is never printed
+either, on this line or the play-place card's: every pin and card here has one,
+and the line would say nothing; `limited` still prints, since it is real
+information (`CONTRACT.md` v37).
 
 The popup asks one more thing, on one line: *play area for children?* —
 *indoors*, *outdoors only*, *none*. It is the second question a father standing

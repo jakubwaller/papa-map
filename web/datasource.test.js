@@ -9,7 +9,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          pinColorExpression, momCounts, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
-         EDIT_TAG_LABEL, editTagLines, EDIT_CHECK_DELAYS } from "./datasource.js";
+         EDIT_TAG_LABEL, editTagLines, printableTableValue, EDIT_CHECK_DELAYS } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -637,6 +637,17 @@ test("the edit check names the tags this site can write and stops within five mi
   for (let i = 1; i < EDIT_CHECK_DELAYS.length; i++)
     assert.ok(EDIT_CHECK_DELAYS[i] > EDIT_CHECK_DELAYS[i - 1], "ascending");
   assert.ok(EDIT_CHECK_DELAYS.at(-1) <= 5 * 60 * 1000);
+});
+
+test("\"changing table: yes\" prints nothing — every object here has one", () => {
+  assert.equal(printableTableValue("yes"), null);
+  // Real information: kept.
+  assert.equal(printableTableValue("limited"), "limited");
+  assert.equal(printableTableValue("no"), "no");
+  // Absent: nothing to print either.
+  assert.equal(printableTableValue(null), null);
+  assert.equal(printableTableValue(undefined), null);
+  assert.equal(printableTableValue(""), null);
 });
 
 test("the confirmation gives each play key its own line when the two disagree", () => {

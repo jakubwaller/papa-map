@@ -1,5 +1,40 @@
 # papa-map — build contract (v0)
 
+> **v37 amendment (19 Sep 2026, the room in the reader's own language):** **no
+> shape change** — no data file gains, loses or changes a property, `location_raw`
+> is untouched, and this is still not a classifier: `pipeline/classify.py`'s exact
+> token matching is the one place this project's colour comes from, and nothing
+> here reads it. Corrects the "OSM's reply is quoted in the popup" line of the
+> v25 amendment above: since build 30 it is quoted in the reader's own
+> language, not verbatim. A new pure function, `roomLabelKeys` (`web/osm.js`,
+> next to `ROOMS`), splits a raw `changing_table:location` value on `;`,
+> matches each token against the theme's vocabulary — exactly, never by
+> substring, the same rule `classify.py` lives by — and hands back either an
+> i18n key (`ROOM_LABEL`, moved from `app.js` into `osm.js` next to `ROOMS` so
+> the popup reuses the very map the answer buttons render their labels from,
+> rather than a second copy of it) or the token verbatim when the vocabulary
+> does not have one. The pair `{female_toilet, male_toilet}`, in either order,
+> collapses to the one "both" label a reader would use for it, rather than
+> printing two. The pin popup, the play-place card and the edit confirmation
+> all render it the same way (`roomLabel` in `web/app.js`), in place of
+> printing `location_raw` as OSM wrote it.
+>
+> **Riding along, same PR: "changing table: yes" is dropped from all three of
+> those render sites.** Every pin and every place card the popup can show has
+> a changing table, so the line said nothing; `limited`, or whatever other
+> value OSM holds, is real information and still prints, in front of the room
+> where one is on record. `printableTableValue` (`web/datasource.js`, a pure
+> function next to `EDIT_TAG_LABEL`) is the one place this rule lives, so the
+> three render sites cannot drift apart on it — `editTagLines()` itself is
+> untouched and still hands back `"yes"` verbatim, since the rule is applied
+> at render time, not to what the confirmation's own data represents.
+>
+> The `changing_table` value itself (`yes` / `limited` / `no`) has no matching
+> label of its own in `web/i18n.js` — `wcYes`/`wcLimited`/`wcNo` are the
+> wheelchair vocabulary, a different question in the same three words — so
+> `limited` (the only value now ever printed beside "yes") stays verbatim, as
+> before. Shell pin `app29` → `app30`.
+>
 > **v36 amendment (18 Sep 2026, the Route button on iOS):** **no shape change** — no data
 > file gains, loses or changes a property, and `STATUSES` is untouched. The
 > popup's Route anchor now carries **`data-route="<lat>,<lon>"`** and
