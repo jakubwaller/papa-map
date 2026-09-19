@@ -236,23 +236,35 @@ site most wants to reach a reader, and asking permission for that cold — a
 location prompt with no button pressed — is not this feature's to spend. So it
 never asks the phone anything on its own: it only ever looks at a fix the
 reader already produced by tapping locate or nearest, the only two places the
-page ever calls for one. When that fix lands within 75 m of a
-`changing_tables.geojson` pin whose room is unrecorded (`status === "unknown"`,
-no `location_raw`) — over the whole loaded dataset, not what the chips
-currently show, because the question is about the place, not the view — a
-small card rises above the attribution line: the place's name, the popup's own
-room question repeated rather than reworded, one button that opens that pin's
-popup (the two-tap answer waiting there, exactly as if the reader had tapped
-the pin itself) and a close ×. It is a card, not a dialog: no backdrop, the map
+page ever calls for one. The rule: the nearest `changing_tables.geojson` pin
+whose room is unrecorded (`status === "unknown"`, no `location_raw`) within
+75 m of that fix — over the whole loaded dataset, not what the chips currently
+show, because the question is about the place, not the view.
+
+Locate never opens anything, so its fix gets the card's turn at once. Nearest
+almost always opens a popup of its own first, so the card waits — a fix stays
+usable for it for five minutes, popups and all — and gets its turn once that
+popup **closes**: click the map, tap its ×, tap a different pin, or answer it.
+Closing *without* answering brings the card back, naming the same pin, because
+nothing about the object has changed; answering it does not, because the room
+it just learned (`location_raw`, set in memory the moment OSM confirms it) is
+exactly what the rule excludes. A card left standing survives a mode or
+language switch's own popup teardown without popping back up a moment later —
+that close is not the reader's doing — and re-reads itself in the new
+language rather than going stale.
+
+When it rises, a small card above the attribution line shows the place's name,
+the popup's own room question repeated rather than reworded, one button that
+opens that pin's popup (making the "unknown" chip visible again first, if it
+had been switched off — the same courtesy the nearest button already pays its
+own popup) and a close ×. It is a card, not a dialog: no backdrop, the map
 still pans under it.
 
 Closing it remembers the pin (`localStorage`, `papamap-card-dismissed`, a
-capped list) so it does not ask about that table again on that device;
-answering it needs no such bookkeeping; a table already answered drops out of
-the rule itself the moment the in-memory object learns its room. At most one
-card at a time, and it steps aside for anything that outranks it — any popup
-opening, or the reader panning far enough that the card no longer names
-anywhere close by.
+capped list) so it does not ask about that table again on that device. At most
+one card at a time, and it steps aside for anything that outranks it — any
+popup opening, or the reader panning more than 300 m from the fix that raised
+it.
 
 ## Offline
 
@@ -376,11 +388,18 @@ mini. It builds a plain `https://papamap.de/?osm=<osm_url>` link from the
 pipeline's own `osm_url`, the identifier the app's own deep link
 (`papamap://table?osm=…`, the widget and the Siri shortcut) already carries,
 so `openPin` is the one place that reads either back — on this page's own load
-and from the app. The link opens for anyone, the app installed or not, in the
-receiver's own language (a share carries no `?lang=`: it is not the sharer's
-choice to make). `navigator.share` where the browser offers it, otherwise a
-clipboard copy with a toast to confirm it — no new Capacitor dependency, since
-both reach across the app's WebView on their own.
+and from the app; once it has (found the pin, found the play place, or found
+neither), the `?osm=` param strips itself from the address bar, the way
+`?lang=`/`?mode=` already do, so a shared link saved to the home screen does
+not reopen the same pin on every future launch. The link opens for anyone, the
+app installed or not, in the receiver's own language (a share carries no
+`?lang=`: it is not the sharer's choice to make). `navigator.share` where the
+browser offers it, otherwise a clipboard copy with a toast to confirm it — no
+new Capacitor dependency, since both reach across the app's WebView on their
+own. The share text names the object truthfully: a table pin says so; a play
+place says so only once the reader has answered "yes" to it this session —
+otherwise OSM records no table there at all, and the text says "a play area"
+instead, the same word the play-corner card itself uses.
 
 ## Play corners
 

@@ -253,9 +253,22 @@ const TOKEN_TO_CHOICE = Object.fromEntries(
 // verbatim, the display for a token this project's vocabulary does not know
 // at all. Exactness survives the fold: "female_toilet" and "male_toilet"
 // still never match each other, lower-cased or not.
+//
+// Deduplication is case-insensitive too, first spelling wins: a mapper who
+// wrote `Female_toilet;female_toilet` meant the room once, not the label
+// twice, and the same goes for a repeated token this vocabulary does not
+// know — `Attic;attic` is one `{ raw: "Attic" }`, not two.
 export function roomLabelKeys(raw) {
   if (!raw) return [];
-  const tokens = [...new Set(raw.split(";").map((s) => s.trim()).filter(Boolean))];
+  const parts = raw.split(";").map((s) => s.trim()).filter(Boolean);
+  const seen = new Set();
+  const tokens = [];
+  for (const tok of parts) {
+    const key = tok.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    tokens.push(tok);
+  }
   const lower = tokens.map((tok) => tok.toLowerCase());
   if (lower.length === 2 && lower.includes("female_toilet") && lower.includes("male_toilet"))
     return [{ key: ROOM_LABEL.both }];

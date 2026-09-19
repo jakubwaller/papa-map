@@ -18,20 +18,31 @@
 > its card too — an object neither array holds any more (deleted, or never on
 > this dataset in the first place) flies nowhere and gets one toast
 > (`sharePinGone`) instead of silently doing nothing, which the widget and the
-> shortcut inherit for free, not only the share link. The link carries no
-> `?lang=`: a shared link is not the sharer's language to choose for whoever
-> opens it, so the receiver's own detection or stored choice wins exactly as it
-> would on any other visit. `navigator.share({title, text, url})` where the
-> browser has it — the reader's own share sheet decides where it goes from
-> there; failing that, the link is copied to the clipboard
-> (`navigator.clipboard`, then a hidden-textarea `execCommand("copy")` for a
-> WebView with neither) and a toast confirms it (`shareCopied`), or, if even
-> that fails, a toast says so (`shareFailed`) rather than leaving the tap
-> looking like it did nothing. `text` is the place's name plus one line naming
-> PapaMap (`shareText`, `{name}`), in the reader's own language; `title` is the
-> same name. No `@capacitor/share`: both `navigator.share` and the clipboard
-> API reach across Capacitor's WKWebView/Android WebView bridge on their own,
-> so `app/plugins.test.mjs`'s list is unchanged.
+> shortcut inherit for free, not only the share link. Once resolved, found or
+> not, `?osm=` is stripped from the address bar with `history.replaceState`
+> (`withoutOsmParam`, `web/datasource.js`, pure and tested), the way `?lang=`
+> and `?mode=` already strip themselves — a page installed to the home screen
+> from a shared link must not reopen that same pin on every future launch.
+> The link carries no `?lang=` of its own: a shared link is not the sharer's
+> language to choose for whoever opens it, so the receiver's own detection or
+> stored choice wins exactly as it would on any other visit.
+> `navigator.share({title, text, url})` where the browser has it — the
+> reader's own share sheet decides where it goes from there; failing that, the
+> link is copied to the clipboard (`navigator.clipboard`, then a
+> hidden-textarea `execCommand("copy")` for a WebView with neither) and a
+> toast confirms it (`shareCopied`), or, if even that fails, a toast says so
+> (`shareFailed`) rather than leaving the tap looking like it did nothing.
+> `title` is the place's name; `text` is the name plus one true line naming
+> PapaMap, in the reader's own language — **two variants**, because a play
+> place's own vocabulary (`popupPlay`/`tagPlay`/`metaPlaces`) is what makes
+> one of them true: `shareText` ("a changing table on PapaMap") for a pin, or
+> for a play place the reader has answered "yes" to in this session
+> (`obj.changing_table === "yes"`, set by `answer()` the moment OSM confirms
+> it — same as the popup's own tag row); `sharePlaceText` ("a play area on
+> PapaMap") for every other play place, which OSM does not, in fact, record a
+> changing table on. No `@capacitor/share`: both `navigator.share` and the
+> clipboard API reach across Capacitor's WKWebView/Android WebView bridge on
+> their own, so `app/plugins.test.mjs`'s list is unchanged.
 >
 > **The room card.** Standing in front of a table nobody has recorded a room
 > for is the one moment this project most wants a reader's attention, and
@@ -46,47 +57,94 @@
 > straight-line like `nearestUsable` — over every loaded feature, not
 > `pinFeatures`, so neither the status chips nor the wheelchair chip narrow
 > what the card can ask about: the question is about the place the reader is
-> standing in, not about the view. Play places are out of scope for this v1
-> (`allPlaces` is not searched) — folding them in would mean deciding whether
-> the card also files their bare `changing_table=yes`, a bigger question than
-> 75 m answers. A small card above the attribution line (`#room-card`, never a
-> `<dialog>`: nothing here needs a backdrop, or the focus trap that would
-> fight the map) names the place and repeats the popup's own question
-> (`askRoom`, not a second translation of it) with one primary action that
-> opens that pin's popup — the two-tap answer, the login line, all of it,
-> already there — and one close ×. Closing it remembers the pin in
+> standing in, not about the view (a pin a chip is hiding is made visible
+> again — `ensureVisible`, factored out of the nearest handler, which already
+> did this for its own popup — the moment the card's own button is tapped, so
+> it never flies to a spot that then shows nothing). Play places are out of
+> scope for this v1 (`allPlaces` is not searched) — folding them in would mean
+> deciding whether the card also files their bare `changing_table=yes`, a
+> bigger question than 75 m answers.
+>
+> **A fix does not always get the card's turn at once.** `nearest` almost
+> always opens a popup of its own first, and a card under it would be
+> pointless; `evaluateRoomCard` is the one place that decides whether the card
+> is up right now, recomputed from scratch — never patched — from the most
+> recent fix (`lastFix`, `noteFix`) each time it runs: after `locate()` (which
+> opens nothing, so the card's turn is immediate), after `nearest()` when it
+> finds no usable table (same reasoning), and, deferred to a microtask,
+> whenever a popup **closes** (`onPopupClosed`, wired on every popup this file
+> ever creates, in `openPopup`/`openPlacePopup`) — a click on the map, the
+> popup's own ×, this file's own remove-then-replace when a new popup opens on
+> top, or `applyDataset` finding the object gone. A stale `lastFix` does not
+> get the card back years later: it is good for **5 minutes** (`isFixFresh`,
+> `web/datasource.js`, pure and tested) from the moment it was taken, popups
+> and all. The deferral matters: a close fired by this file's own
+> remove-then-open-a-new-one (the common case — reopening the same object
+> after login, or opening a different pin) must see the *new* popup already in
+> place before asking whether to show the card, which is why the check is
+> `popup?.isOpen()` on the module's current popup, not on whichever instance
+> just closed, and why it waits a microtask rather than asking synchronously
+> mid-`remove()`. One close is deliberately **silent**: `applyMode` and the
+> language switch tear the open popup down because its *text* belonged to the
+> old reading, not because the reader dismissed anything, and must not bring
+> the card back as a side effect (`closePopupSilently`, a one-shot
+> `suppressCardOnClose` flag). Net effect: locate → card; open a pin → card
+> hides; close that pin without answering → the card returns, naming the same
+> pin, if the fix is still fresh; answer it instead → `location_raw` is truthy
+> in memory the instant `answer()` returns (v25), so `nearestUnknownRoom` does
+> not find it again and the card does not either; nearest → its own popup
+> first, the card only once that one closes.
+>
+> A small card above the attribution line (`#room-card`, never a `<dialog>`:
+> nothing here needs a backdrop, or the focus trap that would fight the map)
+> names the place and repeats the popup's own question (`askRoom`, not a
+> second translation of it — re-rendered on a language change, `applyI18n`,
+> so a card left standing does not go stale in the old one) with one primary
+> action that opens that pin's popup — the two-tap answer, the login line,
+> all of it, already there — and one close ×. Closing it remembers the pin in
 > `localStorage` under **`papamap-card-dismissed`** (a bounded FIFO list,
 > capped at 200, wrapped in try/catch like every other storage read in this
-> file) so it does not ask about that table again on that device; a table the
-> reader has since answered needs no entry in that list at all — `location_raw`
-> is truthy in memory the moment `answer()` returns (v25), which the rule
-> itself already excludes. At most one card is shown per fix, it disappears
-> the moment any popup opens (its own or another pin's — a phone screen is
-> small enough that two things asking for attention at once is one too many),
-> and it disappears again if the reader pans the map more than 300 m from the
-> fix that raised it. Never covers the popup, the toast or the app's dialogs on
-> a 12 mini: mutual exclusion with the popup already guarantees the first, and
-> the toast and the offline/route dialogs sit in their own corners of the
-> screen. Works the same on the website and inside the app; this feature never
-> asks `isNative()`.
+> file) so it does not ask about that table again on that device. At most one
+> card is shown at a time, and it disappears again if the reader pans the map
+> more than 300 m from the fix that raised it (judged against the fix, not the
+> pin — the card is still "about" that fix even while it is between popups).
+> Never covers the popup, the toast or the app's dialogs on a 12 mini: mutual
+> exclusion with the popup already guarantees the first, and the toast and the
+> offline/route dialogs sit in their own corners of the screen. Works the same
+> on the website and inside the app; this feature never asks `isNative()`.
 >
-> **Riding along, same PR, three fixes from the last review.** `roomLabelKeys`
+> **The blocker this caught, same PR, before merge:** `popup`/`popupObj`
+> (`web/app.js`) were never cleared when the reader closed a popup by clicking
+> the map or the × — only this file's own `remove()`-then-reassign paths ever
+> nulled them, which meant `if (popup)`, read anywhere as "is one open right
+> now", was wrong the moment any popup had ever been opened in the session.
+> The room card's own first cut used exactly that read and so could never
+> reappear a second time. `onPopupClosed`, wired above, is now the one place
+> that nulls them, on every close, whichever of the four ways above caused it.
+>
+> **Riding along, same PR, four fixes from the last review.** `roomLabelKeys`
 > (`web/osm.js`) now lower-cases both the raw tag's tokens and its own
 > vocabulary before comparing them, so `Female_toilet` still resolves to the
 > room label instead of falling through to `{ raw: "Female_toilet" }` verbatim
 > — `classify.py` already lower-cases before it matches, this only catches
 > `roomLabelKeys` up to it. Matching stays exact, never substring, whatever the
 > case: `female_toilet` and `male_toilet` still never match each other.
-> **Correcting v37:** its own text names the shell pin move as `app29` →
-> `app30`, but what shipped that day, in the same amendment's own later
-> paragraphs, moved it on again to `app31` — "since build 30" in v37's first
-> paragraph should read "since build 31"; everything else in v37 stands.
-> **`docs/FEATURES.md`** (~line 302) said the play-place card never prints
-> "Changing table: yes" at all — true of every path that writes to it today,
-> since `tablePatch` always writes a room alongside it, but not what the code
-> actually promises: `placeHTML`'s table row prints "yes" when there is no
-> room to stand in for it (v37's own second review fix), so the sentence there
-> now says exactly that instead of a blanket "never".
+> De-duplication is case-insensitive too, first spelling wins:
+> `Female_toilet;female_toilet` is one label, and `Attic;ATTIC;attic` is one
+> `{ raw: "Attic" }`, not three. **Correcting v37:** its own CONTRACT.md text
+> names only one shell-pin move, `app29` → `app30` — the sole pin line its
+> prose carries. What actually shipped, in the same PR (#144), was a second
+> bump to `app31`, for the three same-day review fixes (the `editFoundPlain`
+> fallback, `placeHTML`'s table-row guard, and this file's own correction of
+> v23) — recorded only in that PR's squashed commit message, never folded
+> into v37's own prose here. "Since build 30" in v37's first paragraph should
+> read "since build 31". **`docs/FEATURES.md`** (~line 302) said the
+> play-place card never prints "Changing table: yes" at all — true of every
+> path that writes to it today, since `tablePatch` always writes a room
+> alongside it, but not what the code actually promises: `placeHTML`'s table
+> row prints "yes" when there is no room to stand in for it (v37's own second
+> review fix), so the sentence there now says exactly that instead of a
+> blanket "never".
 >
 > Shell pin `app31` → `app32`.
 

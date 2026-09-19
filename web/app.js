@@ -8,7 +8,8 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          pinColorExpression, momCounts, nearestUsable, formatDistance, haversineKm,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
-         EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, nearestUnknownRoom } from "./datasource.js?v=app32";
+         EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
+         isFixFresh } from "./datasource.js?v=app32";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          langUrl } from "./i18n.js?v=app32";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
@@ -104,6 +105,9 @@ function applyI18n() {
   // choice, or a Czech browser): the control has to agree with the page.
   const sel = document.getElementById("lang-select");
   if (sel && sel.value !== lang) sel.value = lang;
+  // A card left standing through a language change would otherwise go stale
+  // in the old one (CONTRACT.md v38); a no-op when none is up.
+  renderRoomCardText();
 }
 
 // ---- Footer area link: follows the map view, not the UI language ----
@@ -687,12 +691,22 @@ function placeHTML(p) {
   return `<div class="popup"><h3>${esc(title)}</h3>${sub}${rows.join("")}</div>`;
 }
 
+// Every popup this page ever opens is created here or in openPlacePopup, and
+// both wire its own "close" listener to the instance itself (`p`, not the
+// mutable `popup` variable — a closure over `popup` would name whichever
+// popup happens to be current when the event fires, not the one it belongs
+// to). onPopupClosed is the one place `popup`/`popupObj` are nulled for a
+// close nobody in this file asked for — clicking the map (closeOnClick),
+// clicking the built-in ×, or the map itself going away — which used to go
+// unnoticed here entirely (the room card's original bug, CONTRACT.md v38).
 function openPopup(f) {
-  hideRoomCard();   // the two never share the screen (CONTRACT.md v38)
+  hideRoomCard();   // the two never share the screen
   if (popup) popup.remove();
   popupObj = { kind: "table", obj: f };
-  popup = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
+  const p = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
     .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
+  p.on("close", () => onPopupClosed(p));
+  popup = p;
   attachEditNote();
   panPopupIntoView();
 }
@@ -701,8 +715,10 @@ function openPlacePopup(p) {
   hideRoomCard();
   if (popup) popup.remove();
   popupObj = { kind: "place", obj: p };
-  popup = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
+  const pop = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
     .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
+  pop.on("close", () => onPopupClosed(pop));
+  popup = pop;
   attachEditNote();
   panPopupIntoView();
 }
@@ -1034,13 +1050,26 @@ function locateFrom(btn) {
   return locate().finally(() => btn.removeAttribute("aria-busy"));
 }
 
+// A pin a chip is currently hiding is nobody's "nearest" or "the one the room
+// card is about" in any useful sense — the filters that would hide it are
+// switched back on, visibly, so a fly-to never lands on an empty-looking spot.
+// Shared by the nearest button and the room card's own open button, which can
+// name a pin the "unknown" chip has since been switched off (CONTRACT.md v38).
+function ensureVisible(f) {
+  let refilter = false;
+  if (!visible.has(f.status)) { visible.add(f.status); refilter = true; }
+  if (playOnly && !f.play) { playOnly = false; refilter = true; }
+  if (refilter) { renderChips(); refreshPins(); }
+}
+
 document.getElementById("locate").addEventListener("click", (e) => {
   if (!hasGeo()) { toast(t("toastNoGeo")); return; }
   locateFrom(e.currentTarget).then(
     (coords) => {
       const at = [coords.longitude, coords.latitude];
       showYou(at);
-      maybeShowRoomCard(coords.latitude, coords.longitude);
+      noteFix(coords.latitude, coords.longitude);
+      evaluateRoomCard();   // locate never opens a popup of its own
       map.flyTo({ center: at, zoom: Math.max(map.getZoom(), 14) });
     },
     () => toast(t("toastGeoFail")),
@@ -1063,18 +1092,15 @@ document.getElementById("nearest").addEventListener("click", (e) => {
     (coords) => {
       const { latitude: lat, longitude: lon } = coords;
       showYou([lon, lat]);
-      maybeShowRoomCard(lat, lon);
+      noteFix(lat, lon);
       const hit = nearestUsable(allFeatures, lat, lon, mode, wheelchairOnly);
-      if (!hit) { toast(t("toastNearestNone")); return; }
+      if (!hit) {
+        toast(t("toastNearestNone"));
+        evaluateRoomCard();   // no popup is opening — this fix's own turn to ask
+        return;
+      }
       const f = hit.feature;
-      // The search runs over every pin, not just the shown ones: a chip left
-      // switched off should not change which table is nearest. It would fly the
-      // view to an empty spot, though, so the filters that would hide the
-      // winner are switched back on — visibly, in the chip strip.
-      let refilter = false;
-      if (!visible.has(f.status)) { visible.add(f.status); refilter = true; }
-      if (playOnly && !f.play) { playOnly = false; refilter = true; }
-      if (refilter) { renderChips(); refreshPins(); }
+      ensureVisible(f);
       openPopup(f);
       // flyTo stops the pan openPopup just started; once the flight lands,
       // fit the card to the view it landed in.
@@ -1086,6 +1112,11 @@ document.getElementById("nearest").addEventListener("click", (e) => {
         name: f.name
           || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed"),
       }));
+      // The room card follows this popup, not this fix, the way locate's own
+      // fix would if a popup were not about to cover it: openPopup above hid
+      // it, and closing this one (whenever that happens — this same object,
+      // another pin, or the reader taps away) re-evaluates it while the fix
+      // is still fresh (evaluateRoomCard, via onPopupClosed below).
     },
     () => toast(t("toastGeoFail")),
   );
@@ -1118,37 +1149,58 @@ function rememberCardDismissed(osmUrl) {
 const roomCardEl = document.getElementById("room-card");
 const roomCardText = document.getElementById("room-card-text");
 let roomCardFeature = null;
-let roomCardFix = null;   // {lat, lon} of the fix that raised the card standing, for the move-away check
+
+// The most recent fix from locate() or nearest(), whether or not it ended up
+// showing a card — nearest almost always opens a popup of its own first, and
+// the card's turn comes only once that popup closes (below). Kept apart from
+// whatever the card is doing right now, so a popup that closes minutes later
+// is not mistaken for a fresh "I am here" (isFixFresh, web/datasource.js).
+let lastFix = null;   // { lat, lon, at }
+
+function noteFix(lat, lon) {
+  lastFix = { lat, lon, at: Date.now() };
+}
 
 function hideRoomCard() {
   roomCardFeature = null;
-  roomCardFix = null;
   roomCardEl.hidden = true;
 }
 
-// How far the reader can pan before the card no longer applies to what is on
-// screen — well past the 75 m the rule itself asks within, so a small pan
-// while reading it does not snatch it away.
-const ROOM_CARD_FORGET_KM = 0.3;
-
-function maybeShowRoomCard(lat, lon) {
-  // Never over an open popup — the map is small enough on a phone that two
-  // things asking for attention at once is one too many.
-  if (!dataReady || popup) return;
-  const hit = nearestUnknownRoom(allFeatures, lat, lon);
-  if (!hit || readCardDismissed().includes(hit.feature.osm_url)) { hideRoomCard(); return; }
-  roomCardFeature = hit.feature;
-  roomCardFix = { lat, lon };
+function renderRoomCardText() {
+  if (!roomCardFeature) return;
   // The card repeats the popup's own question rather than a second
-  // translation of it, so the two can never read differently.
+  // translation of it, so the two can never read differently. Re-run on a
+  // language change (applyI18n) so a card left standing does not go stale in
+  // the old language.
   roomCardText.textContent = `${t(roomCardFeature.name ? "roomCardNamed" : "roomCardUnnamed",
     { name: roomCardFeature.name })} ${t("askRoom")}`;
+}
+
+// The single source of truth for whether the card is showing, and for what —
+// recomputed from lastFix every time rather than patched incrementally, so
+// "should it be up right now" never has to be asked two different ways.
+// Called after every fix (locate, or nearest when no popup is about to cover
+// it) and, deferred, after every popup close (onPopupClosed) — which is what
+// makes "the reader closed the popup without answering" bring the card back
+// on its own, and "answered" not: answer() sets location_raw on the very
+// object in allFeatures the moment OSM confirms it, so nearestUnknownRoom
+// stops finding it without this function needing to know why.
+function evaluateRoomCard() {
+  if (!dataReady || popup?.isOpen() || !lastFix || !isFixFresh(lastFix.at)) {
+    hideRoomCard();
+    return;
+  }
+  const hit = nearestUnknownRoom(allFeatures, lastFix.lat, lastFix.lon);
+  if (!hit || readCardDismissed().includes(hit.feature.osm_url)) { hideRoomCard(); return; }
+  roomCardFeature = hit.feature;
+  renderRoomCardText();
   roomCardEl.hidden = false;
 }
 
 document.getElementById("room-card-open").addEventListener("click", () => {
   if (!roomCardFeature) return;
   const f = roomCardFeature;
+  ensureVisible(f);   // the "unknown" chip may since have been switched off
   map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
   openPopup(f);   // also hides the card
   map.once("moveend", panPopupIntoView);
@@ -1157,12 +1209,48 @@ document.getElementById("room-card-close").addEventListener("click", () => {
   if (roomCardFeature) rememberCardDismissed(roomCardFeature.osm_url);
   hideRoomCard();
 });
-// A pan far enough that the card no longer names anywhere near the reader.
+// A pan far enough that the card no longer names anywhere near the reader —
+// well past the 75 m the rule itself asks within, so a small pan while
+// reading it does not snatch it away. Judged against the fix, not the pin:
+// the card is still "about" that fix even while it is between popups.
+const ROOM_CARD_FORGET_KM = 0.3;
 map.on("moveend", () => {
-  if (!roomCardFix) return;
+  if (!roomCardFeature || !lastFix) return;
   const c = map.getCenter();
-  if (haversineKm(roomCardFix.lat, roomCardFix.lon, c.lat, c.lng) > ROOM_CARD_FORGET_KM) hideRoomCard();
+  if (haversineKm(lastFix.lat, lastFix.lon, c.lat, c.lng) > ROOM_CARD_FORGET_KM) hideRoomCard();
 });
+
+// Every popup's "close" (openPopup/openPlacePopup) reports itself here —
+// clicking away, clicking the ×, this file's own remove()-then-replace, or
+// applyDataset finding the object gone. `popup`/`popupObj` used to go stale
+// on the first two of those (nobody nulled them), which is why the card could
+// never appear a second time in a session before this fix.
+//
+// suppressCardOnClose is for the one close that must NOT bring the card back:
+// a mode or language switch tearing the popup down because its *text* no
+// longer applies, not because the reader dismissed anything. Every other
+// close — including this file's own "remove the old one, open a new one" in
+// openPopup/openPlacePopup/reopen() — re-evaluates, deferred to a microtask so
+// a same-tick reopen has already reassigned `popup` by the time it runs
+// (evaluateRoomCard's popup?.isOpen() then correctly sees the new one and
+// stays quiet).
+let suppressCardOnClose = false;
+
+function onPopupClosed(closedPopup) {
+  if (popup === closedPopup) { popup = null; popupObj = null; }
+  if (suppressCardOnClose) { suppressCardOnClose = false; return; }
+  queueMicrotask(evaluateRoomCard);
+}
+
+// Used where the popup is torn down as a side effect of something else
+// (applyMode, the language switch) rather than the reader's own doing.
+function closePopupSilently() {
+  if (!popup) return;
+  suppressCardOnClose = true;
+  popup.remove();
+  popup = null;
+  popupObj = null;
+}
 
 // ---- Edit confirmation: re-read the object from OSM after a MapComplete click ----
 // The nightly build is the only way an answer reaches the map, so a reader who
@@ -1366,7 +1454,14 @@ function dropEditNote() {
 async function sharePin(kind, obj) {
   const url = shareUrl(obj.osm_url);
   const title = obj.name || t(obj.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
-  const text = t("shareText", { name: title });
+  // "a changing table on PapaMap" is false for a play place OSM records no
+  // table on — shareText is for a real pin, or a play place this reader has
+  // just answered "yes" to in this session (answer() sets obj.changing_table
+  // the moment OSM confirms it, same as the popup's own tag row). Everything
+  // else — the open question, or a recorded "no" — gets sharePlaceText, which
+  // names the place, not a table it does not have.
+  const hasTable = kind === "table" || obj.changing_table === "yes";
+  const text = t(hasTable ? "shareText" : "sharePlaceText", { name: title });
   if (navigator.share) {
     try { await navigator.share({ title, text, url }); return; }
     // AbortError: the reader closed the OS share sheet without picking
@@ -1634,7 +1729,7 @@ function applyMode() {
   // layer is created with pinColorExpression(mode) anyway, so a mode chosen
   // that early is already painted correctly when the style arrives.
   if (styleReady) map.setPaintProperty(SRC, "circle-color", pinColorExpression(mode));
-  if (popup) { popup.remove(); popup = null; }   // its text belonged to the old reading
+  closePopupSilently();   // its text belonged to the old reading; not the reader's own close
   renderStats(lastStats);
   renderChips();
   positionZoomCtrl();   // the sentence can wrap to a different height
@@ -1668,7 +1763,7 @@ langSelect.addEventListener("change", () => {
     url.searchParams.delete("lang");
     history.replaceState(null, "", url);
   }
-  if (popup) { popup.remove(); popup = null; }
+  closePopupSilently();   // same reason as applyMode: not the reader's own close
   applyI18n();
   renderStats(lastStats);
   renderChips();
@@ -1814,15 +1909,27 @@ function openPin(osmUrl) {
   if (f) {
     map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
     openPopup(f);
+    stripOsmParam();
     return;
   }
   const p = allPlaces.find((x) => x.osm_url === osmUrl);
   if (p) {
     map.jumpTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
     openPlacePopup(p);
+    stripOsmParam();
     return;
   }
   toast(t("sharePinGone"));
+  stripOsmParam();
+}
+
+// A page installed to the home screen from a shared link, or simply left
+// open in a tab, must not reopen the same pin on every future launch —
+// ?lang= and ?mode= already strip themselves once honoured, and ?osm= now
+// does the same, once openPin above has actually resolved it.
+function stripOsmParam() {
+  const stripped = withoutOsmParam(location.href);
+  if (stripped) history.replaceState(null, "", stripped);
 }
 
 // The five assignments a set of four files turns into on screen — boot()'s

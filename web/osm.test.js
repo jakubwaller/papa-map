@@ -163,6 +163,22 @@ test("roomLabelKeys matches tokens case-insensitively, like classify.py", () => 
   assert.deepEqual(roomLabelKeys("Attic"), [{ raw: "Attic" }]);
 });
 
+test("roomLabelKeys dedupes case-insensitively, first spelling wins", () => {
+  // A known token repeated under a different case is one label, not two.
+  assert.deepEqual(roomLabelKeys("Female_toilet;female_toilet"), [{ key: "roomFemale" }]);
+  assert.deepEqual(roomLabelKeys("female_toilet;Female_toilet;FEMALE_TOILET"),
+    [{ key: "roomFemale" }]);
+  // An unknown token repeated under a different case is one part too, and
+  // keeps the FIRST spelling seen, not the last.
+  assert.deepEqual(roomLabelKeys("Attic;ATTIC;attic"), [{ raw: "Attic" }]);
+  assert.deepEqual(roomLabelKeys("attic;Attic"), [{ raw: "attic" }]);
+  // The "both" pair still collapses when one half is a case-duplicate of the
+  // other's near-miss — three tokens that fold to the two-token pair once
+  // deduped.
+  assert.deepEqual(roomLabelKeys("female_toilet;Female_toilet;male_toilet"),
+    [{ key: "roomBoth" }]);
+});
+
 test("a mother is not asked about the men's room; a father gets every answer", () => {
   assert.deepEqual(roomChoices("mama"), ["female", "unisex", "wheelchair", "dedicated"]);
   assert.ok(!roomChoices("mama").includes("male") && !roomChoices("mama").includes("both"));

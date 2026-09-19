@@ -439,6 +439,18 @@ export function nearestUnknownRoom(features, lat, lon) {
   return best;
 }
 
+// A fix from locate()/nearest() stays good for the card even when nearest
+// opens a popup first and the card's own turn only comes once that popup
+// closes, minutes later — but not forever: a fix from before the reader
+// walked off is not "here" any more. web/app.js's evaluateRoomCard is the
+// only caller; kept here, pure, so the 5-minute rule has its own test rather
+// than living as inline arithmetic next to a DOM read.
+export const ROOM_CARD_FIX_MAX_AGE_MS = 5 * 60 * 1000;
+
+export function isFixFresh(fixAt, now = Date.now()) {
+  return Number.isFinite(fixAt) && now - fixAt <= ROOM_CARD_FIX_MAX_AGE_MS;
+}
+
 // Metres below a kilometre, and rounded to the nearest ten: a good phone fix
 // is accurate to a handful of metres and a poor one to fifty, so "437 m" would
 // claim a precision the sensor cannot deliver. Returns the i18n key and the
@@ -486,6 +498,20 @@ export function shareUrl(osmUrl) {
 // and both are covered by the same tests.
 export function parseShareOsm(search) {
   return new URLSearchParams(search).get("osm");
+}
+
+// Once openPin (web/app.js) has resolved a ?osm= link — found or not — the
+// param is dropped from the address bar with history.replaceState, the way
+// ?lang= and ?mode= already are, so a page installed to the home screen from
+// a shared link does not reopen that same pin on every future launch. Every
+// other param (and the path) survives. Returns null when there was no ?osm=
+// to strip, so the caller can skip the replaceState call entirely rather than
+// writing back an identical URL.
+export function withoutOsmParam(href) {
+  const url = new URL(href);
+  if (!url.searchParams.has("osm")) return null;
+  url.searchParams.delete("osm");
+  return url.toString();
 }
 
 // ---- Edit confirmation: one object re-read from the OSM API ----

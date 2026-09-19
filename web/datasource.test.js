@@ -10,8 +10,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
-         EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, ROOM_CARD_RADIUS_KM,
-         nearestUnknownRoom } from "./datasource.js";
+         EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
+         nearestUnknownRoom, isFixFresh } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -567,6 +567,20 @@ test("parseShareOsm reads ?osm= and nothing else", () => {
     "https://www.openstreetmap.org/node/1");
 });
 
+test("withoutOsmParam strips ?osm= once resolved, keeping every other param", () => {
+  assert.equal(
+    withoutOsmParam("https://papamap.de/?osm=https%3A%2F%2Fwww.openstreetmap.org%2Fnode%2F1"),
+    "https://papamap.de/");
+  // Other params survive, in place, whichever side of ?osm= they sat.
+  assert.equal(
+    withoutOsmParam("https://papamap.de/?lang=en&osm=https%3A%2F%2Fwww.openstreetmap.org%2Fnode%2F1&mode=mama"),
+    "https://papamap.de/?lang=en&mode=mama");
+  // Nothing to strip: null, not the URL echoed back, so the caller can skip
+  // a no-op history.replaceState.
+  assert.equal(withoutOsmParam("https://papamap.de/?lang=en"), null);
+  assert.equal(withoutOsmParam("https://papamap.de/"), null);
+});
+
 // ---- The "which room?" card ----
 
 test("nearestUnknownRoom: only status unknown with no recorded room, within 75 m", () => {
@@ -606,6 +620,19 @@ test("nearestUnknownRoom respects nothing else: it is not pinFeatures", () => {
     [{ status: "unknown", location_raw: null, key: "eurokey", lat: 53.5503, lon: 9.9920 }],
     53.5503, 9.9920);
   assert.ok(hit);
+});
+
+test("isFixFresh: good for 5 minutes, stale a moment past it", () => {
+  const now = 1_000_000_000;
+  assert.equal(isFixFresh(now, now), true);   // this instant
+  assert.equal(isFixFresh(now - 4 * 60 * 1000, now), true);
+  assert.equal(isFixFresh(now - 5 * 60 * 1000, now), true);   // exactly the edge
+  assert.equal(isFixFresh(now - 5 * 60 * 1000 - 1, now), false);
+  assert.equal(isFixFresh(now - 6 * 60 * 1000, now), false);
+  // A malformed or missing timestamp reads as stale, not as fresh-by-default.
+  assert.equal(isFixFresh(NaN, now), false);
+  assert.equal(isFixFresh(undefined, now), false);
+  assert.equal(isFixFresh(null, now), false);
 });
 
 // ---- Edit confirmation ----
