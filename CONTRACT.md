@@ -1,5 +1,95 @@
 # papa-map — build contract (v0)
 
+> **v38 amendment (19 Sep 2026, share a pin, and the room card):** **no shape
+> change** — no data file gains, loses or changes a property, and `STATUSES`
+> is untouched.
+>
+> **Share.** The pin popup and the play-place popup gain a share button in the
+> row the Route button already lives in — icon only (`popupShare` names it in
+> the aria-label and the title, there being no room for a labelled button too
+> in that row at 375 px in German). It builds
+> `https://papamap.de/?osm=<osm_url>` (`shareUrl`, `web/datasource.js`) from
+> the pipeline's own `osm_url`, urlencoded, verbatim — the very identifier
+> `papamap://table?osm=…` already carries for the widget and the Siri shortcut
+> (`TableStore.swift`'s `deepLink`). `openPin` (`web/app.js`) is now the one
+> parser both read: this page's own `?osm=` on load, and the app's deep link,
+> whichever scheme delivered it. It used to search only `changing_tables.geojson`;
+> it now also searches `play_places.geojson`, so a shared play-place link opens
+> its card too — an object neither array holds any more (deleted, or never on
+> this dataset in the first place) flies nowhere and gets one toast
+> (`sharePinGone`) instead of silently doing nothing, which the widget and the
+> shortcut inherit for free, not only the share link. The link carries no
+> `?lang=`: a shared link is not the sharer's language to choose for whoever
+> opens it, so the receiver's own detection or stored choice wins exactly as it
+> would on any other visit. `navigator.share({title, text, url})` where the
+> browser has it — the reader's own share sheet decides where it goes from
+> there; failing that, the link is copied to the clipboard
+> (`navigator.clipboard`, then a hidden-textarea `execCommand("copy")` for a
+> WebView with neither) and a toast confirms it (`shareCopied`), or, if even
+> that fails, a toast says so (`shareFailed`) rather than leaving the tap
+> looking like it did nothing. `text` is the place's name plus one line naming
+> PapaMap (`shareText`, `{name}`), in the reader's own language; `title` is the
+> same name. No `@capacitor/share`: both `navigator.share` and the clipboard
+> API reach across Capacitor's WKWebView/Android WebView bridge on their own,
+> so `app/plugins.test.mjs`'s list is unchanged.
+>
+> **The room card.** Standing in front of a table nobody has recorded a room
+> for is the one moment this project most wants a reader's attention, and
+> asking for it cold — a location permission prompt out of nowhere — is not
+> this feature's to spend. So the card only ever follows a fix the reader
+> already has for another reason: the locate button or the nearest-table
+> button, the only two places `web/app.js` ever calls `locate()`. No new
+> prompt, and never background location. The rule itself is pure and tested
+> (`nearestUnknownRoom`, `web/datasource.js`): the nearest
+> `changing_tables.geojson` feature with `status === "unknown"` and no
+> `location_raw`, within **75 m** (`ROOM_CARD_RADIUS_KM`) of the fix,
+> straight-line like `nearestUsable` — over every loaded feature, not
+> `pinFeatures`, so neither the status chips nor the wheelchair chip narrow
+> what the card can ask about: the question is about the place the reader is
+> standing in, not about the view. Play places are out of scope for this v1
+> (`allPlaces` is not searched) — folding them in would mean deciding whether
+> the card also files their bare `changing_table=yes`, a bigger question than
+> 75 m answers. A small card above the attribution line (`#room-card`, never a
+> `<dialog>`: nothing here needs a backdrop, or the focus trap that would
+> fight the map) names the place and repeats the popup's own question
+> (`askRoom`, not a second translation of it) with one primary action that
+> opens that pin's popup — the two-tap answer, the login line, all of it,
+> already there — and one close ×. Closing it remembers the pin in
+> `localStorage` under **`papamap-card-dismissed`** (a bounded FIFO list,
+> capped at 200, wrapped in try/catch like every other storage read in this
+> file) so it does not ask about that table again on that device; a table the
+> reader has since answered needs no entry in that list at all — `location_raw`
+> is truthy in memory the moment `answer()` returns (v25), which the rule
+> itself already excludes. At most one card is shown per fix, it disappears
+> the moment any popup opens (its own or another pin's — a phone screen is
+> small enough that two things asking for attention at once is one too many),
+> and it disappears again if the reader pans the map more than 300 m from the
+> fix that raised it. Never covers the popup, the toast or the app's dialogs on
+> a 12 mini: mutual exclusion with the popup already guarantees the first, and
+> the toast and the offline/route dialogs sit in their own corners of the
+> screen. Works the same on the website and inside the app; this feature never
+> asks `isNative()`.
+>
+> **Riding along, same PR, three fixes from the last review.** `roomLabelKeys`
+> (`web/osm.js`) now lower-cases both the raw tag's tokens and its own
+> vocabulary before comparing them, so `Female_toilet` still resolves to the
+> room label instead of falling through to `{ raw: "Female_toilet" }` verbatim
+> — `classify.py` already lower-cases before it matches, this only catches
+> `roomLabelKeys` up to it. Matching stays exact, never substring, whatever the
+> case: `female_toilet` and `male_toilet` still never match each other.
+> **Correcting v37:** its own text names the shell pin move as `app29` →
+> `app30`, but what shipped that day, in the same amendment's own later
+> paragraphs, moved it on again to `app31` — "since build 30" in v37's first
+> paragraph should read "since build 31"; everything else in v37 stands.
+> **`docs/FEATURES.md`** (~line 302) said the play-place card never prints
+> "Changing table: yes" at all — true of every path that writes to it today,
+> since `tablePatch` always writes a room alongside it, but not what the code
+> actually promises: `placeHTML`'s table row prints "yes" when there is no
+> room to stand in for it (v37's own second review fix), so the sentence there
+> now says exactly that instead of a blanket "never".
+>
+> Shell pin `app31` → `app32`.
+
 > **v37 amendment (19 Sep 2026, the room in the reader's own language):** **no
 > shape change** — no data file gains, loses or changes a property, `location_raw`
 > is untouched, and this is still not a classifier: `pipeline/classify.py`'s exact

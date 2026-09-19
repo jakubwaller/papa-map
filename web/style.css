@@ -373,6 +373,52 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 /* A toast with something to open (the edit confirmation reopens its pin). */
 #toast.show.tap { pointer-events: auto; cursor: pointer; }
 
+/* ---------- The "which room?" card ---------- */
+/* Anchored above the attribution line, not a modal: no backdrop, and the map
+   underneath stays interactive. Sits well clear of #toast's own 24px band so
+   the two never overlap when a toast fires while the card is up. */
+#room-card {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(76px + var(--safe-bottom));
+  z-index: 25;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bar);
+  box-shadow: 0 6px 20px rgba(15, 25, 20, .22);
+  font-size: 12.5px;
+  color: var(--ink);
+}
+#room-card[hidden] { display: none; }
+#room-card p { margin: 0 26px 8px 0; line-height: 1.4; }
+#room-card .room-card-actions { display: flex; gap: 8px; }
+#room-card .btn.primary {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--green);
+  background: var(--green);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+#room-card .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
+#room-card .close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: none;
+  background: none;
+  font-size: 18px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+#room-card .close:hover { color: var(--ink); }
+
 /* ---------- Add-a-place dialog ---------- */
 #add-dialog, #offline-dialog, #route-dialog {
   max-width: min(92vw, 430px);
@@ -516,6 +562,16 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .btn:hover { border-color: var(--green); color: var(--green-strong); }
 .popup .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
 .popup .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
+/* The share button: icon only, in the same row as Route and the OSM link —
+   at 375 px in German that row has no room left for one more word. */
+.popup .btn.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  padding: 7px;
+}
+.popup .btn .share-icon { width: 14px; height: 14px; fill: currentColor; display: block; }
 /* Edit confirmation: what OSM holds after a MapComplete answer. Found is
    bold ink on the neutral ground, deliberately not green: green is the one
    colour this site reserves for "a dad can reach it", and the row quotes a

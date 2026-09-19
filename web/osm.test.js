@@ -149,6 +149,20 @@ test("roomLabelKeys turns a raw changing_table:location into display parts", () 
   assert.deepEqual(roomLabelKeys("attic;attic"), [{ raw: "attic" }]);
 });
 
+test("roomLabelKeys matches tokens case-insensitively, like classify.py", () => {
+  // A mapper's capitalised token still resolves to its label...
+  assert.deepEqual(roomLabelKeys("Female_toilet"), [{ key: "roomFemale" }]);
+  assert.deepEqual(roomLabelKeys("WHEELCHAIR_TOILET"), [{ key: "roomWheelchair" }]);
+  // ...the "both" pair collapses regardless of which token carries the case...
+  assert.deepEqual(roomLabelKeys("Female_toilet;male_toilet"), [{ key: "roomBoth" }]);
+  assert.deepEqual(roomLabelKeys("MALE_TOILET;FEMALE_TOILET"), [{ key: "roomBoth" }]);
+  // ...but exactness survives the fold: still never male for female, whatever
+  // the case of either.
+  assert.notDeepEqual(roomLabelKeys("Female_toilet"), [{ key: "roomMale" }]);
+  // An unknown token still prints exactly as OSM wrote it, case included.
+  assert.deepEqual(roomLabelKeys("Attic"), [{ raw: "Attic" }]);
+});
+
 test("a mother is not asked about the men's room; a father gets every answer", () => {
   assert.deepEqual(roomChoices("mama"), ["female", "unisex", "wheelchair", "dedicated"]);
   assert.ok(!roomChoices("mama").includes("male") && !roomChoices("mama").includes("both"));
