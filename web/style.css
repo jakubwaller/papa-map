@@ -334,7 +334,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   color: var(--muted-2);
 }
 #zoom-ctrl button:hover { border-color: var(--green); color: var(--green-strong); }
-#locate, #nearest, #offline { display: flex; align-items: center; justify-content: center; }
+#locate, #nearest, #me, #offline { display: flex; align-items: center; justify-content: center; }
 #locate[aria-busy], #nearest[aria-busy] { animation: locating .7s ease-in-out infinite alternate; }
 @keyframes locating { to { opacity: .4; } }
 @media (prefers-reduced-motion: reduce) {
@@ -420,7 +420,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #room-card .close:hover { color: var(--ink); }
 
 /* ---------- Add-a-place dialog ---------- */
-#add-dialog, #offline-dialog, #route-dialog {
+#add-dialog, #offline-dialog, #route-dialog, #me-dialog {
   max-width: min(92vw, 430px);
   border: none;
   border-radius: 14px;
@@ -429,9 +429,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   font-family: var(--ui);
   color: var(--ink);
 }
-#add-dialog::backdrop, #offline-dialog::backdrop, #route-dialog::backdrop { background: rgba(15, 25, 20, .45); }
-#add-dialog h3, #offline-dialog h3, #route-dialog h3 { margin: 0 0 6px; font-size: 17px; padding-right: 22px; }
-#add-dialog p, #offline-dialog p, #route-dialog p { margin: 0 0 12px; font-size: 13px; color: var(--muted-2); line-height: 1.5; }
+#add-dialog::backdrop, #offline-dialog::backdrop, #route-dialog::backdrop, #me-dialog::backdrop { background: rgba(15, 25, 20, .45); }
+#add-dialog h3, #offline-dialog h3, #route-dialog h3, #me-dialog h3 { margin: 0 0 6px; font-size: 17px; padding-right: 22px; }
+#add-dialog p, #offline-dialog p, #route-dialog p, #me-dialog p { margin: 0 0 12px; font-size: 13px; color: var(--muted-2); line-height: 1.5; }
 #add-dialog .btn {
   display: block;
   padding: 11px 14px;
@@ -457,7 +457,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #add-dialog .btn code { font-size: 11px; }
 #add-dialog .dialog-foot { margin: 4px 0 0; font-size: 12.5px; }
 
-#add-dialog .close, #offline-dialog .close, #route-dialog .close {
+#add-dialog .close, #offline-dialog .close, #route-dialog .close, #me-dialog .close {
   position: absolute;
   top: 8px;
   right: 10px;
@@ -468,7 +468,78 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   cursor: pointer;
   padding: 4px 8px;
 }
-#add-dialog .close:hover, #offline-dialog .close:hover, #route-dialog .close:hover { color: var(--ink); }
+#add-dialog .close:hover, #offline-dialog .close:hover, #route-dialog .close:hover, #me-dialog .close:hover { color: var(--ink); }
+
+/* ---------- Mein PapaMap ---------- */
+/* The game sentence: parts joined by app.js (me-sentence's own spans/buttons),
+   not one template — mode and login state each swap a clause, never the
+   whole line (web/me.js's sentenceParts). */
+.me-sentence { margin: 0 0 12px; font-size: 14px; line-height: 1.5; color: var(--ink); }
+.me-sentence .linkish { font-size: inherit; font-weight: 600; }
+.me-stats { margin-bottom: 12px; }
+/* Read as groups, not four loose lines: the two number lines sit close
+   together, "Abmelden" gets a clear gap above it rather than the same 3px
+   the numbers share (offline dialog's own rhythm: an intro paragraph, then
+   a clear gap before the list). */
+.me-stats p { margin: 0 0 3px; font-size: 13px; color: var(--muted-2); }
+.me-stats p:last-of-type { margin-bottom: 0; }
+.me-stats .linkish { display: inline-block; margin-top: 7px; }
+.me-stats .btn.primary { margin-top: 4px; }
+/* The backfill note: quiet, not a warning — the total is still true, just
+   not necessarily final yet. */
+.me-stats .me-backfill { font-style: italic; color: var(--muted); margin-top: 2px; }
+#me-dialog .linkish {
+  border: 0; background: none; padding: 0; font: inherit;
+  color: var(--green-strong); text-decoration: underline; cursor: pointer;
+}
+#me-dialog .btn.primary {
+  display: inline-block; padding: 9px 16px; border-radius: 999px;
+  border: 1px solid var(--green); background: var(--green); color: #fff;
+  font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+}
+#me-dialog .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
+.me-saved h4 { margin: 4px 0 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
+.saved-list { list-style: none; margin: 0; padding: 0; max-height: 40vh; overflow-y: auto; }
+.saved-list li.saved-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-top: 1px solid var(--line); font-size: 13px;
+}
+.saved-list li:first-child { border-top: none; }
+.saved-list .saved-empty { padding: 6px 0; color: var(--muted-2); font-size: 13px; border-top: none; }
+.saved-list .saved-link {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 7px;
+  border: 0; background: none; padding: 0; font: inherit; font-size: 13px;
+  text-align: left; color: var(--ink); cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.saved-list .saved-link .dist { color: var(--muted-2); font-size: 11.5px; }
+.saved-list .saved-remove {
+  flex: 0 0 auto; border: 0; background: none; padding: 2px 6px;
+  font-size: 16px; line-height: 1; color: var(--muted); cursor: pointer;
+}
+.saved-list .saved-remove:hover { color: var(--ink); }
+/* The pin's own colour, or a plain outline when tonight's data no longer has
+   the place — never a status this project did not classify (CONTRACT.md). */
+.saved-list .dot {
+  flex: 0 0 auto; width: 9px; height: 9px; border-radius: 50%; display: inline-block;
+}
+.saved-list .dot.ok { background: var(--green); }
+.saved-list .dot.bad { background: var(--red); }
+.saved-list .dot.ask { background: var(--grey-pin); }
+.saved-list .dot.maybe { background: #e69f00; }
+.saved-list .dot.play { background: var(--play); }
+.saved-list .dot.neutral { background: none; border: 1.5px solid var(--line); }
+
+/* The star, in the popup's title line (not the Route row): sized to the
+   headline so it never pushes the card taller. */
+.popup h3 { display: flex; align-items: center; gap: 6px; }
+.popup .star-btn {
+  flex: 0 0 auto; border: 0; background: none; padding: 0; margin-left: auto;
+  width: 18px; height: 18px; color: var(--muted); cursor: pointer;
+}
+.popup .star-btn svg { width: 100%; height: 100%; }
+.popup .star-btn.on { color: #e6a700; }
+.popup .star-btn:hover { color: #e6a700; }
 
 /* ---------- Attribution ---------- */
 #attribution {

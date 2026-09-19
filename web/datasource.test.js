@@ -5,8 +5,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          isWheelchairOk, countWheelchair, pinFeatures, placeFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
-         pinColorExpression, momCounts, usableStatuses, haversineKm,
+         parseBbox, pickArea, areaLink, areaKeysFor, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
+         pinColorExpression, momCounts, localAnswered, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
@@ -469,6 +469,16 @@ test("momCounts adds the two rooms and keeps the unrecorded ones apart", () => {
   assert.deepEqual(momCounts({ accessible: 4 }), { good: 4, maybe: 0 });
 });
 
+// statsLocal (renderStats, web/app.js) and "Mein PapaMap"'s percentage
+// (web/me.js's answeredPercent) both call this, so the two can never read
+// the local block two different ways — see CONTRACT.md v39.
+test("localAnswered: tables partitions into known and unknown, the pipeline's own split (v24)", () => {
+  assert.deepEqual(localAnswered({ ct_yes: 25, ct_limited: 2, accessible: 10, female_only: 3, unknown: 14 }),
+    { tables: 27, unknown: 14, known: 13 });
+  assert.deepEqual(localAnswered({}), { tables: 0, unknown: 0, known: 0 });
+  assert.deepEqual(localAnswered(undefined), { tables: 0, unknown: 0, known: 0 });
+});
+
 // ---- Nearest usable table ----
 
 test("usable means what the reading already calls good, nothing new", () => {
@@ -887,6 +897,13 @@ test("areaLink reads the page in the UI language, else its English twin", () => 
   // An English page is its own English reading, for every UI language.
   assert.deepEqual(areaLink(AREAS.find((a) => a.area === "Florida"), "de"), { href: "wickeltische/florida.html", label: "Changing tables in Florida" });
   assert.equal(areaLink(null, "de"), null);
+});
+
+test("areaKeysFor: a chunk's own one area, a country's several, nothing for null", () => {
+  const hh = AREAS[1], de = AREAS[0];
+  assert.deepEqual(areaKeysFor(hh), new Set(["Hamburg"]));
+  assert.deepEqual(areaKeysFor(de), new Set(["Bayern", "Hamburg", "Schleswig-Holstein"]));
+  assert.deepEqual(areaKeysFor(null), new Set());
 });
 
 // A fake unproject standing in for map.unproject: north is up (lat falls as

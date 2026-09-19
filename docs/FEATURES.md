@@ -244,14 +244,17 @@ show, because the question is about the place, not the view.
 Locate never opens anything, so its fix gets the card's turn at once. Nearest
 almost always opens a popup of its own first, so the card waits — a fix stays
 usable for it for five minutes, popups and all — and gets its turn once that
-popup **closes**: click the map, tap its ×, tap a different pin, or answer it.
-Closing *without* answering brings the card back, naming the same pin, because
-nothing about the object has changed; answering it does not, because the room
-it just learned (`location_raw`, set in memory the moment OSM confirms it) is
-exactly what the rule excludes. A card left standing survives a mode or
-language switch's own popup teardown without popping back up a moment later —
-that close is not the reader's doing — and re-reads itself in the new
-language rather than going stale.
+popup **closes**: a click on the map, a tap on its own ×, or the page
+replacing it with a new popup (opening a different pin, or reopening the same
+one after a login round trip). Closing *without* answering brings the card
+back, naming the same pin, because nothing about the object has changed;
+answering it does not close the popup at all — it stays open, showing the
+room OSM now holds — but the card would not return for that object anyway,
+because the room it just learned (`location_raw`, set in memory the moment
+OSM confirms it) is exactly what the rule excludes. A card left standing
+survives a mode or language switch's own popup teardown without popping back
+up a moment later — that close is not the reader's doing — and re-reads
+itself in the new language rather than going stale.
 
 When it rises, a small card above the attribution line shows the place's name,
 the popup's own room question repeated rather than reworded, one button that
@@ -504,6 +507,86 @@ Every Overpass answer is checked for freshness (`osm3s.timestamp_osm_base`,
 `PAPAMAP_OVERPASS_MAX_DATA_AGE_H`, default 24 h): a mirror serving a frozen
 database is skipped, because a region quietly computed from months-old data is
 a data bug on the map and a fake mover on the leaderboard.
+
+## Mein PapaMap: your own numbers, and places worth going back to
+
+A button beside locate and nearest — `#me` in `web/zoom-ctrl`, the same look
+as the offline-cities dialog — opens "Mein PapaMap": a headline sentence,
+the reader's own answer count, and a list of starred places. All three read
+data that already exists somewhere; none of it is a new thing PapaMap keeps
+about anyone.
+
+The headline is a game: "Wickeltische in Hamburg: 31 % beantwortet, 2
+davon sind von dir, 8 graue Pins im Umkreis von 1 km" — and both the area
+and its own name are whichever the footer link already shows: the same
+`pickArea` pick the "Wickeltische in Hamburg" link makes from the pins
+nearest the map centre (CONTRACT.md v32), and the exact same label text
+(`currentAreaLink.label` — the row's own `label`, or its `en.label` for a
+reader whose UI language the row isn't written in — never a bare sweep-area
+key on its own). `web/app.js` keeps that exact pick (`currentArea`/
+`currentAreaLink`) rather than choosing a second time with different
+inputs, so the two can never name different places, and panning from
+Hamburg to Berlin before opening the dialog gets Berlin. The percentage is
+counted live over every table the pipeline put in that area — every loaded
+feature, never the chip-filtered subset a reader happens to be looking at —
+never a second dataset of its own. Only when `pickArea` finds nothing at
+all (open sea, zoomed out past any area's reach) does the sentence fall
+back to the site's own whole-sweep numbers, the same ones the stats strip
+renders (`localAnswered`, `web/datasource.js` — one place "how many tables
+are answered" comes from `stats.json`'s `local` block, so the strip and
+that one fallback sentence cannot drift apart either). A second clause says
+how many of the reader's own OSM changesets land in that same area — each
+attributed by the nearest loaded feature within the changeset's own search
+radius (below) — worded as an invitation rather than a zero when there are
+none yet. A third names how many grey pins (amber, reading as a mother) sit
+within a kilometre of wherever the reader last used *locate* or *nearest*
+— **never a fresh location prompt of its own** — and tapping it closes the
+dialog and frames the map on that circle instead. Read `sentenceParts` in
+`web/me.js` for exactly which clause is chosen when.
+
+"Your stats" reads the reader's own **public** OSM changesets live, on the
+device: `GET {api}/changesets.json?display_name=<name>`, no login-privileged
+data, nothing a stranger with the same username could not also see. A
+changeset counts as PapaMap's if its tags say so — `created_by: "PapaMap"`
+for this site's own writes, or `theme: "papamap"` for the MapComplete
+hand-off — and never by downloading what it actually changed. **A PapaMap
+changeset edits exactly one object, so its bounding box is a point — a
+MapComplete changeset is not.** MapComplete reuses one changeset across a
+whole theme session, so one changeset can hold several answers (the room
+question and the play question on the same table, or several tables in one
+sitting), spread over its own wider bbox. The changeset's own
+`changes_count` — how many edits it holds — is kept as each cached answer's
+`n`, and all of a changeset's `n` answers are attributed together to the
+single nearest loaded feature within `max(50 m, half the bbox's own
+diagonal)`, capped at 5 km. `changes_count` can include the theme's other
+questions too, not only the room this project asks about — the total is
+still called "Antworten" (answers) in German, honestly, since every one of
+those changes is an answer to one of the theme's own questions, even where
+it isn't this one. Cached on the device (`papamap-my-answers`, tied to the
+logged-in name so a second account on a shared computer never inherits the
+first one's numbers, cleared outright on logout, along with the throttle
+clock that used to leave a fresh login showing "0 Antworten" for five
+minutes), shown at once and topped up in the background — bounded to a
+handful of requests per open, split between what's new since the last visit
+and continuing a backfill cursor into the reader's older history a first
+open's budget could not reach, with a quiet note while that backfill is
+still incomplete so the total is never shown as final before it is. An
+answer just given is added the moment OSM confirms the write, from that
+write's own reply, so the count moves on the same tap rather than on the
+next time the list happens to be paged. Attributing many answers against a
+dataset of tens of thousands of features runs through a coarse grid index
+built once per loaded dataset, not a fresh full scan per answer. No
+ranking, no other reader's name, anywhere: the owner ruled that out early,
+and the API call itself never asks about anyone but the one person logged
+in.
+
+Saved places are a star, next to a pin's or a play place's name rather than
+in the Route row, kept only on the device (`papamap-saved`, up to 200) —
+enough to show and fly back to a place even if tonight's build no longer
+carries it, because the star keeps its own `lon`/`lat`, not just an id. The
+dialog lists them newest first, with tonight's pin colour when the place is
+still on the map and a plain dot when it is not, and the distance from
+wherever the reader last stood.
 
 ## The store app
 
