@@ -447,8 +447,9 @@ export function geoUri(lat, lon, label) {
 // lags minutes; this does not), needs no login, and answers papamap.de
 // cross-origin — so app.js keeps the object's version and tags as a baseline
 // when the MapComplete button is clicked and re-reads it a few times once the
-// tab is back in front. What it shows is the raw tag value, never a colour:
-// classification stays in the pipeline (CONTRACT.md v23).
+// tab is back in front. What it shows is the tag as OSM now holds it, in the
+// reader's own language where app.js has one to show it in (v37) — never a
+// colour: classification stays in the pipeline (CONTRACT.md v23).
 const OSM_REF = /^https:\/\/www\.openstreetmap\.org\/(node|way|relation)\/(\d+)$/;
 
 // The pipeline's osm_url → { type, id }, or null for anything else.
@@ -512,6 +513,21 @@ export function editTagLines(tags) {
   return EDIT_TAGS
     .filter((k) => tags?.[k] && !(repeats && k === sub))
     .map((k) => [EDIT_TAG_LABEL[k], tags[k]]);
+}
+
+// editTagLines minus the line printableTableValue would drop — the lines the
+// confirmation actually prints, not just the tags it read. Pulled out as its
+// own tested rule because app.js needs the same "is there anything to show"
+// question twice: once to render the toast's body (tagsLabel), once to pick
+// between it and the tagless "found" toast (editFoundPlain) in the first
+// place — and those two used to ask it two different ways, so a reader whose
+// only change was `changing_table=yes` (the theme's own standalone table
+// question, answered on a play place with no room) saw a toast quoting an
+// empty line. "No printable line → the plain toast" is now one rule, tested
+// once, rather than a filter in the render path that the caller upstream
+// does not see.
+export function printableEditTagLines(tags) {
+  return editTagLines(tags).filter(([label, value]) => label !== "popupTable" || printableTableValue(value));
 }
 
 // Re-read schedule in ms once the tab is back in front. MapComplete uploads

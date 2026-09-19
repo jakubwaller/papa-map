@@ -35,6 +35,37 @@
 > `limited` (the only value now ever printed beside "yes") stays verbatim, as
 > before. Shell pin `app29` → `app30`.
 >
+> Also corrects the v23 amendment below, the same way this amendment corrects
+> v25: since build 30 the edit confirmation no longer shows `changing_table`
+> and `changing_table:location` "verbatim" — the room is translated, and a
+> `changing_table=yes` line is dropped, exactly as above.
+>
+> *(19 Sep 2026, later: three review fixes, same PR, before merge.)* **Fix
+> one:** dropping the `changing_table=yes` line at render time left a gap —
+> `pollEdit` (`web/app.js`) chose between the `editFound` toast (quotes the
+> tags) and `editFoundPlain` (does not) by asking only whether *any* `EDIT_TAGS`
+> key had changed, not whether anything survived the render-time drop. A
+> reader who answers only the theme's standalone table question on a play
+> place — `changing_table=yes`, no room, the one tag the theme lets stand
+> alone — changed a tag but left nothing printable, and the toast read "…is
+> auf OSM: . …", an empty line where the tags should be. `printableEditTagLines`
+> (`web/datasource.js`, next to `editTagLines`) is now the one rule both sides
+> ask: `editTagLines` minus the line `printableTableValue` would drop.
+> `tagsLabel` (`web/app.js`) renders it, and `pollEdit` picks `editFoundPlain`
+> whenever it comes back empty. `editTagLines` itself is unchanged.
+> **Fix two (a latent trap, not a live bug):** `placeHTML`'s table row used to
+> risk rendering empty — a place with a truthy `changing_table`, no room and
+> no printable value would have shown no headline row at all, table line
+> suppressed and the "OSM says nothing" line skipped because `changing_table`
+> is not, in fact, absent. `tablePatch` always sets a room alongside
+> `changing_table`, so this could not happen through this site's own two taps,
+> but the render code should not depend on that staying true. It now drops
+> `yes` only when a room is there to stand in for it — `p.location_raw ?
+> printableTableValue(p.changing_table) : p.changing_table` — so the row
+> always has something in it. **Fix three:** this paragraph, correcting v23's
+> "verbatim" the same way it corrects v25's "quoted… verbatim" above, and the
+> `web/datasource.js` comment beside `OSM_REF` that made the same claim.
+>
 > **v36 amendment (18 Sep 2026, the Route button on iOS):** **no shape change** — no data
 > file gains, loses or changes a property, and `STATUSES` is untouched. The
 > popup's Route anchor now carries **`data-route="<lat>,<lon>"`** and

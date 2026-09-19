@@ -5,6 +5,7 @@ import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
          roomLabelKeys,
          PLAY_CHOICES, PLAY_KEYS, isPlayChoice, playPatch, guardKeys, changesetTags, changesetXml,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY } from "./osm.js";
+import { STRINGS, LANGS } from "./i18n.js";
 
 // ---- Which OSM ----
 
@@ -104,6 +105,15 @@ test("every room choice has a label, and roomLabelKeys names no other key", () =
   assert.deepEqual(Object.keys(ROOM_LABEL).sort(), Object.keys(ROOMS).sort());
   for (const [choice, key] of Object.entries(ROOM_LABEL))
     assert.equal(key, `room${choice[0].toUpperCase()}${choice.slice(1)}`, choice);
+});
+
+test("every ROOM_LABEL key resolves in STRINGS, in every language", () => {
+  // The same guard datasource.test.js runs for EDIT_TAG_LABEL: a key with no
+  // string in some language would print that key's own name to a reader
+  // instead of a word, in that language only — easy to miss without this.
+  for (const lang of LANGS)
+    for (const key of Object.values(ROOM_LABEL))
+      assert.ok(STRINGS[lang][key]?.trim(), `${lang}: ${key}`);
 });
 
 test("roomLabelKeys turns a raw changing_table:location into display parts", () => {

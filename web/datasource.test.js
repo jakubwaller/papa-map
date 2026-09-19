@@ -9,7 +9,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          pinColorExpression, momCounts, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
-         EDIT_TAG_LABEL, editTagLines, printableTableValue, EDIT_CHECK_DELAYS } from "./datasource.js";
+         EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
+         EDIT_CHECK_DELAYS } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -673,6 +674,25 @@ test("the confirmation gives each play key its own line when the two disagree", 
   assert.deepEqual(editTagLines({ kids_area: "maybe" }), [["tagPlay", "maybe"]]);
   assert.deepEqual(editTagLines({}), []);
   assert.deepEqual(editTagLines(null), []);
+});
+
+test("printableEditTagLines drops the empty \"changing table: yes\" line editTagLines still reports", () => {
+  // The bug this exists to close: the theme's standalone table question,
+  // answered on a play place with no room, changes only changing_table=yes —
+  // editTagLines still reports it (verbatim, as always), but nothing about
+  // it is printable, and the caller needs to know that in one place rather
+  // than asking twice and risking a different answer each time.
+  assert.deepEqual(printableEditTagLines({ changing_table: "yes" }), []);
+  // A room beside it: the room line stays, "yes" still drops.
+  assert.deepEqual(printableEditTagLines({ changing_table: "yes", "changing_table:location": "unisex_toilet" }),
+    [["popupRoom", "unisex_toilet"]]);
+  // limited is real information and is never dropped.
+  assert.deepEqual(printableEditTagLines({ changing_table: "limited" }), [["popupTable", "limited"]]);
+  // A play answer with no table tag at all is untouched.
+  assert.deepEqual(printableEditTagLines({ kids_area: "yes" }), [["tagPlay", "yes"]]);
+  // Nothing changed, nothing printable.
+  assert.deepEqual(printableEditTagLines({}), []);
+  assert.deepEqual(printableEditTagLines(null), []);
 });
 
 test("every tag the confirmation prints has a label, in every language", () => {

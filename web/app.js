@@ -7,20 +7,21 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          parseBbox, pickArea, areaLink, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
-         TABLE_TAGS, PLAY_TAGS, editTagLines, printableTableValue, EDIT_CHECK_DELAYS } from "./datasource.js?v=app30";
+         TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
+         EDIT_CHECK_DELAYS } from "./datasource.js?v=app31";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app30";
+         langUrl } from "./i18n.js?v=app31";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app30";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app31";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app30";
+         formatMB, citiesToMount } from "./native.js?v=app31";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -634,14 +635,21 @@ function placeHTML(p) {
   const rows = [];
   if (p.changing_table) {
     // "Changing table: yes" is dropped here too (v37): a place card that has
-    // one to show at all has already answered the question this card would
-    // otherwise ask below, and "yes" adds nothing beyond that. `limited`
-    // stays, alongside the room where one is on record.
-    const tableValue = printableTableValue(p.changing_table);
+    // a room to show has already answered the question this card would
+    // otherwise ask below, and "yes" beside it adds nothing beyond that.
+    // But "yes" alone, with no room to stand in for it, still prints — a
+    // place with a truthy changing_table always has an answered question
+    // (the else-branch below is the only "OSM says nothing" line, and it is
+    // keyed on changing_table being absent), so dropping "yes" unconditionally
+    // would risk a headline row with nothing in it at all. Today every path
+    // that sets changing_table on a place also sets a room (tablePatch), so
+    // this is only ever exercised by a future path that doesn't; it is still
+    // worth being honest about. `limited` (or anything else) always stays.
+    const tableValue = p.location_raw ? printableTableValue(p.changing_table) : p.changing_table;
     const parts = [];
     if (tableValue) parts.push(`${esc(t("popupTable"))}: <b>${esc(tableValue)}</b>`);
     if (p.location_raw) parts.push(`${esc(t("popupRoom"))}: ${esc(roomLabel(p.location_raw))}`);
-    if (parts.length) rows.push(`<div class="row">${parts.join(" · ")}</div>`);
+    rows.push(`<div class="row">${parts.join(" · ")}</div>`);
   } else
     // ask-ctx marks the line that is true only while the question is open —
     // "about a changing table, OSM says nothing" — so answer() can sweep it
@@ -1179,7 +1187,14 @@ async function pollEdit(gen, last) {
   if (out.changed) {
     clearEditTimers();
     writeEdit(null);
-    setEditNote(rec, "found", out.tags ? "editFound" : "editFoundPlain", out.tags);
+    // editFoundPlain, not editFound, whenever there is nothing printable to
+    // quote — out.tags is non-null but printableEditTagLines(out.tags) can
+    // still come back empty when the only change is `changing_table=yes`
+    // (the theme's standalone table question, answered on a play place with
+    // no room to show instead): tagsLabel would otherwise render an empty
+    // line, and the toast would read "…OSM: . …".
+    const printable = out.tags && printableEditTagLines(out.tags).length > 0;
+    setEditNote(rec, "found", printable ? "editFound" : "editFoundPlain", out.tags);
   } else if (last) {
     // The record stays: coming back to the tab re-arms the reads until the
     // TTL runs out, for the reader who returned once before answering — but
@@ -1198,15 +1213,16 @@ async function pollEdit(gen, last) {
 // "Room: unisex toilet" — the popup's own labels, in the reader's language
 // where roomLabel has one, the tag value verbatim otherwise. Which lines
 // there are (and that "Play area: yes · Indoor play area: no" is two of
-// them) is editTagLines' business, in datasource.js where the tags and their
-// labels live; this only puts the words to it, at render time, the way the
-// two popups do — editTagLines itself still hands back "yes" and the raw
-// room token unchanged. "Changing table: yes" is dropped the same way it is
-// in the popups (v37): the line would only repeat what every object here
-// already has. Goes through textContent, so no escaping here.
+// them) is printableEditTagLines' business, in datasource.js where the tags
+// and their labels live; this only puts the words to it, at render time, the
+// way the two popups do — editTagLines itself still hands back "yes" and the
+// raw room token unchanged. "Changing table: yes" is dropped the same way it
+// is in the popups (v37): the line would only repeat what every object here
+// already has — pollEdit asks the same question to pick editFound over
+// editFoundPlain, so the two can never disagree about whether there is
+// anything here to show. Goes through textContent, so no escaping here.
 const tagsLabel = (tags) =>
-  editTagLines(tags)
-    .filter(([label, value]) => label !== "popupTable" || printableTableValue(value))
+  printableEditTagLines(tags)
     .map(([label, value]) => `${t(label)}: ${label === "popupRoom" ? roomLabel(value) : value}`)
     .join(" · ");
 
