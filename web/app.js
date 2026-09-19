@@ -1027,18 +1027,10 @@ function fitHome() {
 // One reusable DOM marker (a single marker is no perf concern); errors show a
 // transient toast instead of a blocking alert.
 let youMarker = null, toastTimer = null;
-// The last position either the locate or the nearest-table button actually
-// found, [lon, lat] — "Mein PapaMap" reuses it for the grey-pins-within-1km
-// clause so opening that dialog never triggers a location prompt of its own
-// (the spec's own rule); a reader who has never tapped either button sees the
-// dialog's "use my location" action instead. Deliberately not persisted: a
-// stale fix from a previous city is worse than none.
-let lastFix = null;
 
 // Shared by the locate button and the nearest-table one: both put the reader
 // on the map, and a second marker class would drift from the first.
 function showYou(at) {
-  lastFix = at;
   if (!youMarker) {
     const dot = document.createElement("div");
     dot.className = "you-dot";
@@ -1184,6 +1176,9 @@ let roomCardFeature = null;
 // the card's turn comes only once that popup closes (below). Kept apart from
 // whatever the card is doing right now, so a popup that closes minutes later
 // is not mistaken for a fresh "I am here" (isFixFresh, web/datasource.js).
+// "Mein PapaMap" (CONTRACT.md v39) reuses this same fix for its grey-pins-
+// within-1km clause and the saved-places list's distances, rather than
+// keeping a second one of its own — one reader position, one variable.
 let lastFix = null;   // { lat, lon, at }
 
 function noteFix(lat, lon) {
@@ -2020,6 +2015,13 @@ function applyDataset(fc, places, stats, areas) {
       popupObj = null;
     }
   }
+  // A background refresh can drop the very object the room card is standing
+  // on (or bring back one the reader dismissed and that got re-added under
+  // the same id) — evaluateRoomCard recomputes it from scratch, the same
+  // call every other trigger already makes, so a card that has now been
+  // sitting for up to five minutes never outlives the dataset it was named
+  // from.
+  evaluateRoomCard();
 }
 
 // The app's background refresh, watched once boot has already drawn: waits
@@ -2436,7 +2438,7 @@ function renderSavedList() {
     const li = document.createElement("li");
     li.className = "saved-row";
     const name = row.name || t("popupUnnamed");
-    const dist = lastFix ? formatDistance(haversineKm(lastFix[1], lastFix[0], row.lat, row.lon)) : null;
+    const dist = lastFix ? formatDistance(haversineKm(lastFix.lat, lastFix.lon, row.lat, row.lon)) : null;
     const open = document.createElement("button");
     open.type = "button";
     open.className = "saved-link";
@@ -2632,7 +2634,7 @@ function renderMeSentence() {
   const answers = user ? ensureMyAnswers(user).answers : null;
   const yours = !user ? null
     : keys ? answersInArea(answers, myFeatureGrid, keys) : totalAnswers(answers);
-  const greyCount = lastFix ? greyNearby(allFeatures, lastFix[1], lastFix[0]).length : 0;
+  const greyCount = lastFix ? greyNearby(allFeatures, lastFix.lat, lastFix.lon).length : 0;
   const parts = sentenceParts({ area, percent, yours, greyCount, hasFix: !!lastFix, mama: mode === "mama" });
   const bits = [];
   bits.push(parts.area
@@ -2654,12 +2656,15 @@ function renderMeSentence() {
   meSentenceEl.innerHTML = bits.join(" ");
   meSentenceEl.querySelector("#me-locate")?.addEventListener("click", () => {
     if (!hasGeo()) { toast(t("toastNoGeo")); return; }
-    locate().then((coords) => { showYou([coords.longitude, coords.latitude]); renderMeSentence(); },
-      () => toast(t("toastGeoFail")));
+    locate().then((coords) => {
+      showYou([coords.longitude, coords.latitude]);
+      noteFix(coords.latitude, coords.longitude);
+      renderMeSentence();
+    }, () => toast(t("toastGeoFail")));
   });
   meSentenceEl.querySelector("#me-grey")?.addEventListener("click", () => {
     meDialog.close();
-    map.fitBounds(circleBounds(lastFix[1], lastFix[0], 1), { padding: 40 });
+    map.fitBounds(circleBounds(lastFix.lat, lastFix.lon, 1), { padding: 40 });
   });
 }
 

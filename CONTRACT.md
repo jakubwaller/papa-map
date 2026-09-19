@@ -196,8 +196,8 @@
 > (`meSaveFailed`), never a star that claims to be on when nothing was
 > written.
 >
-> **Shell pin `app31` → `app33`** (skipping `app32`, reserved for a parallel
-> PR): `web/me.js` joins `web/sw.js`'s `SHELL` and `web/app.js`'s own
+> **Shell pin `app32` → `app33`** (v38's own `app31`→`app32` merged first,
+> #146): `web/me.js` joins `web/sw.js`'s `SHELL` and `web/app.js`'s own
 > imports at the new pin, and `app/build-www.js`'s file list, the same way
 > `datasource.js`/`i18n.js`/`osm.js` already do — **including its own local
 > imports**, `./osm.js?v=app33` and `./datasource.js?v=app33`: `me.js`
@@ -213,6 +213,28 @@
 > `ariaSave`, `ariaUnsave`, `meSaveFailed` — in all 32 languages, each block
 > right after its own `statsGlobalMissing`, per `web/i18n.test.js`'s parity
 > and token-matching tests.
+>
+> **Rebased onto v38 (#146, "share a pin, and the room card"), which touches
+> the same popup code this amendment does.** `web/app.js` had gained two
+> module-level `lastFix`, one this amendment's own `[lon, lat]` array for the
+> grey-pins clause and the saved-places list's distances, one v38's own
+> `{lat, lon, at}` for the room card — a `let`/`let` collision that is a
+> `SyntaxError`, not a silent bug, caught rebasing rather than by any test
+> here (nothing exercises `app.js` as a module). This amendment's own reads
+> now take v38's shared `lastFix`/`noteFix` instead of keeping a second one;
+> the "use my location" action in the dialog calls `noteFix` alongside
+> `showYou`, exactly like the locate and nearest buttons already do. Three
+> more findings, now this amendment's because it is in the same files:
+> `sharePinGone` (v38) fires for an `?osm=` link this dataset never held too,
+> where "nicht mehr"/"no longer" claimed a history the object never had —
+> reworded neutral in all 32 languages. `docs/FEATURES.md`'s list of what
+> gives the room card its turn named "tap a different pin" and "answer it";
+> neither closes the popup the way described — a different pin replaces it
+> with a new one, and answering leaves it open — corrected. `applyDataset`
+> rebuilt `allFeatures` on every refresh but never re-evaluated a standing
+> room card, so `roomCardFeature` could still name an object the new dataset
+> had dropped for up to the card's own five minutes; it now calls
+> `evaluateRoomCard()` too, the same recomputation every other trigger uses.
 
 > **v38 amendment (19 Sep 2026, share a pin, and the room card):** **no shape
 > change** — no data file gains, loses or changes a property, and `STATUSES`

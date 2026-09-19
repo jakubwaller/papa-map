@@ -244,14 +244,17 @@ show, because the question is about the place, not the view.
 Locate never opens anything, so its fix gets the card's turn at once. Nearest
 almost always opens a popup of its own first, so the card waits — a fix stays
 usable for it for five minutes, popups and all — and gets its turn once that
-popup **closes**: click the map, tap its ×, tap a different pin, or answer it.
-Closing *without* answering brings the card back, naming the same pin, because
-nothing about the object has changed; answering it does not, because the room
-it just learned (`location_raw`, set in memory the moment OSM confirms it) is
-exactly what the rule excludes. A card left standing survives a mode or
-language switch's own popup teardown without popping back up a moment later —
-that close is not the reader's doing — and re-reads itself in the new
-language rather than going stale.
+popup **closes**: a click on the map, a tap on its own ×, or the page
+replacing it with a new popup (opening a different pin, or reopening the same
+one after a login round trip). Closing *without* answering brings the card
+back, naming the same pin, because nothing about the object has changed;
+answering it does not close the popup at all — it stays open, showing the
+room OSM now holds — but the card would not return for that object anyway,
+because the room it just learned (`location_raw`, set in memory the moment
+OSM confirms it) is exactly what the rule excludes. A card left standing
+survives a mode or language switch's own popup teardown without popping back
+up a moment later — that close is not the reader's doing — and re-reads
+itself in the new language rather than going stale.
 
 When it rises, a small card above the attribution line shows the place's name,
 the popup's own room question repeated rather than reworded, one button that
