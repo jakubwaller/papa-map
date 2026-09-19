@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 // sw.js runs in a ServiceWorkerGlobalScope, which node:test does not have. So
 // it is loaded into a vm context with just enough of that scope faked to drive
@@ -185,6 +187,32 @@ test("the shell precache pins the same ?v= as index.html", () => {
     const src = fs.readFileSync(path, "utf8");
     for (const m of src.matchAll(/from\s+"(\.\/[\w.-]+\.js)(\?[^"]*)?"/g))
       assert.equal(m[2], `?v=${pin}`, `${f} imports ${m[1]} without the shell pin`);
+  }
+});
+
+// PR #147, folded into #146's rebase: two module-scope `let lastFix`
+// declarations landed in web/app.js at once, one from each branch, ~150
+// lines apart — a SyntaxError the moment the page loads. Nothing else in
+// this suite catches it: every other test here imports a named export from
+// one file (datasource.js, me.js, osm.js, …), never loads app.js as a whole,
+// and app.js itself has no test of its own. `node --check` parses a file
+// without running it, which is exactly the guard this needs and costs
+// nothing to run. Every SHELL entry is checked, not just app.js — derived
+// from SHELL itself, the same reasoning as the pin-consistency test above,
+// so a module added later is covered for free. Currently every one of them,
+// vendor/maplibre-gl.js included, is plain checkable source; a future entry
+// that genuinely cannot be checked (a binary, say) would need its own
+// skip here with the reason written next to it — not a silent one.
+test("every shell .js file parses on its own — a duplicate `let` fails here, not in a reader's browser", () => {
+  const list = SRC.slice(SRC.indexOf("const SHELL"), SRC.indexOf("const NEVER_CACHE"));
+  const entries = [...list.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  const jsPaths = entries.map((e) => e.split("?")[0]).filter((p) => p.endsWith(".js"));
+  assert.ok(jsPaths.length >= 7, "the shell should list at least its seven known .js files");
+  for (const p of jsPaths) {
+    const file = new URL(p, import.meta.url);
+    assert.ok(fs.existsSync(file), `shell entry ${p} has no local file to check`);
+    const result = spawnSync(process.execPath, ["--check", fileURLToPath(file)]);
+    assert.equal(result.status, 0, `${p} does not parse:\n${result.stderr}`);
   }
 });
 
