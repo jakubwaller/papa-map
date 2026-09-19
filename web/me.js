@@ -13,15 +13,68 @@ import { CREATED_BY } from "./osm.js";
 import { localAnswered, haversineKm } from "./datasource.js";
 
 // ---- The game sentence's percentage ----
-// localAnswered (web/datasource.js) is the one place "how many tables are
-// answered" is computed from stats.json's `local` block; statsLocal (the
-// stats strip, web/app.js) and this percentage both call it, so the two can
-// never read the counts two different ways — only the presentation (a raw
-// count there, a percentage here) differs.
+const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
+
+// The whole-site fallback only (pickArea found no area — open sea, zoomed to
+// the world): localAnswered (web/datasource.js) is the one place "how many
+// tables are answered" is computed from stats.json's `local` block;
+// statsLocal (the stats strip, web/app.js) and this percentage both call it,
+// so the two can never read the counts two different ways.
 export function answeredPercent(local) {
   if (!local) return null;
   const { tables, known } = localAnswered(local);
-  return tables > 0 ? Math.round((known / tables) * 100) : null;
+  return pctOf(tables, known);
+}
+
+// ---- The game sentence's numbers, scoped to one sweep area ----
+// The area is whichever one pickArea chose for the footer link (web/app.js
+// keeps that exact row, never picks a second time) — `areaKeys` is its
+// areaKeysFor() set (web/datasource.js). Counted over every LOADED feature,
+// never the chip-filtered subset: a reader who switched off "female only"
+// must not see the score move (CONTRACT.md v39).
+export function areaAnswered(features, areaKeys) {
+  const keys = areaKeys instanceof Set ? areaKeys : new Set(areaKeys ?? []);
+  let tables = 0, known = 0, unknown = 0;
+  if (keys.size)
+    for (const f of features ?? []) {
+      if (!f.area || !keys.has(f.area)) continue;
+      tables++;
+      if (f.status === "accessible" || f.status === "female_only") known++;
+      else if (f.status === "unknown") unknown++;
+    }
+  return { tables, unknown, known };
+}
+
+export function areaPercent(features, areaKeys) {
+  const { tables, known } = areaAnswered(features, areaKeys);
+  return pctOf(tables, known);
+}
+
+// Which sweep area a reader's own answer lands in: the `area` of the nearest
+// loaded feature within `maxMeters` of the changeset's centre — close enough
+// that "nearest" cannot be ambiguous, since a PapaMap or MapComplete answer
+// always lands exactly on an existing object, never mid-street. Trusts only
+// that feature's own `area`, never a guess from distance alone; an answer
+// with nothing that close (the object has since fallen out of the sweep, or
+// the features simply have not loaded yet) is not in any area, though it
+// still counts in the reader's total.
+export function answerArea(answer, features, maxMeters = 50) {
+  if (!Number.isFinite(answer?.lon) || !Number.isFinite(answer?.lat)) return null;
+  let best = null, bestKm = Infinity;
+  for (const f of features ?? []) {
+    if (!f.area || !Number.isFinite(f.lat) || !Number.isFinite(f.lon)) continue;
+    const km = haversineKm(answer.lat, answer.lon, f.lat, f.lon);
+    if (km < bestKm) { bestKm = km; best = f; }
+  }
+  return best && bestKm * 1000 <= maxMeters ? best.area : null;
+}
+
+// How many of the reader's own answers fall in the given area (its
+// areaKeysFor() set) — each attributed via answerArea above.
+export function answersInArea(answers, features, areaKeys) {
+  const keys = areaKeys instanceof Set ? areaKeys : new Set(areaKeys ?? []);
+  if (!keys.size) return 0;
+  return (answers ?? []).filter((a) => keys.has(answerArea(a, features))).length;
 }
 
 // ---- Which clause the sentence needs, and with which numbers ----
@@ -29,9 +82,12 @@ export function answeredPercent(local) {
 // template strings: the zero case ("none of those are yours yet") wants
 // inviting words, not "0 of those are yours", and the no-fix case swaps the
 // grey-pin clause for a small "use my location" action rather than ever
-// prompting for one on open. `area` is the already-declined label
-// (areaLabel(stats, true) in web/app.js — the same dative form statsLocal
-// uses); `percent`/`yours`/`greyCount` are numbers or null when unknown.
+// prompting for one on open. `area` is a bare, undeclined name — a sweep
+// area's own key ("Hamburg") when pickArea chose a chunk, or a country row's
+// own page label ("Wickeltische in Deutschland") when it chose a country;
+// either way the sentence keys are written not to need a preposition or a
+// declined form (web/i18n.js). `percent`/`yours`/`greyCount` are numbers or
+// null when unknown.
 export function sentenceParts({ area, percent, yours, greyCount, hasFix, mama }) {
   const areaPart = (area && percent != null)
     ? { key: mama ? "meAreaSentenceMama" : "meAreaSentence", vars: { area, percent } }
@@ -124,15 +180,6 @@ export function newestClosedAt(answers) {
 
 export function oldestClosedAt(answers) {
   return answers?.length ? answers[answers.length - 1].closed_at ?? null : null;
-}
-
-// "In this area": papamap.de sweeps one area today — everything the site
-// shows — so every one of the reader's own answers already lies in it; see
-// CONTRACT.md v39. Kept as its own function rather than inlined as
-// `.length` so a future narrower deployment (a single-country build) has one
-// place to add a real geographic filter instead of a site-wide rewrite.
-export function answersInArea(answers) {
-  return (answers ?? []).length;
 }
 
 // ---- Paging the OSM changesets list ----

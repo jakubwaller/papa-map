@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CREATED_BY } from "./osm.js";
 import {
-  answeredPercent, sentenceParts, greyNearby, circleBounds,
+  answeredPercent, areaAnswered, areaPercent, answerArea, sentenceParts, greyNearby, circleBounds,
   MAPCOMPLETE_THEME, isOwnChangeset, changesetAnswer, extractAnswers,
   mergeAnswers, newestClosedAt, oldestClosedAt, answersInArea,
   EPOCH, changesetsUrl, pageBoundary,
@@ -137,10 +137,57 @@ test("newestClosedAt / oldestClosedAt read mergeAnswers' own order", () => {
   assert.equal(oldestClosedAt(null), null);
 });
 
-test("answersInArea: every one of the reader's answers, for a site with one area", () => {
-  assert.equal(answersInArea([{ id: 1 }, { id: 2 }]), 2);
-  assert.equal(answersInArea([]), 0);
-  assert.equal(answersInArea(null), 0);
+// ---- The game sentence's numbers, scoped to one sweep area ----
+// The live fixture: Hamburg today is 131 tables, 35 accessible + 6
+// female_only -> 31%, checked against a real copy of changing_tables.geojson
+// (CONTRACT.md v39).
+const HAMBURG_FEATURES = [
+  ...Array.from({ length: 35 }, () => ({ area: "Hamburg", status: "accessible" })),
+  ...Array.from({ length: 6 }, () => ({ area: "Hamburg", status: "female_only" })),
+  ...Array.from({ length: 90 }, () => ({ area: "Hamburg", status: "unknown" })),
+  { area: "Bayern", status: "accessible" },   // a different chunk: must not be counted
+  { area: null, status: "unknown" },          // no sweep area at all: must not be counted
+];
+
+test("areaAnswered: every loaded feature in the area, never the chip-filtered subset", () => {
+  assert.deepEqual(areaAnswered(HAMBURG_FEATURES, new Set(["Hamburg"])),
+    { tables: 131, unknown: 90, known: 41 });
+  assert.equal(areaPercent(HAMBURG_FEATURES, new Set(["Hamburg"])), 31);
+  assert.deepEqual(areaAnswered(HAMBURG_FEATURES, new Set()), { tables: 0, unknown: 0, known: 0 });
+  assert.equal(areaPercent([], new Set(["Hamburg"])), null);
+});
+
+test("areaAnswered: a country row's several chunk keys all count", () => {
+  const stats = areaAnswered(HAMBURG_FEATURES, new Set(["Hamburg", "Bayern"]));
+  assert.equal(stats.tables, 132);
+});
+
+test("answerArea: the nearest loaded feature within 50 m, never a guess further out", () => {
+  const features = [
+    { area: "Hamburg", lat: 53.5511, lon: 9.9937 },
+    { area: "Bayern", lat: 48.1351, lon: 11.5820 },
+  ];
+  // ~5 m away: well inside 50 m.
+  assert.equal(answerArea({ lat: 53.55112, lon: 9.99372 }, features), "Hamburg");
+  // A long way from either fixture point: nothing close enough.
+  assert.equal(answerArea({ lat: 0, lon: 0 }, features), null);
+  assert.equal(answerArea({ lat: NaN, lon: NaN }, features), null);
+  assert.equal(answerArea(null, features), null);
+});
+
+test("answersInArea: attributes each answer via answerArea, counts only this area's", () => {
+  const features = [
+    { area: "Hamburg", lat: 53.5511, lon: 9.9937 },
+    { area: "Bayern", lat: 48.1351, lon: 11.5820 },
+  ];
+  const answers = [
+    { id: 1, lat: 53.55112, lon: 9.99372 },   // Hamburg
+    { id: 2, lat: 48.13511, lon: 11.58201 },  // Bayern
+    { id: 3, lat: 0, lon: 0 },                // nowhere close: in the total, in no area
+  ];
+  assert.equal(answersInArea(answers, features, new Set(["Hamburg"])), 1);
+  assert.equal(answersInArea(answers, features, new Set(["Bayern"])), 1);
+  assert.equal(answersInArea(answers, features, new Set()), 0);
 });
 
 // ---- Paging ----

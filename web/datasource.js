@@ -713,6 +713,19 @@ export function areaLink(area, lang) {
   return { href: area.en.href, label: area.en.label };
 }
 
+// The set of `f.area` values an areas.json row covers — a chunk (Land,
+// région, state, prefecture) covers its own one sweep area; a country row
+// covers every sweep area behind it (`areas`, CONTRACT.md v32: Germany's 16
+// Länder, or a single-entry list for an unchunked country like Denmark's
+// `["Danmark"]`). Used to score the exact area pickArea chose for the
+// footer link over the loaded features — "Mein PapaMap"'s own numbers
+// (`web/me.js`) — never a second, differently-fed pick.
+export function areaKeysFor(row) {
+  if (!row) return new Set();
+  if (row.area) return new Set([row.area]);
+  return new Set(Array.isArray(row.areas) ? row.areas : []);
+}
+
 // pickArea's centre and view have to be what the reader can actually SEE, not
 // the map canvas's own centre: the canvas extends underneath the (partly
 // transparent) top bar, so on a phone the canvas centre sits a third of a

@@ -513,22 +513,30 @@ the reader's own answer count, and a list of starred places. All three read
 data that already exists somewhere; none of it is a new thing PapaMap keeps
 about anyone.
 
-The headline is one sentence built from the stats strip's own numbers, never
-a second count: `localAnswered` (`web/datasource.js`) is the one place
-"how many tables are answered" comes from `stats.json`'s `local` block, and
-both the strip's counts and the dialog's percentage call it, so they cannot
-drift apart. Since papamap.de sweeps one area — all 49 countries in a
-single build — the area named is simply the site's own swept area, the same
-one the header wordmark already shows; there is no per-viewport recompute,
-and a future build that narrows to one country inherits the right answer for
-free because it is reading the same field. A second clause says how many of
-the reader's own OSM changesets fall in that area (the same count "your
-stats" shows in full, below) — worded as an invitation rather than a zero
-when there are none yet. A third names how many grey pins (amber, reading as
-a mother) sit within a kilometre of wherever the reader last used *locate* or
-*nearest* — **never a fresh location prompt of its own** — and tapping it
-closes the dialog and frames the map on that circle instead. Read
-`sentenceParts` in `web/me.js` for exactly which clause is chosen when.
+The headline is a game: "Hamburg is 31 % answered, 2 of those are yours, 8
+grey pins within 1 km" — and the area it plays over is whichever one the
+footer link already names, the same `pickArea` pick the "Wickeltische in
+Hamburg" link makes from the pins nearest the map centre (CONTRACT.md v32).
+`web/app.js` keeps that exact pick (`currentArea`) rather than choosing a
+second time with different inputs, so the two can never name different
+places, and panning from Hamburg to Berlin before opening the dialog gets
+Berlin. The percentage is counted live over every table the pipeline put in
+that area — every loaded feature, never the chip-filtered subset a reader
+happens to be looking at — never a second dataset of its own. Only when
+`pickArea` finds nothing at all (open sea, zoomed out past any area's
+reach) does the sentence fall back to the site's own whole-sweep numbers,
+the same ones the stats strip renders (`localAnswered`, `web/datasource.js` —
+one place "how many tables are answered" comes from `stats.json`'s `local`
+block, so the strip and that one fallback sentence cannot drift apart
+either). A second clause says how many of the reader's own OSM changesets
+land in that same area — each attributed by the nearest loaded feature
+within 50 m of the changeset's own position — worded as an invitation
+rather than a zero when there are none yet. A third names how many grey
+pins (amber, reading as a mother) sit within a kilometre of wherever the
+reader last used *locate* or *nearest* — **never a fresh location prompt of
+its own** — and tapping it closes the dialog and frames the map on that
+circle instead. Read `sentenceParts` in `web/me.js` for exactly which
+clause is chosen when.
 
 "Your stats" reads the reader's own **public** OSM changesets live, on the
 device: `GET {api}/changesets.json?display_name=<name>`, no login-privileged

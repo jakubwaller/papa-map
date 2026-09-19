@@ -8,53 +8,72 @@
 > alike), opens `<dialog id="me-dialog">`, three parts top to bottom, all
 > wired in `web/app.js` from pure logic in the new `web/me.js`.
 >
-> **1. The game sentence.** Area and percentage are the exact numbers the
-> stats strip already renders — `localAnswered` (`web/datasource.js`, new)
-> is now the one place `tables`/`known`/`unknown` are computed from
-> `stats.json`'s `local` block, and `renderStats` and `me.js`'s
-> `answeredPercent` both call it, so the strip's counts and the dialog's
-> percentage cannot read the block two different ways. **The area named is
-> the site's own swept area** (`areaLabel(stats)`, unchanged) — papamap.de
-> sweeps one area, all 49 countries at once, so this is not a per-viewport
-> recompute; a build that ever narrows to one country or one city gets the
-> right area for free, because it is the same field the header wordmark
-> already names. Stats missing entirely (`!stats.local`, the same condition
-> `renderStats` degrades to `statsMissing` on) drops the clause rather than
-> guessing an area from the visible map — a real per-viewport fallback
-> would need geometry this project does not otherwise carry (the chunk
-> bounding boxes are rectangles that overlap neighbouring countries, per the
-> France/US/Canada/Japan chunking above) and was judged not worth adding for
-> a degrade path that is already rare. The "yours" clause reads the reader's
-> own answer count (below); zero renders `meYoursZero`, an invitation, never
-> "0 of those are yours". The "grey pins nearby" clause reads `greyNearby`
-> (`web/me.js`): status `unknown` with **empty `location_raw`** — a room
-> answered in words the classifier does not read is not a question to send
-> anyone back to — within 1 km of `lastFix`, the last position either the
-> locate or the nearest-table button actually resolved (`web/app.js`); the
-> dialog **never triggers a location prompt of its own**, and with no fix
-> yet the clause becomes a `meLocate` ("Standort verwenden") action that
-> runs the existing `locate()` flow and re-renders in place. Tapping the
-> grey-pins clause closes the dialog and calls `map.fitBounds` on
-> `circleBounds` (`web/me.js`, a flat-earth degrees-per-km box — plenty for
-> a 1 km circle already drawn in Web Mercator). Mama mode reads the same
-> literal `status === "unknown"` pins, worded `meGreyNearbyMama` (amber, not
-> grey) and framed by `meAreaSentenceMama` instead of `meAreaSentence` — the
-> answered-percentage is the identical number either way (`momCounts`'
-> `good` is `accessible + female_only`, the same two buckets `known` sums),
-> only the sentence differs. `sentenceParts` (`web/me.js`) is the one place
-> that picks the key and the numbers for all three clauses.
+> **1. The game sentence.** The area is **whichever one the footer link
+> already names** — `pickArea`'s own pick (CONTRACT.md v32), kept in
+> `web/app.js`'s `currentArea`/`currentAreaLink` by `updateRegionsLink` on
+> every pan, language change and first draw, and read from there rather than
+> picked a second time with different inputs: the dialog can never disagree
+> with the link sitting above it on screen, and it follows a pan the same
+> way the link does (open in Hamburg, pan to Berlin, the sentence now says
+> Berlin). Tables/answered/unknown are counted live over **every loaded
+> feature**, never the chip-filtered subset — a reader who has switched off
+> "female only" must not see the score move — by `f.area` membership in the
+> row's own area keys: `web/datasource.js`'s new `areaKeysFor(row)` is one
+> key for a chunk (its own `area`, "Hamburg") or every key behind a country
+> (`areas`, Germany's 16 Länder); `web/me.js`'s new `areaAnswered`/
+> `areaPercent` do the counting (live-checked against a real
+> `changing_tables.geojson`: Hamburg today is 131 tables, 35 `accessible` +
+> 6 `female_only` = 31 %). **Only when `pickArea` has found nothing at all**
+> (open sea, zoomed out past any area's 250 km reach) does the sentence fall
+> back to the site's own whole-sweep numbers — `localAnswered(stats.local)`
+> and `answeredPercent`, unchanged, the same ones the stats strip renders,
+> so the two still cannot disagree in that one case either. The area's own
+> name is a bare, undeclined string: a chunk's own sweep-area key as-is
+> ("Hamburg" — areas.json carries no declined form, and none is needed once
+> the sentence needs no preposition, below), or a country row's own page
+> label ("Wickeltische in Deutschland", `currentAreaLink.label` — the same
+> text the header link shows, since a country has no bare name of its own
+> to fall back to) when pickArea chose a country rather than a chunk.
 >
-> **The primary sentence is deliberately verbless** (`"{area}: {percent} %
-> beantwortet"`, not `"{area} ist … beantwortet"`): `area` can be a country
-> count (`"49 Länder"`, plural) as easily as a single place, and a
-> conjugated copula agreeing with it in number is exactly the kind of thing
-> that silently breaks in one language while the other thirty-one look
-> fine. The colon-headline form needs no agreement in any of the 32
-> languages. The mama sentence keeps its verb (`"In {area} sind …"`) because
-> the verb agrees with "the changing tables", not with `area` — so `area`
-> there stays the same declined (dative in German) form `statsLocalMama`
-> already uses, and `web/app.js` picks which form to hand `sentenceParts`
-> by mode.
+> **The sentence is deliberately verbless** (`"{area}: {percent} %
+> beantwortet"`, not `"{area} ist … beantwortet"`, and the mama reading
+> `"{area}: wahrscheinlich …"` rather than `"In {area} sind …"`): `area` can
+> be anything from a country count (`"49 Länder"`, plural) to a country's
+> own full page label to a bare city name with no case ending on record at
+> all, and a conjugated verb — let alone one behind a preposition demanding
+> a declined form — is exactly the kind of thing that silently breaks in one
+> language while the other thirty-one look fine, or has nothing to decline
+> to in the first place. The colon-headline form needs neither, in any of
+> the 32 languages.
+>
+> The "yours" clause is the reader's own answers **attributed to this same
+> area**: `me.js`'s new `answerArea(answer, features, 50)` takes the `area`
+> of the nearest loaded feature within 50 m of the changeset's centre —
+> close enough that "nearest" is never ambiguous, since a PapaMap or
+> MapComplete answer always lands exactly on an existing object — and
+> `answersInArea` counts how many of the reader's answers land in the
+> current `areaKeysFor()` set; an answer with nothing that close (the
+> object has since fallen out of the sweep) counts in the reader's total but
+> in no area's score. In the whole-site fallback "yours" is simply the
+> reader's total, unattributed — there being only the one area to be in.
+> Zero renders `meYoursZero`, an invitation, never "0 of those are yours".
+> The "grey pins nearby" clause reads `greyNearby` (`web/me.js`): status
+> `unknown` with **empty `location_raw`** — a room answered in words the
+> classifier does not read is not a question to send anyone back to —
+> within 1 km of `lastFix`, the last position either the locate or the
+> nearest-table button actually resolved (`web/app.js`); the dialog **never
+> triggers a location prompt of its own**, and with no fix yet the clause
+> becomes a `meLocate` ("Standort verwenden") action that runs the existing
+> `locate()` flow and re-renders in place. Tapping the grey-pins clause
+> closes the dialog and calls `map.fitBounds` on `circleBounds` (`web/me.js`,
+> a flat-earth degrees-per-km box — plenty for a 1 km circle already drawn
+> in Web Mercator). Mama mode reads the same literal `status === "unknown"`
+> pins, worded `meGreyNearbyMama` (amber, not grey) and framed by
+> `meAreaSentenceMama` instead of `meAreaSentence` — the answered-percentage
+> is the identical number either way (`momCounts`' `good` is
+> `accessible + female_only`, the same two buckets `known` sums), only the
+> sentence differs. `sentenceParts` (`web/me.js`) is the one place that
+> picks the key and the numbers for all three clauses.
 >
 > **2. Your stats**, from the reader's own **public** OSM changesets, read
 > live on the device: `GET {api}/changesets.json?display_name=<user>`, no
@@ -77,8 +96,10 @@
 > changeset edits exactly one object, so its **bounding box is a point** —
 > `me.js`'s `changesetAnswer` takes the box's centre as the answer's
 > position and keeps only `{id, lon, lat, closed_at}`. Shown: the total, the
-> date of the first (`meStatsSince`), and (part 1's own clause) how many lie
-> in the site's one swept area — **no ranking, no other user's name,
+> date of the first (`meStatsSince`, the full date — `{day, month: "long",
+> year}` — not the abbreviated one, whose own trailing "." in German
+> collided with the template's), and (part 1's own clause) how many lie in
+> the area currently on screen — **no ranking, no other user's name,
 > anywhere**, per the owner's ruling. **No per-answer colour breakdown in
 > this cut**: matching each answer to the nearest loaded feature to show
 > green/red/grey counts was in scope but is left for a later PR — omitted

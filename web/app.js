@@ -4,7 +4,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          countWheelchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, areaKeysFor, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance, localAnswered,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
@@ -137,6 +137,13 @@ function applyI18n() {
 // doesn't cover; the ±180° wrap dance below is unchanged, just fed from that
 // visible centre instead of map.getCenter()/getBounds().
 let areaIndex = null;
+// The exact area row pickArea chose for the footer link, and its resolved
+// {href, label} — "Mein PapaMap"'s own game sentence (renderMeSentence,
+// below) reuses both rather than picking a second time with different
+// inputs, so the dialog can never name a different place than the header
+// link on screen (CONTRACT.md v39). Kept in sync by every updateRegionsLink
+// call: a pan, a language change, a mode change, the first draw.
+let currentArea = null, currentAreaLink = null;
 function updateRegionsLink() {
   const el = document.getElementById("regions-link");
   let link = null;
@@ -153,8 +160,9 @@ function updateRegionsLink() {
     const raw = new maplibregl.LngLat(rawCenter[0], rawCenter[1]);
     const c = raw.wrap(), dx = c.lng - raw.lng;
     const view = rawBounds.map(([x, y]) => [x + dx, y]);
-    link = areaLink(pickArea(areaIndex, allFeatures, [c.lng, c.lat], view), lang);
-  } catch { /* no map yet: the fallback below */ }
+    currentArea = pickArea(areaIndex, allFeatures, [c.lng, c.lat], view);
+    link = currentAreaLink = areaLink(currentArea, lang);
+  } catch { currentArea = null; currentAreaLink = null; }
   const label = link ? link.label : t("regions");
   el.href = link ? link.href : t("regionsHref");
   if (el.textContent === label) return;
@@ -2528,16 +2536,32 @@ async function refreshMyAnswers() {
 }
 
 // ---- The game sentence ----
-function renderMeSentence() {
+// The area is whichever one pickArea last chose for the footer link
+// (currentArea, updateRegionsLink above) — never a second, differently-fed
+// pick, so a pan from Hamburg to Berlin between opens says Berlin, and the
+// dialog can never name a place the header link itself doesn't show. Only
+// when pickArea has found nothing at all (open sea, zoomed out past any
+// area's reach) does this fall back to the site's own whole-sweep numbers,
+// the same ones the stats strip renders (localAnswered/answeredPercent).
+function meAreaNumbers() {
+  if (currentArea) {
+    // A chunk (Land, région, state, prefecture) carries its own bare sweep-
+    // area key ("Hamburg") — used as-is, undeclined, per CONTRACT.md v39. A
+    // country row has no such bare name, so its own page label stands in
+    // ("Wickeltische in Deutschland", the same text the header link shows).
+    const area = currentArea.area || currentAreaLink?.label || null;
+    const keys = areaKeysFor(currentArea);
+    return { area, percent: areaPercent(allFeatures, keys), keys };
+  }
   const l = lastStats?.local;
-  // The dad sentence is a colon headline ("49 Länder: 13 % beantwortet") and
-  // needs the plain (nominative) form, the same one the wordmark shows; the
-  // mama sentence keeps "In {area} …" and so needs the declined form
-  // statsLocalMama already uses (areaLabel's own comment, ~847, says why).
-  const area = l ? areaLabel(lastStats, mode === "mama") : null;
-  const percent = l ? answeredPercent(l) : null;
+  return { area: l ? areaLabel(lastStats) : null, percent: l ? answeredPercent(l) : null, keys: null };
+}
+
+function renderMeSentence() {
+  const { area, percent, keys } = meAreaNumbers();
   const user = getUser();
-  const yours = user ? answersInArea(ensureMyAnswers(user).answers) : null;
+  const answers = user ? ensureMyAnswers(user).answers : null;
+  const yours = !user ? null : keys ? answersInArea(answers, allFeatures, keys) : answers.length;
   const greyCount = lastFix ? greyNearby(allFeatures, lastFix[1], lastFix[0]).length : 0;
   const parts = sentenceParts({ area, percent, yours, greyCount, hasFix: !!lastFix, mama: mode === "mama" });
   const bits = [];
@@ -2588,8 +2612,12 @@ function renderMeStats() {
   const first = total ? answers.reduce((a, b) => ((a.closed_at ?? "") < (b.closed_at ?? "") ? a : b)) : null;
   const lines = [`<p>${esc(total > 0 ? t("meStatsTotal", { n: num(total) }) : t("meStatsTotalZero"))}</p>`];
   if (first?.closed_at) {
+    // The full month, not the abbreviated one: German abbreviates with a
+    // trailing period of its own ("1. Aug."), which collided with the
+    // template's — "1. Aug.." with two. The full form has no such period in
+    // any of the 32 languages, so the template can own the one it prints.
     const date = new Date(first.closed_at).toLocaleDateString(NUMBER_LOCALE[lang] ?? "en-GB",
-      { day: "numeric", month: "short" });
+      { day: "numeric", month: "long", year: "numeric" });
     lines.push(`<p>${esc(t("meStatsSince", { date }))}</p>`);
   }
   lines.push(`<p><button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button></p>`);

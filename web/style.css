@@ -477,7 +477,14 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .me-sentence { margin: 0 0 12px; font-size: 14px; line-height: 1.5; color: var(--ink); }
 .me-sentence .linkish { font-size: inherit; font-weight: 600; }
 .me-stats { margin-bottom: 12px; }
-.me-stats p { margin: 0 0 6px; font-size: 13px; color: var(--muted-2); }
+/* Read as groups, not four loose lines: the two number lines sit close
+   together, "Abmelden" gets a clear gap above it rather than the same 3px
+   the numbers share (offline dialog's own rhythm: an intro paragraph, then
+   a clear gap before the list). */
+.me-stats p { margin: 0 0 3px; font-size: 13px; color: var(--muted-2); }
+.me-stats p:last-of-type { margin-bottom: 0; }
+.me-stats .linkish { display: inline-block; margin-top: 7px; }
+.me-stats .btn.primary { margin-top: 4px; }
 #me-dialog .linkish {
   border: 0; background: none; padding: 0; font: inherit;
   color: var(--green-strong); text-decoration: underline; cursor: pointer;

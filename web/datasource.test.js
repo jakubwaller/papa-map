@@ -5,7 +5,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          isWheelchairOk, countWheelchair, pinFeatures, placeFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, areaKeysFor, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, localAnswered, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
@@ -897,6 +897,13 @@ test("areaLink reads the page in the UI language, else its English twin", () => 
   // An English page is its own English reading, for every UI language.
   assert.deepEqual(areaLink(AREAS.find((a) => a.area === "Florida"), "de"), { href: "wickeltische/florida.html", label: "Changing tables in Florida" });
   assert.equal(areaLink(null, "de"), null);
+});
+
+test("areaKeysFor: a chunk's own one area, a country's several, nothing for null", () => {
+  const hh = AREAS[1], de = AREAS[0];
+  assert.deepEqual(areaKeysFor(hh), new Set(["Hamburg"]));
+  assert.deepEqual(areaKeysFor(de), new Set(["Bayern", "Hamburg", "Schleswig-Holstein"]));
+  assert.deepEqual(areaKeysFor(null), new Set());
 });
 
 // A fake unproject standing in for map.unproject: north is up (lat falls as
