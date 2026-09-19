@@ -68,6 +68,23 @@ test("both surfaces ask the one question, so they cannot answer differently", ()
   }
   assert.match(lookup, /TableStore\.nearest\(to: loc, mode: mode, in: tables\)/,
                "the rule stays TableStore's, over `usable`, over the pipeline's status");
+  // Two megabytes of JSON and a CLLocation per row, in the middle of the
+  // launch the tap asked to be quick: only LocationOnce may have the main
+  // actor, and it brings its own.
+  assert.doesNotMatch(lookup, /@MainActor/,
+                      "the parse and the scan run off the main thread, as they did before");
+});
+
+test("the button is redrawn when the words it shows change", () => {
+  assert.match(store, /public static let controlKind = "de\.papamap\.app\.control\.nearest"/,
+               "one kind, named where the control and the app can both see it");
+  assert.match(control, /StaticControlConfiguration\(kind: PapaMap\.controlKind\)/);
+  assert.match(plugin, /ControlCenter\.shared\.reloadControls\(ofKind: PapaMap\.controlKind\)/,
+               "a control has no timeline: without this nothing would redraw its label");
+  assert.match(plugin, /if #available\(iOS 18\.0, \*\) \{ ControlCenter/);
+  // The helper and both hand-overs, because either can be the one that
+  // changed the language the button is drawn in.
+  assert.equal((plugin.match(/reloadSurfaces\(\)/g) ?? []).length, 3);
 });
 
 test("the control's tap runs in the app and hands the table through the same slot", () => {

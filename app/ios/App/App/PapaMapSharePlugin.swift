@@ -49,11 +49,21 @@ public class PapaMapSharePlugin: CAPPlugin, CAPBridgedPlugin {
         NotificationCenter.default.post(name: .capacitorOpenURL, object: ["url": url])
     }
 
+    // Everything outside the app that shows what was just written. The widget
+    // has a timeline and would come round by itself in the end; the Control
+    // Center button has nothing of the kind — its label is whatever the system
+    // last drew, in whichever language was set then — so it is asked for by
+    // name, and the name is the app's to know as well (PapaMap.controlKind).
+    private func reloadSurfaces() {
+        WidgetCenter.shared.reloadAllTimelines()
+        if #available(iOS 18.0, *) { ControlCenter.shared.reloadControls(ofKind: PapaMap.controlKind) }
+    }
+
     @objc func writeDataset(_ call: CAPPluginCall) {
         guard let json = call.getString("json") else { call.reject("json missing"); return }
         do {
             try TableStore.save(json: json)
-            WidgetCenter.shared.reloadAllTimelines()
+            reloadSurfaces()
             call.resolve()
         } catch {
             call.reject("could not write the dataset: \(error.localizedDescription)")
@@ -64,7 +74,7 @@ public class PapaMapSharePlugin: CAPPlugin, CAPBridgedPlugin {
         let d = PapaMap.defaults
         if let mode = call.getString("mode") { d?.set(mode, forKey: PapaMap.modeKey) }
         if let lang = call.getString("lang") { d?.set(lang, forKey: PapaMap.langKey) }
-        WidgetCenter.shared.reloadAllTimelines()
+        reloadSurfaces()
         call.resolve()
     }
 }

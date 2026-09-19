@@ -16,13 +16,14 @@ import WidgetKit
 //
 // The words follow the map's language out of the App Group, as the widget's
 // gallery entry does — English until PapaMap has been opened once and said
-// otherwise.
+// otherwise. They are read when the system draws the button, and it draws it
+// when it pleases, so PapaMapSharePlugin asks for this kind to be reloaded as
+// the page hands a language over: without that the button would keep
+// yesterday's word until something else happened to redraw it.
 @available(iOS 18.0, *)
 struct NearestTableControl: ControlWidget {
-    static let kind = "de.papamap.app.control.nearest"
-
     var body: some ControlWidgetConfiguration {
-        StaticControlConfiguration(kind: Self.kind) {
+        StaticControlConfiguration(kind: PapaMap.controlKind) {
             ControlWidgetButton(action: OpenNearestTableIntent()) {
                 Label(L.title(lang: TableStore.lang), systemImage: "figure.and.child.holdinghands")
             }

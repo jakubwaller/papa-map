@@ -9,11 +9,17 @@ import CoreLocation
 // TableStore.nearest over `usable`, the pipeline's `status` read and never
 // re-derived.
 //
-// Main actor, because LocationOnce is: CLLocationManager delivers its
-// delegate calls on the run loop of the thread that made it. Both callers run
-// in the app process — Siri performs its intent there, and the control's
-// intent gets there through `openAppWhenRun` — which is also the only place
-// iOS lets a when-in-use permission be asked for.
+// Both callers run in the app process — Siri performs its intent there, the
+// control's intent gets there through `openAppWhenRun` — which is also the
+// only place iOS lets a when-in-use permission be asked for.
+//
+// Only the fix is on the main actor, and only because LocationOnce has to be:
+// CLLocationManager delivers its delegate calls on the run loop of the thread
+// that made it. The parse and the scan stay off it, as they were before they
+// moved here. They are two megabytes of JSON and a CLLocation built per row,
+// some 26,000 of them, and the control's tap lands in the middle of the app
+// launching, beside the WebView coming up: holding the main thread there
+// stutters the very screen the tap asked for.
 public enum NearestLookup {
     public enum Outcome {
         case found(Nearest)
@@ -22,7 +28,6 @@ public enum NearestLookup {
         case noneUsable  // tables and a position, but none this reader can use
     }
 
-    @MainActor
     public static func run(mode: String) async -> Outcome {
         let tables = TableStore.load()
         guard !tables.isEmpty else { return .noData }

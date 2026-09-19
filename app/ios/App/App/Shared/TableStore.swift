@@ -14,6 +14,10 @@ public enum PapaMap {
     public static let modeKey = "mode"      // "papa" | "mama"
     public static let langKey = "lang"      // "de" | "en" (anything else reads as en)
     public static let pendingTableKey = "pendingTable"  // the Siri hand-over, see PendingTable
+    // The Control Center button's kind. Here rather than beside the control
+    // itself, because the app has to name it as well: the button's words come
+    // from the two settings above, and only the app knows when they change.
+    public static let controlKind = "de.papamap.app.control.nearest"
 
     public static var container: URL? {
         FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)
