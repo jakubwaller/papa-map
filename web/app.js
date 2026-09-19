@@ -276,6 +276,7 @@ window._papamap = map;
 // ---- State ----
 let allFeatures = [];                                     // flattened GeoJSON
 let allPlaces = [];                                       // play-area prospects
+let myFeatureGrid = null;   // buildFeatureGrid(allFeatures) — "Mein PapaMap"'s own nearest lookup
 let visible = new Set(STATUS_DEFS.map((d) => d.value));   // toggled-on statuses
 let playOnly = false;                                     // narrow to play corners
 // narrow to wheelchair=yes (v26), remembered on the device
@@ -1659,6 +1660,9 @@ function logout() {
   // shared phone, a library computer) — their answers must not carry over.
   try { localStorage.removeItem(MY_ANSWERS_KEY); } catch { /* nothing to clear */ }
   myAnswers = null;
+  // Without this a login right after logout waited out the five-minute
+  // throttle before fetching anything — "0 Antworten" until it did.
+  myAnswersFetchedAt = 0;
   if (token) revoke(osm, token);
   if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line changes
 }
@@ -1989,6 +1993,11 @@ function stripOsmParam() {
 function applyDataset(fc, places, stats, areas) {
   allFeatures = loadFeatures(fc);
   allPlaces = loadPlaces(places);
+  // "Mein PapaMap"'s own nearest-feature lookup (answerArea, web/me.js) —
+  // rebuilt here with everything else that depends on allFeatures, not
+  // lazily on first use, so a background refresh's new dataset is what the
+  // next answer gets attributed against too.
+  myFeatureGrid = buildFeatureGrid(allFeatures);
   renderStats(stats);
   areaIndex = Array.isArray(areas) ? areas : null;
   updateRegionsLink();
@@ -2453,30 +2462,46 @@ function renderSavedList() {
 // ---- "Yours": the reader's own public OSM changesets, read live ----
 // Cached on the device (papamap-my-answers), tied to the logged-in user so a
 // second account on the same browser never sees the first one's numbers —
-// logout() above clears the key outright. Compact records only: id, lon, lat,
-// closed_at (me.js's changesetAnswer/extractAnswers) — never a changeset's
-// contents, which are never downloaded at all.
+// logout() above clears the key outright. Compact records only: id, lon,
+// lat, closed_at, n (me.js's changesetAnswer/extractAnswers — n is
+// changes_count, 1 for this site's own writes, more for a MapComplete
+// session that answered several of the theme's questions in one changeset)
+// and radius_m (the changeset's own area-attribution search radius) —
+// never a changeset's contents, which are never downloaded at all.
 const MY_ANSWERS_KEY = "papamap-my-answers";
-// "A few pages max per open": five pages of up to 100 changesets is a
-// one-time backfill of 500 on a reader's very first open, and in practice far
-// fewer calls once the cache holds anything — see fetchMyAnswers below.
+// Bumped whenever the cached record's own shape changes (v1 -> v2 added n/
+// radius_m/backfill — CONTRACT.md v39): a record from an older shape is
+// worth less than refetching it correctly, not worth a migration.
+const MY_ANSWERS_CACHE_VERSION = 2;
+// "A few pages max per open": on a reader's very first open this is a
+// one-time scan of the newest 500 of their changesets of any kind (the API
+// filters by user, not by tag); once the cache holds anything, the same
+// budget splits between a top-up (what's new) and continuing the backfill
+// cursor (older answers a previous open's budget did not reach) — see
+// fetchMyAnswers below.
 const MY_ANSWERS_PAGES = 5;
 const MY_ANSWERS_REFRESH_MS = 5 * 60 * 1000;   // at most one refresh per open, and per five minutes
-let myAnswers = null;         // { user, answers } once loaded/fetched this page load
+let myAnswers = null;         // { user, answers, backfill } once loaded/fetched this page load
 let myAnswersFetchedAt = 0;
 
 function loadMyAnswersRaw(user) {
   try {
     const raw = JSON.parse(localStorage.getItem(MY_ANSWERS_KEY));
-    return raw && raw.user === user ? (raw.answers ?? []) : [];
-  } catch { return []; }
+    if (!raw || raw.user !== user || raw.v !== MY_ANSWERS_CACHE_VERSION) return { answers: [], backfill: null };
+    return { answers: raw.answers ?? [], backfill: raw.backfill ?? null };
+  } catch { return { answers: [], backfill: null }; }
 }
-function writeMyAnswersRaw(user, answers) {
-  try { localStorage.setItem(MY_ANSWERS_KEY, JSON.stringify({ user, answers })); }
-  catch { /* blocked storage: the count lives for this page load only */ }
+function writeMyAnswersRaw(user, answers, backfill) {
+  try {
+    localStorage.setItem(MY_ANSWERS_KEY,
+      JSON.stringify({ v: MY_ANSWERS_CACHE_VERSION, user, answers, backfill }));
+  } catch { /* blocked storage: the count lives for this page load only */ }
 }
 function ensureMyAnswers(user) {
-  if (!myAnswers || myAnswers.user !== user) myAnswers = { user, answers: loadMyAnswersRaw(user) };
+  if (!myAnswers || myAnswers.user !== user) {
+    const stored = loadMyAnswersRaw(user);
+    myAnswers = { user, answers: stored.answers, backfill: stored.backfill };
+  }
   return myAnswers;
 }
 
@@ -2485,42 +2510,82 @@ function ensureMyAnswers(user) {
 // changesets list. `answer()` in the two-tap flow above calls this; it is a
 // no-op logged out (an answer cannot be written logged out in the first
 // place, but a stale intent replayed after a fresh login is exactly the kind
-// of edge this guards).
+// of edge this guards). Always exactly one answer at this site's own hand
+// (n: 1) at the exact object's own position, so the 50 m floor always finds
+// it — never a MapComplete session, which only ever arrives via the
+// changesets list itself.
 function recordMyAnswer(changesetId, lon, lat) {
   const user = getUser();
   if (!user) return;
   const cache = ensureMyAnswers(user);
   cache.answers = mergeAnswers(cache.answers,
-    [{ id: Number(changesetId), lon, lat, closed_at: new Date().toISOString() }]);
-  writeMyAnswersRaw(user, cache.answers);
+    [{ id: Number(changesetId), lon, lat, closed_at: new Date().toISOString(), n: 1, radius_m: 50 }]);
+  writeMyAnswersRaw(user, cache.answers, cache.backfill);
+}
+
+// One page of the changesets list: the raw `changesets` array, or null on
+// any failure (offline, a timeout, a dead mirror, a non-OK response, bad
+// JSON) — swallowed here so the caller can simply stop rather than surface
+// an error the spec says never to show for this.
+async function fetchChangesetPage(url) {
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout?.(15000) });
+    if (!r.ok) return null;
+    const list = (await r.json())?.changesets;
+    return Array.isArray(list) ? list : null;
+  } catch { return null; }
 }
 
 // GET .../changesets.json?display_name=<user>[&time=...] (me.js's
 // changesetsUrl says exactly what `time=` means and why). No auth header: a
-// user's changesets are public. Any failure — offline, a timeout, a dead
-// mirror — is swallowed here and answered with whatever the cache already
-// has; the dialog never shows an error for this, per the spec. Bounded to
-// MY_ANSWERS_PAGES calls whether this is a first-ever backfill (cached is
-// empty, `since` is null) or a top-up (since = the cache's own newest answer,
-// so only what changed since the last open is asked for at all).
-async function fetchMyAnswers(user, cached) {
-  let merged = cached;
-  const since = newestClosedAt(cached);
-  let before = null;
-  for (let page = 0; page < MY_ANSWERS_PAGES; page++) {
-    const url = changesetsUrl(osm.api, user, since, before);
-    let list;
-    try {
-      const r = await fetch(url, { signal: AbortSignal.timeout?.(15000) });
-      if (!r.ok) break;
-      list = (await r.json())?.changesets;
-    } catch { break; }   // offline included: the cached numbers stand, no error shown
-    if (!Array.isArray(list) || !list.length) break;
-    merged = mergeAnswers(merged, extractAnswers(list));
-    before = pageBoundary(list);
-    if (!before) break;   // fewer than 100 back: nothing older is left to ask for
+// user's changesets are public. Bounded to MY_ANSWERS_PAGES calls total,
+// split between two passes that share the one budget:
+//
+// 1. Top-up — what's new since the cache's own newest record (`since`). On
+//    a first-ever open the cache is empty and this pass is skipped outright:
+//    with no watermark to top up from it would only repeat pass 2's own
+//    first call.
+// 2. Backfill — continues from `backfill.oldest_scanned` (or the start of
+//    OSM's own history, on a first-ever open) with whatever budget the
+//    top-up did not spend, so a reader who has answered a lot, or who also
+//    makes a lot of unrelated edits, is not stuck forever on the newest 500.
+//    Stops for good (`done: true`) once a page comes back short.
+//
+// Either pass can spend its whole share of the budget without reaching the
+// end of what it is asking for; the next open picks up exactly where this
+// one left off (the top-up from the cache's new watermark, the backfill
+// from its advanced cursor).
+async function fetchMyAnswers(user, cache) {
+  let answers = cache.answers ?? [];
+  let backfill = cache.backfill ?? { oldest_scanned: null, done: false };
+  let pagesUsed = 0;
+
+  if (answers.length) {
+    const since = newestClosedAt(answers);
+    let before = null;
+    while (pagesUsed < MY_ANSWERS_PAGES) {
+      const page = await fetchChangesetPage(changesetsUrl(osm.api, user, since, before));
+      pagesUsed++;
+      if (page === null) return { answers, backfill };   // network failure: keep what we have
+      if (!page.length) break;
+      answers = mergeAnswers(answers, extractAnswers(page));
+      before = pageBoundary(page);
+      if (!before) break;   // caught up to the cache's own watermark
+    }
   }
-  return merged;
+
+  while (!backfill.done && pagesUsed < MY_ANSWERS_PAGES) {
+    const url = backfill.oldest_scanned
+      ? changesetsUrl(osm.api, user, null, backfill.oldest_scanned)
+      : changesetsUrl(osm.api, user, null, null);
+    const page = await fetchChangesetPage(url);
+    pagesUsed++;
+    if (page === null) break;
+    answers = mergeAnswers(answers, extractAnswers(page));
+    backfill = advanceBackfillCursor(backfill, page);
+  }
+
+  return { answers, backfill };
 }
 
 // Called once per dialog open, and no more often than every few minutes: the
@@ -2530,8 +2595,10 @@ async function refreshMyAnswers() {
   if (!user || Date.now() - myAnswersFetchedAt < MY_ANSWERS_REFRESH_MS) return;
   myAnswersFetchedAt = Date.now();
   const cache = ensureMyAnswers(user);
-  cache.answers = await fetchMyAnswers(user, cache.answers);
-  writeMyAnswersRaw(user, cache.answers);
+  const { answers, backfill } = await fetchMyAnswers(user, cache);
+  cache.answers = answers;
+  cache.backfill = backfill;
+  writeMyAnswersRaw(user, answers, backfill);
   if (meDialog.open) { renderMeSentence(); renderMeStats(); }
 }
 
@@ -2545,11 +2612,13 @@ async function refreshMyAnswers() {
 // the same ones the stats strip renders (localAnswered/answeredPercent).
 function meAreaNumbers() {
   if (currentArea) {
-    // A chunk (Land, région, state, prefecture) carries its own bare sweep-
-    // area key ("Hamburg") — used as-is, undeclined, per CONTRACT.md v39. A
-    // country row has no such bare name, so its own page label stands in
-    // ("Wickeltische in Deutschland", the same text the header link shows).
-    const area = currentArea.area || currentAreaLink?.label || null;
+    // The exact text the footer link shows — currentAreaLink is
+    // areaLink(currentArea, lang), the same call updateRegionsLink made for
+    // it — never a bare sweep-area key on its own: "Wickeltische in
+    // Hamburg" for a chunk, "Wickeltische in Deutschland" for a country,
+    // whichever pickArea chose, so the dialog and the link read identically
+    // (CONTRACT.md v39).
+    const area = currentAreaLink?.label ?? null;
     const keys = areaKeysFor(currentArea);
     return { area, percent: areaPercent(allFeatures, keys), keys };
   }
@@ -2561,7 +2630,8 @@ function renderMeSentence() {
   const { area, percent, keys } = meAreaNumbers();
   const user = getUser();
   const answers = user ? ensureMyAnswers(user).answers : null;
-  const yours = !user ? null : keys ? answersInArea(answers, allFeatures, keys) : answers.length;
+  const yours = !user ? null
+    : keys ? answersInArea(answers, myFeatureGrid, keys) : totalAnswers(answers);
   const greyCount = lastFix ? greyNearby(allFeatures, lastFix[1], lastFix[0]).length : 0;
   const parts = sentenceParts({ area, percent, yours, greyCount, hasFix: !!lastFix, mama: mode === "mama" });
   const bits = [];
@@ -2607,9 +2677,13 @@ function renderMeStats() {
     });
     return;
   }
-  const answers = ensureMyAnswers(user).answers;
-  const total = answers.length;
-  const first = total ? answers.reduce((a, b) => ((a.closed_at ?? "") < (b.closed_at ?? "") ? a : b)) : null;
+  const cache = ensureMyAnswers(user);
+  const answers = cache.answers;
+  // n-weighted: a MapComplete session's one changeset can hold several of
+  // the theme's own questions answered at once, and every one of those is
+  // counted, not one per changeset (CONTRACT.md v39).
+  const total = totalAnswers(answers);
+  const first = answers.length ? answers.reduce((a, b) => ((a.closed_at ?? "") < (b.closed_at ?? "") ? a : b)) : null;
   const lines = [`<p>${esc(total > 0 ? t("meStatsTotal", { n: num(total) }) : t("meStatsTotalZero"))}</p>`];
   if (first?.closed_at) {
     // The full month, not the abbreviated one: German abbreviates with a
@@ -2620,6 +2694,12 @@ function renderMeStats() {
       { day: "numeric", month: "long", year: "numeric" });
     lines.push(`<p>${esc(t("meStatsSince", { date }))}</p>`);
   }
+  // The backfill (fetchMyAnswers, above) may not have reached the true start
+  // of the reader's OSM history yet — a bounded budget per open means a
+  // heavy mapper's full total can take several opens to settle. Said
+  // quietly rather than left for the total to simply look wrong meanwhile.
+  if (!cache.backfill?.done)
+    lines.push(`<p class="me-backfill">${esc(t("meBackfillPending"))}</p>`);
   lines.push(`<p><button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button></p>`);
   meStatsEl.innerHTML = lines.join("");
 }

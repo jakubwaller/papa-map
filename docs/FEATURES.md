@@ -513,49 +513,69 @@ the reader's own answer count, and a list of starred places. All three read
 data that already exists somewhere; none of it is a new thing PapaMap keeps
 about anyone.
 
-The headline is a game: "Hamburg is 31 % answered, 2 of those are yours, 8
-grey pins within 1 km" — and the area it plays over is whichever one the
-footer link already names, the same `pickArea` pick the "Wickeltische in
-Hamburg" link makes from the pins nearest the map centre (CONTRACT.md v32).
-`web/app.js` keeps that exact pick (`currentArea`) rather than choosing a
-second time with different inputs, so the two can never name different
-places, and panning from Hamburg to Berlin before opening the dialog gets
-Berlin. The percentage is counted live over every table the pipeline put in
-that area — every loaded feature, never the chip-filtered subset a reader
-happens to be looking at — never a second dataset of its own. Only when
-`pickArea` finds nothing at all (open sea, zoomed out past any area's
-reach) does the sentence fall back to the site's own whole-sweep numbers,
-the same ones the stats strip renders (`localAnswered`, `web/datasource.js` —
-one place "how many tables are answered" comes from `stats.json`'s `local`
-block, so the strip and that one fallback sentence cannot drift apart
-either). A second clause says how many of the reader's own OSM changesets
-land in that same area — each attributed by the nearest loaded feature
-within 50 m of the changeset's own position — worded as an invitation
-rather than a zero when there are none yet. A third names how many grey
-pins (amber, reading as a mother) sit within a kilometre of wherever the
-reader last used *locate* or *nearest* — **never a fresh location prompt of
-its own** — and tapping it closes the dialog and frames the map on that
-circle instead. Read `sentenceParts` in `web/me.js` for exactly which
-clause is chosen when.
+The headline is a game: "Wickeltische in Hamburg: 31 % beantwortet, 2
+davon sind von dir, 8 graue Pins im Umkreis von 1 km" — and both the area
+and its own name are whichever the footer link already shows: the same
+`pickArea` pick the "Wickeltische in Hamburg" link makes from the pins
+nearest the map centre (CONTRACT.md v32), and the exact same label text
+(`currentAreaLink.label` — the row's own `label`, or its `en.label` for a
+reader whose UI language the row isn't written in — never a bare sweep-area
+key on its own). `web/app.js` keeps that exact pick (`currentArea`/
+`currentAreaLink`) rather than choosing a second time with different
+inputs, so the two can never name different places, and panning from
+Hamburg to Berlin before opening the dialog gets Berlin. The percentage is
+counted live over every table the pipeline put in that area — every loaded
+feature, never the chip-filtered subset a reader happens to be looking at —
+never a second dataset of its own. Only when `pickArea` finds nothing at
+all (open sea, zoomed out past any area's reach) does the sentence fall
+back to the site's own whole-sweep numbers, the same ones the stats strip
+renders (`localAnswered`, `web/datasource.js` — one place "how many tables
+are answered" comes from `stats.json`'s `local` block, so the strip and
+that one fallback sentence cannot drift apart either). A second clause says
+how many of the reader's own OSM changesets land in that same area — each
+attributed by the nearest loaded feature within the changeset's own search
+radius (below) — worded as an invitation rather than a zero when there are
+none yet. A third names how many grey pins (amber, reading as a mother) sit
+within a kilometre of wherever the reader last used *locate* or *nearest*
+— **never a fresh location prompt of its own** — and tapping it closes the
+dialog and frames the map on that circle instead. Read `sentenceParts` in
+`web/me.js` for exactly which clause is chosen when.
 
 "Your stats" reads the reader's own **public** OSM changesets live, on the
 device: `GET {api}/changesets.json?display_name=<name>`, no login-privileged
 data, nothing a stranger with the same username could not also see. A
 changeset counts as PapaMap's if its tags say so — `created_by: "PapaMap"`
 for this site's own writes, or `theme: "papamap"` for the MapComplete
-hand-off — and never by downloading what it actually changed: a PapaMap
-changeset touches exactly one object, so the bounding box the list already
-carries is (for all practical purposes) a point, and that point is the
-answer's position. Cached on the device (`papamap-my-answers`, tied to the
+hand-off — and never by downloading what it actually changed. **A PapaMap
+changeset edits exactly one object, so its bounding box is a point — a
+MapComplete changeset is not.** MapComplete reuses one changeset across a
+whole theme session, so one changeset can hold several answers (the room
+question and the play question on the same table, or several tables in one
+sitting), spread over its own wider bbox. The changeset's own
+`changes_count` — how many edits it holds — is kept as each cached answer's
+`n`, and all of a changeset's `n` answers are attributed together to the
+single nearest loaded feature within `max(50 m, half the bbox's own
+diagonal)`, capped at 5 km. `changes_count` can include the theme's other
+questions too, not only the room this project asks about — the total is
+still called "Antworten" (answers) in German, honestly, since every one of
+those changes is an answer to one of the theme's own questions, even where
+it isn't this one. Cached on the device (`papamap-my-answers`, tied to the
 logged-in name so a second account on a shared computer never inherits the
-first one's numbers, cleared outright on logout), shown at once and topped
-up in the background — bounded to a handful of requests per open, and to
-one refresh every few minutes — so the dialog never makes the reader wait on
-OSM to open. An answer just given is added the moment OSM confirms the
-write, from that write's own reply, so the count moves on the same tap
-rather than on the next time the list happens to be paged. No ranking, no
-other reader's name, anywhere: the owner ruled that out early, and the API
-call itself never asks about anyone but the one person logged in.
+first one's numbers, cleared outright on logout, along with the throttle
+clock that used to leave a fresh login showing "0 Antworten" for five
+minutes), shown at once and topped up in the background — bounded to a
+handful of requests per open, split between what's new since the last visit
+and continuing a backfill cursor into the reader's older history a first
+open's budget could not reach, with a quiet note while that backfill is
+still incomplete so the total is never shown as final before it is. An
+answer just given is added the moment OSM confirms the write, from that
+write's own reply, so the count moves on the same tap rather than on the
+next time the list happens to be paged. Attributing many answers against a
+dataset of tens of thousands of features runs through a coarse grid index
+built once per loaded dataset, not a fresh full scan per answer. No
+ranking, no other reader's name, anywhere: the owner ruled that out early,
+and the API call itself never asks about anyone but the one person logged
+in.
 
 Saved places are a star, next to a pin's or a play place's name rather than
 in the Route row, kept only on the device (`papamap-saved`, up to 200) —

@@ -15,51 +15,59 @@
 > picked a second time with different inputs: the dialog can never disagree
 > with the link sitting above it on screen, and it follows a pan the same
 > way the link does (open in Hamburg, pan to Berlin, the sentence now says
-> Berlin). Tables/answered/unknown are counted live over **every loaded
-> feature**, never the chip-filtered subset — a reader who has switched off
-> "female only" must not see the score move — by `f.area` membership in the
-> row's own area keys: `web/datasource.js`'s new `areaKeysFor(row)` is one
-> key for a chunk (its own `area`, "Hamburg") or every key behind a country
+> Berlin). **The area's own name in the sentence is the exact label the
+> footer link shows** — `currentAreaLink.label` (`areaLink(currentArea,
+> lang)`, unchanged: the row's own `label` or its `en.label`, whichever the
+> link itself would choose for the reader's language) — never a bare sweep-
+> area key on its own: `"Wickeltische in Hamburg: 31 % beantwortet"` for a
+> chunk, `"Wickeltische in Deutschland: 28 % beantwortet"` for a country, so
+> the dialog and the link can never read differently, in any language.
+> Tables/answered/unknown are counted live over **every loaded feature**,
+> never the chip-filtered subset — a reader who has switched off "female
+> only" must not see the score move — by `f.area` membership in the row's
+> own area keys: `web/datasource.js`'s new `areaKeysFor(row)` is one key for
+> a chunk (its own `area`, "Hamburg") or every key behind a country
 > (`areas`, Germany's 16 Länder); `web/me.js`'s new `areaAnswered`/
 > `areaPercent` do the counting (live-checked against a real
-> `changing_tables.geojson`: Hamburg today is 131 tables, 35 `accessible` +
-> 6 `female_only` = 31 %). **Only when `pickArea` has found nothing at all**
+> `changing_tables.geojson`: Hamburg is 131 tables, 35 `accessible` + 6
+> `female_only` = 31 %). **Only when `pickArea` has found nothing at all**
 > (open sea, zoomed out past any area's 250 km reach) does the sentence fall
 > back to the site's own whole-sweep numbers — `localAnswered(stats.local)`
 > and `answeredPercent`, unchanged, the same ones the stats strip renders,
-> so the two still cannot disagree in that one case either. The area's own
-> name is a bare, undeclined string: a chunk's own sweep-area key as-is
-> ("Hamburg" — areas.json carries no declined form, and none is needed once
-> the sentence needs no preposition, below), or a country row's own page
-> label ("Wickeltische in Deutschland", `currentAreaLink.label` — the same
-> text the header link shows, since a country has no bare name of its own
-> to fall back to) when pickArea chose a country rather than a chunk.
+> so the two still cannot disagree in that one case either; there `area` is
+> `areaLabel(stats)`, the wordmark's own reading ("49 Länder").
 >
 > **The sentence is deliberately verbless** (`"{area}: {percent} %
 > beantwortet"`, not `"{area} ist … beantwortet"`, and the mama reading
-> `"{area}: wahrscheinlich …"` rather than `"In {area} sind …"`): `area` can
-> be anything from a country count (`"49 Länder"`, plural) to a country's
-> own full page label to a bare city name with no case ending on record at
-> all, and a conjugated verb — let alone one behind a preposition demanding
-> a declined form — is exactly the kind of thing that silently breaks in one
-> language while the other thirty-one look fine, or has nothing to decline
-> to in the first place. The colon-headline form needs neither, in any of
-> the 32 languages.
+> `"{area}: wahrscheinlich …"` rather than `"In {area} sind …"`): `area` is
+> whatever the footer link's own label happens to be — a full page label, a
+> bare city name, a country's plural count — and a conjugated verb, let
+> alone one behind a preposition demanding a declined form, is exactly the
+> kind of thing that silently breaks in one language while the other
+> thirty-one look fine, or has nothing to decline to in the first place. The
+> colon-headline form needs neither, in any of the 32 languages.
 >
 > The "yours" clause is the reader's own answers **attributed to this same
-> area**: `me.js`'s new `answerArea(answer, features, 50)` takes the `area`
-> of the nearest loaded feature within 50 m of the changeset's centre —
-> close enough that "nearest" is never ambiguous, since a PapaMap or
-> MapComplete answer always lands exactly on an existing object — and
-> `answersInArea` counts how many of the reader's answers land in the
-> current `areaKeysFor()` set; an answer with nothing that close (the
-> object has since fallen out of the sweep) counts in the reader's total but
-> in no area's score. In the whole-site fallback "yours" is simply the
-> reader's total, unattributed — there being only the one area to be in.
-> Zero renders `meYoursZero`, an invitation, never "0 of those are yours".
-> The "grey pins nearby" clause reads `greyNearby` (`web/me.js`): status
-> `unknown` with **empty `location_raw`** — a room answered in words the
-> classifier does not read is not a question to send anyone back to —
+> area**, weighted by how many answers a changeset actually holds (`n`,
+> part 2 below): `web/me.js`'s `answerArea(answer, grid)` takes the `area`
+> of the nearest loaded feature within the changeset's own `radius_m` —
+> close enough that "nearest" is never ambiguous for this site's own
+> point-changeset writes, and wide enough to still find a MapComplete
+> session's own object(s) — and `answersInArea` sums `n` for every answer
+> that lands in the current `areaKeysFor()` set; an answer with nothing
+> that close (the object has since fallen out of the sweep) counts in the
+> reader's total but in no area's score. `grid` is `buildFeatureGrid
+> (allFeatures)`, rebuilt in `applyDataset` alongside everything else that
+> depends on the loaded features — a coarse ~5.5 km-cell index, because a
+> brute-force scan of ~26k features per answer (`answersInArea` calls
+> `answerArea` once per cached answer) cost a few hundred ms on a phone once
+> a reader had more than a handful, on both the dialog's open and the
+> background refresh landing. In the whole-site fallback "yours" is simply
+> `totalAnswers(answers)`, unattributed — there being only the one area to
+> be in. Zero renders `meYoursZero`, an invitation, never "0 of those are
+> yours". The "grey pins nearby" clause reads `greyNearby` (`web/me.js`):
+> status `unknown` with **empty `location_raw`** — a room answered in words
+> the classifier does not read is not a question to send anyone back to —
 > within 1 km of `lastFix`, the last position either the locate or the
 > nearest-table button actually resolved (`web/app.js`); the dialog **never
 > triggers a location prompt of its own**, and with no fix yet the clause
@@ -80,52 +88,94 @@
 > auth header — a user's changesets are public information, this is not a
 > privileged read. `time=T1` asks "closed after T1" (a top-up: only what's
 > new since the cache); `time=T1,T2` additionally bounds "created before
-> T2" (a page beyond the first 100, `T2` the oldest `created_at` seen so
-> far) — both exactly as OSM's API documents them, never a made-up cursor.
-> `me.js`'s `changesetsUrl`/`pageBoundary` build and walk this; `web/app.js`'s
-> `fetchMyAnswers` bounds it to `MY_ANSWERS_PAGES` (5) calls per open,
-> whether that is a first-ever backfill (500 of the reader's newest
-> changesets, of any kind — the API filters by user, not by tag) or a
-> top-up. **A changeset counts as "yours" by its tags alone, never its
-> contents, which are never downloaded**: `created_by: "PapaMap"` (this
-> site's own writes, `writeTags`/`changesetTags`, unchanged) or
-> `theme: "papamap"` (MapComplete's own hand-off tag for this theme,
-> `theme/papamap.theme.json`'s id — equally reliable, so counted the same
-> way; nothing else is, because nothing else can be told apart from an
-> unrelated edit by its tags). A PapaMap or MapComplete-under-this-theme
-> changeset edits exactly one object, so its **bounding box is a point** —
-> `me.js`'s `changesetAnswer` takes the box's centre as the answer's
-> position and keeps only `{id, lon, lat, closed_at}`. Shown: the total, the
-> date of the first (`meStatsSince`, the full date — `{day, month: "long",
-> year}` — not the abbreviated one, whose own trailing "." in German
-> collided with the template's), and (part 1's own clause) how many lie in
-> the area currently on screen — **no ranking, no other user's name,
-> anywhere**, per the owner's ruling. **No per-answer colour breakdown in
-> this cut**: matching each answer to the nearest loaded feature to show
-> green/red/grey counts was in scope but is left for a later PR — omitted
-> here to keep this one reviewable, not because it turned out unreliable.
+> T2" (a page beyond the first 100, `T2` one second past the oldest
+> `created_at` seen so far — `time=`'s own second resolution means a
+> changeset sharing that exact second with the page's true oldest entry
+> could otherwise be cut off by the 100-item limit and then excluded again
+> by an exclusive bound set to that same second; `mergeAnswers`' dedup-by-id
+> absorbs the one-page repeat the +1s reintroduces) — both exactly as OSM's
+> API documents them, never a made-up cursor. `me.js`'s
+> `changesetsUrl`/`pageBoundary` build and walk this. **A changeset counts
+> as "yours" by its tags alone, never its contents, which are never
+> downloaded**: `created_by: "PapaMap"` (this site's own writes,
+> `writeTags`/`changesetTags`, unchanged) or `theme: "papamap"`
+> (MapComplete's own hand-off tag for this theme, `theme/papamap.theme.json`'s
+> id — equally reliable, so counted the same way; nothing else is, because
+> nothing else can be told apart from an unrelated edit by its tags).
+>
+> **A PapaMap changeset edits exactly one object, so its bounding box is a
+> point — a MapComplete changeset is not the same shape.** MapComplete
+> reuses one changeset across a whole theme session, so one changeset can
+> hold several answers (the room question and the play question on one
+> table, or several tables visited in one sitting), spread over its own
+> bbox. The API's own `changes_count` says how many edits a changeset holds;
+> `me.js`'s `changesetAnswer` keeps it as `n` (defaulting to 1 for a
+> changeset that lacks it — this site's own writes always are exactly 1;
+> MapComplete's theme-session changesets are the only source that is ever
+> more), and **all `n` of a changeset's answers are attributed as one
+> block** to the single nearest feature within `radius_m` — `max(50 m, half
+> the changeset's own bbox diagonal)`, capped at 5 km so one changeset can
+> never claim a whole country's worth of area. `changes_count` may also
+> count the theme's *other* questions (the play corner) on the same object,
+> not only the room this project asks about, so **the count is honestly "a
+> theme session's worth of answers", not "rooms recorded"** — the dialog
+> still says "Antworten" (answers) in German, because every one of those
+> changes is genuinely an answer to one of the theme's own questions, just
+> not always this project's own one. Shown: the total (`totalAnswers`, the
+> `n`s summed, not one per cached changeset record), the date of the first
+> (`meStatsSince`, the full date — `{day, month: "long", year}` — not the
+> abbreviated one, whose own trailing "." in German collided with the
+> template's), and (part 1's own clause) how many lie in the area currently
+> on screen — **no ranking, no other user's name, anywhere**, per the
+> owner's ruling. **No per-answer colour breakdown in this cut**: matching
+> each answer to the nearest loaded feature to show green/red/grey counts
+> was in scope but is left for a later PR — omitted here to keep this one
+> reviewable, not because it turned out unreliable.
 >
 > **Cached on the device**, localStorage key **`papamap-my-answers`**:
-> `{ user, answers: [{id, lon, lat, closed_at}, …] }`, tied to the display
-> name so a second login on the same browser never inherits the first
-> one's numbers — `logout()` (`web/app.js`) removes the key outright, and a
-> read for a different `user` than the one stored is treated as empty
-> rather than trusted. Refreshed at most once every five minutes and once
-> per dialog open (`MY_ANSWERS_REFRESH_MS`); the dialog always paints the
-> cached numbers first and re-renders only once a refresh actually lands.
-> **A failure — offline, a timeout, a dead mirror — is swallowed and
-> answered with whatever the cache already has, no toast, no error state**:
+> `{ v, user, answers: [{id, lon, lat, closed_at, n, radius_m}, …],
+> backfill: {oldest_scanned, done} | null }`, tied to the display name so a
+> second login on the same browser never inherits the first one's numbers —
+> `logout()` (`web/app.js`) removes the key outright and resets the
+> refresh-throttle clock too (`myAnswersFetchedAt = 0`; missing this left a
+> fresh login waiting out the five-minute throttle before its first fetch,
+> showing "0 Antworten" until it did), and a read for a different `user`, or
+> a stored `v` that does not match the cache's own current shape, is treated
+> as empty rather than trusted or migrated — `v` bumps whenever the record's
+> own shape changes, this being the first bump (no `n`/`radius_m`/`backfill`
+> before it). Refreshed at most once every five minutes and once per dialog
+> open (`MY_ANSWERS_REFRESH_MS`); the dialog always paints the cached
+> numbers first and re-renders only once a refresh actually lands. **A
+> failure — offline, a timeout, a dead mirror — is swallowed and answered
+> with whatever the cache already has, no toast, no error state**:
 > `native.js`'s own connectivity signal was removed by the pin `app23`→`app29`
 > chain above as fundamentally unreliable on iOS, and this does not bring a
 > new one back — the bounded fetch (`AbortSignal.timeout`, 15 s) simply
 > fails the same way offline as it does on a bad host, and both are
 > "nothing new happened this time" to the reader. **An answer this tap just
 > wrote is appended immediately** from `writeTags`'s own reply — `obj.lon`/
-> `obj.lat`, the changeset id it returns, `Date.now()` for `closed_at` — so
-> the count moves on the same tap rather than waiting for the next time the
-> list happens to be paged; `mergeAnswers` (`web/me.js`) deduplicates by id
-> so the same answer seen twice (the write's own echo, then the API's list)
-> is never counted twice.
+> `obj.lat`, the changeset id it returns, `Date.now()` for `closed_at`, `n:
+> 1` (this site's own writes are always exactly one) — so the count moves on
+> the same tap rather than waiting for the next time the list happens to be
+> paged; `mergeAnswers` (`web/me.js`) deduplicates by id so the same answer
+> seen twice (the write's own echo, then the API's list) is never counted
+> twice.
+>
+> **The backfill.** `MY_ANSWERS_PAGES` (5) calls is enough for a first-ever
+> open to scan the reader's newest 500 changesets of any kind (the API
+> filters by user, not by tag, so a heavy iD/StreetComplete mapper's own
+> edits spend the same budget) — not necessarily their whole PapaMap
+> history. `web/app.js`'s `fetchMyAnswers` splits that one budget across two
+> passes: a top-up (what's new since the cache's own newest record, skipped
+> outright when the cache is empty — it would only repeat the backfill
+> pass's own first call) and a backfill continuing from a cursor kept in the
+> cache record (`{oldest_scanned, done}`, `web/me.js`'s
+> `advanceBackfillCursor`, walking `time=EPOCH,<oldest_scanned>` one page
+> older each call). `done` flips true once a page comes back short — the
+> true beginning of the reader's OSM history, not just this open's budget
+> running out — and until then the total is not necessarily final: the
+> dialog says so quietly, `meBackfillPending` ("Ältere Antworten werden noch
+> gesucht …"), rather than presenting a partial scan as the whole answer.
 >
 > **3. Saved places.** A star toggle in the popup's title line — pin and
 > play place alike, `web/app.js`'s `starHTML`/`toggleStar` — deliberately
@@ -149,14 +199,20 @@
 > **Shell pin `app31` → `app33`** (skipping `app32`, reserved for a parallel
 > PR): `web/me.js` joins `web/sw.js`'s `SHELL` and `web/app.js`'s own
 > imports at the new pin, and `app/build-www.js`'s file list, the same way
-> `datasource.js`/`i18n.js`/`osm.js` already do. New i18n keys — `ariaMe`,
-> `meTitle`, `meAreaSentence(Mama)`, `meYours(Zero)`,
+> `datasource.js`/`i18n.js`/`osm.js` already do — **including its own local
+> imports**, `./osm.js?v=app33` and `./datasource.js?v=app33`: `me.js`
+> shipped without the pin on those (PR #147) because `web/sw.test.js`'s
+> "shell precache pins the same ?v=" test only ever read app.js's own
+> imports. It now derives the file list to check from `SHELL` itself and
+> scans every one of those modules' own `from "./*.js…"` imports, so a
+> future module missing its pin fails there too, not just for app.js. New
+> i18n keys — `ariaMe`, `meTitle`, `meAreaSentence(Mama)`, `meYours(Zero)`,
 > `meGreyNearby(Mama)(Zero)(Mama)`, `meLocate`, `ariaMeGrey`,
 > `meLoginInvite`, `meLogin`, `meStatsTotal(Zero)`, `meStatsSince`,
-> `meSavedHeading`, `meSavedEmpty`, `ariaMeSavedRemove`, `ariaSave`,
-> `ariaUnsave`, `meSaveFailed` — in all 32 languages, each block right after
-> its own `statsGlobalMissing`, per `web/i18n.test.js`'s parity and
-> token-matching tests.
+> `meBackfillPending`, `meSavedHeading`, `meSavedEmpty`, `ariaMeSavedRemove`,
+> `ariaSave`, `ariaUnsave`, `meSaveFailed` — in all 32 languages, each block
+> right after its own `statsGlobalMissing`, per `web/i18n.test.js`'s parity
+> and token-matching tests.
 
 > **v38 amendment (19 Sep 2026, share a pin, and the room card):** **no shape
 > change** — no data file gains, loses or changes a property, and `STATUSES`

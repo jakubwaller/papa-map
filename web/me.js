@@ -9,8 +9,11 @@
 // holds (a localStorage cache) or what OSM already publishes about the
 // reader's own account (their changesets, which OSM shows to anyone).
 
-import { CREATED_BY } from "./osm.js";
-import { localAnswered, haversineKm } from "./datasource.js";
+// The ?v= pin matches index.html's / app.js's — bump together, or a cached
+// half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
+// now checks every shell module's imports for this, not just app.js's).
+import { CREATED_BY } from "./osm.js?v=app33";
+import { localAnswered, haversineKm } from "./datasource.js?v=app33";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -50,31 +53,89 @@ export function areaPercent(features, areaKeys) {
   return pctOf(tables, known);
 }
 
-// Which sweep area a reader's own answer lands in: the `area` of the nearest
-// loaded feature within `maxMeters` of the changeset's centre — close enough
-// that "nearest" cannot be ambiguous, since a PapaMap or MapComplete answer
-// always lands exactly on an existing object, never mid-street. Trusts only
-// that feature's own `area`, never a guess from distance alone; an answer
-// with nothing that close (the object has since fallen out of the sweep, or
-// the features simply have not loaded yet) is not in any area, though it
-// still counts in the reader's total.
-export function answerArea(answer, features, maxMeters = 50) {
-  if (!Number.isFinite(answer?.lon) || !Number.isFinite(answer?.lat)) return null;
-  let best = null, bestKm = Infinity;
+// ---- A coarse grid over the loaded features ----
+// answerArea (below) used to scan every one of ~26k loaded features per
+// answer — a few hundred ms blocked on a phone once a reader has more than
+// a handful of answers, run on open and again when the background refresh
+// lands. Bucketed once per dataset (web/app.js's applyDataset, the same
+// place every other per-dataset value is rebuilt) into ~5.5 km cells;
+// answerArea then only compares against the answer's own cell and its
+// neighbours, widened just far enough to guarantee the true nearest feature
+// within `maxKm` is not missed by a search that stopped at the first ring
+// that happened to contain something.
+const GRID_DEG = 0.05;   // ~5.56 km north-south; a generous, simple constant
+const KM_PER_DEG = 111.32;
+const cellOf = (lat, lon) => [Math.floor(lat / GRID_DEG), Math.floor(lon / GRID_DEG)];
+
+export function buildFeatureGrid(features) {
+  const grid = new Map();
   for (const f of features ?? []) {
     if (!f.area || !Number.isFinite(f.lat) || !Number.isFinite(f.lon)) continue;
-    const km = haversineKm(answer.lat, answer.lon, f.lat, f.lon);
-    if (km < bestKm) { bestKm = km; best = f; }
+    const [la, lo] = cellOf(f.lat, f.lon);
+    const key = `${la},${lo}`;
+    let bucket = grid.get(key);
+    if (!bucket) grid.set(key, bucket = []);
+    bucket.push(f);
   }
-  return best && bestKm * 1000 <= maxMeters ? best.area : null;
+  return grid;
+}
+
+// The nearest gridded feature to (lat, lon) within maxKm, or null. Rings
+// outward from the answer's own cell only as far as maxKm could possibly
+// reach, so a small search radius (the common case: a 50 m PapaMap answer)
+// touches a handful of cells, never the whole grid.
+function nearestInGrid(lat, lon, grid, maxKm) {
+  const [baseLa, baseLo] = cellOf(lat, lon);
+  const rings = Math.max(1, Math.ceil(maxKm / (GRID_DEG * KM_PER_DEG)) + 1);
+  let best = null, bestKm = Infinity;
+  for (let dLa = -rings; dLa <= rings; dLa++) {
+    for (let dLo = -rings; dLo <= rings; dLo++) {
+      const bucket = grid.get(`${baseLa + dLa},${baseLo + dLo}`);
+      if (!bucket) continue;
+      for (const f of bucket) {
+        const km = haversineKm(lat, lon, f.lat, f.lon);
+        if (km < bestKm) { bestKm = km; best = f; }
+      }
+    }
+  }
+  return best && bestKm <= maxKm ? { feature: best, km: bestKm } : null;
+}
+
+// Which sweep area a reader's own answer lands in: the `area` of the
+// nearest loaded feature within the answer's own `radius_m` (changesetAnswer,
+// below — max(50 m, half the changeset's own bbox diagonal), capped at
+// 5 km) of the changeset's centre. `grid` is buildFeatureGrid's own index,
+// or a plain feature array for a brute-force fallback (tests, a caller with
+// nothing built yet). Trusts only that feature's own `area`, never a guess
+// from distance alone; an answer with nothing that close (the object has
+// since fallen out of the sweep, or the features simply have not loaded
+// yet) is not in any area, though it still counts in the reader's total.
+export function answerArea(answer, grid) {
+  if (!Number.isFinite(answer?.lon) || !Number.isFinite(answer?.lat)) return null;
+  const maxKm = Math.min(5, Math.max(0.05, (answer.radius_m ?? 50) / 1000));
+  const idx = grid instanceof Map ? grid : buildFeatureGrid(grid);
+  const hit = nearestInGrid(answer.lat, answer.lon, idx, maxKm);
+  return hit ? hit.feature.area : null;
 }
 
 // How many of the reader's own answers fall in the given area (its
-// areaKeysFor() set) — each attributed via answerArea above.
-export function answersInArea(answers, features, areaKeys) {
+// areaKeysFor() set) — each attributed via answerArea above, weighted by
+// the changeset's own `n` (changesetAnswer): a MapComplete session answers
+// more than one question in the one changeset it opens, and every one of
+// those `n` changes is an answer, all landing wherever the changeset itself
+// did (CONTRACT.md v39).
+export function answersInArea(answers, grid, areaKeys) {
   const keys = areaKeys instanceof Set ? areaKeys : new Set(areaKeys ?? []);
   if (!keys.size) return 0;
-  return (answers ?? []).filter((a) => keys.has(answerArea(a, features))).length;
+  let sum = 0;
+  for (const a of answers ?? []) if (keys.has(answerArea(a, grid))) sum += a.n ?? 1;
+  return sum;
+}
+
+// The reader's answers, total — every `n` summed, not one per cached
+// changeset record (the MapComplete-session case above).
+export function totalAnswers(answers) {
+  return (answers ?? []).reduce((sum, a) => sum + (a.n ?? 1), 0);
 }
 
 // ---- Which clause the sentence needs, and with which numbers ----
@@ -82,12 +143,12 @@ export function answersInArea(answers, features, areaKeys) {
 // template strings: the zero case ("none of those are yours yet") wants
 // inviting words, not "0 of those are yours", and the no-fix case swaps the
 // grey-pin clause for a small "use my location" action rather than ever
-// prompting for one on open. `area` is a bare, undeclined name — a sweep
-// area's own key ("Hamburg") when pickArea chose a chunk, or a country row's
-// own page label ("Wickeltische in Deutschland") when it chose a country;
-// either way the sentence keys are written not to need a preposition or a
-// declined form (web/i18n.js). `percent`/`yours`/`greyCount` are numbers or
-// null when unknown.
+// prompting for one on open. `area` is the exact label the footer link
+// itself shows ("Wickeltische in Hamburg", `currentAreaLink.label` in
+// web/app.js — never a bare sweep-area key on its own, so the dialog and the
+// link can never read differently) and the sentence keys are written not to
+// need a preposition or a declined form on top of it (web/i18n.js).
+// `percent`/`yours`/`greyCount` are numbers or null when unknown.
 export function sentenceParts({ area, percent, yours, greyCount, hasFix, mama }) {
   const areaPart = (area && percent != null)
     ? { key: mama ? "meAreaSentenceMama" : "meAreaSentence", vars: { area, percent } }
@@ -140,21 +201,39 @@ export function isOwnChangeset(tags) {
   return !!tags && (tags.created_by === CREATED_BY || tags.theme === MAPCOMPLETE_THEME);
 }
 
-// A PapaMap (or MapComplete-under-this-theme) changeset edits exactly one
-// changing-table object, so its bounding box is — bar float rounding — a
-// point: the centre is where the answer was. No changeset's contents are
-// ever downloaded to get this. A changeset with no bbox at all (opened, then
-// closed with nothing written — a dropped connection mid-write) is not an
-// answer and is dropped rather than counted with a fabricated position.
+// A PapaMap changeset edits exactly one object, so its bounding box is — bar
+// float rounding — a point. **A MapComplete changeset is not the same
+// shape**: MapComplete reuses one changeset across a whole theme session, so
+// one changeset can hold several answers (the room question and the play
+// question on one table, or several tables visited in one sitting) spread
+// over its own bbox, not a point. `changes_count` — the API's own count of
+// edits in the changeset — is how many of those there are; `n` here is that
+// count, defaulting to 1 for a changeset that lacks it (this site's own
+// writes always are 1; MapComplete's own theme-session changesets are the
+// only source that is ever more). No changeset's contents are ever
+// downloaded to learn any of this — bbox and changes_count are both already
+// on the list the reader's changesets.json call returns. A changeset with
+// no bbox at all (opened, then closed with nothing written — a dropped
+// connection mid-write) is not an answer and is dropped rather than counted
+// with a fabricated position.
 export function changesetAnswer(cs) {
   if (!cs || !isOwnChangeset(cs.tags)) return null;
   const { min_lon, min_lat, max_lon, max_lat } = cs;
   if (![min_lon, min_lat, max_lon, max_lat].every(Number.isFinite)) return null;
+  const n = Number.isFinite(cs.changes_count) && cs.changes_count > 0 ? Math.round(cs.changes_count) : 1;
+  // Area attribution's own search radius (answerArea, above): a point
+  // changeset needs only the 50 m floor, a MapComplete session's wider bbox
+  // needs enough to reach every object it touched — half the bbox's own
+  // diagonal, capped at 5 km so one changeset can never claim a whole
+  // country's worth of area.
+  const diagonalM = haversineKm(min_lat, min_lon, max_lat, max_lon) * 1000;
   return {
     id: cs.id,
     lon: (min_lon + max_lon) / 2,
     lat: (min_lat + max_lat) / 2,
     closed_at: cs.closed_at || cs.created_at,
+    n,
+    radius_m: Math.min(5000, Math.max(50, diagonalM / 2)),
   };
 }
 
@@ -200,14 +279,39 @@ export function changesetsUrl(api, user, since, before) {
   return u.href;
 }
 
-// The oldest `created_at` in a full page — the next call's upper bound — or
-// null when the page came back short (fewer than 100: there is nothing older
-// left to ask for, so paging stops).
+// The next call's upper bound — a page beyond the first 100 is reached by
+// asking for `created_at` before this — or null when the page came back
+// short (fewer than 100: there is nothing older left to ask for, so paging
+// stops). One second later than the page's own oldest `created_at`: OSM's
+// `time=` bound has only second resolution, so a full page that happens to
+// end mid-second could have one changeset sharing that second cut off by
+// the 100-item limit and then excluded again by an exclusive "before" bound
+// set to that exact second. The +1s reopens that whole second on the next
+// call; mergeAnswers' own dedup-by-id absorbs the repeat this introduces for
+// the changeset(s) already on this page.
 export function pageBoundary(list, fullPage = 100) {
   if (!Array.isArray(list) || list.length < fullPage) return null;
   let oldest = null;
   for (const cs of list) if (cs.created_at && (!oldest || cs.created_at < oldest)) oldest = cs.created_at;
-  return oldest;
+  if (!oldest) return null;
+  const d = new Date(oldest);
+  return Number.isNaN(d.getTime()) ? oldest : new Date(d.getTime() + 1000).toISOString();
+}
+
+// ---- Backfilling further into the reader's history than one open can reach ----
+// A first-ever open can only spend MY_ANSWERS_PAGES pages (web/app.js)
+// before its budget runs out — for a reader who has mapped through PapaMap
+// for a while, or who also makes a lot of unrelated edits (the API filters
+// by user, not by tag, so every one of those counts against the same page
+// budget), that is not their whole history. `cursor` is `{oldest_scanned,
+// done}`, kept in the cache record: `oldest_scanned` is how far back a
+// `time=EPOCH,<oldest_scanned>` scan has reached across every open combined,
+// `done` once a page has come back short — the true beginning of the
+// reader's OSM history, not just this session's budget running out.
+export function advanceBackfillCursor(cursor, page) {
+  const boundary = pageBoundary(page);
+  if (!boundary) return { oldest_scanned: cursor?.oldest_scanned ?? null, done: true };
+  return { oldest_scanned: boundary, done: false };
 }
 
 // ---- Saved places (device only, papamap-saved) ----
