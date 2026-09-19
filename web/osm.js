@@ -245,13 +245,35 @@ const TOKEN_TO_CHOICE = Object.fromEntries(
 // a women's-only room as the mixed one. The pair {female_toilet, male_toilet},
 // in either order and only that pair, is what a reader calls "both" — it
 // collapses to the one label rather than printing two.
+//
+// Case-insensitive, like classify.py — it lower-cases before it matches, so a
+// mapper's `Female_toilet` still classifies. Comparing the token against the
+// (already lower-case) vocabulary case-insensitively catches roomLabelKeys up
+// to that: before this, the same `Female_toilet` fell through to `{ raw }`
+// verbatim, the display for a token this project's vocabulary does not know
+// at all. Exactness survives the fold: "female_toilet" and "male_toilet"
+// still never match each other, lower-cased or not.
+//
+// Deduplication is case-insensitive too, first spelling wins: a mapper who
+// wrote `Female_toilet;female_toilet` meant the room once, not the label
+// twice, and the same goes for a repeated token this vocabulary does not
+// know — `Attic;attic` is one `{ raw: "Attic" }`, not two.
 export function roomLabelKeys(raw) {
   if (!raw) return [];
-  const tokens = [...new Set(raw.split(";").map((s) => s.trim()).filter(Boolean))];
-  if (tokens.length === 2 && tokens.includes("female_toilet") && tokens.includes("male_toilet"))
+  const parts = raw.split(";").map((s) => s.trim()).filter(Boolean);
+  const seen = new Set();
+  const tokens = [];
+  for (const tok of parts) {
+    const key = tok.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    tokens.push(tok);
+  }
+  const lower = tokens.map((tok) => tok.toLowerCase());
+  if (lower.length === 2 && lower.includes("female_toilet") && lower.includes("male_toilet"))
     return [{ key: ROOM_LABEL.both }];
   return tokens.map((tok) => {
-    const choice = TOKEN_TO_CHOICE[tok];
+    const choice = TOKEN_TO_CHOICE[tok.toLowerCase()];
     return choice ? { key: ROOM_LABEL[choice] } : { raw: tok };
   });
 }

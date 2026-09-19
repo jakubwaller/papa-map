@@ -5,23 +5,24 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
-         pinColorExpression, momCounts, nearestUsable, formatDistance,
+         pinColorExpression, momCounts, nearestUsable, formatDistance, haversineKm,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
-         EDIT_CHECK_DELAYS } from "./datasource.js?v=app31";
+         EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
+         isFixFresh } from "./datasource.js?v=app32";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app31";
+         langUrl } from "./i18n.js?v=app32";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app31";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app32";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app31";
+         formatMB, citiesToMount } from "./native.js?v=app32";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -104,6 +105,9 @@ function applyI18n() {
   // choice, or a Czech browser): the control has to agree with the page.
   const sel = document.getElementById("lang-select");
   if (sel && sel.value !== lang) sel.value = lang;
+  // A card left standing through a language change would otherwise go stale
+  // in the old one (CONTRACT.md v38); a no-op when none is up.
+  renderRoomCardText();
 }
 
 // ---- Footer area link: follows the map view, not the UI language ----
@@ -490,6 +494,15 @@ const routeButton = (lat, lon, name) =>
   `<a class="btn" href="${esc(directionsUri(lat, lon, name, geoUri(lat, lon, name)))}"` +
   ` data-route="${esc(`${lat},${lon}`)}" data-route-label="${esc(name)}">${esc(t("popupDirections"))}</a>`;
 
+// The share button, in the same row: icon only, not icon-plus-label — the
+// German row (MapComplete's long "Auf MapComplete beantworten", Route, View
+// on OSM) is already tight at 375 px, and one more short word would wrap it
+// badly on a 12 mini. The click is delegated (the popup markup is rebuilt on
+// every open); the button itself only needs to say which popup it belongs to.
+const SHARE_PATH = "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.03-.47-.09-.7l7.05-4.11c.53.49 1.23.79 2.01.79 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L7.04 9.81C6.5 9.31 5.79 9 5 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z";
+const shareButtonHTML = () =>
+  `<button type="button" class="btn icon-btn" data-share aria-label="${esc(t("popupShare"))}" title="${esc(t("popupShare"))}">${svgIcon(SHARE_PATH, "share-icon")}</button>`;
+
 function popupHTML(f) {
   const s = viewFor(f.status, mode);
   // The two-tap answer, on the pins nobody has answered for. Not on a pin that
@@ -550,6 +563,7 @@ function popupHTML(f) {
   if (mcUrl)
     links.push(`<a class="btn${!mcOnly && (asks || !f.play_recorded) ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   links.push(routeButton(f.lat, f.lon, f.name || ""));
+  links.push(shareButtonHTML());
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -668,6 +682,7 @@ function placeHTML(p) {
   if (mcUrl)
     links.push(`<a class="btn${p.changing_table ? " primary" : ""}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   links.push(routeButton(p.lat, p.lon, p.name || ""));
+  links.push(shareButtonHTML());
   if (osmUrl)
     links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
@@ -676,20 +691,34 @@ function placeHTML(p) {
   return `<div class="popup"><h3>${esc(title)}</h3>${sub}${rows.join("")}</div>`;
 }
 
+// Every popup this page ever opens is created here or in openPlacePopup, and
+// both wire its own "close" listener to the instance itself (`p`, not the
+// mutable `popup` variable — a closure over `popup` would name whichever
+// popup happens to be current when the event fires, not the one it belongs
+// to). onPopupClosed is the one place `popup`/`popupObj` are nulled for a
+// close nobody in this file asked for — clicking the map (closeOnClick),
+// clicking the built-in ×, or the map itself going away — which used to go
+// unnoticed here entirely (the room card's original bug, CONTRACT.md v38).
 function openPopup(f) {
+  hideRoomCard();   // the two never share the screen
   if (popup) popup.remove();
   popupObj = { kind: "table", obj: f };
-  popup = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
+  const p = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
     .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
+  p.on("close", () => onPopupClosed(p));
+  popup = p;
   attachEditNote();
   panPopupIntoView();
 }
 
 function openPlacePopup(p) {
+  hideRoomCard();
   if (popup) popup.remove();
   popupObj = { kind: "place", obj: p };
-  popup = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
+  const pop = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
     .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
+  pop.on("close", () => onPopupClosed(pop));
+  popup = pop;
   attachEditNote();
   panPopupIntoView();
 }
@@ -1021,12 +1050,26 @@ function locateFrom(btn) {
   return locate().finally(() => btn.removeAttribute("aria-busy"));
 }
 
+// A pin a chip is currently hiding is nobody's "nearest" or "the one the room
+// card is about" in any useful sense — the filters that would hide it are
+// switched back on, visibly, so a fly-to never lands on an empty-looking spot.
+// Shared by the nearest button and the room card's own open button, which can
+// name a pin the "unknown" chip has since been switched off (CONTRACT.md v38).
+function ensureVisible(f) {
+  let refilter = false;
+  if (!visible.has(f.status)) { visible.add(f.status); refilter = true; }
+  if (playOnly && !f.play) { playOnly = false; refilter = true; }
+  if (refilter) { renderChips(); refreshPins(); }
+}
+
 document.getElementById("locate").addEventListener("click", (e) => {
   if (!hasGeo()) { toast(t("toastNoGeo")); return; }
   locateFrom(e.currentTarget).then(
     (coords) => {
       const at = [coords.longitude, coords.latitude];
       showYou(at);
+      noteFix(coords.latitude, coords.longitude);
+      evaluateRoomCard();   // locate never opens a popup of its own
       map.flyTo({ center: at, zoom: Math.max(map.getZoom(), 14) });
     },
     () => toast(t("toastGeoFail")),
@@ -1049,17 +1092,15 @@ document.getElementById("nearest").addEventListener("click", (e) => {
     (coords) => {
       const { latitude: lat, longitude: lon } = coords;
       showYou([lon, lat]);
+      noteFix(lat, lon);
       const hit = nearestUsable(allFeatures, lat, lon, mode, wheelchairOnly);
-      if (!hit) { toast(t("toastNearestNone")); return; }
+      if (!hit) {
+        toast(t("toastNearestNone"));
+        evaluateRoomCard();   // no popup is opening — this fix's own turn to ask
+        return;
+      }
       const f = hit.feature;
-      // The search runs over every pin, not just the shown ones: a chip left
-      // switched off should not change which table is nearest. It would fly the
-      // view to an empty spot, though, so the filters that would hide the
-      // winner are switched back on — visibly, in the chip strip.
-      let refilter = false;
-      if (!visible.has(f.status)) { visible.add(f.status); refilter = true; }
-      if (playOnly && !f.play) { playOnly = false; refilter = true; }
-      if (refilter) { renderChips(); refreshPins(); }
+      ensureVisible(f);
       openPopup(f);
       // flyTo stops the pan openPopup just started; once the flight lands,
       // fit the card to the view it landed in.
@@ -1071,10 +1112,145 @@ document.getElementById("nearest").addEventListener("click", (e) => {
         name: f.name
           || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed"),
       }));
+      // The room card follows this popup, not this fix, the way locate's own
+      // fix would if a popup were not about to cover it: openPopup above hid
+      // it, and closing this one (whenever that happens — this same object,
+      // another pin, or the reader taps away) re-evaluates it while the fix
+      // is still fresh (evaluateRoomCard, via onPopupClosed below).
     },
     () => toast(t("toastGeoFail")),
   );
 });
+
+// ---- The "which room?" card: ask, at the moment it might get answered ----
+// Never a permission prompt of its own: it only ever follows a fix the reader
+// already has for another reason, the locate button or the nearest-table one
+// (the two call sites above) — the only places this page ever asks the phone
+// where it is. The rule is nearestUnknownRoom (web/datasource.js), pure and
+// tested; this is only the card's own bookkeeping (CONTRACT.md v38).
+const CARD_DISMISSED_KEY = "papamap-card-dismissed";
+const CARD_DISMISSED_MAX = 200;   // bounded: years of dismissals must not grow this file forever
+
+function readCardDismissed() {
+  try {
+    const list = JSON.parse(localStorage.getItem(CARD_DISMISSED_KEY) || "[]");
+    return Array.isArray(list) ? list : [];
+  } catch { return []; }
+}
+function rememberCardDismissed(osmUrl) {
+  try {
+    const list = readCardDismissed().filter((u) => u !== osmUrl);
+    list.push(osmUrl);
+    while (list.length > CARD_DISMISSED_MAX) list.shift();
+    localStorage.setItem(CARD_DISMISSED_KEY, JSON.stringify(list));
+  } catch { /* blocked storage: the card may ask again this session, no worse than never asking */ }
+}
+
+const roomCardEl = document.getElementById("room-card");
+const roomCardText = document.getElementById("room-card-text");
+let roomCardFeature = null;
+
+// The most recent fix from locate() or nearest(), whether or not it ended up
+// showing a card — nearest almost always opens a popup of its own first, and
+// the card's turn comes only once that popup closes (below). Kept apart from
+// whatever the card is doing right now, so a popup that closes minutes later
+// is not mistaken for a fresh "I am here" (isFixFresh, web/datasource.js).
+let lastFix = null;   // { lat, lon, at }
+
+function noteFix(lat, lon) {
+  lastFix = { lat, lon, at: Date.now() };
+}
+
+function hideRoomCard() {
+  roomCardFeature = null;
+  roomCardEl.hidden = true;
+}
+
+function renderRoomCardText() {
+  if (!roomCardFeature) return;
+  // The card repeats the popup's own question rather than a second
+  // translation of it, so the two can never read differently. Re-run on a
+  // language change (applyI18n) so a card left standing does not go stale in
+  // the old language.
+  roomCardText.textContent = `${t(roomCardFeature.name ? "roomCardNamed" : "roomCardUnnamed",
+    { name: roomCardFeature.name })} ${t("askRoom")}`;
+}
+
+// The single source of truth for whether the card is showing, and for what —
+// recomputed from lastFix every time rather than patched incrementally, so
+// "should it be up right now" never has to be asked two different ways.
+// Called after every fix (locate, or nearest when no popup is about to cover
+// it) and, deferred, after every popup close (onPopupClosed) — which is what
+// makes "the reader closed the popup without answering" bring the card back
+// on its own, and "answered" not: answer() sets location_raw on the very
+// object in allFeatures the moment OSM confirms it, so nearestUnknownRoom
+// stops finding it without this function needing to know why.
+function evaluateRoomCard() {
+  if (!dataReady || popup?.isOpen() || !lastFix || !isFixFresh(lastFix.at)) {
+    hideRoomCard();
+    return;
+  }
+  const hit = nearestUnknownRoom(allFeatures, lastFix.lat, lastFix.lon);
+  if (!hit || readCardDismissed().includes(hit.feature.osm_url)) { hideRoomCard(); return; }
+  roomCardFeature = hit.feature;
+  renderRoomCardText();
+  roomCardEl.hidden = false;
+}
+
+document.getElementById("room-card-open").addEventListener("click", () => {
+  if (!roomCardFeature) return;
+  const f = roomCardFeature;
+  ensureVisible(f);   // the "unknown" chip may since have been switched off
+  map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+  openPopup(f);   // also hides the card
+  map.once("moveend", panPopupIntoView);
+});
+document.getElementById("room-card-close").addEventListener("click", () => {
+  if (roomCardFeature) rememberCardDismissed(roomCardFeature.osm_url);
+  hideRoomCard();
+});
+// A pan far enough that the card no longer names anywhere near the reader —
+// well past the 75 m the rule itself asks within, so a small pan while
+// reading it does not snatch it away. Judged against the fix, not the pin:
+// the card is still "about" that fix even while it is between popups.
+const ROOM_CARD_FORGET_KM = 0.3;
+map.on("moveend", () => {
+  if (!roomCardFeature || !lastFix) return;
+  const c = map.getCenter();
+  if (haversineKm(lastFix.lat, lastFix.lon, c.lat, c.lng) > ROOM_CARD_FORGET_KM) hideRoomCard();
+});
+
+// Every popup's "close" (openPopup/openPlacePopup) reports itself here —
+// clicking away, clicking the ×, this file's own remove()-then-replace, or
+// applyDataset finding the object gone. `popup`/`popupObj` used to go stale
+// on the first two of those (nobody nulled them), which is why the card could
+// never appear a second time in a session before this fix.
+//
+// suppressCardOnClose is for the one close that must NOT bring the card back:
+// a mode or language switch tearing the popup down because its *text* no
+// longer applies, not because the reader dismissed anything. Every other
+// close — including this file's own "remove the old one, open a new one" in
+// openPopup/openPlacePopup/reopen() — re-evaluates, deferred to a microtask so
+// a same-tick reopen has already reassigned `popup` by the time it runs
+// (evaluateRoomCard's popup?.isOpen() then correctly sees the new one and
+// stays quiet).
+let suppressCardOnClose = false;
+
+function onPopupClosed(closedPopup) {
+  if (popup === closedPopup) { popup = null; popupObj = null; }
+  if (suppressCardOnClose) { suppressCardOnClose = false; return; }
+  queueMicrotask(evaluateRoomCard);
+}
+
+// Used where the popup is torn down as a side effect of something else
+// (applyMode, the language switch) rather than the reader's own doing.
+function closePopupSilently() {
+  if (!popup) return;
+  suppressCardOnClose = true;
+  popup.remove();
+  popup = null;
+  popupObj = null;
+}
 
 // ---- Edit confirmation: re-read the object from OSM after a MapComplete click ----
 // The nightly build is the only way an answer reaches the map, so a reader who
@@ -1271,11 +1447,58 @@ function dropEditNote() {
   popup?.getElement()?.querySelector(".edit-note")?.remove();
 }
 
+// ---- Share: the same https link the app's own deep link opens ----
+// A plain URL, not a MapComplete or OSM one: it opens for anyone, the app
+// installed or not, and openPin (below) is the one parser that reads it back,
+// on the website's own load and on papamap://table?osm=… alike.
+async function sharePin(kind, obj) {
+  const url = shareUrl(obj.osm_url);
+  const title = obj.name || t(obj.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
+  // "a changing table on PapaMap" is false for a play place OSM records no
+  // table on — shareText is for a real pin, or a play place this reader has
+  // just answered "yes" to in this session (answer() sets obj.changing_table
+  // the moment OSM confirms it, same as the popup's own tag row). Everything
+  // else — the open question, or a recorded "no" — gets sharePlaceText, which
+  // names the place, not a table it does not have.
+  const hasTable = kind === "table" || obj.changing_table === "yes";
+  const text = t(hasTable ? "shareText" : "sharePlaceText", { name: title });
+  if (navigator.share) {
+    try { await navigator.share({ title, text, url }); return; }
+    // AbortError: the reader closed the OS share sheet without picking
+    // anything — that is not a failure worth a toast, only a change of mind.
+    catch (err) { if (err?.name === "AbortError") return; }
+  }
+  await copyShareLink(url);
+}
+
+// Three ways to get the link into the reader's hands, tried in order: the
+// modern clipboard API, then the one every WebView has carried for years (a
+// hidden textarea and the browser's own copy command), and if neither is
+// there at all, the link itself in the toast — read it, at least.
+async function copyShareLink(url) {
+  try { await navigator.clipboard.writeText(url); toast(t("shareCopied")); return; }
+  catch { /* try the older way below */ }
+  try {
+    const el = document.createElement("textarea");
+    el.value = url;
+    el.style.position = "fixed";
+    el.style.opacity = "0";
+    document.body.append(el);
+    el.select();
+    const ok = document.execCommand("copy");
+    el.remove();
+    if (!ok) throw new Error("execCommand copy failed");
+    toast(t("shareCopied"));
+  } catch { toast(t("shareFailed")); }
+}
+
 // The popup markup is rebuilt on every open, so the hook listens once at the
 // document; the button itself keeps its plain target=_blank navigation.
 document.addEventListener("click", (e) => {
   if (popupObj && e.target.closest?.("a[data-edit-check]"))
     startEditCheck(popupObj.kind, popupObj.obj);
+  if (popupObj && e.target.closest?.("button[data-share]"))
+    sharePin(popupObj.kind, popupObj.obj);
   const room = e.target.closest?.("button.ask-btn");
   if (room && popupObj) answer(popupObj.kind, popupObj.obj, room.dataset.room);
   const more = e.target.closest?.("button.ask-more");
@@ -1506,7 +1729,7 @@ function applyMode() {
   // layer is created with pinColorExpression(mode) anyway, so a mode chosen
   // that early is already painted correctly when the style arrives.
   if (styleReady) map.setPaintProperty(SRC, "circle-color", pinColorExpression(mode));
-  if (popup) { popup.remove(); popup = null; }   // its text belonged to the old reading
+  closePopupSilently();   // its text belonged to the old reading; not the reader's own close
   renderStats(lastStats);
   renderChips();
   positionZoomCtrl();   // the sentence can wrap to a different height
@@ -1540,7 +1763,7 @@ langSelect.addEventListener("change", () => {
     url.searchParams.delete("lang");
     history.replaceState(null, "", url);
   }
-  if (popup) { popup.remove(); popup = null; }
+  closePopupSilently();   // same reason as applyMode: not the reader's own close
   applyI18n();
   renderStats(lastStats);
   renderChips();
@@ -1671,16 +1894,42 @@ async function completeLogin(href) {
   if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line names the login
 }
 
-// A pin by its OSM URL — the widget's and the shortcut's deep link
-// (papamap://table?osm=…). Before the data is here the request waits.
+// A pin (or a play place) by its OSM URL — the widget's and the shortcut's
+// deep link (papamap://table?osm=…), and now also this page's own ?osm=
+// share link (CONTRACT.md v38): shareUrl builds one from the same identifier,
+// so this is the one parser both read. Before the data is here the request
+// waits. A URL neither array has any more (deleted, or from a stranger's
+// bookmark) flies nowhere and says so once, rather than doing nothing —
+// which the widget and the shortcut inherit for free, not only the share link.
 let pendingPin = null;
 function openPin(osmUrl) {
   if (!osmUrl) return;
   if (!dataReady) { pendingPin = osmUrl; return; }
   const f = allFeatures.find((x) => x.osm_url === osmUrl);
-  if (!f) return;
-  map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
-  openPopup(f);
+  if (f) {
+    map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+    openPopup(f);
+    stripOsmParam();
+    return;
+  }
+  const p = allPlaces.find((x) => x.osm_url === osmUrl);
+  if (p) {
+    map.jumpTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
+    openPlacePopup(p);
+    stripOsmParam();
+    return;
+  }
+  toast(t("sharePinGone"));
+  stripOsmParam();
+}
+
+// A page installed to the home screen from a shared link, or simply left
+// open in a tab, must not reopen the same pin on every future launch —
+// ?lang= and ?mode= already strip themselves once honoured, and ?osm= now
+// does the same, once openPin above has actually resolved it.
+function stripOsmParam() {
+  const stripped = withoutOsmParam(location.href);
+  if (stripped) history.replaceState(null, "", stripped);
 }
 
 // The five assignments a set of four files turns into on screen — boot()'s
@@ -1749,6 +1998,11 @@ async function boot() {
   applyI18n();  // markup default is German — swap before first paint if not
   syncModeButtons();  // ...and the markup default is papa
   if (isNative()) bootNative();
+  // A shared https://papamap.de/?osm=… link (CONTRACT.md v38): the data is
+  // not here yet, so this only sets pendingPin, resolved below once it is —
+  // the same queue the app's own deep link uses, so the two never race each
+  // other for the one popup that can be open.
+  openPin(parseShareOsm(location.search));
   const loaded = await loadDataset([
     "data/changing_tables.geojson",
     "data/play_places.geojson",
@@ -1774,13 +2028,16 @@ async function boot() {
   // app's own version of this toast instead, once the background refresh has
   // had its say.
   if (!isNative() && fromStore && allFeatures.length) toast(t("toastOffline"));
+  // Whatever queued a pin above the data — the app's own deep link (bootNative,
+  // an appUrlOpen already fired) or this load's own ?osm= — opens it now that
+  // there is a dataset to look it up in. jumpTo overrides fitHome's view.
+  if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
   // A return from OSM's consent screen lands here with ?code= and ?state=.
   await completeLogin(location.href);
   if (isNative()) {
     // applyDataset above already shared the tables with the widget and the
     // shortcut; the settings are boot's own to hand over.
     shareSettings({ mode, lang });
-    if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
     watchRefresh(loaded);   // runs on; boot does not wait for it
   }
   // A phone that dropped the tab while the reader was in MapComplete comes

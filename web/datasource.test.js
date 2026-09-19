@@ -10,7 +10,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
-         EDIT_CHECK_DELAYS } from "./datasource.js";
+         EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
+         nearestUnknownRoom, isFixFresh } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -545,6 +546,93 @@ test("geoUri carries the point and escapes the label", () => {
   // Six decimals is ~11 cm — plenty for a doorway, and it never emits
   // exponent notation the way a raw float can.
   assert.ok(!geoUri(0.0000001, 0.0000001).includes("e-"));
+});
+
+// ---- Share a pin ----
+
+test("shareUrl builds the canonical host's link, always, whatever page built it", () => {
+  const url = "https://www.openstreetmap.org/node/123";
+  assert.equal(shareUrl(url), `https://papamap.de/?osm=${encodeURIComponent(url)}`);
+  // Round-trips through the very parser that reads it back on load.
+  assert.equal(parseShareOsm(new URL(shareUrl(url)).search), url);
+});
+
+test("parseShareOsm reads ?osm= and nothing else", () => {
+  assert.equal(parseShareOsm("?osm=https%3A%2F%2Fwww.openstreetmap.org%2Fnode%2F1"),
+    "https://www.openstreetmap.org/node/1");
+  assert.equal(parseShareOsm("?lang=en"), null);
+  assert.equal(parseShareOsm(""), null);
+  // ?lang= and ?osm= coexist, as the feature requires.
+  assert.equal(parseShareOsm("?lang=en&osm=https%3A%2F%2Fwww.openstreetmap.org%2Fnode%2F1"),
+    "https://www.openstreetmap.org/node/1");
+});
+
+test("withoutOsmParam strips ?osm= once resolved, keeping every other param", () => {
+  assert.equal(
+    withoutOsmParam("https://papamap.de/?osm=https%3A%2F%2Fwww.openstreetmap.org%2Fnode%2F1"),
+    "https://papamap.de/");
+  // Other params survive, in place, whichever side of ?osm= they sat.
+  assert.equal(
+    withoutOsmParam("https://papamap.de/?lang=en&osm=https%3A%2F%2Fwww.openstreetmap.org%2Fnode%2F1&mode=mama"),
+    "https://papamap.de/?lang=en&mode=mama");
+  // Nothing to strip: null, not the URL echoed back, so the caller can skip
+  // a no-op history.replaceState.
+  assert.equal(withoutOsmParam("https://papamap.de/?lang=en"), null);
+  assert.equal(withoutOsmParam("https://papamap.de/"), null);
+});
+
+// ---- The "which room?" card ----
+
+test("nearestUnknownRoom: only status unknown with no recorded room, within 75 m", () => {
+  const rows = [
+    // In range, but somebody already named its room: not this reader's to ask.
+    { id: "answered", status: "unknown", location_raw: "female_toilet", lat: 53.5503, lon: 9.9921 },
+    // In range and open — the one the card should surface.
+    { id: "open-near", status: "unknown", location_raw: null, lat: 53.5504, lon: 9.9921 },
+    // Open, but a green pin: nothing to ask.
+    { id: "green", status: "accessible", location_raw: null, lat: 53.5503, lon: 9.9920 },
+    // Open and unknown, but 200+ m away — outside ROOM_CARD_RADIUS_KM.
+    { id: "far", status: "unknown", location_raw: null, lat: 53.552, lon: 9.995 },
+  ];
+  const hit = nearestUnknownRoom(rows, 53.5503, 9.9920);
+  assert.equal(hit.feature.id, "open-near");
+  assert.ok(hit.km <= ROOM_CARD_RADIUS_KM);
+});
+
+test("nearestUnknownRoom degrades instead of throwing, and ignores an empty-string room", () => {
+  assert.equal(nearestUnknownRoom([], 53.55, 9.99), null);
+  assert.equal(nearestUnknownRoom([{ status: "unknown", location_raw: null, lat: NaN, lon: 9.99 }],
+    53.55, 9.99), null);
+  assert.equal(nearestUnknownRoom([{ status: "unknown", location_raw: null, lat: 53.55, lon: 9.99 }],
+    NaN, 9.99), null);
+  // A dataset from before location_raw existed reads as unrecorded, not as
+  // "somebody answered with nothing" — undefined must ask exactly like null.
+  const hit = nearestUnknownRoom(
+    [{ status: "unknown", lat: 53.5503, lon: 9.9920 }], 53.5503, 9.9920);
+  assert.ok(hit);
+});
+
+test("nearestUnknownRoom respects nothing else: it is not pinFeatures", () => {
+  // A keyed (central-key-locked) table is hidden from the map by default, but
+  // the card asks about the place, not the view — the rule takes every
+  // loaded feature, filters never apply here.
+  const hit = nearestUnknownRoom(
+    [{ status: "unknown", location_raw: null, key: "eurokey", lat: 53.5503, lon: 9.9920 }],
+    53.5503, 9.9920);
+  assert.ok(hit);
+});
+
+test("isFixFresh: good for 5 minutes, stale a moment past it", () => {
+  const now = 1_000_000_000;
+  assert.equal(isFixFresh(now, now), true);   // this instant
+  assert.equal(isFixFresh(now - 4 * 60 * 1000, now), true);
+  assert.equal(isFixFresh(now - 5 * 60 * 1000, now), true);   // exactly the edge
+  assert.equal(isFixFresh(now - 5 * 60 * 1000 - 1, now), false);
+  assert.equal(isFixFresh(now - 6 * 60 * 1000, now), false);
+  // A malformed or missing timestamp reads as stale, not as fresh-by-default.
+  assert.equal(isFixFresh(NaN, now), false);
+  assert.equal(isFixFresh(undefined, now), false);
+  assert.equal(isFixFresh(null, now), false);
 });
 
 // ---- Edit confirmation ----

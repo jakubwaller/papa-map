@@ -229,6 +229,43 @@ off should not change which table is *nearest* — but a filter that would hide
 the winner is switched back on, visibly, so the map never flies to an empty
 spot.
 
+### The room card
+
+Standing next to a table nobody has recorded a room for is the one moment this
+site most wants to reach a reader, and asking permission for that cold — a
+location prompt with no button pressed — is not this feature's to spend. So it
+never asks the phone anything on its own: it only ever looks at a fix the
+reader already produced by tapping locate or nearest, the only two places the
+page ever calls for one. The rule: the nearest `changing_tables.geojson` pin
+whose room is unrecorded (`status === "unknown"`, no `location_raw`) within
+75 m of that fix — over the whole loaded dataset, not what the chips currently
+show, because the question is about the place, not the view.
+
+Locate never opens anything, so its fix gets the card's turn at once. Nearest
+almost always opens a popup of its own first, so the card waits — a fix stays
+usable for it for five minutes, popups and all — and gets its turn once that
+popup **closes**: click the map, tap its ×, tap a different pin, or answer it.
+Closing *without* answering brings the card back, naming the same pin, because
+nothing about the object has changed; answering it does not, because the room
+it just learned (`location_raw`, set in memory the moment OSM confirms it) is
+exactly what the rule excludes. A card left standing survives a mode or
+language switch's own popup teardown without popping back up a moment later —
+that close is not the reader's doing — and re-reads itself in the new
+language rather than going stale.
+
+When it rises, a small card above the attribution line shows the place's name,
+the popup's own room question repeated rather than reworded, one button that
+opens that pin's popup (making the "unknown" chip visible again first, if it
+had been switched off — the same courtesy the nearest button already pays its
+own popup) and a close ×. It is a card, not a dialog: no backdrop, the map
+still pans under it.
+
+Closing it remembers the pin (`localStorage`, `papamap-card-dismissed`, a
+capped list) so it does not ask about that table again on that device. At most
+one card at a time, and it steps aside for anything that outranks it — any
+popup opening, or the reader panning more than 300 m from the fix that raised
+it.
+
 ## Offline
 
 `web/sw.js` is a service worker that makes the map work with no signal, which is
@@ -299,10 +336,14 @@ swallowed — and that is all that changes: the pin keeps its colour until the
 nightly build, because classification lives in the pipeline and nowhere else
 (`CONTRACT.md` v26). A pin that already carries a room in words the classifier
 does not read is not asked — that is somebody's tag, and MapComplete shows it
-before letting anyone write over it. "Changing table: yes" is never printed
-either, on this line or the play-place card's: every pin and card here has one,
-and the line would say nothing; `limited` still prints, since it is real
-information (`CONTRACT.md` v37).
+before letting anyone write over it. "Changing table: yes" is never printed on
+this line: every pin here has one, and the word would say nothing beyond the
+room that already says so. The play-place card's own table row drops the same
+"yes" only where a room stands in for it — through the site's own two taps a
+room is always written alongside it, so in practice the card never shows it
+either, but the rule is "no room to stand in for it", not "never", and a place
+that only ever gets a bare `changing_table=yes` would see it (`CONTRACT.md`
+v37). `limited` always prints, on both cards, since it is real information.
 
 The popup asks one more thing, on one line: *play area for children?* —
 *indoors*, *outdoors only*, *none*. It is the second question a father standing
@@ -338,6 +379,27 @@ periodically. Its client is registered for `http://127.0.0.1:8000/` and
 is refused. The token is kept in `localStorage` (`papamap-osm-token`,
 `papamap-osm-user`) and named in the Datenschutz; "Abmelden" in the popup
 forgets it here and revokes it at OSM.
+
+### Share a pin
+
+Both popups carry a share button, icon only, in the row the Route button
+already lives in — a labelled one does not fit that row in German on a 12
+mini. It builds a plain `https://papamap.de/?osm=<osm_url>` link from the
+pipeline's own `osm_url`, the identifier the app's own deep link
+(`papamap://table?osm=…`, the widget and the Siri shortcut) already carries,
+so `openPin` is the one place that reads either back — on this page's own load
+and from the app; once it has (found the pin, found the play place, or found
+neither), the `?osm=` param strips itself from the address bar, the way
+`?lang=`/`?mode=` already do, so a shared link saved to the home screen does
+not reopen the same pin on every future launch. The link opens for anyone, the
+app installed or not, in the receiver's own language (a share carries no
+`?lang=`: it is not the sharer's choice to make). `navigator.share` where the
+browser offers it, otherwise a clipboard copy with a toast to confirm it — no
+new Capacitor dependency, since both reach across the app's WebView on their
+own. The share text names the object truthfully: a table pin says so; a play
+place says so only once the reader has answered "yes" to it this session —
+otherwise OSM records no table there at all, and the text says "a play area"
+instead, the same word the play-corner card itself uses.
 
 ## Play corners
 

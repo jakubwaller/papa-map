@@ -187,14 +187,14 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app31" />
+  <link rel="stylesheet" href="style.css?v=app32" />
 
   <!-- Classic and blocking, in the head on purpose: it puts the .in-app class
        on <html> before the first paint when the store app opened this page in
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app31"></script>
+  <script src="in-app.js?v=app32"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -356,9 +356,22 @@
     <button id="route-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
   </dialog>
 
+  <!-- The "which room?" card (CONTRACT.md v38): only shown after a location
+       fix the reader already gave (the locate/nearest button), when it lands
+       near a table nobody has recorded a room for. Not a <dialog> — nothing
+       here needs a backdrop or a focus trap fighting the map — and it never
+       covers the popup: app.js hides it the moment one opens. -->
+  <div id="room-card" class="room-card" hidden>
+    <p id="room-card-text"></p>
+    <div class="room-card-actions">
+      <button type="button" id="room-card-open" class="btn primary" data-i18n="roomCardOpen">Frage beantworten</button>
+      <button type="button" id="room-card-close" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
+    </div>
+  </div>
+
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app31"></script>
+  <script type="module" src="app.js?v=app32"></script>
 </body>
 </html>

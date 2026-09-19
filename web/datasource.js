@@ -415,6 +415,42 @@ export function nearestUsable(features, lat, lon, mode, wheelchairOnly = false) 
   return best;
 }
 
+// ---- The "which room?" card: nearest unanswered table to a fix already had ----
+// Straight-line, like nearestUsable, and over EVERY loaded feature rather than
+// pinFeatures: the question is about the place the reader is standing in front
+// of, not about the view — neither the status chips nor the wheelchair chip
+// should decide whether it gets asked. 75 m is a fix's own accuracy plus a
+// building's width, not a search radius meant to catch a table down the
+// street. Play places are out of scope for v1 (CONTRACT.md v38): folding them
+// in would mean deciding whether the card also files their bare
+// changing_table=yes, a bigger question than this one.
+export const ROOM_CARD_RADIUS_KM = 0.075;
+
+export function nearestUnknownRoom(features, lat, lon) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  let best = null;
+  for (const f of features) {
+    if (f.status !== "unknown" || f.location_raw) continue;
+    if (!Number.isFinite(f.lat) || !Number.isFinite(f.lon)) continue;
+    const km = haversineKm(lat, lon, f.lat, f.lon);
+    if (km > ROOM_CARD_RADIUS_KM) continue;
+    if (best === null || km < best.km) best = { feature: f, km };
+  }
+  return best;
+}
+
+// A fix from locate()/nearest() stays good for the card even when nearest
+// opens a popup first and the card's own turn only comes once that popup
+// closes, minutes later — but not forever: a fix from before the reader
+// walked off is not "here" any more. web/app.js's evaluateRoomCard is the
+// only caller; kept here, pure, so the 5-minute rule has its own test rather
+// than living as inline arithmetic next to a DOM read.
+export const ROOM_CARD_FIX_MAX_AGE_MS = 5 * 60 * 1000;
+
+export function isFixFresh(fixAt, now = Date.now()) {
+  return Number.isFinite(fixAt) && now - fixAt <= ROOM_CARD_FIX_MAX_AGE_MS;
+}
+
 // Metres below a kilometre, and rounded to the nearest ten: a good phone fix
 // is accurate to a handful of metres and a poor one to fifty, so "437 m" would
 // claim a precision the sensor cannot deliver. Returns the i18n key and the
@@ -438,6 +474,44 @@ export function geoUri(lat, lon, label) {
   const at = `${lat.toFixed(6)},${lon.toFixed(6)}`;
   const q = label ? `(${encodeURIComponent(label)})` : "";
   return `geo:${at}?q=${at}${q}`;
+}
+
+// ---- Share a pin: a plain https link that opens for anyone, app or not ----
+// The identifier is the pipeline's own osm_url, verbatim — the same string
+// TableStore.swift's deepLink already puts on papamap://table?osm=… for the
+// widget and the Siri shortcut — so one parser (openPin, web/app.js) serves
+// both: the app's deep link and this web one differ only in scheme. Always
+// the canonical host, never location.origin: a link opened from a dev server
+// or the sandbox must still work for whoever it was sent to. Carries no
+// ?lang=: a shared link is not the sharer's language to choose for someone
+// else, so the receiver's own detection/stored choice wins as it would on any
+// other visit.
+const SHARE_ORIGIN = "https://papamap.de/";
+
+export function shareUrl(osmUrl) {
+  return `${SHARE_ORIGIN}?osm=${encodeURIComponent(osmUrl)}`;
+}
+
+// The other half of the round trip: what app.js reads out of its own
+// location.search on load. A thin wrapper over URLSearchParams, kept here
+// rather than inlined so the pairing with shareUrl above is one glance away
+// and both are covered by the same tests.
+export function parseShareOsm(search) {
+  return new URLSearchParams(search).get("osm");
+}
+
+// Once openPin (web/app.js) has resolved a ?osm= link — found or not — the
+// param is dropped from the address bar with history.replaceState, the way
+// ?lang= and ?mode= already are, so a page installed to the home screen from
+// a shared link does not reopen that same pin on every future launch. Every
+// other param (and the path) survives. Returns null when there was no ?osm=
+// to strip, so the caller can skip the replaceState call entirely rather than
+// writing back an identical URL.
+export function withoutOsmParam(href) {
+  const url = new URL(href);
+  if (!url.searchParams.has("osm")) return null;
+  url.searchParams.delete("osm");
+  return url.toString();
 }
 
 // ---- Edit confirmation: one object re-read from the OSM API ----
