@@ -6,30 +6,30 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance, localAnswered,
-         geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
+         geoUri, webRouteHref, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh } from "./datasource.js?v=app34";
+         isFixFresh } from "./datasource.js?v=app35";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app34";
+         langUrl } from "./i18n.js?v=app35";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app34";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app35";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
 import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
-         changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies } from "./me.js?v=app34";
+         changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies } from "./me.js?v=app35";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app34";
+         formatMB, citiesToMount } from "./native.js?v=app35";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -514,15 +514,28 @@ function wheelchairRows(o) {
 // "&amp;" instead of "&".
 const roomLabel = (raw) => roomLabelKeys(raw).map((p) => (p.key ? t(p.key) : p.raw)).join(", ");
 
-// The Route button, the same one in both popups. Its href is what a tap
-// follows everywhere but the iOS app: a geo: URI on the web and on Android,
-// Apple Maps on iOS. data-route carries the destination for the iOS cascade
-// at the end of this file, which catches the tap instead and asks the phone
-// what it can actually open — an iPhone without Apple Maps answers nothing
-// to maps://, and iOS says so with an alert of its own.
-const routeButton = (lat, lon, name) =>
-  `<a class="btn" href="${esc(directionsUri(lat, lon, name, geoUri(lat, lon, name)))}"` +
-  ` data-route="${esc(`${lat},${lon}`)}" data-route-label="${esc(name)}">${esc(t("popupDirections"))}</a>`;
+// The changing-table line, for a popup (HTML) and for the edit toast (text).
+// The value is OSM's own word and prints as it is — except "no", which every
+// language already has words for (roomNone, the room question's own "there is
+// none"): until app35 a German reader was told "Wickeltisch: no".
+const tableRowHTML = (value) =>
+  value === "no" ? `<b>${esc(t("roomNone"))}</b>` : `${esc(t("popupTable"))}: <b>${esc(value)}</b>`;
+const tableRowText = (value) => (value === "no" ? t("roomNone") : `${t("popupTable")}: ${value}`);
+
+// The Route button, the same one in both popups. On the website its href is
+// chosen by the device (webRouteHref): geo: on Android, Apple Maps' universal
+// link on an iPhone, openstreetmap.org's directions in a new tab on a desktop,
+// where nothing answers geo: at all. In the apps it is directionsUri's — geo:
+// on Android, Apple Maps on iOS — and data-route carries the destination for
+// the iOS cascade at the end of this file, which catches the tap instead and
+// asks the phone what it can actually open — an iPhone without Apple Maps
+// answers nothing to maps://, and iOS says so with an alert of its own.
+function routeButton(lat, lon, name) {
+  const web = isNative() ? null : webRouteHref(lat, lon, name, navigator.userAgent, navigator.maxTouchPoints);
+  const href = web ? web.href : directionsUri(lat, lon, name, geoUri(lat, lon, name));
+  return `<a class="btn" href="${esc(href)}"${web?.external ? ' target="_blank" rel="noopener"' : ""}` +
+    ` data-route="${esc(`${lat},${lon}`)}" data-route-label="${esc(name)}">${esc(t("popupDirections"))}</a>`;
+}
 
 // The share button, in the same row: icon only, not icon-plus-label — the
 // German row (MapComplete's long "Auf MapComplete beantworten", Route, View
@@ -559,7 +572,7 @@ function popupHTML(f) {
   const tableValue = printableTableValue(f.changing_table);
   if (tableValue || f.location_raw) {
     const parts = [];
-    if (tableValue) parts.push(`${esc(t("popupTable"))}: <b>${esc(tableValue)}</b>`);
+    if (tableValue) parts.push(tableRowHTML(tableValue));
     if (f.location_raw) parts.push(`${esc(t("popupRoom"))}: ${esc(roomLabel(f.location_raw))}`);
     rows.push(`<div class="row">${parts.join(" · ")}</div>`);
   }
@@ -691,7 +704,7 @@ function placeHTML(p) {
     // worth being honest about. `limited` (or anything else) always stays.
     const tableValue = p.location_raw ? printableTableValue(p.changing_table) : p.changing_table;
     const parts = [];
-    if (tableValue) parts.push(`${esc(t("popupTable"))}: <b>${esc(tableValue)}</b>`);
+    if (tableValue) parts.push(tableRowHTML(tableValue));
     if (p.location_raw) parts.push(`${esc(t("popupRoom"))}: ${esc(roomLabel(p.location_raw))}`);
     rows.push(`<div class="row">${parts.join(" · ")}</div>`);
   } else
@@ -1432,7 +1445,8 @@ async function pollEdit(gen, last) {
 // anything here to show. Goes through textContent, so no escaping here.
 const tagsLabel = (tags) =>
   printableEditTagLines(tags)
-    .map(([label, value]) => `${t(label)}: ${label === "popupRoom" ? roomLabel(value) : value}`)
+    .map(([label, value]) => label === "popupTable" ? tableRowText(value)
+      : `${t(label)}: ${label === "popupRoom" ? roomLabel(value) : value}`)
     .join(" · ");
 
 const editText = (note) =>
@@ -2498,8 +2512,11 @@ function renderSavedList() {
 const MY_ANSWERS_KEY = "papamap-my-answers";
 // Bumped whenever the cached record's own shape changes (v1 -> v2 added n/
 // radius_m/backfill — CONTRACT.md v39): a record from an older shape is
-// worth less than refetching it correctly, not worth a migration.
-const MY_ANSWERS_CACHE_VERSION = 2;
+// worth less than refetching it correctly, not worth a migration. v3 changed
+// no shape: v2 caches were filled by a rule that skipped every MapComplete
+// changeset (isOwnChangeset, me.js) and had marked that history as scanned,
+// so nothing short of dropping them would ever look at it again.
+const MY_ANSWERS_CACHE_VERSION = 3;
 // "A few pages max per open": on a reader's very first open this is a
 // one-time scan of the newest 500 of their changesets of any kind (the API
 // filters by user, not by tag); once the cache holds anything, the same

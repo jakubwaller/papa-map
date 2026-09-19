@@ -6,7 +6,7 @@ import {
   answeredPercent, areaAnswered, areaPercent,
   buildFeatureGrid, answerArea, answersInArea, totalAnswers,
   sentenceParts, greyNearby, circleBounds,
-  MAPCOMPLETE_THEME, isOwnChangeset, changesetAnswer, extractAnswers,
+  MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, changesetAnswer, extractAnswers,
   mergeAnswers, newestClosedAt, oldestClosedAt,
   EPOCH, changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap,
   SAVED_MAX, isSaved, addSaved, removeSaved, refreshApplies,
@@ -84,6 +84,14 @@ test("isOwnChangeset: PapaMap's own created_by, or MapComplete under this theme"
   assert.equal(isOwnChangeset({ created_by: "MapComplete 0.42.1", theme: MAPCOMPLETE_THEME }), true);
   assert.equal(isOwnChangeset({ created_by: "iD 2.x" }), false);
   assert.equal(isOwnChangeset({ created_by: "MapComplete 0.42.1", theme: "some_other_theme" }), false);
+  // What MapComplete really writes for a theme it loaded by userlayout=: the
+  // URL, not the id. The rule compared the id only and counted none of them.
+  assert.equal(isOwnChangeset({ created_by: "MapComplete 0.62.13", theme: MAPCOMPLETE_THEME_URL }), true);
+  assert.equal(MAPCOMPLETE_THEME_URL,
+    "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json");
+  // Exact, never a substring: somebody else's fork of the theme is not ours.
+  assert.equal(isOwnChangeset({ theme: MAPCOMPLETE_THEME_URL.replace("jakubwaller", "example") }), false);
+  assert.equal(isOwnChangeset({ theme: `${MAPCOMPLETE_THEME_URL}?x=1` }), false);
   assert.equal(isOwnChangeset(null), false);
 });
 
@@ -114,6 +122,16 @@ test("changesetAnswer: changes_count becomes n; a MapComplete session's wider bb
   // The bbox diagonal here is a good few km; half of it, not the 50 m floor.
   assert.ok(answer.radius_m > 50, "radius_m should widen for a spread-out session");
   assert.ok(answer.radius_m <= 5000, "radius_m is capped at 5 km");
+});
+
+test("changesetAnswer: MapComplete's own answer tag is n, ahead of changes_count", () => {
+  // The shape of a real session: four questions answered, one object version.
+  const cs = { id: 47, tags: { created_by: "MapComplete 0.62.13", theme: MAPCOMPLETE_THEME_URL, answer: "4" },
+               closed_at: "t", changes_count: 1, min_lon: 10, max_lon: 10, min_lat: 53.5, max_lat: 53.5 };
+  assert.equal(changesetAnswer(cs).n, 4);
+  // A tag that is not a plain positive count is not trusted; changes_count is next.
+  for (const answer of ["0", "-2", "4.5", "many", "", 4])
+    assert.equal(changesetAnswer({ ...cs, tags: { ...cs.tags, answer }, changes_count: 2 }).n, 2, String(answer));
 });
 
 test("changesetAnswer: a huge bbox is capped at 5 km, never a whole country's worth", () => {

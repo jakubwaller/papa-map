@@ -180,11 +180,16 @@ Three things it deliberately does not do:
   memory, so the search is a haversine loop in the tab and no request leaves the
   browser. That also makes it a true global nearest over every pin in every
   swept country, not the nearest thing in the current viewport.
-- **It does not choose a maps app.** The popup's `Route` button is a `geo:` URI,
-  so the phone opens Apple Maps or Organic Maps or whatever the reader already
-  uses, and no third party learns where they are standing. Only the
-  *destination's* coordinates travel in that link. The openstreetmap.org link
-  stays beside it for desktop browsers, which mostly ignore `geo:`.
+- **It chooses a maps app only where the device will not.** On Android the
+  popup's `Route` button is a `geo:` URI, so the phone opens Organic Maps or
+  whatever the reader already uses. Nothing else answers `geo:` — not a
+  desktop browser, not any browser on an iPhone — and until app35 the button
+  was a dead link there (found in Firefox on a Mac, 19 Sep 2026). So the
+  website picks by device (`webRouteHref`): Apple Maps' universal link on an
+  iPhone or iPad, openstreetmap.org's own directions in a new tab everywhere
+  else, with the destination filled in and the start left to the reader. In
+  every case only the *destination's* coordinates travel in the link, and no
+  third party learns where the reader is standing.
 
   iOS has no `geo:` handler at all, so there the app has to make the choice —
   and it makes it in the reader's favour, in this order (`routePlan` in
@@ -554,17 +559,22 @@ dialog and frames the map on that circle instead. Read `sentenceParts` in
 device: `GET {api}/changesets.json?display_name=<name>`, no login-privileged
 data, nothing a stranger with the same username could not also see. A
 changeset counts as PapaMap's if its tags say so — `created_by: "PapaMap"`
-for this site's own writes, or `theme: "papamap"` for the MapComplete
-hand-off — and never by downloading what it actually changed. **A PapaMap
+for this site's own writes, or, for the MapComplete hand-off, a `theme` tag
+that is this theme's raw URL (what MapComplete writes for a theme loaded by
+`userlayout=`; the bare id `papamap` is accepted too) — and never by
+downloading what it actually changed. Until app35 only the bare id was
+compared, so no MapComplete session was ever counted. **A PapaMap
 changeset edits exactly one object, so its bounding box is a point — a
 MapComplete changeset is not.** MapComplete reuses one changeset across a
 whole theme session, so one changeset can hold several answers (the room
 question and the play question on the same table, or several tables in one
-sitting), spread over its own wider bbox. The changeset's own
-`changes_count` — how many edits it holds — is kept as each cached answer's
-`n`, and all of a changeset's `n` answers are attributed together to the
+sitting), spread over its own wider bbox. MapComplete's own
+`answer` tag — how many questions the session answered — is kept as each
+cached answer's `n` (the API's `changes_count` where the tag is missing; it
+counts object versions and is the smaller number: 18 against 42 answers on
+14 real sessions), and all of a changeset's `n` answers are attributed together to the
 single nearest loaded feature within `max(50 m, half the bbox's own
-diagonal)`, capped at 5 km. `changes_count` can include the theme's other
+diagonal)`, capped at 5 km. The count can include the theme's other
 questions too, not only the room this project asks about — the total is
 still called "Antworten" (answers) in German, honestly, since every one of
 those changes is an answer to one of the theme's own questions, even where

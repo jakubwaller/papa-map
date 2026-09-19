@@ -480,14 +480,37 @@ export function formatDistance(km) {
 }
 
 // A geo: URI hands the coordinates to whichever map app the reader already has
-// — Apple Maps on an iPhone, Google Maps or Organic Maps or OsmAnd on Android
-// — instead of this site picking one for them and telling a third party where
-// they are standing. Desktop browsers mostly ignore it, which is why the popup
-// keeps the openstreetmap.org link beside it.
+// — Google Maps or Organic Maps or OsmAnd on Android — instead of this site
+// picking one for them. Only Android answers it: iOS has no geo: handler in
+// any browser, and neither has a desktop, so there the link did nothing at
+// all (webRouteHref, below).
 export function geoUri(lat, lon, label) {
   const at = `${lat.toFixed(6)},${lon.toFixed(6)}`;
   const q = label ? `(${encodeURIComponent(label)})` : "";
   return `geo:${at}?q=${at}${q}`;
+}
+
+// What the Route button opens on the website, by the device reading it. The
+// button was a geo: URI for everyone until app35, and a click on it in
+// Firefox on a Mac — or in Safari on an iPhone — was a click on nothing.
+//   Android: geo:, the reader's own choice of app, as before.
+//   iPhone / iPad: maps.apple.com, a universal link — Apple Maps where it is
+//     installed, the same route in the browser where it was deleted. (An
+//     iPad asking for the desktop site says "Macintosh"; the touch points
+//     are what tell it from a Mac.)
+//   Everything else: openstreetmap.org's own directions with the destination
+//     filled in (`to=`, read by its initializeFromParams). The reader types
+//     where they start; nobody is told where they are standing.
+// `external` says the href is a web page and wants a tab of its own. The iOS
+// and Android *apps* never come here (native.js, directionsUri).
+export function webRouteHref(lat, lon, label, ua = "", touchPoints = 0) {
+  const at = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+  if (/Android/i.test(ua)) return { href: geoUri(lat, lon, label), external: false };
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1)) {
+    const q = label ? `&q=${encodeURIComponent(label)}` : "";
+    return { href: `https://maps.apple.com/?daddr=${at}${q}`, external: false };
+  }
+  return { href: `https://www.openstreetmap.org/directions?to=${encodeURIComponent(at)}`, external: true };
 }
 
 // ---- Share a pin: a plain https link that opens for anyone, app or not ----

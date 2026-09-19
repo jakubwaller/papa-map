@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app34";
-import { localAnswered, haversineKm } from "./datasource.js?v=app34";
+import { CREATED_BY } from "./osm.js?v=app35";
+import { localAnswered, haversineKm } from "./datasource.js?v=app35";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -198,17 +198,24 @@ export function circleBounds(lat, lon, km) {
 }
 
 // ---- "Yours": OSM changesets this reader made through PapaMap ----
-// MapComplete tags its own changesets `theme: "papamap"` (theme/papamap.theme.json's
-// own id) rather than PapaMap's own `created_by` — the hand-off writes under
-// MapComplete's name, not this site's — but the theme id is exactly as
-// reliable a marker, so both are counted as "yours". Nothing else is: a
-// changeset a reader made with iD or StreetComplete on an unrelated object is
-// not this project's to count, and is not identifiable from its tags as one
-// of ours anyway.
+// MapComplete writes under its own `created_by`, not this site's, and marks
+// the changeset with the theme it ran instead. For a theme it loads from a
+// URL — which is how every hand-off from this site opens it (`userlayout=`,
+// PAPAMAP_THEME in datasource.js) — the `theme` tag is **that URL**, not the
+// id inside the file. Until app35 this compared against the bare id only, so
+// not one MapComplete session was ever counted: a reader with 3 taps on this
+// site and 14 MapComplete sessions was told "3" (build 24, 2026-09-19). The
+// bare id stays accepted for the day MapComplete lists the theme itself.
+// Nothing else is counted: a changeset a reader made with iD or
+// StreetComplete on an unrelated object is not this project's to count, and
+// is not identifiable from its tags as one of ours anyway.
 export const MAPCOMPLETE_THEME = "papamap";
+export const MAPCOMPLETE_THEME_URL =
+  "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json";
 
 export function isOwnChangeset(tags) {
-  return !!tags && (tags.created_by === CREATED_BY || tags.theme === MAPCOMPLETE_THEME);
+  return !!tags && (tags.created_by === CREATED_BY ||
+    tags.theme === MAPCOMPLETE_THEME || tags.theme === MAPCOMPLETE_THEME_URL);
 }
 
 // A PapaMap changeset edits exactly one object, so its bounding box is — bar
@@ -216,21 +223,26 @@ export function isOwnChangeset(tags) {
 // shape**: MapComplete reuses one changeset across a whole theme session, so
 // one changeset can hold several answers (the room question and the play
 // question on one table, or several tables visited in one sitting) spread
-// over its own bbox, not a point. `changes_count` — the API's own count of
-// edits in the changeset — is how many of those there are; `n` here is that
-// count, defaulting to 1 for a changeset that lacks it (this site's own
-// writes always are 1; MapComplete's own theme-session changesets are the
-// only source that is ever more). No changeset's contents are ever
-// downloaded to learn any of this — bbox and changes_count are both already
-// on the list the reader's changesets.json call returns. A changeset with
-// no bbox at all (opened, then closed with nothing written — a dropped
-// connection mid-write) is not an answer and is dropped rather than counted
-// with a fabricated position.
+// over its own bbox, not a point. MapComplete counts them itself, in the
+// changeset's `answer` tag, and that is `n` where it is there. The API's
+// `changes_count` is the fallback and is the smaller number: it counts
+// object versions, and two questions answered on one table are one version
+// (measured on 14 real sessions: 42 answers, 18 changes). `n` defaults to 1
+// for a changeset that carries neither (this site's own writes always are
+// 1). No changeset's contents are ever downloaded to learn any of this —
+// tags, bbox and changes_count are all already on the list the reader's
+// changesets.json call returns. A changeset with no bbox at all (opened,
+// then closed with nothing written — a dropped connection mid-write) is not
+// an answer and is dropped rather than counted with a fabricated position.
+const positiveInt = (n) => (Number.isFinite(n) && n > 0 ? Math.round(n) : null);
+// A tag is always a string; changes_count is a number or it is not trusted.
+const tagCount = (v) => (typeof v === "string" && /^\d+$/.test(v) ? positiveInt(Number(v)) : null);
+
 export function changesetAnswer(cs) {
   if (!cs || !isOwnChangeset(cs.tags)) return null;
   const { min_lon, min_lat, max_lon, max_lat } = cs;
   if (![min_lon, min_lat, max_lon, max_lat].every(Number.isFinite)) return null;
-  const n = Number.isFinite(cs.changes_count) && cs.changes_count > 0 ? Math.round(cs.changes_count) : 1;
+  const n = tagCount(cs.tags.answer) ?? positiveInt(cs.changes_count) ?? 1;
   // Area attribution's own search radius (answerArea, above): a point
   // changeset needs only the 50 m floor, a MapComplete session's wider bbox
   // needs enough to reach every object it touched — half the bbox's own

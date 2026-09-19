@@ -1,5 +1,31 @@
 # papa-map — build contract (v0)
 
+> **v41 amendment (19 Sep 2026, three findings from TestFlight build 24): no
+> shape change.** **Corrects v39 below** on which changesets count as the
+> reader's own. v39 says a MapComplete hand-off is marked `theme: "papamap"`;
+> it is not. MapComplete writes the theme's **raw URL** into `theme` for a
+> theme loaded by `userlayout=`, which is how every hand-off from this site
+> opens it, so v39's rule never matched one MapComplete changeset (a reader
+> with 3 answers on this site and 14 MapComplete sessions was shown "3").
+> `isOwnChangeset` (`web/me.js`) now accepts `created_by: "PapaMap"`, the raw
+> theme URL (`MAPCOMPLETE_THEME_URL`) and, still, the bare id. A cached
+> answer's `n` is MapComplete's own `answer` tag where the changeset has one,
+> `changes_count` otherwise, 1 when neither is usable: `changes_count` counts
+> object versions, and two questions answered on one table are one version
+> (14 real sessions: 42 answers, 18 changes). The device cache goes to
+> version 3 with no change of shape, because v2 caches had marked the skipped
+> history as scanned. **Corrects the Route button on the website (v36 below calls it
+> "unchanged on every platform"):** a `geo:`
+> URI is answered by Android only, so everywhere else the button was a dead
+> link. `webRouteHref` (`web/datasource.js`) picks by device: `geo:` on
+> Android, `https://maps.apple.com/?daddr=…` on iPhone and iPad,
+> `https://www.openstreetmap.org/directions?to=…` in a new tab elsewhere; the
+> apps keep `directionsUri` and the iOS cascade. Both Datenschutz pages say
+> so. **Display:** `changing_table=no` prints as `roomNone` ("Kein
+> Wickeltisch") in the play-place card and the edit confirmation, not as
+> "Wickeltisch: no"; any other value still prints verbatim. Shell pin `app34`
+> → `app35`.
+>
 > **v40 amendment (19 Sep 2026, "Mein PapaMap" scores exactly the area it
 > names): no shape change.** **Corrects v39 below**, whose own text says the
 > count runs "by `f.area` membership in the row's own area keys:
