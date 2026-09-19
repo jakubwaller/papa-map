@@ -6,7 +6,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
-         pinColorExpression, momCounts, usableStatuses, haversineKm,
+         pinColorExpression, momCounts, localAnswered, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
@@ -467,6 +467,16 @@ test("momCounts adds the two rooms and keeps the unrecorded ones apart", () => {
   assert.deepEqual(momCounts({}), { good: 0, maybe: 0 });
   assert.deepEqual(momCounts(), { good: 0, maybe: 0 });
   assert.deepEqual(momCounts({ accessible: 4 }), { good: 4, maybe: 0 });
+});
+
+// statsLocal (renderStats, web/app.js) and "Mein PapaMap"'s percentage
+// (web/me.js's answeredPercent) both call this, so the two can never read
+// the local block two different ways — see CONTRACT.md v39.
+test("localAnswered: tables partitions into known and unknown, the pipeline's own split (v24)", () => {
+  assert.deepEqual(localAnswered({ ct_yes: 25, ct_limited: 2, accessible: 10, female_only: 3, unknown: 14 }),
+    { tables: 27, unknown: 14, known: 13 });
+  assert.deepEqual(localAnswered({}), { tables: 0, unknown: 0, known: 0 });
+  assert.deepEqual(localAnswered(undefined), { tables: 0, unknown: 0, known: 0 });
 });
 
 // ---- Nearest usable table ----

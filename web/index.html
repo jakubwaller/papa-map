@@ -187,14 +187,14 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app32" />
+  <link rel="stylesheet" href="style.css?v=app33" />
 
   <!-- Classic and blocking, in the head on purpose: it puts the .in-app class
        on <html> before the first paint when the store app opened this page in
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app32"></script>
+  <script src="in-app.js?v=app33"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -213,6 +213,16 @@
     <button id="nearest" type="button" aria-label="Nächsten nutzbaren Wickeltisch finden" title="Nächsten nutzbaren Wickeltisch finden" data-i18n-aria="ariaNearest">
       <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M21.5 2.5L2.8 9.6a.6.6 0 000 1.1l7.6 3 3 7.6a.6.6 0 001.1 0l7.1-18.7a.6.6 0 00-.1-.1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <!-- Mein PapaMap (CONTRACT.md v39): the reader's own numbers and saved
+         places. Website and app both — unlike #offline, nothing here needs
+         Capacitor. -->
+    <button id="me" type="button" aria-label="Mein PapaMap öffnen" title="Mein PapaMap öffnen" data-i18n-aria="ariaMe">
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10.2" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="9.6" r="3.1" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M6.4 18.2c1-2.6 3-4 5.6-4s4.6 1.4 5.6 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </button>
     <!-- Store app only (web/native.js): the website has no offline basemap,
@@ -369,9 +379,26 @@
     </div>
   </div>
 
+  <!-- Mein PapaMap (CONTRACT.md v39): the reader's own numbers — the same
+       area and percentage the stats strip above already shows, how many of
+       the reader's own public OSM changesets fall in it, and grey pins
+       nearby — plus the device's own list of starred places. Nothing here is
+       stored anywhere but this browser and OSM's own public changeset log;
+       app.js fills every part of it. -->
+  <dialog id="me-dialog">
+    <h3 data-i18n="meTitle">Mein PapaMap</h3>
+    <p id="me-sentence" class="me-sentence"></p>
+    <div id="me-stats" class="me-stats"></div>
+    <div class="me-saved">
+      <h4 data-i18n="meSavedHeading">Gemerkte Orte</h4>
+      <ul id="me-saved-list" class="saved-list"></ul>
+    </div>
+    <button id="me-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
+  </dialog>
+
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app32"></script>
+  <script type="module" src="app.js?v=app33"></script>
 </body>
 </html>

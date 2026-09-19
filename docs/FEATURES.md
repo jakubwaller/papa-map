@@ -505,6 +505,58 @@ Every Overpass answer is checked for freshness (`osm3s.timestamp_osm_base`,
 database is skipped, because a region quietly computed from months-old data is
 a data bug on the map and a fake mover on the leaderboard.
 
+## Mein PapaMap: your own numbers, and places worth going back to
+
+A button beside locate and nearest — `#me` in `web/zoom-ctrl`, the same look
+as the offline-cities dialog — opens "Mein PapaMap": a headline sentence,
+the reader's own answer count, and a list of starred places. All three read
+data that already exists somewhere; none of it is a new thing PapaMap keeps
+about anyone.
+
+The headline is one sentence built from the stats strip's own numbers, never
+a second count: `localAnswered` (`web/datasource.js`) is the one place
+"how many tables are answered" comes from `stats.json`'s `local` block, and
+both the strip's counts and the dialog's percentage call it, so they cannot
+drift apart. Since papamap.de sweeps one area — all 49 countries in a
+single build — the area named is simply the site's own swept area, the same
+one the header wordmark already shows; there is no per-viewport recompute,
+and a future build that narrows to one country inherits the right answer for
+free because it is reading the same field. A second clause says how many of
+the reader's own OSM changesets fall in that area (the same count "your
+stats" shows in full, below) — worded as an invitation rather than a zero
+when there are none yet. A third names how many grey pins (amber, reading as
+a mother) sit within a kilometre of wherever the reader last used *locate* or
+*nearest* — **never a fresh location prompt of its own** — and tapping it
+closes the dialog and frames the map on that circle instead. Read
+`sentenceParts` in `web/me.js` for exactly which clause is chosen when.
+
+"Your stats" reads the reader's own **public** OSM changesets live, on the
+device: `GET {api}/changesets.json?display_name=<name>`, no login-privileged
+data, nothing a stranger with the same username could not also see. A
+changeset counts as PapaMap's if its tags say so — `created_by: "PapaMap"`
+for this site's own writes, or `theme: "papamap"` for the MapComplete
+hand-off — and never by downloading what it actually changed: a PapaMap
+changeset touches exactly one object, so the bounding box the list already
+carries is (for all practical purposes) a point, and that point is the
+answer's position. Cached on the device (`papamap-my-answers`, tied to the
+logged-in name so a second account on a shared computer never inherits the
+first one's numbers, cleared outright on logout), shown at once and topped
+up in the background — bounded to a handful of requests per open, and to
+one refresh every few minutes — so the dialog never makes the reader wait on
+OSM to open. An answer just given is added the moment OSM confirms the
+write, from that write's own reply, so the count moves on the same tap
+rather than on the next time the list happens to be paged. No ranking, no
+other reader's name, anywhere: the owner ruled that out early, and the API
+call itself never asks about anyone but the one person logged in.
+
+Saved places are a star, next to a pin's or a play place's name rather than
+in the Route row, kept only on the device (`papamap-saved`, up to 200) —
+enough to show and fly back to a place even if tonight's build no longer
+carries it, because the star keeps its own `lon`/`lat`, not just an id. The
+dialog lists them newest first, with tonight's pin colour when the place is
+still on the map and a plain dot when it is not, and the distance from
+wherever the reader last stood.
+
 ## The store app
 
 `app/` is the same map in a native shell (Capacitor) for the App Store and Google Play — the

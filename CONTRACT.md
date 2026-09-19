@@ -1,5 +1,142 @@
 # papa-map — build contract (v0)
 
+> **v39 amendment (19 Sep 2026, "Mein PapaMap"): no shape change** — no data
+> file gains, loses or changes a property, and classification stays exactly
+> where it was: nothing here derives a `status`, and PapaMap continues to
+> **store nothing about anyone**. A new zoom-ctrl button, `#me` (between
+> `#nearest` and the app-only `#offline`, on the website and in the store app
+> alike), opens `<dialog id="me-dialog">`, three parts top to bottom, all
+> wired in `web/app.js` from pure logic in the new `web/me.js`.
+>
+> **1. The game sentence.** Area and percentage are the exact numbers the
+> stats strip already renders — `localAnswered` (`web/datasource.js`, new)
+> is now the one place `tables`/`known`/`unknown` are computed from
+> `stats.json`'s `local` block, and `renderStats` and `me.js`'s
+> `answeredPercent` both call it, so the strip's counts and the dialog's
+> percentage cannot read the block two different ways. **The area named is
+> the site's own swept area** (`areaLabel(stats)`, unchanged) — papamap.de
+> sweeps one area, all 49 countries at once, so this is not a per-viewport
+> recompute; a build that ever narrows to one country or one city gets the
+> right area for free, because it is the same field the header wordmark
+> already names. Stats missing entirely (`!stats.local`, the same condition
+> `renderStats` degrades to `statsMissing` on) drops the clause rather than
+> guessing an area from the visible map — a real per-viewport fallback
+> would need geometry this project does not otherwise carry (the chunk
+> bounding boxes are rectangles that overlap neighbouring countries, per the
+> France/US/Canada/Japan chunking above) and was judged not worth adding for
+> a degrade path that is already rare. The "yours" clause reads the reader's
+> own answer count (below); zero renders `meYoursZero`, an invitation, never
+> "0 of those are yours". The "grey pins nearby" clause reads `greyNearby`
+> (`web/me.js`): status `unknown` with **empty `location_raw`** — a room
+> answered in words the classifier does not read is not a question to send
+> anyone back to — within 1 km of `lastFix`, the last position either the
+> locate or the nearest-table button actually resolved (`web/app.js`); the
+> dialog **never triggers a location prompt of its own**, and with no fix
+> yet the clause becomes a `meLocate` ("Standort verwenden") action that
+> runs the existing `locate()` flow and re-renders in place. Tapping the
+> grey-pins clause closes the dialog and calls `map.fitBounds` on
+> `circleBounds` (`web/me.js`, a flat-earth degrees-per-km box — plenty for
+> a 1 km circle already drawn in Web Mercator). Mama mode reads the same
+> literal `status === "unknown"` pins, worded `meGreyNearbyMama` (amber, not
+> grey) and framed by `meAreaSentenceMama` instead of `meAreaSentence` — the
+> answered-percentage is the identical number either way (`momCounts`'
+> `good` is `accessible + female_only`, the same two buckets `known` sums),
+> only the sentence differs. `sentenceParts` (`web/me.js`) is the one place
+> that picks the key and the numbers for all three clauses.
+>
+> **The primary sentence is deliberately verbless** (`"{area}: {percent} %
+> beantwortet"`, not `"{area} ist … beantwortet"`): `area` can be a country
+> count (`"49 Länder"`, plural) as easily as a single place, and a
+> conjugated copula agreeing with it in number is exactly the kind of thing
+> that silently breaks in one language while the other thirty-one look
+> fine. The colon-headline form needs no agreement in any of the 32
+> languages. The mama sentence keeps its verb (`"In {area} sind …"`) because
+> the verb agrees with "the changing tables", not with `area` — so `area`
+> there stays the same declined (dative in German) form `statsLocalMama`
+> already uses, and `web/app.js` picks which form to hand `sentenceParts`
+> by mode.
+>
+> **2. Your stats**, from the reader's own **public** OSM changesets, read
+> live on the device: `GET {api}/changesets.json?display_name=<user>`, no
+> auth header — a user's changesets are public information, this is not a
+> privileged read. `time=T1` asks "closed after T1" (a top-up: only what's
+> new since the cache); `time=T1,T2` additionally bounds "created before
+> T2" (a page beyond the first 100, `T2` the oldest `created_at` seen so
+> far) — both exactly as OSM's API documents them, never a made-up cursor.
+> `me.js`'s `changesetsUrl`/`pageBoundary` build and walk this; `web/app.js`'s
+> `fetchMyAnswers` bounds it to `MY_ANSWERS_PAGES` (5) calls per open,
+> whether that is a first-ever backfill (500 of the reader's newest
+> changesets, of any kind — the API filters by user, not by tag) or a
+> top-up. **A changeset counts as "yours" by its tags alone, never its
+> contents, which are never downloaded**: `created_by: "PapaMap"` (this
+> site's own writes, `writeTags`/`changesetTags`, unchanged) or
+> `theme: "papamap"` (MapComplete's own hand-off tag for this theme,
+> `theme/papamap.theme.json`'s id — equally reliable, so counted the same
+> way; nothing else is, because nothing else can be told apart from an
+> unrelated edit by its tags). A PapaMap or MapComplete-under-this-theme
+> changeset edits exactly one object, so its **bounding box is a point** —
+> `me.js`'s `changesetAnswer` takes the box's centre as the answer's
+> position and keeps only `{id, lon, lat, closed_at}`. Shown: the total, the
+> date of the first (`meStatsSince`), and (part 1's own clause) how many lie
+> in the site's one swept area — **no ranking, no other user's name,
+> anywhere**, per the owner's ruling. **No per-answer colour breakdown in
+> this cut**: matching each answer to the nearest loaded feature to show
+> green/red/grey counts was in scope but is left for a later PR — omitted
+> here to keep this one reviewable, not because it turned out unreliable.
+>
+> **Cached on the device**, localStorage key **`papamap-my-answers`**:
+> `{ user, answers: [{id, lon, lat, closed_at}, …] }`, tied to the display
+> name so a second login on the same browser never inherits the first
+> one's numbers — `logout()` (`web/app.js`) removes the key outright, and a
+> read for a different `user` than the one stored is treated as empty
+> rather than trusted. Refreshed at most once every five minutes and once
+> per dialog open (`MY_ANSWERS_REFRESH_MS`); the dialog always paints the
+> cached numbers first and re-renders only once a refresh actually lands.
+> **A failure — offline, a timeout, a dead mirror — is swallowed and
+> answered with whatever the cache already has, no toast, no error state**:
+> `native.js`'s own connectivity signal was removed by the pin `app23`→`app29`
+> chain above as fundamentally unreliable on iOS, and this does not bring a
+> new one back — the bounded fetch (`AbortSignal.timeout`, 15 s) simply
+> fails the same way offline as it does on a bad host, and both are
+> "nothing new happened this time" to the reader. **An answer this tap just
+> wrote is appended immediately** from `writeTags`'s own reply — `obj.lon`/
+> `obj.lat`, the changeset id it returns, `Date.now()` for `closed_at` — so
+> the count moves on the same tap rather than waiting for the next time the
+> list happens to be paged; `mergeAnswers` (`web/me.js`) deduplicates by id
+> so the same answer seen twice (the write's own echo, then the API's list)
+> is never counted twice.
+>
+> **3. Saved places.** A star toggle in the popup's title line — pin and
+> play place alike, `web/app.js`'s `starHTML`/`toggleStar` — deliberately
+> not in the Route row a parallel PR fills. Device-only, localStorage key
+> **`papamap-saved`**: a list of up to `SAVED_MAX` (200) `{osm, name, lon,
+> lat, saved_at}` records, newest first, `web/me.js`'s `addSaved`/
+> `removeSaved`/`isSaved`. Not tied to a login — starring is a device
+> preference, not an OSM write, and needs none. The dialog lists them with
+> the pin's own colour when tonight's data still carries that `osm_url`
+> (`viewFor(f.status, mode).cls`, the same lookup the pins and chips use)
+> or a plain outline dot when it does not, and the distance from `lastFix`
+> when there is one; a tap flies to it and reopens the popup (`openPin` for
+> a still-loaded table, a direct `openPlacePopup` for a play place, a bare
+> `flyTo` with nothing to open when the object has fallen out of tonight's
+> sweep entirely) — that fallback is the whole reason the record carries its
+> own `lon`/`lat` rather than only an id. A write that fails (private mode,
+> a full quota) leaves the star exactly as it was and says so once
+> (`meSaveFailed`), never a star that claims to be on when nothing was
+> written.
+>
+> **Shell pin `app31` → `app33`** (skipping `app32`, reserved for a parallel
+> PR): `web/me.js` joins `web/sw.js`'s `SHELL` and `web/app.js`'s own
+> imports at the new pin, and `app/build-www.js`'s file list, the same way
+> `datasource.js`/`i18n.js`/`osm.js` already do. New i18n keys — `ariaMe`,
+> `meTitle`, `meAreaSentence(Mama)`, `meYours(Zero)`,
+> `meGreyNearby(Mama)(Zero)(Mama)`, `meLocate`, `ariaMeGrey`,
+> `meLoginInvite`, `meLogin`, `meStatsTotal(Zero)`, `meStatsSince`,
+> `meSavedHeading`, `meSavedEmpty`, `ariaMeSavedRemove`, `ariaSave`,
+> `ariaUnsave`, `meSaveFailed` — in all 32 languages, each block right after
+> its own `statsGlobalMissing`, per `web/i18n.test.js`'s parity and
+> token-matching tests.
+
 > **v38 amendment (19 Sep 2026, share a pin, and the room card):** **no shape
 > change** — no data file gains, loses or changes a property, and `STATUSES`
 > is untouched.

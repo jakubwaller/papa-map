@@ -338,6 +338,20 @@ export function viewFor(status, mode) {
   return rows[status] ?? VIEW[DEFAULT_MODE].unknown;
 }
 
+// The one place "how many tables are answered" is computed from stats.json's
+// `local` block: statsLocal's own counts (web/app.js's renderStats) and the
+// "Mein PapaMap" dialog's percentage (web/me.js's answeredPercent) both call
+// this, so the two can never read the block two different ways — only the
+// presentation differs. `tables` is the pipeline's own partition (ct_yes +
+// ct_limited = accessible + female_only + unknown, CONTRACT.md v24);
+// `known` is the two answered buckets, whichever mode is asking.
+export function localAnswered(local) {
+  const tables = (local?.ct_yes ?? 0) + (local?.ct_limited ?? 0);
+  const unknown = local?.unknown ?? 0;
+  const known = (local?.accessible ?? 0) + (local?.female_only ?? 0);
+  return { tables, unknown, known };
+}
+
 // Okabe-Ito throughout. good/bad/ask are the exact three values app.js used
 // before; `maybe` is the one new colour — the palette's orange, far enough
 // from the blue play halo and from all three status colours to stay readable

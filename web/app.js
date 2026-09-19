@@ -5,24 +5,31 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
-         pinColorExpression, momCounts, nearestUsable, formatDistance, haversineKm,
+         pinColorExpression, momCounts, nearestUsable, formatDistance, localAnswered,
          geoUri, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
-         EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh } from "./datasource.js?v=app32";
+         EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
+         isFixFresh } from "./datasource.js?v=app33";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app32";
+         langUrl } from "./i18n.js?v=app33";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app32";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app33";
+// "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
+// datasource.js keeps — the dialog's DOM and the changesets fetch are below,
+// next to the offline dialog's own wiring.
+import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
+         isSaved, addSaved, removeSaved,
+         extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
+         changesetsUrl, pageBoundary, advanceBackfillCursor } from "./me.js?v=app33";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app32";
+         formatMB, citiesToMount } from "./native.js?v=app33";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -186,6 +193,11 @@ const ISA_PATH = "M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm7 11v-2c-1.5
 const KEY_PATH = "M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z";
 const svgIcon = (path, cls) =>
   `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>`;
+
+// The saved-places star (v39): one path, outline when unsaved (stroke only)
+// and filled when saved — a colour change, not a shape change, the same way
+// the wheelchair chip's ring stays one glyph.
+const STAR_PATH = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
 
 // The legend order. The label and the colour of each row are read from
 // viewFor(status, mode) rather than stored here: there are two readings and
@@ -569,7 +581,7 @@ function popupHTML(f) {
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
   const title = f.name || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
   const sub = f.amenity ? `<div class="sub">${esc(f.amenity.replace(/_/g, " "))}</div>` : "";
-  return `<div class="popup"><h3>${esc(title)}</h3>${sub}${rows.join("")}</div>`;
+  return `<div class="popup"><h3>${esc(title)}${starHTML(f.osm_url, title)}</h3>${sub}${rows.join("")}</div>`;
 }
 
 // The question and its answers, in the reading's own vocabulary: a mother is
@@ -688,7 +700,7 @@ function placeHTML(p) {
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
   const title = p.name || t("popupUnnamed");
   const sub = p.kind ? `<div class="sub">${esc(p.kind.replace(/_/g, " "))}</div>` : "";
-  return `<div class="popup"><h3>${esc(title)}</h3>${sub}${rows.join("")}</div>`;
+  return `<div class="popup"><h3>${esc(title)}${starHTML(p.osm_url, title)}</h3>${sub}${rows.join("")}</div>`;
 }
 
 // Every popup this page ever opens is created here or in openPlacePopup, and
@@ -906,7 +918,7 @@ function renderStats(stats) {
   // `global` may be null: the pipeline's cold-start degrade when taginfo is
   // down and no previous stats.json exists. Local stats still render.
   const l = stats.local, g = stats.global;
-  const tables = (l.ct_yes ?? 0) + (l.ct_limited ?? 0);
+  const { tables } = localAnswered(l);
   const updated = stats.generated_at
     ? t("statsUpdated", { date: esc(String(stats.generated_at).slice(0, 10)) }) : "";
   let globalPart;
@@ -1006,10 +1018,18 @@ function fitHome() {
 // One reusable DOM marker (a single marker is no perf concern); errors show a
 // transient toast instead of a blocking alert.
 let youMarker = null, toastTimer = null;
+// The last position either the locate or the nearest-table button actually
+// found, [lon, lat] — "Mein PapaMap" reuses it for the grey-pins-within-1km
+// clause so opening that dialog never triggers a location prompt of its own
+// (the spec's own rule); a reader who has never tapped either button sees the
+// dialog's "use my location" action instead. Deliberately not persisted: a
+// stale fix from a previous city is worse than none.
+let lastFix = null;
 
 // Shared by the locate button and the nearest-table one: both put the reader
 // on the map, and a second marker class would drift from the first.
 function showYou(at) {
+  lastFix = at;
   if (!youMarker) {
     const dot = document.createElement("div");
     dot.className = "you-dot";
@@ -1507,7 +1527,9 @@ document.addEventListener("click", (e) => {
     more.remove();
     panPopupIntoView();   // three more pills: the card just grew a row
   }
-  if (e.target.closest?.("button[data-logout]")) logout();
+  if (e.target.closest?.("button[data-logout]")) { logout(); if (meDialog.open) renderMeDialog(); }
+  const star = e.target.closest?.("button.star-btn");
+  if (star) toggleStar(star);
 });
 
 // ---- The two-tap answer: written to OSM under the reader's own account ----
@@ -1575,6 +1597,10 @@ async function answer(kind, obj, choice, freshToken = null) {
     const comment = play ? CHANGESET_COMMENT[choice]
       : kind === "place" && choice === "none" ? CHANGESET_COMMENT.place_none : CHANGESET_COMMENT[kind];
     const out = await writeTags(osm, token, osmRef(obj.osm_url), patch, comment);
+    // "Mein PapaMap"'s own count moves on this tap, not the next time the
+    // dialog happens to page the changesets list: the write's own reply
+    // already has everything an entry needs (CONTRACT.md v39).
+    recordMyAnswer(out.changeset, obj.lon, obj.lat);
     // The popup's tag row and the question's absence both read from the
     // object, so the one in memory learns the answer. A pin's status, a
     // place's colour and the blue play ring do not move — that is the
@@ -1621,6 +1647,10 @@ const reopen = (kind, obj) => (kind === "place" ? openPlacePopup : openPopup)(ob
 function logout() {
   const token = getToken();
   clearLogin();
+  // The next login may be someone else's account on the same device (a
+  // shared phone, a library computer) — their answers must not carry over.
+  try { localStorage.removeItem(MY_ANSWERS_KEY); } catch { /* nothing to clear */ }
+  myAnswers = null;
   if (token) revoke(osm, token);
   if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line changes
 }
@@ -1891,6 +1921,9 @@ async function completeLogin(href) {
       if (open) answer(kind, obj, intent.choice, login.token);
     }
   }
+  // The login the "Mein PapaMap" dialog itself started: land back on it
+  // rather than on a bare map (renderMeStats, above).
+  if (intent?.kind === "me" && login?.token) { meDialog.showModal(); renderMeDialog(); refreshMyAnswers(); }
   if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line names the login
 }
 
@@ -2296,6 +2329,286 @@ document.addEventListener("click", (e) => {
 });
 document.getElementById("route-close").addEventListener("click", () => routeDialog.close());
 routeDialog.addEventListener("click", (e) => { if (e.target === routeDialog) routeDialog.close(); });
+
+// ---- "Mein PapaMap": the reader's own numbers and saved places (CONTRACT.md v39) ----
+// Same shape as the offline dialog just above: a zoom-ctrl button opens a
+// <dialog>, closed by × or a tap on the backdrop. Nothing here is a second
+// data source — the game sentence reads the same stats.json numbers the strip
+// already rendered (renderStats/lastStats), "yours" reads the reader's own
+// public OSM changesets, and saved places live only in this browser.
+const meBtn = document.getElementById("me");
+const meDialog = document.getElementById("me-dialog");
+const meSentenceEl = document.getElementById("me-sentence");
+const meStatsEl = document.getElementById("me-stats");
+const meSavedListEl = document.getElementById("me-saved-list");
+
+// ---- Saved places (device only, papamap-saved) ----
+const SAVED_KEY = "papamap-saved";
+function loadSavedRaw() {
+  try { return JSON.parse(localStorage.getItem(SAVED_KEY)) ?? []; } catch { return []; }
+}
+function writeSavedRaw(list) {
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify(list)); return true; }
+  catch { return false; }   // private mode, quota: the caller tells the reader once
+}
+let savedPlaces = loadSavedRaw();
+
+// The star, in the title line of both popups (popupHTML, placeHTML) rather
+// than the Route row a colleague's PR fills. No star at all on a pin with no
+// OSM id — should not happen, but nothing here should assume it can't.
+function starHTML(osmUrl, name) {
+  if (!osmUrl) return "";
+  const saved = isSaved(savedPlaces, osmUrl);
+  const svg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${STAR_PATH}" ` +
+    `fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+  return `<button type="button" class="star-btn${saved ? " on" : ""}" data-osm="${esc(osmUrl)}"` +
+    ` data-name="${esc(name)}" aria-label="${esc(t(saved ? "ariaUnsave" : "ariaSave"))}">${svg}</button>`;
+}
+
+// Failure (private mode, quota) leaves the star exactly as it was and says so
+// once — never a star that claims to be on when nothing was written.
+function toggleStar(btn) {
+  const osm = btn.dataset.osm;
+  const already = isSaved(savedPlaces, osm);
+  let next;
+  if (already) next = removeSaved(savedPlaces, osm);
+  else {
+    const obj = allFeatures.find((x) => x.osm_url === osm) || allPlaces.find((x) => x.osm_url === osm);
+    if (!obj) return;
+    next = addSaved(savedPlaces, { osm, name: btn.dataset.name || "", lon: obj.lon, lat: obj.lat });
+  }
+  if (!writeSavedRaw(next)) { toast(t("meSaveFailed")); return; }
+  savedPlaces = next;
+  const nowSaved = !already;
+  btn.classList.toggle("on", nowSaved);
+  btn.querySelector("path")?.setAttribute("fill", nowSaved ? "currentColor" : "none");
+  btn.setAttribute("aria-label", t(nowSaved ? "ariaUnsave" : "ariaSave"));
+  if (meDialog.open) renderSavedList();
+}
+
+// Fly to a saved place and reopen it — via the same openPin the widget and
+// the Siri shortcut use, when it is still a table pin tonight; a play place
+// or a place that has since fallen out of the sweep still gets the fly, just
+// not the popup (its own lon/lat came along in the saved record for exactly
+// this case).
+function openSavedPlace(row) {
+  meDialog.close();
+  const f = allFeatures.find((x) => x.osm_url === row.osm);
+  if (f) { map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }); openPin(row.osm); return; }
+  const p = allPlaces.find((x) => x.osm_url === row.osm);
+  if (p) { map.flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) }); openPlacePopup(p); return; }
+  map.flyTo({ center: [row.lon, row.lat], zoom: Math.max(map.getZoom(), 16) });
+}
+
+// The dot beside a saved row's name: the pin's own colour when tonight's data
+// still has it (a table's status, a play place's blue), a plain outline when
+// it does not — never a status this project did not actually classify.
+function savedDotClass(osmUrl) {
+  const f = allFeatures.find((x) => x.osm_url === osmUrl);
+  if (f) return viewFor(f.status, mode).cls;
+  return allPlaces.some((x) => x.osm_url === osmUrl) ? "play" : "neutral";
+}
+
+function renderSavedList() {
+  if (!savedPlaces.length) {
+    meSavedListEl.innerHTML = `<li class="saved-empty">${esc(t("meSavedEmpty"))}</li>`;
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  for (const row of savedPlaces) {
+    const li = document.createElement("li");
+    li.className = "saved-row";
+    const name = row.name || t("popupUnnamed");
+    const dist = lastFix ? formatDistance(haversineKm(lastFix[1], lastFix[0], row.lat, row.lon)) : null;
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "saved-link";
+    open.innerHTML = `<span class="dot ${savedDotClass(row.osm)}"></span>${esc(name)}` +
+      (dist ? ` <span class="dist">${esc(t(dist.key, { n: num(dist.n) }))}</span>` : "");
+    open.addEventListener("click", () => openSavedPlace(row));
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.className = "saved-remove";
+    rm.setAttribute("aria-label", t("ariaMeSavedRemove", { name }));
+    rm.textContent = "×";
+    rm.addEventListener("click", () => {
+      savedPlaces = removeSaved(savedPlaces, row.osm);
+      writeSavedRaw(savedPlaces);   // a failed remove just leaves the row; nothing to toast about
+      renderSavedList();
+    });
+    li.append(open, rm);
+    frag.append(li);
+  }
+  meSavedListEl.replaceChildren(frag);
+}
+
+// ---- "Yours": the reader's own public OSM changesets, read live ----
+// Cached on the device (papamap-my-answers), tied to the logged-in user so a
+// second account on the same browser never sees the first one's numbers —
+// logout() above clears the key outright. Compact records only: id, lon, lat,
+// closed_at (me.js's changesetAnswer/extractAnswers) — never a changeset's
+// contents, which are never downloaded at all.
+const MY_ANSWERS_KEY = "papamap-my-answers";
+// "A few pages max per open": five pages of up to 100 changesets is a
+// one-time backfill of 500 on a reader's very first open, and in practice far
+// fewer calls once the cache holds anything — see fetchMyAnswers below.
+const MY_ANSWERS_PAGES = 5;
+const MY_ANSWERS_REFRESH_MS = 5 * 60 * 1000;   // at most one refresh per open, and per five minutes
+let myAnswers = null;         // { user, answers } once loaded/fetched this page load
+let myAnswersFetchedAt = 0;
+
+function loadMyAnswersRaw(user) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(MY_ANSWERS_KEY));
+    return raw && raw.user === user ? (raw.answers ?? []) : [];
+  } catch { return []; }
+}
+function writeMyAnswersRaw(user, answers) {
+  try { localStorage.setItem(MY_ANSWERS_KEY, JSON.stringify({ user, answers })); }
+  catch { /* blocked storage: the count lives for this page load only */ }
+}
+function ensureMyAnswers(user) {
+  if (!myAnswers || myAnswers.user !== user) myAnswers = { user, answers: loadMyAnswersRaw(user) };
+  return myAnswers;
+}
+
+// Appended the moment OSM confirms the write — the dialog's number moves on
+// this same tap rather than waiting for the next time it happens to page the
+// changesets list. `answer()` in the two-tap flow above calls this; it is a
+// no-op logged out (an answer cannot be written logged out in the first
+// place, but a stale intent replayed after a fresh login is exactly the kind
+// of edge this guards).
+function recordMyAnswer(changesetId, lon, lat) {
+  const user = getUser();
+  if (!user) return;
+  const cache = ensureMyAnswers(user);
+  cache.answers = mergeAnswers(cache.answers,
+    [{ id: Number(changesetId), lon, lat, closed_at: new Date().toISOString() }]);
+  writeMyAnswersRaw(user, cache.answers);
+}
+
+// GET .../changesets.json?display_name=<user>[&time=...] (me.js's
+// changesetsUrl says exactly what `time=` means and why). No auth header: a
+// user's changesets are public. Any failure — offline, a timeout, a dead
+// mirror — is swallowed here and answered with whatever the cache already
+// has; the dialog never shows an error for this, per the spec. Bounded to
+// MY_ANSWERS_PAGES calls whether this is a first-ever backfill (cached is
+// empty, `since` is null) or a top-up (since = the cache's own newest answer,
+// so only what changed since the last open is asked for at all).
+async function fetchMyAnswers(user, cached) {
+  let merged = cached;
+  const since = newestClosedAt(cached);
+  let before = null;
+  for (let page = 0; page < MY_ANSWERS_PAGES; page++) {
+    const url = changesetsUrl(osm.api, user, since, before);
+    let list;
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout?.(15000) });
+      if (!r.ok) break;
+      list = (await r.json())?.changesets;
+    } catch { break; }   // offline included: the cached numbers stand, no error shown
+    if (!Array.isArray(list) || !list.length) break;
+    merged = mergeAnswers(merged, extractAnswers(list));
+    before = pageBoundary(list);
+    if (!before) break;   // fewer than 100 back: nothing older is left to ask for
+  }
+  return merged;
+}
+
+// Called once per dialog open, and no more often than every few minutes: the
+// cache already rendered (renderMeDialog, below) is not held hostage to this.
+async function refreshMyAnswers() {
+  const user = getUser();
+  if (!user || Date.now() - myAnswersFetchedAt < MY_ANSWERS_REFRESH_MS) return;
+  myAnswersFetchedAt = Date.now();
+  const cache = ensureMyAnswers(user);
+  cache.answers = await fetchMyAnswers(user, cache.answers);
+  writeMyAnswersRaw(user, cache.answers);
+  if (meDialog.open) { renderMeSentence(); renderMeStats(); }
+}
+
+// ---- The game sentence ----
+function renderMeSentence() {
+  const l = lastStats?.local;
+  // The dad sentence is a colon headline ("49 Länder: 13 % beantwortet") and
+  // needs the plain (nominative) form, the same one the wordmark shows; the
+  // mama sentence keeps "In {area} …" and so needs the declined form
+  // statsLocalMama already uses (areaLabel's own comment, ~847, says why).
+  const area = l ? areaLabel(lastStats, mode === "mama") : null;
+  const percent = l ? answeredPercent(l) : null;
+  const user = getUser();
+  const yours = user ? answersInArea(ensureMyAnswers(user).answers) : null;
+  const greyCount = lastFix ? greyNearby(allFeatures, lastFix[1], lastFix[0]).length : 0;
+  const parts = sentenceParts({ area, percent, yours, greyCount, hasFix: !!lastFix, mama: mode === "mama" });
+  const bits = [];
+  bits.push(parts.area
+    ? `<span>${t(parts.area.key, { area: esc(area), percent: num(percent) })}</span>`
+    // No area (stats.json missing entirely) is the one case renderStats
+    // itself falls back to statsMissing rather than naming an area; the
+    // dialog says the same rather than guessing at one from the map view.
+    : `<span>${esc(t("statsMissing", { href: t("methodsHref") }))}</span>`);
+  if (parts.yours)
+    bits.push(`<span>${t(parts.yours.key, parts.yours.vars ? { n: num(parts.yours.vars.n) } : {})}</span>`);
+  if (parts.grey.locate) {
+    bits.push(`<button type="button" id="me-locate" class="linkish">${esc(t("meLocate"))}</button>`);
+  } else if (parts.grey.vars) {
+    bits.push(`<button type="button" id="me-grey" class="linkish" aria-label="${esc(t("ariaMeGrey"))}">` +
+      `${t(parts.grey.key, { n: num(parts.grey.vars.n) })}</button>`);
+  } else {
+    bits.push(`<span>${t(parts.grey.key)}</span>`);
+  }
+  meSentenceEl.innerHTML = bits.join(" ");
+  meSentenceEl.querySelector("#me-locate")?.addEventListener("click", () => {
+    if (!hasGeo()) { toast(t("toastNoGeo")); return; }
+    locate().then((coords) => { showYou([coords.longitude, coords.latitude]); renderMeSentence(); },
+      () => toast(t("toastGeoFail")));
+  });
+  meSentenceEl.querySelector("#me-grey")?.addEventListener("click", () => {
+    meDialog.close();
+    map.fitBounds(circleBounds(lastFix[1], lastFix[0], 1), { padding: 40 });
+  });
+}
+
+// ---- Part 2: your stats ----
+function renderMeStats() {
+  const user = getUser();
+  if (!user) {
+    meStatsEl.innerHTML = `<p>${esc(t("meLoginInvite"))}</p>` +
+      `<button type="button" id="me-login" class="btn primary">${esc(t("meLogin"))}</button>`;
+    meStatsEl.querySelector("#me-login").addEventListener("click", () => {
+      // The intent brings the reader back to this dialog once logged in
+      // (completeLogin, above) rather than dropping them back on a bare map.
+      rememberView();
+      goLogin({ kind: "me" });
+    });
+    return;
+  }
+  const answers = ensureMyAnswers(user).answers;
+  const total = answers.length;
+  const first = total ? answers.reduce((a, b) => ((a.closed_at ?? "") < (b.closed_at ?? "") ? a : b)) : null;
+  const lines = [`<p>${esc(total > 0 ? t("meStatsTotal", { n: num(total) }) : t("meStatsTotalZero"))}</p>`];
+  if (first?.closed_at) {
+    const date = new Date(first.closed_at).toLocaleDateString(NUMBER_LOCALE[lang] ?? "en-GB",
+      { day: "numeric", month: "short" });
+    lines.push(`<p>${esc(t("meStatsSince", { date }))}</p>`);
+  }
+  lines.push(`<p><button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button></p>`);
+  meStatsEl.innerHTML = lines.join("");
+}
+
+function renderMeDialog() {
+  renderMeSentence();
+  renderMeStats();
+  renderSavedList();
+}
+
+meBtn.addEventListener("click", () => {
+  meDialog.showModal();
+  renderMeDialog();
+  refreshMyAnswers();   // best-effort background top-up; re-renders when it lands
+});
+document.getElementById("me-close").addEventListener("click", () => meDialog.close());
+meDialog.addEventListener("click", (e) => { if (e.target === meDialog) meDialog.close(); });
 
 boot();
 window.addEventListener("resize", positionZoomCtrl);
