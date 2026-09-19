@@ -6,7 +6,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, nearestUsable, formatDistance, localAnswered,
-         geoUri, webRouteHref, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
+         geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh } from "./datasource.js?v=app35";
@@ -523,9 +523,10 @@ const tableRowHTML = (value) =>
 const tableRowText = (value) => (value === "no" ? t("roomNone") : `${t("popupTable")}: ${value}`);
 
 // The Route button, the same one in both popups. On the website its href is
-// chosen by the device (webRouteHref): geo: on Android, Apple Maps' universal
-// link on an iPhone, openstreetmap.org's directions in a new tab on a desktop,
-// where nothing answers geo: at all. In the apps it is directionsUri's — geo:
+// chosen by the device (webRouteHref): geo: on Android, openstreetmap.org's
+// directions in a new tab on a desktop, where nothing answers geo: at all,
+// and on an iPhone a question — data-route-choose, answered by the dialog at
+// the end of this file — because a web page cannot learn the phone's default. In the apps it is directionsUri's — geo:
 // on Android, Apple Maps on iOS — and data-route carries the destination for
 // the iOS cascade at the end of this file, which catches the tap instead and
 // asks the phone what it can actually open — an iPhone without Apple Maps
@@ -534,6 +535,7 @@ function routeButton(lat, lon, name) {
   const web = isNative() ? null : webRouteHref(lat, lon, name, navigator.userAgent, navigator.maxTouchPoints);
   const href = web ? web.href : directionsUri(lat, lon, name, geoUri(lat, lon, name));
   return `<a class="btn" href="${esc(href)}"${web?.external ? ' target="_blank" rel="noopener"' : ""}` +
+    `${web?.choose ? " data-route-choose" : ""}` +
     ` data-route="${esc(`${lat},${lon}`)}" data-route-label="${esc(name)}">${esc(t("popupDirections"))}</a>`;
 }
 
@@ -2370,9 +2372,37 @@ function showRouteChoices(choices, web) {
   routeDialog.showModal();
 }
 
+// The same dialog on the website, for an iPhone's browser (webRouteChoices).
+// Links here, not buttons: iOS hands a universal link to its app only when the
+// reader themselves taps a real anchor, and a location.href set from a click
+// handler is not reliably that.
+function showWebRouteChoices(choices) {
+  routeList.replaceChildren();
+  for (const c of choices) {
+    const li = document.createElement("li"), a = document.createElement("a");
+    a.href = c.url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = c.name;
+    a.addEventListener("click", () => routeDialog.close());
+    li.append(a);
+    routeList.append(li);
+  }
+  routeDialog.showModal();
+}
+
 document.addEventListener("click", (e) => {
   const a = e.target.closest?.("a[data-route]");
-  if (!a || !isNative() || platform() !== "ios") return;
+  if (!a) return;
+  if (!isNative()) {
+    // The website: only an iPhone's Route button asks; every other is a link.
+    if (!("routeChoose" in a.dataset)) return;
+    e.preventDefault();
+    const [lat, lon] = a.dataset.route.split(",").map(Number);
+    showWebRouteChoices(webRouteChoices(lat, lon, a.dataset.routeLabel || ""));
+    return;
+  }
+  if (platform() !== "ios") return;
   e.preventDefault();
   const href = a.getAttribute("href");
   const [lat, lon] = a.dataset.route.split(",").map(Number);

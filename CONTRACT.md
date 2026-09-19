@@ -18,8 +18,11 @@
 > "unchanged on every platform"):** a `geo:`
 > URI is answered by Android only, so everywhere else the button was a dead
 > link. `webRouteHref` (`web/datasource.js`) picks by device: `geo:` on
-> Android, `https://maps.apple.com/?daddr=…` on iPhone and iPad,
-> `https://www.openstreetmap.org/directions?to=…` in a new tab elsewhere; the
+> Android, `https://www.openstreetmap.org/directions?to=…` in a new tab on a
+> desktop, and on iPhone and iPad — where a web page cannot learn the default
+> navigation app — the reader chooses in the `route-dialog` the app already
+> has: Google Maps, Apple Maps, Waze (`webRouteChoices`), each an https
+> universal link on a real `<a>`, never an app scheme. The
 > apps keep `directionsUri` and the iOS cascade. Both Datenschutz pages say
 > so. **Display:** `changing_table=no` prints as `roomNone` ("Kein
 > Wickeltisch") in the play-place card and the edit confirmation, not as

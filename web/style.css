@@ -817,15 +817,17 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .offline-list button.saved { background: #fff; color: var(--muted-2); border-color: var(--line); }
 .offline-list button:disabled { opacity: .6; cursor: default; }
 
-/* The route chooser's apps: the add dialog's big tap targets, as buttons —
-   they open an app rather than navigate, so none of them is an <a>. */
+/* The route chooser's apps: the add dialog's big tap targets. Buttons in the
+   app, where they open an app rather than navigate; links on the website,
+   where only a tapped <a> gets a universal link to its app. */
 .route-list { list-style: none; margin: 0; padding: 0; }
-.route-list button {
+.route-list button, .route-list a {
   display: block; width: 100%; margin-bottom: 9px;
   padding: 11px 14px; border-radius: 12px;
   border: 1px solid var(--line); background: none; color: var(--ink);
   font: inherit; font-family: var(--ui); font-size: 13.5px; font-weight: 600;
   text-align: left; cursor: pointer;
 }
-.route-list button:hover { border-color: var(--green); }
-.route-list li:last-child button { margin-bottom: 0; }
+.route-list a { box-sizing: border-box; text-decoration: none; }
+.route-list button:hover, .route-list a:hover { border-color: var(--green); }
+.route-list li:last-child button, .route-list li:last-child a { margin-bottom: 0; }

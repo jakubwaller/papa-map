@@ -193,10 +193,15 @@ export function parseBbox(value) {
 // zoom is rounded and floored at the editors' useful minimum, because handing
 // MapComplete or iD a country-level zoom just strands the user in the clouds.
 // Same userlayout theme as the pin popups (pipeline/export.py): its dad_toilet
-// layer has an add-toilet preset, and edits through it carry theme=papamap in
-// the changeset — the official toilets theme would make them uncountable.
-const PAPAMAP_THEME = "https://mapcomplete.org/theme.html?userlayout=" +
+// layer has an add-toilet preset, and edits through it carry this theme's URL
+// in the changeset's `theme` tag (the URL, not the id "papamap": that is what
+// MapComplete writes for a theme it loaded by userlayout=, and what me.js
+// counts a reader's answers by) — the official toilets theme would make them
+// uncountable. One copy of the URL on this side; pipeline/export.py holds the
+// other, and datasource.test.js fails when the two part ways.
+export const PAPAMAP_THEME_URL =
   "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json";
+const PAPAMAP_THEME = "https://mapcomplete.org/theme.html?userlayout=" + PAPAMAP_THEME_URL;
 
 // MapComplete's own UI languages (its langs/ directory), keyed by the site's
 // codes. Only these get a language= parameter: MapComplete falls back to
@@ -494,22 +499,39 @@ export function geoUri(lat, lon, label) {
 // button was a geo: URI for everyone until app35, and a click on it in
 // Firefox on a Mac — or in Safari on an iPhone — was a click on nothing.
 //   Android: geo:, the reader's own choice of app, as before.
-//   iPhone / iPad: maps.apple.com, a universal link — Apple Maps where it is
-//     installed, the same route in the browser where it was deleted. (An
-//     iPad asking for the desktop site says "Macintosh"; the touch points
-//     are what tell it from a Mac.)
+//   iPhone / iPad: a web page cannot ask iOS for the reader's default
+//     navigation app (only the app can — native.js, routePlan), so it asks
+//     the reader instead: `choose`, one https link per maps app. Every one is
+//     a universal link — the app where it is installed, the same route in
+//     the browser where it is not — so none of them can be a dead link, the
+//     way `comgooglemaps://` or `om://` would be from a web page. `href` is
+//     the first of them, for the tap that the dialog never catches. (An iPad
+//     asking for the desktop site says "Macintosh"; the touch points are
+//     what tell it from a Mac.)
 //   Everything else: openstreetmap.org's own directions with the destination
 //     filled in (`to=`, read by its initializeFromParams). The reader types
 //     where they start; nobody is told where they are standing.
 // `external` says the href is a web page and wants a tab of its own. The iOS
 // and Android *apps* never come here (native.js, directionsUri).
-export function webRouteHref(lat, lon, label, ua = "", touchPoints = 0) {
+export function webRouteChoices(lat, lon, label) {
   const at = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+  // `ll` beside `q`: without an explicit location Apple Maps treats q as a
+  // search typed into its field, and "Rewe" finds a different Rewe.
+  const q = label ? `q=${encodeURIComponent(label)}&` : "";
+  return [
+    { name: "Google Maps", url: `https://www.google.com/maps/dir/?api=1&destination=${at}` },
+    { name: "Apple Maps", url: `https://maps.apple.com/?${q}ll=${at}&daddr=${at}` },
+    { name: "Waze", url: `https://waze.com/ul?ll=${at}&navigate=yes` },
+  ];
+}
+
+export function webRouteHref(lat, lon, label, ua = "", touchPoints = 0) {
   if (/Android/i.test(ua)) return { href: geoUri(lat, lon, label), external: false };
   if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1)) {
-    const q = label ? `&q=${encodeURIComponent(label)}` : "";
-    return { href: `https://maps.apple.com/?daddr=${at}${q}`, external: false };
+    const choose = webRouteChoices(lat, lon, label);
+    return { href: choose[0].url, external: false, choose };
   }
+  const at = `${lat.toFixed(6)},${lon.toFixed(6)}`;
   return { href: `https://www.openstreetmap.org/directions?to=${encodeURIComponent(at)}`, external: true };
 }
 

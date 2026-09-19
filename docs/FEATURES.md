@@ -185,9 +185,16 @@ Three things it deliberately does not do:
   whatever the reader already uses. Nothing else answers `geo:` — not a
   desktop browser, not any browser on an iPhone — and until app35 the button
   was a dead link there (found in Firefox on a Mac, 19 Sep 2026). So the
-  website picks by device (`webRouteHref`): Apple Maps' universal link on an
-  iPhone or iPad, openstreetmap.org's own directions in a new tab everywhere
-  else, with the destination filled in and the start left to the reader. In
+  website picks by device (`webRouteHref`). On a desktop it is
+  openstreetmap.org's own directions in a new tab, with the destination filled
+  in and the start left to the reader. On an iPhone or iPad a web page cannot
+  ask iOS for the reader's default navigation app — only the app can, below —
+  so the site asks the reader: the same "Route öffnen in …" dialog the app
+  has, listing Google Maps, Apple Maps and Waze (`webRouteChoices`). All three
+  are https universal links, which open the app where it is installed and the
+  same route in the browser where it is not; an app scheme from a web page is
+  a dead link on a phone without the app. They are real `<a>` elements,
+  because iOS hands a universal link to its app only for a tapped anchor. In
   every case only the *destination's* coordinates travel in the link, and no
   third party learns where the reader is standing.
 

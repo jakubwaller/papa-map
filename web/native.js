@@ -557,10 +557,11 @@ export function interceptLinks(doc = document) {
 // Directions: iOS has no geo: handler, Apple Maps answers maps://; Android
 // hands geo: to whichever maps app the reader chose.
 //
-// This is still what the Route button's href says on every platform, and on
-// the web and on Android it is still what a tap follows. In the iOS app the
-// tap is caught and routePlan() below decides instead; the href is what is
-// left when that cannot run at all.
+// This is what the Route button's href says in the two apps (the website
+// chooses its own, by device: webRouteHref in datasource.js), and in the
+// Android app it is what a tap follows. In the iOS app the tap is caught and
+// routePlan() below decides instead; the href is what is left when that
+// cannot run at all.
 const coords = (lat, lon) => `${lat.toFixed(6)},${lon.toFixed(6)}`;
 const appleMapsUri = (at, label) =>
   `maps://?q=${encodeURIComponent(label || "")}&ll=${at}&daddr=${at}`;

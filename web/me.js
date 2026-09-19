@@ -13,7 +13,7 @@
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
 import { CREATED_BY } from "./osm.js?v=app35";
-import { localAnswered, haversineKm } from "./datasource.js?v=app35";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app35";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -210,8 +210,7 @@ export function circleBounds(lat, lon, km) {
 // StreetComplete on an unrelated object is not this project's to count, and
 // is not identifiable from its tags as one of ours anyway.
 export const MAPCOMPLETE_THEME = "papamap";
-export const MAPCOMPLETE_THEME_URL =
-  "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json";
+export const MAPCOMPLETE_THEME_URL = PAPAMAP_THEME_URL;   // the one the hand-off opens, not a copy
 
 export function isOwnChangeset(tags) {
   return !!tags && (tags.created_by === CREATED_BY ||

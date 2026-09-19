@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
          isWheelchairOk, countWheelchair, pinFeatures, placeFeatures,
@@ -7,7 +8,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
          pinColorExpression, momCounts, localAnswered, usableStatuses, haversineKm,
-         nearestUsable, formatDistance, geoUri, webRouteHref, osmRef, osmApiUrl,
+         nearestUsable, formatDistance, geoUri, webRouteHref, webRouteChoices, PAPAMAP_THEME_URL, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
@@ -546,6 +547,16 @@ test("formatDistance rounds to what a phone fix can actually claim", () => {
   assert.equal(typeof formatDistance(3.47).n, "number");
 });
 
+test("the theme URL is the same one on both sides of the pipeline", () => {
+  // MapComplete stamps this URL on every changeset made through the theme,
+  // and "Mein PapaMap" counts a reader's answers by it (me.js). If the theme
+  // moves and only one side follows, the count silently drops to the site's
+  // own writes. export.py writes it as adjacent string literals.
+  const py = readFileSync(new URL("../pipeline/export.py", import.meta.url), "utf8")
+    .replace(/"\s*\n\s*"/g, "");
+  assert.ok(py.includes(`"${PAPAMAP_THEME_URL}"`), "pipeline/export.py names a different theme URL");
+});
+
 test("webRouteHref: geo: only where something answers it", () => {
   const FIREFOX_MAC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0";
   const SAFARI_IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1";
@@ -553,12 +564,26 @@ test("webRouteHref: geo: only where something answers it", () => {
   // The reported case: a desktop has no geo: handler, the click did nothing.
   assert.deepEqual(webRouteHref(53.5503, 9.992, "Café", FIREFOX_MAC, 0), {
     href: "https://www.openstreetmap.org/directions?to=53.550300%2C9.992000", external: true });
-  assert.deepEqual(webRouteHref(53.5503, 9.992, "Café A&B", SAFARI_IPHONE, 5), {
-    href: "https://maps.apple.com/?daddr=53.550300,9.992000&q=Caf%C3%A9%20A%26B", external: false });
+  // An iPhone's browser cannot be asked for the default navigation app, so
+  // the reader is: three universal links, never an app scheme (a dead link
+  // from a web page where the app is missing).
+  const ios = webRouteHref(53.5503, 9.992, "Café A&B", SAFARI_IPHONE, 5);
+  assert.deepEqual(ios.choose, webRouteChoices(53.5503, 9.992, "Café A&B"));
+  assert.deepEqual(ios.choose.map((c) => c.name), ["Google Maps", "Apple Maps", "Waze"]);
+  assert.ok(ios.choose.every((c) => c.url.startsWith("https://")));
+  assert.equal(ios.href, ios.choose[0].url);
+  assert.equal(ios.external, false);
+  assert.equal(ios.choose[0].url, "https://www.google.com/maps/dir/?api=1&destination=53.550300,9.992000");
+  // q is only a label once ll names the place; alone it is a search.
+  assert.equal(ios.choose[1].url,
+    "https://maps.apple.com/?q=Caf%C3%A9%20A%26B&ll=53.550300,9.992000&daddr=53.550300,9.992000");
+  assert.equal(webRouteChoices(1, 2, "")[1].url, "https://maps.apple.com/?ll=1.000000,2.000000&daddr=1.000000,2.000000");
+  assert.equal(ios.choose[2].url, "https://waze.com/ul?ll=53.550300,9.992000&navigate=yes");
+  assert.equal(webRouteHref(53.5503, 9.992, "Café", FIREFOX_MAC, 0).choose, undefined);
   assert.deepEqual(webRouteHref(53.5503, 9.992, "Café", CHROME_ANDROID, 5), {
     href: geoUri(53.5503, 9.992, "Café"), external: false });
   // An iPad asking for the desktop site calls itself a Mac; a Mac has no touch points.
-  assert.match(webRouteHref(1, 2, "", FIREFOX_MAC.replace("Firefox/142.0", "Safari/605"), 5).href, /^https:\/\/maps\.apple\.com\/\?daddr=1\.000000,2\.000000$/);
+  assert.equal(webRouteHref(1, 2, "", FIREFOX_MAC.replace("Firefox/142.0", "Safari/605"), 5).choose.length, 3);
   // No UA at all (a test, a bot): the link that works everywhere.
   assert.equal(webRouteHref(1, 2).external, true);
 });
