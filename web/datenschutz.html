@@ -39,6 +39,14 @@
      nicht protokolliert. Die Schaltfläche „Route“ öffnet einen <code>geo:</code>-Link mit den
      Koordinaten des Wickeltisches — welche Karten-App ihn entgegennimmt, entscheidet Ihr Gerät;
      Ihr eigener Standort steht nicht in diesem Link.</p>
+  <p>Haben Sie Ihren Standort über eine der beiden Schaltflächen freigegeben und liegt höchstens
+     75 m entfernt ein Wickeltisch, dessen Raum noch niemand eingetragen hat, fragt ein kleiner
+     Hinweis am unteren Rand, ob Sie den Raum kennen. Dafür verwendet die Seite die zuletzt ermittelte
+     Position noch einige Minuten lang; sie liegt nur im Arbeitsspeicher der geöffneten Seite und
+     wird weder gespeichert noch übertragen.
+     Schließen Sie den Hinweis, merkt sich der Browser im Local Storage (Schlüssel
+     <code>papamap-card-dismissed</code>), für welche Orte er nicht mehr erscheinen soll — rein
+     funktional, nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>Spracheinstellung (Local Storage)</h2>
   <p>Wählen Sie über den Sprachumschalter eine Sprache, wird diese Wahl im Local Storage Ihres
      Browsers gespeichert (Schlüssel <code>papamap-lang</code>); ebenso, ob Sie die Karte aus
@@ -77,6 +85,29 @@
      Objekt geprüft wird, merkt sich der Browser im Session Storage (Schlüssel
      <code>papamap-edit-check</code>) und verwirft es beim Schließen des Tabs — rein funktional,
      nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+  <h2>Mein PapaMap: eigene Antworten und gemerkte Orte</h2>
+  <p>Der Dialog „Mein PapaMap“ zeigt, wie viele Antworten Sie selbst gegeben haben. Sind Sie bei
+     OpenStreetMap angemeldet, ruft die Seite dafür beim Öffnen des Dialogs bei
+     api.openstreetmap.org die öffentliche Liste Ihrer eigenen Änderungssätze ab — dieselbe Liste,
+     die jeder in Ihrem OSM-Profil einsehen kann — und zählt auf Ihrem Gerät diejenigen, die über
+     PapaMap oder das PapaMap-Thema von MapComplete entstanden sind. Die Anfrage nennt Ihren
+     OSM-Anzeigenamen, sendet aber kein Zugriffstoken; dabei wird Ihre IP-Adresse an die
+     OpenStreetMap Foundation übertragen (siehe oben). Nummer, Position und Datum dieser
+     Änderungssätze legt der Browser im Local Storage ab (Schlüssel
+     <code>papamap-my-answers</code>), damit sie nicht jedes Mal neu geladen werden; beim Abmelden
+     werden sie gelöscht. Dieser Server erfährt davon nichts, und PapaMap vergleicht Sie mit
+     niemandem: Eine Rangliste von Personen gibt es nicht.</p>
+  <p>Mit dem Stern in einem Pin merken Sie sich einen Ort. Die Liste (OSM-Link, Name und
+     Koordinaten des Ortes, Zeitpunkt) liegt ausschließlich im Local Storage Ihres Browsers
+     (Schlüssel <code>papamap-saved</code>), bis Sie den Ort im Dialog wieder entfernen oder die
+     Browserdaten löschen. Rein funktional, nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+  <h2>Einen Ort teilen</h2>
+  <p>Der Teilen-Knopf in einem Pin übergibt den Namen des Ortes und einen Link auf papamap.de an
+     die Teilen-Funktion Ihres Geräts. An welche App oder Person der Link geht, entscheiden allein
+     Sie; für diese App gelten deren eigene Bestimmungen. Bietet das Gerät keine Teilen-Funktion
+     oder schlägt sie fehl, kopiert die Seite den Link in die Zwischenablage. Wer einen solchen Link öffnet, ruft
+     papamap.de mit dem Zusatz <code>?osm=…</code> auf; er nennt nur den Ort und steht wie jede
+     abgerufene Adresse im Server-Log (siehe oben).</p>
   <h2>Die App (iPhone, iPad)</h2>
   <p>PapaMap gibt es zusätzlich als App, verteilt über den App Store und über TestFlight. Die App
      ist dieselbe Karte in einer nativen Hülle. Es gilt derselbe Grundsatz: kein Konto bei uns,
@@ -105,13 +136,14 @@
      der Datei auf dem Gerät; ohne Netz werden gar keine Kacheln abgerufen. Mit „Löschen“ im selben
      Dialog entfernen Sie eine Stadt wieder.</p>
   <h2>App: Standort</h2>
-  <p>Der Standort-Knopf, die Suche nach dem nächsten Wickeltisch, der Siri-Kurzbefehl und das
-     Home-Bildschirm-Widget fragen Ihren Standort über iOS ab — erst nach Ihrer ausdrücklichen
+  <p>Der Standort-Knopf, die Suche nach dem nächsten Wickeltisch, der Siri-Kurzbefehl, das
+     Home-Bildschirm-Widget und die Schaltfläche „Nächster Wickeltisch“ im Kontrollzentrum (auch
+     auf dem Sperrbildschirm oder der Aktionstaste) fragen Ihren Standort über iOS ab — erst nach Ihrer ausdrücklichen
      Erlaubnis („Beim Verwenden der App“), die Sie in den iOS-Einstellungen jederzeit widerrufen
      können. Die Position wird ausschließlich auf Ihrem Gerät verarbeitet: Die Suche nach dem
      nächsten nutzbaren Wickeltisch läuft gegen die Daten, die ohnehin schon auf dem Gerät liegen.
      Der Standort wird nicht an diesen Server und nicht an Dritte übertragen, nicht gespeichert und
-     nicht protokolliert — auch nicht aus dem Widget und nicht aus dem Kurzbefehl heraus. Das
+     nicht protokolliert — auch nicht aus dem Widget, dem Kurzbefehl oder dem Kontrollzentrum heraus. Das
      Widget rechnet den nächsten Wickeltisch in regelmäßigen Abständen auf dem Gerät neu, solange
      es auf dem Home-Bildschirm oder dem Sperrbildschirm liegt. Nach einem Tipp auf den
      Standort-Knopf zeigt die Karte Ihre Umgebung; die Kacheln für diesen Ausschnitt lädt sie dann
@@ -127,8 +159,10 @@
   <p>Die App speichert dieselben funktionalen Schlüssel wie die Website — Sprache
      (<code>papamap-lang</code>), Papa- oder Mama-Sicht (<code>papamap-mode</code>), den Filter
      „Barrierefrei“ (<code>papamap-wheelchair</code>) und, nach einer Anmeldung, das Zugriffstoken
-     und Ihren OSM-Anzeigenamen (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>) —
-     nur eben im Speicher der App statt im Browser. Rein funktional, ohne Tracking, nur auf Ihrem
+     und Ihren OSM-Anzeigenamen (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>),
+     dazu die gemerkten Orte (<code>papamap-saved</code>), Ihre eigenen Antworten
+     (<code>papamap-my-answers</code>) und die geschlossenen Raum-Hinweise
+     (<code>papamap-card-dismissed</code>) — nur eben im Speicher der App statt im Browser. Rein funktional, ohne Tracking, nur auf Ihrem
      Gerät — und, wie alles, was die App ablegt, in einer Gerätesicherung (iCloud oder Computer),
      falls Sie eine eingerichtet haben (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>App: Anmeldung bei OpenStreetMap</h2>
@@ -166,8 +200,8 @@
   <p>Die Standortfreigabe widerrufen Sie in den iOS-Einstellungen bei PapaMap; gespeicherte Städte
      löschen Sie im Dialog „Stadt offline speichern“ mit „Löschen“; von OpenStreetMap melden Sie
      sich im Pin mit „Abmelden“ ab. Löschen Sie die App, verschwindet damit alles, was sie auf dem
-     Gerät abgelegt hat: die Kopie der Wickeltisch-Daten, die Offline-Städte, die Einstellungen und
-     das Zugriffstoken. Was davon in einer Gerätesicherung liegt, die Sie eingerichtet haben,
+     Gerät abgelegt hat: die Kopie der Wickeltisch-Daten, die Offline-Städte, die Einstellungen, die
+     gemerkten Orte, die Liste Ihrer eigenen Antworten und das Zugriffstoken. Was davon in einer Gerätesicherung liegt, die Sie eingerichtet haben,
      verwaltet iOS; es verschwindet mit dieser Sicherung. Was Sie zu OpenStreetMap geschrieben haben, bleibt dort — das ist der Sinn
      der Sache.</p>
   <h2>Kontakt per E-Mail oder Formular</h2>
@@ -183,6 +217,6 @@
      <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a>.</p>
   <p>Außerdem haben Sie das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren
      (Art. 77 DSGVO), zum Beispiel bei der Behörde an Ihrem Wohnort.</p>
-  <p style="margin-top:30px">Stand: 18. September 2026</p>
+  <p style="margin-top:30px">Stand: 19. September 2026</p>
   <p><a href="./">← Zur Karte</a></p>
 </body></html>
