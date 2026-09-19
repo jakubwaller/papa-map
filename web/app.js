@@ -9,27 +9,28 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh } from "./datasource.js?v=app35";
+         isFixFresh } from "./datasource.js?v=app36";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app35";
+         langUrl } from "./i18n.js?v=app36";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app35";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app36";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
 import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
-         changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies } from "./me.js?v=app35";
+         changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app36";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app35";
+         formatMB, citiesToMount } from "./native.js?v=app36";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -517,7 +518,7 @@ const roomLabel = (raw) => roomLabelKeys(raw).map((p) => (p.key ? t(p.key) : p.r
 // The changing-table line, for a popup (HTML) and for the edit toast (text).
 // The value is OSM's own word and prints as it is — except "no", which every
 // language already has words for (roomNone, the room question's own "there is
-// none"): until app35 a German reader was told "Wickeltisch: no".
+// none"): until app36 a German reader was told "Wickeltisch: no".
 const tableRowHTML = (value) =>
   value === "no" ? `<b>${esc(t("roomNone"))}</b>` : `${esc(t("popupTable"))}: <b>${esc(value)}</b>`;
 const tableRowText = (value) => (value === "no" ? t("roomNone") : `${t("popupTable")}: ${value}`);
@@ -1157,6 +1158,7 @@ document.getElementById("nearest").addEventListener("click", (e) => {
         name: f.name
           || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed"),
       }));
+      maybeToastTip();
       // The room card follows this popup, not this fix, the way locate's own
       // fix would if a popup were not about to cover it: openPopup above hid
       // it, and closing this one (whenever that happens — this same object,
@@ -2819,10 +2821,58 @@ function renderMeStats() {
   meStatsEl.innerHTML = lines.join("");
 }
 
+// "Mehr aus der App": the three things iOS keeps on its own screens (me.js,
+// appTips). Plain text — nothing here is a link, the reader has to leave the
+// app to do any of it. Hidden wherever appTips has nothing to say.
+const meTipsEl = document.getElementById("me-tips");
+const meTipsListEl = document.getElementById("me-tips-list");
+function renderMeTips() {
+  const tips = appTips(platform(), lang);
+  meTipsEl.hidden = tips.length === 0;
+  meTipsListEl.replaceChildren(...tips.map((key) => {
+    const li = document.createElement("li");
+    li.textContent = t(key);
+    return li;
+  }));
+}
+
+// Said once, after the first "nearest" that found something: the moment the
+// reader has just used the very thing the control and the widget do in one
+// tap. Waits out the "x m away" toast instead of replacing it. A tap opens
+// Mein PapaMap, where the three are spelled out. The flag is set when the
+// toast is shown — not when it is tapped, a hint that returns until it is
+// obeyed is an advert; and not when it is scheduled, an app killed in the
+// wait would have spent its one hint unseen. It also waits its turn: never
+// over another toast (one with a tap of its own would lose it) and never
+// under an open dialog, where it could be read but not tapped. A few tries,
+// then it is left for the next "nearest". Storage blocked: once per launch.
+const TIP_DELAY_MS = 4500, TIP_TRIES = 4;
+let tipPending = false, tipSaidThisLaunch = false;
+function maybeToastTip() {
+  if (tipPending || tipSaidThisLaunch || appTips(platform(), lang).length === 0) return;
+  try { if (localStorage.getItem(TIP_SEEN_KEY)) return; } catch { /* no storage: fall through */ }
+  tipPending = true;
+  let tries = 0;
+  const say = () => {
+    const busy = document.getElementById("toast").classList.contains("show")
+      || document.querySelector("dialog[open]");
+    if (busy) {
+      if (++tries < TIP_TRIES) setTimeout(say, TIP_DELAY_MS); else tipPending = false;
+      return;
+    }
+    tipPending = false;
+    tipSaidThisLaunch = true;
+    try { localStorage.setItem(TIP_SEEN_KEY, "1"); } catch { /* said once per launch instead */ }
+    toast(t("toastTip"), { ms: 8000, onTap: () => meBtn.click() });
+  };
+  setTimeout(say, TIP_DELAY_MS);
+}
+
 function renderMeDialog() {
   renderMeSentence();
   renderMeStats();
   renderSavedList();
+  renderMeTips();
 }
 
 meBtn.addEventListener("click", () => {

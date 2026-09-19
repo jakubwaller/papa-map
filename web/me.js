@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app35";
-import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app35";
+import { CREATED_BY } from "./osm.js?v=app36";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app36";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -202,7 +202,7 @@ export function circleBounds(lat, lon, km) {
 // the changeset with the theme it ran instead. For a theme it loads from a
 // URL — which is how every hand-off from this site opens it (`userlayout=`,
 // PAPAMAP_THEME in datasource.js) — the `theme` tag is **that URL**, not the
-// id inside the file. Until app35 this compared against the bare id only, so
+// id inside the file. Until app36 this compared against the bare id only, so
 // not one MapComplete session was ever counted: a reader with 3 taps on this
 // site and 14 MapComplete sessions was told "3" (build 24, 2026-09-19). The
 // bare id stays accepted for the day MapComplete lists the theme itself.
@@ -365,6 +365,22 @@ export function advanceBackfillCursor(cursor, page) {
 // between nearly every single dialog open for that to matter in practice.
 export function reopenGap(before, oldWatermark, previousBackfill) {
   return { oldest_scanned: before, done: false, floor: previousBackfill?.done ? oldWatermark : null };
+}
+
+// ---- "Mehr aus der App": what nobody would guess a map app has ----
+// The Control Center control, the home-screen widget and the Siri phrase are
+// all reached from iOS's own screens, never from this one, so a reader who is
+// not told never finds them. iOS app only: the website and the Android app
+// have none of the three. The Siri line only where the app ships phrases
+// (app/ios/App/App/de.lproj/AppShortcuts.strings, and English in the intent
+// itself) — Siri answers in the phone's language, and a phrase it was never
+// given is a promise that fails out loud. Returns i18n keys, in order.
+export const SIRI_LANGS = ["de", "en"];
+export const TIP_SEEN_KEY = "papamap-tip-seen";
+
+export function appTips(platform, lang) {
+  if (platform !== "ios") return [];
+  return ["tipControl", "tipWidget", ...(SIRI_LANGS.includes(lang) ? ["tipSiri"] : [])];
 }
 
 // ---- Saved places (device only, papamap-saved) ----

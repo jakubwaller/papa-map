@@ -23,9 +23,11 @@ def _mapcomplete_url(osm_type, osm_id, lat, lon):
     preselected via the #<type>/<id> fragment (format per MapComplete's
     Docs/URL_Parameters.md). Always our own theme via userlayout — its
     dad_toilet layer covers amenity=toilets too, and edits made through it
-    carry theme=papamap in the changeset, so website contributions stay
-    countable (the official toilets theme would tag them theme=toilets,
-    indistinguishable from any other MapComplete user)."""
+    carry PAPAMAP_THEME_URL in the changeset's `theme` tag (the URL, not the
+    id "papamap": that is what MapComplete writes for a userlayout theme), so
+    website contributions stay countable (the official toilets theme would
+    tag them theme=toilets, indistinguishable from any other MapComplete
+    user)."""
     return (f"https://mapcomplete.org/theme.html?userlayout={PAPAMAP_THEME_URL}"
             f"&z=18&lat={lat}&lon={lon}#{osm_type}/{osm_id}")
 
