@@ -161,4 +161,9 @@ public enum L {
     public static func title(lang: String) -> String {
         lang == "de" ? "Nächster Wickeltisch" : "Nearest changing table"
     }
+    // What the Control Center gallery says the button is for, one line.
+    public static func controlHint(lang: String) -> String {
+        lang == "de" ? "Öffnet PapaMap beim nächsten Wickeltisch, den du auch erreichst."
+                     : "Opens PapaMap on the nearest changing table you can actually reach."
+    }
 }

@@ -441,7 +441,7 @@ a data bug on the map and a fake mover on the leaderboard.
 
 `app/` is the same map in a native shell (Capacitor) for the App Store and Google Play — the
 very same `web/` tree, with `web/native.js` as the only seam; on the website every export of
-it is inert. It exists for the three things a web page cannot do (`app/README.md` has the
+it is inert. It exists for the four things a web page cannot do (`app/README.md` has the
 layout, the build and the signing):
 
 - **A city offline.** The website may not keep a basemap (see *Offline* above: the OSMF tile
@@ -457,8 +457,14 @@ layout, the build and the signing):
   Group container — already narrowed by the wheelchair chip and read with the reader's
   Papa/Mama setting, so the widget, the shortcut and the app's own button name the same table.
   `status` is read there, never derived.
+- **A button in Control Center** (iOS 18), which is also a Lock Screen button and the Action
+  button: one tap on the nearest reachable table, no app to find first. It asks the same
+  question as the shortcut — one lookup, `NearestLookup`, so the two cannot drift apart — from
+  an intent that runs in the app, because only a foreground app may ask for the position. It
+  shows no distance: Control Center is drawn from a process with no fresh fix, and a number
+  quietly hours old is worse than none.
 
-Both end at the same deep link, `papamap://table?osm=…`, and only the widget's tap takes it
+All of them end at the same deep link, `papamap://table?osm=…`, and only the widget's tap takes it
 through the OS. Siri's cannot: `OpenURLIntent` is the universal-link API, and handed the app's
 own scheme iOS brings the app to the front and drops the URL — `application(_:open:)` never
 fires, so the page is never told which table was found. Build 20 did exactly that: Siri said the
@@ -467,7 +473,11 @@ the widget opened the pin. So the tap runs an intent of the app's own instead (`
 `openAppWhenRun`, which is what makes `perform()` run inside the app), and that leaves the link
 in a one-value slot the app's plugin empties into Capacitor's own opened-URL path. The slot is
 read once and removed whatever its age, and ignored when it is older than two minutes: a tap
-that never arrived must not open a table on some later morning.
+that never arrived must not open a table on some later morning. The Control Center button goes
+down that same path for a reason of its own (`OpenNearestTableIntent`): its intent must run in
+the app to be allowed a position at all, so it looks the table up there and leaves the link in
+the same slot — and when it finds none, it leaves nothing and the app simply opens on the map,
+because a control that does nothing at all reads as broken.
 
 The promises of the page hold unchanged: the position is used on the phone and never sent,
 the dataset comes from papamap.de, and an answer goes to OpenStreetMap under the reader's own

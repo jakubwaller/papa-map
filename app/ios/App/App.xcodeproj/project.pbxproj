@@ -8,10 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		0596E55727FD5DE1A23118AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8ED5D290B1D8B98A508BAD9 /* Foundation.framework */; };
+		0921410F9A294BA0BEAFEA8F /* NearestLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0DF4758D6C7380A82AFA64 /* NearestLookup.swift */; };
 		106D63B995A04C73DEDEF9A3 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E91E50A59E02195346BD341B /* SwiftUI.framework */; };
 		2154B1D6EC28F1CCD097676C /* TableStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23441C9FFEE7740149D15F50 /* TableStore.swift */; };
-		41D4F41D472CFA1A60C29160 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E8C95C670FB2BF17895954FE /* PrivacyInfo.xcprivacy */; };
+		2E81A86BB6EC48E5EFCA53B9 /* NearestTableControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67FEEAEBD1935295B290EB88 /* NearestTableControl.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
+		41D4F41D472CFA1A60C29160 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E8C95C670FB2BF17895954FE /* PrivacyInfo.xcprivacy */; };
+		451DE8AEAE55BBD4E5E6E77C /* OpenNearestTableIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC5495B5FFFD688306E41B6 /* OpenNearestTableIntent.swift */; };
+		4B197D96C7D5F360154319CC /* OpenNearestTableIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC5495B5FFFD688306E41B6 /* OpenNearestTableIntent.swift */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
@@ -27,6 +31,8 @@
 		9CC6228A48B8941894BE51B6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B9768CEED5ED1270D31AFCD9 /* PrivacyInfo.xcprivacy */; };
 		A2AA3ACE4537E985D8454432 /* AppShortcuts.strings in Resources */ = {isa = PBXBuildFile; fileRef = CC4DBB420AC21B007AD748C3 /* AppShortcuts.strings */; };
 		A98906B0931356652DF58F6E /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4D17BDDFB78901FAFBCE58 /* MainViewController.swift */; };
+		B43A951B7C3B053DD51574CC /* LocationOnce.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB322657027E0435A89F1A31 /* LocationOnce.swift */; };
+		E0C22A8A9CE7FB9A3C63781E /* NearestLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0DF4758D6C7380A82AFA64 /* NearestLookup.swift */; };
 		E2FBD9CDE674D43A21BAB9BD /* PapaMapWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8359E174648566B100795441 /* PapaMapWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E538C9A6ABE389FD885F2664 /* TableStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23441C9FFEE7740149D15F50 /* TableStore.swift */; };
 		F587B44CA5304912426298F9 /* LocationOnce.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB322657027E0435A89F1A31 /* LocationOnce.swift */; };
@@ -73,7 +79,9 @@
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
+		5BC5495B5FFFD688306E41B6 /* OpenNearestTableIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OpenNearestTableIntent.swift; path = Intents/OpenNearestTableIntent.swift; sourceTree = "<group>"; };
 		5DE40A4EC637421D85E3CE44 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		67FEEAEBD1935295B290EB88 /* NearestTableControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NearestTableControl.swift; sourceTree = "<group>"; };
 		71C15FC030695EBD0CC2BA64 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8359E174648566B100795441 /* PapaMapWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PapaMapWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -87,6 +95,7 @@
 		E8C95C670FB2BF17895954FE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E91E50A59E02195346BD341B /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		F811EBD1BFA9E8DD3497DD35 /* de */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		FF0DF4758D6C7380A82AFA64 /* NearestLookup.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NearestLookup.swift; path = Shared/NearestLookup.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -160,6 +169,8 @@
 				CC4DBB420AC21B007AD748C3 /* AppShortcuts.strings */,
 				DF7D6BF3CF8BE884DA68FCE2 /* InfoPlist.strings */,
 				0EFD81D1DF8B737BF7E90B81 /* App.entitlements */,
+				FF0DF4758D6C7380A82AFA64 /* NearestLookup.swift */,
+				5BC5495B5FFFD688306E41B6 /* OpenNearestTableIntent.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -171,6 +182,7 @@
 				71C15FC030695EBD0CC2BA64 /* Info.plist */,
 				2FA67DA1D2DAB307A146690C /* PapaMapWidget.entitlements */,
 				E8C95C670FB2BF17895954FE /* PrivacyInfo.xcprivacy */,
+				67FEEAEBD1935295B290EB88 /* NearestTableControl.swift */,
 			);
 			name = PapaMapWidget;
 			path = PapaMapWidget;
@@ -306,6 +318,8 @@
 				E538C9A6ABE389FD885F2664 /* TableStore.swift in Sources */,
 				F587B44CA5304912426298F9 /* LocationOnce.swift in Sources */,
 				84C6746A621D41513155EFA0 /* NearestTableIntent.swift in Sources */,
+				E0C22A8A9CE7FB9A3C63781E /* NearestLookup.swift in Sources */,
+				451DE8AEAE55BBD4E5E6E77C /* OpenNearestTableIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -315,6 +329,10 @@
 			files = (
 				6B21E1D2B055D00B310E0E8B /* PapaMapWidget.swift in Sources */,
 				2154B1D6EC28F1CCD097676C /* TableStore.swift in Sources */,
+				2E81A86BB6EC48E5EFCA53B9 /* NearestTableControl.swift in Sources */,
+				B43A951B7C3B053DD51574CC /* LocationOnce.swift in Sources */,
+				0921410F9A294BA0BEAFEA8F /* NearestLookup.swift in Sources */,
+				4B197D96C7D5F360154319CC /* OpenNearestTableIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -515,8 +533,8 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = de.papamap.app;
-				PROVISIONING_PROFILE_SPECIFIER = "PapaMap CI de.papamap.app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "PapaMap CI de.papamap.app";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -569,8 +587,8 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = de.papamap.app.widget;
-				PROVISIONING_PROFILE_SPECIFIER = "PapaMap CI de.papamap.app.widget";
 				PRODUCT_NAME = PapaMapWidget;
+				PROVISIONING_PROFILE_SPECIFIER = "PapaMap CI de.papamap.app.widget";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
