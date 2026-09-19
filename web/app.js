@@ -2840,15 +2840,32 @@ function renderMeTips() {
 // reader has just used the very thing the control and the widget do in one
 // tap. Waits out the "x m away" toast instead of replacing it. A tap opens
 // Mein PapaMap, where the three are spelled out. The flag is set when the
-// toast is shown, not when it is tapped — a hint that returns until it is
-// obeyed is an advert. Storage blocked: said once per launch, then.
-let tipSaidThisLaunch = false;
+// toast is shown — not when it is tapped, a hint that returns until it is
+// obeyed is an advert; and not when it is scheduled, an app killed in the
+// wait would have spent its one hint unseen. It also waits its turn: never
+// over another toast (one with a tap of its own would lose it) and never
+// under an open dialog, where it could be read but not tapped. A few tries,
+// then it is left for the next "nearest". Storage blocked: once per launch.
+const TIP_DELAY_MS = 4500, TIP_TRIES = 4;
+let tipPending = false, tipSaidThisLaunch = false;
 function maybeToastTip() {
-  if (tipSaidThisLaunch || appTips(platform(), lang).length === 0) return;
+  if (tipPending || tipSaidThisLaunch || appTips(platform(), lang).length === 0) return;
   try { if (localStorage.getItem(TIP_SEEN_KEY)) return; } catch { /* no storage: fall through */ }
-  tipSaidThisLaunch = true;
-  try { localStorage.setItem(TIP_SEEN_KEY, "1"); } catch { /* said once per launch instead */ }
-  setTimeout(() => toast(t("toastTip"), { ms: 8000, onTap: () => meBtn.click() }), 4500);
+  tipPending = true;
+  let tries = 0;
+  const say = () => {
+    const busy = document.getElementById("toast").classList.contains("show")
+      || document.querySelector("dialog[open]");
+    if (busy) {
+      if (++tries < TIP_TRIES) setTimeout(say, TIP_DELAY_MS); else tipPending = false;
+      return;
+    }
+    tipPending = false;
+    tipSaidThisLaunch = true;
+    try { localStorage.setItem(TIP_SEEN_KEY, "1"); } catch { /* said once per launch instead */ }
+    toast(t("toastTip"), { ms: 8000, onTap: () => meBtn.click() });
+  };
+  setTimeout(say, TIP_DELAY_MS);
 }
 
 function renderMeDialog() {
