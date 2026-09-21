@@ -1,0 +1,6 @@
+– „Nejbližší přebalovací pult": sedí místo a funguje trasa ve tvé mapové aplikaci?
+– Sedí barvy u míst, která znáš? Chybí ti nějaké místo? I to je užitečná zpětná vazba.
+– Přidej si widget a ovládací prvek v Ovládacím centru (návod je dole v „Můj PapaMap"). Jmenují se zatím anglicky: „Nearest changing table".
+– Stáhni si město offline, zapni režim Letadlo a otevři mapu.
+– Volitelně s účtem OpenStreetMap: odpověz u šedého místa, ve které místnosti pult je.
+Cokoli je nejasné nebo nefunguje: udělej snímek obrazovky a pošli ho přes TestFlight.

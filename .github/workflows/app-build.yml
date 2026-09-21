@@ -4,9 +4,14 @@
 # Every push to a PR gets the two unsigned builds — they prove the Swift, the
 # project file and the Gradle setup compile. The signed ones are asked for:
 #
-#   testflight   archive, sign, upload to App Store Connect (TestFlight)
-#   apple-setup  once per account: bundle ids, App Groups capability, the
-#                distribution certificate for app/ios/distribution.csr
+#   testflight       archive, sign, upload to App Store Connect (TestFlight). A second job,
+#                    beta-text (ubuntu-latest, needs: testflight — no Xcode, no reason to wait
+#                    on Apple's processing on the Mac runner), then pushes
+#                    app/ios/testflight/what-to-test.*.txt to that build and, if the repo
+#                    variable ASC_BETA_GROUP is set, adds the build to that beta group
+#   apple-setup      once per account: bundle ids, App Groups capability, the
+#                    distribution certificate for app/ios/distribution.csr
+#   beta-text-pull   print what TestFlight currently shows, no build needed
 #
 # Ask from the Actions tab (Run workflow → task) or by putting the label of
 # that name on a pull request, which builds that PR's branch. The label route
@@ -33,7 +38,7 @@ on:
         description: "What to run"
         type: choice
         default: build
-        options: [build, testflight, apple-setup]
+        options: [build, testflight, apple-setup, beta-text-pull]
 
 concurrency:
   group: app-build-${{ github.ref }}-${{ github.event.label.name || inputs.task || 'build' }}
@@ -129,6 +134,26 @@ jobs:
           path: ${{ runner.temp }}/distribution.cer
           if-no-files-found: ignore
           retention-days: 7
+
+  # Prints what is live in TestFlight right now — no build, no Xcode, just the
+  # API — so the repo's testflight/what-to-test.*.txt can be compared against
+  # App Store Connect without opening a browser.
+  beta-text-pull:
+    if: inputs.task == 'beta-text-pull'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node ios/asc.mjs beta-text pull
 
   testflight:
     if: inputs.task == 'testflight' || (github.event.action == 'labeled' && github.event.label.name == 'testflight')
@@ -229,3 +254,34 @@ jobs:
         run: |
           security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
           rm -rf "$RUNNER_TEMP/keys"
+
+  # Split from `testflight` on purpose: pushing the text and distributing the
+  # build can wait up to 25 minutes on Apple's own processing, and none of
+  # that needs Xcode or a Mac. Keeping it on ubuntu-latest also means a
+  # failure here shows up as its own red job instead of making the (already
+  # successful) upload job look failed.
+  beta-text:
+    needs: testflight
+    if: inputs.task == 'testflight' || (github.event.action == 'labeled' && github.event.label.name == 'testflight')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # github.run_number is the same for every job of one run, so this is
+      # the same build number the testflight job just archived and uploaded.
+      - name: Push TestFlight text
+        run: node ios/asc.mjs beta-text push --build "${{ github.run_number }}"
+      - name: Add build to the beta group
+        if: vars.ASC_BETA_GROUP != ''
+        env:
+          ASC_BETA_GROUP: ${{ vars.ASC_BETA_GROUP }}
+        run: node ios/asc.mjs beta-text distribute --build "${{ github.run_number }}" --group "$ASC_BETA_GROUP"
