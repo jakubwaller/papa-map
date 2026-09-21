@@ -222,7 +222,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #stats code { font-size: 11.5px; }
 #stats a { font-weight: 600; }
 #stats .cta-grey { color: var(--grey-pin); font-weight: 600; }
-#stats .honesty { color: var(--muted); }
+#stats .updated { color: var(--muted); }
 
 /* ---------- Chip filter bar (legend + toggles) ---------- */
 .chip-bar {
@@ -820,10 +820,10 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
      must not stand a size taller than the chips it repaints. */
   .mode-btn { padding: 7px 11px; font-size: 12px; }
 
-  /* The strip is 161px of the 308px overlay here — over half the chrome, and
-     the map pays for all of it. Collapsed keeps the headline and its "tap the
-     grey pins" call to action, which is the whole point of the strip; the
-     worldwide comparison and the methodology note fold away. 308px → 214px. */
+  /* The strip is over half the chrome here, and the map pays for all of it.
+     Collapsed keeps the headline and its "tap the grey pins" call to action,
+     which is the whole point of the strip; the worldwide comparison and the
+     "as of" date fold away. */
   .stats-wrap:not(.open) #stats .stat:not(:first-child) { display: none; }
   .stats-wrap:not(.open) #stats { cursor: pointer; }
   #stats { padding-right: 44px; }   /* room for the toggle, which overlays it */

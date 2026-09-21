@@ -251,8 +251,7 @@ export const STRINGS = {
     tipWidget: "Widget: Home-Bildschirm gedrückt halten, „Bearbeiten“, „Widget hinzufügen“, PapaMap.",
     tipSiri: "Siri: „Nächster Wickeltisch in PapaMap“.",
     toastTip: "Tipp: Den nächsten Wickeltisch gibt es auch als Taste im Kontrollzentrum und als Widget. Tippen für mehr.",
-    statsHonesty: '{toilets} Toiletten hier erfasst, Kapazitäts-Tags an {cap} — das Angebot selbst ist nicht messbar. <a href="{href}">Methoden</a>{updated}',
-    statsUpdated: " · Stand {date}",
+    statsUpdated: "Stand {date}.",
 
     toastNoGeo: "Standortbestimmung ist in diesem Browser nicht verfügbar.",
     toastGeoFail: "Standort nicht gefunden — Browser-Berechtigung prüfen.",
@@ -447,8 +446,7 @@ export const STRINGS = {
     tipWidget: "Widget: touch and hold the Home Screen, Edit, “Add Widget”, PapaMap.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Tip: the nearest changing table is also a Control Center button and a widget. Tap for more.",
-    statsHonesty: '{toilets} toilets mapped here, capacity tags on {cap} — provision itself is unmeasurable. <a href="{href}">Methods</a>{updated}',
-    statsUpdated: " · updated {date}",
+    statsUpdated: "Updated {date}.",
 
     toastNoGeo: "Geolocation is not available in this browser.",
     toastGeoFail: "Couldn't get your location — check the browser's permission.",
@@ -640,8 +638,7 @@ export const STRINGS = {
     tipWidget: "Widget: føj PapaMap-widgetten til hjemmeskærmen.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Tip: Det nærmeste puslebord findes også som knap i Kontrolcenter og som widget. Tryk for mere.",
-    statsHonesty: '{toilets} toiletter registreret her, kapacitets-tags på {cap} — selve udbuddet kan ikke måles. <a href="{href}">Metode</a>{updated}',
-    statsUpdated: " · opdateret {date}",
+    statsUpdated: "Opdateret {date}.",
 
     toastNoGeo: "Placering er ikke tilgængelig i denne browser.",
     toastGeoFail: "Kunne ikke finde din placering — tjek browserens tilladelse.",
@@ -831,8 +828,7 @@ export const STRINGS = {
     tipWidget: "Widget: zet de PapaMap-widget op je beginscherm.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Tip: de dichtstbijzijnde verschoontafel is er ook als knop in het bedieningspaneel en als widget. Tik voor meer.",
-    statsHonesty: "{toilets} toiletten hier vastgelegd, capaciteitstags bij {cap} — het aanbod zelf is niet meetbaar. <a href=\"{href}\">Methode</a>{updated}",
-    statsUpdated: " · bijgewerkt {date}",
+    statsUpdated: "Bijgewerkt {date}.",
 
     toastNoGeo: "Locatiebepaling is niet beschikbaar in deze browser.",
     toastGeoFail: "Locatie niet gevonden — controleer de toestemming in de browser.",
@@ -1020,8 +1016,7 @@ export const STRINGS = {
     tipWidget: "Widget : ajoutez le widget PapaMap à votre écran d’accueil.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Astuce : la table à langer la plus proche existe aussi en bouton du Centre de contrôle et en widget. Touchez pour en savoir plus.",
-    statsHonesty: "{toilets} toilettes recensées ici, tags de capacité sur {cap} — l'offre elle-même n'est pas mesurable. <a href=\"{href}\">Méthodes</a>{updated}",
-    statsUpdated: " · mis à jour le {date}",
+    statsUpdated: "Mis à jour le {date}.",
 
     toastNoGeo: "La géolocalisation n'est pas disponible dans ce navigateur.",
     toastGeoFail: "Position introuvable — vérifie l'autorisation du navigateur.",
@@ -1209,8 +1204,7 @@ export const STRINGS = {
     tipWidget: "Widget: aggiungi il widget di PapaMap alla schermata Home.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Suggerimento: il fasciatoio più vicino c’è anche come pulsante nel Centro di Controllo e come widget. Tocca per saperne di più.",
-    statsHonesty: "{toilets} bagni registrati qui, tag di capienza su {cap} — l'offerta in sé non è misurabile. <a href=\"{href}\">Metodo</a>{updated}",
-    statsUpdated: " · aggiornato il {date}",
+    statsUpdated: "Aggiornato il {date}.",
 
     toastNoGeo: "La geolocalizzazione non è disponibile in questo browser.",
     toastGeoFail: "Non riesco a trovare la tua posizione — controlla i permessi del browser.",
@@ -1398,8 +1392,7 @@ export const STRINGS = {
     tipWidget: "Widget: přidejte si widget PapaMap na plochu.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Tip: nejbližší přebalovací pult najdete i jako tlačítko v Ovládacím centru a jako widget. Klepněte pro více.",
-    statsHonesty: "Tady zaznamenáno {toilets} toalet, tagy s kapacitou u {cap} — samotnou vybavenost změřit nejde. <a href=\"{href}\">Metody</a>{updated}",
-    statsUpdated: " · aktualizováno {date}",
+    statsUpdated: "Aktualizováno {date}.",
 
     toastNoGeo: "Určování polohy není v tomto prohlížeči k dispozici.",
     toastGeoFail: "Polohu se nepodařilo zjistit — zkontroluj oprávnění prohlížeče.",
@@ -1587,8 +1580,7 @@ export const STRINGS = {
     tipWidget: "Widżet: dodaj widżet PapaMap do ekranu początkowego.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Wskazówka: najbliższy przewijak jest też przyciskiem w Centrum sterowania i widżetem. Stuknij, aby dowiedzieć się więcej.",
-    statsHonesty: "{toilets} toalet zapisanych tutaj, tagi pojemności ma {cap} z nich — samej dostępności nie da się zmierzyć. <a href=\"{href}\">Metody</a>{updated}",
-    statsUpdated: " · dane z {date}",
+    statsUpdated: "Dane z {date}.",
 
     toastNoGeo: "Geolokalizacja nie jest dostępna w tej przeglądarce.",
     toastGeoFail: "Nie udało się ustalić lokalizacji — sprawdź uprawnienia przeglądarki.",
@@ -1776,8 +1768,7 @@ export const STRINGS = {
     tipWidget: "Widget: lägg till PapaMap-widgeten på hemskärmen.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Tips: närmaste skötbord finns också som knapp i Kontrollcenter och som widget. Tryck för mer.",
-    statsHonesty: "{toilets} toaletter registrerade här, kapacitetstaggar på {cap} — själva tillgången går inte att mäta. <a href=\"{href}\">Metod</a>{updated}",
-    statsUpdated: " · uppdaterad {date}",
+    statsUpdated: "Uppdaterad {date}.",
 
     toastNoGeo: "Positionering är inte tillgänglig i den här webbläsaren.",
     toastGeoFail: "Hittade inte din position — kontrollera webbläsarens behörighet.",
@@ -1964,8 +1955,7 @@ export const STRINGS = {
     tipWidget: "Widget: dodajte PapaMap widget na početni ekran.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Savjet: najbliži sto za previjanje postoji i kao dugme u Control Centeru i kao widget. Dodirnite za više.",
-    statsHonesty: '{toilets} WC-a zabilježeno ovdje, oznaka kapaciteta na {cap} — sama ponuda se ne može izmjeriti. <a href="{href}">Metode</a>{updated}',
-    statsUpdated: " · ažurirano {date}",
+    statsUpdated: "Ažurirano {date}.",
 
     toastNoGeo: "Geolokacija nije dostupna u ovom pregledniku.",
     toastGeoFail: "Nije moguće utvrditi tvoju lokaciju — provjeri dozvole preglednika.",
@@ -2152,8 +2142,7 @@ export const STRINGS = {
     tipWidget: "Giny: afegiu el giny de PapaMap a la pantalla d’inici.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Consell: el canviador més proper també és un botó del Centre de control i un giny. Toqueu per saber-ne més.",
-    statsHonesty: '{toilets} lavabos registrats aquí, etiquetes de capacitat a {cap} — la disponibilitat en si no es pot mesurar. <a href="{href}">Mètodes</a>{updated}',
-    statsUpdated: " · actualitzat el {date}",
+    statsUpdated: "Actualitzat el {date}.",
 
     toastNoGeo: "La geolocalització no està disponible en aquest navegador.",
     toastGeoFail: "No s'ha pogut trobar la teva ubicació — comprova els permisos del navegador.",
@@ -2340,8 +2329,7 @@ export const STRINGS = {
     tipWidget: "Vidin: lisa PapaMapi vidin avakuvale.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Vihje: lähim mähkimislaud on olemas ka Control Centeri nupuna ja vidinana. Puuduta, et näha rohkem.",
-    statsHonesty: '{toilets} tualetti siin kaardistatud, mahutavuse sildid {cap}-l neist — pakkumist ennast ei saa mõõta. <a href="{href}">Meetodid</a>{updated}',
-    statsUpdated: " · uuendatud {date}",
+    statsUpdated: "Uuendatud {date}.",
 
     toastNoGeo: "Asukoha määramine ei ole selles brauseris saadaval.",
     toastGeoFail: "Asukohta ei õnnestunud leida — kontrolli brauseri luba.",
@@ -2528,8 +2516,7 @@ export const STRINGS = {
     tipWidget: "Widget: añade el widget de PapaMap a la pantalla de inicio.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Consejo: el cambiador más cercano también está como botón en el Centro de control y como widget. Toca para saber más.",
-    statsHonesty: '{toilets} aseos registrados aquí, etiquetas de capacidad en {cap} — la oferta en sí no se puede medir. <a href="{href}">Métodos</a>{updated}',
-    statsUpdated: " · actualizado el {date}",
+    statsUpdated: "Actualizado el {date}.",
 
     toastNoGeo: "La geolocalización no está disponible en este navegador.",
     toastGeoFail: "No se ha podido encontrar tu ubicación — comprueba el permiso del navegador.",
@@ -2716,8 +2703,7 @@ export const STRINGS = {
     tipWidget: "Widget: dodajte PapaMap widget na početni zaslon.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Savjet: najbliži stol za previjanje postoji i kao tipka u Kontrolnom centru i kao widget. Dodirnite za više.",
-    statsHonesty: '{toilets} zabilježenih toaleta ovdje, oznaka kapaciteta na {cap} — samu ponudu nije moguće izmjeriti. <a href="{href}">Metode</a>{updated}',
-    statsUpdated: " · ažurirano {date}",
+    statsUpdated: "Ažurirano {date}.",
 
     toastNoGeo: "Određivanje lokacije nije dostupno u ovom pregledniku.",
     toastGeoFail: "Nije moguće dohvatiti tvoju lokaciju — provjeri dopuštenje u pregledniku.",
@@ -2904,8 +2890,7 @@ export const STRINGS = {
     tipWidget: "Græja: bættu PapaMap-græjunni á heimaskjáinn.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Ábending: næsta skiptiborð er líka til sem hnappur í Control Center og sem græja. Ýttu til að sjá meira.",
-    statsHonesty: '{toilets} salerni skráð hér, afkastamerkingar á {cap} — framboðið sjálft er ekki mælanlegt. <a href="{href}">Aðferð</a>{updated}',
-    statsUpdated: " · uppfært {date}",
+    statsUpdated: "Uppfært {date}.",
 
     toastNoGeo: "Staðsetning er ekki tiltæk í þessum vafra.",
     toastGeoFail: "Tókst ekki að finna staðsetningu þína — athugaðu heimildir vafrans.",
@@ -3092,8 +3077,7 @@ export const STRINGS = {
     tipWidget: "Logrīks: pievieno PapaMap logrīku sākuma ekrānam.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Padoms: tuvākais pārtinamais galds ir arī kā poga Control Center un kā logrīks. Pieskaries, lai uzzinātu vairāk.",
-    statsHonesty: '{toilets} šeit atzīmētas tualetes, no kurām kapacitātes birkas ir tikai {cap} — pašu nodrošinājumu izmērīt nevar. <a href="{href}">Metodika</a>{updated}',
-    statsUpdated: " · atjaunots {date}",
+    statsUpdated: "Atjaunots {date}.",
 
     toastNoGeo: "Šajā pārlūkprogrammā ģeolokācija nav pieejama.",
     toastGeoFail: "Neizdevās noteikt tavu atrašanās vietu — pārbaudi pārlūkprogrammas atļauju.",
@@ -3280,8 +3264,7 @@ export const STRINGS = {
     tipWidget: "Valdiklis: pridėkite PapaMap valdiklį į pradžios ekraną.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Patarimas: artimiausias pervystymo stalas yra ir kaip mygtukas Control Center, ir kaip valdiklis. Bakstelėkite, kad sužinotumėte daugiau.",
-    statsHonesty: 'Čia pažymėta {toilets} tualetų, o talpos žymą turi tik {cap} iš jų — pati pasiūla yra neišmatuojama. <a href="{href}">Metodai</a>{updated}',
-    statsUpdated: " · atnaujinta {date}",
+    statsUpdated: "Atnaujinta {date}.",
 
     toastNoGeo: "Vietos nustatymas šioje naršyklėje nepasiekiamas.",
     toastGeoFail: "Nepavyko nustatyti tavo vietos — patikrink naršyklės leidimą.",
@@ -3468,8 +3451,7 @@ export const STRINGS = {
     tipWidget: "Widget: add hozzá a PapaMap widgetet a Főképernyőhöz.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Tipp: a legközelebbi pelenkázó a Vezérlőközpontban gombként és widgetként is elérhető. Koppints a részletekért.",
-    statsHonesty: '{toilets} mosdó van itt feltérképezve, kapacitás-címke {cap} esetében — maga az ellátottság nem mérhető. <a href="{href}">Módszertan</a>{updated}',
-    statsUpdated: " · frissítve: {date}",
+    statsUpdated: "Frissítve: {date}.",
 
     toastNoGeo: "A helymeghatározás nem elérhető ebben a böngészőben.",
     toastGeoFail: "Nem sikerült megállapítani a helyzeted — ellenőrizd a böngésző engedélyét.",
@@ -3656,8 +3638,7 @@ export const STRINGS = {
     tipWidget: "Widget: legg til PapaMap-widgeten på Hjem-skjermen.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Tips: nærmeste stellebord finnes også som knapp i Kontrollsenter og som widget. Trykk for mer.",
-    statsHonesty: '{toilets} toaletter registrert her, kapasitetstagger på {cap} — selve tilbudet kan ikke måles. <a href="{href}">Metode</a>{updated}',
-    statsUpdated: " · oppdatert {date}",
+    statsUpdated: "Oppdatert {date}.",
 
     toastNoGeo: "Posisjonering er ikke tilgjengelig i denne nettleseren.",
     toastGeoFail: "Fant ikke posisjonen din — sjekk nettleserens tillatelse.",
@@ -3844,8 +3825,7 @@ export const STRINGS = {
     tipWidget: "Widget: adicione o widget PapaMap ao ecrã principal.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Dica: o fraldário mais próximo também existe como botão na Central de controlo e como widget. Toque para saber mais.",
-    statsHonesty: '{toilets} casas de banho registadas aqui, tags de capacidade em {cap} — a oferta em si não é mensurável. <a href="{href}">Métodos</a>{updated}',
-    statsUpdated: " · atualizado a {date}",
+    statsUpdated: "Atualizado a {date}.",
 
     toastNoGeo: "A geolocalização não está disponível neste navegador.",
     toastGeoFail: "Não foi possível obter a tua localização — verifica a autorização do navegador.",
@@ -4032,8 +4012,7 @@ export const STRINGS = {
     tipWidget: "Widget: adaugă widgetul PapaMap pe ecranul principal.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Sfat: cea mai apropiată masă de înfășat există și ca buton în Centrul de control și ca widget. Atinge pentru mai multe.",
-    statsHonesty: '{toilets} toalete înregistrate aici, tag-uri de capacitate la {cap} — oferta în sine nu poate fi măsurată. <a href="{href}">Metode</a>{updated}',
-    statsUpdated: " · actualizat la {date}",
+    statsUpdated: "Actualizat la {date}.",
 
     toastNoGeo: "Geolocalizarea nu este disponibilă în acest browser.",
     toastGeoFail: "Nu am putut afla locația ta — verifică permisiunea browserului.",
@@ -4220,8 +4199,7 @@ export const STRINGS = {
     tipWidget: "Widget: shto widget-in e PapaMap në ekranin kryesor.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Këshillë: tavolina më e afërt e ndërrimit gjendet edhe si buton në Control Center dhe si widget. Prek për më shumë.",
-    statsHonesty: '{toilets} tualete të hartëzuara këtu, {cap} prej tyre kanë etiketa kapaciteti — vetë oferta nuk matet dot. <a href="{href}">Metodologjia</a>{updated}',
-    statsUpdated: " · përditësuar më {date}",
+    statsUpdated: "Përditësuar më {date}.",
 
     toastNoGeo: "Gjeolokalizimi nuk është i disponueshëm në këtë shfletues.",
     toastGeoFail: "Nuk u gjet vendndodhja jote — kontrollo lejen e shfletuesit.",
@@ -4408,8 +4386,7 @@ export const STRINGS = {
     tipWidget: "Widget: pridajte si widget PapaMap na plochu.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Tip: najbližší prebaľovací pult nájdete aj ako tlačidlo v Ovládacom centre a ako widget. Klepnite pre viac.",
-    statsHonesty: 'Tu je zaznamenaných {toilets} toaliet, z nich {cap} má tag s kapacitou — samotnú vybavenosť nemožno zmerať. <a href="{href}">Metódy</a>{updated}',
-    statsUpdated: " · aktualizované {date}",
+    statsUpdated: "Aktualizované {date}.",
 
     toastNoGeo: "Určovanie polohy nie je v tomto prehliadači k dispozícii.",
     toastGeoFail: "Polohu sa nepodarilo zistiť — skontroluj povolenie prehliadača.",
@@ -4596,8 +4573,7 @@ export const STRINGS = {
     tipWidget: "Pripomoček: dodajte pripomoček PapaMap na začetni zaslon.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Namig: najbližja previjalna miza je na voljo tudi kot gumb v Control Centru in kot pripomoček. Tapnite za več.",
-    statsHonesty: '{toilets} stranišč zabeleženih tu, {cap} z oznako zmogljivosti — ponudbe same ni mogoče izmeriti. <a href="{href}">Metode</a>{updated}',
-    statsUpdated: " · posodobljeno {date}",
+    statsUpdated: "Posodobljeno {date}.",
 
     toastNoGeo: "Geolokacija v tem brskalniku ni na voljo.",
     toastGeoFail: "Lokacije ni bilo mogoče ugotoviti — preveri dovoljenje brskalnika.",
@@ -4784,8 +4760,7 @@ export const STRINGS = {
     tipWidget: "Widgetti: lisää PapaMap-widgetti Koti-valikkoon.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Vinkki: lähin hoitopöytä löytyy myös Ohjauskeskuksen painikkeena ja widgettinä. Napauta, niin näet lisää.",
-    statsHonesty: '{toilets} WC:tä merkitty tänne, kapasiteettitageja {cap} kohteella — itse tarjontaa ei voi mitata. <a href="{href}">Menetelmät</a>{updated}',
-    statsUpdated: " · päivitetty {date}",
+    statsUpdated: "Päivitetty {date}.",
 
     toastNoGeo: "Sijainninmääritys ei ole käytettävissä tässä selaimessa.",
     toastGeoFail: "Sijaintia ei löytynyt — tarkista selaimen käyttöoikeus.",
@@ -4972,8 +4947,7 @@ export const STRINGS = {
     tipWidget: "Widget: προσθέστε το widget του PapaMap στην οθόνη Αφετηρίας.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Συμβουλή: η πλησιέστερη αλλαξιέρα υπάρχει και ως κουμπί στο Κέντρο ελέγχου και ως widget. Αγγίξτε για περισσότερα.",
-    statsHonesty: '{toilets} τουαλέτες καταγεγραμμένες εδώ, ετικέτες χωρητικότητας σε {cap} — η ίδια η προσφορά δεν είναι μετρήσιμη. <a href="{href}">Μέθοδος</a>{updated}',
-    statsUpdated: " · ενημερώθηκε στις {date}",
+    statsUpdated: "Ενημερώθηκε στις {date}.",
 
     toastNoGeo: "Ο εντοπισμός τοποθεσίας δεν είναι διαθέσιμος σε αυτό το πρόγραμμα περιήγησης.",
     toastGeoFail: "Δεν ήταν δυνατός ο εντοπισμός της τοποθεσίας σου — έλεγξε τα δικαιώματα του προγράμματος περιήγησης.",
@@ -5160,8 +5134,7 @@ export const STRINGS = {
     tipWidget: "Віджэт: дадайце віджэт PapaMap на галоўны экран.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Парада: бліжэйшы стол для спавівання ёсць таксама як кнопка ў Control Center і як віджэт. Націсніце, каб даведацца больш.",
-    statsHonesty: '{toilets} туалетаў тут пазначана, тэгі ёмістасці мае {cap} з іх — сам узровень забеспячэння вымераць немагчыма. <a href="{href}">Метады</a>{updated}',
-    statsUpdated: " · абноўлена {date}",
+    statsUpdated: "Абноўлена {date}.",
 
     toastNoGeo: "Вызначэнне месцазнаходжання недаступнае ў гэтым браўзеры.",
     toastGeoFail: "Не ўдалося вызначыць тваё месцазнаходжанне — правер дазвол браўзера.",
@@ -5348,8 +5321,7 @@ export const STRINGS = {
     tipWidget: "Уиджет: добавете уиджета на PapaMap на началния екран.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Съвет: най-близката маса за повиване я има и като бутон в Контролния център, и като уиджет. Докоснете за повече.",
-    statsHonesty: '{toilets} тоалетни, картографирани тук, тагове за капацитет на {cap} — самата наличност не подлежи на измерване. <a href="{href}">Методи</a>{updated}',
-    statsUpdated: " · обновено на {date}",
+    statsUpdated: "Обновено на {date}.",
 
     toastNoGeo: "Определянето на местоположение не е достъпно в този браузър.",
     toastGeoFail: "Местоположението не бе намерено — провери разрешенията на браузъра.",
@@ -5536,8 +5508,7 @@ export const STRINGS = {
     tipWidget: "Виџет: додајте го виџетот на PapaMap на почетниот екран.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Совет: најблиската маса за пеленање ја има и како копче во Control Center и како виџет. Допрете за повеќе.",
-    statsHonesty: '{toilets} тоалети означени тука, ознаки за капацитет на {cap} — самата опременост не е мерлива. <a href="{href}">Методи</a>{updated}',
-    statsUpdated: " · ажурирано {date}",
+    statsUpdated: "Ажурирано {date}.",
 
     toastNoGeo: "Геолокацијата не е достапна во овој прелистувач.",
     toastGeoFail: "Не успеавме да ја одредиме твојата локација — провери ја дозволата на прелистувачот.",
@@ -5724,8 +5695,7 @@ export const STRINGS = {
     tipWidget: "Виџет: додајте PapaMap виџет на почетни екран.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Савет: најближи сто за превијање постоји и као дугме у Control Center-у и као виџет. Додирните за више.",
-    statsHonesty: '{toilets} тоалета уписано овде, ознаке капацитета на {cap} — сама опремљеност се не може измерити. <a href="{href}">Методе</a>{updated}',
-    statsUpdated: " · ажурирано {date}",
+    statsUpdated: "Ажурирано {date}.",
 
     toastNoGeo: "Одређивање локације није доступно у овом прегледачу.",
     toastGeoFail: "Није могуће утврдити твоју локацију — провери дозволу прегледача.",
@@ -5912,8 +5882,7 @@ export const STRINGS = {
     tipWidget: "Віджет: додайте віджет PapaMap на початковий екран.",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "Порада: найближчий сповивальний столик є також як кнопка в Пункті керування і як віджет. Торкніться, щоб дізнатися більше.",
-    statsHonesty: '{toilets} туалетів позначено тут, тег місткості має {cap} з них — саму забезпеченість виміряти не можна. <a href="{href}">Методи</a>{updated}',
-    statsUpdated: " · оновлено {date}",
+    statsUpdated: "Оновлено {date}.",
 
     toastNoGeo: "Визначення місцезнаходження недоступне в цьому браузері.",
     toastGeoFail: "Не вдалося визначити місцезнаходження — перевір дозвіл браузера.",
@@ -6104,8 +6073,7 @@ export const STRINGS = {
     tipWidget: "ウィジェット：PapaMapのウィジェットをホーム画面に追加できます。",
     tipSiri: "Siri: “Nearest changing table in PapaMap”.",
     toastTip: "ヒント：最寄りのおむつ替え台は、コントロールセンターのボタンやウィジェットからも開けます。タップで詳しく。",
-    statsHonesty: 'ここに記録されたトイレ{toilets}か所、容量タグ付きは{cap}か所 — 設備の充実度そのものは測れません。<a href="{href}">方法</a>{updated}',
-    statsUpdated: " · {date}更新",
+    statsUpdated: "{date}更新。",
 
     toastNoGeo: "このブラウザでは位置情報を利用できません。",
     toastGeoFail: "現在地を取得できませんでした — ブラウザの位置情報の許可を確認してください。",

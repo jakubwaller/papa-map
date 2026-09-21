@@ -9,13 +9,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app39";
+         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app42";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app39";
+         langUrl } from "./i18n.js?v=app42";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app39";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app42";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -23,18 +23,18 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app39";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app42";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app39";
+         formatMB, citiesToMount } from "./native.js?v=app42";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app39";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app42";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -1055,8 +1055,11 @@ function renderStats(stats) {
   // down and no previous stats.json exists. Local stats still render.
   const l = stats.local, g = stats.global;
   const { tables } = localAnswered(l);
-  const updated = stats.generated_at
-    ? t("statsUpdated", { date: esc(String(stats.generated_at).slice(0, 10)) }) : "";
+  // The "as of" stamp, now the strip's own last item rather than a suffix on
+  // the retired honesty sentence — also what dates the social-card screenshot.
+  const updatedPart = stats.generated_at
+    ? `<span class="stat updated">${t("statsUpdated", {
+        date: esc(String(stats.generated_at).slice(0, 10)) })}</span>` : "";
   let globalPart;
   if (g) {
     const ratio = g.location_male_only > 0
@@ -1078,9 +1081,7 @@ function renderStats(stats) {
   statsEl.innerHTML =
     `<span class="stat">${localSentence}</span>` +
     globalPart +
-    `<span class="stat honesty">${t("statsHonesty", {
-      toilets: num(l.toilets_total), cap: num(l.capacity_tagged_toilets),
-      href: t("methodsHref"), updated })}</span>`;
+    updatedPart;
 }
 
 // ---- Zoom controls ----

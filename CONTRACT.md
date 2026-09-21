@@ -1,5 +1,35 @@
 # papa-map — build contract (v0)
 
+> **v47 amendment (21 Sep 2026, the honesty line is retired): no shape change.**
+> The stats strip's third sentence — "N toilets mapped here, capacity tags on
+> M — provision itself is unmeasurable" — is gone from both the website and
+> the app's "Mein PapaMap" foot (`bootNative` moves the whole `.stats-wrap`
+> node there, so one removal covers both). It told a parent looking for a
+> changing table nothing they could act on, and it was one of the lines
+> testers meant by "too much on the first screen" (2026-09-21, the same
+> feedback v43 answered for the nearest-table button). `statsHonesty` is
+> removed from `web/i18n.js` in all 32 languages; `#stats .honesty` in
+> `web/style.css` goes with it.
+>
+> **The date survives, on its own.** `statsUpdated` used to be a suffix
+> glued onto the honesty sentence (" · updated {date}"); it is now the
+> strip's own last item, a full sentence in each of the 32 languages
+> ("Updated {date}." in English, "Stand {date}." in German) rendered as
+> `<span class="stat updated">`. It is still what dates the social-card
+> screenshot. The Methods link is not replaced: the header nav's
+> `#methods-link` already reaches `methods.html` (or its per-language twin)
+> in every language, and that nav moves into "Mein PapaMap" the same way the
+> strip does, so the app loses nothing either.
+>
+> **`stats.json` is untouched.** `toilets_total` and `capacity_tagged_toilets`
+> still ship in the `local` block — the pipeline's weekly counting query
+> keeps running — they are just no longer rendered in the strip. They still
+> print on the public ops page (`ops.html`, "Dataset" table) and
+> `toilets_total` alone still prints in the `toilets_note` sentence on every
+> generated country/area page (`pipeline/pages.py`/`pages_l10n.py`); nothing
+> there changes. Shell pin `app39` → `app42` (two PRs ahead of this one took
+> `app40` and `app41`).
+>
 > **v44 amendment (21 Sep 2026, the selected-place marker): no shape change.**
 > While a "table" popup is open, one `maplibregl.Marker` sits on that pin: the
 > logo's door-sign shape, filled with the pin's own bucket colour, carrying a
