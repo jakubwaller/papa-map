@@ -1,0 +1,7 @@
+– „Nächster Wickeltisch": stimmt der Ort, klappt die Route in deiner Karten-App?
+– Stimmen die Farben bei Orten, die du kennst? Fehlt ein Ort? Auch das hilft.
+– Widget und Kontrollzentrum-Schalter hinzufügen (Anleitung unten in „Mein PapaMap").
+– Siri: „Nächster Wickeltisch in PapaMap".
+– Eine Stadt offline laden, Flugmodus an, Karte öffnen.
+– Optional mit OpenStreetMap-Konto: bei einem grauen Ort die Raum-Frage beantworten.
+Alles, was unklar ist oder hakt: Screenshot machen und über TestFlight schicken.

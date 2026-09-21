@@ -5,6 +5,9 @@
 //   node ios/asc.mjs ids                  register the two bundle ids, App Groups on
 //   node ios/asc.mjs cert <csr> <out.cer> one distribution certificate from a CSR (once a year)
 //   node ios/asc.mjs profiles <dir>       fresh App Store profiles for both bundle ids
+//   node ios/asc.mjs beta-text pull                                   print what's live in TestFlight
+//   node ios/asc.mjs beta-text push --build <n>                      testflight/what-to-test.*.txt → that build
+//   node ios/asc.mjs beta-text distribute --build <n> --group <name> add to a beta group, submit for review
 //
 // Reads ASC_ISSUER_ID, ASC_KEY_ID and ASC_API_KEY_P8 (the key's text) from the
 // environment — the repository secrets of the same names.
@@ -14,8 +17,9 @@
 // visit to developer.apple.com (Identifiers); `profiles` says so when it is missing
 // from the profile it was handed.
 import { createPrivateKey, sign } from "node:crypto";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const API = "https://api.appstoreconnect.apple.com/v1";
 
@@ -158,11 +162,192 @@ async function profiles(dir) {
   }
 }
 
+// --- TestFlight "What to Test" text -----------------------------------------
+//
+// Docs consulted (2026-09-21):
+//   https://developer.apple.com/documentation/appstoreconnectapi/betaapplocalization
+//   https://developer.apple.com/documentation/appstoreconnectapi/betabuildlocalization
+//   https://developer.apple.com/documentation/appstoreconnectapi/betabuildlocalization/attributes-data.dictionary
+//     (the locale table for a build-level "What to Test" entry: de-DE, en-US among them)
+//   https://developer.apple.com/documentation/appstoreconnectapi/get-v1-builds
+//     (processingState: PROCESSING | FAILED | INVALID | VALID)
+//   https://developer.apple.com/documentation/appstoreconnectapi/betagroup
+//   https://developer.apple.com/documentation/appstoreconnectapi/post-v1-betagroups-_id_-relationships-builds
+//   https://developer.apple.com/documentation/appstoreconnectapi/betaappreviewsubmission
+//
+// Apple's help pages and fastlane's pilot (which has shipped this for years)
+// agree on a 4000-character whatsNew limit; nothing here can check that
+// against Apple directly, so it is enforced locally before any request.
+export const WHATS_NEW_LIMIT = 4000;
+export const POLL_INTERVAL_MS = 30_000;
+export const POLL_TIMEOUT_MS = 25 * 60 * 1000;
+
+// One `what-to-test.<locale>.txt` file per locale, read from this directory
+// unless a test points elsewhere. The filename IS the locale, so a new
+// language needs a new file and no code change.
+const testflightDir = join(dirname(fileURLToPath(import.meta.url)), "testflight");
+
+export function whatsNewFiles(dir) {
+  return readdirSync(dir)
+    .map((name) => /^what-to-test\.([\w-]+)\.txt$/.exec(name))
+    .filter(Boolean)
+    .map(([name, locale]) => ({ locale, file: name, text: readFileSync(join(dir, name), "utf8").trim() }))
+    .sort((a, b) => a.locale.localeCompare(b.locale));
+}
+
+// The bundle id at BUNDLE_IDS[0] is the app itself; the widget (index 1) has
+// no App Store Connect app record or TestFlight page of its own.
+async function appId() {
+  const r = await api("GET", `/apps?filter[bundleId]=${BUNDLE_IDS[0].identifier}&limit=1`);
+  if (!r.data.length) throw new Error(`no App Store Connect app found for bundle id ${BUNDLE_IDS[0].identifier}`);
+  return r.data[0].id;
+}
+
+async function findBuild(app, version) {
+  const r = await api("GET", `/builds?filter[app]=${app}&filter[version]=${encodeURIComponent(version)}&limit=1`);
+  return r.data[0] ?? null;
+}
+
+async function latestBuild(app) {
+  const r = await api("GET", `/builds?filter[app]=${app}&sort=-uploadedDate&limit=1`);
+  return r.data[0] ?? null;
+}
+
+async function betaAppLocalizations(app) {
+  return (await api("GET", `/betaAppLocalizations?filter[app]=${app}&limit=200`)).data;
+}
+
+async function betaBuildLocalizations(build) {
+  return (await api("GET", `/betaBuildLocalizations?filter[build]=${build}&limit=200`)).data;
+}
+
+// Apple processes an upload after it lands, so the freshly-uploaded build
+// answers PROCESSING for a while. Poll until VALID; INVALID/FAILED are dead
+// ends (a bad Info.plist, encryption declaration, …) and stop right away
+// rather than waiting out the clock for something that will never change.
+export async function pollBuild(app, version, { intervalMs = POLL_INTERVAL_MS, timeoutMs = POLL_TIMEOUT_MS } = {}) {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const build = await findBuild(app, version);
+    const state = build?.attributes.processingState;
+    if (state === "VALID") return build;
+    if (state === "INVALID" || state === "FAILED") {
+      throw new Error(`build ${version} is ${state} — App Store Connect rejected the upload, this will not change on its own`);
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`build ${version} did not reach VALID within ${Math.round(timeoutMs / 60_000)} minutes ` +
+                      `(last seen: ${state ?? "not uploaded yet"})`);
+    }
+    console.log(`build ${version}: ${state ?? "not visible yet"}, waiting…`);
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
+
+export async function betaTextPull() {
+  const app = await appId();
+  console.log(`app ${BUNDLE_IDS[0].identifier} → ${app}`);
+  console.log("betaAppLocalizations:");
+  for (const l of await betaAppLocalizations(app)) console.log(`  ${l.attributes.locale}: ${JSON.stringify(l.attributes.description)}`);
+  const build = await latestBuild(app);
+  if (!build) { console.log("no builds uploaded yet"); return; }
+  console.log(`latest build: ${build.attributes.version} (${build.attributes.processingState})`);
+  console.log("betaBuildLocalizations (What to Test):");
+  for (const l of await betaBuildLocalizations(build.id)) console.log(`  ${l.attributes.locale}: ${JSON.stringify(l.attributes.whatsNew)}`);
+}
+
+// Idempotent: an existing locale is PATCHed, a missing one POSTed. Waits for
+// the build to be VALID first — an upload just off the runner is still
+// PROCESSING for a few minutes.
+export async function betaTextPush(build, { dir = testflightDir, intervalMs, timeoutMs } = {}) {
+  if (!build) throw new Error("beta-text push: --build <CFBundleVersion> is required");
+  const files = whatsNewFiles(dir);
+  if (!files.length) throw new Error(`no what-to-test.*.txt files in ${dir}`);
+  for (const f of files) {
+    if (f.text.length > WHATS_NEW_LIMIT) {
+      throw new Error(`${f.file}: ${f.text.length} characters, over Apple's ${WHATS_NEW_LIMIT}-character whatsNew limit`);
+    }
+  }
+  const app = await appId();
+  console.log(`waiting for build ${build} to finish processing…`);
+  const b = await pollBuild(app, build, { intervalMs, timeoutMs });
+  console.log(`build ${build} is VALID (${b.id})`);
+  const existing = await betaBuildLocalizations(b.id);
+  for (const { locale, text } of files) {
+    const have = existing.find((l) => l.attributes.locale === locale);
+    if (have) {
+      await api("PATCH", `/betaBuildLocalizations/${have.id}`, {
+        data: { type: "betaBuildLocalizations", id: have.id, attributes: { whatsNew: text } },
+      });
+      console.log(`${locale}: updated`);
+    } else {
+      const made = await api("POST", "/betaBuildLocalizations", {
+        data: {
+          type: "betaBuildLocalizations",
+          attributes: { locale, whatsNew: text },
+          relationships: { build: { data: { type: "builds", id: b.id } } },
+        },
+      });
+      console.log(`${locale}: created (${made.data.id})`);
+    }
+  }
+}
+
+// Adds the build to the named group if it is not already a member, then, for
+// an external group, submits it for Beta App Review — unless a submission
+// for this build already exists, in which case that submission (whatever
+// its state: waiting, in review, approved) is treated as done.
+export async function betaTextDistribute(build, group) {
+  if (!build || !group) throw new Error("beta-text distribute: --build <n> and --group <name> are required");
+  const app = await appId();
+  const b = await findBuild(app, build);
+  if (!b) throw new Error(`build ${build} not found for ${BUNDLE_IDS[0].identifier}`);
+  const groups = (await api("GET", `/betaGroups?filter[app]=${app}&filter[name]=${encodeURIComponent(group)}&limit=200`)).data;
+  const g = groups.find((x) => x.attributes.name === group);
+  if (!g) throw new Error(`no beta group named "${group}" for ${BUNDLE_IDS[0].identifier}`);
+  const members = (await api("GET", `/betaGroups/${g.id}/relationships/builds?limit=200`)).data;
+  if (members.some((m) => m.id === b.id)) {
+    console.log(`${group}: build ${build} already in the group`);
+  } else {
+    await api("POST", `/betaGroups/${g.id}/relationships/builds`, { data: [{ type: "builds", id: b.id }] });
+    console.log(`${group}: build ${build} added to the group`);
+  }
+  if (g.attributes.isInternalGroup) {
+    console.log(`${group}: internal group, no Beta App Review needed`);
+    return;
+  }
+  const submissions = (await api("GET", `/betaAppReviewSubmissions?filter[build]=${b.id}&limit=1`)).data;
+  if (submissions.length) {
+    console.log(`beta app review for build ${build}: already ${submissions[0].attributes.betaReviewState}`);
+  } else {
+    await api("POST", "/betaAppReviewSubmissions", {
+      data: { type: "betaAppReviewSubmissions", relationships: { build: { data: { type: "builds", id: b.id } } } },
+    });
+    console.log(`beta app review: submitted build ${build}`);
+  }
+}
+
+// "--build 125 --group Friends" → { build: "125", group: "Friends" }
+function flags(args) {
+  const out = {};
+  for (let i = 0; i < args.length; i += 2) out[(args[i] ?? "").replace(/^--/, "")] = args[i + 1];
+  return out;
+}
+
+async function betaText(sub, ...args) {
+  const f = flags(args);
+  if (sub === "pull") return betaTextPull();
+  if (sub === "push") return betaTextPush(f.build);
+  if (sub === "distribute") return betaTextDistribute(f.build, f.group);
+  throw new Error(`beta-text: unknown subcommand "${sub}" (pull | push | distribute)`);
+}
+
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) {
   const [cmd, ...args] = process.argv.slice(2);
-  const run = { ids, cert, profiles }[cmd];
-  if (!run || (cmd === "cert" && args.length !== 2) || (cmd === "profiles" && args.length !== 1)) {
-    console.error("usage: asc.mjs ids | cert <csr> <out.cer> | profiles <dir>");
+  const run = { ids, cert, profiles, "beta-text": betaText }[cmd];
+  if (!run || (cmd === "cert" && args.length !== 2) || (cmd === "profiles" && args.length !== 1) ||
+      (cmd === "beta-text" && args.length < 1)) {
+    console.error("usage: asc.mjs ids | cert <csr> <out.cer> | profiles <dir> | beta-text pull | " +
+                  "beta-text push --build <n> | beta-text distribute --build <n> --group <name>");
     process.exit(2);
   }
   run(...args).catch((e) => { console.error(String(e.message ?? e)); process.exit(1); });

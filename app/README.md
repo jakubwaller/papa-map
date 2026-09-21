@@ -54,8 +54,10 @@ app/
                         button's intent has to exist in both, because the extension declares
                         it and the app is where it runs
   ios/add-native-targets.rb  registers the Swift files and the widget target with the project
-  ios/asc.mjs           App Store Connect API for the runner: bundle ids, certificate, profiles
+  ios/asc.mjs           App Store Connect API for the runner: bundle ids, certificate, profiles,
+                        TestFlight "What to Test" text and beta group distribution
   ios/distribution.csr  the request the distribution certificate was signed from (no secret in it)
+  ios/testflight/       what-to-test.<locale>.txt, one per TestFlight locale (below)
   android/              the Android project (feature 1 only for now: no widget, no Assistant)
 ```
 
@@ -131,6 +133,34 @@ team on both targets and run.
   the storyboard's `MainViewController` and `SceneDelegate.swift` (its root view controller
   must be `MainViewController`, or the share plugin is never registered) — `git diff` on those
   files shows what.
+
+### TestFlight text, no browser needed
+
+`ios/testflight/what-to-test.<locale>.txt` holds the tester-facing "What to Test" text for
+each locale; the filename **is** the locale ASC uses (`de-DE`, `en-US`, `cs` — a new language
+is a new file, no code change). After every `testflight` upload, the `testflight` job:
+
+1. waits for the freshly-uploaded build to leave `PROCESSING` and reach `VALID` (`asc.mjs
+   beta-text push --build <n>`, polling every 30 s, up to 25 minutes; `INVALID`/`FAILED` fail
+   right away rather than waiting out the clock);
+2. creates or updates one `betaBuildLocalizations` record per file — idempotent, so a rerun
+   only ever PATCHes what already exists;
+3. if the repository variable `ASC_BETA_GROUP` is set, adds the build to that beta group and,
+   for an external group, submits it for Beta App Review (`asc.mjs beta-text distribute --build
+   <n> --group <name>`) — an already-submitted or already-approved build is left alone. With
+   `ASC_BETA_GROUP` unset, only the text goes out.
+
+The text step runs after the upload and is its own step, so a problem there (a stale
+`processingState`, an over-limit file) shows up as its own failure and never makes an
+already-successful upload look broken.
+
+Run `beta-text pull` (Actions tab, task `beta-text-pull`, or `node ios/asc.mjs beta-text
+pull` with the same three `ASC_*` secrets) to print what App Store Connect currently shows —
+the app's `betaAppLocalizations` and the latest build's `betaBuildLocalizations` — against
+which the files in `ios/testflight/` can be compared. `pull` never writes anything.
+
+Apple's `whatsNew` limit is 4000 characters per locale; `push` checks every file against it
+before making any request. See `ios/asc.mjs` for the App Store Connect API docs consulted.
 
 ### The OSM login
 
