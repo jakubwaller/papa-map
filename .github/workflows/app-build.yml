@@ -4,9 +4,11 @@
 # Every push to a PR gets the two unsigned builds — they prove the Swift, the
 # project file and the Gradle setup compile. The signed ones are asked for:
 #
-#   testflight       archive, sign, upload to App Store Connect (TestFlight), then push
+#   testflight       archive, sign, upload to App Store Connect (TestFlight). A second job,
+#                    beta-text (ubuntu-latest, needs: testflight — no Xcode, no reason to wait
+#                    on Apple's processing on the Mac runner), then pushes
 #                    app/ios/testflight/what-to-test.*.txt to that build and, if the repo
-#                    variable ASC_BETA_GROUP is set, add the build to that beta group
+#                    variable ASC_BETA_GROUP is set, adds the build to that beta group
 #   apple-setup      once per account: bundle ids, App Groups capability, the
 #                    distribution certificate for app/ios/distribution.csr
 #   beta-text-pull   print what TestFlight currently shows, no build needed
@@ -247,10 +249,35 @@ jobs:
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" | tee ios/export.log
           grep -q "EXPORT SUCCEEDED" ios/export.log
-      # Separate from the export step on purpose: the upload above is what
-      # actually matters, and a failure here (Apple still processing, a typo
-      # in a testflight/*.txt file) must show up as its own red step rather
-      # than making a successful upload look like it failed.
+      - name: Forget the keys
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
+          rm -rf "$RUNNER_TEMP/keys"
+
+  # Split from `testflight` on purpose: pushing the text and distributing the
+  # build can wait up to 25 minutes on Apple's own processing, and none of
+  # that needs Xcode or a Mac. Keeping it on ubuntu-latest also means a
+  # failure here shows up as its own red job instead of making the (already
+  # successful) upload job look failed.
+  beta-text:
+    needs: testflight
+    if: inputs.task == 'testflight'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # github.run_number is the same for every job of one run, so this is
+      # the same build number the testflight job just archived and uploaded.
       - name: Push TestFlight text
         run: node ios/asc.mjs beta-text push --build "${{ github.run_number }}"
       - name: Add build to the beta group
@@ -258,8 +285,3 @@ jobs:
         env:
           ASC_BETA_GROUP: ${{ vars.ASC_BETA_GROUP }}
         run: node ios/asc.mjs beta-text distribute --build "${{ github.run_number }}" --group "$ASC_BETA_GROUP"
-      - name: Forget the keys
-        if: always()
-        run: |
-          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
-          rm -rf "$RUNNER_TEMP/keys"

@@ -138,7 +138,9 @@ team on both targets and run.
 
 `ios/testflight/what-to-test.<locale>.txt` holds the tester-facing "What to Test" text for
 each locale; the filename **is** the locale ASC uses (`de-DE`, `en-US`, `cs` — a new language
-is a new file, no code change). After every `testflight` upload, the `testflight` job:
+is a new file, no code change). After every `testflight` upload, a second job, `beta-text`
+(`ubuntu-latest`, `needs: testflight` — no Xcode, and no reason to hold the Mac runner while
+waiting on Apple):
 
 1. waits for the freshly-uploaded build to leave `PROCESSING` and reach `VALID` (`asc.mjs
    beta-text push --build <n>`, polling every 30 s, up to 25 minutes; `INVALID`/`FAILED` fail
@@ -150,9 +152,10 @@ is a new file, no code change). After every `testflight` upload, the `testflight
    <n> --group <name>`) — an already-submitted or already-approved build is left alone. With
    `ASC_BETA_GROUP` unset, only the text goes out.
 
-The text step runs after the upload and is its own step, so a problem there (a stale
-`processingState`, an over-limit file) shows up as its own failure and never makes an
-already-successful upload look broken.
+Splitting this into its own job (rather than two more steps in `testflight`) means a problem
+here (a stale `processingState`, an over-limit file) shows up as its own red job and never
+makes the already-successful upload job look broken. `github.run_number` is the same for every
+job of one workflow run, so `beta-text` still gets the build number `testflight` just uploaded.
 
 Run `beta-text pull` (Actions tab, task `beta-text-pull`, or `node ios/asc.mjs beta-text
 pull` with the same three `ASC_*` secrets) to print what App Store Connect currently shows —
