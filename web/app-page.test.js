@@ -6,12 +6,14 @@
 // Caddy log, its line in the Datenschutz).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const dir = new URL(".", import.meta.url);
 const read = (f) => readFileSync(new URL(f, dir), "utf8");
 const PAGES = ["app.html", "app-en.html"];
+// Changes with the artwork, not with the shell: see docs/logo/README.md.
+const ICON_PIN = "logo2";
 
 test("every language's app link lands on one of the two pages", () => {
   for (const lang of LANGS) {
@@ -39,8 +41,26 @@ test("both pages carry the install steps, and the map carries the manifest they 
   for (const f of PAGES) {
     const html = read(f);
     assert.ok(html.includes('<link rel="manifest" href="manifest.webmanifest">'), f);
-    assert.ok(html.includes('<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">'), f);
+    assert.ok(html.includes(`<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=${ICON_PIN}">`), f);
     assert.ok(html.includes('<meta name="apple-mobile-web-app-title" content="PapaMap">'), f);
+  }
+});
+
+test("every home-screen icon exists and carries the one artwork pin", () => {
+  // The PNGs keep their names when the logo changes, so the pin is what tells
+  // Cloudflare and an installed web app that the picture is a new one. One
+  // icon left on an old pin (or none) keeps the old logo there.
+  const { icons } = JSON.parse(read("manifest.webmanifest"));
+  assert.equal(icons.length, 3);
+  const touch = ["index.html", "index-en.html", ...PAGES].map((f) => {
+    const m = /<link rel="apple-touch-icon" href="([^"]+)"/.exec(read(f));
+    assert.ok(m, f);
+    return m[1];
+  });
+  for (const src of [...icons.map((i) => i.src), ...touch]) {
+    const [path, query] = src.split("?");
+    assert.equal(query, `v=${ICON_PIN}`, src);
+    assert.ok(existsSync(new URL(path, dir)), path);
   }
 });
 

@@ -176,9 +176,11 @@
        every language: it names the brand, not page content, so it is not
        part of the ?lang= split. iOS ignores the manifest's icons entirely,
        hence the apple-touch-icon link and the two apple-mobile-web-app-*
-       tags alongside it. -->
+       tags alongside it. The ?v= on that link and on the manifest's icons
+       changes with the artwork (docs/logo/README.md): the PNGs keep their
+       names, so without it the edge and an installed app keep the old ones. -->
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=logo2" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
