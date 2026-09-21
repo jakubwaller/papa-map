@@ -682,6 +682,15 @@ test("shouldOpenAtLocation: the app's own papamap://table deep link wins too", (
     shouldOpenAtLocation({ search: "", permission: "granted", hasPendingPin: true }), false);
 });
 
+test("shouldOpenAtLocation: a return from OSM's consent screen keeps the reader where they were", () => {
+  assert.equal(
+    shouldOpenAtLocation({ search: "?code=abc&state=xyz", permission: "granted" }), false);
+  // Either alone is no OAuth return (state is required to match the PKCE
+  // verifier; a bare ?code= or ?state= is nonsense, not a login).
+  assert.equal(shouldOpenAtLocation({ search: "?code=abc", permission: "granted" }), true);
+  assert.equal(shouldOpenAtLocation({ search: "?state=xyz", permission: "granted" }), true);
+});
+
 // ---- The "which room?" card ----
 
 test("nearestUnknownRoom: only status unknown with no recorded room, within 75 m", () => {

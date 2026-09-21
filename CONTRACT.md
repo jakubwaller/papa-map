@@ -9,22 +9,38 @@
 > the app) already reads `"granted"`, so a first-time visitor or an "Allow
 > once" grant keeps today's home view exactly as before. Skipped outright
 > whenever the URL already asks for a view of its own: a Bundesland page's
-> `?bbox=`, a shared place's `?osm=`, or the app's own `papamap://table` deep
-> link, which the widget, the Siri shortcut and the Control Center button all
-> resolve to before this ever runs. The fix itself (`openAtLocationFix`,
-> `web/app.js`) is a second, deliberately separate `locate()` — a boot nobody
-> asked anything of gets the cheapest fix the OS already has cached
-> (`enableHighAccuracy: false`, a few minutes' `maximumAge`, a short timeout),
-> the locate button's own options untouched — kicked off early so its own
-> "second or three" overlaps the dataset load, and applied with `jumpTo`, not
-> `flyTo`, only once `fitHome()` has already run. If the reader has touched
-> the map at all before the fix lands — a drag, a zoom, a popup, any button —
-> the camera is left alone and only the you-are-here dot is drawn. The fix
-> never calls `noteFix`, so it can never raise the room card or a popup, not
-> even indirectly through some later, unrelated popup close — the first
-> testers' own complaint was that too much already happens when the app
-> opens. Datenschutz and its English page each gain a sentence on this in
-> their locate sections, no new stored key. Shell pin `app38` → `app39`.
+> `?bbox=`, a shared place's `?osm=`, the return leg of OSM's OAuth consent
+> screen (`?code=`+`?state=` — a reader coming back from signing in should
+> land where they were, not be relocated), or the app's own `papamap://table`
+> deep link, which the widget, the Siri shortcut and the Control Center
+> button all resolve to before this ever runs. The fix itself
+> (`openAtLocationFix`, `web/app.js`) is a second, deliberately separate
+> `locate()` — a boot nobody asked anything of gets the cheapest fix the OS
+> already has cached (`enableHighAccuracy: false`, a few minutes'
+> `maximumAge`, a short timeout), the locate button's own options untouched —
+> kicked off as early in `boot()` as possible so its own "second or three"
+> overlaps the dataset load. **`boot()` never awaits it**: the fix is applied
+> from a `.then()` registered right after `fitHome()`, so a slow fix (no
+> cached position, indoors, the full timeout) never delays the `?osm=`/deep-
+> link pin open just below it, `completeLogin`'s own OAuth return,
+> `shareSettings`, `watchRefresh` or `armEditCheck` — all of which `boot()`
+> runs on regardless of whether or when the fix ever lands. Because the fix
+> can now resolve after boot has already moved the camera somewhere else,
+> applying it checks three guards, not one: `touchedBeforeFix` (the reader
+> did anything at all — a drag, a zoom, a popup, any button), `popup
+> ?.isOpen()`, and the new `pinOpenedBeforeFix` (boot itself opened a pin in
+> the meantime — the `?osm=` link resolved just below, or a
+> `papamap://table` deep link that arrived late; set by `openPin`, never by
+> the reader's own tap, which `touchedBeforeFix` already covers). Any of the
+> three leaves the camera alone; the you-are-here dot is drawn regardless —
+> showing it is never wrong, only moving the camera can be. Applied with
+> `jumpTo`, not `flyTo`. The fix never calls `noteFix`, so it can never raise
+> the room card or a popup, not even indirectly through some later, unrelated
+> popup close — the first testers' own complaint was that too much already
+> happens when the app opens. Datenschutz and its English page each gain a
+> sentence on this in their locate sections — permission is granted to the
+> site/app, not to a button, and the wording says so. No new stored key.
+> Shell pin `app38` → `app39`.
 >
 > **v44 amendment (21 Sep 2026, the selected-place marker): no shape change.**
 > While a "table" popup is open, one `maplibregl.Marker` sits on that pin: the

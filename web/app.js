@@ -291,6 +291,17 @@ const markTouchedBeforeFix = () => { touchedBeforeFix = true; };
 document.addEventListener("pointerdown", markTouchedBeforeFix, { capture: true, once: true });
 document.addEventListener("wheel", markTouchedBeforeFix, { capture: true, once: true, passive: true });
 
+// The other half of that guard: boot() itself opened a pin before the fix
+// landed — a `?osm=` share link, or a papamap://table deep link (Siri, the
+// widget, Control Center) that arrived late. Not a reader gesture, so
+// touchedBeforeFix above never sees it; set by openPin (below) the moment it
+// actually opens one, never for its own "not found" toast. boot() does not
+// wait for the fix (it can land seconds after boot has already moved on), so
+// this has to survive independently of whatever `popup` holds by then —
+// checked alongside `popup?.isOpen()` at the point the fix is applied, not
+// instead of it.
+let pinOpenedBeforeFix = false;
+
 // ---- State ----
 let allFeatures = [];                                     // flattened GeoJSON
 let allPlaces = [];                                       // play-area prospects
@@ -2153,6 +2164,7 @@ function openPin(osmUrl) {
     map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
     openPopup(f);
     stripOsmParam();
+    pinOpenedBeforeFix = true;   // the boot fix's own turn to stand aside, if it hasn't yet
     return;
   }
   const p = placesByOsmUrl.get(osmUrl);
@@ -2160,6 +2172,7 @@ function openPin(osmUrl) {
     map.jumpTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
     openPlacePopup(p);
     stripOsmParam();
+    pinOpenedBeforeFix = true;
     return;
   }
   toast(t("sharePinGone"));
@@ -2299,21 +2312,28 @@ async function boot() {
   // app's own version of this toast instead, once the background refresh has
   // had its say.
   if (!isNative() && fromStore && allFeatures.length) toast(t("toastOffline"));
-  // The boot fix's own turn, checked (again, gate() inside openAtLocationFix
-  // already re-ran it once the fix landed) before the pendingPin deep link
-  // below is consumed — a `?osm=` link or the app's own papamap://table must
-  // still win even though this is exactly where boot() is about to open it.
-  // No noteFix(): this fix must never feed evaluateRoomCard, not even
-  // indirectly through some later, unrelated popup close (the first
-  // testers' "too much happens when the app opens", CONTRACT.md v43/v44).
-  // Never a popup either — showYou only draws the dot, jumpTo only moves the
-  // camera, and jumpTo not flyTo because a reader who granted this expects
-  // the map to simply open there, not to watch it fly there from Germany.
-  const at = await locationFix;
-  if (at) {
+  // Applied whenever it lands — never awaited. A fix can take the whole of
+  // its own timeout (indoors, no cached fix), and boot() must not make the
+  // pendingPin open below, completeLogin's OAuth return, shareSettings,
+  // watchRefresh or armEditCheck wait for it. Three reasons the camera stands
+  // still even once a fix does arrive, on top of gate() inside
+  // openAtLocationFix already having re-checked shouldOpenAtLocation the
+  // moment the fix landed: touchedBeforeFix (the reader did anything at
+  // all), popup?.isOpen() and pinOpenedBeforeFix (boot itself opened a pin
+  // in the meantime — the pendingPin open just below, or a papamap://table
+  // deep link that arrived late). The dot is drawn regardless: showYou is
+  // never wrong, only the camera move can be. No noteFix() either way: this
+  // fix must never feed evaluateRoomCard, not even indirectly through some
+  // later, unrelated popup close (the first testers' "too much happens when
+  // the app opens", CONTRACT.md v43/v44) — and jumpTo, not flyTo, because a
+  // reader who granted this expects the map to simply open there, not to
+  // watch it fly there from Germany.
+  locationFix.then((at) => {
+    if (!at) return;
     showYou([at.longitude, at.latitude]);
-    if (!touchedBeforeFix) map.jumpTo({ center: [at.longitude, at.latitude], zoom: Math.max(map.getZoom(), 14) });
-  }
+    if (!touchedBeforeFix && !pinOpenedBeforeFix && !popup?.isOpen())
+      map.jumpTo({ center: [at.longitude, at.latitude], zoom: Math.max(map.getZoom(), 14) });
+  });
   // Whatever queued a pin above the data — the app's own deep link (bootNative,
   // an appUrlOpen already fired) or this load's own ?osm= — opens it now that
   // there is a dataset to look it up in. jumpTo overrides fitHome's view.

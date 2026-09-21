@@ -614,17 +614,21 @@ export function withoutOsmParam(href) {
 // checkPermissions() in the app) — anything but "granted" keeps today's home
 // view, so a first-time visitor or an "Allow once" grant never sees this at
 // all (design rule 1). `search` is location.search: a `?bbox=` link (a
-// Bundesland page's "auf der Karte öffnen", VIEW_BOUNDS) or a `?osm=` share
-// link (parseShareOsm) both ask for a view of their own, and the reader's
-// own position must not override either. `hasPendingPin` covers the one deep
-// link no URL param shows: the app's own papamap://table, which the widget,
-// the Siri shortcut and the Control Center button all resolve to
-// (app/README.md) before app.js ever calls this.
+// Bundesland page's "auf der Karte öffnen", VIEW_BOUNDS), a `?osm=` share
+// link (parseShareOsm), or `?code=`+`?state=` — the return leg of OSM's OAuth
+// consent screen (completeLogin, web/app.js) — all ask for a view of their
+// own; a reader coming back from signing in should land where they were, not
+// be relocated. `hasPendingPin` covers the one deep link no URL param shows:
+// the app's own papamap://table, which the widget, the Siri shortcut and the
+// Control Center button all resolve to (app/README.md) before app.js ever
+// calls this.
 export function shouldOpenAtLocation({ search, permission, hasPendingPin = false } = {}) {
   if (permission !== "granted") return false;
   if (hasPendingPin) return false;
-  if (parseBbox(new URLSearchParams(search ?? "").get("bbox"))) return false;
+  const params = new URLSearchParams(search ?? "");
+  if (parseBbox(params.get("bbox"))) return false;
   if (parseShareOsm(search)) return false;
+  if (params.get("code") && params.get("state")) return false;
   return true;
 }
 
