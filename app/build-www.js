@@ -18,7 +18,7 @@ const www = join(here, "www");
 // bundled page that 404s on its own script is a worse trade than a kilobyte.
 const FILES = [
   "index.html", "app.js", "datasource.js", "i18n.js", "osm.js", "me.js", "native.js",
-  "in-app.js", "style.css", "icon.svg", "taginfo.json",
+  "sign-pin.js", "in-app.js", "style.css", "icon.svg", "taginfo.json",
 ];
 const DIRS = ["vendor", "icons"];
 
