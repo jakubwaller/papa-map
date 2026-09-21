@@ -256,19 +256,18 @@ def _jsonld(obj) -> str:
     return f'<script type="application/ld+json">{body}</script>\n\n'
 
 
-# The same mark index.html carries, inlined for the same reason: a data URI
-# costs no request and — unlike a root-relative /icon.svg — resolves from any
-# directory depth, so the pages under wickeltische/ need no {up} dance. Without
-# it a browser falls back to /favicon.ico, which this site does not serve: every
-# generated page logged a 404 until 2026-08-17.
+# The same mark index.html carries, now the shared web/favicon.svg and
+# web/icons/favicon-32.png rather than a duplicated inline data URI (which
+# used to dodge the {up} dance a root-relative href needs from a directory one
+# level below the site root, at the cost of ~50 copies of the same markup
+# drifting independently). UP puts both hrefs back on solid ground for the
+# pages under wickeltische/, and the leaderboard and ops pages, which import
+# this constant too. Without either link a browser falls back to
+# /favicon.ico, which this site does not serve: every generated page logged a
+# 404 until 2026-08-17.
 ICON = (
-    '<link rel="icon" href="data:image/svg+xml,'
-    "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E"
-    "%3Ccircle cx='12' cy='12' r='11' fill='%23009e73'/%3E"
-    "%3Crect x='5' y='12' width='14' height='2.6' rx='1.3' fill='%23fff'/%3E"
-    "%3Ccircle cx='9' cy='9' r='2.2' fill='%23fff'/%3E"
-    "%3Crect x='11.5' y='7.8' width='6.5' height='2.4' rx='1.2' fill='%23fff'/%3E"
-    '%3C/svg%3E">'
+    f'<link rel="icon" type="image/png" sizes="32x32" href="{UP}icons/favicon-32.png">\n'
+    f'<link rel="icon" type="image/svg+xml" href="{UP}favicon.svg">'
 )
 
 STYLE = """\
