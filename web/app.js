@@ -9,13 +9,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app39";
+         isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation } from "./datasource.js?v=app40";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app39";
+         langUrl } from "./i18n.js?v=app40";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app39";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app40";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -23,18 +23,18 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app39";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app40";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app39";
+         formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse } from "./native.js?v=app40";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app39";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app40";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -279,6 +279,31 @@ map.touchZoomRotate.disableRotation();
 // Debug/testing handle — MapLibre offers no global registry, and headless
 // verification (Playwright) needs to drive the view.
 window._papamap = map;
+
+// Whether the reader has done anything with the map before the boot fix's
+// own fix lands (openAtLocationFix, near locate() below) — a drag, a zoom, a
+// tap that opened a popup, a press on any button. One global, capture-phase
+// listener rather than a MapLibre one: it has to catch a button press too,
+// and `once` means it costs nothing once it has fired. `wheel` covers a
+// mouse's scroll-zoom, which fires no `pointerdown` of its own.
+let touchedBeforeFix = false;
+const markTouchedBeforeFix = () => { touchedBeforeFix = true; };
+document.addEventListener("pointerdown", markTouchedBeforeFix, { capture: true, once: true });
+document.addEventListener("wheel", markTouchedBeforeFix, { capture: true, once: true, passive: true });
+// A focused map canvas takes arrow-key pans and +/- zooms with no pointer
+// event of its own — MapLibre's own keyboard handler, not this page's.
+document.addEventListener("keydown", markTouchedBeforeFix, { capture: true, once: true });
+
+// The other half of that guard: boot() itself opened a pin before the fix
+// landed — a `?osm=` share link, or a papamap://table deep link (Siri, the
+// widget, Control Center) that arrived late. Not a reader gesture, so
+// touchedBeforeFix above never sees it; set by openPin (below) the moment it
+// actually opens one, never for its own "not found" toast. boot() does not
+// wait for the fix (it can land seconds after boot has already moved on), so
+// this has to survive independently of whatever `popup` holds by then —
+// checked alongside `popup?.isOpen()` at the point the fix is applied, not
+// instead of it.
+let pinOpenedBeforeFix = false;
 
 // ---- State ----
 let allFeatures = [];                                     // flattened GeoJSON
@@ -1196,6 +1221,59 @@ const hasGeo = () => isNative() || !!navigator.geolocation;
 function locateFrom(btn) {
   btn.setAttribute("aria-busy", "true");
   return locate().finally(() => btn.removeAttribute("aria-busy"));
+}
+
+// ---- Open at location: opens zoomed in on the reader, like Google Maps ----
+// TestFlight feedback: a reader who has already granted location expects the
+// map to open where they are, not on Germany. locateCoarse() is a second
+// locate(), deliberately not a reuse of it — the boot fix wants a fast fix
+// that never keeps an unprompted reader waiting (enableHighAccuracy: false,
+// a few minutes' maximumAge, a short timeout — ignored on iOS, see
+// locateNativeCoarse's own comment in web/native.js), and locate()'s own
+// options, and the button it pulses, stay the locate button's alone.
+//
+// How the fix is applied (boot(), below) depends on how long it took past
+// fitHome(): within LATE_FIX_MS the reader has barely had a frame to look at
+// the home view, so jumpTo — no motion to notice, the map simply opened
+// there. Past it, the home view has actually been on screen long enough to
+// register, and snapping away from it would read as the view glitching
+// rather than something the map meant to do; flyTo, over LATE_FIX_FLY_MS,
+// makes that same repositioning read as deliberate instead.
+const LATE_FIX_MS = 700;
+const LATE_FIX_FLY_MS = 1200;
+function locateCoarse() {
+  if (isNative()) return locateNativeCoarse();
+  return new Promise((ok, fail) => {
+    if (!navigator.geolocation) { fail(new Error("nogeo")); return; }
+    navigator.geolocation.getCurrentPosition((pos) => ok(pos.coords), fail,
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 5 * 60 * 1000 });
+  });
+}
+
+// One permission read (never a prompt — checkPermissions() only, on both
+// platforms) and, only where shouldOpenAtLocation (web/datasource.js) says
+// the boot fix may act at all, one coarse fix. Checked once, before the fix
+// starts, so a `?bbox=` or `?osm=` link already in the URL never starts one
+// at all. NOT checked again once the fix lands: a deep link that arrives
+// WHILE it is in flight — the app's own papamap://table (Siri, the widget,
+// Control Center) resolving late — is caught at the point the fix is
+// applied instead (boot(), below), by pinOpenedBeforeFix/popup?.isOpen()
+// rather than by re-asking this question. Those guard the camera move only;
+// the dot is drawn either way, which a second call here, discarding the
+// coords outright, could not do (CONTRACT.md v45's own "dot drawn
+// regardless" was not yet true of the code before this). Returns the coords
+// to open on, or null for "do nothing", which is also what any failure
+// reads as (no Permissions API, no plugin, a timed-out fix) — this is a
+// nicety, never a reason to tell the reader anything went wrong.
+async function openAtLocationFix() {
+  try {
+    const permission = isNative()
+      ? await checkLocationPermissionNative()
+      : (await navigator.permissions?.query({ name: "geolocation" }))?.state ?? null;
+    if (!shouldOpenAtLocation({ search: location.search, permission, hasPendingPin: !!pendingPin }))
+      return null;
+    return await locateCoarse();
+  } catch { return null; }
 }
 
 // A pin a chip is currently hiding is nobody's "nearest" or "the one the room
@@ -2116,6 +2194,7 @@ function openPin(osmUrl) {
     map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
     openPopup(f);
     stripOsmParam();
+    pinOpenedBeforeFix = true;   // the boot fix's own turn to stand aside, if it hasn't yet
     return;
   }
   const p = placesByOsmUrl.get(osmUrl);
@@ -2123,6 +2202,7 @@ function openPin(osmUrl) {
     map.jumpTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
     openPlacePopup(p);
     stripOsmParam();
+    pinOpenedBeforeFix = true;
     return;
   }
   toast(t("sharePinGone"));
@@ -2231,6 +2311,12 @@ async function boot() {
   // the same queue the app's own deep link uses, so the two never race each
   // other for the one popup that can be open.
   openPin(parseShareOsm(location.search));
+  // Kicked off now rather than after the dataset, so its own "second or
+  // three" (openAtLocationFix, near locate() above) overlaps the load
+  // instead of adding to it. Applied below, after fitHome() — never before,
+  // or a fast fix would open on the reader only for fitHome to undo it a
+  // moment later.
+  const locationFix = openAtLocationFix();
   const loaded = await loadDataset([
     "data/changing_tables.geojson",
     "data/play_places.geojson",
@@ -2249,6 +2335,7 @@ async function boot() {
   // refresh (watchRefresh, below) never pulls the view out from under a
   // reader who has since panned somewhere else.
   fitHome();
+  const fitHomeAt = Date.now();   // LATE_FIX_MS is measured from here, not from boot's own start
   // On the website `fromStore` is still the service worker's honest "you are
   // looking at old data" signal (X-PapaMap-Source: cache) and the toast fires
   // on it exactly as it always has. In the app the copy draws on every
@@ -2256,6 +2343,34 @@ async function boot() {
   // app's own version of this toast instead, once the background refresh has
   // had its say.
   if (!isNative() && fromStore && allFeatures.length) toast(t("toastOffline"));
+  // Applied whenever it lands — never awaited. A fix can take the whole of
+  // its own timeout (indoors, no cached fix), and boot() must not make the
+  // pendingPin open below, completeLogin's OAuth return, shareSettings,
+  // watchRefresh or armEditCheck wait for it. Three reasons the camera stands
+  // still even once a fix does arrive: touchedBeforeFix (the reader did
+  // anything at all), popup?.isOpen() and pinOpenedBeforeFix (boot itself
+  // opened a pin in the meantime — the pendingPin open just below, or a
+  // papamap://table deep link that arrived late; openAtLocationFix itself
+  // does not re-check this, on purpose — see its own comment). The dot is
+  // drawn regardless of all three: showYou is never wrong, only the camera
+  // move can be. No noteFix() either way: this fix must never feed
+  // evaluateRoomCard, not even indirectly through some later, unrelated
+  // popup close (the first testers' "too much happens when the app opens",
+  // CONTRACT.md v43/v44). And a throw from a bad fix — malformed coordinates
+  // reaching MapLibre — must not surface as an unhandled rejection for a
+  // nicety nobody asked for; the outer .catch is that backstop.
+  locationFix.then((coords) => {
+    if (!coords) return;
+    const at = [coords.longitude, coords.latitude];
+    showYou(at);
+    if (touchedBeforeFix || pinOpenedBeforeFix || popup?.isOpen()) return;
+    const zoom = Math.max(map.getZoom(), 14);
+    // Early: the map simply opens there, no motion to notice. Late: the
+    // reader has had time to actually look at the home view first, so the
+    // camera travels to them on purpose instead of snapping.
+    if (Date.now() - fitHomeAt > LATE_FIX_MS) map.flyTo({ center: at, zoom, duration: LATE_FIX_FLY_MS });
+    else map.jumpTo({ center: at, zoom });
+  }).catch(() => {});
   // Whatever queued a pin above the data — the app's own deep link (bootNative,
   // an appUrlOpen already fired) or this load's own ?osm= — opens it now that
   // there is a dataset to look it up in. jumpTo overrides fitHome's view.

@@ -515,6 +515,82 @@ export async function locateNative(geo = plugin("Geolocation"),
   });
 }
 
+// Whether the OS has already granted location — read-only, never a prompt.
+// Every other permission read in this file (locateNative, above) may
+// escalate to requestPermissions() because it runs from a tap the reader
+// just made; this one backs the boot fix (web/app.js, openAtLocationFix),
+// which runs unprompted and must never put up the OS dialog on its own.
+// Returns null on anything that stops it from answering at all — no plugin,
+// location services off — which the caller reads exactly like "not granted".
+export async function checkLocationPermissionNative(geo = plugin("Geolocation")) {
+  try {
+    const perm = await geo?.checkPermissions();
+    return perm?.location ?? null;
+  } catch { return null; }
+}
+
+// ---- Boot-only: a coarse fix, never a fresh GPS lock ----
+// locateNative() above tunes for the locate button's own tap: several
+// seconds are worth spending on the best fix a reader who is actively
+// waiting will get. The boot fix is the opposite — first tester feedback was
+// "too much happens when the app opens" — so this asks for whatever fix the
+// OS already has sitting in its cache, never a fresh lock, and gives up
+// quickly rather than making an unprompted reader wait. Same permission gate
+// as locateNative, but checkPermissions() only: requestPermissions() stays
+// that function's alone.
+//
+// `maximumAge` only means anything on Android. Checked against
+// @capacitor/geolocation 8.2.2's own iOS source
+// (node_modules/@capacitor/geolocation/ios/Sources/GeolocationPlugin
+// /GeolocationPlugin.swift): getCurrentPosition there reads only
+// `enableHighAccuracy` off the call (`getCurrentPosition`, line 57-61) and
+// hands it to `requestSingleLocation`, which maps straight to Core
+// Location's `CLLocationManager.requestLocation()` — one fresh fix, no
+// cache, no `maximumAge` anywhere in the call (confirmed in the
+// ion-ios-geolocation dependency the plugin pulls in,
+// IONGLOCManagerWrapper.swift line 88-100: `requestSingleLocation` short-
+// circuits to the cached `currentLocation` only when a *watch* is already
+// running — never on its own — otherwise it is `locationManager
+// .requestLocation()` outright). That's locateNative's own existing comment
+// above, several seconds no matter what this function asks for.
+// `watchPosition`, though, maps to `startMonitoringLocation` ->
+// `CLLocationManager.startUpdatingLocation()` (same file, line 64-70), whose
+// delegate callback (`didUpdateLocations`, line 139-156) fires with
+// whatever Core Location already has cached the moment monitoring starts —
+// the ordinary, documented behaviour of that API. So on iOS the coarse fix
+// is the FIRST watch callback, taken and the watch cleared at once — never
+// the "best fix seen" tuning locateNative does for the button the reader is
+// actively waiting on. Android's plugin does read `maximumAge`
+// (`getCurrentPosition`'s own options), so it keeps the simpler call.
+export async function locateNativeCoarse(geo = plugin("Geolocation"),
+                                         { timeout = 5000, maximumAge = 5 * 60 * 1000 } = {},
+                                         plat = platform()) {
+  if (!geo) throw new Error("nogeo");
+  const perm = await geo.checkPermissions();
+  if (perm.location !== "granted") throw new Error("denied");
+  if (plat !== "ios") {
+    const pos = await geo.getCurrentPosition({ enableHighAccuracy: false, timeout, maximumAge });
+    return pos.coords;
+  }
+  return new Promise((ok, fail) => {
+    let done = false, watch = null;
+    const clearTheWatch = () =>
+      Promise.resolve(watch).then((id) => id != null && geo.clearWatch({ id })).catch(() => {});
+    const finish = (coords, err) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      clearTheWatch();
+      if (coords) ok(coords); else fail(err ?? new Error("timeout"));
+    };
+    const timer = setTimeout(() => finish(null), timeout);
+    watch = geo.watchPosition({ enableHighAccuracy: false, timeout }, (p, err) => {
+      if (p?.coords) finish(p.coords); else if (err) finish(null, err);
+    });
+    Promise.resolve(watch).catch((e) => finish(null, e));
+  });
+}
+
 // ---- Links ----
 // A WKWebView opens target=_blank nowhere and a relative link to methods.html
 // would 404 inside the bundle: every link that leaves the map goes to the
