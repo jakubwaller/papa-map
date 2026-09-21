@@ -1,5 +1,16 @@
 # papa-map — build contract (v0)
 
+> **v43 amendment (21 Sep 2026, first tester feedback): no shape change.** One
+> new i18n key in all 32 languages, `nearestBtn` ("Nächster Wickeltisch"): the
+> nearest-table button is a labelled pill at the foot of the map, no longer an
+> icon in the control column, and hides while a popup is open. The locate
+> button draws iOS's own arrow on iPhones and iPads (`isAppleTouch`,
+> `web/datasource.js`) and the crosshair elsewhere. Popups stay clear of the
+> control column (`popupPan`). In the store app the header's links, language
+> picker and stats strip live in "Mein PapaMap" (`#me-about`) and the tagline
+> is hidden; the website's header is unchanged. No new stored key, nothing
+> new sent anywhere. Shell pin `app36` → `app37`.
+>
 > **v42 amendment (19 Sep 2026, "Mehr aus der App"): no shape change.** The
 > iOS app's "Mein PapaMap" dialog gains a block that names what iOS keeps on
 > its own screens and nobody would guess a map app has: the Control Center

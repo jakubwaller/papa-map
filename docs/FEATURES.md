@@ -170,8 +170,23 @@ table tagged `male_toilet` only is counted as reachable in both readings.
 
 ## Nearest usable table
 
-The second button under the zoom controls answers "where can I change him?" in
-one tap. It asks the browser for a position, finds the nearest table the
+A labelled pill at the foot of the map, "Nächster Wickeltisch", answers "where
+can I change him?" in one tap. Until 2026-09-21 it was an unlabelled icon in the
+column under the zoom controls, and its icon was the diagonal arrow — the glyph
+iOS itself draws for "my location". The first external testers of the app tapped
+it to see where they were. So the map's main action now has its name on it, and
+the arrow went to the locate button on iPhones and iPads (`.ios`, set from
+`platform()` in the app and `isAppleTouch` in a browser); everywhere else locate
+keeps the crosshair Android and desktop maps use. The pill hides while a popup
+is open: the popup is its answer, and the two would share the foot of a phone.
+
+A popup is kept clear of the control column as well as of the topbar and the
+attribution (`popupPan`, `web/datasource.js`). The same testers reported that the
+app "froze" after that tap: the card's × had come to rest under the zoom-out
+button, so closing it zoomed the map instead, and the card covered most of the
+canvas.
+
+The button It asks the browser for a position, finds the nearest table the
 **current reading** calls usable, flies there and opens the popup.
 
 Three things it deliberately does not do:
@@ -522,7 +537,7 @@ a data bug on the map and a fake mover on the leaderboard.
 
 ## Mein PapaMap: your own numbers, and places worth going back to
 
-A button beside locate and nearest — `#me` in `web/zoom-ctrl`, the same look
+A button under locate — `#me` in `web/zoom-ctrl`, the same look
 as the offline-cities dialog — opens "Mein PapaMap": a headline sentence,
 the reader's own answer count, and a list of starred places. All three read
 data that already exists somewhere; none of it is a new thing PapaMap keeps
@@ -641,6 +656,13 @@ very same `web/` tree, with `web/native.js` as the only seam; on the website eve
 it is inert. It exists for the four things a web page cannot do (`app/README.md` has the
 layout, the build and the signing):
 
+- **A first screen that is a map.** The website's header is a website's: four links, a
+  language picker, a tagline that is the page's `<h1>`, a stats strip — 218 of a 667px phone
+  before the notch, and "too much on the screen" was the first thing the first testers said
+  (2026-09-21). `bootNative` moves the links, the picker and the strip into the foot of "Mein
+  PapaMap" (`#me-about`; the same nodes, so every listener and the area link's relabelling come
+  along) and `.native` hides the tagline. What is left is the brand, "+ Ort hinzufügen" and the
+  chip row: 96px. The website is unchanged.
 - **A city offline.** The website may not keep a basemap (see *Offline* above: the OSMF tile
   policy), so the app brings its own: a PMTiles extract of the Protomaps daily build per
   leaderboard city, cut weekly by `pipeline/tiles.py` and listed in `tiles/index.json`

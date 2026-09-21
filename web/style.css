@@ -334,13 +334,50 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   color: var(--muted-2);
 }
 #zoom-ctrl button:hover { border-color: var(--green); color: var(--green-strong); }
-#locate, #nearest, #me, #offline { display: flex; align-items: center; justify-content: center; }
+#locate, #me, #offline { display: flex; align-items: center; justify-content: center; }
+/* One glyph per platform (index.html, #locate): app.js sets .ios. */
+#locate .ico-ios, .ios #locate .ico-std { display: none; }
+.ios #locate .ico-ios { display: block; }
 #locate[aria-busy], #nearest[aria-busy] { animation: locating .7s ease-in-out infinite alternate; }
 @keyframes locating { to { opacity: .4; } }
 @media (prefers-reduced-motion: reduce) {
   #locate[aria-busy], #nearest[aria-busy] { animation: none; opacity: .6; }
 }
 #offline[hidden] { display: none; }
+
+/* ---------- "Nearest changing table": the map's one labelled control ---------- */
+/* At the foot, centred, above #toast's 24px band (a one-line toast ends at
+   ~61px) and under #room-card. 44px tall: the tap target Apple asks for, and
+   the column's 34px icons are what it must not be mistaken for. */
+.nearest-btn {
+  position: absolute;
+  left: 50%;
+  bottom: calc(64px + var(--safe-bottom));
+  transform: translateX(-50%);
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  height: 44px;
+  padding: 0 20px 0 16px;
+  border: 1px solid var(--green);
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font: inherit;
+  font-family: var(--ui);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 25, 20, .28);
+}
+.nearest-btn span { overflow: hidden; text-overflow: ellipsis; }
+.nearest-btn svg { flex: 0 0 auto; }
+.nearest-btn:hover { background: var(--green-strong); border-color: var(--green-strong); }
+.nearest-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.nearest-btn[hidden] { display: none; }
 
 /* You-are-here dot (single DOM marker, added on demand) */
 .you-dot {
@@ -381,7 +418,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   position: absolute;
   left: 12px;
   right: 12px;
-  bottom: calc(76px + var(--safe-bottom));
+  bottom: calc(118px + var(--safe-bottom));   /* clear of .nearest-btn: 64 + 44 + 10 */
   z-index: 25;
   max-width: 420px;
   margin: 0 auto;
@@ -498,6 +535,16 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
 }
 #me-dialog .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
+/* Store app only (bootNative): the header's links, the language picker and
+   the stats strip, moved in here so the first screen is the map. The strip
+   shows every line — there is no map underneath to save room for. */
+.native .tagline { display: none; }
+.me-about { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.me-about[hidden] { display: none; }
+.me-about #stats { padding: 0 0 10px; border-top: none; background: none; cursor: default; }
+#me-about #stats .stat { display: block; }
+.me-about .stats-toggle { display: none; }
+.me-about .header-actions { order: 0; flex: none; justify-content: flex-start; flex-wrap: wrap; gap: 8px 14px; }
 .me-saved h4 { margin: 4px 0 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
 .me-tips h4 { margin: 14px 0 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
 .tips-list { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }

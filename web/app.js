@@ -9,7 +9,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh, popupPan } from "./datasource.js?v=app37";
+         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app37";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          langUrl } from "./i18n.js?v=app37";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
@@ -753,6 +753,7 @@ function openPopup(f) {
     .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
   p.on("close", () => onPopupClosed(p));
   popup = p;
+  syncNearestBtn();
   attachEditNote();
   panPopupIntoView();
 }
@@ -765,6 +766,7 @@ function openPlacePopup(p) {
     .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
   pop.on("close", () => onPopupClosed(pop));
   popup = pop;
+  syncNearestBtn();
   attachEditNote();
   panPopupIntoView();
 }
@@ -1138,7 +1140,13 @@ document.getElementById("locate").addEventListener("click", (e) => {
 //
 // "Usable" is the current reading's own verdict, so the same tap sends a father
 // to the nearest open room and a mother to the nearest room of either kind.
-document.getElementById("nearest").addEventListener("click", (e) => {
+const nearestBtn = document.getElementById("nearest");
+// The popup is the button's own answer, and at the foot of a phone the two
+// would stand on each other: the pill steps aside for as long as one is open.
+function syncNearestBtn() {
+  nearestBtn.hidden = !!popup?.isOpen();
+}
+nearestBtn.addEventListener("click", (e) => {
   if (!hasGeo()) { toast(t("toastNoGeo")); return; }
   if (!dataReady) { toast(t("countNoData")); return; }
   locateFrom(e.currentTarget).then(
@@ -1295,6 +1303,7 @@ let suppressCardOnClose = false;
 
 function onPopupClosed(closedPopup) {
   if (popup === closedPopup) { popup = null; popupObj = null; }
+  syncNearestBtn();
   if (suppressCardOnClose) { suppressCardOnClose = false; return; }
   queueMicrotask(evaluateRoomCard);
 }
@@ -1307,6 +1316,7 @@ function closePopupSilently() {
   popup.remove();
   popup = null;
   popupObj = null;
+  syncNearestBtn();
 }
 
 // ---- Edit confirmation: re-read the object from OSM after a MapComplete click ----
@@ -1847,6 +1857,7 @@ langSelect.addEventListener("change", () => {
   refreshPins();
   syncModeButtons();   // applyI18n() relabels them; the pressed state is ours
   positionZoomCtrl();  // strip height can change with string lengths
+  if (meDialog.open) renderMeDialog();   // the app's picker lives in that dialog
 });
 // Click on the backdrop (the dialog element itself, not its children) closes.
 addDialog.addEventListener("click", (e) => { if (e.target === addDialog) addDialog.close(); });
@@ -2100,6 +2111,10 @@ async function boot() {
   applyI18n();  // markup default is German — swap before first paint if not
   syncModeButtons();  // ...and the markup default is papa
   if (isNative()) bootNative();
+  // iOS draws "my location" as an arrow, everyone else as a crosshair
+  // (index.html, #locate): the app on an iPhone, and Safari on one.
+  if (platform() === "ios" || (!isNative() && isAppleTouch(navigator.userAgent, navigator.maxTouchPoints)))
+    document.documentElement.classList.add("ios");
   // A shared https://papamap.de/?osm=… link (CONTRACT.md v38): the data is
   // not here yet, so this only sets pendingPin, resolved below once it is —
   // the same queue the app's own deep link uses, so the two never race each
@@ -2168,6 +2183,17 @@ let nativeScripts = Promise.resolve();   // declared before the call site below
 function bootNative() {
   interceptLinks();                  // site pages and OSM open in the in-app browser
   document.getElementById("app-link").hidden = true;   // this is the app
+  // The app's first screen is the brand, the chips and the map. The website's
+  // header is a website's: four links, a language picker, a tagline for search
+  // engines and a stats strip, 218 of a 667px phone before the notch — "too
+  // much on the screen" was the first thing the first testers said
+  // (2026-09-21). The links, the picker and the strip move into Mein PapaMap,
+  // the same nodes with the same listeners, so nothing about them changes but
+  // where they stand; the tagline is hidden by .native in style.css.
+  document.documentElement.classList.add("native");
+  const about = document.getElementById("me-about");
+  about.append(document.querySelector(".stats-wrap"), document.querySelector(".header-actions"));
+  about.hidden = false;
   offlineBtn.hidden = false;
   onAppUrl({ auth: (url) => completeLogin(url), table: openPin });
   nativeScripts = Promise.all([loadScript("vendor/pmtiles.js"), loadScript("vendor/protomaps/basemaps.js")]);

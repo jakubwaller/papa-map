@@ -546,9 +546,17 @@ export function webRouteChoices(lat, lon, label) {
   ];
 }
 
+// An iPhone or iPad, by its browser: an iPad's Safari calls itself a Mac, and
+// the touch points are what tell the two apart. Also decides which glyph the
+// locate button draws (web/app.js) — iOS's own arrow there, the crosshair
+// everywhere else.
+export function isAppleTouch(ua = "", touchPoints = 0) {
+  return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1);
+}
+
 export function webRouteHref(lat, lon, label, ua = "", touchPoints = 0) {
   if (/Android/i.test(ua)) return { href: geoUri(lat, lon, label), external: false };
-  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1)) {
+  if (isAppleTouch(ua, touchPoints)) {
     // The href is what is left if the dialog never catches the tap, and it
     // must not be one of the three: the Datenschutz says no provider's link
     // opens before the reader has chosen one. "#" keeps them on the map.
