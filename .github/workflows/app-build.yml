@@ -262,7 +262,7 @@ jobs:
   # successful) upload job look failed.
   beta-text:
     needs: testflight
-    if: inputs.task == 'testflight'
+    if: inputs.task == 'testflight' || (github.event.action == 'labeled' && github.event.label.name == 'testflight')
     runs-on: ubuntu-latest
     defaults:
       run:

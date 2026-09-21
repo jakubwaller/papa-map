@@ -49,19 +49,41 @@ function credentials() {
   return { issuer, keyId, p8 };
 }
 
-let bearer;
+// token()'s own exp is 600 s out. One command used to mean one token, but
+// `beta-text push` can poll for up to 25 minutes, so a single bearer minted
+// at the start would be rejected with 401 well before the wait is over.
+// Re-mint once within a minute of that 600 s lifetime instead of once per
+// process.
+const TOKEN_LIFETIME_S = 600;
+const TOKEN_REFRESH_MARGIN_S = 60;
+let bearer = null; // { value, mintedAt } in epoch seconds, or null before the first call
+
+export function freshToken(now = Math.floor(Date.now() / 1000)) {
+  if (!bearer || now - bearer.mintedAt >= TOKEN_LIFETIME_S - TOKEN_REFRESH_MARGIN_S) {
+    bearer = { value: token(credentials(), now), mintedAt: now };
+  }
+  return bearer.value;
+}
+
+// Test-only seam: forces the next freshToken() call to mint again, so a test
+// can start clean regardless of what an earlier test already cached.
+export function _resetBearerForTests() {
+  bearer = null;
+}
+
 async function api(method, path, body) {
-  bearer ??= token(credentials());
   const r = await fetch(path.startsWith("http") ? path : API + path, {
     method,
-    headers: { Authorization: `Bearer ${bearer}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${freshToken()}`, "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (r.status === 204) return null;
   const json = await r.json().catch(() => null);
   if (!r.ok) {
     const why = (json?.errors ?? []).map((e) => `${e.code}: ${e.detail}`).join("; ");
-    throw new Error(`${method} ${path} → ${r.status} ${why}`);
+    const err = new Error(`${method} ${path} → ${r.status} ${why}`);
+    err.status = r.status;
+    throw err;
   }
   return json;
 }
@@ -196,15 +218,26 @@ export function whatsNewFiles(dir) {
 }
 
 // The bundle id at BUNDLE_IDS[0] is the app itself; the widget (index 1) has
-// no App Store Connect app record or TestFlight page of its own.
-async function appId() {
-  const r = await api("GET", `/apps?filter[bundleId]=${BUNDLE_IDS[0].identifier}&limit=1`);
-  if (!r.data.length) throw new Error(`no App Store Connect app found for bundle id ${BUNDLE_IDS[0].identifier}`);
-  return r.data[0].id;
+// no App Store Connect app record or TestFlight page of its own. filter[bundleId]
+// is a prefix match, same as bundleId()'s filter[identifier] above — de.papamap.app
+// also answers the widget's own app record, if it had one — so the exact match
+// is picked here rather than trusting data[0].
+export async function appId() {
+  const r = await api("GET", `/apps?filter[bundleId]=${BUNDLE_IDS[0].identifier}&limit=200`);
+  const hit = r.data.find((a) => a.attributes.bundleId === BUNDLE_IDS[0].identifier);
+  if (!hit) throw new Error(`no App Store Connect app found for bundle id ${BUNDLE_IDS[0].identifier}`);
+  return hit.id;
 }
 
-async function findBuild(app, version) {
-  const r = await api("GET", `/builds?filter[app]=${app}&filter[version]=${encodeURIComponent(version)}&limit=1`);
+// filter[version] is exact, but nothing stops two builds (different
+// platforms, say) from sharing a CFBundleVersion for one app, and taking the
+// first of an unsorted list would then be a guess. Newest first, and refuse
+// outright rather than silently act on the wrong build.
+export async function findBuild(app, version) {
+  const r = await api("GET", `/builds?filter[app]=${app}&filter[version]=${encodeURIComponent(version)}&sort=-uploadedDate&limit=2`);
+  if (r.data.length > 1) {
+    throw new Error(`build ${version} is ambiguous for this app — more than one build shares that version`);
+  }
   return r.data[0] ?? null;
 }
 
@@ -221,6 +254,22 @@ async function betaBuildLocalizations(build) {
   return (await api("GET", `/betaBuildLocalizations?filter[build]=${build}&limit=200`)).data;
 }
 
+// A rate limit or a transient 5xx is not App Store Connect's opinion of the
+// build, just noise over a 25-minute wait — worth a retry next tick rather
+// than aborting the whole push. Anything else 4xx (a bad key, a renamed
+// filter) will not fix itself by waiting, so it is left to propagate.
+async function findBuildTolerantly(app, version) {
+  try {
+    return await findBuild(app, version);
+  } catch (e) {
+    if (e.status === 429 || (e.status && e.status >= 500)) {
+      console.log(`build ${version}: ${e.message} — temporary, trying again next poll`);
+      return null;
+    }
+    throw e;
+  }
+}
+
 // Apple processes an upload after it lands, so the freshly-uploaded build
 // answers PROCESSING for a while. Poll until VALID; INVALID/FAILED are dead
 // ends (a bad Info.plist, encryption declaration, …) and stop right away
@@ -228,7 +277,7 @@ async function betaBuildLocalizations(build) {
 export async function pollBuild(app, version, { intervalMs = POLL_INTERVAL_MS, timeoutMs = POLL_TIMEOUT_MS } = {}) {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
-    const build = await findBuild(app, version);
+    const build = await findBuildTolerantly(app, version);
     const state = build?.attributes.processingState;
     if (state === "VALID") return build;
     if (state === "INVALID" || state === "FAILED") {
@@ -263,6 +312,9 @@ export async function betaTextPush(build, { dir = testflightDir, intervalMs, tim
   const files = whatsNewFiles(dir);
   if (!files.length) throw new Error(`no what-to-test.*.txt files in ${dir}`);
   for (const f of files) {
+    if (!f.text) {
+      throw new Error(`${f.file}: empty (or whitespace-only) — refusing to push a blank "What to Test"`);
+    }
     if (f.text.length > WHATS_NEW_LIMIT) {
       throw new Error(`${f.file}: ${f.text.length} characters, over Apple's ${WHATS_NEW_LIMIT}-character whatsNew limit`);
     }
