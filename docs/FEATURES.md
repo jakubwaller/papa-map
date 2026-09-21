@@ -314,6 +314,41 @@ one card at a time, and it steps aside for anything that outranks it — any
 popup opening, or the reader panning more than 300 m from the fix that raised
 it.
 
+### Open at location
+
+TestFlight feedback: a reader who has already granted location expects the
+map to open where they are, the way Google Maps does, not on the German home
+view. Like the room card above, this never asks the phone anything on its
+own — it only ever reads a permission state that is already known
+(`navigator.permissions.query` on the website, the Geolocation plugin's own
+`checkPermissions()` in the app, both read-only) — so a first-time visitor or
+a reader who picked "Allow once" keeps today's home view exactly as before.
+`shouldOpenAtLocation` (`web/datasource.js`) is the single, pure, tested rule:
+permission has to read `"granted"`, and the URL must not already ask for a
+view of its own — a Bundesland page's `?bbox=` link, a shared place's `?osm=`,
+or the app's own `papamap://table` deep link (the widget, the Siri shortcut
+and the Control Center button all resolve to that one link, `app/README.md`)
+— any of which wins outright.
+
+Where it is allowed to act at all, the fix itself (`openAtLocationFix`,
+`web/app.js`) is deliberately not a reuse of the locate button's own `locate()`
+— a boot nobody asked anything of gets the cheapest fix the OS already has
+cached (`enableHighAccuracy: false`, a `maximumAge` of a few minutes, a short
+timeout), never a fresh GPS lock, and the locate button's own options are
+untouched. It is kicked off as early as boot() can manage so its own "second
+or three" overlaps the dataset load rather than adding to it, and applied only
+once `fitHome()` has already run — a `jumpTo`, not a `flyTo`: the reader
+granted this expecting the map to simply open there, not to watch it travel
+there from Germany.
+
+Two more guards, both first-tester complaints about "too much happens when the
+app opens": if the reader has touched the map at all before the fix lands —
+a drag, a zoom, a tap that opened a popup, a press on any button — the camera
+is left alone and only the you-are-here dot is drawn (the same `showYou` the
+locate and nearest buttons use). And the fix never calls `noteFix`, so it can
+never raise the room card above, or a popup, not even indirectly through some
+later, unrelated popup close.
+
 ## Offline
 
 `web/sw.js` is a service worker that makes the map work with no signal, which is

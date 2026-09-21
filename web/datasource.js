@@ -604,6 +604,30 @@ export function withoutOsmParam(href) {
   return url.toString();
 }
 
+// ---- Open at location: zoomed in on the reader, the way Google Maps opens ----
+// TestFlight feedback: a reader who has already granted location expects the
+// map to open where they are, not on Germany. Whether app.js's boot fix
+// (web/app.js, openAtLocationFix) may act at all — never whether to ask for
+// permission, which it never does; this only reads a state already known.
+// `permission` is that state ("granted" | "denied" | "prompt" | null, from
+// the Permissions API on the website or the Geolocation plugin's own
+// checkPermissions() in the app) — anything but "granted" keeps today's home
+// view, so a first-time visitor or an "Allow once" grant never sees this at
+// all (design rule 1). `search` is location.search: a `?bbox=` link (a
+// Bundesland page's "auf der Karte öffnen", VIEW_BOUNDS) or a `?osm=` share
+// link (parseShareOsm) both ask for a view of their own, and the reader's
+// own position must not override either. `hasPendingPin` covers the one deep
+// link no URL param shows: the app's own papamap://table, which the widget,
+// the Siri shortcut and the Control Center button all resolve to
+// (app/README.md) before app.js ever calls this.
+export function shouldOpenAtLocation({ search, permission, hasPendingPin = false } = {}) {
+  if (permission !== "granted") return false;
+  if (hasPendingPin) return false;
+  if (parseBbox(new URLSearchParams(search ?? "").get("bbox"))) return false;
+  if (parseShareOsm(search)) return false;
+  return true;
+}
+
 // ---- Edit confirmation: one object re-read from the OSM API ----
 // The nightly build is the only path from OSM into the map, so a reader who
 // has just answered the room question sees nothing for up to a day. The OSM

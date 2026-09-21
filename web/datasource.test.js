@@ -12,7 +12,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
-         nearestUnknownRoom, isFixFresh, popupPan, isAppleTouch } from "./datasource.js";
+         nearestUnknownRoom, isFixFresh, popupPan, isAppleTouch,
+         shouldOpenAtLocation } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -642,6 +643,43 @@ test("withoutOsmParam strips ?osm= once resolved, keeping every other param", ()
   // a no-op history.replaceState.
   assert.equal(withoutOsmParam("https://papamap.de/?lang=en"), null);
   assert.equal(withoutOsmParam("https://papamap.de/"), null);
+});
+
+// ---- Open at location ----
+
+test("shouldOpenAtLocation: granted, no deep link — opens at the reader", () => {
+  assert.equal(shouldOpenAtLocation({ search: "", permission: "granted" }), true);
+  assert.equal(shouldOpenAtLocation({ search: "?lang=en", permission: "granted" }), true);
+});
+
+test("shouldOpenAtLocation: never without an already-granted permission", () => {
+  assert.equal(shouldOpenAtLocation({ search: "", permission: "prompt" }), false);
+  assert.equal(shouldOpenAtLocation({ search: "", permission: "denied" }), false);
+  // A first-time visitor, or "Allow once": no Permissions API answer at all.
+  assert.equal(shouldOpenAtLocation({ search: "", permission: null }), false);
+  assert.equal(shouldOpenAtLocation({}), false);
+});
+
+test("shouldOpenAtLocation: a ?bbox= link asks for its own view", () => {
+  assert.equal(
+    shouldOpenAtLocation({ search: "?bbox=9,53,10,54", permission: "granted" }), false);
+  // A malformed bbox is no view of its own (parseBbox returns null for it).
+  assert.equal(
+    shouldOpenAtLocation({ search: "?bbox=not-a-box", permission: "granted" }), true);
+});
+
+test("shouldOpenAtLocation: a ?osm= share link asks for its own pin", () => {
+  assert.equal(
+    shouldOpenAtLocation({
+      search: `?osm=${encodeURIComponent("https://www.openstreetmap.org/node/1")}`,
+      permission: "granted",
+    }),
+    false);
+});
+
+test("shouldOpenAtLocation: the app's own papamap://table deep link wins too", () => {
+  assert.equal(
+    shouldOpenAtLocation({ search: "", permission: "granted", hasPendingPin: true }), false);
 });
 
 // ---- The "which room?" card ----

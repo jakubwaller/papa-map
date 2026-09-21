@@ -1,5 +1,31 @@
 # papa-map — build contract (v0)
 
+> **v45 amendment (21 Sep 2026, open at location): no shape change.** TestFlight
+> feedback: a reader who has already granted location expects the map to open
+> where they are, the way Google Maps does. Never a permission prompt of its
+> own — `shouldOpenAtLocation` (`web/datasource.js`, pure, tested) only fires
+> once a permission read that was never asked for this (`navigator.permissions
+> .query` on the website, the Geolocation plugin's own `checkPermissions()` in
+> the app) already reads `"granted"`, so a first-time visitor or an "Allow
+> once" grant keeps today's home view exactly as before. Skipped outright
+> whenever the URL already asks for a view of its own: a Bundesland page's
+> `?bbox=`, a shared place's `?osm=`, or the app's own `papamap://table` deep
+> link, which the widget, the Siri shortcut and the Control Center button all
+> resolve to before this ever runs. The fix itself (`openAtLocationFix`,
+> `web/app.js`) is a second, deliberately separate `locate()` — a boot nobody
+> asked anything of gets the cheapest fix the OS already has cached
+> (`enableHighAccuracy: false`, a few minutes' `maximumAge`, a short timeout),
+> the locate button's own options untouched — kicked off early so its own
+> "second or three" overlaps the dataset load, and applied with `jumpTo`, not
+> `flyTo`, only once `fitHome()` has already run. If the reader has touched
+> the map at all before the fix lands — a drag, a zoom, a popup, any button —
+> the camera is left alone and only the you-are-here dot is drawn. The fix
+> never calls `noteFix`, so it can never raise the room card or a popup, not
+> even indirectly through some later, unrelated popup close — the first
+> testers' own complaint was that too much already happens when the app
+> opens. Datenschutz and its English page each gain a sentence on this in
+> their locate sections, no new stored key. Shell pin `app38` → `app39`.
+>
 > **v44 amendment (21 Sep 2026, the selected-place marker): no shape change.**
 > While a "table" popup is open, one `maplibregl.Marker` sits on that pin: the
 > logo's door-sign shape, filled with the pin's own bucket colour, carrying a

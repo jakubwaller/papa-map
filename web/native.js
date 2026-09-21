@@ -515,6 +515,38 @@ export async function locateNative(geo = plugin("Geolocation"),
   });
 }
 
+// Whether the OS has already granted location — read-only, never a prompt.
+// Every other permission read in this file (locateNative, above) may
+// escalate to requestPermissions() because it runs from a tap the reader
+// just made; this one backs the boot fix (web/app.js, openAtLocationFix),
+// which runs unprompted and must never put up the OS dialog on its own.
+// Returns null on anything that stops it from answering at all — no plugin,
+// location services off — which the caller reads exactly like "not granted".
+export async function checkLocationPermissionNative(geo = plugin("Geolocation")) {
+  try {
+    const perm = await geo?.checkPermissions();
+    return perm?.location ?? null;
+  } catch { return null; }
+}
+
+// ---- Boot-only: a coarse fix, never a fresh GPS lock ----
+// locateNative() above tunes for the locate button's own tap: several
+// seconds are worth spending on the best fix a reader who is actively
+// waiting will get. The boot fix is the opposite — first tester feedback was
+// "too much happens when the app opens" — so this asks for whatever fix the
+// OS already has sitting in its cache (maximumAge), never a fresh lock
+// (enableHighAccuracy: false), and gives up quickly rather than making an
+// unprompted reader wait. Same permission gate as locateNative, but
+// checkPermissions() only: requestPermissions() stays that function's alone.
+export async function locateNativeCoarse(geo = plugin("Geolocation"),
+                                         { timeout = 5000, maximumAge = 5 * 60 * 1000 } = {}) {
+  if (!geo) throw new Error("nogeo");
+  const perm = await geo.checkPermissions();
+  if (perm.location !== "granted") throw new Error("denied");
+  const pos = await geo.getCurrentPosition({ enableHighAccuracy: false, timeout, maximumAge });
+  return pos.coords;
+}
+
 // ---- Links ----
 // A WKWebView opens target=_blank nowhere and a relative link to methods.html
 // would 404 inside the bundle: every link that leaves the map goes to the
