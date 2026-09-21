@@ -470,6 +470,28 @@ export function isFixFresh(fixAt, now = Date.now()) {
   return Number.isFinite(fixAt) && now - fixAt <= ROOM_CARD_FIX_MAX_AGE_MS;
 }
 
+// How far the map has to pan for a popup card to be readable *and closable*:
+// `card` and `box` are viewport rects, `box` the part of the canvas nothing
+// floats over (below the topbar, above the attribution line). `avoid` is the
+// control column on the right edge: a card that reaches its rows stops at its
+// left edge instead of the canvas's. Until 2026-09-21 it did not, and on a
+// 375px phone the card's own × ended up underneath the zoom-out button — a tap
+// on "close" zoomed the map, the card stayed, and with the card over most of
+// the canvas the app read as frozen (first external testers, build 107).
+// A card taller or wider than the space keeps its head and its left edge;
+// web/app.js's popupMaxWidth is what makes "wider" not happen beside the column.
+export function popupPan(card, box, avoid = null) {
+  let dx = 0, dy = 0;
+  if (card.bottom > box.bottom) dy = card.bottom - box.bottom;
+  if (card.top - dy < box.top) dy = card.top - box.top;
+  let right = box.right;
+  if (avoid && card.top - dy < avoid.bottom && card.bottom - dy > avoid.top)
+    right = Math.min(right, avoid.left);
+  if (card.right > right) dx = card.right - right;
+  if (card.left - dx < box.left) dx = card.left - box.left;
+  return [dx, dy];
+}
+
 // Metres below a kilometre, and rounded to the nearest ten: a good phone fix
 // is accurate to a handful of metres and a poor one to fifty, so "437 m" would
 // claim a precision the sensor cannot deliver. Returns the i18n key and the

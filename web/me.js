@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app36";
-import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app36";
+import { CREATED_BY } from "./osm.js?v=app37";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app37";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -202,7 +202,7 @@ export function circleBounds(lat, lon, km) {
 // the changeset with the theme it ran instead. For a theme it loads from a
 // URL — which is how every hand-off from this site opens it (`userlayout=`,
 // PAPAMAP_THEME in datasource.js) — the `theme` tag is **that URL**, not the
-// id inside the file. Until app36 this compared against the bare id only, so
+// id inside the file. Until app37 this compared against the bare id only, so
 // not one MapComplete session was ever counted: a reader with 3 taps on this
 // site and 14 MapComplete sessions was told "3" (build 24, 2026-09-19). The
 // bare id stays accepted for the day MapComplete lists the theme itself.

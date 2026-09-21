@@ -12,7 +12,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
-         nearestUnknownRoom, isFixFresh } from "./datasource.js";
+         nearestUnknownRoom, isFixFresh, popupPan } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -686,6 +686,35 @@ test("isFixFresh: good for 5 minutes, stale a moment past it", () => {
   assert.equal(isFixFresh(NaN, now), false);
   assert.equal(isFixFresh(undefined, now), false);
   assert.equal(isFixFresh(null, now), false);
+});
+
+// ---- Popup pan ----
+// The numbers are the 375x667 phone the bug was measured on: topbar 218,
+// control column from x=325, card 300 wide.
+const BOX = { left: 8, top: 226, right: 367, bottom: 620 };
+const COLUMN = { left: 317, top: 228, bottom: 422 };
+
+test("popupPan: a card that fits moves nothing", () => {
+  assert.deepEqual(popupPan({ left: 10, top: 300, right: 310, bottom: 500 }, BOX, COLUMN), [0, 0]);
+});
+
+test("popupPan: a card beside the control column stops at the column, not the canvas edge", () => {
+  // The measured case: right edge 338 put the card's × under the zoom-out button.
+  assert.deepEqual(popupPan({ left: 38, top: 278, right: 338, bottom: 621 }, BOX, COLUMN), [21, 1]);
+  // Below the column's last button the full width is free again.
+  assert.deepEqual(popupPan({ left: 60, top: 430, right: 360, bottom: 600 }, BOX, COLUMN), [0, 0]);
+  // No column given: the old rule, canvas edge only.
+  assert.deepEqual(popupPan({ left: 38, top: 278, right: 338, bottom: 600 }, BOX), [0, 0]);
+});
+
+test("popupPan: the column is judged where the card lands, not where it started", () => {
+  // Starts below the column, overflows the foot by 200, and lands beside it.
+  assert.deepEqual(popupPan({ left: 60, top: 430, right: 360, bottom: 820 }, BOX, COLUMN), [43, 200]);
+});
+
+test("popupPan: taller or wider than the space keeps the head and the left edge", () => {
+  assert.deepEqual(popupPan({ left: 20, top: 100, right: 300, bottom: 700 }, BOX, COLUMN), [0, -126]);
+  assert.deepEqual(popupPan({ left: 5, top: 300, right: 400, bottom: 500 }, BOX, COLUMN), [-3, 0]);
 });
 
 // ---- Edit confirmation ----
