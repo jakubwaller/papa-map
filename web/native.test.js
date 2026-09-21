@@ -99,6 +99,54 @@ test("locateNativeCoarse fails silently (its caller's job) with no plugin", asyn
   await assert.rejects(locateNativeCoarse(undefined), /nogeo/);
 });
 
+// ---- locateNativeCoarse on iOS: watchPosition, not getCurrentPosition ----
+// @capacitor/geolocation 8.2.2's iOS side maps getCurrentPosition straight
+// to Core Location's requestLocation() — one fresh fix, `maximumAge` read
+// nowhere — so the fast path there is the first watchPosition callback,
+// taken and the watch cleared at once. No requestPermissions here either:
+// this fake carries none, so a mistaken call throws instead of granting.
+function fakeGeoIosWatch(permission, playback) {
+  const geo = {
+    cleared: [],
+    checkPermissions: async () => ({ location: permission }),
+    watchPosition: async (_opts, cb) => {
+      if (playback) setTimeout(() => cb(playback.coords && { coords: playback.coords }, playback.err),
+        playback.ms ?? 5);
+      return "watch-coarse";
+    },
+    clearWatch: async ({ id }) => { geo.cleared.push(id); },
+  };
+  return geo;
+}
+
+test("locateNativeCoarse on iOS takes the first watch callback and clears the watch", async () => {
+  const geo = fakeGeoIosWatch("granted", { coords: { latitude: 53.55, longitude: 9.99, accuracy: 1500 } });
+  const c = await locateNativeCoarse(geo, { timeout: 200 }, "ios");
+  assert.equal(c.latitude, 53.55);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(geo.cleared, ["watch-coarse"]);
+});
+
+test("locateNativeCoarse on iOS times out and still clears the watch", async () => {
+  const geo = fakeGeoIosWatch("granted", null);   // no callback ever fires
+  await assert.rejects(locateNativeCoarse(geo, { timeout: 30 }, "ios"), /timeout/);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(geo.cleared, ["watch-coarse"]);
+});
+
+test("locateNativeCoarse on iOS rejects on a watch error and clears the watch", async () => {
+  const geo = fakeGeoIosWatch("granted", { err: new Error("boom"), ms: 5 });
+  await assert.rejects(locateNativeCoarse(geo, { timeout: 200 }, "ios"), /boom/);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(geo.cleared, ["watch-coarse"]);
+});
+
+test("locateNativeCoarse on iOS never prompts either: not yet granted fails outright", async () => {
+  const geo = fakeGeoIosWatch("prompt", { coords: { latitude: 0, longitude: 0, accuracy: 1 } });
+  await assert.rejects(locateNativeCoarse(geo, {}, "ios"), /denied/);
+  assert.deepEqual(geo.cleared, []);   // never even started a watch
+});
+
 // ---- citiesToMount ----
 import { citiesToMount } from "./native.js";
 const HH = { slug: "hamburg", bbox: [9.7, 53.4, 10.3, 53.75] };

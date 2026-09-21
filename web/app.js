@@ -290,6 +290,9 @@ let touchedBeforeFix = false;
 const markTouchedBeforeFix = () => { touchedBeforeFix = true; };
 document.addEventListener("pointerdown", markTouchedBeforeFix, { capture: true, once: true });
 document.addEventListener("wheel", markTouchedBeforeFix, { capture: true, once: true, passive: true });
+// A focused map canvas takes arrow-key pans and +/- zooms with no pointer
+// event of its own — MapLibre's own keyboard handler, not this page's.
+document.addEventListener("keydown", markTouchedBeforeFix, { capture: true, once: true });
 
 // The other half of that guard: boot() itself opened a pin before the fix
 // landed — a `?osm=` share link, or a papamap://table deep link (Siri, the
@@ -1212,8 +1215,19 @@ function locateFrom(btn) {
 // map to open where they are, not on Germany. locateCoarse() is a second
 // locate(), deliberately not a reuse of it — the boot fix wants a fast fix
 // that never keeps an unprompted reader waiting (enableHighAccuracy: false,
-// a few minutes' maximumAge, a short timeout), and locate()'s own options,
-// and the button it pulses, stay the locate button's alone.
+// a few minutes' maximumAge, a short timeout — ignored on iOS, see
+// locateNativeCoarse's own comment in web/native.js), and locate()'s own
+// options, and the button it pulses, stay the locate button's alone.
+//
+// How the fix is applied (boot(), below) depends on how long it took past
+// fitHome(): within LATE_FIX_MS the reader has barely had a frame to look at
+// the home view, so jumpTo — no motion to notice, the map simply opened
+// there. Past it, the home view has actually been on screen long enough to
+// register, and snapping away from it would read as the view glitching
+// rather than something the map meant to do; flyTo, over LATE_FIX_FLY_MS,
+// makes that same repositioning read as deliberate instead.
+const LATE_FIX_MS = 700;
+const LATE_FIX_FLY_MS = 1200;
 function locateCoarse() {
   if (isNative()) return locateNativeCoarse();
   return new Promise((ok, fail) => {
@@ -1225,24 +1239,27 @@ function locateCoarse() {
 
 // One permission read (never a prompt — checkPermissions() only, on both
 // platforms) and, only where shouldOpenAtLocation (web/datasource.js) says
-// the boot fix may act at all, one coarse fix. Checked twice: once before
-// the fix, so a `?bbox=` or `?osm=` link never starts one at all, and once
-// after, because the fix itself takes long enough for the app's own
-// papamap://table deep link — Siri, the widget, Control Center — to resolve
-// and set `pendingPin` (below) while it was in flight; arriving late, that
-// link still has to win. Returns the coords to open on, or null for "do
-// nothing", which is also what any failure reads as (no Permissions API, no
-// plugin, a timed-out fix) — this is a nicety, never a reason to tell the
-// reader anything went wrong.
+// the boot fix may act at all, one coarse fix. Checked once, before the fix
+// starts, so a `?bbox=` or `?osm=` link already in the URL never starts one
+// at all. NOT checked again once the fix lands: a deep link that arrives
+// WHILE it is in flight — the app's own papamap://table (Siri, the widget,
+// Control Center) resolving late — is caught at the point the fix is
+// applied instead (boot(), below), by pinOpenedBeforeFix/popup?.isOpen()
+// rather than by re-asking this question. Those guard the camera move only;
+// the dot is drawn either way, which a second call here, discarding the
+// coords outright, could not do (CONTRACT.md v45's own "dot drawn
+// regardless" was not yet true of the code before this). Returns the coords
+// to open on, or null for "do nothing", which is also what any failure
+// reads as (no Permissions API, no plugin, a timed-out fix) — this is a
+// nicety, never a reason to tell the reader anything went wrong.
 async function openAtLocationFix() {
   try {
     const permission = isNative()
       ? await checkLocationPermissionNative()
       : (await navigator.permissions?.query({ name: "geolocation" }))?.state ?? null;
-    const gate = () => shouldOpenAtLocation({ search: location.search, permission, hasPendingPin: !!pendingPin });
-    if (!gate()) return null;
-    const coords = await locateCoarse();
-    return gate() ? coords : null;
+    if (!shouldOpenAtLocation({ search: location.search, permission, hasPendingPin: !!pendingPin }))
+      return null;
+    return await locateCoarse();
   } catch { return null; }
 }
 
@@ -2305,6 +2322,7 @@ async function boot() {
   // refresh (watchRefresh, below) never pulls the view out from under a
   // reader who has since panned somewhere else.
   fitHome();
+  const fitHomeAt = Date.now();   // LATE_FIX_MS is measured from here, not from boot's own start
   // On the website `fromStore` is still the service worker's honest "you are
   // looking at old data" signal (X-PapaMap-Source: cache) and the toast fires
   // on it exactly as it always has. In the app the copy draws on every
@@ -2316,24 +2334,30 @@ async function boot() {
   // its own timeout (indoors, no cached fix), and boot() must not make the
   // pendingPin open below, completeLogin's OAuth return, shareSettings,
   // watchRefresh or armEditCheck wait for it. Three reasons the camera stands
-  // still even once a fix does arrive, on top of gate() inside
-  // openAtLocationFix already having re-checked shouldOpenAtLocation the
-  // moment the fix landed: touchedBeforeFix (the reader did anything at
-  // all), popup?.isOpen() and pinOpenedBeforeFix (boot itself opened a pin
-  // in the meantime — the pendingPin open just below, or a papamap://table
-  // deep link that arrived late). The dot is drawn regardless: showYou is
-  // never wrong, only the camera move can be. No noteFix() either way: this
-  // fix must never feed evaluateRoomCard, not even indirectly through some
-  // later, unrelated popup close (the first testers' "too much happens when
-  // the app opens", CONTRACT.md v43/v44) — and jumpTo, not flyTo, because a
-  // reader who granted this expects the map to simply open there, not to
-  // watch it fly there from Germany.
-  locationFix.then((at) => {
-    if (!at) return;
-    showYou([at.longitude, at.latitude]);
-    if (!touchedBeforeFix && !pinOpenedBeforeFix && !popup?.isOpen())
-      map.jumpTo({ center: [at.longitude, at.latitude], zoom: Math.max(map.getZoom(), 14) });
-  });
+  // still even once a fix does arrive: touchedBeforeFix (the reader did
+  // anything at all), popup?.isOpen() and pinOpenedBeforeFix (boot itself
+  // opened a pin in the meantime — the pendingPin open just below, or a
+  // papamap://table deep link that arrived late; openAtLocationFix itself
+  // does not re-check this, on purpose — see its own comment). The dot is
+  // drawn regardless of all three: showYou is never wrong, only the camera
+  // move can be. No noteFix() either way: this fix must never feed
+  // evaluateRoomCard, not even indirectly through some later, unrelated
+  // popup close (the first testers' "too much happens when the app opens",
+  // CONTRACT.md v43/v44). And a throw from a bad fix — malformed coordinates
+  // reaching MapLibre — must not surface as an unhandled rejection for a
+  // nicety nobody asked for; the outer .catch is that backstop.
+  locationFix.then((coords) => {
+    if (!coords) return;
+    const at = [coords.longitude, coords.latitude];
+    showYou(at);
+    if (touchedBeforeFix || pinOpenedBeforeFix || popup?.isOpen()) return;
+    const zoom = Math.max(map.getZoom(), 14);
+    // Early: the map simply opens there, no motion to notice. Late: the
+    // reader has had time to actually look at the home view first, so the
+    // camera travels to them on purpose instead of snapping.
+    if (Date.now() - fitHomeAt > LATE_FIX_MS) map.flyTo({ center: at, zoom, duration: LATE_FIX_FLY_MS });
+    else map.jumpTo({ center: at, zoom });
+  }).catch(() => {});
   // Whatever queued a pin above the data — the app's own deep link (bootNative,
   // an appUrlOpen already fired) or this load's own ?osm= — opens it now that
   // there is a dataset to look it up in. jumpTo overrides fitHome's view.

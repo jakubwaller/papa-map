@@ -332,32 +332,67 @@ or the app's own `papamap://table` deep link (the widget, the Siri shortcut
 and the Control Center button all resolve to that one link, `app/README.md`)
 — any of which wins outright.
 
-Where it is allowed to act at all, the fix itself (`openAtLocationFix`,
-`web/app.js`) is deliberately not a reuse of the locate button's own `locate()`
-— a boot nobody asked anything of gets the cheapest fix the OS already has
-cached (`enableHighAccuracy: false`, a `maximumAge` of a few minutes, a short
-timeout), never a fresh GPS lock, and the locate button's own options are
-untouched. It is kicked off as early as boot() can manage so its own "second
-or three" overlaps the dataset load rather than adding to it.
+Where it is allowed to act at all, the fix itself
+(`openAtLocationFix`/`locateCoarse`, `web/app.js`) is deliberately not a reuse
+of the locate button's own `locate()` — a boot nobody asked anything of gets
+the cheapest fix available, never the accuracy a reader actively waiting for
+`locate()` gets. On Android and on the web that means `getCurrentPosition`
+with `enableHighAccuracy: false` and a `maximumAge` of a few minutes, a short
+timeout, and the locate button's own options untouched.
+
+**iOS does not read `maximumAge` at all.** Checked against
+`@capacitor/geolocation` 8.2.2's own iOS source
+(`node_modules/@capacitor/geolocation/ios/Sources/GeolocationPlugin/GeolocationPlugin.swift`):
+`getCurrentPosition` there reads only `enableHighAccuracy` off the call and
+hands it to `requestSingleLocation`, which — in the `ion-ios-geolocation`
+dependency the plugin pulls in (`IONGLOCManagerWrapper.swift`) — maps
+straight to Core Location's `CLLocationManager.requestLocation()`: one fresh
+fix, no cache, `maximumAge` nowhere in the call. That is exactly
+`locateNative`'s own longstanding comment about why the locate button
+itself avoids `getCurrentPosition` on iOS — several seconds regardless of
+what this asks for. `watchPosition`, though, maps to `startMonitoringLocation`
+→ `CLLocationManager.startUpdatingLocation()`, whose delegate callback fires
+with whatever Core Location already has cached the moment monitoring
+starts. So `locateNativeCoarse` (`web/native.js`) takes a different path on
+iOS: start a watch, take the *first* callback (never the "best fix seen"
+tuning `locateNative` does for the button), clear the watch at once — on
+that first position, on a timeout, and on an error alike, so no watch is
+ever left running. Same permission gate as everywhere else,
+`checkPermissions()` only.
+
+It is kicked off as early as boot() can manage so its own "second or three"
+overlaps the dataset load rather than adding to it.
 
 **`boot()` never waits for it.** A fix can take the whole of its own timeout —
 indoors, with nothing cached — and boot() does not let that hold up the
 `?osm=`/deep-link pin open, `completeLogin`'s own OAuth return, `shareSettings`,
 `watchRefresh` or `armEditCheck`; the fix is applied from a `.then()`
-registered right after `fitHome()`, not awaited. Because it can now land
-after boot has already moved the camera somewhere else, applying it checks
-three guards, not one, all first-tester complaints about "too much happens
-when the app opens": `touchedBeforeFix` — the reader has touched the map at
-all before the fix lands, a drag, a zoom, a tap that opened a popup, a press
-on any button; whether a popup is open; and `pinOpenedBeforeFix` — boot itself
-opened a pin in the meantime, the `?osm=` link resolved just below it or a
-`papamap://table` deep link that arrived late (set by `openPin`, never by a
-reader's own tap, which the first guard already covers). Any of the three
-leaves the camera alone, but the you-are-here dot is always drawn (the same
-`showYou` the locate and nearest buttons use) — drawing the dot is never
-wrong, only moving the camera can be. Applied with `jumpTo`, not `flyTo`: the
-reader granted this expecting the map to simply open there, not to watch it
-travel there from Germany.
+registered right after `fitHome()`, not awaited (a stray throw from a bad fix
+is caught there too, so it never surfaces as an unhandled rejection). Because
+it can now land after boot has already moved the camera somewhere else,
+applying it checks three guards, all first-tester complaints about "too much
+happens when the app opens": `touchedBeforeFix` — the reader has touched the
+map at all before the fix lands, a drag, a zoom, a keypress, a tap that
+opened a popup, a press on any button; whether a popup is open (which is what
+catches a reader's OAuth return too, once `completeLogin` reopens the pin
+they were answering); and `pinOpenedBeforeFix` — boot itself opened a pin in
+the meantime, the `?osm=` link resolved just below it or a `papamap://table`
+deep link that arrived late (set by `openPin`, never by a reader's own tap,
+which the first guard already covers).
+
+Any of the three leaves the camera alone, but **the you-are-here dot is
+always drawn** (the same `showYou` the locate and nearest buttons use) —
+drawing the dot is never wrong, only moving the camera can be, and
+`openAtLocationFix` deliberately never re-checks `shouldOpenAtLocation` once
+the fix has landed, so a late-arriving deep link can veto the camera move
+via those three guards without discarding the dot along with it.
+
+How the camera move is applied depends on how long the fix took past
+`fitHome()`: within `LATE_FIX_MS` (700 ms) it is a `jumpTo` — the map simply
+opened there, no motion for the reader to notice. Slower than that, a
+`flyTo` over `LATE_FIX_FLY_MS` (1.2 s): the reader has had time to actually
+look at the home view by then, and snapping away from it would read as the
+view glitching rather than something the map meant to do.
 
 And the fix never calls `noteFix`, so it can never raise the room card above,
 or a popup, not even indirectly through some later, unrelated popup close.
