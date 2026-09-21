@@ -168,6 +168,24 @@ never changes, so 26k pins recolour without a re-fetch.
 The one simplification the switch inherits is disclosed on the methods pages: a
 table tagged `male_toilet` only is counted as reachable in both readings.
 
+### The selected-place marker
+
+The ~26k pins stay WebGL circles at every zoom — a pictogram needs about
+30 px to read, which would double a pin's footprint and collide with the
+play halo and the key glyph drawn on top of them. Instead, exactly one pin
+gets one extra marker: the logo's own door-sign shape, while its popup is
+open, drawn by `web/sign-pin.js` (pure string builders, `node --test`) and
+shown by a single reusable `maplibregl.Marker` in `web/app.js`
+(`updateSignMarker`). Pictogram by status, colour by bucket — the same
+`VIEW`/`BUCKET_COLOR` table above, never a second one: `accessible` is the
+dad, `female_only` the woman, `unknown` a question mark that follows the
+reading (grey `ask` for papa; the woman plus a small "?", dark ink, for
+mama — CONTRACT.md v44). A prospect (no status recorded at all) never gets
+one. The marker tracks the same popup rather than being torn down and
+rebuilt with it: a background refresh that lands a new status, or the
+Papa/Mama toggle itself, repaints it in place, and it disappears the moment
+the popup closes by any route.
+
 ## Nearest usable table
 
 A labelled pill at the foot of the map, "Nächster Wickeltisch", answers "where

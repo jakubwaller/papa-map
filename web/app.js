@@ -9,13 +9,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app37";
+         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app38";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app37";
+         langUrl } from "./i18n.js?v=app38";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app37";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app38";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -23,14 +23,18 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app37";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app38";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app37";
+         formatMB, citiesToMount } from "./native.js?v=app38";
+// The selected-place marker's own drawing module (CONTRACT.md v44): pure
+// string builders, no DOM of their own — the one maplibregl.Marker that
+// shows the result is this file's, next to the popup it belongs beside.
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app38";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -749,12 +753,15 @@ function openPopup(f) {
   hideRoomCard();   // the two never share the screen
   if (popup) popup.remove();
   popupObj = { kind: "table", obj: f };
-  const p = new maplibregl.Popup({ offset: 14, maxWidth: popupMaxWidth() })
+  // Always the marker-aware offset: a "table" popup always gets the sign
+  // pin (updateSignMarker below), never only sometimes.
+  const p = new maplibregl.Popup({ offset: POPUP_OFFSET_WITH_MARKER, maxWidth: popupMaxWidth() })
     .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
   p.on("close", () => onPopupClosed(p));
   popup = p;
   syncNearestBtn();
   attachEditNote();
+  updateSignMarker();
   panPopupIntoView();
 }
 
@@ -762,14 +769,87 @@ function openPlacePopup(p) {
   hideRoomCard();
   if (popup) popup.remove();
   popupObj = { kind: "place", obj: p };
-  const pop = new maplibregl.Popup({ offset: 14, maxWidth: popupMaxWidth() })
+  // A prospect carries no status: no marker, plain offset (updateSignMarker
+  // below still runs, to clear a marker left over from a table selection).
+  const pop = new maplibregl.Popup({ offset: POPUP_OFFSET, maxWidth: popupMaxWidth() })
     .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
   pop.on("close", () => onPopupClosed(pop));
   popup = pop;
   syncNearestBtn();
   attachEditNote();
+  updateSignMarker();
   panPopupIntoView();
 }
+
+// ---- Selected-place marker: the door-sign pictogram (CONTRACT.md v44) ----
+// One reusable DOM marker, the same pattern as youMarker below: shown only
+// while a "table" popup is open, at that pin's own coordinates, repainted
+// (never re-created) for as long as the same popup stays open, and removed
+// the moment popupObj says anything else. The ~26k circles this marker sits
+// on top of, and the play halo / key glyph drawn on them, are all untouched —
+// this is the one pin a reader has just tapped, nothing else.
+const SIGN_PIN_W = 46;
+const SIGN_PIN_H = Math.round(SIGN_PIN_W * SIGN_PIN_ASPECT);
+let signMarker = null, signMarkerBody = null;
+
+function ensureSignMarker() {
+  if (signMarker) return signMarker;
+  const el = document.createElement("div");
+  el.className = "sign-pin-marker";
+  el.style.width = `${SIGN_PIN_W}px`;
+  el.style.height = `${SIGN_PIN_H}px`;
+  // The scale-in lives on a child, never on `el` itself: MapLibre positions
+  // a marker with its own `transform` on the element it was given, and a
+  // second transform here would fight that on every pan and zoom frame.
+  signMarkerBody = document.createElement("div");
+  signMarkerBody.className = "sign-pin-marker-body";
+  el.appendChild(signMarkerBody);
+  signMarker = new maplibregl.Marker({ element: el, anchor: "bottom" });
+  return signMarker;
+}
+
+// Pictogram by status, colour by bucket — sign-pin.js's own rule, not
+// repeated here: accessible is the dad, female_only the woman, unknown a
+// question mark that follows the reading (ask for papa; woman-ask, dark ink,
+// for mama, CONTRACT.md v44). Only ever painted for a "table" object.
+function paintSignMarker(f) {
+  const view = viewFor(f.status, mode);
+  signMarkerBody.innerHTML =
+    signPinSvg(signPinKind(f.status, mode), BUCKET_COLOR[view.bucket], signPinInk(view.bucket));
+}
+
+// The one place that decides whether the marker belongs on the map at all,
+// and where — called after every popup open, after a mode switch that keeps
+// a table popup open (applyMode), after a background refresh redraws one in
+// place (applyDataset), and from onPopupClosed once popupObj is nulled for
+// any other reason. A "place" popup (a prospect: no status to colour or draw
+// by) always reads as "hide" here, same as no popup at all.
+function updateSignMarker() {
+  if (popupObj?.kind !== "table") { signMarker?.remove(); return; }
+  const f = popupObj.obj;
+  const marker = ensureSignMarker();
+  paintSignMarker(f);
+  marker.setLngLat([f.lon, f.lat]).addTo(map);
+}
+
+// The popup's own 14 px offset (openPopup/openPlacePopup) clears a bare
+// point; the marker sits ~45 px above that same point, so a popup MapLibre
+// opens on that side needs to clear the marker too. Only the anchors that
+// put the popup above or beside the point are raised — "top" (opens below
+// the point) has nothing to clash with and keeps the plain offset.
+const POPUP_OFFSET = 14;
+const SIGN_PIN_CORNER = Math.round(Math.sqrt(0.5) * POPUP_OFFSET);   // MapLibre's own diagonal split of a uniform offset
+const POPUP_OFFSET_WITH_MARKER = {
+  center: [0, 0],
+  top: [0, POPUP_OFFSET], "top-left": [SIGN_PIN_CORNER, SIGN_PIN_CORNER], "top-right": [-SIGN_PIN_CORNER, SIGN_PIN_CORNER],
+  bottom: [0, -(SIGN_PIN_H + POPUP_OFFSET)],
+  "bottom-left": [SIGN_PIN_CORNER, -(SIGN_PIN_H + POPUP_OFFSET)],
+  "bottom-right": [-SIGN_PIN_CORNER, -(SIGN_PIN_H + POPUP_OFFSET)],
+  // Pushed clear by half the marker's own width plus the usual gap, so the
+  // popup's near edge lands outside the marker's column regardless of how
+  // tall the popup itself ends up (a fixed y offset could not promise that).
+  left: [SIGN_PIN_W / 2 + POPUP_OFFSET, 0], right: [-(SIGN_PIN_W / 2 + POPUP_OFFSET), 0],
+};
 
 // MapLibre anchors the card to the pin and picks the side with room, but a
 // card taller or wider than the free space overflows on every side — a pin
@@ -1292,17 +1372,18 @@ map.on("moveend", () => {
 // never appear a second time in a session before this fix.
 //
 // suppressCardOnClose is for the one close that must NOT bring the card back:
-// a mode or language switch tearing the popup down because its *text* no
-// longer applies, not because the reader dismissed anything. Every other
-// close — including this file's own "remove the old one, open a new one" in
-// openPopup/openPlacePopup/reopen() — re-evaluates, deferred to a microtask so
-// a same-tick reopen has already reassigned `popup` by the time it runs
-// (evaluateRoomCard's popup?.isOpen() then correctly sees the new one and
-// stays quiet).
+// a language switch (or a mode switch with a *prospect* popup open — applyMode
+// redraws a table popup in place instead of closing it, below) tearing the
+// popup down because its text no longer applies, not because the reader
+// dismissed anything. Every other close — including this file's own "remove
+// the old one, open a new one" in openPopup/openPlacePopup/reopen() —
+// re-evaluates, deferred to a microtask so a same-tick reopen has already
+// reassigned `popup` by the time it runs (evaluateRoomCard's popup?.isOpen()
+// then correctly sees the new one and stays quiet).
 let suppressCardOnClose = false;
 
 function onPopupClosed(closedPopup) {
-  if (popup === closedPopup) { popup = null; popupObj = null; }
+  if (popup === closedPopup) { popup = null; popupObj = null; updateSignMarker(); }
   syncNearestBtn();
   if (suppressCardOnClose) { suppressCardOnClose = false; return; }
   queueMicrotask(evaluateRoomCard);
@@ -1816,10 +1897,26 @@ function applyMode() {
   // layer is created with pinColorExpression(mode) anyway, so a mode chosen
   // that early is already painted correctly when the style arrives.
   if (styleReady) map.setPaintProperty(SRC, "circle-color", pinColorExpression(mode));
-  closePopupSilently();   // its text belonged to the old reading; not the reader's own close
+  // A table popup's status line, its room pills and its sign-pin marker are
+  // all read out of `mode` (viewFor, roomChoices, paintSignMarker) — repainted
+  // in place rather than closed, the same "still here, redrawn" rule
+  // applyDataset already gives a popup that survives a background refresh
+  // (CONTRACT.md v44). A prospect's headline never reads `mode` and carries
+  // no marker, so there is nothing here worth keeping open over — it still
+  // just closes.
+  if (popupObj?.kind === "table") {
+    popup.setHTML(popupHTML(popupObj.obj));
+    attachEditNote();
+    updateSignMarker();
+  } else {
+    closePopupSilently();   // its text belonged to the old reading; not the reader's own close
+  }
   renderStats(lastStats);
   renderChips();
   positionZoomCtrl();   // the sentence can wrap to a different height
+  // After, not before: positionZoomCtrl can move the column popupPan avoids,
+  // and renderStats can change the topbar height panPopupIntoView reads.
+  if (popupObj?.kind === "table") panPopupIntoView();
 }
 
 for (const m of MODES) {
@@ -2068,6 +2165,7 @@ function applyDataset(fc, places, stats, areas) {
       if (popup) {
         popup.setHTML(popupObj.kind === "place" ? placeHTML(obj) : popupHTML(obj));
         attachEditNote();
+        updateSignMarker();   // tonight's build may carry a new status for it
       }
     } else if (popup) {
       popup.remove();

@@ -1,5 +1,43 @@
 # papa-map — build contract (v0)
 
+> **v44 amendment (21 Sep 2026, the selected-place marker): no shape change.**
+> While a "table" popup is open, one `maplibregl.Marker` sits on that pin: the
+> logo's door-sign shape, filled with the pin's own bucket colour, carrying a
+> pictogram (`web/sign-pin.js`, pure string builders — `signPinKind`,
+> `signPinInk`, `signPinSvg`). Pictogram by status, colour by bucket:
+> `accessible` is the dad, `female_only` the woman, `unknown` a question mark
+> that follows the reading (`ask` for papa; `woman-ask` — the woman plus a
+> small "?", dark ink — for mama, since an unrecorded room is usually still
+> hers). The ~26k circles this marker sits above, the play halo and the key
+> glyph are all unchanged — it is the one pin a reader has just tapped, drawn
+> once, never a second dataset or a second render path. A "place" popup (a
+> prospect: no status to colour or draw by) never gets one.
+>
+> **The marker follows the same popup, never a fresh one.** `updateSignMarker`
+> (`web/app.js`) is the one place that decides whether it belongs on the map,
+> called after every popup open, after a background refresh redraws a table
+> popup's object in place (CONTRACT.md's existing `applyDataset` behaviour —
+> a status changed by an edit reaches the marker the same night it reaches
+> the popup), and from the popup's own "close" handler however the close
+> happened (the × button, clicking away, selecting a different pin, "nearest"
+> jumping to one, a deep link). **Changes existing behaviour in one place:**
+> `applyMode` (the Papa/Mama toggle) used to close any open popup outright
+> because its text belonged to the old reading; a table popup's text and its
+> marker are now both redrawn in place instead, the same "still here,
+> repainted" rule the background refresh already gave it — so the marker
+> recolours live when the reading is switched while a pin is selected,
+> rather than vanishing with the popup. A prospect popup still just closes;
+> `placeHTML` never read `mode` in the first place.
+>
+> **The popup's own offset is raised on the side the marker occupies**
+> (`POPUP_OFFSET_WITH_MARKER`, `web/app.js`): the marker stands ~45 px above
+> the pin, so a popup MapLibre opens above or beside the point is pushed
+> clear of it; one that opens below has nothing to clear and keeps the
+> original 14 px. No new stored key, nothing new sent anywhere. `web/sign-pin.js`
+> joins the service worker's shell precache and the store app's bundled
+> files (`app/build-www.js`) the same way `native.js` did. Shell pin `app37`
+> → `app38`.
+>
 > **v43 amendment (21 Sep 2026, first tester feedback): no shape change.** One
 > new i18n key in all 32 languages, `nearestBtn` ("Nächster Wickeltisch"): the
 > nearest-table button is a labelled pill at the foot of the map, no longer an
