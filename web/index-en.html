@@ -182,14 +182,14 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app36" />
+  <link rel="stylesheet" href="style.css?v=app37" />
 
   <!-- Classic and blocking, in the head on purpose: it puts the .in-app class
        on <html> before the first paint when the store app opened this page in
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app36"></script>
+  <script src="in-app.js?v=app37"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -198,15 +198,18 @@
   <div id="zoom-ctrl">
     <button id="zoom-in" type="button" aria-label="Hineinzoomen" data-i18n-aria="ariaZoomIn">+</button>
     <button id="zoom-out" type="button" aria-label="Herauszoomen" data-i18n-aria="ariaZoomOut">−</button>
+    <!-- Two glyphs for one button: the crosshair is what Android and desktop
+         maps draw for "my location", the arrow is what iOS draws for it (Apple
+         Maps, the status bar). Until 2026-09-21 the arrow stood on the
+         "nearest" button instead, and the first iPhone testers tapped it to
+         see where they were. app.js sets .ios on <html>; style.css shows one. -->
     <button id="locate" type="button" aria-label="Meinen Standort zeigen" title="Meinen Standort zeigen" data-i18n-aria="ariaLocate">
-      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+      <svg class="ico-std" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
         <path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         <circle cx="12" cy="12" r="7.2" fill="none" stroke="currentColor" stroke-width="2"/>
       </svg>
-    </button>
-    <button id="nearest" type="button" aria-label="Nächsten nutzbaren Wickeltisch finden" title="Nächsten nutzbaren Wickeltisch finden" data-i18n-aria="ariaNearest">
-      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+      <svg class="ico-ios" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M21.5 2.5L2.8 9.6a.6.6 0 000 1.1l7.6 3 3 7.6a.6.6 0 001.1 0l7.1-18.7a.6.6 0 00-.1-.1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
       </svg>
     </button>
@@ -326,6 +329,18 @@
        "·". -->
   <div id="attribution">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="ops.html" title="Build and dataset status">Status</a><span class="donate"> · <a href="https://ko-fi.com/jakubwaller" target="_blank" rel="noopener" title="Kaffee spendieren" data-i18n="kofi" data-i18n-aria="ariaKofi">☕ Kaffee</a></span> · <a href="https://jakubwaller.eu" rel="author">Made with ♥ in Hamburg by Jakub Waller</a></div>
 
+  <!-- The one tap the map is for, so it is the one control with its name
+       written on it: a pill at the foot of the map, not a fourth icon in the
+       column (where it stood until 2026-09-21, unlabelled, and was taken for
+       "my location"). app.js hides it while a popup is open — the popup is
+       its answer, and the two would share the foot of a phone. -->
+  <button id="nearest" type="button" class="nearest-btn" aria-label="Nächsten nutzbaren Wickeltisch finden" title="Nächsten nutzbaren Wickeltisch finden" data-i18n-aria="ariaNearest">
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 21.5s-6.5-6.2-6.5-11a6.5 6.5 0 0113 0c0 4.8-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="12" cy="10.3" r="2.3" fill="currentColor"/>
+    </svg>
+    <span data-i18n="nearestBtn">Nächster Wickeltisch</span>
+  </button>
   <!-- Add-a-place dialog: everything lands in OpenStreetMap, not here -->
   <dialog id="add-dialog">
     <h3 data-i18n="dlgTitle">Fehlenden Ort hinzufügen</h3>
@@ -395,12 +410,16 @@
       <h4 data-i18n="meTipsHeading">Mehr aus der App</h4>
       <ul id="me-tips-list" class="tips-list"></ul>
     </div>
+    <!-- Store app only: app.js moves the header's links, the language
+         picker and the stats strip in here (bootNative), so the app's first
+         screen is the brand, the chips and the map. Empty on the website. -->
+    <div id="me-about" class="me-about" hidden></div>
     <button id="me-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
   </dialog>
 
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app36"></script>
+  <script type="module" src="app.js?v=app37"></script>
 </body>
 </html>

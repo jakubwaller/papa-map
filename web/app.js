@@ -9,13 +9,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh } from "./datasource.js?v=app36";
+         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app37";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app36";
+         langUrl } from "./i18n.js?v=app37";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app36";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app37";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -23,14 +23,14 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app36";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app37";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app36";
+         formatMB, citiesToMount } from "./native.js?v=app37";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -518,7 +518,7 @@ const roomLabel = (raw) => roomLabelKeys(raw).map((p) => (p.key ? t(p.key) : p.r
 // The changing-table line, for a popup (HTML) and for the edit toast (text).
 // The value is OSM's own word and prints as it is — except "no", which every
 // language already has words for (roomNone, the room question's own "there is
-// none"): until app36 a German reader was told "Wickeltisch: no".
+// none"): until app37 a German reader was told "Wickeltisch: no".
 const tableRowHTML = (value) =>
   value === "no" ? `<b>${esc(t("roomNone"))}</b>` : `${esc(t("popupTable"))}: <b>${esc(value)}</b>`;
 const tableRowText = (value) => (value === "no" ? t("roomNone") : `${t("popupTable")}: ${value}`);
@@ -749,10 +749,11 @@ function openPopup(f) {
   hideRoomCard();   // the two never share the screen
   if (popup) popup.remove();
   popupObj = { kind: "table", obj: f };
-  const p = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
+  const p = new maplibregl.Popup({ offset: 14, maxWidth: popupMaxWidth() })
     .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
   p.on("close", () => onPopupClosed(p));
   popup = p;
+  syncNearestBtn();
   attachEditNote();
   panPopupIntoView();
 }
@@ -761,10 +762,11 @@ function openPlacePopup(p) {
   hideRoomCard();
   if (popup) popup.remove();
   popupObj = { kind: "place", obj: p };
-  const pop = new maplibregl.Popup({ offset: 14, maxWidth: "300px" })
+  const pop = new maplibregl.Popup({ offset: 14, maxWidth: popupMaxWidth() })
     .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
   pop.on("close", () => onPopupClosed(pop));
   popup = pop;
+  syncNearestBtn();
   attachEditNote();
   panPopupIntoView();
 }
@@ -777,7 +779,15 @@ function openPlacePopup(p) {
 // topbar, minus the attribution line at the foot) and pan the map by the
 // overflow. The pin moves with the map, the card with the pin. Where nothing
 // overflows nothing moves, so a desktop tap stays a tap.
-const EDGE = 8;
+const EDGE = 8, POPUP_MAX_W = 300;
+// The card never gets wider than the room beside the control column, or
+// popupPan could only keep one of its edges clear — and the × is on the one it
+// would give up. 300px everywhere that has the room (375px and up).
+function popupMaxWidth() {
+  const w = map.getContainer().clientWidth;
+  const col = w - zoomCtrl.getBoundingClientRect().left;   // the column and its right margin
+  return Math.max(200, Math.min(POPUP_MAX_W, w - col - 2 * EDGE)) + "px";
+}
 function panPopupIntoView() {
   const el = popup?.getElement();
   if (!el) return;
@@ -790,11 +800,10 @@ function panPopupIntoView() {
   // installed app it floats a safe-area inset above the foot.
   const attr = document.getElementById("attribution")?.getBoundingClientRect();
   const bottom = Math.min(c.bottom, attr?.top ?? c.bottom) - EDGE;
-  let dx = 0, dy = 0;
-  if (r.bottom > bottom) dy = r.bottom - bottom;
-  if (r.top - dy < top) dy = r.top - top;         // taller than the space: keep the head
-  if (r.right > c.right - EDGE) dx = r.right - (c.right - EDGE);
-  if (r.left - dx < c.left + EDGE) dx = r.left - (c.left + EDGE);
+  const z = zoomCtrl.getBoundingClientRect();
+  const [dx, dy] = popupPan(r,
+    { left: c.left + EDGE, top, right: c.right - EDGE, bottom },
+    { left: z.left - EDGE, top: z.top, bottom: z.bottom });
   if (dx || dy) map.panBy([dx, dy], { duration: 250 });
 }
 
@@ -1131,7 +1140,13 @@ document.getElementById("locate").addEventListener("click", (e) => {
 //
 // "Usable" is the current reading's own verdict, so the same tap sends a father
 // to the nearest open room and a mother to the nearest room of either kind.
-document.getElementById("nearest").addEventListener("click", (e) => {
+const nearestBtn = document.getElementById("nearest");
+// The popup is the button's own answer, and at the foot of a phone the two
+// would stand on each other: the pill steps aside for as long as one is open.
+function syncNearestBtn() {
+  nearestBtn.hidden = !!popup?.isOpen();
+}
+nearestBtn.addEventListener("click", (e) => {
   if (!hasGeo()) { toast(t("toastNoGeo")); return; }
   if (!dataReady) { toast(t("countNoData")); return; }
   locateFrom(e.currentTarget).then(
@@ -1288,6 +1303,7 @@ let suppressCardOnClose = false;
 
 function onPopupClosed(closedPopup) {
   if (popup === closedPopup) { popup = null; popupObj = null; }
+  syncNearestBtn();
   if (suppressCardOnClose) { suppressCardOnClose = false; return; }
   queueMicrotask(evaluateRoomCard);
 }
@@ -1300,6 +1316,7 @@ function closePopupSilently() {
   popup.remove();
   popup = null;
   popupObj = null;
+  syncNearestBtn();
 }
 
 // ---- Edit confirmation: re-read the object from OSM after a MapComplete click ----
@@ -1840,6 +1857,7 @@ langSelect.addEventListener("change", () => {
   refreshPins();
   syncModeButtons();   // applyI18n() relabels them; the pressed state is ours
   positionZoomCtrl();  // strip height can change with string lengths
+  if (meDialog.open) renderMeDialog();   // the app's picker lives in that dialog
 });
 // Click on the backdrop (the dialog element itself, not its children) closes.
 addDialog.addEventListener("click", (e) => { if (e.target === addDialog) addDialog.close(); });
@@ -2093,6 +2111,10 @@ async function boot() {
   applyI18n();  // markup default is German — swap before first paint if not
   syncModeButtons();  // ...and the markup default is papa
   if (isNative()) bootNative();
+  // iOS draws "my location" as an arrow, everyone else as a crosshair
+  // (index.html, #locate): the app on an iPhone, and Safari on one.
+  if (platform() === "ios" || (!isNative() && isAppleTouch(navigator.userAgent, navigator.maxTouchPoints)))
+    document.documentElement.classList.add("ios");
   // A shared https://papamap.de/?osm=… link (CONTRACT.md v38): the data is
   // not here yet, so this only sets pendingPin, resolved below once it is —
   // the same queue the app's own deep link uses, so the two never race each
@@ -2161,6 +2183,18 @@ let nativeScripts = Promise.resolve();   // declared before the call site below
 function bootNative() {
   interceptLinks();                  // site pages and OSM open in the in-app browser
   document.getElementById("app-link").hidden = true;   // this is the app
+  // The app's first screen is the brand, the chips and the map. The website's
+  // header is a website's: four links, a language picker, a tagline for search
+  // engines and a stats strip, 218 of a 667px phone before the notch — "too
+  // much on the screen" was the first thing the first testers said
+  // (2026-09-21). The links, the picker and the strip move into Mein PapaMap,
+  // the same nodes with the same listeners, so nothing about them changes but
+  // where they stand; the tagline is hidden by .native in style.css.
+  document.documentElement.classList.add("native");
+  const about = document.getElementById("me-about");
+  about.append(document.querySelector(".stats-wrap"), document.querySelector(".header-actions"));
+  about.hidden = false;
+  positionZoomCtrl();   // applyI18n placed the column under the taller header a moment ago
   offlineBtn.hidden = false;
   onAppUrl({ auth: (url) => completeLogin(url), table: openPin });
   nativeScripts = Promise.all([loadScript("vendor/pmtiles.js"), loadScript("vendor/protomaps/basemaps.js")]);
