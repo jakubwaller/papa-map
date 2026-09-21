@@ -23,3 +23,64 @@ export function appShell(html) {
   if (/class="donate"/.test(out)) throw new Error("index.html: a second donate span is left after the cut");
   return out;
 }
+
+// Every file of its own the page loads: <link href>, <script src>, <img src>,
+// <source src>, and srcset, without the ?v= pin and without a leading ./ or /
+// (the bundle's root is the page's directory). Links to other pages (<a href>)
+// are not resources, an absolute URL is fetched from the network, not from the
+// bundle, and a tag inside a comment loads nothing.
+// build-www.js checks the list against what it copies: until 2026-09-21 it
+// only caught a listed file that was missing, never a file the page asks for
+// that nobody listed, and manifest.webmanifest 404ed in the app that way.
+const COMMENT = /<!--[\s\S]*?-->/g;
+const TAG = /<(?:link|script|img|source)\b[^>]*>/gi;
+const ATTR = /\s(href|src|srcset)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+const REMOTE = /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i;
+
+const local = (url) => (REMOTE.test(url) ? null : url.split(/[?#]/)[0].replace(/^(?:\.\/|\/)+/, ""));
+
+// srcset the way the HTML spec reads it: a URL runs to the next whitespace,
+// its descriptor to the next comma. Splitting on commas first would tear a
+// data: URI at the comma it carries.
+function srcsetUrls(value) {
+  const urls = [];
+  for (const [, url] of value.matchAll(/[\s,]*(\S+)[^,]*/g)) urls.push(url.replace(/,+$/, ""));
+  return urls;
+}
+
+export function localRefs(html) {
+  const refs = new Set();
+  for (const [tag] of html.replace(COMMENT, "").matchAll(TAG))
+    for (const [, name, dq, sq] of tag.matchAll(ATTR)) {
+      const value = dq ?? sq;
+      const urls = name.toLowerCase() === "srcset" ? srcsetUrls(value) : [value];
+      for (const url of urls) {
+        const ref = url && local(url);
+        if (ref) refs.add(ref);
+      }
+    }
+  return [...refs];
+}
+
+// The other way a file gets loaded: a module importing its neighbour, which
+// no tag in the page shows. Static, side-effect and dynamic imports of a
+// relative or root-relative path; build-www.js runs it over every script it
+// bundles. Comments go first, or prose that quotes a path after the word
+// "from" would fail the build over a file nothing imports. A // counts as a
+// comment at the start of a line or after whitespace, never inside "https://".
+const JS_COMMENT = /\/\*[\s\S]*?\*\/|(?:^|\s)\/\/.*$/gm;
+const IMPORT = /(?:\bfrom\s*|\bimport\s*\(?\s*)(?:"([./][^"]*)"|'([./][^']*)')/g;
+
+export function moduleRefs(js) {
+  const refs = new Set();
+  for (const [, dq, sq] of js.replace(JS_COMMENT, "").matchAll(IMPORT)) {
+    const ref = local(dq ?? sq);
+    if (ref) refs.add(ref);
+  }
+  return [...refs];
+}
+
+// The refs neither FILES nor a directory in DIRS covers.
+export function unbundled(refs, files, dirs) {
+  return refs.filter((r) => !files.includes(r) && !dirs.some((d) => r.startsWith(`${d}/`)));
+}
