@@ -9,13 +9,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app38";
+         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app39";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app38";
+         langUrl } from "./i18n.js?v=app39";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app38";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app39";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -23,18 +23,18 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app38";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app39";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app38";
+         formatMB, citiesToMount } from "./native.js?v=app39";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app38";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app39";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -829,7 +829,11 @@ function updateSignMarker() {
   const f = popupObj.obj;
   const marker = ensureSignMarker();
   paintSignMarker(f);
-  marker.setLngLat([f.lon, f.lat]).addTo(map);
+  marker.setLngLat([f.lon, f.lat]);
+  // Only a marker that is not on the map yet: addTo() takes the element out
+  // of the page and puts it back, which replays the scale-in (style.css) —
+  // right for a fresh selection, a flicker on a repaint of the same pin.
+  if (!marker.getElement().isConnected) marker.addTo(map);
 }
 
 // The popup's own 14 px offset (openPopup/openPlacePopup) clears a bare
@@ -881,9 +885,18 @@ function panPopupIntoView() {
   const attr = document.getElementById("attribution")?.getBoundingClientRect();
   const bottom = Math.min(c.bottom, attr?.top ?? c.bottom) - EDGE;
   const z = zoomCtrl.getBoundingClientRect();
+  // The sign-pin comes out from behind the topbar too (popupPan), which moves
+  // the pin down — and MapLibre re-picks the card's side on every move,
+  // against the whole canvas, topbar included: a card that opened below its
+  // pin jumps above it once the pin is further down than the card is tall,
+  // and lands behind the topbar itself. That cannot happen to a card taller
+  // than the strip the topbar covers, so only such a card brings its marker
+  // along. Every real one is (285 px and up, the topbar 222 on a phone).
+  const pin = signMarker?.getElement();
+  const marker = pin?.isConnected && r.height > top - c.top ? pin.getBoundingClientRect() : null;
   const [dx, dy] = popupPan(r,
     { left: c.left + EDGE, top, right: c.right - EDGE, bottom },
-    { left: z.left - EDGE, top: z.top, bottom: z.bottom });
+    { left: z.left - EDGE, top: z.top, bottom: z.bottom }, marker);
   if (dx || dy) map.panBy([dx, dy], { duration: 250 });
 }
 

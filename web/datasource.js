@@ -480,10 +480,18 @@ export function isFixFresh(fixAt, now = Date.now()) {
 // the canvas the app read as frozen (first external testers, build 107).
 // A card taller or wider than the space keeps its head and its left edge;
 // web/app.js's popupMaxWidth is what makes "wider" not happen beside the column.
-export function popupPan(card, box, avoid = null) {
+// `marker` is the selected place's sign-pin, which stands above its pin: a
+// card that opens below a pin close under the topbar left it behind the
+// topbar. It slides out with whatever room is left under the card and no
+// more — the card is what the reader came for, and one that fills the space
+// has no map left around it for a marker to point into. Before dx, because
+// the column is judged where the card lands.
+export function popupPan(card, box, avoid = null, marker = null) {
   let dx = 0, dy = 0;
   if (card.bottom > box.bottom) dy = card.bottom - box.bottom;
   if (card.top - dy < box.top) dy = card.top - box.top;
+  if (marker && marker.top - dy < box.top)
+    dy -= Math.min(box.top - (marker.top - dy), Math.max(0, box.bottom - (card.bottom - dy)));
   let right = box.right;
   if (avoid && card.top - dy < avoid.bottom && card.bottom - dy > avoid.top)
     right = Math.min(right, avoid.left);
