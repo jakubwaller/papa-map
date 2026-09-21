@@ -228,9 +228,22 @@ aborted so exactly one is ever in flight, `limit=5`, and a `lang` parameter only
 for the three languages Photon's dumps actually carry (German, English, French)
 — for the other twenty-nine no language is sent at all and the local name comes
 back, which is what the street sign says anyway. The location bias is the **map
-centre rounded to one decimal**, about 10 km, plus the zoom. **The reader's GPS
-fix is never part of it**: `lastFix` is not in scope in that code path, and the
-Datenschutz page says so in those words. `PHOTON_ENDPOINT` in `web/search.js` is
+centre rounded to one decimal**, about 10 km, plus the zoom.
+
+**The GPS fix is never sent**: `lastFix` is not in scope in that code path. That
+is a narrower promise than "the reader's position is never involved", and it is
+narrower on purpose. After the locate button, or when the map opens at the
+reader's position because permission was already granted, the map centre *is*
+roughly where the reader is standing, and they never steered there. So the
+rounding is the protection, not the choice of variable: one decimal turns a
+street corner into "somewhere around Hamburg" before anything leaves the
+browser, and komoot learns a region rather than a position. It happens in
+exactly one function, `photonUrl`, with a test that pins `53.5511, 9.9937` to
+`53.6, 10.0` and pins that `web/app.js` hands the centre over unrounded — two
+roundings would be two rules that can drift apart. The Datenschutz pages say
+this in the same words rather than the stronger one.
+
+`PHOTON_ENDPOINT` in `web/search.js` is
 the only place the host appears, so moving to a same-origin proxy — which is
 what an "extensive usage" mail from komoot would make us do — is one line, and a
 test pins that it appears exactly once.

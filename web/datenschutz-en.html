@@ -67,9 +67,11 @@
      at first.</p>
   <p>This happens only while you are typing in that field, and only from the third character on;
      your input is briefly collected so that not every keystroke triggers a request of its own.
-     <strong>Your location is never part of it</strong> — neither the position from the locate
-     buttons nor any other location data from your device; what is sent is only the map section
-     you navigated to yourself. Legal basis: Art. 6(1)(f) GDPR. If you do not want anything
+     <strong>The position from the locate function is never sent</strong>; what is sent is only the
+     rounded centre of the map. If the map is showing your surroundings, for instance because you
+     used the locate button or the map opened at your location, that centre is near you: the
+     service then learns your area to about 10 km, not your location.
+     Legal basis: Art. 6(1)(f) GDPR. If you do not want anything
      transmitted, simply do not use the field: the map is fully usable without the search, and
      your device finds the matches among the map's own changing tables and places by itself
      anyway.</p>
@@ -177,8 +179,9 @@
      sending nothing; from the third character on it additionally asks komoot GmbH's Photon for
      places and addresses worldwide, with the same details and the same legal basis as described
      above. With no network the search among the changing-table data keeps working; the worldwide
-     search then only reports that it cannot be reached. Here too your location is never part of a
-     search request — not even if you have granted the app permission to locate you.</p>
+     search then only reports that it cannot be reached. Here too the position from the locate
+     function is never sent, only the rounded centre of the map; if the map shows your
+     surroundings, that centre is near you (see above).</p>
   <h2>App: widget and Siri Shortcut</h2>
   <p>So that the widget and the Shortcut name the same changing table as the map, the app keeps a
      shortened copy of the changing-table data (coordinates, status, name, OSM link) as well as

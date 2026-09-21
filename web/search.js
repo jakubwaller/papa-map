@@ -52,10 +52,21 @@ export const PHOTON_LIMIT = 5;
 export const PHOTON_DEBOUNCE_MS = 300;
 
 // The bias point is the map's centre rounded to one decimal — about 10 km at
-// these latitudes, a city rather than a street corner. The reader's GPS fix
-// never comes near this function: `lastFix` in web/app.js is for the nearest
-// button and the room card, and sending it to a geocoder would break the one
-// promise this site has always made about it.
+// these latitudes, a city rather than a street corner.
+//
+// The GPS fix itself is never sent: `lastFix` in web/app.js belongs to the
+// nearest button and the room card, and is not in scope in the search path at
+// all. That is NOT the same as "the reader's position is never involved", and
+// the rounding exists precisely because it is not. After the locate button —
+// or when the map opens at the reader's position because permission was
+// already granted — the map centre is roughly where the reader is standing,
+// and they did not steer there. One decimal is what turns that from a street
+// corner into "somewhere around Hamburg" before it leaves the browser. The
+// Datenschutz page says exactly this, rather than promising more than the
+// code delivers.
+//
+// Rounded in exactly one place, photonUrl below: two roundings are two rules
+// that can drift apart, and the one that drifts is the one nobody tested.
 export const PHOTON_BIAS_DECIMALS = 1;
 
 // Case- and diacritic-insensitive, both sides. NFD splits "ü" into "u" plus a

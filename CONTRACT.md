@@ -21,9 +21,16 @@
 > 300 ms, the previous request aborted with an `AbortController`, `limit=5`,
 > `lang` only for the three languages Photon's dumps carry (de/en/fr) and
 > omitted otherwise, and biased with the **map centre rounded to one decimal
-> (~10 km)** plus the zoom. **The reader's GPS fix is never part of a search
-> request** — `lastFix` is not in scope in that code path, and the Datenschutz
-> now says so in those words. Nominatim was rejected rather than overlooked:
+> (~10 km)** plus the zoom. **The GPS fix is never sent** — `lastFix` is not in
+> scope in that code path. That is a narrower claim than "the reader's position
+> is never involved", and deliberately so: after the locate button, or when the
+> map opens at the reader's position because permission was already granted,
+> the centre *is* roughly where they are standing, and the rounding to one
+> decimal is what makes that a region (~10 km) rather than a position. The
+> rounding happens in exactly one function, `photonUrl` (`web/search.js`), and
+> a test pins it — `53.5511, 9.9937` leaves as `53.6, 10.0`. The Datenschutz
+> pages say this in the same words rather than a stronger one.
+> Nominatim was rejected rather than overlooked:
 > its usage policy forbids autocomplete outright. `PHOTON_ENDPOINT`
 > (`web/search.js`) is the one place the host appears, so a same-origin proxy
 > is a one-line swap; a test pins that it appears exactly once.

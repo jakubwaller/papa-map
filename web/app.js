@@ -1317,9 +1317,13 @@ nearestBtn.addEventListener("click", (e) => {
 //   2. Everywhere else, from Photon (web/search.js says why that geocoder and
 //      not Nominatim). This is the first feature on this site that sends
 //      anything a reader typed to a third party, which is why the field waits
-//      for the third character, debounces, and sends the map's centre rounded
-//      to ~10 km rather than anything the locate button ever produced. The
-//      Datenschutz says so in those words.
+//      for the third character, debounces, and biases with the map's centre
+//      rounded to ~10 km. The GPS fix is never sent — but the centre can BE
+//      the reader's surroundings, after the locate button or a map that
+//      opened at their position, so the rounding is the protection, not the
+//      choice of variable. web/search.js's PHOTON_BIAS_DECIMALS carries the
+//      whole reasoning, and the Datenschutz says the same thing in the same
+//      words rather than a stronger one.
 //
 // Photon promises nothing about availability. Offline, throttled or simply
 // down, the second source contributes one quiet line and the first one keeps
@@ -1525,8 +1529,10 @@ async function sendPhoton(q) {
   const ctrl = new AbortController();
   photonRequest = ctrl;
   const c = map.getCenter();
-  // The map's centre, not the reader's position — web/search.js rounds it to
-  // about ten kilometres, and lastFix is never in scope here.
+  // The map's centre, and only ever the map's centre: lastFix is not in scope
+  // here, so no GPS reading is sent. Where the centre happens to be the
+  // reader's own surroundings, web/search.js's rounding to one decimal is
+  // what keeps that a region rather than a position.
   const url = photonUrl(q, { lang, lat: c.lat, lon: c.lng, zoom: map.getZoom() });
   try {
     const res = await fetch(url, { signal: ctrl.signal });

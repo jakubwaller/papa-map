@@ -80,6 +80,44 @@ test("photonUrl: lang goes only where Photon has translations", () => {
   }
 });
 
+test("photonUrl is the one place the bias is rounded, and one decimal is all that leaves", () => {
+  // The centre is not always somewhere the reader chose: after the locate
+  // button, or on a map that opened at their position, it is roughly where
+  // they are standing. The rounding is therefore the whole protection, so it
+  // is pinned to a literal pair rather than to "it calls toFixed somewhere".
+  const u = new URL(photonUrl("x", { lat: 53.5511, lon: 9.9937 })).searchParams;
+  assert.equal(u.get("lat"), "53.6");
+  assert.equal(u.get("lon"), "10.0");
+  // Southern and western hemispheres, a pair that rounds across zero, and one
+  // that rounds up to a whole degree: never more than one decimal, ever.
+  for (const [lat, lon] of [[-53.5511, -9.9937], [0.04, -0.06], [47.999, 179.96]]) {
+    const p = new URL(photonUrl("x", { lat, lon })).searchParams;
+    for (const k of ["lat", "lon"])
+      assert.match(p.get(k), /^-?\d+\.\d$/, `${k}=${p.get(k)} carries more than one decimal`);
+  }
+  // ...and web/app.js hands the centre over untouched. Rounding in two places
+  // is two rules that can drift apart, and the one that drifts is the one
+  // nobody wrote a test for.
+  const call = /photonUrl\([^)]*\)/.exec(
+    readFileSync(new URL("./app.js", import.meta.url), "utf8"))?.[0] ?? "";
+  assert.match(call, /lat: c\.lat, lon: c\.lng/);
+  assert.equal(/toFixed|Math\.round/.test(call), false, "the centre must reach photonUrl unrounded");
+});
+
+test("the pages promise what the code does: the fix is not sent, the centre is rounded", () => {
+  // Both pages used to say the reader's location was "never part of it", which
+  // stops being true the moment the map is centred on them — after the locate
+  // button, or on a map opened at their position. The narrower claim is the
+  // true one, and the ~10 km the rounding buys has to be named with it.
+  for (const f of ["./datenschutz.html", "./datenschutz-en.html"]) {
+    const html = readFileSync(new URL(f, import.meta.url), "utf8");
+    assert.equal(/Standort ist daran niemals beteiligt|location is never part of it/.test(html),
+      false, `${f} still claims the reader's position is never involved`);
+    assert.match(html, /nie gesendet|never sent/, f);
+    assert.match(html, /10 km/, f);
+  }
+});
+
 test("photonUrl: the endpoint is one constant a proxy can replace", () => {
   const src = readFileSync(new URL("./search.js", import.meta.url), "utf8")
     + readFileSync(new URL("./app.js", import.meta.url), "utf8");
