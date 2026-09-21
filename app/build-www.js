@@ -16,9 +16,11 @@ const www = join(here, "www");
 // in-app.js comes along although the bundled page has nothing left for it to
 // hide (shell.mjs cuts the span out): index.html loads it from the head, and a
 // bundled page that 404s on its own script is a worse trade than a kilobyte.
+// favicon.svg is the same story: index.html's <link rel="icon"> points at it
+// (icons/favicon-32.png, the PNG fallback, already comes along in DIRS below).
 const FILES = [
   "index.html", "app.js", "datasource.js", "i18n.js", "osm.js", "me.js", "native.js",
-  "in-app.js", "style.css", "icon.svg", "taginfo.json",
+  "in-app.js", "style.css", "icon.svg", "favicon.svg", "taginfo.json",
 ];
 const DIRS = ["vendor", "icons"];
 
