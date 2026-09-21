@@ -1,0 +1,7 @@
+– "Nearest changing table": is the place right, and does the route open in your maps app?
+– Are the colours right for places you know? Is a place missing? That helps too.
+– Add the widget and the Control Center control (steps are at the foot of "My PapaMap").
+– Siri: "Nearest changing table in PapaMap".
+– Download a city for offline use, switch on Airplane Mode, open the map.
+– Optional, with an OpenStreetMap account: answer "which room?" for a grey place.
+Anything unclear or broken: take a screenshot and send it through TestFlight.

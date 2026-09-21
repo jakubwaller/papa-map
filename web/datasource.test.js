@@ -12,7 +12,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
-         nearestUnknownRoom, isFixFresh, popupPan, isAppleTouch } from "./datasource.js";
+         nearestUnknownRoom, isFixFresh, popupPan, isAppleTouch,
+         shouldOpenAtLocation } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -644,6 +645,52 @@ test("withoutOsmParam strips ?osm= once resolved, keeping every other param", ()
   assert.equal(withoutOsmParam("https://papamap.de/"), null);
 });
 
+// ---- Open at location ----
+
+test("shouldOpenAtLocation: granted, no deep link — opens at the reader", () => {
+  assert.equal(shouldOpenAtLocation({ search: "", permission: "granted" }), true);
+  assert.equal(shouldOpenAtLocation({ search: "?lang=en", permission: "granted" }), true);
+});
+
+test("shouldOpenAtLocation: never without an already-granted permission", () => {
+  assert.equal(shouldOpenAtLocation({ search: "", permission: "prompt" }), false);
+  assert.equal(shouldOpenAtLocation({ search: "", permission: "denied" }), false);
+  // A first-time visitor, or "Allow once": no Permissions API answer at all.
+  assert.equal(shouldOpenAtLocation({ search: "", permission: null }), false);
+  assert.equal(shouldOpenAtLocation({}), false);
+});
+
+test("shouldOpenAtLocation: a ?bbox= link asks for its own view", () => {
+  assert.equal(
+    shouldOpenAtLocation({ search: "?bbox=9,53,10,54", permission: "granted" }), false);
+  // A malformed bbox is no view of its own (parseBbox returns null for it).
+  assert.equal(
+    shouldOpenAtLocation({ search: "?bbox=not-a-box", permission: "granted" }), true);
+});
+
+test("shouldOpenAtLocation: a ?osm= share link asks for its own pin", () => {
+  assert.equal(
+    shouldOpenAtLocation({
+      search: `?osm=${encodeURIComponent("https://www.openstreetmap.org/node/1")}`,
+      permission: "granted",
+    }),
+    false);
+});
+
+test("shouldOpenAtLocation: the app's own papamap://table deep link wins too", () => {
+  assert.equal(
+    shouldOpenAtLocation({ search: "", permission: "granted", hasPendingPin: true }), false);
+});
+
+test("shouldOpenAtLocation: a return from OSM's consent screen keeps the reader where they were", () => {
+  assert.equal(
+    shouldOpenAtLocation({ search: "?code=abc&state=xyz", permission: "granted" }), false);
+  // Either alone is no OAuth return (state is required to match the PKCE
+  // verifier; a bare ?code= or ?state= is nonsense, not a login).
+  assert.equal(shouldOpenAtLocation({ search: "?code=abc", permission: "granted" }), true);
+  assert.equal(shouldOpenAtLocation({ search: "?state=xyz", permission: "granted" }), true);
+});
+
 // ---- The "which room?" card ----
 
 test("nearestUnknownRoom: only status unknown with no recorded room, within 75 m", () => {
@@ -722,24 +769,36 @@ test("popupPan: the column is judged where the card lands, not where it started"
   assert.deepEqual(popupPan({ left: 60, top: 430, right: 360, bottom: 820 }, BOX, COLUMN), [43, 200]);
 });
 
-test("popupPan: the sign-pin standing above a card counts as part of it", () => {
-  // MapLibre opens the card below the point when the pin sits near the top of
-  // the canvas, which puts the ~45px sign-pin above the card — half behind the
-  // bar unless the pan makes room for it. 59 is the marker plus the popup's
-  // own 14px offset, which is what web/app.js measures.
-  const card = { left: 40, top: 240, right: 300, bottom: 520 };
-  assert.deepEqual(popupPan(card, BOX, COLUMN), [0, 0]);
-  assert.deepEqual(popupPan(card, BOX, COLUMN, 59), [0, -45]);
-  // Room to spare above the card: the marker changes nothing.
-  assert.deepEqual(popupPan({ ...card, top: 320, bottom: 600 }, BOX, COLUMN, 59), [0, 0]);
-  // Left out, as every caller before the marker existed left it out, the
-  // arithmetic is exactly what it was.
-  assert.deepEqual(popupPan(card, BOX, COLUMN, 0), popupPan(card, BOX, COLUMN));
-});
-
 test("popupPan: taller or wider than the space keeps the head and the left edge", () => {
   assert.deepEqual(popupPan({ left: 20, top: 100, right: 300, bottom: 700 }, BOX, COLUMN), [0, -126]);
   assert.deepEqual(popupPan({ left: 5, top: 300, right: 400, bottom: 500 }, BOX, COLUMN), [-3, 0]);
+});
+
+test("popupPan: the sign-pin above a pin close under the topbar slides out from behind it", () => {
+  // Pin 14 px under the band's head: the card opens below it, the marker's
+  // 45 px stand above it, 31 of them behind the topbar.
+  const card = { left: 38, top: 254, right: 338, bottom: 504 }, marker = { top: 195, bottom: 240 };
+  assert.deepEqual(popupPan(card, BOX, null, marker), [0, -31]);
+  // Already clear of the topbar, or no marker at all: the card's own answer.
+  assert.deepEqual(popupPan(card, BOX, null, { top: 230, bottom: 275 }), [0, 0]);
+  assert.deepEqual(popupPan(card, BOX, null), [0, 0]);
+});
+
+test("popupPan: the sign-pin only gets the room the card leaves", () => {
+  // 20 px under the card: the marker comes out by 20, not by its 31.
+  assert.deepEqual(popupPan({ left: 38, top: 254, right: 338, bottom: 600 }, BOX, null, { top: 195, bottom: 240 }), [0, -20]);
+  // A card that overflows the band gives nothing: the same pan as with no marker.
+  const tall = { left: 38, top: 240, right: 338, bottom: 752 }, marker = { top: 181, bottom: 226 };
+  assert.deepEqual(popupPan(tall, BOX, null, marker), popupPan(tall, BOX, null));
+  assert.deepEqual(popupPan(tall, BOX, null, marker), [0, 14]);
+});
+
+test("popupPan: the column is judged after the sign-pin has moved the card", () => {
+  // The marker's 45 px carry the card from beside a short column to below it.
+  const column = { left: 317, top: 100, bottom: 250 };
+  const card = { left: 38, top: 240, right: 338, bottom: 400 };
+  assert.deepEqual(popupPan(card, BOX, column), [21, 0]);
+  assert.deepEqual(popupPan(card, BOX, column, { top: 181, bottom: 226 }), [0, -45]);
 });
 
 // ---- Edit confirmation ----

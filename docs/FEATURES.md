@@ -186,6 +186,14 @@ rebuilt with it: a background refresh that lands a new status, or the
 Papa/Mama toggle itself, repaints it in place, and it disappears the moment
 the popup closes by any route.
 
+The marker stands 45 px above its pin, so a card that opens below a pin close
+under the topbar would leave it behind the topbar. `popupPan`
+(`web/datasource.js`), which already pans the map to keep the card readable
+and closable, slides the marker out too — with the room left under the card
+and no more. On a 375 × 667 phone a `female_only` or `unknown` card fills the
+free band on its own; there the marker stays covered, and so does the map it
+would point into.
+
 ## Search: this map's places, and the world
 
 A rounded field floats over the top of the map canvas — 44 px tall, a magnifier,
@@ -393,6 +401,89 @@ capped list) so it does not ask about that table again on that device. At most
 one card at a time, and it steps aside for anything that outranks it — any
 popup opening, or the reader panning more than 300 m from the fix that raised
 it.
+
+### Open at location
+
+TestFlight feedback: a reader who has already granted location expects the
+map to open where they are, the way Google Maps does, not on the German home
+view. Like the room card above, this never asks the phone anything on its
+own — it only ever reads a permission state that is already known
+(`navigator.permissions.query` on the website, the Geolocation plugin's own
+`checkPermissions()` in the app, both read-only) — so a first-time visitor or
+a reader who picked "Allow once" keeps today's home view exactly as before.
+`shouldOpenAtLocation` (`web/datasource.js`) is the single, pure, tested rule:
+permission has to read `"granted"`, and the URL must not already ask for a
+view of its own — a Bundesland page's `?bbox=` link, a shared place's `?osm=`,
+the return leg of OSM's OAuth consent screen (`?code=`+`?state=`: a reader
+coming back from signing in should land where they were, not be relocated),
+or the app's own `papamap://table` deep link (the widget, the Siri shortcut
+and the Control Center button all resolve to that one link, `app/README.md`)
+— any of which wins outright.
+
+Where it is allowed to act at all, the fix itself
+(`openAtLocationFix`/`locateCoarse`, `web/app.js`) is deliberately not a reuse
+of the locate button's own `locate()` — a boot nobody asked anything of gets
+the cheapest fix available, never the accuracy a reader actively waiting for
+`locate()` gets. On Android and on the web that means `getCurrentPosition`
+with `enableHighAccuracy: false` and a `maximumAge` of a few minutes, a short
+timeout, and the locate button's own options untouched.
+
+**iOS does not read `maximumAge` at all.** Checked against
+`@capacitor/geolocation` 8.2.2's own iOS source
+(`node_modules/@capacitor/geolocation/ios/Sources/GeolocationPlugin/GeolocationPlugin.swift`):
+`getCurrentPosition` there reads only `enableHighAccuracy` off the call and
+hands it to `requestSingleLocation`, which — in the `ion-ios-geolocation`
+dependency the plugin pulls in (`IONGLOCManagerWrapper.swift`) — maps
+straight to Core Location's `CLLocationManager.requestLocation()`: one fresh
+fix, no cache, `maximumAge` nowhere in the call. That is exactly
+`locateNative`'s own longstanding comment about why the locate button
+itself avoids `getCurrentPosition` on iOS — several seconds regardless of
+what this asks for. `watchPosition`, though, maps to `startMonitoringLocation`
+→ `CLLocationManager.startUpdatingLocation()`, whose delegate callback fires
+with whatever Core Location already has cached the moment monitoring
+starts. So `locateNativeCoarse` (`web/native.js`) takes a different path on
+iOS: start a watch, take the *first* callback (never the "best fix seen"
+tuning `locateNative` does for the button), clear the watch at once — on
+that first position, on a timeout, and on an error alike, so no watch is
+ever left running. Same permission gate as everywhere else,
+`checkPermissions()` only.
+
+It is kicked off as early as boot() can manage so its own "second or three"
+overlaps the dataset load rather than adding to it.
+
+**`boot()` never waits for it.** A fix can take the whole of its own timeout —
+indoors, with nothing cached — and boot() does not let that hold up the
+`?osm=`/deep-link pin open, `completeLogin`'s own OAuth return, `shareSettings`,
+`watchRefresh` or `armEditCheck`; the fix is applied from a `.then()`
+registered right after `fitHome()`, not awaited (a stray throw from a bad fix
+is caught there too, so it never surfaces as an unhandled rejection). Because
+it can now land after boot has already moved the camera somewhere else,
+applying it checks three guards, all first-tester complaints about "too much
+happens when the app opens": `touchedBeforeFix` — the reader has touched the
+map at all before the fix lands, a drag, a zoom, a keypress, a tap that
+opened a popup, a press on any button; whether a popup is open (which is what
+catches a reader's OAuth return too, once `completeLogin` reopens the pin
+they were answering); and `pinOpenedBeforeFix` — boot itself opened a pin in
+the meantime, the `?osm=` link resolved just below it or a `papamap://table`
+deep link that arrived late (set by `openPin`, never by a reader's own tap,
+which the first guard already covers).
+
+Any of the three leaves the camera alone, but **the you-are-here dot is
+always drawn** (the same `showYou` the locate and nearest buttons use) —
+drawing the dot is never wrong, only moving the camera can be, and
+`openAtLocationFix` deliberately never re-checks `shouldOpenAtLocation` once
+the fix has landed, so a late-arriving deep link can veto the camera move
+via those three guards without discarding the dot along with it.
+
+How the camera move is applied depends on how long the fix took past
+`fitHome()`: within `LATE_FIX_MS` (700 ms) it is a `jumpTo` — the map simply
+opened there, no motion for the reader to notice. Slower than that, a
+`flyTo` over `LATE_FIX_FLY_MS` (1.2 s): the reader has had time to actually
+look at the home view by then, and snapping away from it would read as the
+view glitching rather than something the map meant to do.
+
+And the fix never calls `noteFix`, so it can never raise the room card above,
+or a popup, not even indirectly through some later, unrelated popup close.
 
 ## Offline
 

@@ -480,17 +480,18 @@ export function isFixFresh(fixAt, now = Date.now()) {
 // the canvas the app read as frozen (first external testers, build 107).
 // A card taller or wider than the space keeps its head and its left edge;
 // web/app.js's popupMaxWidth is what makes "wider" not happen beside the column.
-//
-// `headroom` is space the card needs *above* itself that is not part of its own
-// rect: the sign-pin marker, which stands ~45 px above the pin and so above the
-// card whenever MapLibre opens the card below the point. Until this parameter
-// existed nothing accounted for it, and a pin within ~45 px of the bar had its
-// pictogram half-hidden behind it. Only the top edge takes it — the marker's
-// foot is the pin, which the card's own rect already keeps inside the view.
-export function popupPan(card, box, avoid = null, headroom = 0) {
+// `marker` is the selected place's sign-pin, which stands above its pin: a
+// card that opens below a pin close under the topbar left it behind the
+// topbar. It slides out with whatever room is left under the card and no
+// more — the card is what the reader came for, and one that fills the space
+// has no map left around it for a marker to point into. Before dx, because
+// the column is judged where the card lands.
+export function popupPan(card, box, avoid = null, marker = null) {
   let dx = 0, dy = 0;
   if (card.bottom > box.bottom) dy = card.bottom - box.bottom;
-  if (card.top - headroom - dy < box.top) dy = card.top - headroom - box.top;
+  if (card.top - dy < box.top) dy = card.top - box.top;
+  if (marker && marker.top - dy < box.top)
+    dy -= Math.min(box.top - (marker.top - dy), Math.max(0, box.bottom - (card.bottom - dy)));
   let right = box.right;
   if (avoid && card.top - dy < avoid.bottom && card.bottom - dy > avoid.top)
     right = Math.min(right, avoid.left);
@@ -609,6 +610,34 @@ export function withoutOsmParam(href) {
   if (!url.searchParams.has("osm")) return null;
   url.searchParams.delete("osm");
   return url.toString();
+}
+
+// ---- Open at location: zoomed in on the reader, the way Google Maps opens ----
+// TestFlight feedback: a reader who has already granted location expects the
+// map to open where they are, not on Germany. Whether app.js's boot fix
+// (web/app.js, openAtLocationFix) may act at all — never whether to ask for
+// permission, which it never does; this only reads a state already known.
+// `permission` is that state ("granted" | "denied" | "prompt" | null, from
+// the Permissions API on the website or the Geolocation plugin's own
+// checkPermissions() in the app) — anything but "granted" keeps today's home
+// view, so a first-time visitor or an "Allow once" grant never sees this at
+// all (design rule 1). `search` is location.search: a `?bbox=` link (a
+// Bundesland page's "auf der Karte öffnen", VIEW_BOUNDS), a `?osm=` share
+// link (parseShareOsm), or `?code=`+`?state=` — the return leg of OSM's OAuth
+// consent screen (completeLogin, web/app.js) — all ask for a view of their
+// own; a reader coming back from signing in should land where they were, not
+// be relocated. `hasPendingPin` covers the one deep link no URL param shows:
+// the app's own papamap://table, which the widget, the Siri shortcut and the
+// Control Center button all resolve to (app/README.md) before app.js ever
+// calls this.
+export function shouldOpenAtLocation({ search, permission, hasPendingPin = false } = {}) {
+  if (permission !== "granted") return false;
+  if (hasPendingPin) return false;
+  const params = new URLSearchParams(search ?? "");
+  if (parseBbox(params.get("bbox"))) return false;
+  if (parseShareOsm(search)) return false;
+  if (params.get("code") && params.get("state")) return false;
+  return true;
 }
 
 // ---- Edit confirmation: one object re-read from the OSM API ----
