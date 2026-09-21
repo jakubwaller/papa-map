@@ -194,6 +194,86 @@ and no more. On a 375 × 667 phone a `female_only` or `unknown` card fills the
 free band on its own; there the marker stays covered, and so does the map it
 would point into.
 
+## Search: this map's places, and the world
+
+A rounded field floats over the top of the map canvas — 44 px tall, a magnifier,
+a clear button once there is text, and a dropdown under it. It is deliberately
+not a row in the header: the app's header had just been cut from 218 to 96 px
+because the first TestFlight testers said there was too much on the screen, and
+a search row up there would have given all of it back. `positionZoomCtrl` seats
+the field in the same band as the zoom/locate column and to the left of it, so
+the two never overlap at any width down to 360 px.
+
+The dropdown has two sources, and the line between them is the privacy
+boundary.
+
+- **Places on this map**, from two characters. A substring match against the
+  names in `allFeatures` and `allPlaces`, case- and diacritic-insensitive (so
+  "muhlen" finds "Mühlenkamp" and "namesti" finds "Náměstí", which is what a
+  phone keyboard actually gives you), nearest to the map centre first, at most
+  three rows, each with the pin's own bucket-coloured dot. Nothing is sent for
+  it: the GeoJSON is already in memory, so this half of the field works in the
+  same basement café the rest of the map does. Choosing a row does exactly what
+  the nearest button does with its answer — switch back on any filter that was
+  hiding the pin, open the popup, fly to zoom 16, fit the card to the view it
+  lands in.
+- **Places in the world**, from three characters, from
+  [Photon](https://photon.komoot.io) — komoot's public demo server, running on
+  the same OpenStreetMap data. Nominatim was rejected rather than overlooked:
+  its usage policy forbids autocomplete outright, and a field that queries as
+  you type is exactly that. Photon's own feature list says
+  "search-as-you-type". Choosing a row fits the result's `extent` where it has
+  one (capped at zoom 17, or an address whose extent is a few metres across
+  would land at the closest zoom there is) and otherwise flies to a zoom chosen
+  by the result's level — a house or a street 17, a city 12, a country 5. No
+  marker is left behind and no popup opens: the reader asked to look
+  somewhere, not to select something.
+
+This is the first feature on the site that sends something a reader typed to a
+party that is not OpenStreetMap, so it is deliberately frugal about it. Three
+characters before the first request, a 300 ms debounce, the previous request
+aborted so exactly one is ever in flight, `limit=5`, and a `lang` parameter only
+for the three languages Photon's dumps actually carry (German, English, French)
+— for the other twenty-nine no language is sent at all and the local name comes
+back, which is what the street sign says anyway. The location bias is the **map
+centre rounded to one decimal**, about 10 km, plus the zoom.
+
+**The GPS fix is never sent**: `lastFix` is not in scope in that code path. That
+is a narrower promise than "the reader's position is never involved", and it is
+narrower on purpose. After the locate button, or when the map opens at the
+reader's position because permission was already granted, the map centre *is*
+roughly where the reader is standing, and they never steered there. So the
+rounding is the protection, not the choice of variable: one decimal turns a
+street corner into "somewhere around Hamburg" before anything leaves the
+browser, and komoot learns a region rather than a position. It happens in
+exactly one function, `photonUrl`, with a test that pins `53.5511, 9.9937` to
+`53.6, 10.0` and pins that `web/app.js` hands the centre over unrounded — two
+roundings would be two rules that can drift apart. The Datenschutz pages say
+this in the same words rather than the stronger one.
+
+`PHOTON_ENDPOINT` in `web/search.js` is
+the only place the host appears, so moving to a same-origin proxy — which is
+what an "extensive usage" mail from komoot would make us do — is one line, and a
+test pins that it appears exactly once.
+
+Photon's terms promise nothing: "Extensive usage will be throttled or completely
+banned. We do not give guarantees for availability." So a failure there is not
+an error state. Offline, throttled or down, the world half contributes one quiet
+line in the dropdown and the map's own matches above it keep working. Never a
+toast — a toast would fire on every keystroke.
+
+The field is an ARIA combobox over a listbox: arrow keys move the active row,
+Enter takes it (or the first row, when nothing has been arrowed to), Escape
+closes the list and a second Escape clears the field. Rows are 44 px targets,
+the input is 16 px so iOS does not zoom the page in on focus, and
+`enterkeyhint="search"` labels the phone's return key. Tapping the map closes
+the list and blurs the field, which is what takes the keyboard away again.
+
+An open popup, and the sign-pin above it, are kept clear of the field:
+`popupPan` gained a `headroom` argument for the part of the marker standing
+above the card, which also fixed the older nit where a pin within ~45 px of the
+top bar had its pictogram half-hidden behind it.
+
 ## Nearest usable table
 
 A labelled pill at the foot of the map, "Nächster Wickeltisch", answers "where

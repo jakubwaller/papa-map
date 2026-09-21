@@ -185,17 +185,41 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app40" />
+  <link rel="stylesheet" href="style.css?v=app41" />
 
   <!-- Classic and blocking, in the head on purpose: it puts the .in-app class
        on <html> before the first paint when the store app opened this page in
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app40"></script>
+  <script src="in-app.js?v=app41"></script>
 </head>
 <body>
   <div id="map"></div>
+
+  <!-- Search (CONTRACT.md v46): a field floating over the top of the canvas,
+       not a row in the header. The header was cut from 218 to 96px in the app
+       because the first testers said there was too much on the screen, and a
+       search row there would give all of that back. app.js seats this in the
+       same band as the control column, to the left of it, so the two never
+       overlap. type="text" rather than type="search" on purpose: a search
+       input draws Safari's own clear button beside the one below. -->
+  <div id="search" class="search">
+    <div class="search-field">
+      <svg class="search-ico" width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="10.5" cy="10.5" r="6.8" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M15.4 15.4L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <input id="search-input" type="text" role="combobox" aria-expanded="false"
+             aria-autocomplete="list" aria-controls="search-results" aria-haspopup="listbox"
+             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+             enterkeyhint="search" placeholder="Ort oder Adresse suchen"
+             data-i18n-placeholder="searchPlaceholder" data-i18n-aria="searchPlaceholder" />
+      <button id="search-clear" type="button" hidden aria-label="Suche löschen" data-i18n-aria="ariaSearchClear">×</button>
+    </div>
+    <ul id="search-results" class="search-results" role="listbox" hidden
+        aria-label="Ort oder Adresse suchen" data-i18n-aria="searchPlaceholder"></ul>
+  </div>
 
   <!-- Zoom + locate controls -->
   <div id="zoom-ctrl">
@@ -432,6 +456,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app40"></script>
+  <script type="module" src="app.js?v=app41"></script>
 </body>
 </html>
