@@ -2194,6 +2194,7 @@ function bootNative() {
   const about = document.getElementById("me-about");
   about.append(document.querySelector(".stats-wrap"), document.querySelector(".header-actions"));
   about.hidden = false;
+  positionZoomCtrl();   // applyI18n placed the column under the taller header a moment ago
   offlineBtn.hidden = false;
   onAppUrl({ auth: (url) => completeLogin(url), table: openPin });
   nativeScripts = Promise.all([loadScript("vendor/pmtiles.js"), loadScript("vendor/protomaps/basemaps.js")]);

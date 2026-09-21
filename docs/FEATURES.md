@@ -186,7 +186,7 @@ app "froze" after that tap: the card's × had come to rest under the zoom-out
 button, so closing it zoomed the map instead, and the card covered most of the
 canvas.
 
-The button It asks the browser for a position, finds the nearest table the
+The button asks the browser for a position, finds the nearest table the
 **current reading** calls usable, flies there and opens the popup.
 
 Three things it deliberately does not do:

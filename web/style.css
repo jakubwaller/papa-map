@@ -541,7 +541,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .native .tagline { display: none; }
 .me-about { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .me-about[hidden] { display: none; }
-.me-about #stats { padding: 0 0 10px; border-top: none; background: none; cursor: default; }
+#me-about #stats { padding: 0 0 10px; border-top: none; background: none; cursor: default; }
 #me-about #stats .stat { display: block; }
 .me-about .stats-toggle { display: none; }
 .me-about .header-actions { order: 0; flex: none; justify-content: flex-start; flex-wrap: wrap; gap: 8px 14px; }
