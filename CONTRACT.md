@@ -1,5 +1,48 @@
 # papa-map — build contract (v0)
 
+> **v46 amendment (21 Sep 2026, the search field): no shape change, and the
+> first request this site makes to a party that is not OpenStreetMap.**
+> A rounded field floats over the top of the map canvas — never a row in the
+> header, which the app cut from 218 to 96 px after the first testers said
+> there was too much on the screen. `positionZoomCtrl` (`web/app.js`) seats it
+> in the same band as the control column and to the left of it; `#search`
+> (`web/style.css`) keeps its right edge clear of the column's 34 px button and
+> 16 px margin, and caps the field at 380 px on a desktop.
+>
+> **Two sources, one dropdown, and the split between them is the privacy
+> boundary.** The first is this map's own objects — `allFeatures` and
+> `allPlaces`, matched in memory from two characters, case- and
+> diacritic-insensitively, nearest to the map centre first, at most three rows,
+> each with its bucket-coloured dot. Nothing is sent for it, so it keeps
+> working with no network at all, and a chosen row does exactly what the
+> nearest button's answer does: `ensureVisible`, `openPopup`, fly to zoom 16,
+> `panPopupIntoView`. The second is the rest of the world, from **Photon**
+> (komoot's public demo server, OSM data): from three characters, debounced
+> 300 ms, the previous request aborted with an `AbortController`, `limit=5`,
+> `lang` only for the three languages Photon's dumps carry (de/en/fr) and
+> omitted otherwise, and biased with the **map centre rounded to one decimal
+> (~10 km)** plus the zoom. **The reader's GPS fix is never part of a search
+> request** — `lastFix` is not in scope in that code path, and the Datenschutz
+> now says so in those words. Nominatim was rejected rather than overlooked:
+> its usage policy forbids autocomplete outright. `PHOTON_ENDPOINT`
+> (`web/search.js`) is the one place the host appears, so a same-origin proxy
+> is a one-line swap; a test pins that it appears exactly once.
+>
+> **Photon guarantees nothing.** Offline, throttled or down, the geocoder half
+> contributes one quiet line (`searchFailed`) and the map's own matches stay on
+> screen — never a toast, which would fire on every keystroke.
+>
+> **Changes existing behaviour in one place:** `popupPan` (`web/datasource.js`)
+> takes a fourth argument, `headroom` — space a card needs above its own rect.
+> `panPopupIntoView` measures the sign-pin marker's element and passes the part
+> of it standing above the card, which both keeps an open popup and its
+> pictogram clear of the new field and fixes the v44 nit where a pin within
+> ~45 px of the bar had that pictogram half-hidden behind it. Left out, the
+> function is exactly what it was. `web/search.js` (pure, tested) joins the
+> service worker's shell precache and the store app's bundled files the same
+> way `sign-pin.js` did. Six new i18n keys in all 32 languages. Shell pin
+> `app39` → `app40`.
+>
 > **v44 amendment (21 Sep 2026, the selected-place marker): no shape change.**
 > While a "table" popup is open, one `maplibregl.Marker` sits on that pin: the
 > logo's door-sign shape, filled with the pin's own bucket colour, carrying a

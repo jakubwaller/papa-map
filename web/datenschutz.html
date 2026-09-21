@@ -52,6 +52,28 @@
      Schließen Sie den Hinweis, merkt sich der Browser im Local Storage (Schlüssel
      <code>papamap-card-dismissed</code>), für welche Orte er nicht mehr erscheinen soll — rein
      funktional, nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+  <h2>Suche (Ort oder Adresse)</h2>
+  <p>Das Suchfeld über der Karte durchsucht zweierlei. Ab dem zweiten Zeichen vergleicht die Seite
+     das Eingetippte mit den Namen der Wickeltische und Orte, die ohnehin schon geladen sind.
+     Dieser Abgleich läuft ausschließlich auf Ihrem Gerät; er sendet nichts an diesen Server und
+     nichts an Dritte.</p>
+  <p>Ab dem dritten Zeichen fragt die Seite zusätzlich den Ortssuchdienst Photon nach Orten und
+     Adressen weltweit. Betrieben wird er von der komoot GmbH, Kienberger Allee 4, 12529
+     Schönefeld (<a href="https://www.komoot.com/privacy">Datenschutzerklärung von komoot</a>).
+     Übertragen werden dabei: der von Ihnen eingetippte Text; die Sprache der Oberfläche, aber nur
+     bei Deutsch, Englisch und Französisch — für alle anderen Sprachen wird keine Sprachangabe
+     gesendet; der Mittelpunkt des gerade sichtbaren Kartenausschnitts, auf eine Nachkommastelle
+     gerundet, also auf etwa 10 km genau; die Zoomstufe der Karte; und, wie bei jedem Abruf im
+     Internet, Ihre IP-Adresse. Ausschnitt und Zoomstufe sind dafür da, dass der Dienst Treffer in
+     der Nähe dessen, was Sie gerade ansehen, nach vorne stellt.</p>
+  <p>Das geschieht nur, während Sie in diesem Feld tippen, und erst ab dem dritten Zeichen; die
+     Eingaben werden kurz gesammelt, sodass nicht jeder Tastendruck eine eigene Anfrage auslöst.
+     <strong>Ihr Standort ist daran niemals beteiligt</strong> — weder die Position aus den
+     Ortungs-Schaltflächen noch irgendeine andere Ortsangabe Ihres Geräts; gesendet wird allein
+     der Kartenausschnitt, den Sie selbst angesteuert haben. Rechtsgrundlage: Art. 6 Abs. 1 lit. f
+     DSGVO. Möchten Sie nichts übertragen, benutzen Sie das Feld einfach nicht: Die Karte ist ohne
+     Suche vollständig nutzbar, und die Treffer unter den Wickeltischen und Orten der Karte findet
+     Ihr Gerät ohnehin selbst.</p>
   <h2>Spracheinstellung (Local Storage)</h2>
   <p>Wählen Sie über den Sprachumschalter eine Sprache, wird diese Wahl im Local Storage Ihres
      Browsers gespeichert (Schlüssel <code>papamap-lang</code>); ebenso, ob Sie die Karte aus
@@ -117,9 +139,10 @@
   <p>PapaMap gibt es zusätzlich als App, verteilt über den App Store und über TestFlight. Die App
      ist dieselbe Karte in einer nativen Hülle. Es gilt derselbe Grundsatz: kein Konto bei uns,
      keine Analyse-, Tracking- oder Werbebausteine, kein eigenes Absturz-Meldesystem, keine
-     Push-Nachrichten. Die App selbst spricht mit zwei Servern — papamap.de für die
+     Push-Nachrichten. Die App selbst spricht mit drei Servern — papamap.de für die
      Wickeltisch-Daten und die Offline-Städte, openstreetmap.org für Kartenkacheln und für Ihre
-     Antworten. Hinzu kommt, was Sie über einen Link öffnen, und Apples Rolle bei der Verteilung;
+     Antworten und, nur während Sie im Suchfeld tippen, photon.komoot.io für die weltweite
+     Ortssuche. Hinzu kommt, was Sie über einen Link öffnen, und Apples Rolle bei der Verteilung;
      beides steht weiter unten. Die folgenden Abschnitte beschreiben, was in der App anders oder
      zusätzlich passiert; sonst gilt das oben Gesagte entsprechend.</p>
   <h2>App: Daten von papamap.de</h2>
@@ -153,6 +176,14 @@
      es auf dem Home-Bildschirm oder dem Sperrbildschirm liegt. Nach einem Tipp auf den
      Standort-Knopf zeigt die Karte Ihre Umgebung; die Kacheln für diesen Ausschnitt lädt sie dann
      wie oben beschrieben von tile.openstreetmap.org.</p>
+  <h2>App: Suche</h2>
+  <p>Das Suchfeld arbeitet in der App wie auf der Website (siehe „Suche (Ort oder Adresse)“ oben):
+     Treffer unter den Wickeltischen und Orten der Karte findet die App auf dem Gerät, ohne etwas
+     zu senden; ab dem dritten Zeichen fragt sie zusätzlich Photon der komoot GmbH nach Orten und
+     Adressen weltweit, mit denselben Angaben und derselben Rechtsgrundlage wie oben beschrieben.
+     Ohne Netz bleibt die Suche in den Wickeltisch-Daten nutzbar; die weltweite Suche meldet dann
+     nur, dass sie nicht erreichbar ist. Ihr Standort ist auch hier nie Teil einer Suchanfrage —
+     auch dann nicht, wenn Sie der App die Ortung erlaubt haben.</p>
   <h2>App: Widget und Siri-Kurzbefehl</h2>
   <p>Damit das Widget und der Kurzbefehl denselben Wickeltisch nennen wie die Karte, legt die App
      eine verkürzte Kopie der Wickeltisch-Daten (Koordinaten, Zustand, Name, OSM-Link) sowie Ihre

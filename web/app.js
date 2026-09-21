@@ -9,13 +9,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app38";
+         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app40";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app38";
+         langUrl } from "./i18n.js?v=app40";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app38";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app40";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -23,18 +23,23 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app38";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app40";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app38";
+         formatMB, citiesToMount } from "./native.js?v=app40";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app38";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app40";
+// The search field's own pure half (CONTRACT.md v46): what matches, what URL
+// the geocoder is asked and how its answer becomes a row. The field, the
+// dropdown and the keyboard are below, next to the map they move.
+import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app40";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -104,6 +109,10 @@ function applyI18n() {
     el.setAttribute("aria-label", t(el.dataset.i18nAria));
     if (el.title) el.title = t(el.dataset.i18nAria);
   }
+  // The search field's own prompt. Its own attribute rather than data-i18n:
+  // an <input> has no text content to swap.
+  for (const el of document.querySelectorAll("[data-i18n-placeholder]"))
+    el.placeholder = t(el.dataset.i18nPlaceholder);
   document.getElementById("methods-link").href = t("methodsHref");
   document.getElementById("board-link").href = t("boardHref");
   // The area link follows the map view, and its label is the target page's
@@ -120,6 +129,9 @@ function applyI18n() {
   // A card left standing through a language change would otherwise go stale
   // in the old one (CONTRACT.md v38); a no-op when none is up.
   renderRoomCardText();
+  // Same for a dropdown left open: its two group headings and its one note
+  // line are translated. A no-op when the field is empty, which it is at boot.
+  renderSearch();
 }
 
 // ---- Footer area link: follows the map view, not the UI language ----
@@ -305,6 +317,13 @@ const countEl = document.getElementById("count");
 const topbar = document.getElementById("topbar");
 const zoomCtrl = document.getElementById("zoom-ctrl");
 const scopeEl = document.getElementById("scope");
+// Up here with the topbar and the column, not down beside the search section
+// itself: positionZoomCtrl seats all three in the same band and runs long
+// before that section's own code would have been evaluated.
+const searchBox = document.getElementById("search");
+const searchInput = document.getElementById("search-input");
+const searchClear = document.getElementById("search-clear");
+const searchList = document.getElementById("search-results");
 
 // ---- Pins: one WebGL circle layer, colored by status ----
 // ~5k features Germany-wide — still one WebGL layer, no clustering, no DOM
@@ -459,6 +478,13 @@ function addTableLayer() {
     map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
   }
+  // A tap on the map is the reader saying "not that, this one": the search
+  // dropdown goes, and on a phone the keyboard goes with it. No layer, so a
+  // tap on a pin closes it too — that pin's popup is the better answer.
+  map.on("click", () => {
+    if (searchList.hidden && document.activeElement !== searchInput) return;
+    closeSearch();
+  });
 }
 
 function refreshPins() {
@@ -872,18 +898,29 @@ function panPopupIntoView() {
   const el = popup?.getElement();
   if (!el) return;
   const r = el.getBoundingClientRect(), c = map.getContainer().getBoundingClientRect();
-  // Never let the topbar claim more than half the canvas: on a short
-  // landscape phone the strip can approach the full height (fitHome has the
-  // same clamp), and a band with no room in it would pan the card clean off.
-  const top = c.top + Math.min(topbar.offsetHeight, c.height / 2) + EDGE;
+  // What floats over the head of the canvas: the topbar, and the search field
+  // hanging below it (CONTRACT.md v46). Whichever reaches further down is what
+  // the card has to clear — the field is the deeper of the two everywhere.
+  // Never more than half the canvas, though: on a short landscape phone the
+  // strip can approach the full height (fitHome has the same clamp), and a
+  // band with no room left in it would pan the card clean off.
+  const covered = Math.max(topbar.offsetHeight, searchBox.getBoundingClientRect().bottom - c.top);
+  const top = c.top + Math.min(covered, c.height / 2) + EDGE;
   // The attribution's own top edge, not its height from the bottom: in the
   // installed app it floats a safe-area inset above the foot.
   const attr = document.getElementById("attribution")?.getBoundingClientRect();
   const bottom = Math.min(c.bottom, attr?.top ?? c.bottom) - EDGE;
   const z = zoomCtrl.getBoundingClientRect();
+  // The sign-pin stands above the pin, so on a card MapLibre opened *below*
+  // the point the marker is above the card and outside the rect measured here.
+  // Measured rather than derived from the anchor: the marker's own element
+  // knows where it ended up, and no anchor table here can go stale against it.
+  const sign = popupObj?.kind === "table" ? signMarker?.getElement().getBoundingClientRect() : null;
+  const headroom = sign ? Math.max(0, r.top - sign.top) : 0;
   const [dx, dy] = popupPan(r,
     { left: c.left + EDGE, top, right: c.right - EDGE, bottom },
-    { left: z.left - EDGE, top: z.top, bottom: z.bottom });
+    { left: z.left - EDGE, top: z.top, bottom: z.bottom },
+    headroom);
   if (dx || dy) map.panBy([dx, dy], { duration: 250 });
 }
 
@@ -1086,6 +1123,10 @@ document.getElementById("zoom-out").addEventListener("click", () => map.zoomOut(
 let syncingLink = false;
 function positionZoomCtrl() {
   zoomCtrl.style.top = topbar.offsetHeight + 10 + "px";
+  // The search field shares that band, to the left of the column: one `top`
+  // for both, so a topbar that changes height (a language with longer chips,
+  // the stats strip folding open) never leaves the two at different heights.
+  searchBox.style.top = zoomCtrl.style.top;
   if (!syncingLink) {
     syncingLink = true;
     try { updateRegionsLink(); } finally { syncingLink = false; }
@@ -1263,6 +1304,290 @@ nearestBtn.addEventListener("click", (e) => {
     () => toast(t("toastGeoFail")),
   );
 });
+
+// ---- Search: this map's own places, and the rest of the world ----
+// Tester feedback from the first TestFlight build: there was no way to look at
+// anywhere you were not standing. Two sources in one dropdown, and the split
+// between them matters more than it looks:
+//
+//   1. This map's pins and prospects, matched in memory against the GeoJSON
+//      that is already loaded. No request leaves the browser, so a reader in
+//      the basement café still finds the place they came for. Chosen, a row
+//      behaves exactly like the nearest button's answer.
+//   2. Everywhere else, from Photon (web/search.js says why that geocoder and
+//      not Nominatim). This is the first feature on this site that sends
+//      anything a reader typed to a third party, which is why the field waits
+//      for the third character, debounces, and sends the map's centre rounded
+//      to ~10 km rather than anything the locate button ever produced. The
+//      Datenschutz says so in those words.
+//
+// Photon promises nothing about availability. Offline, throttled or simply
+// down, the second source contributes one quiet line and the first one keeps
+// working — never a toast, which would fire on every keystroke.
+const SEARCH_FIT_MAX_ZOOM = 17;   // an address with a tiny extent must not land at z22
+
+let searchRows = [];              // the options as rendered, in listbox order
+let searchActive = -1;            // index into searchRows, -1 = nothing active
+let searchLocal = [];             // matchLocal hits
+let searchWorld = [];             // photonResults rows
+let searchWorldState = "idle";    // idle | loading | ok | failed
+let photonTimer = null;
+let photonRequest = null;         // the AbortController of the one request in flight
+
+const mapCentre = () => { const c = map.getCenter(); return { lat: c.lat, lon: c.lng }; };
+
+function searchRowEl(row) {
+  const li = document.createElement("li");
+  li.className = "search-opt";
+  li.id = `search-opt-${searchRows.length}`;
+  li.setAttribute("role", "option");
+  li.setAttribute("aria-selected", "false");
+  li.append(searchRowIcon(row));
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  // textContent throughout: these names come from OSM and from komoot, and
+  // nothing about them has been through esc().
+  const name = document.createElement("span");
+  name.className = "name";
+  name.textContent = row.name;
+  txt.append(name);
+  if (row.context) {
+    const ctx = document.createElement("span");
+    ctx.className = "ctx";
+    ctx.textContent = row.context;
+    txt.append(ctx);
+  }
+  li.append(txt);
+  li.addEventListener("click", () => pickSearchRow(row));
+  searchRows.push(row);
+  return li;
+}
+
+// The pin's own bucket colour, so the dropdown reads like the map: green is
+// still "a dad can reach it" here. A prospect has no status and gets the play
+// ring; a place from the geocoder is not on this map at all and gets a pin
+// outline in the muted tone, which is the honest thing to draw for it.
+function searchRowIcon(row) {
+  if (row.kind === "world") {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "globe");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML = '<path d="M12 21.5s-6.5-6.2-6.5-11a6.5 6.5 0 0113 0c0 4.8-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>';
+    return svg;
+  }
+  const dot = document.createElement("span");
+  if (row.hit.kind === "place") dot.className = "dot play";
+  else {
+    dot.className = "dot";
+    dot.style.background = BUCKET_COLOR[viewFor(row.hit.obj.status, mode).bucket];
+  }
+  return dot;
+}
+
+function searchGroupEl(label) {
+  const li = document.createElement("li");
+  li.className = "search-group";
+  li.setAttribute("role", "presentation");
+  li.textContent = label;
+  return li;
+}
+
+function searchNoteEl(text) {
+  const li = document.createElement("li");
+  li.className = "search-note";
+  li.setAttribute("role", "presentation");
+  li.textContent = text;
+  return li;
+}
+
+function renderSearch() {
+  const q = searchInput.value.trim();
+  searchRows = [];
+  searchList.textContent = "";
+  searchClear.hidden = !q;
+  if (!q) { setSearchOpen(false); return; }
+
+  if (searchLocal.length) {
+    searchList.append(searchGroupEl(t("searchOnMap")));
+    for (const hit of searchLocal) {
+      const d = formatDistance(hit.km);
+      searchList.append(searchRowEl({
+        kind: "local", hit, name: hit.obj.name, context: t(d.key, { n: num(d.n) }),
+      }));
+    }
+  }
+  if (searchWorld.length) {
+    searchList.append(searchGroupEl(t("searchWorld")));
+    for (const r of searchWorld)
+      searchList.append(searchRowEl({ kind: "world", ...r }));
+  }
+  // One line, never a toast. "Nothing found" only once the geocoder has had
+  // its turn — saying it while a request is still out would flash it away
+  // again a moment later on every single keystroke.
+  if (searchWorldState === "failed") searchList.append(searchNoteEl(t("searchFailed")));
+  else if (!searchRows.length && searchWorldState !== "loading")
+    searchList.append(searchNoteEl(t("searchNone")));
+  setSearchOpen(searchList.childElementCount > 0);
+}
+
+function setSearchOpen(open) {
+  searchList.hidden = !open;
+  searchInput.setAttribute("aria-expanded", String(open));
+  setSearchActive(open ? searchActive : -1);
+}
+
+function setSearchActive(i) {
+  const opts = searchList.querySelectorAll(".search-opt");
+  searchActive = i < 0 || i >= opts.length ? -1 : i;
+  opts.forEach((el, j) => el.setAttribute("aria-selected", String(j === searchActive)));
+  const el = opts[searchActive];
+  if (el) {
+    el.scrollIntoView({ block: "nearest" });
+    searchInput.setAttribute("aria-activedescendant", el.id);
+  } else searchInput.removeAttribute("aria-activedescendant");
+}
+
+// Closing after a pick takes the phone's keyboard with it: the reader asked
+// for a place, and half the screen should not still be a keyboard when they
+// get there.
+function closeSearch() {
+  setSearchOpen(false);
+  searchInput.blur();
+}
+
+function clearSearch() {
+  searchInput.value = "";
+  searchLocal = [];
+  searchWorld = [];
+  searchWorldState = "idle";
+  clearTimeout(photonTimer);
+  photonRequest?.abort();
+  photonRequest = null;
+  renderSearch();
+}
+
+// The prospects chip may be switched off, and flying to a place the reader
+// then cannot see would read as a broken tap — ensureVisible's reasoning, for
+// the one filter it does not cover.
+function ensurePlacesVisible() {
+  if (placesOn) return;
+  placesOn = true;
+  renderChips();
+  refreshPins();
+}
+
+// Keep the fitted result clear of the chrome that floats over the canvas, the
+// same two edges popupPan works from.
+function searchFitPadding() {
+  const c = map.getContainer().getBoundingClientRect();
+  const top = Math.min(searchBox.getBoundingClientRect().bottom - c.top, c.height / 2) + EDGE;
+  return { top: Math.round(top), bottom: 70, left: 20, right: 60 };
+}
+
+function pickSearchRow(row) {
+  closeSearch();
+  if (row.kind === "world") {
+    // fitBounds where the result knows its own extent — a city then fills the
+    // screen and is not guessed at from a zoom table. Capped, or a house whose
+    // extent is a few metres across would land at the maximum zoom there is.
+    if (row.target.bounds)
+      map.fitBounds(row.target.bounds, { maxZoom: SEARCH_FIT_MAX_ZOOM, padding: searchFitPadding() });
+    else map.flyTo({ center: row.target.center, zoom: row.target.zoom });
+    return;
+  }
+  const f = row.hit.obj;
+  if (row.hit.kind === "table") { ensureVisible(f); openPopup(f); }
+  else { ensurePlacesVisible(); openPlacePopup(f); }
+  // Exactly what the nearest button does with its own answer: fly, and fit the
+  // card to the view it lands in once the flight is over.
+  map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+  map.once("moveend", panPopupIntoView);
+}
+
+function queryPhoton(q) {
+  clearTimeout(photonTimer);
+  // One request in flight, ever: a reader typing "hamburg" would otherwise
+  // leave seven behind, and the last answer to arrive need not be the last one
+  // asked for.
+  photonRequest?.abort();
+  photonRequest = null;
+  if (q.length < PHOTON_MIN_CHARS) {
+    searchWorld = [];
+    searchWorldState = "idle";
+    return;
+  }
+  searchWorldState = "loading";
+  photonTimer = setTimeout(() => sendPhoton(q), PHOTON_DEBOUNCE_MS);
+}
+
+async function sendPhoton(q) {
+  const ctrl = new AbortController();
+  photonRequest = ctrl;
+  const c = map.getCenter();
+  // The map's centre, not the reader's position — web/search.js rounds it to
+  // about ten kilometres, and lastFix is never in scope here.
+  const url = photonUrl(q, { lang, lat: c.lat, lon: c.lng, zoom: map.getZoom() });
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`photon ${res.status}`);
+    const rows = photonResults(await res.json());
+    if (photonRequest !== ctrl) return;   // a later keystroke already took over
+    searchWorld = rows;
+    searchWorldState = "ok";
+  } catch {
+    // Aborted, offline, throttled, or komoot simply down: their terms promise
+    // no availability at all. Nothing is retried and nothing is toasted.
+    if (photonRequest !== ctrl) return;
+    searchWorld = [];
+    searchWorldState = "failed";
+  }
+  photonRequest = null;
+  renderSearch();
+}
+
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.trim();
+  // The whole dataset, not the viewport: the same true-global search the
+  // nearest button does, and for the same reason.
+  searchLocal = dataReady ? matchLocal(allFeatures, allPlaces, q, mapCentre()) : [];
+  queryPhoton(q);
+  renderSearch();
+});
+
+searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (!searchRows.length) return;
+    e.preventDefault();
+    const n = searchRows.length, step = e.key === "ArrowDown" ? 1 : -1;
+    setSearchActive(searchActive < 0
+      ? (step > 0 ? 0 : n - 1)
+      : (searchActive + step + n) % n);
+    return;
+  }
+  if (e.key === "Enter") {
+    // Nothing arrowed to: the first row, which is what a reader who typed and
+    // hit Enter meant — and the local matches are always the first rows.
+    if (!searchRows.length) return;
+    e.preventDefault();
+    pickSearchRow(searchRows[Math.max(searchActive, 0)]);
+    return;
+  }
+  if (e.key === "Escape") {
+    // First the list, then the field. Two steps, because closing a dropdown
+    // and throwing away what was typed are two different intentions.
+    e.preventDefault();
+    if (!searchList.hidden) { setSearchOpen(false); return; }
+    clearSearch();
+  }
+});
+
+// The field must not lose focus before a row's own click handler runs, and a
+// drag on the list's scrollbar must not close it either.
+searchList.addEventListener("mousedown", (e) => e.preventDefault());
+searchInput.addEventListener("focus", () => { if (searchRows.length) setSearchOpen(true); });
+searchInput.addEventListener("blur", () => setSearchOpen(false));
+searchClear.addEventListener("click", () => { clearSearch(); searchInput.focus(); });
 
 // ---- The "which room?" card: ask, at the moment it might get answered ----
 // Never a permission prompt of its own: it only ever follows a fix the reader

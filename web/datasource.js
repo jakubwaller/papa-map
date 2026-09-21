@@ -480,10 +480,17 @@ export function isFixFresh(fixAt, now = Date.now()) {
 // the canvas the app read as frozen (first external testers, build 107).
 // A card taller or wider than the space keeps its head and its left edge;
 // web/app.js's popupMaxWidth is what makes "wider" not happen beside the column.
-export function popupPan(card, box, avoid = null) {
+//
+// `headroom` is space the card needs *above* itself that is not part of its own
+// rect: the sign-pin marker, which stands ~45 px above the pin and so above the
+// card whenever MapLibre opens the card below the point. Until this parameter
+// existed nothing accounted for it, and a pin within ~45 px of the bar had its
+// pictogram half-hidden behind it. Only the top edge takes it — the marker's
+// foot is the pin, which the card's own rect already keeps inside the view.
+export function popupPan(card, box, avoid = null, headroom = 0) {
   let dx = 0, dy = 0;
   if (card.bottom > box.bottom) dy = card.bottom - box.bottom;
-  if (card.top - dy < box.top) dy = card.top - box.top;
+  if (card.top - headroom - dy < box.top) dy = card.top - headroom - box.top;
   let right = box.right;
   if (avoid && card.top - dy < avoid.bottom && card.bottom - dy > avoid.top)
     right = Math.min(right, avoid.left);

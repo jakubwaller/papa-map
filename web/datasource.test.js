@@ -722,6 +722,21 @@ test("popupPan: the column is judged where the card lands, not where it started"
   assert.deepEqual(popupPan({ left: 60, top: 430, right: 360, bottom: 820 }, BOX, COLUMN), [43, 200]);
 });
 
+test("popupPan: the sign-pin standing above a card counts as part of it", () => {
+  // MapLibre opens the card below the point when the pin sits near the top of
+  // the canvas, which puts the ~45px sign-pin above the card — half behind the
+  // bar unless the pan makes room for it. 59 is the marker plus the popup's
+  // own 14px offset, which is what web/app.js measures.
+  const card = { left: 40, top: 240, right: 300, bottom: 520 };
+  assert.deepEqual(popupPan(card, BOX, COLUMN), [0, 0]);
+  assert.deepEqual(popupPan(card, BOX, COLUMN, 59), [0, -45]);
+  // Room to spare above the card: the marker changes nothing.
+  assert.deepEqual(popupPan({ ...card, top: 320, bottom: 600 }, BOX, COLUMN, 59), [0, 0]);
+  // Left out, as every caller before the marker existed left it out, the
+  // arithmetic is exactly what it was.
+  assert.deepEqual(popupPan(card, BOX, COLUMN, 0), popupPan(card, BOX, COLUMN));
+});
+
 test("popupPan: taller or wider than the space keeps the head and the left edge", () => {
   assert.deepEqual(popupPan({ left: 20, top: 100, right: 300, bottom: 700 }, BOX, COLUMN), [0, -126]);
   assert.deepEqual(popupPan({ left: 5, top: 300, right: 400, bottom: 500 }, BOX, COLUMN), [-3, 0]);

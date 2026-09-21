@@ -51,6 +51,28 @@
      transmitted. If you close the note, the
      browser remembers in local storage (key <code>papamap-card-dismissed</code>) for which places
      it should no longer appear — purely functional, only on your device (§ 25(2) no. 2 TDDDG).</p>
+  <h2>Search (place or address)</h2>
+  <p>The search field above the map searches two things. From the second character on, the site
+     compares what you type against the names of the changing tables and places that have already
+     been loaded anyway. That comparison runs exclusively on your device; it sends nothing to this
+     server and nothing to any third party.</p>
+  <p>From the third character on, the site additionally asks the Photon place-search service for
+     places and addresses worldwide. It is operated by komoot GmbH, Kienberger Allee 4, 12529
+     Schönefeld, Germany (<a href="https://www.komoot.com/privacy">komoot's privacy policy</a>).
+     What is transmitted: the text you typed; the language of the interface, but only for German,
+     English and French — for every other language no language is sent at all; the centre of the
+     map section currently on screen, rounded to one decimal place, that is to about 10 km; the
+     map's zoom level; and, as with every request on the internet, your IP address. The section
+     and the zoom level are there so the service puts results near what you are currently looking
+     at first.</p>
+  <p>This happens only while you are typing in that field, and only from the third character on;
+     your input is briefly collected so that not every keystroke triggers a request of its own.
+     <strong>Your location is never part of it</strong> — neither the position from the locate
+     buttons nor any other location data from your device; what is sent is only the map section
+     you navigated to yourself. Legal basis: Art. 6(1)(f) GDPR. If you do not want anything
+     transmitted, simply do not use the field: the map is fully usable without the search, and
+     your device finds the matches among the map's own changing tables and places by itself
+     anyway.</p>
   <h2>Language setting (local storage)</h2>
   <p>If you choose a language via the language switcher, that choice is stored in your browser's
      local storage (key <code>papamap-lang</code>); the same applies to whether you read the map
@@ -114,8 +136,9 @@
   <p>PapaMap is also available as an app, distributed through the App Store and through TestFlight.
      The app is the same map in a native shell. The same principle applies: no account with us, no
      analytics, tracking or advertising components, no crash-reporting system of our own, no push
-     notifications. The app itself talks to two servers — papamap.de for the changing-table data
-     and the offline cities, openstreetmap.org for map tiles and for your answers. On top of that
+     notifications. The app itself talks to three servers — papamap.de for the changing-table data
+     and the offline cities, openstreetmap.org for map tiles and for your answers, and, only while
+     you are typing in the search field, photon.komoot.io for the worldwide place search. On top of that
      comes whatever you open through a link, and Apple's role in distribution; both are covered
      further below. The following sections describe what is different or additional in the app;
      otherwise the above applies accordingly.</p>
@@ -148,6 +171,14 @@
      regular intervals as long as it sits on the home screen or the lock screen. After you tap the
      locate button, the map shows your surroundings; it then loads the tiles for that section from
      tile.openstreetmap.org as described above.</p>
+  <h2>App: search</h2>
+  <p>The search field works in the app as it does on the website (see “Search (place or address)”
+     above): the app finds matches among the map's own changing tables and places on the device,
+     sending nothing; from the third character on it additionally asks komoot GmbH's Photon for
+     places and addresses worldwide, with the same details and the same legal basis as described
+     above. With no network the search among the changing-table data keeps working; the worldwide
+     search then only reports that it cannot be reached. Here too your location is never part of a
+     search request — not even if you have granted the app permission to locate you.</p>
   <h2>App: widget and Siri Shortcut</h2>
   <p>So that the widget and the Shortcut name the same changing table as the map, the app keeps a
      shortened copy of the changing-table data (coordinates, status, name, OSM link) as well as
