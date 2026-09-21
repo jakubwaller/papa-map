@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { appShell, localRefs, unbundled } from "./shell.mjs";
+import { appShell, localRefs, moduleRefs, unbundled } from "./shell.mjs";
 
 const page = readFileSync(new URL("../web/index.html", import.meta.url), "utf8");
 
@@ -56,5 +56,34 @@ test("the real page loads the files the build knows about", () => {
   const refs = localRefs(appShell(page));
   for (const f of ["app.js", "style.css", "favicon.svg", "manifest.webmanifest",
                    "icons/favicon-32.png", "icons/apple-touch-icon.png", "vendor/maplibre-gl.js"])
+    assert.ok(refs.includes(f), f);
+});
+
+test("quoting, case, ./ and / prefixes, srcset and <source> are read; a commented-out tag is not", () => {
+  const refs = localRefs(`
+    <!-- <link rel="stylesheet" href="gone.css" /> -->
+    <LINK rel='stylesheet' href='./a.css'>
+    <script src="/b.js"></script>
+    <img srcset="c.png 1x, icons/c@2x.png 2x" src="c.png">
+    <picture><source src="d.webp"></picture>
+    <img src="data:image/png;base64,AAAA">`);
+  assert.deepEqual(refs, ["a.css", "b.js", "c.png", "icons/c@2x.png", "d.webp"]);
+});
+
+test("a module's imports are found: static, side-effect and dynamic, never a package or a URL", () => {
+  const refs = moduleRefs(`
+    import { a,
+             b } from "./datasource.js?v=app1";
+    import './side.js';
+    const m = await import("./lazy.js");
+    import x from "some-package";
+    import y from "https://example.com/y.js";`);
+  assert.deepEqual(refs, ["datasource.js", "side.js", "lazy.js"]);
+});
+
+test("the real app.js imports the modules the build knows about", () => {
+  const js = readFileSync(new URL("../web/app.js", import.meta.url), "utf8");
+  const refs = moduleRefs(js);
+  for (const f of ["datasource.js", "i18n.js", "osm.js", "me.js", "native.js"])
     assert.ok(refs.includes(f), f);
 });

@@ -40,10 +40,10 @@ The PNG comes first: a browser that understands both types is expected to prefer
 more capable one, but the ordering also means a browser that only reads the first `<link
 rel="icon">` it finds gets a favicon either way.
 
-All of the site's own pages sit in `web/` itself, so the relative hrefs above resolve
-directly — confirmed against `deploy/papamap.Caddyfile` (the `?lang=en` rewrite and the
-`/ops.html` rewrite both stay inside `web/`) and the methods pages (served at the same
-level). The one place the hrefs need help is the generated pages, which import
+All of the site's hand-maintained pages sit in `web/` itself, so the relative hrefs above
+resolve directly — confirmed against `deploy/papamap.Caddyfile` (the `?lang=en` rewrite serves
+`index-en.html` from the same level) and the methods pages (served at the same level). The
+one place the hrefs need help is the generated pages, which import
 `pipeline/pages.py`'s `ICON` constant. It prefixes both hrefs with the module's existing `UP`
 ("../"), the same relative-path convention `IN_APP_JS` already used. That is right for the
 pages written one directory below the site root (`web/wickeltische/*.html`, which includes the
@@ -63,16 +63,22 @@ HTML/CSS/JS is.
 ## The icon pin: `?v=logo2`
 
 The home-screen PNGs keep their file names when the artwork changes. Cloudflare caches PNGs
-at the edge by default, as it does the shell's `.js` and `.css` (four hours measured there,
-`docs/DEPLOY.md`), and a browser keeps Caddy's hour on top. So the three icon `src`s in
+at the edge by default, as it does the shell's `.js` and `.css`. On those `docs/DEPLOY.md`
+measured the edge rewriting Caddy's hour to `max-age=14400`, so a browser holds its copy for
+four hours as well. So the three icon `src`s in
 `web/manifest.webmanifest` and the `apple-touch-icon` link in `index.html`, `app.html` and
 `app-en.html` (and `index-en.html`, generated) carry `?v=logo2`. **Raise it (`logo3`, …) with
 every re-render of those PNGs**, in all of those places at once; `web/app-page.test.js` fails
 if they disagree or a file is missing. It is separate from the shell's `?v=appNN` pin, which
 moves far more often. The changed manifest is also what makes Chrome refresh the icon of an
 installed Android web app. iOS never re-reads the icon of a site already on the home screen:
-there the new logo arrives only when the reader adds the site again. The two favicon files
-were new paths in this change and carry no pin; a later redraw of them would need one too.
+there the new logo arrives only when the reader adds the site again.
+
+What carries no pin: `web/favicon.svg` and `web/icons/favicon-32.png`, new paths in this
+change, and `web/icon.svg`, which was redrawn in place. Its one reader outside the bundle is
+taginfo, through the `icon_url` in `web/taginfo.json`, and that can wait out the edge's four
+hours. **A later redraw touches all three: give the favicon links a pin then, in the pages
+and in `pipeline/pages.py`'s `ICON`.**
 
 ## Splash: measuring the mark's size against the background it replaces
 

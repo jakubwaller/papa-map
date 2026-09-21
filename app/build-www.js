@@ -7,7 +7,7 @@
 import { cpSync, mkdirSync, rmSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { appShell, localRefs, unbundled } from "./shell.mjs";
+import { appShell, localRefs, moduleRefs, unbundled } from "./shell.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const web = join(here, "..", "web");
@@ -41,6 +41,12 @@ for (const f of FILES) {
     if (missing.length) throw new Error(`index.html loads ${missing.join(", ")}, not in FILES or DIRS`);
     writeFileSync(join(www, f), page);
   } else cpSync(src, join(www, f));
+}
+// The same check one level down: a module a bundled script imports. All of
+// them sit beside the page, so an import path is a path from the root too.
+for (const f of FILES.filter((f) => f.endsWith(".js"))) {
+  const missing = unbundled(moduleRefs(readFileSync(join(web, f), "utf8")), FILES, DIRS);
+  if (missing.length) throw new Error(`${f} imports ${missing.join(", ")}, not in FILES or DIRS`);
 }
 for (const d of DIRS) cpSync(join(web, d), join(www, d), { recursive: true });
 console.log(`www/ built from ${web}`);
