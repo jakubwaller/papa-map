@@ -7,7 +7,7 @@
 import { cpSync, mkdirSync, rmSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { appShell } from "./shell.mjs";
+import { appShell, localRefs, unbundled } from "./shell.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const web = join(here, "..", "web");
@@ -18,9 +18,10 @@ const www = join(here, "www");
 // bundled page that 404s on its own script is a worse trade than a kilobyte.
 // favicon.svg is the same story: index.html's <link rel="icon"> points at it
 // (icons/favicon-32.png, the PNG fallback, already comes along in DIRS below).
+// And manifest.webmanifest: a web view has no use for it, but the page links it.
 const FILES = [
   "index.html", "app.js", "datasource.js", "i18n.js", "osm.js", "me.js", "native.js",
-  "in-app.js", "style.css", "icon.svg", "favicon.svg", "taginfo.json",
+  "in-app.js", "style.css", "icon.svg", "favicon.svg", "manifest.webmanifest", "taginfo.json",
 ];
 const DIRS = ["vendor", "icons"];
 
@@ -32,8 +33,14 @@ for (const f of FILES) {
   // The page itself is the one file that differs from the website (shell.mjs).
   // It is never copied as it is: a build that fails there leaves no page
   // behind for a later `cap sync` to bundle.
-  if (f === "index.html") writeFileSync(join(www, f), appShell(readFileSync(src, "utf8")));
-  else cpSync(src, join(www, f));
+  if (f === "index.html") {
+    const page = appShell(readFileSync(src, "utf8"));
+    // The check above catches a listed file that is gone. This one catches the
+    // other half: a file the page loads that nobody listed.
+    const missing = unbundled(localRefs(page), FILES, DIRS);
+    if (missing.length) throw new Error(`index.html loads ${missing.join(", ")}, not in FILES or DIRS`);
+    writeFileSync(join(www, f), page);
+  } else cpSync(src, join(www, f));
 }
 for (const d of DIRS) cpSync(join(web, d), join(www, d), { recursive: true });
 console.log(`www/ built from ${web}`);

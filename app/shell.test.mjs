@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { appShell } from "./shell.mjs";
+import { appShell, localRefs, unbundled } from "./shell.mjs";
 
 const page = readFileSync(new URL("../web/index.html", import.meta.url), "utf8");
 
@@ -32,4 +32,29 @@ test("a second link elsewhere on the page is caught", () => {
 
 test("a second donate span elsewhere on the page is caught", () => {
   assert.throws(() => appShell(page + '<span class="donate">x</span>'), /second donate span/);
+});
+
+test("the page's own files are found, pins cut, pages and absolute URLs left out", () => {
+  const refs = localRefs(`
+    <link rel="canonical" href="https://example.com/" />
+    <link rel="stylesheet" href="style.css?v=app1" />
+    <link rel="icon" href="icons/favicon-32.png" />
+    <script type="module" src="app.js?v=app1"></script>
+    <script src="//cdn.example.com/x.js"></script>
+    <a href="leaderboard.html">x</a>
+    <img alt="" src="icon.svg#mark">`);
+  assert.deepEqual(refs, ["style.css", "icons/favicon-32.png", "app.js", "icon.svg"]);
+});
+
+test("a file the page loads that the build does not copy is named", () => {
+  assert.deepEqual(unbundled(["app.js", "icons/a.png", "new.css"], ["app.js"], ["icons"]), ["new.css"]);
+  // "icons" covers icons/…, not a file that merely starts with the word.
+  assert.deepEqual(unbundled(["iconsheet.css"], [], ["icons"]), ["iconsheet.css"]);
+});
+
+test("the real page loads the files the build knows about", () => {
+  const refs = localRefs(appShell(page));
+  for (const f of ["app.js", "style.css", "favicon.svg", "manifest.webmanifest",
+                   "icons/favicon-32.png", "icons/apple-touch-icon.png", "vendor/maplibre-gl.js"])
+    assert.ok(refs.includes(f), f);
 });

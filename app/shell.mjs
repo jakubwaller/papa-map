@@ -23,3 +23,25 @@ export function appShell(html) {
   if (/class="donate"/.test(out)) throw new Error("index.html: a second donate span is left after the cut");
   return out;
 }
+
+// Every file of its own the page loads: <link href>, <script src>, <img src>,
+// without the ?v= pin. Links to other pages (<a href>) are not resources, and
+// an absolute URL is fetched from the network, not from the bundle.
+// build-www.js checks the list against what it copies: until 2026-09-21 it
+// only caught a listed file that was missing, never a file the page asks for
+// that nobody listed, and manifest.webmanifest 404ed in the app that way.
+const REF = /<(?:link|script|img)\b[^>]*?\s(?:href|src)="([^"]+)"/g;
+
+export function localRefs(html) {
+  const refs = new Set();
+  for (const [, url] of html.matchAll(REF)) {
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(url)) continue;
+    refs.add(url.split(/[?#]/)[0]);
+  }
+  return [...refs];
+}
+
+// The refs neither FILES nor a directory in DIRS covers.
+export function unbundled(refs, files, dirs) {
+  return refs.filter((r) => !files.includes(r) && !dirs.some((d) => r.startsWith(`${d}/`)));
+}

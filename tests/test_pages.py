@@ -156,6 +156,19 @@ def test_land_page_carries_one_h1_a_canonical_and_the_counts():
     assert pages.ICON in html
 
 
+def test_the_icon_links_point_at_files_that_exist():
+    """`ICON in html` only proves the template carries the constant. The
+    constant is two relative hrefs, so a renamed or dropped file would leave
+    every generated page 404-ing on its favicon with the suite still green.
+    Resolved from web/wickeltische/, where the pages are written."""
+    hrefs = re.findall(r'href="([^"]+)"', pages.ICON)
+    assert len(hrefs) == 2
+    pages_dir = Path(__file__).resolve().parent.parent / "web" / "wickeltische"
+    for href in hrefs:
+        assert href.startswith(pages.UP), href
+        assert (pages_dir / href).resolve().is_file(), href
+
+
 def test_pages_carry_a_social_card_in_their_own_language():
     """Until 2026-08-25 the generated pages had no og:* at all, so Mastodon and
     Discourse fell back to title + description and unfurled a text-only card.
