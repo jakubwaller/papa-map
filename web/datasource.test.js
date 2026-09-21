@@ -727,6 +727,33 @@ test("popupPan: taller or wider than the space keeps the head and the left edge"
   assert.deepEqual(popupPan({ left: 5, top: 300, right: 400, bottom: 500 }, BOX, COLUMN), [-3, 0]);
 });
 
+test("popupPan: the sign-pin above a pin close under the topbar slides out from behind it", () => {
+  // Pin 14 px under the band's head: the card opens below it, the marker's
+  // 45 px stand above it, 31 of them behind the topbar.
+  const card = { left: 38, top: 254, right: 338, bottom: 504 }, marker = { top: 195, bottom: 240 };
+  assert.deepEqual(popupPan(card, BOX, null, marker), [0, -31]);
+  // Already clear of the topbar, or no marker at all: the card's own answer.
+  assert.deepEqual(popupPan(card, BOX, null, { top: 230, bottom: 275 }), [0, 0]);
+  assert.deepEqual(popupPan(card, BOX, null), [0, 0]);
+});
+
+test("popupPan: the sign-pin only gets the room the card leaves", () => {
+  // 20 px under the card: the marker comes out by 20, not by its 31.
+  assert.deepEqual(popupPan({ left: 38, top: 254, right: 338, bottom: 600 }, BOX, null, { top: 195, bottom: 240 }), [0, -20]);
+  // A card that overflows the band gives nothing: the same pan as with no marker.
+  const tall = { left: 38, top: 240, right: 338, bottom: 752 }, marker = { top: 181, bottom: 226 };
+  assert.deepEqual(popupPan(tall, BOX, null, marker), popupPan(tall, BOX, null));
+  assert.deepEqual(popupPan(tall, BOX, null, marker), [0, 14]);
+});
+
+test("popupPan: the column is judged after the sign-pin has moved the card", () => {
+  // The marker's 45 px carry the card from beside a short column to below it.
+  const column = { left: 317, top: 100, bottom: 250 };
+  const card = { left: 38, top: 240, right: 338, bottom: 400 };
+  assert.deepEqual(popupPan(card, BOX, column), [21, 0]);
+  assert.deepEqual(popupPan(card, BOX, column, { top: 181, bottom: 226 }), [0, -45]);
+});
+
 // ---- Edit confirmation ----
 
 test("osmRef reads the pipeline's osm_url and nothing else", () => {

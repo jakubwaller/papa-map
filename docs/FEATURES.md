@@ -186,6 +186,14 @@ rebuilt with it: a background refresh that lands a new status, or the
 Papa/Mama toggle itself, repaints it in place, and it disappears the moment
 the popup closes by any route.
 
+The marker stands 45 px above its pin, so a card that opens below a pin close
+under the topbar would leave it behind the topbar. `popupPan`
+(`web/datasource.js`), which already pans the map to keep the card readable
+and closable, slides the marker out too — with the room left under the card
+and no more. On a 375 × 667 phone a `female_only` or `unknown` card fills the
+free band on its own; there the marker stays covered, and so does the map it
+would point into.
+
 ## Nearest usable table
 
 A labelled pill at the foot of the map, "Nächster Wickeltisch", answers "where

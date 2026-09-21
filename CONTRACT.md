@@ -38,6 +38,19 @@
 > files (`app/build-www.js`) the same way `native.js` did. Shell pin `app37`
 > → `app38`.
 >
+> **Two fixes the same evening, from the review of the above; no shape change.**
+> A card that opens below a pin close under the topbar left the marker behind
+> the topbar. `popupPan` (`web/datasource.js`) now takes the marker's rect
+> and slides it out with the room left under the card, never more: the card
+> keeps its head and its foot first, and a card that fills the free band on
+> its own (a `female_only` or `unknown` card on a 375 × 667 phone) still
+> covers the marker's spot. A card no taller than the strip the topbar covers
+> brings no marker along — MapLibre would flip it above its pin mid-pan, and
+> behind the topbar; no real card is that short. And `updateSignMarker` calls
+> `addTo()` only for a marker that is not on the map, so a repaint of the same
+> pin (the Papa/Mama toggle, a refresh) no longer replays the scale-in. Shell
+> pin `app38` → `app39`.
+>
 > **v43 amendment (21 Sep 2026, first tester feedback): no shape change.** One
 > new i18n key in all 32 languages, `nearestBtn` ("Nächster Wickeltisch"): the
 > nearest-table button is a labelled pill at the foot of the map, no longer an
