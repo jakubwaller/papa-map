@@ -39,14 +39,21 @@ const REMOTE = /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i;
 
 const local = (url) => (REMOTE.test(url) ? null : url.split(/[?#]/)[0].replace(/^(?:\.\/|\/)+/, ""));
 
+// srcset the way the HTML spec reads it: a URL runs to the next whitespace,
+// its descriptor to the next comma. Splitting on commas first would tear a
+// data: URI at the comma it carries.
+function srcsetUrls(value) {
+  const urls = [];
+  for (const [, url] of value.matchAll(/[\s,]*(\S+)[^,]*/g)) urls.push(url.replace(/,+$/, ""));
+  return urls;
+}
+
 export function localRefs(html) {
   const refs = new Set();
   for (const [tag] of html.replace(COMMENT, "").matchAll(TAG))
     for (const [, name, dq, sq] of tag.matchAll(ATTR)) {
       const value = dq ?? sq;
-      // srcset is a list of "url descriptor" pairs.
-      const urls = name.toLowerCase() === "srcset"
-        ? value.split(",").map((c) => c.trim().split(/\s+/)[0]) : [value];
+      const urls = name.toLowerCase() === "srcset" ? srcsetUrls(value) : [value];
       for (const url of urls) {
         const ref = url && local(url);
         if (ref) refs.add(ref);
@@ -57,12 +64,16 @@ export function localRefs(html) {
 
 // The other way a file gets loaded: a module importing its neighbour, which
 // no tag in the page shows. Static, side-effect and dynamic imports of a
-// relative path; build-www.js runs it over every script it bundles.
-const IMPORT = /(?:\bfrom\s*|\bimport\s*\(?\s*)(?:"(\.[^"]+)"|'(\.[^']+)')/g;
+// relative or root-relative path; build-www.js runs it over every script it
+// bundles. Comments go first, or prose that quotes a path after the word
+// "from" would fail the build over a file nothing imports. A // counts as a
+// comment at the start of a line or after whitespace, never inside "https://".
+const JS_COMMENT = /\/\*[\s\S]*?\*\/|(?:^|\s)\/\/.*$/gm;
+const IMPORT = /(?:\bfrom\s*|\bimport\s*\(?\s*)(?:"([./][^"]*)"|'([./][^']*)')/g;
 
 export function moduleRefs(js) {
   const refs = new Set();
-  for (const [, dq, sq] of js.matchAll(IMPORT)) {
+  for (const [, dq, sq] of js.replace(JS_COMMENT, "").matchAll(IMPORT)) {
     const ref = local(dq ?? sq);
     if (ref) refs.add(ref);
   }

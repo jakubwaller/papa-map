@@ -26,6 +26,13 @@ const FILES = [
 const DIRS = ["vendor", "icons"];
 
 rmSync(www, { recursive: true, force: true });
+// A module a bundled script imports has to be bundled too. All of them sit
+// beside the page, so an import path is a path from the root. Checked before
+// anything is written, like the page below: a failed build leaves no www/.
+for (const f of FILES.filter((f) => f.endsWith(".js"))) {
+  const missing = unbundled(moduleRefs(readFileSync(join(web, f), "utf8")), FILES, DIRS);
+  if (missing.length) throw new Error(`${f} imports ${missing.join(", ")}, not in FILES or DIRS`);
+}
 mkdirSync(www, { recursive: true });
 for (const f of FILES) {
   const src = join(web, f);
@@ -41,12 +48,6 @@ for (const f of FILES) {
     if (missing.length) throw new Error(`index.html loads ${missing.join(", ")}, not in FILES or DIRS`);
     writeFileSync(join(www, f), page);
   } else cpSync(src, join(www, f));
-}
-// The same check one level down: a module a bundled script imports. All of
-// them sit beside the page, so an import path is a path from the root too.
-for (const f of FILES.filter((f) => f.endsWith(".js"))) {
-  const missing = unbundled(moduleRefs(readFileSync(join(web, f), "utf8")), FILES, DIRS);
-  if (missing.length) throw new Error(`${f} imports ${missing.join(", ")}, not in FILES or DIRS`);
 }
 for (const d of DIRS) cpSync(join(web, d), join(www, d), { recursive: true });
 console.log(`www/ built from ${web}`);

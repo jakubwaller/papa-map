@@ -66,8 +66,8 @@ test("quoting, case, ./ and / prefixes, srcset and <source> are read; a commente
     <script src="/b.js"></script>
     <img srcset="c.png 1x, icons/c@2x.png 2x" src="c.png">
     <picture><source src="d.webp"></picture>
-    <img src="data:image/png;base64,AAAA">`);
-  assert.deepEqual(refs, ["a.css", "b.js", "c.png", "icons/c@2x.png", "d.webp"]);
+    <img srcset="data:image/png;base64,AAAA 1x,e.png 2x" src="data:image/png;base64,AAAA">`);
+  assert.deepEqual(refs, ["a.css", "b.js", "c.png", "icons/c@2x.png", "d.webp", "e.png"]);
 });
 
 test("a module's imports are found: static, side-effect and dynamic, never a package or a URL", () => {
@@ -76,9 +76,13 @@ test("a module's imports are found: static, side-effect and dynamic, never a pac
              b } from "./datasource.js?v=app1";
     import './side.js';
     const m = await import("./lazy.js");
+    import r from "/root.js";
     import x from "some-package";
-    import y from "https://example.com/y.js";`);
-  assert.deepEqual(refs, ["datasource.js", "side.js", "lazy.js"]);
+    import y from "https://example.com/y.js";
+    // the table comes from "./gone.js"
+    /* import "./old.js" */
+    const u = "https://example.com/"; import z from "./after-url.js";`);
+  assert.deepEqual(refs, ["datasource.js", "side.js", "lazy.js", "root.js", "after-url.js"]);
 });
 
 test("the real app.js imports the modules the build knows about", () => {
