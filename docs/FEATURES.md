@@ -64,9 +64,11 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   (e.g. `Hamburg` / `4`), and `PAPAMAP_DISPLAY_AREA` names the dataset in the
   stats strip.
 - Each area costs one Overpass query a night, not two. The object sweep runs
-  nightly; the `amenity=toilets` count behind "N toilets mapped here" is
-  recounted on a weekly rota — every area on its own night, a seventh of them
-  each night — and kept in `web/data/toilets_counts.json` between builds
+  nightly; the `amenity=toilets` count (`toilets_total`, shown on the public
+  ops page and named in the country pages' toilets note, no longer in the
+  stats strip) is recounted on a weekly rota — every area on its own night,
+  a seventh of them each night — and kept in `web/data/toilets_counts.json`
+  between builds
   (state, like `history.json`; deleting it costs one night of counts). The
   count is the slower query in the big areas and the number that moves least,
   so this is where the wall clock for the next countries comes from.

@@ -9,13 +9,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation } from "./datasource.js?v=app41";
+         isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation } from "./datasource.js?v=app42";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app41";
+         langUrl } from "./i18n.js?v=app42";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app41";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app42";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -23,23 +23,23 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app41";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app42";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse } from "./native.js?v=app41";
+         formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse } from "./native.js?v=app42";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app41";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app42";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app41";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app42";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -1110,8 +1110,11 @@ function renderStats(stats) {
   // down and no previous stats.json exists. Local stats still render.
   const l = stats.local, g = stats.global;
   const { tables } = localAnswered(l);
-  const updated = stats.generated_at
-    ? t("statsUpdated", { date: esc(String(stats.generated_at).slice(0, 10)) }) : "";
+  // The "as of" stamp, now the strip's own last item rather than a suffix on
+  // the retired honesty sentence — also what dates the social-card screenshot.
+  const updatedPart = stats.generated_at
+    ? `<span class="stat updated">${t("statsUpdated", {
+        date: esc(String(stats.generated_at).slice(0, 10)) })}</span>` : "";
   let globalPart;
   if (g) {
     const ratio = g.location_male_only > 0
@@ -1133,9 +1136,7 @@ function renderStats(stats) {
   statsEl.innerHTML =
     `<span class="stat">${localSentence}</span>` +
     globalPart +
-    `<span class="stat honesty">${t("statsHonesty", {
-      toilets: num(l.toilets_total), cap: num(l.capacity_tagged_toilets),
-      href: t("methodsHref"), updated })}</span>`;
+    updatedPart;
 }
 
 // ---- Zoom controls ----
@@ -1422,7 +1423,8 @@ let searchWorldState = "idle";    // idle | loading | ok | failed
 let photonTimer = null;
 let photonRequest = null;         // the AbortController of the one request in flight
 
-const mapCentre = () => { const c = map.getCenter(); return { lat: c.lat, lon: c.lng }; };
+// wrap(): with no maxBounds a pan past the antimeridian leaves lng at 182.
+const mapCentre = () => { const c = map.getCenter().wrap(); return { lat: c.lat, lon: c.lng }; };
 
 function searchRowEl(row) {
   const li = document.createElement("li");
@@ -1612,7 +1614,7 @@ function queryPhoton(q) {
 async function sendPhoton(q) {
   const ctrl = new AbortController();
   photonRequest = ctrl;
-  const c = map.getCenter();
+  const c = map.getCenter().wrap();   // a longitude the geocoder accepts, see mapCentre
   // The map's centre, and only ever the map's centre: lastFix is not in scope
   // here, so no GPS reading is sent. Where the centre happens to be the
   // reader's own surroundings, web/search.js's rounding to one decimal is
