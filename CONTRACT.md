@@ -29,6 +29,122 @@
 > generated country/area page (`pipeline/pages.py`/`pages_l10n.py`); nothing
 > there changes. Shell pin `app39` → `app42` (two PRs ahead of this one took
 > `app40` and `app41`).
+> **v46 amendment (21 Sep 2026, the search field): no shape change, and the
+> first request this site makes to a party that is not OpenStreetMap.**
+> A rounded field floats over the top of the map canvas — never a row in the
+> header, which the app cut from 218 to 96 px after the first testers said
+> there was too much on the screen. `positionZoomCtrl` (`web/app.js`) seats it
+> in the same band as the control column and to the left of it; `#search`
+> (`web/style.css`) keeps its right edge clear of the column's 34 px button and
+> 16 px margin, and caps the field at 380 px on a desktop.
+>
+> **Two sources, one dropdown, and the split between them is the privacy
+> boundary.** The first is this map's own objects — `allFeatures` and
+> `allPlaces`, matched in memory from two characters, case- and
+> diacritic-insensitively, nearest to the map centre first, at most three rows,
+> each with its bucket-coloured dot. Nothing is sent for it, so it keeps
+> working with no network at all, and a chosen row does exactly what the
+> nearest button's answer does: `ensureVisible`, `openPopup`, fly to zoom 16,
+> `panPopupIntoView`. The second is the rest of the world, from **Photon**
+> (komoot's public demo server, OSM data): from three characters, debounced
+> 300 ms, the previous request aborted with an `AbortController`, `limit=5`,
+> `lang` only for the three languages Photon's dumps carry (de/en/fr) and
+> omitted otherwise, and biased with the **map centre rounded to one decimal
+> (~10 km)** plus the zoom. **The GPS fix is never sent** — `lastFix` is not in
+> scope in that code path. That is a narrower claim than "the reader's position
+> is never involved", and deliberately so: after the locate button, or when the
+> map opens at the reader's position because permission was already granted,
+> the centre *is* roughly where they are standing, and the rounding to one
+> decimal is what makes that a region (~10 km) rather than a position. The
+> rounding happens in exactly one function, `photonUrl` (`web/search.js`), and
+> a test pins it — `53.5511, 9.9937` leaves as `53.6, 10.0`. The Datenschutz
+> pages say this in the same words rather than a stronger one.
+> Nominatim was rejected rather than overlooked:
+> its usage policy forbids autocomplete outright. `PHOTON_ENDPOINT`
+> (`web/search.js`) is the one place the host appears, so a same-origin proxy
+> is a one-line swap; a test pins that it appears exactly once.
+>
+> **Photon guarantees nothing.** Offline, throttled or down, the geocoder half
+> contributes one quiet line (`searchFailed`) and the map's own matches stay on
+> screen — never a toast, which would fire on every keystroke.
+>
+> **The field joins the band a popup has to clear.** `panPopupIntoView`
+> (`web/app.js`) folds the field's own bottom edge into the covered top band it
+> hands `popupPan`, so an open card — and the sign-pin the v44 follow-up slides
+> out from behind the topbar — comes to rest under the field rather than behind
+> it. `popupPan` itself is untouched by this amendment. `web/search.js` (pure,
+> tested) joins the service worker's shell precache and the store app's bundled
+> files the same way `sign-pin.js` did. Six new i18n keys in all 32 languages.
+> Shell pin `app40` → `app41`.
+>
+> **v45 amendment (21 Sep 2026, open at location): no shape change.** TestFlight
+> feedback: a reader who has already granted location expects the map to open
+> where they are, the way Google Maps does. Never a permission prompt of its
+> own — `shouldOpenAtLocation` (`web/datasource.js`, pure, tested) only fires
+> once a permission read that was never asked for this (`navigator.permissions
+> .query` on the website, the Geolocation plugin's own `checkPermissions()` in
+> the app) already reads `"granted"`, so a first-time visitor or an "Allow
+> once" grant keeps today's home view exactly as before. Skipped outright
+> whenever the URL already asks for a view of its own: a Bundesland page's
+> `?bbox=`, a shared place's `?osm=`, the return leg of OSM's OAuth consent
+> screen (`?code=`+`?state=` — a reader coming back from signing in should
+> land where they were, not be relocated), or the app's own `papamap://table`
+> deep link, which the widget, the Siri shortcut and the Control Center
+> button all resolve to before this ever runs.
+>
+> The fix itself (`openAtLocationFix`/`locateCoarse`, `web/app.js`) is a
+> second, deliberately separate `locate()` — a boot nobody asked anything of
+> gets the cheapest fix available, never the accuracy `locate()`'s own tap
+> waits for. On Android and on the web that is `getCurrentPosition` with
+> `enableHighAccuracy: false` and a few minutes' `maximumAge`. **iOS does not
+> read `maximumAge` at all** — checked against `@capacitor/geolocation`
+> 8.2.2's own Swift source (`GeolocationPlugin.swift`): `getCurrentPosition`
+> maps straight to Core Location's `requestLocation()`, one fresh fix, same
+> several seconds `locateNative`'s own longstanding comment already names.
+> `locateNativeCoarse` (`web/native.js`) instead calls `watchPosition` on
+> iOS — `startUpdatingLocation()` underneath — and takes whatever its first
+> delegate callback carries (ordinary Core Location behaviour: often
+> whatever fix is already cached), clearing the watch at once; same 5 s
+> timeout, cleared there too, and on an error. Same permission gate
+> throughout, `checkPermissions()` only — `requestPermissions()` stays
+> `locate()`'s own.
+>
+> Kicked off as early in `boot()` as possible so its own "second or three"
+> overlaps the dataset load. **`boot()` never awaits it**: the fix is applied
+> from a `.then()` registered right after `fitHome()`, so a slow fix (no
+> cached position, indoors, the full timeout) never delays the `?osm=`/deep-
+> link pin open just below it, `completeLogin`'s own OAuth return,
+> `shareSettings`, `watchRefresh` or `armEditCheck` — all of which `boot()`
+> runs on regardless of whether or when the fix ever lands. Because the fix
+> can now resolve after boot has already moved the camera somewhere else,
+> applying it checks three guards: `touchedBeforeFix` (the reader did
+> anything at all — a drag, a zoom, a keypress, a popup, any button),
+> `popup?.isOpen()`, and `pinOpenedBeforeFix` (boot itself opened a pin in
+> the meantime — the `?osm=` link resolved just below, or a
+> `papamap://table` deep link that arrived late; set by `openPin`, never by
+> the reader's own tap, which `touchedBeforeFix` already covers — the
+> reader's OAuth return is covered by `popup?.isOpen()` the same way, once
+> `completeLogin` reopens the pin they were answering). Any of the three
+> leaves the camera alone; **the you-are-here dot is drawn regardless** —
+> showing it is never wrong, only moving the camera can be, and
+> `openAtLocationFix` itself never re-asks `shouldOpenAtLocation` once the
+> fix lands, on purpose, so a late-arriving deep link cannot discard the dot
+> along with the camera move. Within `LATE_FIX_MS` (700 ms) of `fitHome()`
+> the camera move is a `jumpTo` — no motion to notice, the map simply opened
+> there; slower than that, `flyTo` over `LATE_FIX_FLY_MS` (1.2 s), because
+> the reader has had time to actually look at the home view by then, and a
+> snap would read as the view glitching rather than something the map meant
+> to do. The fix never calls `noteFix`, so it can never raise the room card
+> or a popup, not even indirectly through some later, unrelated popup close
+> — the first testers' own complaint was that too much already happens when
+> the app opens.
+>
+> Datenschutz and its English page each gain a sentence on this in their
+> locate sections — permission is granted to the site/app, not to a button,
+> and the wording says so — and the app page's existing tile-loading
+> sentence, until now tied only to a tap on the locate button, now also
+> names the map opening at the reader's position as a second way the same
+> tiles get requested. No new stored key. Shell pin `app39` → `app40`.
 >
 > **v44 amendment (21 Sep 2026, the selected-place marker): no shape change.**
 > While a "table" popup is open, one `maplibregl.Marker` sits on that pin: the

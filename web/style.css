@@ -345,6 +345,119 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 #offline[hidden] { display: none; }
 
+/* ---------- Search: this map's places, and the world (CONTRACT.md v46) ---------- */
+/* Over the canvas, not in the header — the app's header was cut from 218 to
+   96px because the first testers said there was too much on the screen, and a
+   search row up there would give all of it back. app.js sets `top` to the same
+   band as the control column (positionZoomCtrl), so `right` only has to clear
+   the column's 34px button and its 16px margin with a gap left over: 316px of
+   field on a 390px phone, 298 on a 360. On a desktop the field stops at 380
+   and sits at the top left of the map, where every other map puts it. */
+#search {
+  position: absolute;
+  left: 12px;
+  right: 62px;
+  max-width: 380px;
+  z-index: 9;
+}
+.search-field {
+  display: flex;
+  align-items: center;
+  height: 44px;               /* the tap target Apple asks for */
+  padding-left: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(15, 25, 20, .22);
+}
+/* The whole field is the focus ring, not the bare <input> inside it: an
+   outline on the input alone draws a second box inside the first one. */
+.search-field:focus-within {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(0, 158, 115, .35), 0 4px 14px rgba(15, 25, 20, .22);
+}
+.search-ico { flex: 0 0 auto; color: var(--muted); }
+#search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  margin-left: 9px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-family: var(--ui);
+  /* Never under 16px: iOS zooms the whole page in when a smaller field takes
+     focus, and the map comes back at a size the reader did not choose. */
+  font-size: 16px;
+  color: var(--ink);
+}
+#search-input::placeholder { color: var(--muted); opacity: 1; }
+#search-input:focus { outline: none; }
+#search-clear {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 21px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+#search-clear:hover { color: var(--ink); }
+#search-clear[hidden] { display: none; }
+#search-clear:focus-visible { outline: 2px solid var(--green); outline-offset: -3px; }
+
+.search-results {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 4px 0;
+  /* 340px is the full three local rows plus five from the geocoder minus two —
+     i.e. the everyday list fits whole and only the rare full one scrolls. The
+     vh half is for a landscape phone, where the list would otherwise run past
+     the nearest-table pill and the attribution line at the foot. */
+  max-height: min(50vh, 340px);
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 24px rgba(15, 25, 20, .25);
+}
+.search-results[hidden] { display: none; }
+.search-group {
+  padding: 7px 12px 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.search-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+/* One highlight for the keyboard's active row and for the pointer's, so
+   arrowing down and hovering can never disagree about what Enter would take. */
+.search-opt[aria-selected="true"], .search-opt:hover { background: #eaf1ee; }
+/* The pin's own bucket colour, the same dot the chips carry. A prospect has no
+   status to colour and gets the play ring instead, like its halo on the map. */
+.search-opt .dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; }
+.search-opt .dot.play { background: none; border: 2px solid var(--play); }
+.search-opt .globe { flex: 0 0 auto; width: 15px; height: 15px; color: var(--muted); }
+.search-opt .txt { min-width: 0; }
+.search-opt .name,
+.search-opt .ctx { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-opt .name { font-size: 14px; color: var(--ink); }
+.search-opt .ctx { font-size: 12px; color: var(--muted); }
+.search-note { padding: 9px 12px; font-size: 12.5px; color: var(--muted); }
+
 /* ---------- "Nearest changing table": the map's one labelled control ---------- */
 /* At the foot, centred, above #toast's 24px band (a one-line toast ends at
    ~61px) and under #room-card. 44px tall: the tap target Apple asks for, and

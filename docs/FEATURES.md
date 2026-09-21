@@ -196,6 +196,86 @@ and no more. On a 375 × 667 phone a `female_only` or `unknown` card fills the
 free band on its own; there the marker stays covered, and so does the map it
 would point into.
 
+## Search: this map's places, and the world
+
+A rounded field floats over the top of the map canvas — 44 px tall, a magnifier,
+a clear button once there is text, and a dropdown under it. It is deliberately
+not a row in the header: the app's header had just been cut from 218 to 96 px
+because the first TestFlight testers said there was too much on the screen, and
+a search row up there would have given all of it back. `positionZoomCtrl` seats
+the field in the same band as the zoom/locate column and to the left of it, so
+the two never overlap at any width down to 360 px.
+
+The dropdown has two sources, and the line between them is the privacy
+boundary.
+
+- **Places on this map**, from two characters. A substring match against the
+  names in `allFeatures` and `allPlaces`, case- and diacritic-insensitive (so
+  "muhlen" finds "Mühlenkamp" and "namesti" finds "Náměstí", which is what a
+  phone keyboard actually gives you), nearest to the map centre first, at most
+  three rows, each with the pin's own bucket-coloured dot. Nothing is sent for
+  it: the GeoJSON is already in memory, so this half of the field works in the
+  same basement café the rest of the map does. Choosing a row does exactly what
+  the nearest button does with its answer — switch back on any filter that was
+  hiding the pin, open the popup, fly to zoom 16, fit the card to the view it
+  lands in.
+- **Places in the world**, from three characters, from
+  [Photon](https://photon.komoot.io) — komoot's public demo server, running on
+  the same OpenStreetMap data. Nominatim was rejected rather than overlooked:
+  its usage policy forbids autocomplete outright, and a field that queries as
+  you type is exactly that. Photon's own feature list says
+  "search-as-you-type". Choosing a row fits the result's `extent` where it has
+  one (capped at zoom 17, or an address whose extent is a few metres across
+  would land at the closest zoom there is) and otherwise flies to a zoom chosen
+  by the result's level — a house or a street 17, a city 12, a country 5. No
+  marker is left behind and no popup opens: the reader asked to look
+  somewhere, not to select something.
+
+This is the first feature on the site that sends something a reader typed to a
+party that is not OpenStreetMap, so it is deliberately frugal about it. Three
+characters before the first request, a 300 ms debounce, the previous request
+aborted so exactly one is ever in flight, `limit=5`, and a `lang` parameter only
+for the three languages Photon's dumps actually carry (German, English, French)
+— for the other twenty-nine no language is sent at all and the local name comes
+back, which is what the street sign says anyway. The location bias is the **map
+centre rounded to one decimal**, about 10 km, plus the zoom.
+
+**The GPS fix is never sent**: `lastFix` is not in scope in that code path. That
+is a narrower promise than "the reader's position is never involved", and it is
+narrower on purpose. After the locate button, or when the map opens at the
+reader's position because permission was already granted, the map centre *is*
+roughly where the reader is standing, and they never steered there. So the
+rounding is the protection, not the choice of variable: one decimal turns a
+street corner into "somewhere around Hamburg" before anything leaves the
+browser, and komoot learns a region rather than a position. It happens in
+exactly one function, `photonUrl`, with a test that pins `53.5511, 9.9937` to
+`53.6, 10.0` and pins that `web/app.js` hands the centre over unrounded — two
+roundings would be two rules that can drift apart. The Datenschutz pages say
+this in the same words rather than the stronger one.
+
+`PHOTON_ENDPOINT` in `web/search.js` is
+the only place the host appears, so moving to a same-origin proxy — which is
+what an "extensive usage" mail from komoot would make us do — is one line, and a
+test pins that it appears exactly once.
+
+Photon's terms promise nothing: "Extensive usage will be throttled or completely
+banned. We do not give guarantees for availability." So a failure there is not
+an error state. Offline, throttled or down, the world half contributes one quiet
+line in the dropdown and the map's own matches above it keep working. Never a
+toast — a toast would fire on every keystroke.
+
+The field is an ARIA combobox over a listbox: arrow keys move the active row,
+Enter takes it (or the first row, when nothing has been arrowed to), Escape
+closes the list and a second Escape clears the field. Rows are 44 px targets,
+the input is 16 px so iOS does not zoom the page in on focus, and
+`enterkeyhint="search"` labels the phone's return key. Tapping the map closes
+the list and blurs the field, which is what takes the keyboard away again.
+
+An open popup, and the sign-pin above it, are kept clear of the field:
+`popupPan` gained a `headroom` argument for the part of the marker standing
+above the card, which also fixed the older nit where a pin within ~45 px of the
+top bar had its pictogram half-hidden behind it.
+
 ## Nearest usable table
 
 A labelled pill at the foot of the map, "Nächster Wickeltisch", answers "where
@@ -323,6 +403,89 @@ capped list) so it does not ask about that table again on that device. At most
 one card at a time, and it steps aside for anything that outranks it — any
 popup opening, or the reader panning more than 300 m from the fix that raised
 it.
+
+### Open at location
+
+TestFlight feedback: a reader who has already granted location expects the
+map to open where they are, the way Google Maps does, not on the German home
+view. Like the room card above, this never asks the phone anything on its
+own — it only ever reads a permission state that is already known
+(`navigator.permissions.query` on the website, the Geolocation plugin's own
+`checkPermissions()` in the app, both read-only) — so a first-time visitor or
+a reader who picked "Allow once" keeps today's home view exactly as before.
+`shouldOpenAtLocation` (`web/datasource.js`) is the single, pure, tested rule:
+permission has to read `"granted"`, and the URL must not already ask for a
+view of its own — a Bundesland page's `?bbox=` link, a shared place's `?osm=`,
+the return leg of OSM's OAuth consent screen (`?code=`+`?state=`: a reader
+coming back from signing in should land where they were, not be relocated),
+or the app's own `papamap://table` deep link (the widget, the Siri shortcut
+and the Control Center button all resolve to that one link, `app/README.md`)
+— any of which wins outright.
+
+Where it is allowed to act at all, the fix itself
+(`openAtLocationFix`/`locateCoarse`, `web/app.js`) is deliberately not a reuse
+of the locate button's own `locate()` — a boot nobody asked anything of gets
+the cheapest fix available, never the accuracy a reader actively waiting for
+`locate()` gets. On Android and on the web that means `getCurrentPosition`
+with `enableHighAccuracy: false` and a `maximumAge` of a few minutes, a short
+timeout, and the locate button's own options untouched.
+
+**iOS does not read `maximumAge` at all.** Checked against
+`@capacitor/geolocation` 8.2.2's own iOS source
+(`node_modules/@capacitor/geolocation/ios/Sources/GeolocationPlugin/GeolocationPlugin.swift`):
+`getCurrentPosition` there reads only `enableHighAccuracy` off the call and
+hands it to `requestSingleLocation`, which — in the `ion-ios-geolocation`
+dependency the plugin pulls in (`IONGLOCManagerWrapper.swift`) — maps
+straight to Core Location's `CLLocationManager.requestLocation()`: one fresh
+fix, no cache, `maximumAge` nowhere in the call. That is exactly
+`locateNative`'s own longstanding comment about why the locate button
+itself avoids `getCurrentPosition` on iOS — several seconds regardless of
+what this asks for. `watchPosition`, though, maps to `startMonitoringLocation`
+→ `CLLocationManager.startUpdatingLocation()`, whose delegate callback fires
+with whatever Core Location already has cached the moment monitoring
+starts. So `locateNativeCoarse` (`web/native.js`) takes a different path on
+iOS: start a watch, take the *first* callback (never the "best fix seen"
+tuning `locateNative` does for the button), clear the watch at once — on
+that first position, on a timeout, and on an error alike, so no watch is
+ever left running. Same permission gate as everywhere else,
+`checkPermissions()` only.
+
+It is kicked off as early as boot() can manage so its own "second or three"
+overlaps the dataset load rather than adding to it.
+
+**`boot()` never waits for it.** A fix can take the whole of its own timeout —
+indoors, with nothing cached — and boot() does not let that hold up the
+`?osm=`/deep-link pin open, `completeLogin`'s own OAuth return, `shareSettings`,
+`watchRefresh` or `armEditCheck`; the fix is applied from a `.then()`
+registered right after `fitHome()`, not awaited (a stray throw from a bad fix
+is caught there too, so it never surfaces as an unhandled rejection). Because
+it can now land after boot has already moved the camera somewhere else,
+applying it checks three guards, all first-tester complaints about "too much
+happens when the app opens": `touchedBeforeFix` — the reader has touched the
+map at all before the fix lands, a drag, a zoom, a keypress, a tap that
+opened a popup, a press on any button; whether a popup is open (which is what
+catches a reader's OAuth return too, once `completeLogin` reopens the pin
+they were answering); and `pinOpenedBeforeFix` — boot itself opened a pin in
+the meantime, the `?osm=` link resolved just below it or a `papamap://table`
+deep link that arrived late (set by `openPin`, never by a reader's own tap,
+which the first guard already covers).
+
+Any of the three leaves the camera alone, but **the you-are-here dot is
+always drawn** (the same `showYou` the locate and nearest buttons use) —
+drawing the dot is never wrong, only moving the camera can be, and
+`openAtLocationFix` deliberately never re-checks `shouldOpenAtLocation` once
+the fix has landed, so a late-arriving deep link can veto the camera move
+via those three guards without discarding the dot along with it.
+
+How the camera move is applied depends on how long the fix took past
+`fitHome()`: within `LATE_FIX_MS` (700 ms) it is a `jumpTo` — the map simply
+opened there, no motion for the reader to notice. Slower than that, a
+`flyTo` over `LATE_FIX_FLY_MS` (1.2 s): the reader has had time to actually
+look at the home view by then, and snapping away from it would read as the
+view glitching rather than something the map meant to do.
+
+And the fix never calls `noteFix`, so it can never raise the room card above,
+or a popup, not even indirectly through some later, unrelated popup close.
 
 ## Offline
 

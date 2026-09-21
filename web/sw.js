@@ -38,6 +38,7 @@ const SHELL = [
   "me.js?v=app42",
   "native.js?v=app42",
   "sign-pin.js?v=app42",
+  "search.js?v=app42",
   // index.html loads this one from the head, blocking. Left out of the
   // precache, a shell served from this cache would sit on a network request
   // for it before painting anything — offline, until that request fails.

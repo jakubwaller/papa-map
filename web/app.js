@@ -9,7 +9,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh, popupPan, isAppleTouch } from "./datasource.js?v=app42";
+         isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation } from "./datasource.js?v=app42";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          langUrl } from "./i18n.js?v=app42";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
@@ -30,11 +30,16 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount } from "./native.js?v=app42";
+         formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse } from "./native.js?v=app42";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
 import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app42";
+// The search field's own pure half (CONTRACT.md v46): what matches, what URL
+// the geocoder is asked and how its answer becomes a row. The field, the
+// dropdown and the keyboard are below, next to the map they move.
+import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app42";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -104,6 +109,10 @@ function applyI18n() {
     el.setAttribute("aria-label", t(el.dataset.i18nAria));
     if (el.title) el.title = t(el.dataset.i18nAria);
   }
+  // The search field's own prompt. Its own attribute rather than data-i18n:
+  // an <input> has no text content to swap.
+  for (const el of document.querySelectorAll("[data-i18n-placeholder]"))
+    el.placeholder = t(el.dataset.i18nPlaceholder);
   document.getElementById("methods-link").href = t("methodsHref");
   document.getElementById("board-link").href = t("boardHref");
   // The area link follows the map view, and its label is the target page's
@@ -120,6 +129,9 @@ function applyI18n() {
   // A card left standing through a language change would otherwise go stale
   // in the old one (CONTRACT.md v38); a no-op when none is up.
   renderRoomCardText();
+  // Same for a dropdown left open: its two group headings and its one note
+  // line are translated. A no-op when the field is empty, which it is at boot.
+  renderSearch();
 }
 
 // ---- Footer area link: follows the map view, not the UI language ----
@@ -280,6 +292,31 @@ map.touchZoomRotate.disableRotation();
 // verification (Playwright) needs to drive the view.
 window._papamap = map;
 
+// Whether the reader has done anything with the map before the boot fix's
+// own fix lands (openAtLocationFix, near locate() below) — a drag, a zoom, a
+// tap that opened a popup, a press on any button. One global, capture-phase
+// listener rather than a MapLibre one: it has to catch a button press too,
+// and `once` means it costs nothing once it has fired. `wheel` covers a
+// mouse's scroll-zoom, which fires no `pointerdown` of its own.
+let touchedBeforeFix = false;
+const markTouchedBeforeFix = () => { touchedBeforeFix = true; };
+document.addEventListener("pointerdown", markTouchedBeforeFix, { capture: true, once: true });
+document.addEventListener("wheel", markTouchedBeforeFix, { capture: true, once: true, passive: true });
+// A focused map canvas takes arrow-key pans and +/- zooms with no pointer
+// event of its own — MapLibre's own keyboard handler, not this page's.
+document.addEventListener("keydown", markTouchedBeforeFix, { capture: true, once: true });
+
+// The other half of that guard: boot() itself opened a pin before the fix
+// landed — a `?osm=` share link, or a papamap://table deep link (Siri, the
+// widget, Control Center) that arrived late. Not a reader gesture, so
+// touchedBeforeFix above never sees it; set by openPin (below) the moment it
+// actually opens one, never for its own "not found" toast. boot() does not
+// wait for the fix (it can land seconds after boot has already moved on), so
+// this has to survive independently of whatever `popup` holds by then —
+// checked alongside `popup?.isOpen()` at the point the fix is applied, not
+// instead of it.
+let pinOpenedBeforeFix = false;
+
 // ---- State ----
 let allFeatures = [];                                     // flattened GeoJSON
 let allPlaces = [];                                       // play-area prospects
@@ -305,6 +342,13 @@ const countEl = document.getElementById("count");
 const topbar = document.getElementById("topbar");
 const zoomCtrl = document.getElementById("zoom-ctrl");
 const scopeEl = document.getElementById("scope");
+// Up here with the topbar and the column, not down beside the search section
+// itself: positionZoomCtrl seats all three in the same band and runs long
+// before that section's own code would have been evaluated.
+const searchBox = document.getElementById("search");
+const searchInput = document.getElementById("search-input");
+const searchClear = document.getElementById("search-clear");
+const searchList = document.getElementById("search-results");
 
 // ---- Pins: one WebGL circle layer, colored by status ----
 // ~5k features Germany-wide — still one WebGL layer, no clustering, no DOM
@@ -459,6 +503,13 @@ function addTableLayer() {
     map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
   }
+  // A tap on the map is the reader saying "not that, this one": the search
+  // dropdown goes, and on a phone the keyboard goes with it. No layer, so a
+  // tap on a pin closes it too — that pin's popup is the better answer.
+  map.on("click", () => {
+    if (searchList.hidden && document.activeElement !== searchInput) return;
+    closeSearch();
+  });
 }
 
 function refreshPins() {
@@ -876,10 +927,14 @@ function panPopupIntoView() {
   const el = popup?.getElement();
   if (!el) return;
   const r = el.getBoundingClientRect(), c = map.getContainer().getBoundingClientRect();
-  // Never let the topbar claim more than half the canvas: on a short
-  // landscape phone the strip can approach the full height (fitHome has the
-  // same clamp), and a band with no room in it would pan the card clean off.
-  const top = c.top + Math.min(topbar.offsetHeight, c.height / 2) + EDGE;
+  // What floats over the head of the canvas: the topbar, and the search field
+  // hanging below it (CONTRACT.md v46). Whichever reaches further down is what
+  // the card has to clear — the field is the deeper of the two everywhere.
+  // Never more than half the canvas, though: on a short landscape phone the
+  // strip can approach the full height (fitHome has the same clamp), and a
+  // band with no room left in it would pan the card clean off.
+  const covered = Math.max(topbar.offsetHeight, searchBox.getBoundingClientRect().bottom - c.top);
+  const top = c.top + Math.min(covered, c.height / 2) + EDGE;
   // The attribution's own top edge, not its height from the bottom: in the
   // installed app it floats a safe-area inset above the foot.
   const attr = document.getElementById("attribution")?.getBoundingClientRect();
@@ -1100,6 +1155,10 @@ document.getElementById("zoom-out").addEventListener("click", () => map.zoomOut(
 let syncingLink = false;
 function positionZoomCtrl() {
   zoomCtrl.style.top = topbar.offsetHeight + 10 + "px";
+  // The search field shares that band, to the left of the column: one `top`
+  // for both, so a topbar that changes height (a language with longer chips,
+  // the stats strip folding open) never leaves the two at different heights.
+  searchBox.style.top = zoomCtrl.style.top;
   if (!syncingLink) {
     syncingLink = true;
     try { updateRegionsLink(); } finally { syncingLink = false; }
@@ -1199,6 +1258,59 @@ function locateFrom(btn) {
   return locate().finally(() => btn.removeAttribute("aria-busy"));
 }
 
+// ---- Open at location: opens zoomed in on the reader, like Google Maps ----
+// TestFlight feedback: a reader who has already granted location expects the
+// map to open where they are, not on Germany. locateCoarse() is a second
+// locate(), deliberately not a reuse of it — the boot fix wants a fast fix
+// that never keeps an unprompted reader waiting (enableHighAccuracy: false,
+// a few minutes' maximumAge, a short timeout — ignored on iOS, see
+// locateNativeCoarse's own comment in web/native.js), and locate()'s own
+// options, and the button it pulses, stay the locate button's alone.
+//
+// How the fix is applied (boot(), below) depends on how long it took past
+// fitHome(): within LATE_FIX_MS the reader has barely had a frame to look at
+// the home view, so jumpTo — no motion to notice, the map simply opened
+// there. Past it, the home view has actually been on screen long enough to
+// register, and snapping away from it would read as the view glitching
+// rather than something the map meant to do; flyTo, over LATE_FIX_FLY_MS,
+// makes that same repositioning read as deliberate instead.
+const LATE_FIX_MS = 700;
+const LATE_FIX_FLY_MS = 1200;
+function locateCoarse() {
+  if (isNative()) return locateNativeCoarse();
+  return new Promise((ok, fail) => {
+    if (!navigator.geolocation) { fail(new Error("nogeo")); return; }
+    navigator.geolocation.getCurrentPosition((pos) => ok(pos.coords), fail,
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 5 * 60 * 1000 });
+  });
+}
+
+// One permission read (never a prompt — checkPermissions() only, on both
+// platforms) and, only where shouldOpenAtLocation (web/datasource.js) says
+// the boot fix may act at all, one coarse fix. Checked once, before the fix
+// starts, so a `?bbox=` or `?osm=` link already in the URL never starts one
+// at all. NOT checked again once the fix lands: a deep link that arrives
+// WHILE it is in flight — the app's own papamap://table (Siri, the widget,
+// Control Center) resolving late — is caught at the point the fix is
+// applied instead (boot(), below), by pinOpenedBeforeFix/popup?.isOpen()
+// rather than by re-asking this question. Those guard the camera move only;
+// the dot is drawn either way, which a second call here, discarding the
+// coords outright, could not do (CONTRACT.md v45's own "dot drawn
+// regardless" was not yet true of the code before this). Returns the coords
+// to open on, or null for "do nothing", which is also what any failure
+// reads as (no Permissions API, no plugin, a timed-out fix) — this is a
+// nicety, never a reason to tell the reader anything went wrong.
+async function openAtLocationFix() {
+  try {
+    const permission = isNative()
+      ? await checkLocationPermissionNative()
+      : (await navigator.permissions?.query({ name: "geolocation" }))?.state ?? null;
+    if (!shouldOpenAtLocation({ search: location.search, permission, hasPendingPin: !!pendingPin }))
+      return null;
+    return await locateCoarse();
+  } catch { return null; }
+}
+
 // A pin a chip is currently hiding is nobody's "nearest" or "the one the room
 // card is about" in any useful sense — the filters that would hide it are
 // switched back on, visibly, so a fly-to never lands on an empty-looking spot.
@@ -1277,6 +1389,297 @@ nearestBtn.addEventListener("click", (e) => {
     () => toast(t("toastGeoFail")),
   );
 });
+
+// ---- Search: this map's own places, and the rest of the world ----
+// Tester feedback from the first TestFlight build: there was no way to look at
+// anywhere you were not standing. Two sources in one dropdown, and the split
+// between them matters more than it looks:
+//
+//   1. This map's pins and prospects, matched in memory against the GeoJSON
+//      that is already loaded. No request leaves the browser, so a reader in
+//      the basement café still finds the place they came for. Chosen, a row
+//      behaves exactly like the nearest button's answer.
+//   2. Everywhere else, from Photon (web/search.js says why that geocoder and
+//      not Nominatim). This is the first feature on this site that sends
+//      anything a reader typed to a third party, which is why the field waits
+//      for the third character, debounces, and biases with the map's centre
+//      rounded to ~10 km. The GPS fix is never sent — but the centre can BE
+//      the reader's surroundings, after the locate button or a map that
+//      opened at their position, so the rounding is the protection, not the
+//      choice of variable. web/search.js's PHOTON_BIAS_DECIMALS carries the
+//      whole reasoning, and the Datenschutz says the same thing in the same
+//      words rather than a stronger one.
+//
+// Photon promises nothing about availability. Offline, throttled or simply
+// down, the second source contributes one quiet line and the first one keeps
+// working — never a toast, which would fire on every keystroke.
+const SEARCH_FIT_MAX_ZOOM = 17;   // an address with a tiny extent must not land at z22
+
+let searchRows = [];              // the options as rendered, in listbox order
+let searchActive = -1;            // index into searchRows, -1 = nothing active
+let searchLocal = [];             // matchLocal hits
+let searchWorld = [];             // photonResults rows
+let searchWorldState = "idle";    // idle | loading | ok | failed
+let photonTimer = null;
+let photonRequest = null;         // the AbortController of the one request in flight
+
+// wrap(): with no maxBounds a pan past the antimeridian leaves lng at 182.
+const mapCentre = () => { const c = map.getCenter().wrap(); return { lat: c.lat, lon: c.lng }; };
+
+function searchRowEl(row) {
+  const li = document.createElement("li");
+  li.className = "search-opt";
+  li.id = `search-opt-${searchRows.length}`;
+  li.setAttribute("role", "option");
+  li.setAttribute("aria-selected", "false");
+  li.append(searchRowIcon(row));
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  // textContent throughout: these names come from OSM and from komoot, and
+  // nothing about them has been through esc().
+  const name = document.createElement("span");
+  name.className = "name";
+  name.textContent = row.name;
+  txt.append(name);
+  if (row.context) {
+    const ctx = document.createElement("span");
+    ctx.className = "ctx";
+    ctx.textContent = row.context;
+    txt.append(ctx);
+  }
+  li.append(txt);
+  li.addEventListener("click", () => pickSearchRow(row));
+  searchRows.push(row);
+  return li;
+}
+
+// The pin's own bucket colour, so the dropdown reads like the map: green is
+// still "a dad can reach it" here. A prospect has no status and gets the play
+// ring; a place from the geocoder is not on this map at all and gets a pin
+// outline in the muted tone, which is the honest thing to draw for it.
+function searchRowIcon(row) {
+  if (row.kind === "world") {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "globe");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML = '<path d="M12 21.5s-6.5-6.2-6.5-11a6.5 6.5 0 0113 0c0 4.8-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>';
+    return svg;
+  }
+  const dot = document.createElement("span");
+  if (row.hit.kind === "place") dot.className = "dot play";
+  else {
+    dot.className = "dot";
+    dot.style.background = BUCKET_COLOR[viewFor(row.hit.obj.status, mode).bucket];
+  }
+  return dot;
+}
+
+function searchGroupEl(label) {
+  const li = document.createElement("li");
+  li.className = "search-group";
+  li.setAttribute("role", "presentation");
+  li.textContent = label;
+  return li;
+}
+
+function searchNoteEl(text) {
+  const li = document.createElement("li");
+  li.className = "search-note";
+  li.setAttribute("role", "presentation");
+  li.textContent = text;
+  return li;
+}
+
+function renderSearch() {
+  const q = searchInput.value.trim();
+  searchRows = [];
+  searchList.textContent = "";
+  searchClear.hidden = !q;
+  if (!q) { setSearchOpen(false); return; }
+
+  if (searchLocal.length) {
+    searchList.append(searchGroupEl(t("searchOnMap")));
+    for (const hit of searchLocal) {
+      const d = formatDistance(hit.km);
+      searchList.append(searchRowEl({
+        kind: "local", hit, name: hit.obj.name, context: t(d.key, { n: num(d.n) }),
+      }));
+    }
+  }
+  if (searchWorld.length) {
+    searchList.append(searchGroupEl(t("searchWorld")));
+    for (const r of searchWorld)
+      searchList.append(searchRowEl({ kind: "world", ...r }));
+  }
+  // One line, never a toast. "Nothing found" only once the geocoder has had
+  // its turn — saying it while a request is still out would flash it away
+  // again a moment later on every single keystroke.
+  if (searchWorldState === "failed") searchList.append(searchNoteEl(t("searchFailed")));
+  else if (!searchRows.length && searchWorldState !== "loading")
+    searchList.append(searchNoteEl(t("searchNone")));
+  setSearchOpen(searchList.childElementCount > 0);
+}
+
+function setSearchOpen(open) {
+  searchList.hidden = !open;
+  searchInput.setAttribute("aria-expanded", String(open));
+  setSearchActive(open ? searchActive : -1);
+}
+
+function setSearchActive(i) {
+  const opts = searchList.querySelectorAll(".search-opt");
+  searchActive = i < 0 || i >= opts.length ? -1 : i;
+  opts.forEach((el, j) => el.setAttribute("aria-selected", String(j === searchActive)));
+  const el = opts[searchActive];
+  if (el) {
+    el.scrollIntoView({ block: "nearest" });
+    searchInput.setAttribute("aria-activedescendant", el.id);
+  } else searchInput.removeAttribute("aria-activedescendant");
+}
+
+// Closing after a pick takes the phone's keyboard with it: the reader asked
+// for a place, and half the screen should not still be a keyboard when they
+// get there.
+function closeSearch() {
+  setSearchOpen(false);
+  searchInput.blur();
+}
+
+function clearSearch() {
+  searchInput.value = "";
+  searchLocal = [];
+  searchWorld = [];
+  searchWorldState = "idle";
+  clearTimeout(photonTimer);
+  photonRequest?.abort();
+  photonRequest = null;
+  renderSearch();
+}
+
+// The prospects chip may be switched off, and flying to a place the reader
+// then cannot see would read as a broken tap — ensureVisible's reasoning, for
+// the one filter it does not cover.
+function ensurePlacesVisible() {
+  if (placesOn) return;
+  placesOn = true;
+  renderChips();
+  refreshPins();
+}
+
+// Keep the fitted result clear of the chrome that floats over the canvas, the
+// same two edges popupPan works from.
+function searchFitPadding() {
+  const c = map.getContainer().getBoundingClientRect();
+  const top = Math.min(searchBox.getBoundingClientRect().bottom - c.top, c.height / 2) + EDGE;
+  return { top: Math.round(top), bottom: 70, left: 20, right: 60 };
+}
+
+function pickSearchRow(row) {
+  closeSearch();
+  if (row.kind === "world") {
+    // fitBounds where the result knows its own extent — a city then fills the
+    // screen and is not guessed at from a zoom table. Capped, or a house whose
+    // extent is a few metres across would land at the maximum zoom there is.
+    if (row.target.bounds)
+      map.fitBounds(row.target.bounds, { maxZoom: SEARCH_FIT_MAX_ZOOM, padding: searchFitPadding() });
+    else map.flyTo({ center: row.target.center, zoom: row.target.zoom });
+    return;
+  }
+  const f = row.hit.obj;
+  if (row.hit.kind === "table") { ensureVisible(f); openPopup(f); }
+  else { ensurePlacesVisible(); openPlacePopup(f); }
+  // Exactly what the nearest button does with its own answer: fly, and fit the
+  // card to the view it lands in once the flight is over.
+  map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+  map.once("moveend", panPopupIntoView);
+}
+
+function queryPhoton(q) {
+  clearTimeout(photonTimer);
+  // One request in flight, ever: a reader typing "hamburg" would otherwise
+  // leave seven behind, and the last answer to arrive need not be the last one
+  // asked for.
+  photonRequest?.abort();
+  photonRequest = null;
+  if (q.length < PHOTON_MIN_CHARS) {
+    searchWorld = [];
+    searchWorldState = "idle";
+    return;
+  }
+  searchWorldState = "loading";
+  photonTimer = setTimeout(() => sendPhoton(q), PHOTON_DEBOUNCE_MS);
+}
+
+async function sendPhoton(q) {
+  const ctrl = new AbortController();
+  photonRequest = ctrl;
+  const c = map.getCenter().wrap();   // a longitude the geocoder accepts, see mapCentre
+  // The map's centre, and only ever the map's centre: lastFix is not in scope
+  // here, so no GPS reading is sent. Where the centre happens to be the
+  // reader's own surroundings, web/search.js's rounding to one decimal is
+  // what keeps that a region rather than a position.
+  const url = photonUrl(q, { lang, lat: c.lat, lon: c.lng, zoom: map.getZoom() });
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`photon ${res.status}`);
+    const rows = photonResults(await res.json());
+    if (photonRequest !== ctrl) return;   // a later keystroke already took over
+    searchWorld = rows;
+    searchWorldState = "ok";
+  } catch {
+    // Aborted, offline, throttled, or komoot simply down: their terms promise
+    // no availability at all. Nothing is retried and nothing is toasted.
+    if (photonRequest !== ctrl) return;
+    searchWorld = [];
+    searchWorldState = "failed";
+  }
+  photonRequest = null;
+  renderSearch();
+}
+
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.trim();
+  // The whole dataset, not the viewport: the same true-global search the
+  // nearest button does, and for the same reason.
+  searchLocal = dataReady ? matchLocal(allFeatures, allPlaces, q, mapCentre()) : [];
+  queryPhoton(q);
+  renderSearch();
+});
+
+searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (!searchRows.length) return;
+    e.preventDefault();
+    const n = searchRows.length, step = e.key === "ArrowDown" ? 1 : -1;
+    setSearchActive(searchActive < 0
+      ? (step > 0 ? 0 : n - 1)
+      : (searchActive + step + n) % n);
+    return;
+  }
+  if (e.key === "Enter") {
+    // Nothing arrowed to: the first row, which is what a reader who typed and
+    // hit Enter meant — and the local matches are always the first rows.
+    if (!searchRows.length) return;
+    e.preventDefault();
+    pickSearchRow(searchRows[Math.max(searchActive, 0)]);
+    return;
+  }
+  if (e.key === "Escape") {
+    // First the list, then the field. Two steps, because closing a dropdown
+    // and throwing away what was typed are two different intentions.
+    e.preventDefault();
+    if (!searchList.hidden) { setSearchOpen(false); return; }
+    clearSearch();
+  }
+});
+
+// The field must not lose focus before a row's own click handler runs, and a
+// drag on the list's scrollbar must not close it either.
+searchList.addEventListener("mousedown", (e) => e.preventDefault());
+searchInput.addEventListener("focus", () => { if (searchRows.length) setSearchOpen(true); });
+searchInput.addEventListener("blur", () => setSearchOpen(false));
+searchClear.addEventListener("click", () => { clearSearch(); searchInput.focus(); });
 
 // ---- The "which room?" card: ask, at the moment it might get answered ----
 // Never a permission prompt of its own: it only ever follows a fix the reader
@@ -2117,6 +2520,7 @@ function openPin(osmUrl) {
     map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
     openPopup(f);
     stripOsmParam();
+    pinOpenedBeforeFix = true;   // the boot fix's own turn to stand aside, if it hasn't yet
     return;
   }
   const p = placesByOsmUrl.get(osmUrl);
@@ -2124,6 +2528,7 @@ function openPin(osmUrl) {
     map.jumpTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
     openPlacePopup(p);
     stripOsmParam();
+    pinOpenedBeforeFix = true;
     return;
   }
   toast(t("sharePinGone"));
@@ -2232,6 +2637,12 @@ async function boot() {
   // the same queue the app's own deep link uses, so the two never race each
   // other for the one popup that can be open.
   openPin(parseShareOsm(location.search));
+  // Kicked off now rather than after the dataset, so its own "second or
+  // three" (openAtLocationFix, near locate() above) overlaps the load
+  // instead of adding to it. Applied below, after fitHome() — never before,
+  // or a fast fix would open on the reader only for fitHome to undo it a
+  // moment later.
+  const locationFix = openAtLocationFix();
   const loaded = await loadDataset([
     "data/changing_tables.geojson",
     "data/play_places.geojson",
@@ -2250,6 +2661,7 @@ async function boot() {
   // refresh (watchRefresh, below) never pulls the view out from under a
   // reader who has since panned somewhere else.
   fitHome();
+  const fitHomeAt = Date.now();   // LATE_FIX_MS is measured from here, not from boot's own start
   // On the website `fromStore` is still the service worker's honest "you are
   // looking at old data" signal (X-PapaMap-Source: cache) and the toast fires
   // on it exactly as it always has. In the app the copy draws on every
@@ -2257,6 +2669,34 @@ async function boot() {
   // app's own version of this toast instead, once the background refresh has
   // had its say.
   if (!isNative() && fromStore && allFeatures.length) toast(t("toastOffline"));
+  // Applied whenever it lands — never awaited. A fix can take the whole of
+  // its own timeout (indoors, no cached fix), and boot() must not make the
+  // pendingPin open below, completeLogin's OAuth return, shareSettings,
+  // watchRefresh or armEditCheck wait for it. Three reasons the camera stands
+  // still even once a fix does arrive: touchedBeforeFix (the reader did
+  // anything at all), popup?.isOpen() and pinOpenedBeforeFix (boot itself
+  // opened a pin in the meantime — the pendingPin open just below, or a
+  // papamap://table deep link that arrived late; openAtLocationFix itself
+  // does not re-check this, on purpose — see its own comment). The dot is
+  // drawn regardless of all three: showYou is never wrong, only the camera
+  // move can be. No noteFix() either way: this fix must never feed
+  // evaluateRoomCard, not even indirectly through some later, unrelated
+  // popup close (the first testers' "too much happens when the app opens",
+  // CONTRACT.md v43/v44). And a throw from a bad fix — malformed coordinates
+  // reaching MapLibre — must not surface as an unhandled rejection for a
+  // nicety nobody asked for; the outer .catch is that backstop.
+  locationFix.then((coords) => {
+    if (!coords) return;
+    const at = [coords.longitude, coords.latitude];
+    showYou(at);
+    if (touchedBeforeFix || pinOpenedBeforeFix || popup?.isOpen()) return;
+    const zoom = Math.max(map.getZoom(), 14);
+    // Early: the map simply opens there, no motion to notice. Late: the
+    // reader has had time to actually look at the home view first, so the
+    // camera travels to them on purpose instead of snapping.
+    if (Date.now() - fitHomeAt > LATE_FIX_MS) map.flyTo({ center: at, zoom, duration: LATE_FIX_FLY_MS });
+    else map.jumpTo({ center: at, zoom });
+  }).catch(() => {});
   // Whatever queued a pin above the data — the app's own deep link (bootNative,
   // an appUrlOpen already fired) or this load's own ?osm= — opens it now that
   // there is a dataset to look it up in. jumpTo overrides fitHome's view.
