@@ -898,3 +898,89 @@ export function visibleMapView(canvasSize, coveredTop, unproject) {
   const se = unproject([width, height]);
   return { center: [center.lng, center.lat], bounds: [[nw.lng, se.lat], [se.lng, nw.lat]] };
 }
+
+// ---- Live updates: web/data/delta.json, instant answer recolour ------------
+// (CONTRACT.md's live-updates amendment.) The nightly build stays the only
+// path FROM OSM into the map's own status field — everything below only
+// merges feature objects the pipeline already classified (build_features /
+// build_play_features, reused verbatim by pipeline/delta.py) or, for a
+// reader's own confirmed answer, looks a status up in stats.json's
+// answer_status table. Nothing here re-derives a status from tags.
+
+// Merge a nightly FeatureCollection with a delta's (or an override layer's)
+// upsert/remove lists, keyed by osm_url — the one identifier stable across
+// the nightly build, the delta follower and a reader's own answer. Pure:
+// plain objects in, plain objects out, never touches the map or the app's
+// live arrays.
+export function mergeFeatureCollection(fc, upsertFeatures = [], removeUrls = []) {
+  const byUrl = new Map();
+  for (const f of (fc && fc.features) || []) {
+    const url = f && f.properties && f.properties.osm_url;
+    if (url) byUrl.set(url, f);
+  }
+  for (const f of upsertFeatures || []) {
+    const url = f && f.properties && f.properties.osm_url;
+    if (url) byUrl.set(url, f);
+  }
+  for (const url of removeUrls || []) byUrl.delete(url);
+  return { type: "FeatureCollection", features: [...byUrl.values()] };
+}
+
+// A delta is only worth merging when it is at least as new as the dataset it
+// would sit on top of: "ignore a delta whose base is older than the loaded
+// dataset's base" (live-updates design). ISO 8601 timestamps in the same
+// offset form compare correctly as plain strings, which is what
+// pipeline.delta.read_data_base always hands back (stats.json's own
+// data_base/generated_at, read verbatim). No datasetBase at all — a
+// stats.json from before this field existed — never blocks a delta; there is
+// nothing to compare against, so the newer information wins.
+export function isDeltaFresh(deltaBase, datasetBase) {
+  if (!deltaBase) return false;
+  if (!datasetBase) return true;
+  return deltaBase >= datasetBase;
+}
+
+// A reader's own confirmed answer, folded on top of whatever base/delta
+// feature already exists for that osm_url — the instant recolour and the
+// place -> table promotion a room answer on a play place causes (both a
+// grey table's room and a play place's own room question can move an
+// object's status). `overrides` is localStorage's papamap-answer-overrides
+// shape: {osm_url: {status, changing_table, location_raw, t}}. An override
+// for an object neither collection has any more (deleted, or never loaded)
+// is silently skipped. `status` present promotes/keeps the object as a
+// table (out.fc); its absence (a play answer with no room, e.g. "none") — or
+// an object that was never a table — keeps it in `places`.
+export function applyAnswerOverrides(fc, places, overrides) {
+  const entries = overrides ? Object.entries(overrides) : [];
+  if (!entries.length) return { fc, places };
+  const tableByUrl = new Map(((fc && fc.features) || []).map((f) => [f.properties.osm_url, f]));
+  const placeByUrl = new Map(((places && places.features) || []).map((f) => [f.properties.osm_url, f]));
+  for (const [url, o] of entries) {
+    const base = tableByUrl.get(url) || placeByUrl.get(url);
+    if (!base) continue;
+    const patched = { ...base, properties: { ...base.properties,
+      changing_table: o.changing_table, location_raw: o.location_raw,
+      status: o.status ?? base.properties.status } };
+    if (o.status) { tableByUrl.set(url, patched); placeByUrl.delete(url); }
+    else placeByUrl.set(url, patched);
+  }
+  return { fc: { type: "FeatureCollection", features: [...tableByUrl.values()] },
+          places: { type: "FeatureCollection", features: [...placeByUrl.values()] } };
+}
+
+// Which override entries a fresher dataset or delta has already caught up
+// with — dropped "once a dataset or delta covers an edit time >= t for that
+// object" (live-updates design). `deltaEditedAtByUrl` is a Map(osm_url ->
+// edited_at) built from the current delta's upsert lists (the only place an
+// edit timestamp travels — the nightly base carries none). Pure: returns a
+// new object, never mutates `overrides`.
+export function pruneAnswerOverrides(overrides, datasetBase, deltaEditedAtByUrl) {
+  const out = {};
+  for (const [url, o] of Object.entries(overrides || {})) {
+    const coveredByBase = Boolean(datasetBase && o.t && datasetBase >= o.t);
+    const editedAt = deltaEditedAtByUrl && deltaEditedAtByUrl.get(url);
+    const coveredByDelta = Boolean(editedAt && o.t && editedAt >= o.t);
+    if (!coveredByBase && !coveredByDelta) out[url] = o;
+  }
+  return out;
+}

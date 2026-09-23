@@ -78,6 +78,32 @@ The image carries the `pmtiles` binary (Dockerfile, pinned and checksummed), so 
 nothing new. After the first run, `curl -sI https://papamap.de/tiles/index.json | grep -i
 access-control` must show `*`; the Caddyfile change needs the container restart described above.
 
+## Live updates (in-page recolour + OSM edits within a few minutes)
+
+`pipeline/delta.py` follows OpenStreetMap's minutely replication diffs and writes
+`web-data/delta.json`, which the frontend polls and merges on top of tonight's dataset — a reader's
+own answer recolours instantly (`stats.json`'s `answer_status`), and anybody else's edit anywhere
+reaches every reader within about 2–4 minutes. It is a long-running loop, not a cron, so it is
+started once with the rest of the stack rather than scheduled:
+
+```bash
+docker compose up -d delta
+```
+
+No cron entry — `restart: unless-stopped` in `docker-compose.yml` keeps it running across reboots
+and container restarts the same way the `papamap` service does. It shares the pipeline's image and
+`web-data/` mount (`PAPAMAP_DELTA_PATH`/`PAPAMAP_DELTA_STATE_PATH` point it at
+`/out/delta.json`/`/out/private/delta-state.json`), so a code change under `pipeline/` needs the
+same `docker compose build pipeline` (or `up -d --build delta`) the nightly build does — the
+service does not rebuild itself on a plain restart. `docker logs -f papamap-delta` shows one line
+per tick (sequence number, tables/places upserted); a network error is logged and the previous
+`delta.json` is left exactly as it was, retried the next minute — it never crash-loops.
+
+`delta.json` is served at `/data/delta.json` with its own 60-second `Cache-Control` (the
+`deploy/papamap.Caddyfile` rule that overrides the rest of `/data/*`'s 900-second one) — the app's
+3-minute poll would otherwise mostly hit a stale edge copy. No new mount, no new host port, and
+nothing here writes to OSM.
+
 ## Daily data refresh
 
 `crontab -e`, matching the live schedule:

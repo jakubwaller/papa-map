@@ -788,6 +788,23 @@ export function onAppUrl({ auth, table }) {
   }).catch(() => {});
 }
 
+// The in-app Browser sheet (openExternal, interceptLinks — every OSM/
+// MapComplete link opens here rather than backgrounding the app) never hides
+// the page behind it: document.hidden stays false the whole time a reader is
+// answering on MapComplete or checking an object on OSM, so the website's own
+// visibilitychange-driven "reader is back" path (armEditCheck, the delta
+// poll, maybeNotifyAddedPlace) never fires on its own in the app. The
+// Browser plugin's own `browserFinished` event — fired when that sheet is
+// dismissed, whether by the reader's own "Done" tap or the OS — is the one
+// signal the app actually gets for "back from MapComplete", so `onReturn` is
+// handed the same job visibilitychange does on the website. No-op (never
+// even attaches) outside Capacitor — the website keeps using the real event.
+export function onBrowserFinished(onReturn) {
+  const b = plugin("Browser");
+  if (!b) return;
+  b.addListener("browserFinished", () => onReturn());
+}
+
 // ---- The widget and the Siri shortcut (iOS) ----
 // A compact copy of the dataset for the Swift side: one row per table, five
 // decimals (about a metre), status, name, OSM URL. Written on every load;

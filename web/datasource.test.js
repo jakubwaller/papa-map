@@ -13,7 +13,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
          nearestUnknownRoom, isFixFresh, popupPan, isAppleTouch,
-         shouldOpenAtLocation } from "./datasource.js";
+         shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
+         applyAnswerOverrides, pruneAnswerOverrides } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -1158,4 +1159,106 @@ test("visibleMapView clamps a bar covering the whole canvas at half its height, 
       visibleMapView({ width: 300, height: 600 }, coveredTop, fakeUnproject), half,
       `coveredTop ${coveredTop}`);
   }
+});
+
+// ---- live updates ------------------------------------------------------
+
+test("mergeFeatureCollection upserts and removes by osm_url", () => {
+  const base = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "unknown" }),
+    feat(2, 2, { osm_url: "https://www.openstreetmap.org/node/2", status: "accessible" }),
+  ] };
+  const upsert = [feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "accessible" }),
+                 feat(3, 3, { osm_url: "https://www.openstreetmap.org/node/3", status: "female_only" })];
+  const merged = mergeFeatureCollection(base, upsert, ["https://www.openstreetmap.org/node/2"]);
+  const byUrl = Object.fromEntries(merged.features.map((f) => [f.properties.osm_url, f.properties.status]));
+  assert.deepEqual(byUrl, {
+    "https://www.openstreetmap.org/node/1": "accessible",
+    "https://www.openstreetmap.org/node/3": "female_only",
+  });
+});
+
+test("mergeFeatureCollection tolerates a missing/empty base", () => {
+  const upsert = [feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "accessible" })];
+  assert.equal(mergeFeatureCollection(null, upsert, []).features.length, 1);
+  assert.equal(mergeFeatureCollection(undefined).features.length, 0);
+});
+
+test("isDeltaFresh rejects a delta older than the dataset it would sit on", () => {
+  assert.equal(isDeltaFresh("2026-09-23T08:00:00+00:00", "2026-09-22T02:00:00+00:00"), true);
+  assert.equal(isDeltaFresh("2026-09-21T08:00:00+00:00", "2026-09-22T02:00:00+00:00"), false);
+  assert.equal(isDeltaFresh("2026-09-22T02:00:00+00:00", "2026-09-22T02:00:00+00:00"), true);
+});
+
+test("isDeltaFresh accepts any delta when the dataset has no base to compare", () => {
+  assert.equal(isDeltaFresh("2026-09-23T08:00:00+00:00", null), true);
+});
+
+test("isDeltaFresh rejects a delta with no base of its own", () => {
+  assert.equal(isDeltaFresh(null, "2026-09-22T02:00:00+00:00"), false);
+});
+
+test("applyAnswerOverrides recolours an existing table in place", () => {
+  const fc = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "unknown",
+                changing_table: "yes", location_raw: null }),
+  ] };
+  const places = { type: "FeatureCollection", features: [] };
+  const overrides = { "https://www.openstreetmap.org/node/1":
+    { status: "accessible", changing_table: "yes", location_raw: "male_toilet", t: "2026-09-23T10:00:00Z" } };
+  const out = applyAnswerOverrides(fc, places, overrides);
+  assert.equal(out.fc.features[0].properties.status, "accessible");
+  assert.equal(out.fc.features[0].properties.location_raw, "male_toilet");
+  assert.equal(out.places.features.length, 0);
+});
+
+test("applyAnswerOverrides promotes a play place to a table when the answer carries a status", () => {
+  const fc = { type: "FeatureCollection", features: [] };
+  const places = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/9", kind: "cafe" }),
+  ] };
+  const overrides = { "https://www.openstreetmap.org/node/9":
+    { status: "female_only", changing_table: "yes", location_raw: "female_toilet", t: "2026-09-23T10:00:00Z" } };
+  const out = applyAnswerOverrides(fc, places, overrides);
+  assert.equal(out.places.features.length, 0);
+  assert.equal(out.fc.features.length, 1);
+  assert.equal(out.fc.features[0].properties.status, "female_only");
+});
+
+test("applyAnswerOverrides keeps a no-status answer (e.g. play 'none') in places", () => {
+  const fc = { type: "FeatureCollection", features: [] };
+  const places = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/9", kind: "cafe" }),
+  ] };
+  const overrides = { "https://www.openstreetmap.org/node/9":
+    { status: null, changing_table: "no", location_raw: null, t: "2026-09-23T10:00:00Z" } };
+  const out = applyAnswerOverrides(fc, places, overrides);
+  assert.equal(out.fc.features.length, 0);
+  assert.equal(out.places.features[0].properties.changing_table, "no");
+});
+
+test("applyAnswerOverrides ignores an override for an object neither collection has", () => {
+  const fc = { type: "FeatureCollection", features: [] };
+  const places = { type: "FeatureCollection", features: [] };
+  const overrides = { "https://www.openstreetmap.org/node/404": { status: "accessible" } };
+  const out = applyAnswerOverrides(fc, places, overrides);
+  assert.equal(out.fc.features.length, 0);
+  assert.equal(out.places.features.length, 0);
+});
+
+test("pruneAnswerOverrides drops an entry once the base dataset already covers its edit time", () => {
+  const overrides = { a: { t: "2026-09-23T08:00:00Z" }, b: { t: "2026-09-23T12:00:00Z" } };
+  const pruned = pruneAnswerOverrides(overrides, "2026-09-23T10:00:00Z", new Map());
+  assert.deepEqual(Object.keys(pruned), ["b"]);
+});
+
+test("pruneAnswerOverrides drops an entry once a delta upsert covers its edit time", () => {
+  const overrides = { a: { t: "2026-09-23T08:00:00Z" } };
+  const pruned = pruneAnswerOverrides(overrides, null, new Map([["a", "2026-09-23T09:00:00Z"]]));
+  assert.deepEqual(Object.keys(pruned), []);
+});
+
+test("pruneAnswerOverrides keeps an entry nothing has caught up with yet", () => {
+  const overrides = { a: { t: "2026-09-23T08:00:00Z" } };
+  assert.deepEqual(pruneAnswerOverrides(overrides, "2026-09-23T07:00:00Z", new Map()), overrides);
 });

@@ -66,6 +66,29 @@ services:
     # although nothing was wrong with the queries.
     network_mode: host
 
+  # The live-updates follower (pipeline/delta.py): a long-running loop, not a
+  # cron — started with the stack (`docker compose up -d delta`) and kept
+  # running (restart: unless-stopped), NOT under the `tools` profile the
+  # one-shot jobs above use. Same image as pipeline (it needs the same
+  # export/classify code, reused rather than duplicated) and the same /out
+  # mount, so it reads tonight's changing_tables.geojson/play_places.geojson/
+  # stats.json and writes web-data/delta.json + web-data/private/
+  # delta-state.json right next to them — no mount of its own. Host network
+  # for the same reason as pipeline/tiles: outbound only, and IPv6 (the
+  # 2026-08-23 IPv4 ban applied to every container on the bridge network,
+  # this one included, since it also talks to OSM's own infrastructure).
+  delta:
+    build: .
+    container_name: papamap-delta
+    restart: unless-stopped
+    command: ["python", "-m", "pipeline.delta"]
+    environment:
+      - PAPAMAP_DELTA_PATH=/out/delta.json
+      - PAPAMAP_DELTA_STATE_PATH=/out/private/delta-state.json
+    volumes:
+      - ./web-data:/out
+    network_mode: host
+
   # The weekly city basemaps for the store app: `docker compose run --build
   # --rm tiles`, Sundays at 12:00 (docs/DEPLOY.md). Same image as the build
   # (it carries the pmtiles binary); writes web-data/tiles/*.pmtiles and
