@@ -807,6 +807,13 @@ recognise — makes the whole value `"unknown"`, and the popup shows the raw
 hours with no badge at all: a missing badge beats a wrong one.
 Tests: `web/opening-hours.test.js` (`node --test web/*.test.js`).
 
+Differential check: `tools/opening-hours-diff/diff.mjs` runs every `opening_hours` value in the
+live data through both this parser and the reference
+[`opening_hours`](https://github.com/opening-hours/opening_hours.js) library at 1,008 timestamps
+(three sample weeks, 30-minute steps, holidays skipped) and lists every value where ours answers
+and the reference disagrees. Run it before merging a parser change:
+`cd tools/opening-hours-diff && npm ci && node diff.mjs`. It exits 1 on any disagreement.
+
 ## Leaderboard
 
 A full build also appends one entry per day to `web/data/history.json` —
