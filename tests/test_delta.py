@@ -192,7 +192,91 @@ def test_new_toilet_without_table_is_flagged():
     events = delta.process_changes(changes, _empty_dataset())
     assert events == [("https://www.openstreetmap.org/node/500", "toilet_no_table",
                        {"osm_url": "https://www.openstreetmap.org/node/500",
-                        "lon": 10.0, "lat": 53.55, "t": "2026-09-23T10:13:00Z"})]
+                        "lon": 10.0, "lat": 53.55, "t": "2026-09-23T10:13:00Z", "version": 1})]
+
+
+def test_toilet_no_table_only_flags_creates_not_every_modify():
+    # A toilet already in the base dataset (some earlier version, already
+    # known) that merely loses/never had a table answer must not toast a
+    # reader who tapped "add a place" minutes ago as if it were new — only a
+    # genuine create (or first appearance in this pipeline) counts.
+    url = "https://www.openstreetmap.org/node/501"
+    base = {"tables": {url: {"geometry": {"coordinates": [10.0, 53.55]},
+                             "properties": {"osm_url": url}}}, "places": {}}
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("modify", 501, 4, "2026-09-23T10:14:00Z", 53.55, 10.0, {"amenity": "toilets"}))))
+    events = delta.process_changes(changes, base)
+    assert not any(kind == "toilet_no_table" for _, kind, _ in events)
+    # The object WAS a table before and no longer is — still a removal,
+    # just never a "new toilet" toast.
+    assert (url, "table", None) in events
+
+
+def test_toilet_no_table_flags_first_appearance_even_without_version_1():
+    # An object OSM already had (version > 1) but that was never in this
+    # pipeline's own base dataset — its first appearance here still counts
+    # as "new" for the add-a-place flow, per the design ("version 1, or
+    # objects not in the base").
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("modify", 502, 7, "2026-09-23T10:15:00Z", 53.55, 10.0, {"amenity": "toilets"}))))
+    events = delta.process_changes(changes, _empty_dataset())
+    assert events == [("https://www.openstreetmap.org/node/502", "toilet_no_table",
+                       {"osm_url": "https://www.openstreetmap.org/node/502",
+                        "lon": 10.0, "lat": 53.55, "t": "2026-09-23T10:15:00Z", "version": 7})]
+
+
+# ---- fix: an object created after the base, then deleted/retagged, must --
+# ---- still emit a removal (was previously silently stuck in the upsert) --
+
+def test_object_created_after_base_then_deleted_in_a_later_tick_is_removed():
+    acc = delta.new_accumulator()
+    create = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 600, 1, "2026-09-23T10:00:00Z", 53.55, 10.0,
+              {"changing_table": "yes", "changing_table:location": "male_toilet"}))))
+    delta.apply_events(acc, delta.process_changes(create, _empty_dataset(), acc=acc))
+    url = "https://www.openstreetmap.org/node/600"
+    assert url in acc["tables_upsert"]
+
+    # A LATER tick: a fresh process_changes call, same acc, no base entry —
+    # without `acc` this delete would be invisible (was_table would read
+    # False against the base alone) and the stale upsert would linger.
+    delete = delta.parse_osc(__import__("io").BytesIO(_osc(_delete("node", 600, 2, "2026-09-23T10:05:00Z"))))
+    delta.apply_events(acc, delta.process_changes(delete, _empty_dataset(), acc=acc))
+    assert url not in acc["tables_upsert"]
+    assert url in acc["tables_remove"]
+
+
+def test_object_created_after_base_then_retagged_away_is_removed():
+    acc = delta.new_accumulator()
+    create = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 601, 1, "2026-09-23T10:00:00Z", 53.55, 10.0,
+              {"changing_table": "yes", "changing_table:location": "male_toilet"}))))
+    delta.apply_events(acc, delta.process_changes(create, _empty_dataset(), acc=acc))
+    url = "https://www.openstreetmap.org/node/601"
+    assert url in acc["tables_upsert"]
+
+    retag = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("modify", 601, 2, "2026-09-23T10:05:00Z", 53.55, 10.0, {"amenity": "cafe"}))))
+    delta.apply_events(acc, delta.process_changes(retag, _empty_dataset(), acc=acc))
+    assert url not in acc["tables_upsert"]
+    assert url in acc["tables_remove"]
+
+
+def test_created_then_deleted_within_the_same_osc_file_is_removed():
+    # Both changes in ONE process_changes call — acc has not been applied
+    # between them, so the intra-batch known_tables bookkeeping is what has
+    # to catch this, not just the acc snapshot from a previous tick.
+    acc = delta.new_accumulator()
+    both = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 602, 1, "2026-09-23T10:00:00Z", 53.55, 10.0,
+              {"changing_table": "yes", "changing_table:location": "male_toilet"}),
+        _delete("node", 602, 2, "2026-09-23T10:01:00Z"))))
+    events = delta.process_changes(both, _empty_dataset(), acc=acc)
+    url = "https://www.openstreetmap.org/node/602"
+    assert (url, "table", None) in events
+    delta.apply_events(acc, events)
+    assert url not in acc["tables_upsert"]
+    assert url in acc["tables_remove"]
 
 
 def test_outside_bbox_new_object_dropped_but_known_object_kept():
@@ -400,6 +484,112 @@ def test_find_start_seq_verifies_and_backs_off():
     start = delta.find_start_seq("2026-09-23T09:00:00Z", fetch_state=fake_fetch_state,
                                  max_backoff=8, backoff_step=30)
     assert start == 930
+
+
+# ---- make_coord_fetch: capped, failure-tolerant way/relation centroid ------
+
+def test_make_coord_fetch_returns_what_the_underlying_fetch_returns():
+    calls = []
+
+    def fake_fetch(osm_type, osm_id):
+        calls.append((osm_type, osm_id))
+        return (53.5, 10.0)
+
+    coord_fetch = delta.make_coord_fetch(max_lookups=5, fetch=fake_fetch)
+    assert coord_fetch("way", 1) == (53.5, 10.0)
+    assert calls == [("way", 1)]
+
+
+def test_make_coord_fetch_stops_after_the_cap():
+    calls = []
+
+    def fake_fetch(osm_type, osm_id):
+        calls.append((osm_type, osm_id))
+        return (1.0, 2.0)
+
+    coord_fetch = delta.make_coord_fetch(max_lookups=2, fetch=fake_fetch)
+    assert coord_fetch("way", 1) == (1.0, 2.0)
+    assert coord_fetch("way", 2) == (1.0, 2.0)
+    assert coord_fetch("way", 3) is None   # cap reached — not even attempted
+    assert calls == [("way", 1), ("way", 2)]
+
+
+def test_make_coord_fetch_tolerates_failures():
+    def failing_fetch(osm_type, osm_id):
+        raise RuntimeError("network is sad")
+
+    coord_fetch = delta.make_coord_fetch(max_lookups=5, fetch=failing_fetch)
+    assert coord_fetch("relation", 9) is None
+
+
+def test_run_forever_wires_a_capped_coord_fetch_when_none_is_given(monkeypatch):
+    # run_forever must not leave coord_fetch as the dead None default
+    # (issue: process_changes never got one, so a new way/relation was
+    # always dropped) — it builds one from make_coord_fetch every tick.
+    seen_coord_fetch = []
+
+    def fake_run_tick(state, *, delta_path, coord_fetch, **kwargs):
+        seen_coord_fetch.append(coord_fetch)
+        raise SystemExit  # stop run_forever's infinite loop right away
+
+    monkeypatch.setattr(delta, "run_tick", fake_run_tick)
+    monkeypatch.setattr(delta, "load_state", lambda path: None)
+    try:
+        delta.run_forever(poll_s=0, state_path="unused", delta_path="unused")
+    except SystemExit:
+        pass
+    assert len(seen_coord_fetch) == 1
+    assert callable(seen_coord_fetch[0])
+    assert seen_coord_fetch[0] is not None
+
+
+# ---- area_for_point / carrying `area` over into delta upserts (fix) --------
+
+def test_area_for_point_finds_the_containing_box():
+    boxes = {"Hamburg": (9.7, 53.4, 10.3, 53.7), "Bremen": (8.5, 52.9, 9.1, 53.3)}
+    assert delta.area_for_point(9.99, 53.55, boxes) == "Hamburg"
+    assert delta.area_for_point(8.8, 53.0, boxes) == "Bremen"
+    assert delta.area_for_point(0.0, 0.0, boxes) is None
+
+
+def test_area_for_point_none_without_a_real_per_area_map():
+    assert delta.area_for_point(9.99, 53.55, None) is None
+    assert delta.area_for_point(9.99, 53.55, {}) is None
+
+
+def test_known_table_keeps_its_own_area_on_a_delta_upsert():
+    # Without area_by_key, export.build_features always emits area: None —
+    # this is the exact bug: a modify on a known Hamburg table must not
+    # wipe its area just because the delta touched it.
+    url = "https://www.openstreetmap.org/node/700"
+    base = {"tables": {url: {"geometry": {"coordinates": [10.0, 53.55]},
+                             "properties": {"osm_url": url, "area": "Hamburg"}}},
+           "places": {}}
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("modify", 700, 2, "2026-09-23T10:16:00Z", 53.55, 10.0,
+              {"changing_table": "yes", "changing_table:location": "female_toilet"}))))
+    events = delta.process_changes(changes, base)
+    assert events[0][2]["properties"]["area"] == "Hamburg"
+
+
+def test_new_table_gets_its_area_from_the_first_containing_box():
+    area_boxes_by_name = {"Hamburg": (9.7, 53.4, 10.3, 53.7)}
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 701, 1, "2026-09-23T10:17:00Z", 53.55, 9.99,
+              {"changing_table": "yes", "changing_table:location": "male_toilet"}))))
+    events = delta.process_changes(changes, _empty_dataset(), area_boxes_by_name=area_boxes_by_name)
+    assert events[0][2]["properties"]["area"] == "Hamburg"
+
+
+def test_new_table_outside_every_area_box_gets_no_area():
+    area_boxes_by_name = {"Hamburg": (9.7, 53.4, 10.3, 53.7)}
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 702, 1, "2026-09-23T10:17:00Z", 53.55, 9.99,
+              {"changing_table": "yes", "changing_table:location": "male_toilet"}))))
+    # No area_boxes_by_name at all (the dataset_bbox fallback case) — never
+    # guesses an area from a box that carries no real area names.
+    events = delta.process_changes(changes, _empty_dataset())
+    assert events[0][2]["properties"]["area"] is None
 
 
 # ---- run_tick: sequence-gap catch-up via a fake fetcher ----------------------

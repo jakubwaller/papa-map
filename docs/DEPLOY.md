@@ -99,6 +99,13 @@ service does not rebuild itself on a plain restart. `docker logs -f papamap-delt
 per tick (sequence number, tables/places upserted); a network error is logged and the previous
 `delta.json` is left exactly as it was, retried the next minute — it never crash-loops.
 
+The delta's own country-coverage filter reads `web-data/private/areas-bbox.json`
+(`PAPAMAP_AREAS_BBOX_PATH` on both the `pipeline` and `delta` services, since the nightly build
+writes it and the delta reads it) — one padded bbox per sweep area, written by every nightly build
+next to `toilets_counts.json`. Before the first build under this version has run (a fresh clone, or
+mid-upgrade), the delta logs that the file is missing and falls back to a single bbox around the
+whole loaded dataset; nothing to do about it beyond letting the next nightly build run.
+
 `delta.json` is served at `/data/delta.json` with its own 60-second `Cache-Control` (the
 `deploy/papamap.Caddyfile` rule that overrides the rest of `/data/*`'s 900-second one) — the app's
 3-minute poll would otherwise mostly hit a stale edge copy. No new mount, no new host port, and

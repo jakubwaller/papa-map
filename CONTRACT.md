@@ -34,24 +34,49 @@
 >   NOT generated_at, which can lag the data by a day)", "seq": 6234567,
 >   "tables": {"upsert": [feature, …], "remove": ["osm_url", …]},
 >   "places": {"upsert": [feature, …], "remove": ["osm_url", …]},
->   "new_toilets_no_table": [{"osm_url": "…", "lon": 0, "lat": 0, "t": "iso"}]
+>   "new_toilets_no_table": [{"osm_url": "…", "lon": 0, "lat": 0, "t": "iso",
+>                             "version": 1}]
 > }
 > ```
 > Every upsert feature is shaped exactly like one in `changing_tables.geojson`/
 > `play_places.geojson`, plus `osm_version` and `edited_at` (the edit that
 > produced it) — tags are untrusted user text throughout, escaped by the
-> frontend exactly as the nightly geojson's are, never differently. A
-> consumer merges by `osm_url` (upsert replaces or adds, remove deletes) and
-> **ignores a delta whose `base` is older than the dataset it holds** —
+> frontend exactly as the nightly geojson's are, never differently. A table
+> feature's `area` (CONTRACT.md v32) is never left at the delta's own default
+> of null: it carries over from the base/accumulator's existing feature when
+> the object is already known, else is assigned from the first per-area bbox
+> (below) the point falls in, else null for a genuinely unplaceable one.
+> `new_toilets_no_table` holds only objects OSM did not already have before
+> — `version: 1`, or an object never in the base dataset at all — never
+> every edit to an already-known toilet that merely lacks a table answer.
+> A consumer merges by `osm_url` (upsert replaces or adds, remove deletes)
+> and **ignores a delta whose `base` is older than the dataset it holds** —
 > `web/datasource.js`'s `mergeFeatureCollection`/`isDeltaFresh`, pure and
-> tested. `pipeline/delta.py`'s own design (base estimation, the 48h-gap
-> reset, the bbox approximation config.py has no real per-country polygons
-> for) is documented in the module itself and `docs/DEPLOY.md`.
+> tested. `pipeline/delta.py`'s own design is documented in the module
+> itself and `docs/DEPLOY.md`, including: base estimation and the 48h-gap
+> reset; `web-data/private/areas-bbox.json` (one real, padded bbox per sweep
+> area, written by the nightly build from that area's own features), with a
+> whole-dataset bbox as the fallback only while that file doesn't exist yet;
+> an object created after the base and later deleted or retagged away is
+> still recognised as known (against the accumulator being built, not just
+> the base) so its removal is never silently dropped; and a way/relation
+> with no coordinate of its own falls back to the OSM API's centroid
+> (`fetch_osm_full_centroid`), capped at 50 lookups per tick and tolerant of
+> any failure (`make_coord_fetch`) — dead code before this fix, so a
+> newly-relevant way/relation was always silently skipped.
 >
 > **The frontend (`web/app.js`) merges the delta on top of the loaded
 > dataset**, polling `/data/delta.json` every 3 minutes while the page is
 > visible (30s while a reader has a pending own edit — the same record
-> `startEditCheck` already keeps), on returning to the front
+> `startEditCheck` already keeps). `data/delta.json` is a relative path,
+> fetched directly rather than through `loadDataset`/`loadDatasetNative`
+> (which already resolve the store app's own dataset files against
+> `native.js`'s `SITE`), so it has to resolve the app's own origin itself
+> (`resolveDataUrl`, `web/datasource.js`, pure and tested) — the store app
+> runs from `papamap://localhost`/`https://localhost`, where a bare
+> `data/delta.json` resolves to a path the bundle never ships, and the
+> delta silently never loaded there before this fix. Polled again on
+> returning to the front
 > (`visibilitychange`, or the iOS app's own `browserFinished` — its in-app
 > Browser sheet never sets `document.hidden`, so `native.js` gained
 > `onBrowserFinished` as that platform's equivalent signal), and re-shares the
@@ -60,26 +85,46 @@
 > `answer_status` (above) rather than the delta — instantly, before any
 > delta or nightly build could possibly have it — and persisted in
 > `localStorage['papamap-answer-overrides']`
-> (`{osm_url: {status, changing_table, location_raw, t}}`) so a reload keeps
-> the colour; an entry is dropped once a dataset or delta whose own data
-> covers `t` supersedes it. A room answered on a play place (not just a grey
-> table) promotes that place to a coloured pin the same way. The existing
-> edit check's "found" wording changes from "the map picks it up tonight" to
-> "the pin updates in a moment" (true now, both for a reader's own answer and
-> for an edit found on OSM by someone else, which the check now also watches
-> the delta for, by version) — reworded in all 32 languages, the temporal
-> clause only, rest of each sentence untouched.
+> (`{osm_url: {status, changing_table, location_raw, t, version}}`, `version`
+> the OSM object version `writeTags` returned for this exact write) so a
+> reload keeps the colour. **Pruned by OSM version, primarily**: an entry is
+> dropped once a delta upsert for that `osm_url` carries an `osm_version` at
+> or past the write's own `version` — not by comparing timestamps, because a
+> delta feature's `edited_at` is OSM's own server timestamp from *during*
+> the write, routinely earlier than `t` (set only *after* the round trip
+> completes), which would make a naive time comparison never clear the
+> override it was meant for. The base dataset's own `data_base` time against
+> `t` stays as the secondary rule, for the one case a version can't cover: a
+> nightly rebuild, which carries no per-object version at all. A room
+> answered on a play place (not just a grey table) promotes that place to a
+> coloured pin the same way. The existing edit check's "found" wording
+> changes from "the map picks it up tonight" to "the pin updates in a
+> moment" (true now, both for a reader's own answer and for an edit found on
+> OSM by someone else, which the check now also watches the delta for, by
+> version) — reworded, properly translated, in all 32 languages, the
+> temporal clause only, rest of each sentence untouched.
 >
 > The add-a-place flow (MapComplete deep link) remembers the tap's `{time,
-> view bbox}` and watches the delta for a matching upsert on return: a toast
-> ("New changing table added, thank you") plus a fly-to and a popup open, or —
-> if OSM now has the toilet but no changing table (`new_toilets_no_table`) — a
-> toast explaining it won't show as a pin; after 10 minutes with neither, the
-> existing "nothing new on OSM yet" nudge. Two new i18n keys per language,
-> `toastNewTable`/`toastToiletNoTable` (English text for the 30 languages
-> beyond German and English — a native-language pass is still owed there,
-> unlike the rest of this site's translations, which is a deliberate scope cut
-> for this amendment, not the project's practice).
+> view bbox}` and watches the delta for a matching upsert on return —
+> **only one created after the tap** (`osm_version === 1`, or, for
+> `new_toilets_no_table`, a version-1 object or one that was never in the
+> base dataset at all: an object already known before the tap, merely
+> edited in the same view a moment later, must never be mistaken for what
+> this reader just added), **preferring the candidate nearest the tapped
+> view's own centre** when more than one qualifies. A toast ("New changing
+> table added, thank you") plus a fly-to and a popup open for a table
+> upsert, a place-specific toast ("New play area added, thank you") for a
+> play-place upsert — never the table wording for one — or, if OSM now has
+> the toilet but no changing table (`new_toilets_no_table`), a toast
+> explaining it won't show as a pin; after 10 minutes with neither, the
+> existing "nothing new on OSM yet" nudge. **The fly-to is skipped (the
+> toast still fires) when the tapped view was wider than about zoom 14** —
+> flying in from a whole-country view would be a bigger jump than the
+> "look here" pulse is meant to be. Three new i18n keys per language,
+> `toastNewTable`/`toastNewPlace`/`toastToiletNoTable`, properly translated
+> in all 32 languages (the site's own changing-table/play-area noun per
+> language, matching each language's existing strings — never a generic
+> synonym).
 >
 > **No third-party request added**: `delta.json` is served from papamap.de
 > itself, like every other dataset file — `web/datenschutz.html`/

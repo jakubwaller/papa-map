@@ -14,7 +14,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
          nearestUnknownRoom, isFixFresh, popupPan, isAppleTouch,
          shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
-         applyAnswerOverrides, pruneAnswerOverrides } from "./datasource.js";
+         applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -1198,6 +1198,12 @@ test("isDeltaFresh rejects a delta with no base of its own", () => {
   assert.equal(isDeltaFresh(null, "2026-09-22T02:00:00+00:00"), false);
 });
 
+test("resolveDataUrl prefixes the site origin only in the store app", () => {
+  assert.equal(resolveDataUrl("data/delta.json", false, "https://papamap.de/"), "data/delta.json");
+  assert.equal(resolveDataUrl("data/delta.json", true, "https://papamap.de/"),
+    "https://papamap.de/data/delta.json");
+});
+
 test("applyAnswerOverrides recolours an existing table in place", () => {
   const fc = { type: "FeatureCollection", features: [
     feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "unknown",
@@ -1246,20 +1252,32 @@ test("applyAnswerOverrides ignores an override for an object neither collection 
   assert.equal(out.places.features.length, 0);
 });
 
-test("pruneAnswerOverrides drops an entry once the base dataset already covers its edit time", () => {
+test("pruneAnswerOverrides drops an entry once the base dataset's data_base time covers it (secondary rule)", () => {
   const overrides = { a: { t: "2026-09-23T08:00:00Z" }, b: { t: "2026-09-23T12:00:00Z" } };
   const pruned = pruneAnswerOverrides(overrides, "2026-09-23T10:00:00Z", new Map());
   assert.deepEqual(Object.keys(pruned), ["b"]);
 });
 
-test("pruneAnswerOverrides drops an entry once a delta upsert covers its edit time", () => {
-  const overrides = { a: { t: "2026-09-23T08:00:00Z" } };
-  const pruned = pruneAnswerOverrides(overrides, null, new Map([["a", "2026-09-23T09:00:00Z"]]));
+test("pruneAnswerOverrides drops an entry once a delta upsert's osm_version reaches the write's own version (primary rule)", () => {
+  const overrides = { a: { t: "2026-09-23T08:00:00Z", version: 3 } };
+  const pruned = pruneAnswerOverrides(overrides, null, new Map([["a", 3]]));
   assert.deepEqual(Object.keys(pruned), []);
 });
 
+test("pruneAnswerOverrides keeps an entry whose delta version has not caught up yet, even with a later edited_at-style clock", () => {
+  // The exact bug the version-based rule fixes: a delta upsert can carry an
+  // edit time later than the override's own client-clock `t` (OSM's
+  // edited_at is set DURING the write, `t` only AFTER the round trip) while
+  // still being an EARLIER version than the one this reader's write
+  // produced — an in-between edit by someone else must not clear this
+  // reader's own override.
+  const overrides = { a: { t: "2026-09-23T08:00:00Z", version: 5 } };
+  const pruned = pruneAnswerOverrides(overrides, null, new Map([["a", 4]]));
+  assert.deepEqual(pruned, overrides);
+});
+
 test("pruneAnswerOverrides keeps an entry nothing has caught up with yet", () => {
-  const overrides = { a: { t: "2026-09-23T08:00:00Z" } };
+  const overrides = { a: { t: "2026-09-23T08:00:00Z", version: 2 } };
   assert.deepEqual(pruneAnswerOverrides(overrides, "2026-09-23T07:00:00Z", new Map()), overrides);
 });
 
@@ -1278,7 +1296,7 @@ test("a play-place room answer promotes it, survives a reload, then is dropped o
   const baseTables = { type: "FeatureCollection", features: [] };
   const overrides = { [url]: {
     status: "accessible", changing_table: "yes", location_raw: "male_toilet",
-    t: "2026-09-23T10:00:00Z",
+    t: "2026-09-23T10:00:00Z", version: 3,
   } };
 
   // 1. The answer promotes the play place to a coloured table pin.
@@ -1311,15 +1329,18 @@ test("a play-place room answer promotes it, survives a reload, then is dropped o
   assert.equal(afterDatasetCatchUp.fc.features[0].properties.status, "accessible");
 
   // Same outcome via a delta upsert instead of a full dataset refresh — the
-  // override is dropped because the delta's own edited_at for this osm_url
-  // is at or after the answer's t, per pruneAnswerOverrides' contract.
-  const editedAtByUrl = new Map([[url, "2026-09-23T10:05:00Z"]]);
-  const prunedByDelta = pruneAnswerOverrides(overrides, null, editedAtByUrl);
+  // override is dropped because the delta's own osm_version for this
+  // osm_url has reached the version the write itself produced (the primary
+  // rule pruneAnswerOverrides now uses, not a timestamp comparison).
+  const versionByUrl = new Map([[url, 3]]);
+  const prunedByDelta = pruneAnswerOverrides(overrides, null, versionByUrl);
   assert.deepEqual(prunedByDelta, {});
 
-  // And an edit time the dataset/delta do NOT yet cover keeps the override —
-  // the promotion must not flicker back to a play place mid-transit.
+  // And a delta upsert that has NOT yet reached this write's own version
+  // keeps the override — the promotion must not flicker back to a play
+  // place mid-transit, even if that older delta entry's own edited_at
+  // happens to read later than the override's client-clock `t`.
   const notYetCovered = pruneAnswerOverrides(overrides, "2026-09-23T09:00:00+00:00",
-    new Map([[url, "2026-09-23T09:30:00Z"]]));
+    new Map([[url, 2]]));
   assert.deepEqual(notYetCovered, overrides);
 });

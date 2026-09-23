@@ -940,6 +940,19 @@ export function isDeltaFresh(deltaBase, datasetBase) {
   return deltaBase >= datasetBase;
 }
 
+// A relative dataset path, resolved against the app's own origin when it is
+// one (native, `site` = native.js's SITE) — the website fetches `path`
+// exactly as given, relative to the page it's already on. Unlike
+// boot()'s own dataset files, delta.json is fetched directly
+// (fetchDelta, web/app.js) rather than through loadDataset/
+// loadDatasetNative, so it has to do this resolution itself: in the store
+// app the page runs from papamap://localhost (iOS) or https://localhost
+// (Android), where a bare "data/delta.json" resolves to a path the bundle
+// never ships, and the delta silently never loads.
+export function resolveDataUrl(path, native, site) {
+  return native ? site + path : path;
+}
+
 // A reader's own confirmed answer, folded on top of whatever base/delta
 // feature already exists for that osm_url — the instant recolour and the
 // place -> table promotion a room answer on a play place causes (both a
@@ -968,19 +981,31 @@ export function applyAnswerOverrides(fc, places, overrides) {
           places: { type: "FeatureCollection", features: [...placeByUrl.values()] } };
 }
 
-// Which override entries a fresher dataset or delta has already caught up
-// with — dropped "once a dataset or delta covers an edit time >= t for that
-// object" (live-updates design). `deltaEditedAtByUrl` is a Map(osm_url ->
-// edited_at) built from the current delta's upsert lists (the only place an
-// edit timestamp travels — the nightly base carries none). Pure: returns a
-// new object, never mutates `overrides`.
-export function pruneAnswerOverrides(overrides, datasetBase, deltaEditedAtByUrl) {
+// Which override entries a fresher delta or dataset has already caught up
+// with. **Primary rule: OSM version.** `o.version` is the version writeTags
+// returned for the reader's own write (answer(), web/app.js) — the
+// authoritative "has this exact edit been seen elsewhere" test, because
+// `versionByUrl` (a Map(osm_url -> osm_version), built from the current
+// delta's upsert lists — the only place a version travels; the nightly base
+// carries none) is at or past it only once that exact edit (or a later one)
+// has actually reached the delta. A client-clock timestamp cannot make that
+// promise: `o.t` is set *after* the write's round trip completes, while
+// OSM's own `edited_at` on the resulting delta feature is the server's
+// timestamp from *during* the write — routinely earlier than `o.t`, which
+// would make a naive `edited_at >= o.t` comparison never fire for the very
+// delta that carries this reader's own edit. **Secondary rule: the base
+// dataset's own data_base time**, `datasetBase >= o.t` — kept for the one
+// case version numbers can't cover, a nightly rebuild with no per-object
+// version info of its own, which still deserves to clear an override once
+// its data plainly postdates the answer. Pure: returns a new object, never
+// mutates `overrides`.
+export function pruneAnswerOverrides(overrides, datasetBase, versionByUrl) {
   const out = {};
   for (const [url, o] of Object.entries(overrides || {})) {
+    const seenVersion = versionByUrl && versionByUrl.get(url);
+    const coveredByVersion = Boolean(seenVersion != null && o.version != null && seenVersion >= o.version);
     const coveredByBase = Boolean(datasetBase && o.t && datasetBase >= o.t);
-    const editedAt = deltaEditedAtByUrl && deltaEditedAtByUrl.get(url);
-    const coveredByDelta = Boolean(editedAt && o.t && editedAt >= o.t);
-    if (!coveredByBase && !coveredByDelta) out[url] = o;
+    if (!coveredByVersion && !coveredByBase) out[url] = o;
   }
   return out;
 }

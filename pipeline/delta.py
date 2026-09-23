@@ -162,6 +162,36 @@ def fetch_osm_full_centroid(osm_type: str, osm_id: int, get=None) -> tuple[float
     return lat, lon
 
 
+# A way/relation with no coordinate reachable any other way is rare ("a few
+# a day", per the design) — but unbounded, one API call per object could
+# still hammer api.openstreetmap.org on a bad tick (a burst of way edits, or
+# a bug elsewhere sending more objects through than expected). Capped per
+# tick rather than per run: run_forever builds a fresh one every iteration,
+# so a quiet tick after a busy one is never left short by a previous tick's
+# spending.
+COORD_FETCH_MAX_PER_TICK = 50
+
+
+def make_coord_fetch(max_lookups: int = COORD_FETCH_MAX_PER_TICK, fetch=fetch_osm_full_centroid):
+    """A process_changes-shaped coord_fetch(osm_type, osm_id) backed by
+    `fetch` (fetch_osm_full_centroid by default), capped at `max_lookups`
+    calls total and tolerant of any failure — a timeout, a 404, a rate
+    limit — which is treated exactly like "no coordinate reachable"
+    (returns None) rather than aborting the tick. `fetch` is injectable for
+    tests; production code never needs to pass it."""
+    remaining = [max_lookups]
+
+    def _fetch(osm_type, osm_id):
+        if remaining[0] <= 0:
+            return None
+        remaining[0] -= 1
+        try:
+            return fetch(osm_type, osm_id)
+        except Exception:  # noqa: BLE001 — one bad lookup must not sink the tick
+            return None
+    return _fetch
+
+
 # ---- Base dataset (the nightly build's output, read back) ------------------
 
 def _osm_url(osm_type: str, osm_id: int) -> str:
@@ -268,6 +298,22 @@ def in_any_bbox(lon: float, lat: float, boxes) -> bool:
     return any(in_bbox(lon, lat, tuple(b)) for b in boxes)
 
 
+def area_for_point(lon: float, lat: float, area_boxes_by_name: dict | None) -> str | None:
+    """Which sweep area's own bbox (load_area_bboxes' shape, {name: bbox})
+    (lon, lat) falls inside — the first one found, since sweep areas can
+    overlap a little at their padded edges and any one of them is an honest
+    enough answer (the same tolerance the nightly build's own area
+    assignment has at a real boundary). None when there is no real per-area
+    map to consult (the dataset_bbox fallback has no area names at all) or
+    the point is outside every box — never a guess."""
+    if not area_boxes_by_name:
+        return None
+    for name, box in area_boxes_by_name.items():
+        if in_bbox(lon, lat, tuple(box)):
+            return name
+    return None
+
+
 def read_data_base(stats_path: str = STATS_PATH) -> str | None:
     """The DATA timestamp the nightly build is reconciled to — `data_base`
     (pipeline.run, the minimum osm3s.timestamp_osm_base across the night's
@@ -317,7 +363,8 @@ def find_start_seq(base_iso: str, fetch_state=fetch_state, max_backoff: int = 8,
 # ---- Turning diff objects into features, with the nightly build's own code -
 
 def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
-                    coord_fetch=None) -> list[tuple]:
+                    coord_fetch=None, acc: dict | None = None,
+                    area_boxes_by_name: dict | None = None) -> list[tuple]:
     """changes (parse_osc's shape) -> a list of (osm_url, kind, feature_or_none)
     events, kind in {"table", "place", "toilet_no_table"}, feature_or_none
     being None for a removal. Features are built with export.build_features /
@@ -325,19 +372,47 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
     calls — never a re-derivation of status here. `area_boxes`: an iterable
     of per-area bboxes (load_area_bboxes' values, or a single dataset_bbox
     wrapped in a list as the fallback) — a brand-new object is kept only
-    inside at least one of them (in_any_bbox); an object already in the base
-    dataset is always kept, box or no box."""
+    inside at least one of them (in_any_bbox); an object already known —
+    from the base dataset OR already upserted this accumulation period, see
+    `acc` — is always kept, box or no box.
+
+    `area_boxes_by_name`: load_area_bboxes' own {area_name: bbox} shape
+    (never the dataset_bbox fallback, which has no area names) — a table
+    feature's `area` property (CONTRACT.md v32, the footer's area link)
+    carries over from the base/accumulator's own feature when the object is
+    already known, else is assigned from the first area box the point falls
+    in, else None. Built with export.build_features's own area_by_key
+    parameter, exactly the way the nightly build assigns it — never left at
+    the default None, which would silently wipe a known object's area on
+    every delta upsert.
+
+    `acc`: the accumulator being built up this run (new_accumulator's
+    shape), so an object created after the nightly base and later deleted or
+    retagged away from being a feature is still recognised as "known" and
+    gets its removal emitted — `was_table`/`was_place` checked against the
+    base dataset alone would miss it entirely (it was never in the base),
+    silently leaving a stale upsert in the accumulator forever. `known_*`
+    below is updated as changes are walked, so two changes to the same
+    object within one .osc (created, then deleted, in the same diff) are
+    handled correctly too, not just across ticks/files."""
+    known_tables = set(base_dataset["tables"])
+    known_places = set(base_dataset["places"])
+    if acc is not None:
+        known_tables = (known_tables | set(acc["tables_upsert"])) - acc["tables_remove"]
+        known_places = (known_places | set(acc["places_upsert"])) - acc["places_remove"]
     events = []
     for ch in changes:
         osm_type, osm_id = ch["type"], ch["id"]
         url = _osm_url(osm_type, osm_id)
-        was_table = url in base_dataset["tables"]
-        was_place = url in base_dataset["places"]
+        was_table = url in known_tables
+        was_place = url in known_places
         if ch["action"] == "delete":
             if was_table:
                 events.append((url, "table", None))
+                known_tables.discard(url)
             if was_place:
                 events.append((url, "place", None))
+                known_places.discard(url)
             continue
         tags = ch.get("tags") or {}
         if not (is_relevant_tags(tags) or was_table or was_place):
@@ -345,6 +420,8 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         lat, lon = ch.get("lat"), ch.get("lon")
         if lat is None:
             ref = base_dataset["tables"].get(url) or base_dataset["places"].get(url)
+            if ref is None and acc is not None:
+                ref = acc["tables_upsert"].get(url) or acc["places_upsert"].get(url)
             if ref:
                 lon, lat = ref["geometry"]["coordinates"]
             elif coord_fetch:
@@ -356,7 +433,12 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         if not (was_table or was_place) and not in_any_bbox(lon, lat, area_boxes):
             continue  # a brand-new object outside every covered sweep area
         el = {"type": osm_type, "id": osm_id, "tags": tags, "lat": lat, "lon": lon}
-        table_feats = export.build_features({"elements": [el]})
+        existing_table = base_dataset["tables"].get(url)
+        if existing_table is None and acc is not None:
+            existing_table = acc["tables_upsert"].get(url)
+        area = (existing_table["properties"].get("area") if existing_table is not None
+                else area_for_point(lon, lat, area_boxes_by_name))
+        table_feats = export.build_features({"elements": [el]}, {(osm_type, osm_id): area})
         place_feats = export.build_play_features({"elements": [el]}, {"elements": []})
         table_feat = table_feats[0] if table_feats else None
         place_feat = place_feats[0] if place_feats else None
@@ -366,17 +448,32 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
                 f["properties"]["edited_at"] = ch.get("timestamp")
         if table_feat is not None:
             events.append((url, "table", table_feat))
+            known_tables.add(url)
         elif was_table:
             events.append((url, "table", None))
+            known_tables.discard(url)
         if place_feat is not None:
             events.append((url, "place", place_feat))
+            known_places.add(url)
         elif was_place:
             events.append((url, "place", None))
+            known_places.discard(url)
         value = (tags.get("changing_table") or "").strip()
-        if (tags.get("amenity") == "toilets" and table_feat is None and place_feat is None
-                and value != "no"):
+        # "New" for the add-a-place flow (web/app.js's maybeNotifyAddedPlace)
+        # means a toilet OSM did not already have before — either this diff
+        # entry is a genuine create (version 1), or the object existed on
+        # OSM already but was never in the nightly base_dataset (an
+        # amenity=toilets tag just added to something else, or the object's
+        # first appearance inside a covered sweep area). An object already
+        # in the base that merely lost its table answer must never toast a
+        # reader who tapped "add a place" minutes ago as if it were new.
+        created = ch.get("version") == 1 or (
+            url not in base_dataset["tables"] and url not in base_dataset["places"])
+        if (created and tags.get("amenity") == "toilets"
+                and table_feat is None and place_feat is None and value != "no"):
             events.append((url, "toilet_no_table",
-                          {"osm_url": url, "lon": lon, "lat": lat, "t": ch.get("timestamp")}))
+                          {"osm_url": url, "lon": lon, "lat": lat, "t": ch.get("timestamp"),
+                           "version": ch.get("version")}))
     return events
 
 
@@ -504,7 +601,9 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
     for seq in range(last_seq + 1, current["seq"] + 1):
         raw = fetch_osc(seq)
         changes = parse_osc(io.BytesIO(raw))
-        apply_events(acc, process_changes(changes, base_dataset, area_boxes=area_boxes, coord_fetch=coord_fetch))
+        apply_events(acc, process_changes(changes, base_dataset, area_boxes=area_boxes,
+                                          coord_fetch=coord_fetch, acc=acc,
+                                          area_boxes_by_name=area_boxes_by_name))
         last_seq = seq
 
     delta = render_delta(acc, base_iso, last_seq, now=now)
@@ -512,16 +611,26 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
 
 
 def run_forever(poll_s: float = POLL_INTERVAL_S, state_path: str = STATE_PATH,
-                delta_path: str = DELTA_PATH, **kwargs) -> None:
+                delta_path: str = DELTA_PATH, coord_fetch=None,
+                coord_fetch_cap: int = COORD_FETCH_MAX_PER_TICK, **kwargs) -> None:
     """The `delta` compose service's entrypoint. Never crash-loops: a
     network error (or any other tick failure) is logged and the previous
-    delta.json is left exactly as it was, retried next tick."""
+    delta.json is left exactly as it was, retried next tick.
+
+    `coord_fetch`: wired to make_coord_fetch (fetch_osm_full_centroid,
+    capped at `coord_fetch_cap` per tick) unless a caller supplies its own —
+    without this, a way/relation created or newly relevant after the base
+    can never get a coordinate and process_changes silently drops it. A
+    fresh one is built every tick, not once for the whole run, so the cap
+    is per tick as the design asks, not a lifetime budget."""
     print(f"  delta: following {REPLICATION_BASE}, polling every {poll_s:.0f}s",
           file=sys.stderr)
     while True:
         try:
             state = load_state(state_path)
-            new_state, delta = run_tick(state, delta_path=delta_path, **kwargs)
+            tick_coord_fetch = coord_fetch or make_coord_fetch(coord_fetch_cap)
+            new_state, delta = run_tick(state, delta_path=delta_path,
+                                        coord_fetch=tick_coord_fetch, **kwargs)
             export.write_json_atomic(delta, delta_path)
             save_state(state_path, new_state)
             print(f"  delta: seq {new_state['seq']} base {new_state['base']} — "
