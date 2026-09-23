@@ -719,7 +719,9 @@ time spans in one rule (a lunch break); spans that cross midnight
 (`22:00-02:00`); and the `off`/`closed` modifiers. `PH` and `SH`
 (public/school holiday) rules are recognised and skipped outright — there is
 no calendar to check them against, so "PH off" neither opens nor closes
-anything here, rather than guessing at a holiday.
+anything here, rather than guessing at a holiday. Listed alongside weekdays
+(`PH,Su 10:00-17:00`), `PH`/`SH` are dropped from the selector and the weekdays
+kept, on the same not-a-holiday reading.
 
 `,` also works as OSM's *additional*-rule separator between two whole rules
 (`Mo-Fr 08:00-12:00, Sa 08:00-12:00`), distinct from `;`: it adds hours for

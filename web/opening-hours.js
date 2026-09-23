@@ -21,7 +21,9 @@
 // PH and SH (public/school holiday) rules are recognised and *skipped* — we
 // have no calendar to check them against, so a "PH off" rule neither opens
 // nor closes anything here; the closest alternative, guessing at a holiday,
-// would risk exactly the false claim this module exists to avoid.
+// would risk exactly the false claim this module exists to avoid. PH/SH
+// listed alongside weekdays ("PH,Su 10:00-17:00") are dropped from the
+// selector and the weekdays kept, on the same not-a-holiday reading.
 //
 // Mappers routinely write "," where a stricter reading might expect ";", and
 // OSM's own grammar gives "," an additional-rule meaning distinct from a
@@ -49,6 +51,9 @@ const DAY_LIST_RE = new RegExp(
   `^((?:${DAY_TOKEN}(?:-${DAY_TOKEN})?)(?:\\s*,\\s*(?:${DAY_TOKEN}(?:-${DAY_TOKEN})?))*)`);
 const TIME_SPAN_RE = /^([01]\d|2[0-4]):([0-5]\d)-([01]\d|2[0-4]):([0-5]\d)$/;
 const PH_SH_ONLY_RE = /^(?:PH|SH)(?:,(?:PH|SH))*(?:\s+(?:off|closed))?$/;
+const SELECTOR_ITEM = `(?:${DAY_TOKEN}(?:-${DAY_TOKEN})?|PH|SH)`;
+const MIXED_SELECTOR_RE = new RegExp(
+  `^(${SELECTOR_ITEM}(?:\\s*,\\s*${SELECTOR_ITEM})*)(?=\\s|$)`);
 // What a "," must be followed by to read as the start of a new additional
 // rule rather than a day-list or time-span separator: a day, or PH/SH.
 const NEW_RULE_START_RE = new RegExp(`^\\s*(?:${DAY_TOKEN}|PH|SH)\\b`);
@@ -96,10 +101,20 @@ function parseTimeSpans(text) {
 //                                    null for "every day")
 //  - null                         — anything we don't confidently understand
 function parseRule(raw) {
-  const rule = raw.trim();
+  let rule = raw.trim();
   if (!rule) return { skip: true };
   if (rule === "24/7") return { days: null, spans: [[0, 24 * 60]], off: false };
   if (PH_SH_ONLY_RE.test(rule)) return { skip: true };
+
+  // PH/SH mixed into a day selector ("PH,Su 10:00-17:00") drop out, leaving
+  // the weekdays — the same "today is not a holiday" reading as skipping a
+  // "PH off" rule. A selector of nothing but PH/SH skips the rule.
+  const sel = MIXED_SELECTOR_RE.exec(rule);
+  if (sel && /\b(?:PH|SH)\b/.test(sel[1])) {
+    const dayParts = sel[1].split(",").map((s) => s.trim()).filter((s) => s !== "PH" && s !== "SH");
+    if (!dayParts.length) return { skip: true };
+    rule = dayParts.join(",") + rule.slice(sel[0].length);
+  }
 
   let off = false;
   let rest = rule;

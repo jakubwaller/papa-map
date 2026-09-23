@@ -157,3 +157,17 @@ test("an ambiguous , group (overlapping days) is unknown, not guessed", () => {
   assert.equal(isOpenNow(oh, at(7, 13, 0)), "unknown");
   assert.equal(parseOpeningHours(oh), null);
 });
+
+test("PH mixed into a day selector keeps the weekdays", () => {
+  const oh = "Tu-Fr 08:00-17:00; Sa 09:00-17:00; PH,Su 10:00-17:00";
+  assert.equal(isOpenNow(oh, at(7, 11, 0)), "open");   // Sunday, from PH,Su
+  assert.equal(isOpenNow(oh, at(7, 9, 0)), "closed");  // Sunday, before opening
+  assert.equal(isOpenNow(oh, at(1, 10, 0)), "closed"); // Monday, no rule
+  assert.equal(isOpenNow(oh, at(2, 9, 0)), "open");    // Tuesday
+  assert.equal(isOpenNow("Su,SH 10:00-17:00", at(7, 11, 0)), "open");
+});
+
+test("a PH-only rule with times is skipped, never evaluated", () => {
+  assert.equal(isOpenNow("Mo-Fr 09:00-18:00, PH 10:00-12:00", at(1, 10, 0)), "open");
+  assert.equal(isOpenNow("PH 10:00-12:00", at(1, 10, 0)), "unknown");
+});
