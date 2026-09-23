@@ -713,8 +713,10 @@ here touches CONTRACT.md.
 
 The parser understands `24/7`; day ranges and lists (`Mo-Fr`, `Mo,We`, with or
 without a space after the comma), including wrap-around ranges (`Fr-Mo`);
-several `;`-separated rules, the later ones overriding the earlier for the
-days/times they cover (`Mo-Su 08:00-20:00; Tu off`); several `,`-separated
+several `;`-separated rules, a later one that matches a given day *replacing*
+that whole day's schedule rather than only the minutes its own spans mention
+(`Mo-Su 08:00-20:00; Tu off` closes all of Tuesday, not just the hours `Tu
+off` happens to list — Tuesday has none); several `,`-separated
 time spans in one rule (a lunch break); spans that cross midnight
 (`22:00-02:00`); and the `off`/`closed` modifiers. `PH` and `SH`
 (public/school holiday) rules are recognised and skipped outright — there is
@@ -742,16 +744,22 @@ selector: month ranges (`Apr-Oct`), wrapping ranges that cross the new year
 (`Nov-Apr`), a single month or a list (`Feb,Nov`), an optional trailing `:`,
 day-precise ranges within or across months (`Nov 01-Mar 15`, `Apr 1-Oct 31`),
 and single dates or lists of them (`Dec 25 off`, `Dec 25-26,Jan 01 closed`).
-A date selector obeys the same `;` override and `,` addition rules as
-everything else, and a rule whose date doesn't match today simply doesn't
-apply that day; hours that spill past midnight from a date-restricted rule
-are checked against *yesterday's* date, not today's.
+A day-only continuation names a day in the *same* month, so `Dec 20-05`
+isn't read as a year-wrapping range (there's no month to wrap into) — it's
+`"unknown"`. A date selector obeys the same `;` override and `,` addition
+rules as everything else — including the "a later ; rule that matches
+replaces the whole day" semantics above — and a rule whose date doesn't
+match today simply doesn't apply that day; hours that spill past midnight
+from a date-restricted rule are checked against *yesterday's* date, not
+today's.
 
 "Open end" times are supported: `11:00+` opens from 11:00 to midnight
 (closed before 11:00), `00:00+` is open all day, and `a-b+` is read as the
 guaranteed `a-b` span (the `+`'s "maybe later" isn't modelled). Times past
-24:00 spell out the small hours of the next day (`Fr,Sa 08:00-25:00` = until
-01:00 Saturday night into Sunday), and `00:00-00:00` means open all day.
+24:00 spell out the small hours of the next day on the *end* of a span
+(`Fr,Sa 08:00-25:00` = until 01:00 Saturday night into Sunday), and
+`00:00-00:00` means open all day; a *start* past 24:00 (`Fr 24:00-26:00`)
+isn't a real clock hour relative to Friday and makes the value `"unknown"`.
 Whitespace around `-` is tolerated in day and time ranges (`Mo - Sa 08:00 -
 19:00`), same as it already was around `,`.
 
@@ -764,12 +772,18 @@ the module already makes. Without the place's coordinates, or on a date
 where the event doesn't occur at that latitude (polar day/night), a value
 that needs one is `"unknown"`.
 
-Only the first alternative of a `||` fallback chain is evaluated; the rest
-is dropped, unread. A trailing quoted comment is stripped and the rule
-evaluated normally when it follows an explicit state keyword
+A `||` fallback chain tries its alternatives in order: the first one that
+actually says something about *today* (the right weekday, a date selector
+that matches, sun coordinates it can resolve, ...) decides the answer, and
+one that's silent about today — wrong weekdays, an unparseable comment-only
+fallback — is skipped in favour of the next. Only when every alternative has
+nothing to say does the value come back `"unknown"`; a plain value with no
+`||` at all keeps its old behaviour (a day the rules never mention is
+`"closed"`, not `"unknown"`). A trailing quoted comment is stripped and the
+rule evaluated normally when it follows an explicit state keyword
 (`07:00-23:00 open "Restaurant"`), but a comment with no state keyword
-(`24/7 "depends on the park"`) makes the value `"unknown"` — there's no way
-to know what the comment is qualifying.
+(`24/7 "depends on the park"`) makes that alternative unusable — there's no
+way to know what the comment is qualifying.
 
 Anything else — week numbers, easter, year ranges, nth-weekday selectors
 (`Sa[2]`), "+N day" offsets, or any other construct the parser doesn't

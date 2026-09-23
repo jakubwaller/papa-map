@@ -362,3 +362,90 @@ test("polar day/night makes a sun-event value unknown rather than guessed", () =
   const svalbard = { lat: 78.22, lon: 15.65 };
   assert.equal(isOpenNow("sunrise-sunset", on(2026, 12, 21, 12, 0), svalbard), "unknown");
 });
+
+// A later ";" rule that matches today replaces the *whole day's* schedule,
+// not just the minutes its own spans mention — the default outside those
+// spans is closed, same as any other day the rules are silent about.
+
+test("a date-restricted ; rule replaces the whole day, not just its own spans", () => {
+  const oh = "Mo-Sa 08:00-20:00; Dec 24 08:00-14:00";
+  assert.equal(isOpenNow(oh, on(2026, 12, 24, 10, 0)), "open");   // within the override's hours
+  assert.equal(isOpenNow(oh, on(2026, 12, 24, 16, 0)), "closed"); // Dec 24 governs all of Dec 24
+  assert.equal(isOpenNow(oh, on(2026, 12, 23, 16, 0)), "open");   // an ordinary day: base rule
+});
+
+test("a month-range ; override replaces the whole day across the range", () => {
+  const oh = "Mo-Su 09:00-20:00; Nov-Mar 10:00-17:00";
+  assert.equal(isOpenNow(oh, on(2026, 12, 2, 9, 30)), "closed"); // before the Nov-Mar override opens
+  assert.equal(isOpenNow(oh, on(2026, 12, 2, 12, 0)), "open");
+  assert.equal(isOpenNow(oh, on(2026, 6, 2, 9, 30)), "open");    // outside Nov-Mar: base rule stands
+});
+
+test("a month selector combined with a weekday selector replaces the whole day", () => {
+  const oh = "Mo-Fr 09:00-18:00; Aug Mo-Fr 10:00-14:00";
+  assert.equal(isOpenNow(oh, on(2026, 8, 5, 11, 0)), "open");
+  assert.equal(isOpenNow(oh, on(2026, 8, 5, 15, 0)), "closed"); // August governs all of Wednesday
+  assert.equal(isOpenNow(oh, on(2026, 7, 1, 15, 0)), "open");   // outside August: base rule stands
+});
+
+test("a plain weekday ; override replaces the whole day (not just its own hours)", () => {
+  const oh = "Mo-Fr 08:00-18:00; Fr 10:00-12:00";
+  assert.equal(isOpenNow(oh, at(5, 9, 0)), "closed");  // Friday, before the override's hours
+  assert.equal(isOpenNow(oh, at(5, 11, 0)), "open");   // Friday, within the override's hours
+  assert.equal(isOpenNow(oh, at(5, 13, 0)), "closed"); // Friday, after the override's hours
+  assert.equal(isOpenNow(oh, at(4, 9, 0)), "open");    // Thursday: base rule stands
+});
+
+test('|| with nothing in the first alternative matching today is unknown', () => {
+  const oh = 'Mo-Fr 10:00-18:00 || "by appointment"';
+  assert.equal(isOpenNow(oh, at(6, 11, 0)), "unknown"); // Saturday: neither alternative says anything
+  assert.equal(isOpenNow(oh, at(1, 11, 0)), "open");    // Monday: the first alternative covers it
+});
+
+test("|| falls through to a second alternative that does cover the day", () => {
+  const oh = "Mo-Fr 10:00-18:00 || Sa 10:00-12:00";
+  assert.equal(isOpenNow(oh, at(6, 11, 0)), "open");   // Saturday, within the fallback's hours
+  assert.equal(isOpenNow(oh, at(6, 13, 0)), "closed"); // Saturday, outside the fallback's hours
+  assert.equal(isOpenNow(oh, at(1, 11, 0)), "open");   // Monday, first alternative
+});
+
+test("a start hour of 24 or later doesn't fold back onto the rule's own day", () => {
+  assert.equal(isOpenNow("Fr 24:00-26:00", at(5, 1, 0)), "unknown");
+  assert.equal(isOpenNow("Fr 24:00-26:00", at(6, 1, 0)), "unknown");
+});
+
+test("isOpenNow requires both coordinates to be finite numbers for a sun event", () => {
+  assert.equal(isOpenNow("sunrise-sunset", at(3, 12, 0), {}), "unknown");
+  assert.equal(isOpenNow("sunrise-sunset", at(3, 12, 0), { lat: 52.52 }), "unknown");
+  assert.equal(isOpenNow("sunrise-sunset", at(3, 12, 0), { lat: NaN, lon: 13.4 }), "unknown");
+  assert.equal(isOpenNow("sunrise-sunset", at(3, 12, 0), { lat: "52.52", lon: "13.4" }), "unknown");
+});
+
+test("an overnight sun span's spill ends at *today's* sunrise, not yesterday's", () => {
+  const berlin = { lat: 52.52, lon: 13.405 };
+  // Berlin, around 2026-06-21: sunrise creeps a little earlier or later
+  // day to day, so yesterday's and today's sunrise are not the same
+  // instant — the spillover portion of an overnight span must track
+  // *today's* sunrise, the actual closing instant.
+  const oh = "sunset-sunrise";
+  const justBeforeTodaySunrise = on(2026, 6, 21, 4, 39);
+  const justAfterTodaySunrise = on(2026, 6, 21, 4, 47);
+  assert.equal(isOpenNow(oh, justBeforeTodaySunrise, berlin), "open");
+  assert.equal(isOpenNow(oh, justAfterTodaySunrise, berlin), "closed");
+});
+
+test("a sun-event offset that pushes past midnight wraps rather than breaking", () => {
+  const berlin = { lat: 52.52, lon: 13.405 };
+  // Berlin, 2026-06-21: sunset is late (~21:30 local), so a +5h offset
+  // ((sunset+05:00)) lands in the small hours of the *next* day — it must
+  // fold back into a valid 0-1439 minute-of-day rather than overflowing
+  // past 1440 and comparing nonsensically against the rest of the span.
+  const oh = "(sunset+05:00)-23:59";
+  assert.equal(isOpenNow(oh, on(2026, 6, 21, 20, 0), berlin), "open");    // within the folded span
+  assert.equal(isOpenNow(oh, on(2026, 6, 22, 1, 0), berlin), "closed");   // before the offset time folds open again
+});
+
+test("Dec 20-05 (end day before start, same month) is unknown, not a year-wrap", () => {
+  assert.equal(isOpenNow("Dec 20-05 08:00-18:00", on(2026, 12, 22, 10, 0)), "unknown");
+  assert.equal(isOpenNow("Dec 20-05 08:00-18:00", on(2027, 1, 2, 10, 0)), "unknown");
+});
