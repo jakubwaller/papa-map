@@ -701,6 +701,31 @@ locked. Costs no extra Overpass query. Measured on Germany, 13 Sep 2026:
 `limited`, 495 `no`, 742 untagged; 390 tables in a wheelchair toilet, 7 of
 them behind a Euro key.
 
+## Open now
+
+Wherever a popup already prints the raw `opening_hours` tag, it gets a same-line
+badge — "Open now" (green) or "Closed now" (grey) — whenever `web/opening-hours.js`
+is confident enough to say one. Evaluated client-side, at popup-render time,
+against the *viewer's own clock*: the tables are local to whoever is looking,
+and OSM carries no per-place timezone to check against instead. Pure and
+frontend-only; the pipeline exports `opening_hours` unchanged, so nothing
+here touches CONTRACT.md.
+
+The parser understands `24/7`; day ranges and lists (`Mo-Fr`, `Mo,We`), including
+wrap-around ranges (`Fr-Mo`); several `;`-separated rules, the later ones
+overriding the earlier for the days/times they cover (`Mo-Su 08:00-20:00; Tu
+off`); several `,`-separated time spans in one rule (a lunch break); spans
+that cross midnight (`22:00-02:00`); and the `off`/`closed` modifiers. `PH`
+and `SH` (public/school holiday) rules are recognised and skipped outright —
+there is no calendar to check them against, so "PH off" neither opens nor
+closes anything here, rather than guessing at a holiday.
+
+Anything else — months and date ranges, week numbers, sunrise/sunset,
+"open end" (`+`), quoted comments, year ranges, or any other construct the
+parser doesn't recognise — makes the whole value `"unknown"`, and the popup
+shows the raw hours with no badge at all: a missing badge beats a wrong one.
+Tests: `web/opening-hours.test.js` (`node --test web/*.test.js`).
+
 ## Leaderboard
 
 A full build also appends one entry per day to `web/data/history.json` —

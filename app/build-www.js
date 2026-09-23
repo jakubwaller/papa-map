@@ -21,7 +21,8 @@ const www = join(here, "www");
 // And manifest.webmanifest: a web view has no use for it, but the page links it.
 const FILES = [
   "index.html", "app.js", "datasource.js", "i18n.js", "osm.js", "me.js", "native.js",
-  "sign-pin.js", "search.js", "in-app.js", "style.css", "icon.svg", "favicon.svg", "manifest.webmanifest", "taginfo.json",
+  "sign-pin.js", "search.js", "opening-hours.js", "in-app.js", "style.css", "icon.svg",
+  "favicon.svg", "manifest.webmanifest", "taginfo.json",
 ];
 const DIRS = ["vendor", "icons"];
 
