@@ -508,3 +508,28 @@ test("an off with more than one comma-joined time span is unknown, not a full-da
   assert.equal(isOpenNow(oh, at(3, 9, 0)), "unknown");
   assert.equal(parseOpeningHours(oh), null);
 });
+
+// A comma-joined whole-day "off" closes the day outright, including
+// whatever an earlier member's overnight span would otherwise have
+// spilled into the next calendar day — the evening that would have run
+// into the small hours never happens if the day itself is off.
+
+test("a comma whole-day off also cancels that day's overnight spillover", () => {
+  const oh = "Mo-Fr 20:00-02:00, We off";
+  assert.equal(isOpenNow(oh, at(4, 1, 0)), "closed"); // Thursday 01:00: no spill from an off Wednesday
+  assert.equal(isOpenNow(oh, at(3, 1, 0)), "open");   // Wednesday 01:00: spill from Tuesday still stands
+  assert.equal(isOpenNow(oh, at(2, 21, 0)), "open");  // Tuesday evening: untouched
+});
+
+test("a comma whole-day off with a date selector also cancels the overnight spillover", () => {
+  const oh = "Mo-Su 20:00-02:00, Dec 24 off";
+  assert.equal(isOpenNow(oh, on(2026, 12, 25, 1, 0)), "closed"); // no spill from an off Dec 24
+  assert.equal(isOpenNow(oh, on(2026, 12, 24, 21, 0)), "closed"); // Dec 24 evening itself is off
+  assert.equal(isOpenNow(oh, on(2026, 12, 23, 21, 0)), "open");   // an ordinary evening
+});
+
+test("the ; spelling of a whole-day off already cancelled the overnight spillover", () => {
+  const oh = "Mo-Fr 20:00-02:00; We off";
+  assert.equal(isOpenNow(oh, at(4, 1, 0)), "closed"); // Thursday 01:00: no spill from an off Wednesday
+  assert.equal(isOpenNow(oh, at(3, 1, 0)), "open");   // Wednesday 01:00: spill from Tuesday still stands
+});
