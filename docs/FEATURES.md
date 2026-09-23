@@ -711,14 +711,25 @@ and OSM carries no per-place timezone to check against instead. Pure and
 frontend-only; the pipeline exports `opening_hours` unchanged, so nothing
 here touches CONTRACT.md.
 
-The parser understands `24/7`; day ranges and lists (`Mo-Fr`, `Mo,We`), including
-wrap-around ranges (`Fr-Mo`); several `;`-separated rules, the later ones
-overriding the earlier for the days/times they cover (`Mo-Su 08:00-20:00; Tu
-off`); several `,`-separated time spans in one rule (a lunch break); spans
-that cross midnight (`22:00-02:00`); and the `off`/`closed` modifiers. `PH`
-and `SH` (public/school holiday) rules are recognised and skipped outright —
-there is no calendar to check them against, so "PH off" neither opens nor
-closes anything here, rather than guessing at a holiday.
+The parser understands `24/7`; day ranges and lists (`Mo-Fr`, `Mo,We`, with or
+without a space after the comma), including wrap-around ranges (`Fr-Mo`);
+several `;`-separated rules, the later ones overriding the earlier for the
+days/times they cover (`Mo-Su 08:00-20:00; Tu off`); several `,`-separated
+time spans in one rule (a lunch break); spans that cross midnight
+(`22:00-02:00`); and the `off`/`closed` modifiers. `PH` and `SH`
+(public/school holiday) rules are recognised and skipped outright — there is
+no calendar to check them against, so "PH off" neither opens nor closes
+anything here, rather than guessing at a holiday.
+
+`,` also works as OSM's *additional*-rule separator between two whole rules
+(`Mo-Fr 08:00-12:00, Sa 08:00-12:00`), distinct from `;`: it adds hours for
+the days it names rather than overriding what came before. The parser tells
+this apart from a day-list or time-span-list comma by what follows it — a new
+rule starts with a day (or `PH`/`SH`) selector, only once what precedes the
+comma already has a time. If two comma-joined rules in the same group could
+both match the same weekday, whether the later one is meant to add to or
+replace the earlier one's hours isn't decidable from the text, so the whole
+value comes back `"unknown"` rather than a guess.
 
 Anything else — months and date ranges, week numbers, sunrise/sunset,
 "open end" (`+`), quoted comments, year ranges, or any other construct the
