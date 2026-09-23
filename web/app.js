@@ -9,13 +9,15 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation } from "./datasource.js?v=app42";
+         isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
+         mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app43";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app42";
+         langUrl } from "./i18n.js?v=app43";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app42";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app43";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -23,23 +25,24 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app42";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app43";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse } from "./native.js?v=app42";
+         formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
+         onBrowserFinished, SITE } from "./native.js?v=app43";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app42";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app43";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app42";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app43";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -320,6 +323,33 @@ let pinOpenedBeforeFix = false;
 // ---- State ----
 let allFeatures = [];                                     // flattened GeoJSON
 let allPlaces = [];                                       // play-area prospects
+
+// ---- Live updates (CONTRACT.md's live-updates amendment) ----
+// The nightly build's own two FeatureCollections, kept aside from
+// allFeatures/allPlaces (which are always the merged, on-screen view) so a
+// delta or a fresh answer override can be re-merged on top without ever
+// re-fetching the base. Reset only by applyDataset itself — a new nightly
+// build or a background refresh.
+let baseFC = null;
+let basePlacesFC = null;
+// The delta most recently merged in, or null before the first successful
+// poll (or once a fresher applyDataset has superseded it — see applyDataset).
+let currentDelta = null;
+// A reader's own confirmed answers, instant-recoloured ahead of tonight's
+// build: {osm_url: {status, changing_table, location_raw, t}}, persisted so
+// a reload keeps the colour. Try/catch everywhere storage might be blocked
+// (private mode, quota) — an override that cannot be remembered just waits
+// for the delta/nightly build like it always did.
+const ANSWER_OVERRIDES_KEY = "papamap-answer-overrides";
+function loadAnswerOverrides() {
+  try { return JSON.parse(localStorage.getItem(ANSWER_OVERRIDES_KEY) || "{}") || {}; }
+  catch { return {}; }
+}
+function saveAnswerOverrides(overrides) {
+  try { localStorage.setItem(ANSWER_OVERRIDES_KEY, JSON.stringify(overrides)); }
+  catch { /* blocked storage: the override still works this session */ }
+}
+let answerOverrides = loadAnswerOverrides();
 let myFeatureGrid = null;   // buildFeatureGrid(allFeatures) — "Mein PapaMap"'s own nearest lookup
 // osm_url -> object, one Map each rather than an allFeatures.find/allPlaces.find
 // per lookup: the saved-places list alone can be up to 200 rows, each wanting
@@ -666,7 +696,7 @@ function popupHTML(f) {
   links.push(routeButton(f.lat, f.lon, f.name || ""));
   links.push(shareButtonHTML());
   if (osmUrl)
-    links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
+    links.push(`<a class="btn" data-edit-check href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
   const title = f.name || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
   const sub = f.amenity ? `<div class="sub">${esc(f.amenity.replace(/_/g, " "))}</div>` : "";
@@ -785,7 +815,7 @@ function placeHTML(p) {
   links.push(routeButton(p.lat, p.lon, p.name || ""));
   links.push(shareButtonHTML());
   if (osmUrl)
-    links.push(`<a class="btn" href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
+    links.push(`<a class="btn" data-edit-check href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
   const title = p.name || t("popupUnnamed");
   const sub = p.kind ? `<div class="sub">${esc(p.kind.replace(/_/g, " "))}</div>` : "";
@@ -1936,6 +1966,10 @@ async function pollEdit(gen, last) {
     // line, and the toast would read "…OSM: . …".
     const printable = out.tags && printableEditTagLines(out.tags).length > 0;
     setEditNote(rec, "found", printable ? "editFound" : "editFoundPlain", out.tags);
+    // The OSM API confirms the edit exists; the pin's own colour still
+    // waits on the delta follower (a few minutes) or tonight's build. Watch
+    // for it rather than leaving the note's "in a moment" unfulfilled.
+    if (Number.isFinite(after.version)) watchDeltaForVersion(rec.osm_url, after.version);
   } else if (last) {
     // The record stays: coming back to the tab re-arms the reads until the
     // TTL runs out, for the reader who returned once before answering — but
@@ -2147,9 +2181,12 @@ async function answer(kind, obj, choice, freshToken = null) {
     // already has everything an entry needs (CONTRACT.md v39).
     recordMyAnswer(out.changeset, obj.lon, obj.lat);
     // The popup's tag row and the question's absence both read from the
-    // object, so the one in memory learns the answer. A pin's status, a
-    // place's colour and the blue play ring do not move — that is the
-    // pipeline's to say, tonight.
+    // object, so the one in memory learns the answer. A room answer's own
+    // status recolours instantly below (stats.json's answer_status — never
+    // re-derived here); everything else — a status this reader did NOT just
+    // answer, and the blue play ring either way — still only moves once the
+    // pipeline says so: the delta follower within a few minutes, tonight's
+    // build as the backstop.
     if (play) {
       // Answered is answered, whichever way: the question does not come back
       // when this popup is reopened. Only its own line goes; a room question
@@ -2159,6 +2196,37 @@ async function answer(kind, obj, choice, freshToken = null) {
     } else {
       obj.changing_table = out.tags.changing_table;
       obj.location_raw = out.tags["changing_table:location"];
+      // Instant recolour (CONTRACT.md's live-updates amendment): stats.json's
+      // answer_status is the one lookup the frontend may use for a reader's
+      // OWN confirmed answer — everything else still waits for the delta or
+      // tonight's build. `choice` covers every room (roomPatch/tablePatch);
+      // "none" (a play place with no table) and the three play_* choices
+      // never carry a status, so this stays untouched for those, exactly as
+      // before. obj.status is set directly (not only via the override layer)
+      // so the very next refreshPins() call — right below, via
+      // renderMergedDataset() — repaints this object without waiting on
+      // localStorage to round-trip.
+      const newStatus = lastStats?.answer_status?.[choice];
+      if (newStatus !== undefined && newStatus !== null) {
+        const t = new Date().toISOString();
+        // out.version is the OSM object's version AFTER this write (writeTags,
+        // web/osm.js) — the primary key pruneAnswerOverrides matches against
+        // a delta upsert's own osm_version. `t` (the client clock, after the
+        // round trip) stays only as the secondary, data_base-time fallback:
+        // OSM's own edited_at on that same delta feature is the server's
+        // timestamp from DURING the write, routinely earlier than `t`, so a
+        // time-only comparison against it would never clear this override.
+        answerOverrides = { ...answerOverrides, [obj.osm_url]:
+          { status: newStatus, changing_table: obj.changing_table,
+            location_raw: obj.location_raw, t, version: out.version } };
+        saveAnswerOverrides(answerOverrides);
+        renderMergedDataset();
+        // renderMergedDataset() rebuilds featuresByOsmUrl/placesByOsmUrl and
+        // popupObj from the merged view — obj itself (this closure's own
+        // reference) may now be a stale copy if the answer promoted a place
+        // to a table, so the rest of this branch keeps using it only for the
+        // tag row below, never for anything that must reflect the promotion.
+      }
       // Everything that was true only while the question was open goes: the
       // question itself (.ask — querySelector would take the headline alone
       // and leave the buttons standing, sandbox test 13 Sep 2026) and the
@@ -2209,6 +2277,28 @@ function logout() {
   if (token) revoke(osm, token);
   if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line changes
 }
+// The "reader is back" path — what actually needs to happen once whatever
+// took them away (MapComplete, OSM, another tab) is behind them again. The
+// website reaches this from visibilitychange, below; the iOS app, whose
+// in-app Browser sheet never sets document.hidden at all (native.js's own
+// comment on onBrowserFinished), reaches it from that event instead
+// (bootNative). Idempotent — safe to call from both on a platform where,
+// in principle, either could fire.
+function onReturnToFront() {
+  if (editNote?.unseen) {
+    editNote.unseen = false;
+    if (!attachEditNote() && editNote) toastEditNote();
+  }
+  // A schedule already running keeps running: its 20 s / 1 min / 2 min /
+  // 5 min reads catch an answer made in between, and a reader flipping
+  // between the two tabs must not turn into one API request per flip.
+  if (!editTimers.length && readEdit()) armEditCheck();
+  // "Poll on returning to the front" — a reader who just came back from
+  // MapComplete (or from any other tab) should not wait out the rest of the
+  // 3-minute/30-second schedule for their own edit to show up.
+  if (dataReady) { pollDelta(); scheduleDeltaPoll(); }
+}
+
 document.addEventListener("visibilitychange", () => {
   // Book the time spent away: the nudge at the end of a schedule is for a
   // reader who was in MapComplete long enough to have answered.
@@ -2220,14 +2310,7 @@ document.addEventListener("visibilitychange", () => {
     writeEdit(rec);
   }
   if (document.visibilityState !== "visible") return;
-  if (editNote?.unseen) {
-    editNote.unseen = false;
-    if (!attachEditNote() && editNote) toastEditNote();
-  }
-  // A schedule already running keeps running: its 20 s / 1 min / 2 min /
-  // 5 min reads catch an answer made in between, and a reader flipping
-  // between the two tabs must not turn into one API request per flip.
-  if (!editTimers.length && readEdit()) armEditCheck();
+  onReturnToFront();
 });
 
 // ---- Add a place: deep links out to MapComplete, at the current view ----
@@ -2246,6 +2329,82 @@ document.getElementById("add-place").addEventListener("click", () => {
   addDialog.showModal();
 });
 document.getElementById("add-close").addEventListener("click", () => addDialog.close());
+
+// ---- Add a place: watching the delta for the new object to arrive --------
+// Tapping either link leaves for MapComplete; there is no osm_url to check
+// yet (the object doesn't exist), so — unlike startEditCheck — this watches
+// a place (the view's own bbox) and a time, not one object. Cleared once
+// resolved one way or the other, so a reader who adds two places in a row
+// only ever watches for the most recent.
+const ADD_WATCH_KEY = "papamap-add-watch";
+const ADD_WATCH_TIMEOUT_MS = 10 * 60 * 1000;
+
+function writeAddWatch(rec) {
+  try { sessionStorage.setItem(ADD_WATCH_KEY, JSON.stringify(rec)); }
+  catch { /* blocked storage: the toast/pulse simply never fires */ }
+}
+function readAddWatch() {
+  try { return JSON.parse(sessionStorage.getItem(ADD_WATCH_KEY) || "null"); }
+  catch { return null; }
+}
+function clearAddWatch() {
+  try { sessionStorage.removeItem(ADD_WATCH_KEY); } catch { /* nothing to clear */ }
+}
+
+for (const id of ["add-toilet-link", "add-venue-link"]) {
+  document.getElementById(id).addEventListener("click", () => {
+    const b = map.getBounds();
+    writeAddWatch({
+      t: new Date().toISOString(),
+      bbox: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
+      // The actual zoom at the tap, not an estimate from the bbox's own
+      // span — used only for the "wide view, skip the fly-to" decision
+      // below, but there is no reason to approximate what MapLibre already
+      // hands over for free.
+      zoom: map.getZoom(),
+    });
+    addDialog.close();
+  });
+}
+
+// A short visual "look here": fly to the new pin and (re)open its popup —
+// which already pulses in on open the way any freshly drawn/selected pin
+// does (the selected-pin marker, CONTRACT.md v44's scale-in). No separate
+// animation is added on top of it. Skipped — the toast alone still fires —
+// when the view the reader tapped "add a place" from was wider than about
+// zoom 14 (the actual zoom recorded in the watch at tap time, never
+// estimated from the bbox): flying in from a whole-country view would be a
+// bigger jump than "look here" is meant to be, and the toast already names
+// what happened.
+function pulseNewPin(kind, obj, watch) {
+  if (watch.zoom < 14) return;
+  map.flyTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
+  reopen(kind, obj);
+}
+
+// Checked on every delta poll (applyDelta, below) while a watch is pending.
+// selectAddedPlace (web/datasource.js, pure and tested) is the whole
+// decision — which candidate, if any, is what this reader added, and
+// whether it's a table, a play place or a toilet with no table yet; this
+// is only the side effects (toast, fly-to, clearing the watch). Falls back
+// to the existing "nothing new yet" nudge after ten minutes with nothing.
+function maybeNotifyAddedPlace(deltaJson) {
+  const watch = readAddWatch();
+  const result = selectAddedPlace(deltaJson, watch);
+  if (!result) {
+    if (watch && Date.now() - Date.parse(watch.t) > ADD_WATCH_TIMEOUT_MS) {
+      clearAddWatch();
+      toast(t("editNone"));   // "nothing new on OSM yet / log in to MapComplete and upload"
+    }
+    return;
+  }
+  clearAddWatch();
+  if (result.type === "toilet_no_table") { toast(t("toastToiletNoTable")); return; }
+  toast(t(result.type === "place" ? "toastNewPlace" : "toastNewTable"));
+  const obj = (result.type === "place" ? placesByOsmUrl : featuresByOsmUrl)
+    .get(result.feature.properties.osm_url);
+  if (obj) pulseNewPin(result.type, obj, watch);
+}
 
 // ---- Language picker: re-render everything that carries text ----
 // A <select> rather than the old DE → EN → DA cycle button. Nine languages
@@ -2557,7 +2716,12 @@ function stripOsmParam() {
 // popup is simply closed rather than left showing a table that is no longer
 // there. Before boot's own first call, `popupObj` is always null — nothing
 // is open yet — so this branch is a no-op the first time through.
-function applyDataset(fc, places, stats, areas) {
+// The repaint half of applyDataset, factored out (live-updates amendment) so
+// applyDelta below can redraw the merged view on top of a delta or a fresh
+// answer override without re-running renderStats/areaIndex, which only the
+// base dataset itself (a nightly build, or the app's background refresh)
+// ever changes.
+function applyFeatureSets(fc, places) {
   allFeatures = loadFeatures(fc);
   allPlaces = loadPlaces(places);
   // "Mein PapaMap"'s own nearest-feature lookup (answerArea, web/me.js) —
@@ -2569,9 +2733,6 @@ function applyDataset(fc, places, stats, areas) {
   for (const f of allFeatures) if (f.osm_url) featuresByOsmUrl.set(f.osm_url, f);
   placesByOsmUrl = new Map();
   for (const p of allPlaces) if (p.osm_url) placesByOsmUrl.set(p.osm_url, p);
-  renderStats(stats);
-  areaIndex = Array.isArray(areas) ? areas : null;
-  updateRegionsLink();
   renderChips();
   positionZoomCtrl();   // topbar height depends on the rendered strip
   refreshPins();
@@ -2584,7 +2745,7 @@ function applyDataset(fc, places, stats, areas) {
       if (popup) {
         popup.setHTML(popupObj.kind === "place" ? placeHTML(obj) : popupHTML(obj));
         attachEditNote();
-        updateSignMarker();   // tonight's build may carry a new status for it
+        updateSignMarker();   // tonight's build (or a delta, or this reader's own answer) may carry a new status for it
       }
     } else if (popup) {
       popup.remove();
@@ -2602,6 +2763,40 @@ function applyDataset(fc, places, stats, areas) {
   if (roomCardFeature) evaluateRoomCard();
 }
 
+// Base + delta + this reader's own pending answers, merged and drawn — the
+// one function that has to run after any of the three changes. Never called
+// with a null baseFC (before the first applyDataset).
+function renderMergedDataset() {
+  let fc = baseFC, places = basePlacesFC;
+  if (currentDelta) {
+    fc = mergeFeatureCollection(fc, currentDelta.tables?.upsert, currentDelta.tables?.remove);
+    places = mergeFeatureCollection(places, currentDelta.places?.upsert, currentDelta.places?.remove);
+  }
+  if (Object.keys(answerOverrides).length) {
+    ({ fc, places } = applyAnswerOverrides(fc, places, answerOverrides));
+  }
+  applyFeatureSets(fc, places);
+}
+
+function applyDataset(fc, places, stats, areas) {
+  baseFC = fc;
+  basePlacesFC = places;
+  // A fresh base dataset (a new nightly build, or the app's background
+  // refresh) already contains whatever the delta and this reader's own
+  // answers described — pruneAnswerOverrides below drops the ones it truly
+  // covers, keeping the very few made after this dataset's own data_base;
+  // the delta itself is simply dropped and re-fetched by the next poll,
+  // rather than risk merging it against tags it no longer matches.
+  currentDelta = null;
+  const versionByUrl = new Map();   // nothing to compare a fresh delta against yet — data_base alone decides here
+  answerOverrides = pruneAnswerOverrides(answerOverrides, stats?.data_base, versionByUrl);
+  saveAnswerOverrides(answerOverrides);
+  renderStats(stats);
+  areaIndex = Array.isArray(areas) ? areas : null;
+  updateRegionsLink();
+  renderMergedDataset();
+}
+
 // The app's background refresh, watched once boot has already drawn: waits
 // for all four of loadJSON's `refreshed` promises together, not as each lands
 // — a redraw on the first of four and another on the second would flicker,
@@ -2615,6 +2810,90 @@ function applyDataset(fc, places, stats, areas) {
 // condition that actually says "this is old data and nothing newer could be
 // had". A background refresh that is still running, or that succeeded even
 // with nothing changed, says nothing.
+// ---- The delta follower's own file: web/data/delta.json ----
+// Never shell-precached (SHELL in sw.js is the app's own code, not data) and
+// fetched with cache: "no-store" for the same reason the dataset files
+// aren't: it changes minute to minute, and the service worker's runtime
+// cache is for the offline case, not for staying current online.
+// Relative on purpose, like the other dataset files' own path strings
+// (boot()'s loadDataset call below) — but unlike those, this one is fetched
+// directly rather than through loadDataset/loadDatasetNative, so it has to
+// resolve the app's own origin itself. In the store app the page runs from
+// papamap://localhost (iOS) or https://localhost (Android), where data/
+// is not bundled — loadDatasetNative's own dataset fetches already prefix
+// SITE for exactly this reason (native.js); fetchDelta does the same by hand.
+const DELTA_URL = "data/delta.json";
+const DELTA_POLL_MS = 3 * 60 * 1000;          // "re-poll every 3 min while visible"
+const DELTA_POLL_PENDING_MS = 30 * 1000;      // "...every 30s with a pending own edit"
+let deltaPollTimer = null;
+
+async function fetchDelta() {
+  try {
+    const r = await fetch(resolveDataUrl(DELTA_URL, isNative(), SITE), { cache: "no-store" });
+    return r.ok ? await r.json() : null;
+  } catch { return null; }
+}
+
+// A delta merged on top of the base dataset — never on top of a previous
+// delta, so a dropped object (tables.remove) can never come back to life
+// through an older upsert still sitting in currentDelta. Ignored outright
+// when it is older than the loaded dataset's own base (isDeltaFresh):
+// CONTRACT.md's live-updates amendment.
+function applyDelta(deltaJson) {
+  if (!baseFC || !deltaJson || !isDeltaFresh(deltaJson.base, lastStats?.data_base)) return;
+  currentDelta = deltaJson;
+  const versionByUrl = new Map();
+  for (const f of (deltaJson.tables?.upsert || []).concat(deltaJson.places?.upsert || [])) {
+    const url = f?.properties?.osm_url;
+    const version = f?.properties?.osm_version;
+    if (url && version != null) versionByUrl.set(url, version);
+  }
+  const pruned = pruneAnswerOverrides(answerOverrides, lastStats?.data_base, versionByUrl);
+  if (Object.keys(pruned).length !== Object.keys(answerOverrides).length) {
+    answerOverrides = pruned;
+    saveAnswerOverrides(answerOverrides);
+  }
+  renderMergedDataset();
+  maybeNotifyAddedPlace(deltaJson);
+}
+
+async function pollDelta() {
+  if (!dataReady || document.hidden) return;
+  const json = await fetchDelta();
+  if (json) applyDelta(json);
+}
+
+// A schedule already running keeps its own pace; the next tick reschedules
+// itself, so a poll that races a slow network never queues a second one on
+// top. Faster (30s) for as long as this reader has an answer of their own
+// still waiting to reach the delta — the same readEdit() record
+// startEditCheck/armEditCheck already keep in sessionStorage.
+function scheduleDeltaPoll() {
+  clearTimeout(deltaPollTimer);
+  const ms = readEdit() ? DELTA_POLL_PENDING_MS : DELTA_POLL_MS;
+  deltaPollTimer = setTimeout(async () => { await pollDelta(); scheduleDeltaPoll(); }, ms);
+}
+
+// Waits for the delta to carry a specific object at or past a specific OSM
+// version — the edit check's "found" case (pollEdit, above), where the OSM
+// API has already confirmed the edit exists and only the delta follower's
+// own catch-up (up to ~2-4 min, per the design) stands between it and a
+// repaint. 15s cadence, ~5 min ceiling; gives up quietly — the object still
+// arrives with the next scheduled poll or tonight's build either way.
+function watchDeltaForVersion(osmUrl, minVersion, attemptsLeft = 20) {
+  const check = async () => {
+    const json = await fetchDelta();
+    if (json && isDeltaFresh(json.base, lastStats?.data_base)) {
+      const hit = (json.tables?.upsert || []).concat(json.places?.upsert || [])
+        .find((f) => f.properties.osm_url === osmUrl
+          && Number.isFinite(f.properties.osm_version) && f.properties.osm_version >= minVersion);
+      if (hit) { applyDelta(json); return; }
+    }
+    if (attemptsLeft > 1) setTimeout(() => watchDeltaForVersion(osmUrl, minVersion, attemptsLeft - 1), 15000);
+  };
+  check();
+}
+
 async function watchRefresh(loaded) {
   const results = await Promise.all(loaded.map((l) => l.refreshed));
   if (results.some((r) => r?.json != null)) {
@@ -2723,6 +3002,11 @@ async function boot() {
     }
     armEditCheck();
   }
+  // The delta follower's own catch-up: the very first poll right away (an
+  // edit made in the last few minutes, by anyone, should not need a boot's
+  // worth of waiting to show up), the schedule from then on.
+  pollDelta();
+  scheduleDeltaPoll();
 }
 
 // ---- The store app (app/): what the shell adds around this same page ----
@@ -2749,6 +3033,10 @@ function bootNative() {
   positionZoomCtrl();   // applyI18n placed the column under the taller header a moment ago
   offlineBtn.hidden = false;
   onAppUrl({ auth: (url) => completeLogin(url), table: openPin });
+  // The in-app Browser sheet (every OSM/MapComplete link, and MapComplete's
+  // own OAuth screen) never hides this page, so visibilitychange alone would
+  // never tell the app a reader came back from it (native.js's own comment).
+  onBrowserFinished(onReturnToFront);
   nativeScripts = Promise.all([loadScript("vendor/pmtiles.js"), loadScript("vendor/protomaps/basemaps.js")]);
 }
 

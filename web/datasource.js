@@ -898,3 +898,180 @@ export function visibleMapView(canvasSize, coveredTop, unproject) {
   const se = unproject([width, height]);
   return { center: [center.lng, center.lat], bounds: [[nw.lng, se.lat], [se.lng, nw.lat]] };
 }
+
+// ---- Live updates: web/data/delta.json, instant answer recolour ------------
+// (CONTRACT.md's live-updates amendment.) The nightly build stays the only
+// path FROM OSM into the map's own status field — everything below only
+// merges feature objects the pipeline already classified (build_features /
+// build_play_features, reused verbatim by pipeline/delta.py) or, for a
+// reader's own confirmed answer, looks a status up in stats.json's
+// answer_status table. Nothing here re-derives a status from tags.
+
+// Merge a nightly FeatureCollection with a delta's (or an override layer's)
+// upsert/remove lists, keyed by osm_url — the one identifier stable across
+// the nightly build, the delta follower and a reader's own answer. Pure:
+// plain objects in, plain objects out, never touches the map or the app's
+// live arrays.
+export function mergeFeatureCollection(fc, upsertFeatures = [], removeUrls = []) {
+  const byUrl = new Map();
+  for (const f of (fc && fc.features) || []) {
+    const url = f && f.properties && f.properties.osm_url;
+    if (url) byUrl.set(url, f);
+  }
+  for (const f of upsertFeatures || []) {
+    const url = f && f.properties && f.properties.osm_url;
+    if (url) byUrl.set(url, f);
+  }
+  for (const url of removeUrls || []) byUrl.delete(url);
+  return { type: "FeatureCollection", features: [...byUrl.values()] };
+}
+
+// A delta is only worth merging when it is at least as new as the dataset it
+// would sit on top of: "ignore a delta whose base is older than the loaded
+// dataset's base" (live-updates design). ISO 8601 timestamps in the same
+// offset form compare correctly as plain strings, which is what
+// pipeline.delta.read_data_base always hands back (stats.json's own
+// data_base/generated_at, read verbatim). No datasetBase at all — a
+// stats.json from before this field existed — never blocks a delta; there is
+// nothing to compare against, so the newer information wins.
+export function isDeltaFresh(deltaBase, datasetBase) {
+  if (!deltaBase) return false;
+  if (!datasetBase) return true;
+  return deltaBase >= datasetBase;
+}
+
+// A relative dataset path, resolved against the app's own origin when it is
+// one (native, `site` = native.js's SITE) — the website fetches `path`
+// exactly as given, relative to the page it's already on. Unlike
+// boot()'s own dataset files, delta.json is fetched directly
+// (fetchDelta, web/app.js) rather than through loadDataset/
+// loadDatasetNative, so it has to do this resolution itself: in the store
+// app the page runs from papamap://localhost (iOS) or https://localhost
+// (Android), where a bare "data/delta.json" resolves to a path the bundle
+// never ships, and the delta silently never loads.
+export function resolveDataUrl(path, native, site) {
+  return native ? site + path : path;
+}
+
+// A reader's own confirmed answer, folded on top of whatever base/delta
+// feature already exists for that osm_url — the instant recolour and the
+// place -> table promotion a room answer on a play place causes (both a
+// grey table's room and a play place's own room question can move an
+// object's status). `overrides` is localStorage's papamap-answer-overrides
+// shape: {osm_url: {status, changing_table, location_raw, t}}. An override
+// for an object neither collection has any more (deleted, or never loaded)
+// is silently skipped. `status` present promotes/keeps the object as a
+// table (out.fc); its absence (a play answer with no room, e.g. "none") — or
+// an object that was never a table — keeps it in `places`.
+export function applyAnswerOverrides(fc, places, overrides) {
+  const entries = overrides ? Object.entries(overrides) : [];
+  if (!entries.length) return { fc, places };
+  const tableByUrl = new Map(((fc && fc.features) || []).map((f) => [f.properties.osm_url, f]));
+  const placeByUrl = new Map(((places && places.features) || []).map((f) => [f.properties.osm_url, f]));
+  for (const [url, o] of entries) {
+    const base = tableByUrl.get(url) || placeByUrl.get(url);
+    if (!base) continue;
+    const patched = { ...base, properties: { ...base.properties,
+      changing_table: o.changing_table, location_raw: o.location_raw,
+      status: o.status ?? base.properties.status } };
+    if (o.status) { tableByUrl.set(url, patched); placeByUrl.delete(url); }
+    else placeByUrl.set(url, patched);
+  }
+  return { fc: { type: "FeatureCollection", features: [...tableByUrl.values()] },
+          places: { type: "FeatureCollection", features: [...placeByUrl.values()] } };
+}
+
+// Which override entries a fresher delta or dataset has already caught up
+// with. **Primary rule: OSM version.** `o.version` is the version writeTags
+// returned for the reader's own write (answer(), web/app.js) — the
+// authoritative "has this exact edit been seen elsewhere" test, because
+// `versionByUrl` (a Map(osm_url -> osm_version), built from the current
+// delta's upsert lists — the only place a version travels; the nightly base
+// carries none) is at or past it only once that exact edit (or a later one)
+// has actually reached the delta. A client-clock timestamp cannot make that
+// promise: `o.t` is set *after* the write's round trip completes, while
+// OSM's own `edited_at` on the resulting delta feature is the server's
+// timestamp from *during* the write — routinely earlier than `o.t`, which
+// would make a naive `edited_at >= o.t` comparison never fire for the very
+// delta that carries this reader's own edit. **Secondary rule: the base
+// dataset's own data_base time**, `datasetBase >= o.t` — kept for the one
+// case version numbers can't cover, a nightly rebuild with no per-object
+// version info of its own, which still deserves to clear an override once
+// its data plainly postdates the answer. Pure: returns a new object, never
+// mutates `overrides`.
+export function pruneAnswerOverrides(overrides, datasetBase, versionByUrl) {
+  const out = {};
+  for (const [url, o] of Object.entries(overrides || {})) {
+    const seenVersion = versionByUrl && versionByUrl.get(url);
+    const coveredByVersion = Boolean(seenVersion != null && o.version != null && seenVersion >= o.version);
+    const coveredByBase = Boolean(datasetBase && o.t && datasetBase >= o.t);
+    if (!coveredByVersion && !coveredByBase) out[url] = o;
+  }
+  return out;
+}
+
+// ---- The add-a-place flow: which delta entry (if any) is what THIS reader
+// just added, at the tapped view --------------------------------------------
+// `watch` is the add-place tap record written at click time (web/app.js):
+// {t: iso, bbox: [minLon, minLat, maxLon, maxLat], zoom: the map's actual
+// zoom then — never estimated from the bbox, MapLibre already has it}.
+
+const inBboxTuple = (lon, lat, bbox) =>
+  lon >= bbox[0] && lon <= bbox[2] && lat >= bbox[1] && lat <= bbox[3];
+
+// `properties.created` (pipeline/delta.py) is the first-seen-version rule's
+// own answer, not the diff entry's own osm_version: the ordinary
+// MapComplete flow creates the toilet (v1, no table) and answers the table
+// question a moment later (v2) — the upsert that finally lands is version
+// 2, but pipeline/delta.py still marks it created because it remembers the
+// object's true first version across the whole accumulation period.
+// `osm_version === 1` alone would reject exactly that upsert (the
+// accumulator only ever keeps an object's latest version).
+export function isNewlyCreated(properties) {
+  return Boolean(properties && properties.created === true);
+}
+
+// The pure decision behind maybeNotifyAddedPlace (web/app.js): which of one
+// delta's upserts and new_toilets_no_table entries, if any, is what this
+// reader added at the tapped view, and what kind of outcome it is —
+// {type: "table" | "place", feature} for the new pin itself (the candidate
+// nearest the tapped view's own centre, when more than one qualifies — a
+// few readers can add places in the same neighbourhood in the same few
+// minutes), {type: "toilet_no_table", entry} when OSM has the toilet but no
+// table yet, or null when nothing in this delta answers the watch (the
+// caller decides what a null after ~10 minutes means). A candidate must be
+// "created after the tap": isNewlyCreated AND edited after `watch.t` — an
+// object OSM already had before the tap, merely edited in the same view a
+// moment later, is never mistaken for what this reader just added. A
+// new_toilets_no_table entry whose url also has an upsert this same tick is
+// ignored outright — the upsert branch above already claims it (the
+// ordinary MapComplete flow landing both halves of an answer in one delta).
+export function selectAddedPlace(deltaJson, watch) {
+  if (!watch || !deltaJson) return null;
+  const since = watch.t;
+  const center = [(watch.bbox[0] + watch.bbox[2]) / 2, (watch.bbox[1] + watch.bbox[3]) / 2];
+  const upserts = [...(deltaJson.tables?.upsert || []).map((f) => ["table", f]),
+                   ...(deltaJson.places?.upsert || []).map((f) => ["place", f])];
+  const upsertUrls = new Set();
+  const candidates = [];
+  for (const [kind, f] of upserts) {
+    const p = f.properties || {};
+    if (p.osm_url) upsertUrls.add(p.osm_url);
+    const coords = f.geometry?.coordinates;
+    if (!coords) continue;
+    const [lon, lat] = coords;
+    if (p.edited_at && p.edited_at > since && isNewlyCreated(p) && inBboxTuple(lon, lat, watch.bbox)) {
+      const dist = Math.hypot(lon - center[0], lat - center[1]);
+      candidates.push({ kind, feature: f, dist });
+    }
+  }
+  if (candidates.length) {
+    candidates.sort((a, b) => a.dist - b.dist);
+    return { type: candidates[0].kind, feature: candidates[0].feature };
+  }
+  for (const nt of deltaJson.new_toilets_no_table || []) {
+    if (nt.t && nt.t > since && !upsertUrls.has(nt.osm_url) && inBboxTuple(nt.lon, nt.lat, watch.bbox))
+      return { type: "toilet_no_table", entry: nt };
+  }
+  return null;
+}

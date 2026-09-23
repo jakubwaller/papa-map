@@ -36,3 +36,14 @@ def _isolated_toilet_counts(tmp_path, monkeypatch):
     from pipeline import run
     monkeypatch.setattr(run, "TOILETS_COUNTS_PATH",
                         str(tmp_path / "toilets_counts.json"))
+
+
+@pytest.fixture(autouse=True)
+def _isolated_areas_bbox(tmp_path, monkeypatch):
+    """web-data/private/areas-bbox.json (pipeline.delta's country-coverage
+    filter) is state under the checkout the same way the toilets-count cache
+    is — every run_pipeline call in the suite defaults to a temp copy unless
+    a test passes its own areas_bbox_path. run.py resolves the default at
+    call time from pipeline.delta.AREAS_BBOX_PATH."""
+    from pipeline import delta
+    monkeypatch.setattr(delta, "AREAS_BBOX_PATH", str(tmp_path / "areas-bbox.json"))

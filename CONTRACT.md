@@ -1,5 +1,161 @@
 # papa-map — build contract (v0)
 
+> **v48 amendment (23 Sep 2026, live updates): shape change — two additions,
+> nothing removed.** Today a pin only changes colour after the nightly build.
+> Two paths now update it sooner, and classification stays exactly where it
+> was — Python, `pipeline/classify.py` — in both:
+>
+> **1. `stats.json` gains `answer_status`**, an object mapping every room a
+> reader can answer with (`pipeline/room_choices.py`'s `ROOM_CHOICES` — the
+> keys of `web/osm.js`'s own `ROOMS`, kept in sync by a test that reads
+> `ROOMS` back out of the JS source) plus `"none"` to the status
+> `classify("yes", location)` gives that room, e.g. `{"both": "accessible",
+> "male": "accessible", "female": "female_only", "none": null, …}`. **The
+> frontend may look a status up here for exactly one thing: the reader's own
+> answer, the instant OSM confirms it wrote.** It still never re-derives a
+> status from a tag itself — this is a lookup into a table the pipeline
+> computed, not a second classifier. Every other object's status still only
+> ever comes from the pipeline (the nightly build, or delta.json below).
+>
+> **2. A new file, `web/data/delta.json`**, written by a new long-running
+> service (`pipeline/delta.py`, `docker compose up -d delta` — a loop, not a
+> cron) that follows OpenStreetMap's minutely replication diffs
+> (planet.openstreetmap.org/replication/minute) and turns the ones that touch
+> what this map reads (`changing_table*`, the play-area keys, `amenity=
+> toilets`, the wheelchair keys — or an id already in tonight's dataset, which
+> is how a removal or a tag deletion is caught) into upserts/removals, with
+> the exact `export.build_features`/`build_play_features` code the nightly
+> build calls — never a re-derivation. Shape:
+> ```json
+> {
+>   "generated": "iso timestamp", "base": "iso timestamp — the nightly
+>   dataset's own DATA timestamp (stats.json's new data_base field, the
+>   minimum osm3s.timestamp_osm_base across the night's Overpass queries —
+>   NOT generated_at, which can lag the data by a day)", "seq": 6234567,
+>   "tables": {"upsert": [feature, …], "remove": ["osm_url", …]},
+>   "places": {"upsert": [feature, …], "remove": ["osm_url", …]},
+>   "new_toilets_no_table": [{"osm_url": "…", "lon": 0, "lat": 0, "t": "iso",
+>                             "version": 1, "created": true}]
+> }
+> ```
+> Every upsert feature is shaped exactly like one in `changing_tables.geojson`/
+> `play_places.geojson`, plus `osm_version` and `edited_at` (the edit that
+> produced it) — tags are untrusted user text throughout, escaped by the
+> frontend exactly as the nightly geojson's are, never differently. A table
+> feature's `area` (CONTRACT.md v32) is never left at the delta's own default
+> of null: it carries over from the base/accumulator's existing feature when
+> the object is already known, else is assigned from the first per-area bbox
+> (below) the point falls in, else null for a genuinely unplaceable one.
+> Every upsert, and every `new_toilets_no_table` entry, also carries
+> **`created`** — true only for an object this pipeline is seeing for the
+> first time since the base, decided once from that first diff entry's own
+> version (`version === 1`) and carried forward unchanged for every later
+> event on the same url, *not* recomputed from each event's own version.
+> That is deliberate, not an approximation: the ordinary MapComplete flow
+> creates the toilet (version 1, no table — `created: true`) and answers the
+> table question a moment later (version 2) — the table upsert that finally
+> lands is version 2, but still `created: true`, because the accumulator
+> remembers the object's true first version rather than re-deriving
+> "created" from whatever version happens to be current. An edit to an
+> object already known — from the base, or from earlier in this same
+> accumulation period — is never `created`, however many further edits
+> follow. `apply_events` also drops a `new_toilets_no_table` entry outright
+> the moment the same url lands a real table/place upsert, so a reader's own
+> "toilet, no table yet" moment can never linger and fire its own toast once
+> the table itself has arrived. A consumer merges by `osm_url` (upsert
+> replaces or adds, remove deletes)
+> and **ignores a delta whose `base` is older than the dataset it holds** —
+> `web/datasource.js`'s `mergeFeatureCollection`/`isDeltaFresh`, pure and
+> tested. `pipeline/delta.py`'s own design is documented in the module
+> itself and `docs/DEPLOY.md`, including: base estimation and the 48h-gap
+> reset; `web-data/private/areas-bbox.json` (one real, padded bbox per sweep
+> area, written by the nightly build from that area's own features), with a
+> whole-dataset bbox as the fallback only while that file doesn't exist yet;
+> an object created after the base and later deleted or retagged away is
+> still recognised as known (against the accumulator being built, not just
+> the base) so its removal is never silently dropped; and a way/relation
+> with no coordinate of its own falls back to the OSM API's centroid
+> (`fetch_osm_full_centroid`), capped at 50 lookups per tick and tolerant of
+> any failure (`make_coord_fetch`) — dead code before this fix, so a
+> newly-relevant way/relation was always silently skipped.
+>
+> **The frontend (`web/app.js`) merges the delta on top of the loaded
+> dataset**, polling `/data/delta.json` every 3 minutes while the page is
+> visible (30s while a reader has a pending own edit — the same record
+> `startEditCheck` already keeps). `data/delta.json` is a relative path,
+> fetched directly rather than through `loadDataset`/`loadDatasetNative`
+> (which already resolve the store app's own dataset files against
+> `native.js`'s `SITE`), so it has to resolve the app's own origin itself
+> (`resolveDataUrl`, `web/datasource.js`, pure and tested) — the store app
+> runs from `papamap://localhost`/`https://localhost`, where a bare
+> `data/delta.json` resolves to a path the bundle never ships, and the
+> delta silently never loaded there before this fix. Polled again on
+> returning to the front
+> (`visibilitychange`, or the iOS app's own `browserFinished` — its in-app
+> Browser sheet never sets `document.hidden`, so `native.js` gained
+> `onBrowserFinished` as that platform's equivalent signal), and re-shares the
+> merged tables with the widget/Siri shortcut (`shareDataset`) after every
+> merge. A reader's own confirmed answer is folded in the same way, from
+> `answer_status` (above) rather than the delta — instantly, before any
+> delta or nightly build could possibly have it — and persisted in
+> `localStorage['papamap-answer-overrides']`
+> (`{osm_url: {status, changing_table, location_raw, t, version}}`, `version`
+> the OSM object version `writeTags` returned for this exact write) so a
+> reload keeps the colour. **Pruned by OSM version, primarily**: an entry is
+> dropped once a delta upsert for that `osm_url` carries an `osm_version` at
+> or past the write's own `version` — not by comparing timestamps, because a
+> delta feature's `edited_at` is OSM's own server timestamp from *during*
+> the write, routinely earlier than `t` (set only *after* the round trip
+> completes), which would make a naive time comparison never clear the
+> override it was meant for. The base dataset's own `data_base` time against
+> `t` stays as the secondary rule, for the one case a version can't cover: a
+> nightly rebuild, which carries no per-object version at all. A room
+> answered on a play place (not just a grey table) promotes that place to a
+> coloured pin the same way. The existing edit check's "found" wording
+> changes from "the map picks it up tonight" to "the pin updates in a
+> moment" (true now, both for a reader's own answer and for an edit found on
+> OSM by someone else, which the check now also watches the delta for, by
+> version) — reworded, properly translated, in all 32 languages, the
+> temporal clause only, rest of each sentence untouched.
+>
+> The add-a-place flow (MapComplete deep link) remembers the tap's `{time,
+> view bbox, zoom}` (the actual `map.getZoom()` at the tap, not an estimate
+> from the bbox) and watches the delta for a matching upsert on return —
+> **only one `created === true` and edited after the tap** (`selectAddedPlace`,
+> `web/datasource.js`, pure and tested — never `osm_version === 1`, which
+> would reject the ordinary MapComplete flow's own table upsert once the
+> accumulator has moved it to version 2; see `created`'s own definition
+> above): an object already known before the tap, merely edited in the same
+> view a moment later, must never be mistaken for what this reader just
+> added. **Prefers the candidate nearest the tapped view's own centre** when
+> more than one qualifies, and **ignores a `new_toilets_no_table` entry
+> whose url also has an upsert this same tick** — the upsert branch already
+> claims it. A toast ("New changing table added, thank you") plus a fly-to
+> and a popup open for a table upsert, a place-specific toast ("New play
+> area added, thank you") for a play-place upsert — never the table wording
+> for one — or, if OSM now has the toilet but no changing table
+> (`new_toilets_no_table`), a toast explaining it won't show as a pin; after
+> 10 minutes with neither, the existing "nothing new on OSM yet" nudge.
+> **The fly-to is skipped (the toast still fires) when the tapped view's own
+> recorded zoom was under about 14** — flying in from a whole-country view
+> would be a bigger jump than the "look here" pulse is meant to be. Three
+> new i18n keys per language, `toastNewTable`/`toastNewPlace`/
+> `toastToiletNoTable`, properly translated in all 32 languages (the site's
+> own changing-table/play-area noun per language, matching each language's
+> existing strings — never a generic synonym).
+>
+> **No third-party request added**: `delta.json` is served from papamap.de
+> itself, like every other dataset file — `web/datenschutz.html`/
+> `-en.html` need no change, verified by inspection (no new fetch target
+> introduced anywhere in this amendment). `deploy/papamap.Caddyfile` gives
+> `/data/delta.json` its own 60-second `Cache-Control`, overriding the rest of
+> `/data/*`'s 900-second one (a specific `header` matcher written after the
+> general one, per the file's own established rule for overriding a default);
+> the existing `@app_reads` CORS rule already covers it (`/data/*.json`). The
+> nightly build stays the reconciliation and the base the delta resets
+> against; nothing here writes to OSM, and nothing here changes what
+> `pipeline/classify.py` decides. Shell pin `app42` → `app43`.
+>
 > **v47 amendment (21 Sep 2026, the honesty line is retired): no shape change.**
 > The stats strip's third sentence — "N toilets mapped here, capacity tags on
 > M — provision itself is unmeasurable" — is gone from both the website and

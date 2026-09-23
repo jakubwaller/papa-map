@@ -4,7 +4,8 @@ import sys
 import time
 from datetime import datetime, timezone
 
-from . import export, leaderboard, osm, pages, stats, toilet_counts
+from . import delta, export, leaderboard, osm, pages, stats, toilet_counts
+from .room_choices import answer_status_table
 from .config import (AREAS_PATH, BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTORY_PATH,
                      PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_PAUSE_S,
                      SWEEP_ROUNDS, TOILETS_COUNTS_PATH,
@@ -20,7 +21,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                  cities=None, history_path=HISTORY_PATH,
                  play_geojson_path=PLAY_GEOJSON_PATH,
                  counts_path=None, counts_period_days=None,
-                 areas_path=AREAS_PATH):
+                 areas_path=AREAS_PATH, areas_bbox_path=None):
     """One idempotent build: Overpass (per sweep area) -> classify -> GeoJSON +
     play_places.geojson + stats.json + the per-Bundesland pages, plus (on a
     full build) the per-region history and the leaderboard pages rendered from
@@ -50,6 +51,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # Resolved at call time, not in the signature, so a test can point the
     # module at a temp file and never touch the checkout's web/data.
     counts_path = TOILETS_COUNTS_PATH if counts_path is None else counts_path
+    areas_bbox_path = delta.AREAS_BBOX_PATH if areas_bbox_path is None else areas_bbox_path
     counts_period = (TOILETS_COUNTS_PERIOD_DAYS if counts_period_days is None
                      else counts_period_days)
     # One clock read for the whole build, taken at its START: the rota dates
@@ -77,6 +79,25 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     # object on (or area-assigned across) a boundary, which is the same copy
     # dedup_elements() keeps.
     ct_area = {}
+    # The same, for the play-only half of the same per-area sweep (v48's
+    # per-area delta bboxes, compute_area_bboxes below): a play place never
+    # gets a `ct_area` entry (build_features never sees it), but it comes
+    # from the very same area's Overpass answer, so it is free here too.
+    play_area = {}
+    # The minimum osm3s.timestamp_osm_base across every Overpass answer of
+    # the night — the DATA timestamp, not the build time, which can lag it by
+    # a day (CLAUDE.md). Persisted into stats.json as data_base so
+    # pipeline.delta knows exactly which replication sequence the nightly
+    # build is reconciled to and can reset itself there when a new build
+    # lands. Not every mirror reports it (osm.check_fresh already tolerates
+    # that), so this stays None when none of tonight's answers did.
+    base_timestamps: list[str] = []
+
+    def _note_base(data: dict) -> None:
+        ts = (data.get("osm3s") or {}).get("timestamp_osm_base")
+        if ts:
+            base_timestamps.append(ts)
+
     # Which leaderboard city each object lies in, from an ids-only query per
     # city — the same area-query authority as ct_area, at a fraction of the
     # payload. City sweeps are non-fatal: the map must never be held hostage
@@ -106,6 +127,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         for i, (area_name, admin_level) in enumerate(remaining):
             try:
                 sweep = overpass_fetch(sweep_ql(area_name, admin_level))
+                _note_base(sweep)
                 # The toilets are recounted on the area's night of the rota
                 # (toilet_counts.is_due) — and whenever the sweep came back
                 # empty, whatever the rota says: the zero-objects check below
@@ -118,7 +140,9 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                     query=count_key))
                 remember = False
                 if recount:
-                    counts = osm.parse_counts(overpass_fetch(count_ql))
+                    count_answer = overpass_fetch(count_ql)
+                    _note_base(count_answer)
+                    counts = osm.parse_counts(count_answer)
                     # A real answer carries one count per `out count;`
                     # statement, two zeros included when the area resolved to
                     # nothing — so *no* counts at all is not "no toilets", it
@@ -185,6 +209,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 counts_reused += 1
             for el in ct:
                 ct_area.setdefault((el.get("type"), el.get("id")), area_name)
+            for el in play:
+                play_area.setdefault((el.get("type"), el.get("id")), area_name)
             counted = ("" if recount else
                        f" (counted {toilet_counts.age_days(counts_cache[area_name], today)} d ago)")
             print(f"  {area_name}: ct={len(ct)} play={len(play)} "
@@ -193,6 +219,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         for i, (display, area_name, admin_level) in enumerate(remaining_cities):
             try:
                 ids = overpass_fetch(changing_table_ids_ql(area_name, admin_level))
+                _note_base(ids)
                 # Every listed city has changing tables in reality, so zero
                 # elements means the area didn't resolve — same stale-mirror
                 # trap as above, and retryable for the same reason.
@@ -260,7 +287,36 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         "area_key": area_key,
         "local": local,
         "global": global_block,
+        # The DATA timestamp (min across tonight's Overpass answers), not the
+        # build time above — pipeline.delta resets against this. None on a
+        # mirror that never reports osm3s.timestamp_osm_base.
+        "data_base": min(base_timestamps) if base_timestamps else None,
+        # CONTRACT.md's live-updates amendment: every room a reader can
+        # answer with, mapped to the status classify() gives it — the one
+        # lookup the frontend may use for its own answer, in room_choices.py
+        # so both this and pipeline.delta build it the same way.
+        "answer_status": answer_status_table(),
     }, stats_path)
+    # One padded bbox per sweep area (pipeline.delta's real country-coverage
+    # filter, v48 follow-up) — never served (web-data/private/, like
+    # delta-state.json), written whole on every build the same way
+    # toilets_counts.json is, from every changing-table and play-place
+    # object this build found, each already knowing its own area (ct_area/
+    # play_area, the same per-area sweep authority the pages use). A write
+    # failure (a read-only mount) must not stop the pages the way the
+    # toilets-count cache's own failure doesn't — the delta follower falls
+    # back to its own whole-dataset approximation and logs it.
+    try:
+        elements_with_area = (
+            [(*osm.element_coords(el), ct_area.get((el.get("type"), el.get("id"))))
+             for el in ct_data["elements"]]
+            + [(*osm.element_coords(el), play_area.get((el.get("type"), el.get("id"))))
+               for el in play_data["elements"]])
+        export.write_json_atomic(delta.compute_area_bboxes(elements_with_area), areas_bbox_path)
+    except OSError as exc:
+        print(f"  WARN area bboxes not saved to {areas_bbox_path}: {exc} — "
+              "pipeline.delta falls back to its own whole-dataset approximation",
+              file=sys.stderr)
     print(f"  toilet counts: {len(toilets_by_area) - counts_reused} area(s) "
           f"counted tonight, {counts_reused} reused from {counts_path}",
           file=sys.stderr)

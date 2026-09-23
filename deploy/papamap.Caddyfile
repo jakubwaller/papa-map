@@ -51,6 +51,15 @@
 	# page that changes once a night is not worth a shorter TTL.
 	@data path /data/* /ops.html /tiles/index.json
 	header @data Cache-Control "public, max-age=900"
+	# delta.json (pipeline/delta.py, the live-updates follower) changes every
+	# minute, not nightly — a 900s TTL here would make the app's 3-minute poll
+	# mostly hit a stale edge copy. Written after @data on purpose: both
+	# matchers match /data/delta.json, and a later `header` with its own
+	# matcher overwrites the Set an earlier one made for the same request (the
+	# comment above @data explains why the bare `header ?` default further
+	# down uses `?` instead — same rule, opposite direction here).
+	@delta path /data/delta.json
+	header @delta Cache-Control "public, max-age=60"
 	# The store app (app/) is this same site under its own origin
 	# (papamap://localhost on iOS, https://localhost on Android), so its
 	# fetch of the dataset and the city catalogue is cross-origin. Read-only

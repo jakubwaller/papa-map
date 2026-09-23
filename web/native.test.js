@@ -869,3 +869,35 @@ test("the OSM login's return leg is not mistaken for a table", () => {
   app.open(`${AUTH_REDIRECT}?code=abc&state=xyz`);
   assert.deepEqual([back.length, opened.length], [1, 0]);
 });
+
+// ---- The in-app Browser sheet: "reader is back" without visibilitychange --
+import { onBrowserFinished } from "./native.js";
+
+function fakeBrowser() {
+  const listeners = {};
+  return {
+    plugin: { addListener: (event, fn) => { (listeners[event] ||= []).push(fn); } },
+    finish: () => { for (const fn of listeners.browserFinished ?? []) fn(); },
+  };
+}
+function withBrowser(browser, run) {
+  const before = globalThis.Capacitor;
+  globalThis.Capacitor = { isNativePlatform: () => true, Plugins: { Browser: browser } };
+  try { return run(); } finally { globalThis.Capacitor = before; }
+}
+
+test("browserFinished fires the same return path the website gets from visibilitychange", () => {
+  const browser = fakeBrowser();
+  let calls = 0;
+  withBrowser(browser.plugin, () => onBrowserFinished(() => { calls += 1; }));
+  browser.finish();
+  browser.finish();
+  assert.equal(calls, 2);   // no dedup here — the same as visibilitychange firing twice
+});
+
+test("onBrowserFinished is a no-op outside Capacitor — no plugin, nothing thrown", () => {
+  const before = globalThis.Capacitor;
+  globalThis.Capacitor = undefined;
+  try { assert.doesNotThrow(() => onBrowserFinished(() => {})); }
+  finally { globalThis.Capacitor = before; }
+});

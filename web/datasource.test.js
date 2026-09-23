@@ -13,7 +13,9 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
          nearestUnknownRoom, isFixFresh, popupPan, isAppleTouch,
-         shouldOpenAtLocation } from "./datasource.js";
+         shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
+         applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl,
+         isNewlyCreated, selectAddedPlace } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -1158,4 +1160,304 @@ test("visibleMapView clamps a bar covering the whole canvas at half its height, 
       visibleMapView({ width: 300, height: 600 }, coveredTop, fakeUnproject), half,
       `coveredTop ${coveredTop}`);
   }
+});
+
+// ---- live updates ------------------------------------------------------
+
+test("mergeFeatureCollection upserts and removes by osm_url", () => {
+  const base = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "unknown" }),
+    feat(2, 2, { osm_url: "https://www.openstreetmap.org/node/2", status: "accessible" }),
+  ] };
+  const upsert = [feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "accessible" }),
+                 feat(3, 3, { osm_url: "https://www.openstreetmap.org/node/3", status: "female_only" })];
+  const merged = mergeFeatureCollection(base, upsert, ["https://www.openstreetmap.org/node/2"]);
+  const byUrl = Object.fromEntries(merged.features.map((f) => [f.properties.osm_url, f.properties.status]));
+  assert.deepEqual(byUrl, {
+    "https://www.openstreetmap.org/node/1": "accessible",
+    "https://www.openstreetmap.org/node/3": "female_only",
+  });
+});
+
+test("mergeFeatureCollection tolerates a missing/empty base", () => {
+  const upsert = [feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "accessible" })];
+  assert.equal(mergeFeatureCollection(null, upsert, []).features.length, 1);
+  assert.equal(mergeFeatureCollection(undefined).features.length, 0);
+});
+
+test("isDeltaFresh rejects a delta older than the dataset it would sit on", () => {
+  assert.equal(isDeltaFresh("2026-09-23T08:00:00+00:00", "2026-09-22T02:00:00+00:00"), true);
+  assert.equal(isDeltaFresh("2026-09-21T08:00:00+00:00", "2026-09-22T02:00:00+00:00"), false);
+  assert.equal(isDeltaFresh("2026-09-22T02:00:00+00:00", "2026-09-22T02:00:00+00:00"), true);
+});
+
+test("isDeltaFresh accepts any delta when the dataset has no base to compare", () => {
+  assert.equal(isDeltaFresh("2026-09-23T08:00:00+00:00", null), true);
+});
+
+test("isDeltaFresh rejects a delta with no base of its own", () => {
+  assert.equal(isDeltaFresh(null, "2026-09-22T02:00:00+00:00"), false);
+});
+
+test("resolveDataUrl prefixes the site origin only in the store app", () => {
+  assert.equal(resolveDataUrl("data/delta.json", false, "https://papamap.de/"), "data/delta.json");
+  assert.equal(resolveDataUrl("data/delta.json", true, "https://papamap.de/"),
+    "https://papamap.de/data/delta.json");
+});
+
+test("applyAnswerOverrides recolours an existing table in place", () => {
+  const fc = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "unknown",
+                changing_table: "yes", location_raw: null }),
+  ] };
+  const places = { type: "FeatureCollection", features: [] };
+  const overrides = { "https://www.openstreetmap.org/node/1":
+    { status: "accessible", changing_table: "yes", location_raw: "male_toilet", t: "2026-09-23T10:00:00Z" } };
+  const out = applyAnswerOverrides(fc, places, overrides);
+  assert.equal(out.fc.features[0].properties.status, "accessible");
+  assert.equal(out.fc.features[0].properties.location_raw, "male_toilet");
+  assert.equal(out.places.features.length, 0);
+});
+
+test("applyAnswerOverrides promotes a play place to a table when the answer carries a status", () => {
+  const fc = { type: "FeatureCollection", features: [] };
+  const places = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/9", kind: "cafe" }),
+  ] };
+  const overrides = { "https://www.openstreetmap.org/node/9":
+    { status: "female_only", changing_table: "yes", location_raw: "female_toilet", t: "2026-09-23T10:00:00Z" } };
+  const out = applyAnswerOverrides(fc, places, overrides);
+  assert.equal(out.places.features.length, 0);
+  assert.equal(out.fc.features.length, 1);
+  assert.equal(out.fc.features[0].properties.status, "female_only");
+});
+
+test("applyAnswerOverrides keeps a no-status answer (e.g. play 'none') in places", () => {
+  const fc = { type: "FeatureCollection", features: [] };
+  const places = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/9", kind: "cafe" }),
+  ] };
+  const overrides = { "https://www.openstreetmap.org/node/9":
+    { status: null, changing_table: "no", location_raw: null, t: "2026-09-23T10:00:00Z" } };
+  const out = applyAnswerOverrides(fc, places, overrides);
+  assert.equal(out.fc.features.length, 0);
+  assert.equal(out.places.features[0].properties.changing_table, "no");
+});
+
+test("applyAnswerOverrides ignores an override for an object neither collection has", () => {
+  const fc = { type: "FeatureCollection", features: [] };
+  const places = { type: "FeatureCollection", features: [] };
+  const overrides = { "https://www.openstreetmap.org/node/404": { status: "accessible" } };
+  const out = applyAnswerOverrides(fc, places, overrides);
+  assert.equal(out.fc.features.length, 0);
+  assert.equal(out.places.features.length, 0);
+});
+
+test("pruneAnswerOverrides drops an entry once the base dataset's data_base time covers it (secondary rule)", () => {
+  const overrides = { a: { t: "2026-09-23T08:00:00Z" }, b: { t: "2026-09-23T12:00:00Z" } };
+  const pruned = pruneAnswerOverrides(overrides, "2026-09-23T10:00:00Z", new Map());
+  assert.deepEqual(Object.keys(pruned), ["b"]);
+});
+
+test("pruneAnswerOverrides drops an entry once a delta upsert's osm_version reaches the write's own version (primary rule)", () => {
+  const overrides = { a: { t: "2026-09-23T08:00:00Z", version: 3 } };
+  const pruned = pruneAnswerOverrides(overrides, null, new Map([["a", 3]]));
+  assert.deepEqual(Object.keys(pruned), []);
+});
+
+test("pruneAnswerOverrides keeps an entry whose delta version has not caught up yet, even with a later edited_at-style clock", () => {
+  // The exact bug the version-based rule fixes: a delta upsert can carry an
+  // edit time later than the override's own client-clock `t` (OSM's
+  // edited_at is set DURING the write, `t` only AFTER the round trip) while
+  // still being an EARLIER version than the one this reader's write
+  // produced — an in-between edit by someone else must not clear this
+  // reader's own override.
+  const overrides = { a: { t: "2026-09-23T08:00:00Z", version: 5 } };
+  const pruned = pruneAnswerOverrides(overrides, null, new Map([["a", 4]]));
+  assert.deepEqual(pruned, overrides);
+});
+
+test("pruneAnswerOverrides keeps an entry nothing has caught up with yet", () => {
+  const overrides = { a: { t: "2026-09-23T08:00:00Z", version: 2 } };
+  assert.deepEqual(pruneAnswerOverrides(overrides, "2026-09-23T07:00:00Z", new Map()), overrides);
+});
+
+// ---- the play-place thin path, end to end through the pure functions -------
+// A room answered on a play place (not a grey table) promotes it to a
+// coloured pin, the promotion survives a reload (the override is just a
+// plain object — "reload" is re-running applyAnswerOverrides against it),
+// and it is dropped once a dataset/delta whose own data covers the answer's
+// edit time arrives — after which the object's real (now-promoted) table
+// feature carries the colour on its own, with no override needed at all.
+test("a play-place room answer promotes it, survives a reload, then is dropped once a newer build covers it", () => {
+  const url = "https://www.openstreetmap.org/node/42";
+  const basePlaces = { type: "FeatureCollection", features: [
+    feat(9.99, 53.55, { osm_url: url, kind: "cafe" }),
+  ] };
+  const baseTables = { type: "FeatureCollection", features: [] };
+  const overrides = { [url]: {
+    status: "accessible", changing_table: "yes", location_raw: "male_toilet",
+    t: "2026-09-23T10:00:00Z", version: 3,
+  } };
+
+  // 1. The answer promotes the play place to a coloured table pin.
+  const answered = applyAnswerOverrides(baseTables, basePlaces, overrides);
+  assert.equal(answered.places.features.length, 0);
+  assert.equal(answered.fc.features.length, 1);
+  assert.equal(answered.fc.features[0].properties.status, "accessible");
+  assert.equal(answered.fc.features[0].properties.osm_url, url);
+
+  // 2. A reload: the base dataset is loaded fresh (still just the play
+  // place — no nightly build has run since the answer), and localStorage's
+  // overrides object — a plain, JSON-round-tripped copy of the same data —
+  // is re-applied on top of it. The promotion survives unchanged.
+  const reloadedOverrides = JSON.parse(JSON.stringify(overrides));
+  const afterReload = applyAnswerOverrides(baseTables, basePlaces, reloadedOverrides);
+  assert.deepEqual(afterReload, answered);
+
+  // 3. A dataset/delta lands whose own data covers the answer's edit time —
+  // it now carries the object as a real, already-classified table feature
+  // (the pipeline caught up), so the override is no longer needed and must
+  // not shadow a status the pipeline might have revised in the meantime.
+  const newerBaseTables = { type: "FeatureCollection", features: [
+    feat(9.99, 53.55, { osm_url: url, status: "accessible", changing_table: "yes" }),
+  ] };
+  const newerBasePlaces = { type: "FeatureCollection", features: [] };
+  const prunedByDataset = pruneAnswerOverrides(overrides, "2026-09-23T11:00:00+00:00", new Map());
+  assert.deepEqual(prunedByDataset, {});
+  const afterDatasetCatchUp = applyAnswerOverrides(newerBaseTables, newerBasePlaces, prunedByDataset);
+  assert.equal(afterDatasetCatchUp.fc.features.length, 1);
+  assert.equal(afterDatasetCatchUp.fc.features[0].properties.status, "accessible");
+
+  // Same outcome via a delta upsert instead of a full dataset refresh — the
+  // override is dropped because the delta's own osm_version for this
+  // osm_url has reached the version the write itself produced (the primary
+  // rule pruneAnswerOverrides now uses, not a timestamp comparison).
+  const versionByUrl = new Map([[url, 3]]);
+  const prunedByDelta = pruneAnswerOverrides(overrides, null, versionByUrl);
+  assert.deepEqual(prunedByDelta, {});
+
+  // And a delta upsert that has NOT yet reached this write's own version
+  // keeps the override — the promotion must not flicker back to a play
+  // place mid-transit, even if that older delta entry's own edited_at
+  // happens to read later than the override's client-clock `t`.
+  const notYetCovered = pruneAnswerOverrides(overrides, "2026-09-23T09:00:00+00:00",
+    new Map([[url, 2]]));
+  assert.deepEqual(notYetCovered, overrides);
+});
+
+// ---- the add-a-place flow: selectAddedPlace / isNewlyCreated ---------------
+
+test("isNewlyCreated reads properties.created, never osm_version", () => {
+  assert.equal(isNewlyCreated({ created: true, osm_version: 2 }), true);
+  assert.equal(isNewlyCreated({ created: false, osm_version: 1 }), false);
+  assert.equal(isNewlyCreated({ osm_version: 1 }), false);
+  assert.equal(isNewlyCreated({}), false);
+  assert.equal(isNewlyCreated(null), false);
+});
+
+const WATCH = { t: "2026-09-23T10:00:00Z", bbox: [9.9, 53.5, 10.1, 53.6], zoom: 16 };
+
+test("selectAddedPlace returns null with no watch or no delta", () => {
+  assert.equal(selectAddedPlace({ tables: {}, places: {} }, null), null);
+  assert.equal(selectAddedPlace(null, WATCH), null);
+});
+
+test("selectAddedPlace picks a genuinely created table upsert inside the watch bbox, edited after the tap", () => {
+  const delta = { tables: { upsert: [
+    feat(10.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/1",
+                       created: true, edited_at: "2026-09-23T10:01:00Z" }),
+  ], remove: [] }, places: { upsert: [], remove: [] }, new_toilets_no_table: [] };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.deepEqual(result, { type: "table", feature: delta.tables.upsert[0] });
+});
+
+test("selectAddedPlace ignores an upsert that was already known before the tap (created !== true)", () => {
+  const delta = { tables: { upsert: [
+    feat(10.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/1",
+                       created: false, edited_at: "2026-09-23T10:01:00Z" }),
+  ], remove: [] }, places: { upsert: [], remove: [] }, new_toilets_no_table: [] };
+  assert.equal(selectAddedPlace(delta, WATCH), null);
+});
+
+test("selectAddedPlace ignores an edit that predates the tap even if created", () => {
+  const delta = { tables: { upsert: [
+    feat(10.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/1",
+                       created: true, edited_at: "2026-09-23T09:59:00Z" }),
+  ], remove: [] }, places: { upsert: [], remove: [] }, new_toilets_no_table: [] };
+  assert.equal(selectAddedPlace(delta, WATCH), null);
+});
+
+test("selectAddedPlace ignores a match outside the watch bbox", () => {
+  const delta = { tables: { upsert: [
+    feat(20.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/1",
+                       created: true, edited_at: "2026-09-23T10:01:00Z" }),
+  ], remove: [] }, places: { upsert: [], remove: [] }, new_toilets_no_table: [] };
+  assert.equal(selectAddedPlace(delta, WATCH), null);
+});
+
+test("selectAddedPlace prefers the candidate nearest the watch's own bbox centre", () => {
+  const near = feat(10.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/near",
+                                   created: true, edited_at: "2026-09-23T10:01:00Z" });
+  const far = feat(10.09, 53.59, { osm_url: "https://www.openstreetmap.org/node/far",
+                                   created: true, edited_at: "2026-09-23T10:01:00Z" });
+  const delta = { tables: { upsert: [far, near], remove: [] },
+                  places: { upsert: [], remove: [] }, new_toilets_no_table: [] };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.equal(result.feature.properties.osm_url, "https://www.openstreetmap.org/node/near");
+});
+
+test("selectAddedPlace returns a place-typed result for a play-place upsert, not table", () => {
+  const delta = { tables: { upsert: [], remove: [] },
+                  places: { upsert: [feat(10.0, 53.55,
+                    { osm_url: "https://www.openstreetmap.org/node/9",
+                     created: true, edited_at: "2026-09-23T10:01:00Z" })], remove: [] },
+                  new_toilets_no_table: [] };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.equal(result.type, "place");
+});
+
+test("selectAddedPlace falls back to a toilet_no_table entry when no upsert qualifies", () => {
+  const delta = { tables: { upsert: [], remove: [] }, places: { upsert: [], remove: [] },
+                  new_toilets_no_table: [
+                    { osm_url: "https://www.openstreetmap.org/node/5",
+                      lon: 10.0, lat: 53.55, t: "2026-09-23T10:01:00Z", version: 1, created: true },
+                  ] };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.deepEqual(result, { type: "toilet_no_table", entry: delta.new_toilets_no_table[0] });
+});
+
+test("selectAddedPlace ignores a toilet_no_table entry whose url also has an upsert this tick", () => {
+  // The ordinary MapComplete flow: the toilet's own creation and the table
+  // answer can land in the same delta — the upsert already claims it, so
+  // the stale-looking toilet_no_table entry (which pipeline/delta.py should
+  // already have dropped server-side) must not also fire its own toast.
+  const url = "https://www.openstreetmap.org/node/5";
+  const delta = {
+    tables: { upsert: [feat(10.0, 53.55, { osm_url: url, created: true,
+                                           edited_at: "2026-09-23T10:01:30Z" })], remove: [] },
+    places: { upsert: [], remove: [] },
+    new_toilets_no_table: [{ osm_url: url, lon: 10.0, lat: 53.55,
+                            t: "2026-09-23T10:01:00Z", version: 1, created: true }],
+  };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.equal(result.type, "table");
+});
+
+test("selectAddedPlace: the ordinary MapComplete flow (create v1, answer v2) resolves to the table, not a false toilet_no_table toast", () => {
+  // Mirrors pipeline/delta.py's own fix: the accumulator only keeps the
+  // latest version (2), but process_changes stamps created: true on it
+  // because it remembers the object's true first version — this is the
+  // exact upsert selectAddedPlace has to accept, which osm_version === 1
+  // never would have.
+  const url = "https://www.openstreetmap.org/node/42";
+  const delta = {
+    tables: { upsert: [feat(10.0, 53.55, { osm_url: url, created: true,
+                                           osm_version: 2, edited_at: "2026-09-23T10:01:30Z" })],
+             remove: [] },
+    places: { upsert: [], remove: [] },
+    new_toilets_no_table: [],
+  };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.deepEqual(result, { type: "table", feature: delta.tables.upsert[0] });
 });
