@@ -21,12 +21,13 @@
 // rule (the one before any comma) decides whether the group REPLACES the
 // day's schedule or only ADDS/SUBTRACTS onto it: a first rule that isn't
 // `off` and carries its own weekday or date selector replaces the whole
-// day's schedule for the days it (or any later member of the same group)
-// applies to, not just the minutes its own spans mention (Mo-Su 08:00-20:00;
+// day's schedule for the days that first rule itself applies to, not just the minutes its own spans mention (Mo-Su 08:00-20:00;
 // Tu off closes all of Tuesday, not merely whatever "Tu off" happens to
 // list); a first rule with neither a weekday nor a date selector (a bare
 // time span, meant the same on every day: Mo-Fr 08:00-18:00; 10:00-12:00)
-// never replaces, it only adds its spans to every day; and a first rule
+// only adds its spans, except when it stands alone in its group and no
+// earlier rule has named the day (07:00-11:00; 18:30-22:30 is just the
+// evening); and a first rule
 // that is itself `off` never replaces either, it only subtracts its own
 // hours from whatever is already there (Mo-Fr 08:00-18:00; We 12:00-14:00
 // off carves the lunch break out of Wednesday, it doesn't wipe Wednesday
@@ -102,6 +103,13 @@
 // Not supported, and returned as "unknown" rather than guessed at: year
 // ranges, week numbers, easter, nth-weekday selectors (Sa[2]), "+N day(s)"
 // offsets, and anything else this parser does not recognise.
+//
+// One deliberate difference from the reference library
+// (https://github.com/opening-hours/opening_hours.js): the after-midnight part
+// of a span belongs to the day the span started. A later ; rule for the next
+// day doesn't cancel it (Mo-Th 08:00-01:00; Fr 08:00-02:00 is open at 00:30
+// on Friday), nor does a whole-day off for the next day; a partial off that
+// names those hours ("Sa 01:00-02:00 off") does close them.
 
 const DAY_NAMES = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 const DAY_INDEX = Object.fromEntries(DAY_NAMES.map((d, i) => [d, i]));
@@ -637,6 +645,8 @@ function resolveRuleIntervals(rule, sunTimes, nextSunTimes) {
 //  - spill: [0,end) intervals that a wrap span (e.g. 22:00-02:00) pushes
 //    into the *next* calendar day — read by the caller against the
 //    following day's own minute-of-day
+//  - cuts: the hours partial `off` rules name on this day, which the caller
+//    also takes out of yesterday's spill
 //
 // `sunTimes` resolves this day's own sun-event endpoints; `nextSunTimes`
 // resolves a wrap span's end specifically, since that instant falls on the
@@ -644,6 +654,11 @@ function resolveRuleIntervals(rule, sunTimes, nextSunTimes) {
 // sunrise, not today's).
 function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
   let today = [], spill = [];
+  // Hours a partial `off` names on this day. They also close the matching
+  // part of *yesterday's* spill ("Fr 20:00-02:00; Sa 01:00-02:00 off"), which
+  // only the caller can apply. A whole-day off does not: yesterday's evening
+  // keeps its after-midnight hours (see the header).
+  const cuts = [];
   // Tracks whether this weekday has, at any *earlier* group, been touched
   // by a rule that carries its own weekday or date selector — whether or
   // not that rule was its group's first (replacing) member, or merely a
@@ -690,6 +705,7 @@ function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
         // specific hours it names, and a still-running overnight span
         // outside those hours is untouched.
         if (add.some(([s, e]) => s <= 0 && e >= 24 * 60)) ns = [];
+        else cuts.push(...add);
       } else {
         nt = nt.concat(add);
         ns = ns.concat(ruleSpill);
@@ -699,7 +715,7 @@ function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
     spill = ns;
     if (matched.some((r) => r.days !== null || r.dateSel !== null)) explicitClaimed = true;
   }
-  return { today, spill };
+  return { today, spill, cuts };
 }
 
 const usesSun = (rules) => rules.some((r) => r.spans.some(([s, e]) => isSunPoint(s) || isSunPoint(e)));
@@ -718,13 +734,15 @@ function sunEventsUsed(rules) {
 
 // Evaluates one alternative's groups at a specific instant: whether
 // `minutes` on weekday `day` falls in today's resolved schedule, or in
-// yesterday's schedule where it spills past midnight.
+// yesterday's schedule where it spills past midnight, less any hours a
+// partial `off` for today names.
 function evaluateGroups(groups, day, minutes, val, yval, sunTimes, ySunTimes) {
   const yday = (day + 6) % 7;
   const todayR = resolveDay(groups, day, val, sunTimes, null);
   const ydayR = resolveDay(groups, yday, yval, ySunTimes, sunTimes);
   const todayOpen = todayR.today.some(([s, e]) => minutes >= s && minutes < e);
-  const spillOpen = ydayR.spill.some(([s, e]) => minutes >= s && minutes < e);
+  const spill = todayR.cuts.reduce(subtractInterval, ydayR.spill);
+  const spillOpen = spill.some(([s, e]) => minutes >= s && minutes < e);
   return todayOpen || spillOpen;
 }
 

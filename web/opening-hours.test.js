@@ -706,3 +706,14 @@ test("08:00-26:00 spills into the following day until 02:00", () => {
 test("an overnight spill isn't cancelled by a later ; rule for the day it lands on", () => {
   assert.equal(isOpenNow("Mo-Th 20:00-02:00; Fr 10:00-12:00", at(5, 1, 0)), "open");
 });
+
+test("a partial off for the small hours also closes yesterday's spill", () => {
+  // 2026-02-14 is a Saturday: Friday's 20:00-02:00 runs into it.
+  const sat = (h, m) => new Date(2026, 1, 14, h, m);
+  assert.equal(isOpenNow("Fr 20:00-02:00; Sa 01:00-02:00 off", sat(1, 0)), "closed");
+  assert.equal(isOpenNow("Fr 20:00-02:00; Sa 01:00-02:00 off", sat(0, 30)), "open");
+  assert.equal(isOpenNow("Mo-Su 22:00-01:00; Mo-Su 00:30-00:45 off", sat(0, 30)), "closed");
+  assert.equal(isOpenNow("Mo-Su 22:00-01:00; Mo-Su 00:30-00:45 off", sat(0, 50)), "open");
+  // A whole-day off for the next day still leaves the spill alone.
+  assert.equal(isOpenNow("Fr 20:00-02:00; Sa off", sat(1, 0)), "open");
+});

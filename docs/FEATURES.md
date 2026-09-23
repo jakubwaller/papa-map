@@ -826,8 +826,15 @@ Differential check: `tools/opening-hours-diff/diff.mjs` runs every `opening_hour
 live data through both this parser and the reference
 [`opening_hours`](https://github.com/opening-hours/opening_hours.js) library at 1,008 timestamps
 (three sample weeks, 30-minute steps, holidays skipped) and lists every value where ours answers
-and the reference disagrees. Run it before merging a parser change:
+and the reference answers differently. Run it before merging a parser change:
 `cd tools/opening-hours-diff && npm ci && node diff.mjs`. It exits 1 on any disagreement.
+Two categories are counted but don't fail the run: timestamps where the reference itself says
+unknown (mostly open ends, `11:00+`), and the one deliberate difference: the after-midnight part
+of a span belongs to the day it started, so a next-day `;` rule or whole-day `off` doesn't cancel
+it (`Mo-Th 08:00-01:00; Fr 08:00-02:00` is open at 00:30 on Friday, where the reference says
+closed). The same holds the other way round: when a later rule replaces the day a span started on,
+its spill goes with it (`Mo-Su 06:30-02:00; Fr-Sa 06:30-01:00` closes at 01:00 on Saturday night,
+where the reference says 02:00). A partial `off` naming those hours (`Sa 01:00-02:00 off`) does close them.
 
 ## Leaderboard
 

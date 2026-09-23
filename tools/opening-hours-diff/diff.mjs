@@ -103,6 +103,7 @@ for (const f of features) {
 const dates = sampleDates();
 let rejected = 0, gaps = 0, agreed = 0;
 const overnight = [];
+const refUnknown = new Set(); // values where ours answers but the reference says unknown
 const disagreements = [];
 const rejectedButOursKnows = [];
 
@@ -121,12 +122,17 @@ for (const c of cases.values()) {
     const ours = isOpenNow(c.value, at, coords);
     if (ours === "unknown") { gap = true; continue; }
     knows = true;
-    if (!ref || ref.getUnknown(at)) continue;
+    if (!ref) continue;
+    if (ref.getUnknown(at)) { refUnknown.add(c.value); continue; }
     const theirs = ref.getState(at) ? "open" : "closed";
     if (ours === theirs) continue;
     // Sun times: the two use different solar models (ours NOAA, the reference
     // SunCalc), a few minutes apart. Ignore a mismatch right at a transition.
     if (c.sun && ref.getState(shift(at, -SUN_SLACK)) !== ref.getState(shift(at, SUN_SLACK))) continue;
+    // Both directions: the reference may cancel a spill ours keeps (ours
+    // open), or keep one ours dropped because a later rule replaced the day
+    // the span started on ("Mo-Su 06:30-02:00; Fr-Sa 06:30-01:00" closes at
+    // 01:00 on Saturday night; the reference says 02:00, ours closed).
     if (at.getHours() * 60 + at.getMinutes() < spill) { spillOnly++; continue; }
     bad++;
     if (examples.length < EXAMPLES) examples.push(`${at.toString().slice(0, 21)}: ours ${ours}, reference ${theirs}`);
@@ -143,6 +149,7 @@ console.log(`sun-dependent places outside Europe, skipped: ${farSun}`);
 console.log(`agree everywhere ours answers: ${agreed}`);
 console.log(`ours unknown at some timestamp (coverage gap): ${gaps}`);
 console.log(`reference rejects: ${rejected} (of which ours answers: ${rejectedButOursKnows.length})`);
+console.log(`reference unknown where ours answers (not a failure): ${refUnknown.size}`);
 console.log(`known difference, after-midnight spill (not a failure): ${overnight.length}`);
 console.log(`disagreements: ${disagreements.length}`);
 
