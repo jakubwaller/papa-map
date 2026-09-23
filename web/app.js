@@ -11,13 +11,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app43";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app44";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app43";
+         langUrl } from "./i18n.js?v=app44";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app43";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app44";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -25,7 +25,7 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app43";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app44";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -33,16 +33,16 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
-         onBrowserFinished, SITE } from "./native.js?v=app43";
+         onBrowserFinished, SITE } from "./native.js?v=app44";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app43";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app44";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app43";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app44";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -2785,9 +2785,12 @@ function applyDataset(fc, places, stats, areas) {
   // refresh) already contains whatever the delta and this reader's own
   // answers described — pruneAnswerOverrides below drops the ones it truly
   // covers, keeping the very few made after this dataset's own data_base;
-  // the delta itself is simply dropped and re-fetched by the next poll,
-  // rather than risk merging it against tags it no longer matches.
-  currentDelta = null;
+  // the delta itself is kept only while it is still at least as new as this
+  // dataset (isDeltaFresh) — the app's background refresh usually lands
+  // after boot's first poll, and dropping a still-valid delta there hid a
+  // fresh edit until the next 3-minute poll. An older one is dropped and
+  // re-fetched (watchRefresh polls right after this).
+  if (currentDelta && !isDeltaFresh(currentDelta.base, stats?.data_base)) currentDelta = null;
   const versionByUrl = new Map();   // nothing to compare a fresh delta against yet — data_base alone decides here
   answerOverrides = pruneAnswerOverrides(answerOverrides, stats?.data_base, versionByUrl);
   saveAnswerOverrides(answerOverrides);
@@ -2899,6 +2902,7 @@ async function watchRefresh(loaded) {
   if (results.some((r) => r?.json != null)) {
     const [fc, places, stats, areas] = results.map((r, i) => r?.json ?? loaded[i].json);
     applyDataset(fc, places, stats, areas);
+    pollDelta();
   }
   if (allFeatures.length && results.every((r) => !r || r.ok === false)) toast(t("toastOffline"));
 }
