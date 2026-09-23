@@ -11,7 +11,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl } from "./datasource.js?v=app43";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app43";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          langUrl } from "./i18n.js?v=app43";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
@@ -2357,92 +2357,53 @@ for (const id of ["add-toilet-link", "add-venue-link"]) {
     writeAddWatch({
       t: new Date().toISOString(),
       bbox: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
+      // The actual zoom at the tap, not an estimate from the bbox's own
+      // span — used only for the "wide view, skip the fly-to" decision
+      // below, but there is no reason to approximate what MapLibre already
+      // hands over for free.
+      zoom: map.getZoom(),
     });
     addDialog.close();
   });
 }
-
-const inBbox = (lon, lat, bbox) => lon >= bbox[0] && lon <= bbox[2] && lat >= bbox[1] && lat <= bbox[3];
-
-// "Created after the tap", not merely "edited after the tap": an object
-// OSM already had before the reader ever opened the add-place dialog — a
-// neighbour's table getting its room answered a moment later, in the same
-// view — must never be mistaken for what this reader just added.
-// osm_version === 1 is the strong, cheap signal a genuine create always
-// carries (pipeline/delta.py sets it from the diff entry's own version);
-// new_toilets_no_table is pre-filtered to creates only, upstream, for the
-// same reason.
-const isNewlyCreated = (properties) => properties.osm_version === 1;
-
-// A rough zoom level from a bbox's own longitude span, in the same spirit
-// as MapLibre's own tile math (a span of 360/2^z degrees per doubling) —
-// no pixel width is stored with the watch, so this is deliberately an
-// approximation, only ever used for the "wide view" skip below, never for
-// anything that has to be exact.
-function approxZoomFromBbox(bbox) {
-  const lonSpan = bbox[2] - bbox[0];
-  return lonSpan > 0 ? Math.log2(360 / lonSpan) : 20;
-}
-
-const bboxCenter = (bbox) => [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2];
-const degDistance = (lon, lat, center) => Math.hypot(lon - center[0], lat - center[1]);
 
 // A short visual "look here": fly to the new pin and (re)open its popup —
 // which already pulses in on open the way any freshly drawn/selected pin
 // does (the selected-pin marker, CONTRACT.md v44's scale-in). No separate
 // animation is added on top of it. Skipped — the toast alone still fires —
 // when the view the reader tapped "add a place" from was wider than about
-// zoom 14: flying in from a whole-country view would be a bigger jump than
-// "look here" is meant to be, and the toast already names what happened.
+// zoom 14 (the actual zoom recorded in the watch at tap time, never
+// estimated from the bbox): flying in from a whole-country view would be a
+// bigger jump than "look here" is meant to be, and the toast already names
+// what happened.
 function pulseNewPin(kind, obj, watch) {
-  if (approxZoomFromBbox(watch.bbox) < 14) return;
+  if (watch.zoom < 14) return;
   map.flyTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
   reopen(kind, obj);
 }
 
 // Checked on every delta poll (applyDelta, below) while a watch is pending.
-// Three outcomes, per the design: the new table/place itself arrives (a
-// place-specific toast for a play place, never the table wording); OSM has
-// the toilet but no table (new_toilets_no_table); or ten minutes pass with
-// neither, which falls back to the existing "nothing new yet" nudge.
+// selectAddedPlace (web/datasource.js, pure and tested) is the whole
+// decision — which candidate, if any, is what this reader added, and
+// whether it's a table, a play place or a toilet with no table yet; this
+// is only the side effects (toast, fly-to, clearing the watch). Falls back
+// to the existing "nothing new yet" nudge after ten minutes with nothing.
 function maybeNotifyAddedPlace(deltaJson) {
   const watch = readAddWatch();
-  if (!watch) return;
-  const since = watch.t;
-  const center = bboxCenter(watch.bbox);
-  const upserts = [...(deltaJson.tables?.upsert || []).map((f) => ["table", f]),
-                   ...(deltaJson.places?.upsert || []).map((f) => ["place", f])];
-  // Every candidate this tick's delta offers, not just the first match —
-  // several readers can add places in the same neighbourhood in the same
-  // few minutes, and the one nearest where THIS reader was looking is the
-  // one worth flying to.
-  const candidates = [];
-  for (const [kind, f] of upserts) {
-    const p = f.properties;
-    const [lon, lat] = f.geometry.coordinates;
-    if (p.edited_at && p.edited_at > since && isNewlyCreated(p) && inBbox(lon, lat, watch.bbox))
-      candidates.push({ kind, f, lon, lat, dist: degDistance(lon, lat, center) });
-  }
-  if (candidates.length) {
-    candidates.sort((a, b) => a.dist - b.dist);
-    const { kind, f } = candidates[0];
-    clearAddWatch();
-    toast(t(kind === "place" ? "toastNewPlace" : "toastNewTable"));
-    const obj = (kind === "place" ? placesByOsmUrl : featuresByOsmUrl).get(f.properties.osm_url);
-    if (obj) pulseNewPin(kind, obj, watch);
+  const result = selectAddedPlace(deltaJson, watch);
+  if (!result) {
+    if (watch && Date.now() - Date.parse(watch.t) > ADD_WATCH_TIMEOUT_MS) {
+      clearAddWatch();
+      toast(t("editNone"));   // "nothing new on OSM yet / log in to MapComplete and upload"
+    }
     return;
   }
-  for (const nt of deltaJson.new_toilets_no_table || []) {
-    if (nt.t && nt.t > since && inBbox(nt.lon, nt.lat, watch.bbox)) {
-      clearAddWatch();
-      toast(t("toastToiletNoTable"));
-      return;
-    }
-  }
-  if (Date.now() - Date.parse(watch.t) > ADD_WATCH_TIMEOUT_MS) {
-    clearAddWatch();
-    toast(t("editNone"));   // "nothing new on OSM yet / log in to MapComplete and upload"
-  }
+  clearAddWatch();
+  if (result.type === "toilet_no_table") { toast(t("toastToiletNoTable")); return; }
+  toast(t(result.type === "place" ? "toastNewPlace" : "toastNewTable"));
+  const obj = (result.type === "place" ? placesByOsmUrl : featuresByOsmUrl)
+    .get(result.feature.properties.osm_url);
+  if (obj) pulseNewPin(result.type, obj, watch);
 }
 
 // ---- Language picker: re-render everything that carries text ----

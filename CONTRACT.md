@@ -35,7 +35,7 @@
 >   "tables": {"upsert": [feature, …], "remove": ["osm_url", …]},
 >   "places": {"upsert": [feature, …], "remove": ["osm_url", …]},
 >   "new_toilets_no_table": [{"osm_url": "…", "lon": 0, "lat": 0, "t": "iso",
->                             "version": 1}]
+>                             "version": 1, "created": true}]
 > }
 > ```
 > Every upsert feature is shaped exactly like one in `changing_tables.geojson`/
@@ -46,10 +46,24 @@
 > of null: it carries over from the base/accumulator's existing feature when
 > the object is already known, else is assigned from the first per-area bbox
 > (below) the point falls in, else null for a genuinely unplaceable one.
-> `new_toilets_no_table` holds only objects OSM did not already have before
-> — `version: 1`, or an object never in the base dataset at all — never
-> every edit to an already-known toilet that merely lacks a table answer.
-> A consumer merges by `osm_url` (upsert replaces or adds, remove deletes)
+> Every upsert, and every `new_toilets_no_table` entry, also carries
+> **`created`** — true only for an object this pipeline is seeing for the
+> first time since the base, decided once from that first diff entry's own
+> version (`version === 1`) and carried forward unchanged for every later
+> event on the same url, *not* recomputed from each event's own version.
+> That is deliberate, not an approximation: the ordinary MapComplete flow
+> creates the toilet (version 1, no table — `created: true`) and answers the
+> table question a moment later (version 2) — the table upsert that finally
+> lands is version 2, but still `created: true`, because the accumulator
+> remembers the object's true first version rather than re-deriving
+> "created" from whatever version happens to be current. An edit to an
+> object already known — from the base, or from earlier in this same
+> accumulation period — is never `created`, however many further edits
+> follow. `apply_events` also drops a `new_toilets_no_table` entry outright
+> the moment the same url lands a real table/place upsert, so a reader's own
+> "toilet, no table yet" moment can never linger and fire its own toast once
+> the table itself has arrived. A consumer merges by `osm_url` (upsert
+> replaces or adds, remove deletes)
 > and **ignores a delta whose `base` is older than the dataset it holds** —
 > `web/datasource.js`'s `mergeFeatureCollection`/`isDeltaFresh`, pure and
 > tested. `pipeline/delta.py`'s own design is documented in the module
@@ -105,26 +119,30 @@
 > temporal clause only, rest of each sentence untouched.
 >
 > The add-a-place flow (MapComplete deep link) remembers the tap's `{time,
-> view bbox}` and watches the delta for a matching upsert on return —
-> **only one created after the tap** (`osm_version === 1`, or, for
-> `new_toilets_no_table`, a version-1 object or one that was never in the
-> base dataset at all: an object already known before the tap, merely
-> edited in the same view a moment later, must never be mistaken for what
-> this reader just added), **preferring the candidate nearest the tapped
-> view's own centre** when more than one qualifies. A toast ("New changing
-> table added, thank you") plus a fly-to and a popup open for a table
-> upsert, a place-specific toast ("New play area added, thank you") for a
-> play-place upsert — never the table wording for one — or, if OSM now has
-> the toilet but no changing table (`new_toilets_no_table`), a toast
-> explaining it won't show as a pin; after 10 minutes with neither, the
-> existing "nothing new on OSM yet" nudge. **The fly-to is skipped (the
-> toast still fires) when the tapped view was wider than about zoom 14** —
-> flying in from a whole-country view would be a bigger jump than the
-> "look here" pulse is meant to be. Three new i18n keys per language,
-> `toastNewTable`/`toastNewPlace`/`toastToiletNoTable`, properly translated
-> in all 32 languages (the site's own changing-table/play-area noun per
-> language, matching each language's existing strings — never a generic
-> synonym).
+> view bbox, zoom}` (the actual `map.getZoom()` at the tap, not an estimate
+> from the bbox) and watches the delta for a matching upsert on return —
+> **only one `created === true` and edited after the tap** (`selectAddedPlace`,
+> `web/datasource.js`, pure and tested — never `osm_version === 1`, which
+> would reject the ordinary MapComplete flow's own table upsert once the
+> accumulator has moved it to version 2; see `created`'s own definition
+> above): an object already known before the tap, merely edited in the same
+> view a moment later, must never be mistaken for what this reader just
+> added. **Prefers the candidate nearest the tapped view's own centre** when
+> more than one qualifies, and **ignores a `new_toilets_no_table` entry
+> whose url also has an upsert this same tick** — the upsert branch already
+> claims it. A toast ("New changing table added, thank you") plus a fly-to
+> and a popup open for a table upsert, a place-specific toast ("New play
+> area added, thank you") for a play-place upsert — never the table wording
+> for one — or, if OSM now has the toilet but no changing table
+> (`new_toilets_no_table`), a toast explaining it won't show as a pin; after
+> 10 minutes with neither, the existing "nothing new on OSM yet" nudge.
+> **The fly-to is skipped (the toast still fires) when the tapped view's own
+> recorded zoom was under about 14** — flying in from a whole-country view
+> would be a bigger jump than the "look here" pulse is meant to be. Three
+> new i18n keys per language, `toastNewTable`/`toastNewPlace`/
+> `toastToiletNoTable`, properly translated in all 32 languages (the site's
+> own changing-table/play-area noun per language, matching each language's
+> existing strings — never a generic synonym).
 >
 > **No third-party request added**: `delta.json` is served from papamap.de
 > itself, like every other dataset file — `web/datenschutz.html`/

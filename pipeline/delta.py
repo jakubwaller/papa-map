@@ -397,9 +397,30 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
     handled correctly too, not just across ticks/files."""
     known_tables = set(base_dataset["tables"])
     known_places = set(base_dataset["places"])
+    # Whether an object is "created" — the add-a-place flow's own meaning of
+    # new, never confused with the diff entry's own version: the FIRST
+    # version this pipeline ever saw for a url since the base reset decides
+    # it, once, and every later event for that url (a table upsert after an
+    # earlier toilet_no_table, say) carries the same answer forward. The
+    # ordinary MapComplete flow creates the toilet (v1, no table — created)
+    # then answers the table question a moment later (v2, now a table) —
+    # both events must agree it was created, or the table upsert would be
+    # silently treated as an edit to something that already existed.
+    # Seeded from what the accumulator already carries (each stored feature/
+    # toilet_no_table entry keeps its own `created` from when it was first
+    # decided, round-tripped through delta.json on a restart) and updated as
+    # this batch is walked, so two changes to the same object within one
+    # .osc agree with each other too, not only across ticks.
+    created_by_url: dict[str, bool] = {}
     if acc is not None:
         known_tables = (known_tables | set(acc["tables_upsert"])) - acc["tables_remove"]
         known_places = (known_places | set(acc["places_upsert"])) - acc["places_remove"]
+        for u, f in acc["tables_upsert"].items():
+            created_by_url[u] = bool(f["properties"].get("created"))
+        for u, f in acc["places_upsert"].items():
+            created_by_url[u] = bool(f["properties"].get("created"))
+        for u, t in acc["new_toilets_no_table"].items():
+            created_by_url[u] = bool(t.get("created"))
     events = []
     for ch in changes:
         osm_type, osm_id = ch["type"], ch["id"]
@@ -438,6 +459,21 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
             existing_table = acc["tables_upsert"].get(url)
         area = (existing_table["properties"].get("area") if existing_table is not None
                 else area_for_point(lon, lat, area_boxes_by_name))
+        # The first-seen-version rule, decided once per url per accumulation
+        # period (see created_by_url's own comment above): already decided
+        # (an earlier event for this url, this batch or a previous tick) ->
+        # reuse it; known from the base dataset -> it predates this period,
+        # never created; otherwise this diff entry IS the first one this
+        # pipeline has ever seen for it, so version 1 is the only honest
+        # "created" — an edit at version 4 to an object that merely wasn't
+        # relevant/known before now is a first APPEARANCE, not a creation.
+        if url in created_by_url:
+            created = created_by_url[url]
+        elif was_table or was_place:
+            created = False   # known already, from the base or earlier in this period
+        else:
+            created = ch.get("version") == 1
+        created_by_url[url] = created
         table_feats = export.build_features({"elements": [el]}, {(osm_type, osm_id): area})
         place_feats = export.build_play_features({"elements": [el]}, {"elements": []})
         table_feat = table_feats[0] if table_feats else None
@@ -446,6 +482,7 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
             if f is not None:
                 f["properties"]["osm_version"] = ch.get("version")
                 f["properties"]["edited_at"] = ch.get("timestamp")
+                f["properties"]["created"] = created
         if table_feat is not None:
             events.append((url, "table", table_feat))
             known_tables.add(url)
@@ -459,21 +496,21 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
             events.append((url, "place", None))
             known_places.discard(url)
         value = (tags.get("changing_table") or "").strip()
-        # "New" for the add-a-place flow (web/app.js's maybeNotifyAddedPlace)
-        # means a toilet OSM did not already have before — either this diff
-        # entry is a genuine create (version 1), or the object existed on
-        # OSM already but was never in the nightly base_dataset (an
-        # amenity=toilets tag just added to something else, or the object's
-        # first appearance inside a covered sweep area). An object already
-        # in the base that merely lost its table answer must never toast a
-        # reader who tapped "add a place" minutes ago as if it were new.
-        created = ch.get("version") == 1 or (
-            url not in base_dataset["tables"] and url not in base_dataset["places"])
+        # A toilet_no_table entry only for a genuinely created object (the
+        # same `created` flag the table/place upsert above would carry, had
+        # this object qualified as one) — never for merely editing an
+        # existing toilet that happens to still have no table answer, which
+        # is not new to anyone. apply_events removes this entry outright the
+        # moment the SAME url later becomes a real table/place upsert (the
+        # ordinary MapComplete flow: create the toilet, v1, no table yet;
+        # answer the table question a moment later, v2, now a table) — so a
+        # stale "no table" toast can never fire once the table itself has
+        # landed.
         if (created and tags.get("amenity") == "toilets"
                 and table_feat is None and place_feat is None and value != "no"):
             events.append((url, "toilet_no_table",
                           {"osm_url": url, "lon": lon, "lat": lat, "t": ch.get("timestamp"),
-                           "version": ch.get("version")}))
+                           "version": ch.get("version"), "created": created}))
     return events
 
 
@@ -492,6 +529,11 @@ def apply_events(acc: dict, events: list[tuple]) -> dict:
                 acc["tables_remove"].add(url)
             else:
                 acc["tables_upsert"][url] = feat
+                # The object just became a real table — any earlier "toilet,
+                # no table yet" entry for the same url is stale the moment
+                # this lands (the ordinary MapComplete flow: create the
+                # toilet, then answer the table question a moment later).
+                acc["new_toilets_no_table"].pop(url, None)
         elif kind == "place":
             acc["places_remove"].discard(url)
             if feat is None:
@@ -499,6 +541,7 @@ def apply_events(acc: dict, events: list[tuple]) -> dict:
                 acc["places_remove"].add(url)
             else:
                 acc["places_upsert"][url] = feat
+                acc["new_toilets_no_table"].pop(url, None)
         elif kind == "toilet_no_table":
             acc["new_toilets_no_table"][url] = feat
     return acc

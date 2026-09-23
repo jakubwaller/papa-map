@@ -14,7 +14,8 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
          nearestUnknownRoom, isFixFresh, popupPan, isAppleTouch,
          shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
-         applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl } from "./datasource.js";
+         applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl,
+         isNewlyCreated, selectAddedPlace } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -1343,4 +1344,120 @@ test("a play-place room answer promotes it, survives a reload, then is dropped o
   const notYetCovered = pruneAnswerOverrides(overrides, "2026-09-23T09:00:00+00:00",
     new Map([[url, 2]]));
   assert.deepEqual(notYetCovered, overrides);
+});
+
+// ---- the add-a-place flow: selectAddedPlace / isNewlyCreated ---------------
+
+test("isNewlyCreated reads properties.created, never osm_version", () => {
+  assert.equal(isNewlyCreated({ created: true, osm_version: 2 }), true);
+  assert.equal(isNewlyCreated({ created: false, osm_version: 1 }), false);
+  assert.equal(isNewlyCreated({ osm_version: 1 }), false);
+  assert.equal(isNewlyCreated({}), false);
+  assert.equal(isNewlyCreated(null), false);
+});
+
+const WATCH = { t: "2026-09-23T10:00:00Z", bbox: [9.9, 53.5, 10.1, 53.6], zoom: 16 };
+
+test("selectAddedPlace returns null with no watch or no delta", () => {
+  assert.equal(selectAddedPlace({ tables: {}, places: {} }, null), null);
+  assert.equal(selectAddedPlace(null, WATCH), null);
+});
+
+test("selectAddedPlace picks a genuinely created table upsert inside the watch bbox, edited after the tap", () => {
+  const delta = { tables: { upsert: [
+    feat(10.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/1",
+                       created: true, edited_at: "2026-09-23T10:01:00Z" }),
+  ], remove: [] }, places: { upsert: [], remove: [] }, new_toilets_no_table: [] };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.deepEqual(result, { type: "table", feature: delta.tables.upsert[0] });
+});
+
+test("selectAddedPlace ignores an upsert that was already known before the tap (created !== true)", () => {
+  const delta = { tables: { upsert: [
+    feat(10.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/1",
+                       created: false, edited_at: "2026-09-23T10:01:00Z" }),
+  ], remove: [] }, places: { upsert: [], remove: [] }, new_toilets_no_table: [] };
+  assert.equal(selectAddedPlace(delta, WATCH), null);
+});
+
+test("selectAddedPlace ignores an edit that predates the tap even if created", () => {
+  const delta = { tables: { upsert: [
+    feat(10.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/1",
+                       created: true, edited_at: "2026-09-23T09:59:00Z" }),
+  ], remove: [] }, places: { upsert: [], remove: [] }, new_toilets_no_table: [] };
+  assert.equal(selectAddedPlace(delta, WATCH), null);
+});
+
+test("selectAddedPlace ignores a match outside the watch bbox", () => {
+  const delta = { tables: { upsert: [
+    feat(20.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/1",
+                       created: true, edited_at: "2026-09-23T10:01:00Z" }),
+  ], remove: [] }, places: { upsert: [], remove: [] }, new_toilets_no_table: [] };
+  assert.equal(selectAddedPlace(delta, WATCH), null);
+});
+
+test("selectAddedPlace prefers the candidate nearest the watch's own bbox centre", () => {
+  const near = feat(10.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/near",
+                                   created: true, edited_at: "2026-09-23T10:01:00Z" });
+  const far = feat(10.09, 53.59, { osm_url: "https://www.openstreetmap.org/node/far",
+                                   created: true, edited_at: "2026-09-23T10:01:00Z" });
+  const delta = { tables: { upsert: [far, near], remove: [] },
+                  places: { upsert: [], remove: [] }, new_toilets_no_table: [] };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.equal(result.feature.properties.osm_url, "https://www.openstreetmap.org/node/near");
+});
+
+test("selectAddedPlace returns a place-typed result for a play-place upsert, not table", () => {
+  const delta = { tables: { upsert: [], remove: [] },
+                  places: { upsert: [feat(10.0, 53.55,
+                    { osm_url: "https://www.openstreetmap.org/node/9",
+                     created: true, edited_at: "2026-09-23T10:01:00Z" })], remove: [] },
+                  new_toilets_no_table: [] };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.equal(result.type, "place");
+});
+
+test("selectAddedPlace falls back to a toilet_no_table entry when no upsert qualifies", () => {
+  const delta = { tables: { upsert: [], remove: [] }, places: { upsert: [], remove: [] },
+                  new_toilets_no_table: [
+                    { osm_url: "https://www.openstreetmap.org/node/5",
+                      lon: 10.0, lat: 53.55, t: "2026-09-23T10:01:00Z", version: 1, created: true },
+                  ] };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.deepEqual(result, { type: "toilet_no_table", entry: delta.new_toilets_no_table[0] });
+});
+
+test("selectAddedPlace ignores a toilet_no_table entry whose url also has an upsert this tick", () => {
+  // The ordinary MapComplete flow: the toilet's own creation and the table
+  // answer can land in the same delta — the upsert already claims it, so
+  // the stale-looking toilet_no_table entry (which pipeline/delta.py should
+  // already have dropped server-side) must not also fire its own toast.
+  const url = "https://www.openstreetmap.org/node/5";
+  const delta = {
+    tables: { upsert: [feat(10.0, 53.55, { osm_url: url, created: true,
+                                           edited_at: "2026-09-23T10:01:30Z" })], remove: [] },
+    places: { upsert: [], remove: [] },
+    new_toilets_no_table: [{ osm_url: url, lon: 10.0, lat: 53.55,
+                            t: "2026-09-23T10:01:00Z", version: 1, created: true }],
+  };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.equal(result.type, "table");
+});
+
+test("selectAddedPlace: the ordinary MapComplete flow (create v1, answer v2) resolves to the table, not a false toilet_no_table toast", () => {
+  // Mirrors pipeline/delta.py's own fix: the accumulator only keeps the
+  // latest version (2), but process_changes stamps created: true on it
+  // because it remembers the object's true first version — this is the
+  // exact upsert selectAddedPlace has to accept, which osm_version === 1
+  // never would have.
+  const url = "https://www.openstreetmap.org/node/42";
+  const delta = {
+    tables: { upsert: [feat(10.0, 53.55, { osm_url: url, created: true,
+                                           osm_version: 2, edited_at: "2026-09-23T10:01:30Z" })],
+             remove: [] },
+    places: { upsert: [], remove: [] },
+    new_toilets_no_table: [],
+  };
+  const result = selectAddedPlace(delta, WATCH);
+  assert.deepEqual(result, { type: "table", feature: delta.tables.upsert[0] });
 });

@@ -192,7 +192,8 @@ def test_new_toilet_without_table_is_flagged():
     events = delta.process_changes(changes, _empty_dataset())
     assert events == [("https://www.openstreetmap.org/node/500", "toilet_no_table",
                        {"osm_url": "https://www.openstreetmap.org/node/500",
-                        "lon": 10.0, "lat": 53.55, "t": "2026-09-23T10:13:00Z", "version": 1})]
+                        "lon": 10.0, "lat": 53.55, "t": "2026-09-23T10:13:00Z",
+                        "version": 1, "created": True})]
 
 
 def test_toilet_no_table_only_flags_creates_not_every_modify():
@@ -212,17 +213,17 @@ def test_toilet_no_table_only_flags_creates_not_every_modify():
     assert (url, "table", None) in events
 
 
-def test_toilet_no_table_flags_first_appearance_even_without_version_1():
-    # An object OSM already had (version > 1) but that was never in this
-    # pipeline's own base dataset — its first appearance here still counts
-    # as "new" for the add-a-place flow, per the design ("version 1, or
-    # objects not in the base").
+def test_toilet_no_table_never_flags_an_edit_that_is_not_version_1_even_if_never_in_the_base():
+    # Round-2 review fix: an object OSM already had (version > 1) but that
+    # was never in this pipeline's own base dataset used to be flagged as
+    # "new" too — the bug being fixed here. A toilet-less amenity=toilets
+    # object merely becoming relevant now (never in the base, since it
+    # carries no table) meant ANY edit of ANY existing toilet counted as
+    # created. Only a genuine version-1 create does now.
     changes = delta.parse_osc(__import__("io").BytesIO(_osc(
         _node("modify", 502, 7, "2026-09-23T10:15:00Z", 53.55, 10.0, {"amenity": "toilets"}))))
     events = delta.process_changes(changes, _empty_dataset())
-    assert events == [("https://www.openstreetmap.org/node/502", "toilet_no_table",
-                       {"osm_url": "https://www.openstreetmap.org/node/502",
-                        "lon": 10.0, "lat": 53.55, "t": "2026-09-23T10:15:00Z", "version": 7})]
+    assert events == []
 
 
 # ---- fix: an object created after the base, then deleted/retagged, must --
@@ -277,6 +278,81 @@ def test_created_then_deleted_within_the_same_osc_file_is_removed():
     delta.apply_events(acc, events)
     assert url not in acc["tables_upsert"]
     assert url in acc["tables_remove"]
+
+
+# ---- fix: the ordinary MapComplete flow (create the toilet, v1, no table --
+# ---- yet, then answer the table question a moment later, v2) -------------
+
+def test_mapcomplete_create_then_answer_table_in_a_later_tick_is_a_created_upsert():
+    # v1 (this tick): a bare toilet, no table yet — flagged, created=True.
+    acc = delta.new_accumulator()
+    v1 = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 800, 1, "2026-09-23T10:00:00Z", 53.55, 10.0, {"amenity": "toilets"}))))
+    delta.apply_events(acc, delta.process_changes(v1, _empty_dataset(), acc=acc))
+    url = "https://www.openstreetmap.org/node/800"
+    assert url in acc["new_toilets_no_table"]
+    assert acc["new_toilets_no_table"][url]["created"] is True
+
+    # v2 (a later tick, a separate process_changes call): the table question
+    # answered — this must be accepted as an upsert (the bug: requiring
+    # osm_version == 1 on the upsert itself would reject this, since the
+    # accumulator only ever keeps the latest version) and carry created=True
+    # forward from the object's true first version.
+    v2 = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("modify", 800, 2, "2026-09-23T10:01:00Z", 53.55, 10.0,
+              {"amenity": "toilets", "changing_table": "yes",
+               "changing_table:location": "male_toilet"}))))
+    events = delta.process_changes(v2, _empty_dataset(), acc=acc)
+    table_events = [e for e in events if e[1] == "table"]
+    assert len(table_events) == 1
+    assert table_events[0][2]["properties"]["created"] is True
+    assert table_events[0][2]["properties"]["osm_version"] == 2
+
+    # And the stale "no table yet" entry must be gone once the table lands.
+    delta.apply_events(acc, events)
+    assert url not in acc["new_toilets_no_table"]
+    assert url in acc["tables_upsert"]
+    assert acc["tables_upsert"][url]["properties"]["created"] is True
+
+
+def test_mapcomplete_create_then_answer_table_within_the_same_osc_file():
+    # Both changes in ONE process_changes call this time — the intra-batch
+    # created_by_url bookkeeping (not only the acc snapshot from a previous
+    # tick) is what has to agree the table upsert was created.
+    acc = delta.new_accumulator()
+    both = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 801, 1, "2026-09-23T10:00:00Z", 53.55, 10.0, {"amenity": "toilets"}),
+        _node("modify", 801, 2, "2026-09-23T10:00:30Z", 53.55, 10.0,
+              {"amenity": "toilets", "changing_table": "yes",
+               "changing_table:location": "male_toilet"}))))
+    events = delta.process_changes(both, _empty_dataset(), acc=acc)
+    url = "https://www.openstreetmap.org/node/801"
+    table_events = [e for e in events if e[1] == "table"]
+    assert len(table_events) == 1
+    assert table_events[0][2]["properties"]["created"] is True
+    # v1's own toilet_no_table event is legitimately in the raw batch (at
+    # that point in the walk there was no table yet) — apply_events, which
+    # processes events in order, is what resolves the two into one net
+    # state: the table event lands second and clears it.
+    delta.apply_events(acc, events)
+    assert url not in acc["new_toilets_no_table"]
+    assert url in acc["tables_upsert"]
+
+
+def test_edit_of_an_already_known_toilet_is_never_created_even_before_its_table_answer():
+    # The base already has this object as a table (some earlier session's
+    # answer) — a later edit that merely touches it, still with no table
+    # tag change, must never be "created", matching test_toilet_no_table_
+    # only_flags_creates_not_every_modify's own table-removal case but
+    # checked from the created-flag side directly.
+    url = "https://www.openstreetmap.org/node/802"
+    base = {"tables": {url: {"geometry": {"coordinates": [10.0, 53.55]},
+                             "properties": {"osm_url": url, "area": None}}}, "places": {}}
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("modify", 802, 5, "2026-09-23T10:02:00Z", 53.55, 10.0,
+              {"changing_table": "yes", "changing_table:location": "female_toilet"}))))
+    events = delta.process_changes(changes, base)
+    assert events[0][2]["properties"]["created"] is False
 
 
 def test_outside_bbox_new_object_dropped_but_known_object_kept():

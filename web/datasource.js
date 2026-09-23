@@ -1009,3 +1009,69 @@ export function pruneAnswerOverrides(overrides, datasetBase, versionByUrl) {
   }
   return out;
 }
+
+// ---- The add-a-place flow: which delta entry (if any) is what THIS reader
+// just added, at the tapped view --------------------------------------------
+// `watch` is the add-place tap record written at click time (web/app.js):
+// {t: iso, bbox: [minLon, minLat, maxLon, maxLat], zoom: the map's actual
+// zoom then — never estimated from the bbox, MapLibre already has it}.
+
+const inBboxTuple = (lon, lat, bbox) =>
+  lon >= bbox[0] && lon <= bbox[2] && lat >= bbox[1] && lat <= bbox[3];
+
+// `properties.created` (pipeline/delta.py) is the first-seen-version rule's
+// own answer, not the diff entry's own osm_version: the ordinary
+// MapComplete flow creates the toilet (v1, no table) and answers the table
+// question a moment later (v2) — the upsert that finally lands is version
+// 2, but pipeline/delta.py still marks it created because it remembers the
+// object's true first version across the whole accumulation period.
+// `osm_version === 1` alone would reject exactly that upsert (the
+// accumulator only ever keeps an object's latest version).
+export function isNewlyCreated(properties) {
+  return Boolean(properties && properties.created === true);
+}
+
+// The pure decision behind maybeNotifyAddedPlace (web/app.js): which of one
+// delta's upserts and new_toilets_no_table entries, if any, is what this
+// reader added at the tapped view, and what kind of outcome it is —
+// {type: "table" | "place", feature} for the new pin itself (the candidate
+// nearest the tapped view's own centre, when more than one qualifies — a
+// few readers can add places in the same neighbourhood in the same few
+// minutes), {type: "toilet_no_table", entry} when OSM has the toilet but no
+// table yet, or null when nothing in this delta answers the watch (the
+// caller decides what a null after ~10 minutes means). A candidate must be
+// "created after the tap": isNewlyCreated AND edited after `watch.t` — an
+// object OSM already had before the tap, merely edited in the same view a
+// moment later, is never mistaken for what this reader just added. A
+// new_toilets_no_table entry whose url also has an upsert this same tick is
+// ignored outright — the upsert branch above already claims it (the
+// ordinary MapComplete flow landing both halves of an answer in one delta).
+export function selectAddedPlace(deltaJson, watch) {
+  if (!watch || !deltaJson) return null;
+  const since = watch.t;
+  const center = [(watch.bbox[0] + watch.bbox[2]) / 2, (watch.bbox[1] + watch.bbox[3]) / 2];
+  const upserts = [...(deltaJson.tables?.upsert || []).map((f) => ["table", f]),
+                   ...(deltaJson.places?.upsert || []).map((f) => ["place", f])];
+  const upsertUrls = new Set();
+  const candidates = [];
+  for (const [kind, f] of upserts) {
+    const p = f.properties || {};
+    if (p.osm_url) upsertUrls.add(p.osm_url);
+    const coords = f.geometry?.coordinates;
+    if (!coords) continue;
+    const [lon, lat] = coords;
+    if (p.edited_at && p.edited_at > since && isNewlyCreated(p) && inBboxTuple(lon, lat, watch.bbox)) {
+      const dist = Math.hypot(lon - center[0], lat - center[1]);
+      candidates.push({ kind, feature: f, dist });
+    }
+  }
+  if (candidates.length) {
+    candidates.sort((a, b) => a.dist - b.dist);
+    return { type: candidates[0].kind, feature: candidates[0].feature };
+  }
+  for (const nt of deltaJson.new_toilets_no_table || []) {
+    if (nt.t && nt.t > since && !upsertUrls.has(nt.osm_url) && inBboxTuple(nt.lon, nt.lat, watch.bbox))
+      return { type: "toilet_no_table", entry: nt };
+  }
+  return null;
+}
