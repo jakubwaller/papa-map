@@ -9,7 +9,7 @@
 // the world, from a geocoder — because a parent planning a trip wants to look
 // at Lisbon before they are standing in it, and this map has no street index
 // of its own.
-import { haversineKm } from "./datasource.js?v=app43";
+import { haversineKm } from "./datasource.js?v=app44";
 
 // ---- The geocoder ----
 // Photon (komoot), not Nominatim. Nominatim's usage policy forbids

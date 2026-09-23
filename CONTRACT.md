@@ -1,5 +1,12 @@
 # papa-map — build contract (v0)
 
+> **v49 amendment (23 Sep 2026, the delta survives the app's refresh): no shape change.**
+> `applyDataset` keeps the current delta while `isDeltaFresh(delta.base, stats.data_base)`
+> still holds, instead of dropping it on every dataset swap, and `watchRefresh` polls the
+> delta right after applying a refreshed dataset. The store app's background refresh
+> usually lands after boot's first delta poll and used to hide a fresh edit until the
+> next 3-minute poll. Shell pin `app43` → `app44`.
+>
 > **v48 amendment (23 Sep 2026, live updates): shape change — two additions,
 > nothing removed.** Today a pin only changes colour after the nightly build.
 > Two paths now update it sooner, and classification stays exactly where it
