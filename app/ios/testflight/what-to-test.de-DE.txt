@@ -4,4 +4,5 @@
 – Siri: „Nächster Wickeltisch in PapaMap".
 – Eine Stadt offline laden, Flugmodus an, Karte öffnen.
 – Optional mit OpenStreetMap-Konto: bei einem grauen Ort die Raum-Frage beantworten.
+– Neu: Beantwortest du einen grauen Ort, wechselt er sofort die Farbe; in MapComplete hinzugefügte Orte erscheinen nach wenigen Minuten.
 Alles, was unklar ist oder hakt: Screenshot machen und über TestFlight schicken.
