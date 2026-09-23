@@ -449,3 +449,62 @@ test("Dec 20-05 (end day before start, same month) is unknown, not a year-wrap",
   assert.equal(isOpenNow("Dec 20-05 08:00-18:00", on(2026, 12, 22, 10, 0)), "unknown");
   assert.equal(isOpenNow("Dec 20-05 08:00-18:00", on(2027, 1, 2, 10, 0)), "unknown");
 });
+
+// A comma-joined "off" member is a *partial* closure, carved out of what
+// the rest of the group already built — not a wipe of the whole day.
+
+test("a date-restricted comma off carves out only its own hours", () => {
+  const oh = "Mo-Fr 08:00-20:00, Dec 24 14:00-20:00 off";
+  assert.equal(isOpenNow(oh, on(2026, 12, 24, 10, 0)), "open");   // morning: before the off hours
+  assert.equal(isOpenNow(oh, on(2026, 12, 24, 16, 0)), "closed"); // within the off hours
+});
+
+test("a comma off on a shared weekday carves out only its own hours", () => {
+  const oh = "Mo-Sa 09:00-19:00, Sa 13:00-19:00 off";
+  assert.equal(isOpenNow(oh, at(6, 10, 0)), "open");   // Saturday morning
+  assert.equal(isOpenNow(oh, at(6, 15, 0)), "closed"); // Saturday afternoon, carved out
+  assert.equal(isOpenNow(oh, at(1, 10, 0)), "open");   // an ordinary weekday, untouched
+});
+
+test("a comma off in the middle of the day splits the hours around it", () => {
+  const oh = "Mo-Fr 08:00-18:00, We 12:00-14:00 off";
+  assert.equal(isOpenNow(oh, at(3, 9, 0)), "open");    // Wednesday morning
+  assert.equal(isOpenNow(oh, at(3, 13, 0)), "closed"); // Wednesday, during the carved-out lunch
+  assert.equal(isOpenNow(oh, at(3, 16, 0)), "open");   // Wednesday afternoon
+});
+
+test("order matters: a later additive rule can add hours back after an off", () => {
+  const oh = "We off, Mo-Fr 08:00-18:00";
+  assert.equal(isOpenNow(oh, at(3, 10, 0)), "open"); // Wednesday: the later rule re-adds it
+});
+
+test("|| only counts a spillover while it's still running", () => {
+  const withComment = 'Fr 18:00-02:00 || "by appointment"';
+  const withFallback = "Fr 18:00-02:00 || Sa 10:00-14:00";
+  // Saturday noon: Friday's overnight span closed at 02:00, long before
+  // noon, so it says nothing about this instant — the comment fallback
+  // can't be evaluated either, so the whole value is unknown; the plain
+  // fallback, once tried, does cover Saturday and gives open.
+  assert.equal(isOpenNow(withComment, at(6, 12, 0)), "unknown");
+  assert.equal(isOpenNow(withFallback, at(6, 12, 0)), "open");
+  // Just after midnight Saturday, the spillover from Friday is still live.
+  assert.equal(isOpenNow(withFallback, at(6, 1, 0)), "open");
+});
+
+test('|| stops at an alternative that can\'t be evaluated, rather than trying a later one', () => {
+  assert.equal(isOpenNow('"call first" || Mo-Fr 10:00-18:00', at(1, 12, 0)), "unknown");
+  assert.equal(
+    isOpenNow("week 01-53 Mo-Fr 10:00-12:00 || Mo-Fr 08:00-18:00", at(3, 15, 0)),
+    "unknown");
+  // 78°N during the midnight sun: the sun never sets, so the first
+  // alternative can't be evaluated — even though the second, plain-hours
+  // alternative would otherwise easily resolve.
+  const farNorth = { lat: 78, lon: 15.6 };
+  assert.equal(isOpenNow("sunrise-sunset || 09:00-17:00", on(2026, 6, 21, 20, 0), farNorth), "unknown");
+});
+
+test("an off with more than one comma-joined time span is unknown, not a full-day close", () => {
+  const oh = "Mo-Fr 08:00-18:00, 12:00-13:00 off";
+  assert.equal(isOpenNow(oh, at(3, 9, 0)), "unknown");
+  assert.equal(parseOpeningHours(oh), null);
+});

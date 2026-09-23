@@ -733,11 +733,19 @@ follows it — a new rule starts with a day, `PH`/`SH`, or a month selector,
 only once what precedes the comma is already a complete rule (a time, or a
 trailing `off`/`closed`). Two comma-joined rules that share a weekday have
 their hours unioned (`Mo-Sa 10:00-20:00, Fr-Sa 20:00-22:00` — Friday and
-Saturday get both time spans), and an `off`/`closed` rule in the group still
-closes the days it names outright. Only when both rules carry their own
-(non-off) hours that genuinely overlap in time on a shared day — an override
-or a typo, indistinguishable from the text — does the whole value come back
-`"unknown"` rather than a guess.
+Saturday get both time spans); a comma-joined `off`/`closed` rule instead
+*carves its own hours back out* of whatever the group already built for the
+days it names (`Mo-Sa 09:00-19:00, Sa 13:00-19:00 off` — Saturday is open
+09:00-13:00 only), and only closes the whole day when it names no hours of
+its own. Order within the group matters, same as `;`: a rule after an `off`
+can re-add hours it took away (`We off, Mo-Fr 08:00-18:00` — Wednesday ends
+up open). An `off` with more than one comma-joined time span of its own
+(`Mo-Fr 08:00-18:00, 12:00-13:00 off`) can't be told apart from a genuine new
+rule that's missing its day selector, so it's `"unknown"` rather than a
+guess at which spans it was meant to close. Only when both rules carry their
+own (non-off) hours that genuinely overlap in time on a shared day — an
+override or a typo, indistinguishable from the text — does the whole value
+come back `"unknown"` rather than a guess.
 
 Month and date selectors are understood ahead of, or instead of, a weekday
 selector: month ranges (`Apr-Oct`), wrapping ranges that cross the new year
@@ -773,17 +781,25 @@ where the event doesn't occur at that latitude (polar day/night), a value
 that needs one is `"unknown"`.
 
 A `||` fallback chain tries its alternatives in order: the first one that
-actually says something about *today* (the right weekday, a date selector
-that matches, sun coordinates it can resolve, ...) decides the answer, and
-one that's silent about today — wrong weekdays, an unparseable comment-only
-fallback — is skipped in favour of the next. Only when every alternative has
-nothing to say does the value come back `"unknown"`; a plain value with no
-`||` at all keeps its old behaviour (a day the rules never mention is
-`"closed"`, not `"unknown"`). A trailing quoted comment is stripped and the
-rule evaluated normally when it follows an explicit state keyword
+actually says something about *today* — the right weekday, a date selector
+that matches, or a still-running spillover from yesterday — decides the
+answer, and one that's *positively shown* to be silent about today (wrong
+weekdays, a date that doesn't match, no evaluable rule at all) is skipped in
+favour of the next. An earlier alternative that instead *can't be
+evaluated* — it doesn't parse, or it needs a sun event this call can't
+resolve (no coordinates, or polar day/night) — is never silently skipped in
+favour of an easier later one: the real answer might depend on exactly that
+alternative, so the whole value comes back `"unknown"` right there
+(`"call first" || Mo-Fr 10:00-18:00` is unknown at any time, even though the
+second alternative alone would resolve fine). Only when every alternative
+has been positively shown to say nothing does the value come back
+`"unknown"` for that reason instead; a plain value with no `||` at all keeps
+its old behaviour (a day the rules never mention is `"closed"`, not
+`"unknown"`). A trailing quoted comment is stripped and the rule evaluated
+normally when it follows an explicit state keyword
 (`07:00-23:00 open "Restaurant"`), but a comment with no state keyword
-(`24/7 "depends on the park"`) makes that alternative unusable — there's no
-way to know what the comment is qualifying.
+(`24/7 "depends on the park"`) makes that alternative unparseable — there's
+no way to know what the comment is qualifying.
 
 Anything else — week numbers, easter, year ranges, nth-weekday selectors
 (`Sa[2]`), "+N day" offsets, or any other construct the parser doesn't

@@ -27,7 +27,14 @@
 // group: their spans are unioned rather than rejected, unless the two
 // rules' own (non-off) hours genuinely overlap in time, which is kept
 // "unknown" as genuinely ambiguous (an override or a typo, we can't tell);
-// time spans that cross midnight (22:00-02:00), including "hour past 24"
+// a comma-joined "off" carves its own hours back *out* of what the group
+// already built for the days it names, rather than wiping the day outright
+// (Mo-Sa 09:00-19:00, Sa 13:00-19:00 off — Saturday is 09:00-13:00 only),
+// order within the group mattering the same way ; does (a rule after an
+// off can re-add hours it took away); an off with more than one of its own
+// comma-joined time spans can't be told apart from a new rule that's
+// missing its day selector, so it's "unknown" rather than a guess; time
+// spans that cross midnight (22:00-02:00), including "hour past 24"
 // spellings of the same thing on the *end* of a span (08:00-25:00 = until
 // 01:00 next day) and "00:00-00:00" (all day) — a *start* past 24:00
 // (Fr 24:00-26:00) doesn't mean anything relative to Friday and is
@@ -48,15 +55,19 @@
 // event is "unknown", same as on a date where the event doesn't occur at
 // that latitude (polar day/night); a "||" fallback chain, tried in order —
 // the first alternative that actually says something about today (or, via
-// a wrap span, about yesterday) decides the answer, one that's silent about
-// today is skipped in favour of the next, and "unknown" only once every
-// alternative has nothing to say (a plain value with no "||" keeps its
-// original default-closed behaviour for a day the rules don't mention); a
-// trailing quoted comment on a rule that also carries an explicit state
-// keyword (07:00-23:00 open "Restaurant") is stripped and the rule
-// evaluated normally, but a comment with no state keyword
-// (24/7 "depends on the park") makes that alternative unusable rather than
-// guessing what the comment means.
+// a spillover from yesterday that's still running) decides the answer, one
+// that's *positively shown* to be silent about today is skipped in favour
+// of the next, but one that simply *can't be evaluated* (doesn't parse, or
+// needs a sun event this call can't resolve) makes the whole value
+// "unknown" right there rather than silently falling through to an easier
+// later alternative; "unknown" for the "nothing applies" reason only once
+// every alternative has been positively shown to have nothing to say (a
+// plain value with no "||" keeps its original default-closed behaviour for
+// a day the rules don't mention); a trailing quoted comment on a rule that
+// also carries an explicit state keyword (07:00-23:00 open "Restaurant") is
+// stripped and the rule evaluated normally, but a comment with no state
+// keyword (24/7 "depends on the park") makes that alternative unparseable
+// rather than guessing what the comment means.
 //
 // PH and SH (public/school holiday) rules are recognised and *skipped* — we
 // have no calendar to check them against, so a "PH off" rule neither opens
@@ -428,6 +439,16 @@ function parseRule(raw) {
 
   const spans = parseTimeSpans(timeText);
   if (!spans) return null; // week numbers, year ranges, "+N day", ...
+  // "Mo-Fr 08:00-18:00, 12:00-13:00 off": the comma before "12:00-13:00"
+  // doesn't start a new rule (nothing to its right names a day), so it
+  // stays inside this one rule's time list — but "off" trailing the whole
+  // thing then reads as closing *every* listed span, when what's actually
+  // meant is almost certainly a lunch closure carved out of the first span
+  // (08:00-12:00 and 13:00-18:00), not the whole day. There's no way to
+  // tell which spans the trailing off was meant to cover once there's more
+  // than one, so this comes back unknown rather than closing more than the
+  // mapper meant.
+  if (off && spans.length > 1) return null;
   return { days, spans, off, dateSel };
 }
 
@@ -554,16 +575,60 @@ export function parseOpeningHours(value) {
 // Evaluation
 // -------------------------------------------------------------------------
 
+// Subtracts one [start,end) interval from a list of them, splitting an
+// interval that straddles it in two.
+function subtractInterval(intervals, [os, oe]) {
+  const out = [];
+  for (const [s, e] of intervals) {
+    if (oe <= s || os >= e) {
+      out.push([s, e]); // no overlap
+      continue;
+    }
+    if (os > s) out.push([s, os]);
+    if (oe < e) out.push([oe, e]);
+  }
+  return out;
+}
+
+// Resolves the spans of one rule, already filtered to a day it applies to,
+// into { add, spill } minute-interval pieces: `add` is the today-side
+// portion (truncated to midnight for a wrap span), `spill` is the part of
+// a wrap span that lands on the *next* calendar day, resolved against
+// `nextSunTimes` since that instant falls on that later date.
+function resolveRuleIntervals(rule, sunTimes, nextSunTimes) {
+  const add = [], spill = [];
+  for (const [s0, e0] of rule.spans) {
+    const s = resolvePoint(s0, sunTimes);
+    const eSame = resolvePoint(e0, sunTimes);
+    if (s === null || eSame === null) continue;
+    if (eSame > s) {
+      add.push([s, eSame]);
+      continue;
+    }
+    // Wrap: only the today-side portion belongs here; the end instant
+    // itself is re-resolved against the next calendar date.
+    add.push([s, 24 * 60]);
+    const eNext = isSunPoint(e0) ? resolvePoint(e0, nextSunTimes) : eSame;
+    if (eNext !== null) spill.push([0, eNext]);
+  }
+  return { add, spill };
+}
+
 // Resolves the final schedule for one concrete calendar day (weekday +
 // date ordinal), by walking the ;-groups *in order*: a group that applies
 // to this day (any of its members' weekday and date selectors match)
 // REPLACES whatever an earlier group had built for this day — OSM's "a
 // later rule that matches today replaces the whole day's schedule, not
-// just the minutes its own spans cover" semantics — while a `,`-additive
-// member within the *same* group only adds to (or, if `off`, blanks) what
-// that group is building. A group where nothing applies is silently
-// skipped, leaving the day as an earlier group left it (or unset, meaning
-// "default closed").
+// just the minutes its own spans cover" semantics. Within that same group,
+// its members are then walked *in their own order*: a normal member adds
+// its spans to what the group is building, and an `off` member *subtracts*
+// its own spans from what's been built so far — a partial closure
+// ("Sa 13:00-19:00 off" alongside "Mo-Sa 09:00-19:00") only carves out the
+// hours it names, not the whole day; only an `off` with no times of its own
+// (spanning all 24h by construction) clears the day outright, which falls
+// out of the same subtraction without a special case. A group where
+// nothing applies is silently skipped, leaving the day as an earlier group
+// left it (or unset, meaning "default closed").
 //
 // Returns:
 //  - today: [start,end) minute intervals (0-1440) open on this calendar day
@@ -583,26 +648,15 @@ function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
     const matched = group.filter((r) => daysOf(r).has(weekday) && dateSelMatches(r.dateSel, dateVal));
     if (!matched.length) continue;
     applicable = true;
-    if (matched.some((r) => r.off)) {
-      today = [];
-      spill = [];
-      continue;
-    }
-    const nt = [], ns = [];
+    let nt = [], ns = [];
     for (const rule of matched) {
-      for (const [s0, e0] of rule.spans) {
-        const s = resolvePoint(s0, sunTimes);
-        const eSame = resolvePoint(e0, sunTimes);
-        if (s === null || eSame === null) continue;
-        if (eSame > s) {
-          nt.push([s, eSame]);
-          continue;
-        }
-        // Wrap: only the today-side portion belongs here; the end instant
-        // itself is re-resolved against the next calendar date.
-        nt.push([s, 24 * 60]);
-        const eNext = isSunPoint(e0) ? resolvePoint(e0, nextSunTimes) : eSame;
-        if (eNext !== null) ns.push([0, eNext]);
+      const { add, spill: ruleSpill } = resolveRuleIntervals(rule, sunTimes, nextSunTimes);
+      if (rule.off) {
+        for (const iv of add) nt = subtractInterval(nt, iv);
+        for (const iv of ruleSpill) ns = subtractInterval(ns, iv);
+      } else {
+        nt = nt.concat(add);
+        ns = ns.concat(ruleSpill);
       }
     }
     today = nt;
@@ -635,14 +689,13 @@ function evaluateGroups(groups, day, minutes, val, yval, sunTimes, ySunTimes) {
   const yday = (day + 6) % 7;
   const todayR = resolveDay(groups, day, val, sunTimes, null);
   const ydayR = resolveDay(groups, yday, yval, ySunTimes, sunTimes);
-  const open =
-    todayR.today.some(([s, e]) => minutes >= s && minutes < e) ||
-    ydayR.spill.some(([s, e]) => minutes >= s && minutes < e);
-  // Yesterday only bears on *today*'s determination through an actual
-  // spillover; yesterday matching with a plain same-day span says nothing
-  // about today at all, and mustn't make an otherwise-silent "||"
-  // alternative look like it covers this day.
-  return { open, applicable: todayR.applicable || ydayR.spill.length > 0 };
+  const todayOpen = todayR.today.some(([s, e]) => minutes >= s && minutes < e);
+  const spillOpen = ydayR.spill.some(([s, e]) => minutes >= s && minutes < e);
+  // Yesterday only bears on *today*'s determination for as long as its
+  // spillover is still running; once the spill interval has ended, it says
+  // nothing about the current instant, and mustn't make an otherwise-silent
+  // "||" alternative look like it still covers this moment.
+  return { open: todayOpen || spillOpen, applicable: todayR.applicable || spillOpen };
 }
 
 const hasCoords = (coords) => Number.isFinite(coords?.lat) && Number.isFinite(coords?.lon);
@@ -653,14 +706,21 @@ const hasCoords = (coords) => Number.isFinite(coords?.lat) && Number.isFinite(co
 // and no valid `coords` ({ lat, lon }) were given.
 //
 // A "||" value tries its alternatives in order: the first one whose rules
-// actually say something about today (or, via a wrap span, about
-// yesterday) decides the answer; an alternative that's silent about this
-// day (wrong weekdays, a date selector that doesn't match, an unparseable
-// comment-only fallback, ...) is skipped in favour of the next one. Only
-// when every alternative has nothing to say is the result "unknown" — with
-// just one alternative (the common case, no "||" at all), that day-vs-
-// weekday distinction doesn't apply and a day simply not mentioned in the
-// rules defaults to "closed", same as it always has.
+// actually say something about today (or, via a still-running spillover
+// from yesterday) decides the answer; an alternative that's *positively
+// shown* to be silent about this day (its weekdays or date selector don't
+// match, or it carries no evaluable rule at all, e.g. PH/SH-only) is
+// skipped in favour of the next one. An earlier alternative that instead
+// *can't be evaluated at all* — it doesn't parse, or it needs a sun event
+// this call can't resolve (no coordinates, or polar day/night) — is never
+// silently skipped in favour of a later, easier one: the real answer might
+// be governed by that first alternative in a way this call can't see, so
+// the whole value comes back "unknown" right there. Only when every
+// alternative has been positively shown to say nothing about today is the
+// result also "unknown" — with just one alternative (the common case, no
+// "||" at all), that day-vs-weekday distinction doesn't apply and a day
+// simply not mentioned in the rules defaults to "closed", same as it
+// always has.
 export function isOpenNow(openingHours, now = new Date(), coords = null) {
   if (!openingHours || typeof openingHours !== "string") return "unknown";
   const alts = openingHours.split("||");
@@ -676,30 +736,31 @@ export function isOpenNow(openingHours, now = new Date(), coords = null) {
 
   for (const altText of alts) {
     const groups = parseAlt(altText.trim());
-    if (groups === null) continue;
+    if (groups === null) return "unknown"; // doesn't parse: can't be evaluated at all
     const rules = groups.flat();
-    if (!rules.length) continue; // nothing evaluable (e.g. PH/SH-only)
+    if (!rules.length) continue; // positively nothing evaluable (e.g. PH/SH-only)
 
     let sunTimes = null, ySunTimes = null;
     if (usesSun(rules)) {
-      if (!coordsOk) continue;
+      if (!coordsOk) return "unknown"; // can't resolve the sun event this needs
       sunTimes = sunTimesForDate(now.getFullYear(), now.getMonth() + 1, now.getDate(), coords.lat, coords.lon);
       ySunTimes = sunTimesForDate(
         yesterday.getFullYear(), yesterday.getMonth() + 1, yesterday.getDate(), coords.lat, coords.lon);
       // Polar day/night: the event this value depends on doesn't occur on
-      // today's or yesterday's date at this latitude — nothing confident
-      // to say from this alternative.
+      // today's or yesterday's date at this latitude — can't be evaluated,
+      // not positively shown to be silent.
       let polar = false;
       for (const event of sunEventsUsed(rules)) {
         if (sunTimes[event] === null || ySunTimes[event] === null) polar = true;
       }
-      if (polar) continue;
+      if (polar) return "unknown";
     }
 
     const { open, applicable } = evaluateGroups(groups, day, minutes, val, yval, sunTimes, ySunTimes);
     if (single) return open ? "open" : "closed"; // no fallback chain: default-closed as always
     if (applicable) return open ? "open" : "closed";
-    // This alternative has nothing to say about today; try the next one.
+    // This alternative has been positively shown to say nothing about
+    // today (its own weekdays/dates don't match); try the next one.
   }
 
   return "unknown";
