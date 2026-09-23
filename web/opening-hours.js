@@ -654,14 +654,14 @@ function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
       if (rule.off) {
         for (const iv of add) nt = subtractInterval(nt, iv);
         for (const iv of ruleSpill) ns = subtractInterval(ns, iv);
-        // A whole-day off (no times of its own, so its span is exactly
-        // [0,1440)) closes today outright, including whatever the evening
+        // A whole-day off (no times of its own, or 00:00-24:00 in any
+        // spelling, so its resolved span covers [0,1440)) closes today outright, including whatever the evening
         // would otherwise have spilled into tomorrow: an earlier member's
         // overnight span that *started* today can't survive today being
         // off entirely. A partial off, by contrast, only subtracts the
         // specific hours it names, and a still-running overnight span
         // outside those hours is untouched.
-        if (rule.spans.some(([s, e]) => s === 0 && e === 24 * 60)) ns = [];
+        if (add.some(([s, e]) => s <= 0 && e >= 24 * 60)) ns = [];
       } else {
         nt = nt.concat(add);
         ns = ns.concat(ruleSpill);

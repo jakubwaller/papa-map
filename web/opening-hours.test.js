@@ -528,6 +528,14 @@ test("a comma whole-day off with a date selector also cancels the overnight spil
   assert.equal(isOpenNow(oh, on(2026, 12, 23, 21, 0)), "open");   // an ordinary evening
 });
 
+test("a whole-day off spelled with times also cancels the overnight spillover", () => {
+  for (const off of ["We 00:00-24:00 off", "We 00:00-00:00 off", "We closed"]) {
+    const oh = `Mo-Fr 20:00-02:00, ${off}`;
+    assert.equal(isOpenNow(oh, at(4, 1, 0)), "closed", oh);
+    assert.equal(isOpenNow(oh, at(3, 1, 0)), "open", oh);
+  }
+});
+
 test("the ; spelling of a whole-day off already cancelled the overnight spillover", () => {
   const oh = "Mo-Fr 20:00-02:00; We off";
   assert.equal(isOpenNow(oh, at(4, 1, 0)), "closed"); // Thursday 01:00: no spill from an off Wednesday
