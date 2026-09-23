@@ -4,4 +4,5 @@
 – Siri: "Nearest changing table in PapaMap".
 – Download a city for offline use, switch on Airplane Mode, open the map.
 – Optional, with an OpenStreetMap account: answer "which room?" for a grey place.
+– New: answer the room question for a grey place and it changes colour straight away; places added in MapComplete appear within a few minutes.
 Anything unclear or broken: take a screenshot and send it through TestFlight.
