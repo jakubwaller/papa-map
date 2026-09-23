@@ -110,3 +110,50 @@ test("parseOpeningHours exposes the parsed rules for the unparseable case", () =
   assert.equal(parseOpeningHours("Mo-Fr 08:00-18:00").length, 1);
   assert.equal(parseOpeningHours("sunrise-sunset"), null);
 });
+
+test("a , between rules adds a day range rather than overriding", () => {
+  const oh = "Mo-Fr 08:00-12:00, Sa 08:00-12:00";
+  assert.equal(isOpenNow(oh, at(1, 9, 0)), "open");   // Monday
+  assert.equal(isOpenNow(oh, at(5, 9, 0)), "open");   // Friday
+  assert.equal(isOpenNow(oh, at(6, 9, 0)), "open");   // Saturday, added by the ,
+  assert.equal(isOpenNow(oh, at(7, 9, 0)), "closed"); // Sunday: neither rule names it
+});
+
+test("a day list with spaces after the comma (Mo, Tu)", () => {
+  const oh = "Mo, Tu 10:00-18:00";
+  assert.equal(isOpenNow(oh, at(1, 11, 0)), "open");
+  assert.equal(isOpenNow(oh, at(2, 11, 0)), "open");
+  assert.equal(isOpenNow(oh, at(3, 11, 0)), "closed"); // Wednesday: not in the list
+});
+
+test("a , time-span list still behaves as before, not as an additional rule", () => {
+  const oh = "Mo-Fr 08:00-12:00,14:00-18:00";
+  assert.equal(isOpenNow(oh, at(1, 9, 0)), "open");
+  assert.equal(isOpenNow(oh, at(1, 13, 0)), "closed");
+  assert.equal(isOpenNow(oh, at(1, 15, 0)), "open");
+});
+
+test("a , additional rule combined with a ; override", () => {
+  const oh = "Mo-Fr 09:00-17:00, Sa 10:00-14:00; Su off";
+  assert.equal(isOpenNow(oh, at(3, 10, 0)), "open");   // Wednesday
+  assert.equal(isOpenNow(oh, at(6, 11, 0)), "open");   // Saturday, added by the ,
+  assert.equal(isOpenNow(oh, at(6, 15, 0)), "closed"); // Saturday, after its hours
+  assert.equal(isOpenNow(oh, at(7, 12, 0)), "closed"); // Sunday, closed by the ; rule
+});
+
+test("a , additional rule mixed with a PH off rule", () => {
+  const oh = "Mo-Fr 09:00-17:00, Sa 10:00-14:00; PH off";
+  // PH off is skipped (no calendar), so the additional Saturday rule still
+  // governs — it must not be swallowed by the unrelated PH rule.
+  assert.equal(isOpenNow(oh, at(6, 11, 0)), "open");
+  assert.equal(isOpenNow(oh, at(1, 10, 0)), "open");
+});
+
+test("an ambiguous , group (overlapping days) is unknown, not guessed", () => {
+  // Su appears in both the Mo-Su rule and the Su-only rule that follows it
+  // with ',' — whether the second is meant to add to or replace the first
+  // isn't decidable from the text, so this must not guess either way.
+  const oh = "Mo-Su 11:00-23:00, Su 12:00-20:00";
+  assert.equal(isOpenNow(oh, at(7, 13, 0)), "unknown");
+  assert.equal(parseOpeningHours(oh), null);
+});
