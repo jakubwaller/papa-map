@@ -726,17 +726,55 @@ kept, on the same not-a-holiday reading.
 `,` also works as OSM's *additional*-rule separator between two whole rules
 (`Mo-Fr 08:00-12:00, Sa 08:00-12:00`), distinct from `;`: it adds hours for
 the days it names rather than overriding what came before. The parser tells
-this apart from a day-list or time-span-list comma by what follows it — a new
-rule starts with a day (or `PH`/`SH`) selector, only once what precedes the
-comma already has a time. If two comma-joined rules in the same group could
-both match the same weekday, whether the later one is meant to add to or
-replace the earlier one's hours isn't decidable from the text, so the whole
-value comes back `"unknown"` rather than a guess.
+this apart from a day-list, time-span-list, or date-list comma by what
+follows it — a new rule starts with a day, `PH`/`SH`, or a month selector,
+only once what precedes the comma is already a complete rule (a time, or a
+trailing `off`/`closed`). Two comma-joined rules that share a weekday have
+their hours unioned (`Mo-Sa 10:00-20:00, Fr-Sa 20:00-22:00` — Friday and
+Saturday get both time spans), and an `off`/`closed` rule in the group still
+closes the days it names outright. Only when both rules carry their own
+(non-off) hours that genuinely overlap in time on a shared day — an override
+or a typo, indistinguishable from the text — does the whole value come back
+`"unknown"` rather than a guess.
 
-Anything else — months and date ranges, week numbers, sunrise/sunset,
-"open end" (`+`), quoted comments, year ranges, or any other construct the
-parser doesn't recognise — makes the whole value `"unknown"`, and the popup
-shows the raw hours with no badge at all: a missing badge beats a wrong one.
+Month and date selectors are understood ahead of, or instead of, a weekday
+selector: month ranges (`Apr-Oct`), wrapping ranges that cross the new year
+(`Nov-Apr`), a single month or a list (`Feb,Nov`), an optional trailing `:`,
+day-precise ranges within or across months (`Nov 01-Mar 15`, `Apr 1-Oct 31`),
+and single dates or lists of them (`Dec 25 off`, `Dec 25-26,Jan 01 closed`).
+A date selector obeys the same `;` override and `,` addition rules as
+everything else, and a rule whose date doesn't match today simply doesn't
+apply that day; hours that spill past midnight from a date-restricted rule
+are checked against *yesterday's* date, not today's.
+
+"Open end" times are supported: `11:00+` opens from 11:00 to midnight
+(closed before 11:00), `00:00+` is open all day, and `a-b+` is read as the
+guaranteed `a-b` span (the `+`'s "maybe later" isn't modelled). Times past
+24:00 spell out the small hours of the next day (`Fr,Sa 08:00-25:00` = until
+01:00 Saturday night into Sunday), and `00:00-00:00` means open all day.
+Whitespace around `-` is tolerated in day and time ranges (`Mo - Sa 08:00 -
+19:00`), same as it already was around `,`.
+
+`sunrise`, `sunset`, civil `dawn`/`dusk` (-6°), and offsets from them
+(`(dusk-00:30)`, `(sunset+01:00)`) work as time-span endpoints, computed for
+the place's own coordinates via a compact solar-position calculation (no
+external service) — but converted to a time of day using the *device's*
+timezone, on the same "viewer's clock is close enough" reasoning the rest of
+the module already makes. Without the place's coordinates, or on a date
+where the event doesn't occur at that latitude (polar day/night), a value
+that needs one is `"unknown"`.
+
+Only the first alternative of a `||` fallback chain is evaluated; the rest
+is dropped, unread. A trailing quoted comment is stripped and the rule
+evaluated normally when it follows an explicit state keyword
+(`07:00-23:00 open "Restaurant"`), but a comment with no state keyword
+(`24/7 "depends on the park"`) makes the value `"unknown"` — there's no way
+to know what the comment is qualifying.
+
+Anything else — week numbers, easter, year ranges, nth-weekday selectors
+(`Sa[2]`), "+N day" offsets, or any other construct the parser doesn't
+recognise — makes the whole value `"unknown"`, and the popup shows the raw
+hours with no badge at all: a missing badge beats a wrong one.
 Tests: `web/opening-hours.test.js` (`node --test web/*.test.js`).
 
 ## Leaderboard
