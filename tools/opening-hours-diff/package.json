@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "diff": "node diff.mjs"
+  },
+  "devDependencies": {
+    "opening_hours": "3.15.0"
+  }
+}

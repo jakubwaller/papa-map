@@ -154,13 +154,13 @@ test("a , additional rule mixed with a PH off rule", () => {
   assert.equal(isOpenNow(oh, at(1, 10, 0)), "open");
 });
 
-test("an ambiguous , group (overlapping days) is unknown, not guessed", () => {
+test("overlapping , rules on a shared weekday simply union, not ambiguous", () => {
   // Su appears in both the Mo-Su rule and the Su-only rule that follows it
-  // with ',' — whether the second is meant to add to or replace the first
-  // isn't decidable from the text, so this must not guess either way.
+  // with ',' — a comma-joined rule never replaces, so it just adds its own
+  // (redundant) hours on top of Sunday's.
   const oh = "Mo-Su 11:00-23:00, Su 12:00-20:00";
-  assert.equal(isOpenNow(oh, at(7, 13, 0)), "unknown");
-  assert.equal(parseOpeningHours(oh), null);
+  assert.equal(isOpenNow(oh, at(7, 13, 0)), "open");
+  assert.notEqual(parseOpeningHours(oh), null);
 });
 
 test("PH mixed into a day selector keeps the weekdays", () => {
@@ -263,10 +263,10 @@ test("months/dates that don't parse (year ranges, week numbers) stay unknown", (
   assert.equal(isOpenNow("week 1-20 Mo-Fr 08:00-18:00"), "unknown");
 });
 
-test("|| takes only the first alternative", () => {
+test("|| falls through to a later alternative once the first is closed", () => {
   const oh = "Mo-Fr 08:00-18:00 || 24/7";
-  assert.equal(isOpenNow(oh, at(1, 20, 0)), "closed"); // the 24/7 fallback is never consulted
-  assert.equal(isOpenNow(oh, at(1, 10, 0)), "open");
+  assert.equal(isOpenNow(oh, at(1, 20, 0)), "open"); // first alt closed, 24/7 fallback opens it
+  assert.equal(isOpenNow(oh, at(1, 10, 0)), "open"); // first alt already open
 });
 
 test("a comment after an explicit state keyword is stripped and evaluated", () => {
@@ -545,4 +545,175 @@ test("the ; spelling of a whole-day off already cancelled the overnight spillove
   const oh = "Mo-Fr 20:00-02:00; We off";
   assert.equal(isOpenNow(oh, at(4, 1, 0)), "closed"); // Thursday 01:00: no spill from an off Wednesday
   assert.equal(isOpenNow(oh, at(3, 1, 0)), "open");   // Wednesday 01:00: spill from Tuesday still stands
+});
+
+// A ; rule with no weekday and no date selector (a bare time span) never
+// replaces — it adds its spans to every day alike, or subtracts them (off)
+// from every day alike.
+
+test("a ; rule with no day/date selector adds to every day rather than replacing", () => {
+  assert.equal(isOpenNow("Mo-Fr 08:00-18:00; 10:00-12:00", at(3, 15, 0)), "open");
+});
+
+test("a ; rule with no day/date selector adds the same span to every day", () => {
+  const oh = "Mo-Fr 11:30-14:00; 17:30-00:30";
+  assert.equal(isOpenNow(oh, at(1, 12, 0)), "open"); // Monday, within the first rule's own hours
+  assert.equal(isOpenNow(oh, at(7, 18, 0)), "open"); // Sunday, only ever touched by the second rule
+});
+
+test("a ; off rule with no times subtracts from every day alike", () => {
+  const oh = "24/7;10:30-13:00 off";
+  assert.equal(isOpenNow(oh, at(3, 9, 0)), "open");
+  assert.equal(isOpenNow(oh, at(3, 11, 0)), "closed");
+});
+
+test("several ; off rules with no day/date selector each subtract independently", () => {
+  const oh = "24/7; Mo 00:00-05:00 off; Tu-Fr 03:00-05:00 off";
+  assert.equal(isOpenNow(oh, at(1, 5, 0)), "open");
+  assert.equal(isOpenNow(oh, at(1, 4, 0)), "closed");
+  assert.equal(isOpenNow(oh, at(2, 4, 0)), "closed");
+  assert.equal(isOpenNow(oh, at(2, 2, 0)), "open");
+});
+
+// A ; rule that is off WITH its own times subtracts only those times from
+// the day, rather than replacing (clearing) the whole day.
+
+test("a ; off rule with its own times only carves out those hours", () => {
+  const oh = "Mo-Fr 08:00-18:00; We 12:00-14:00 off";
+  assert.equal(isOpenNow(oh, at(3, 10, 0)), "open");
+  assert.equal(isOpenNow(oh, at(3, 13, 0)), "closed");
+});
+
+test("a ; off rule with its own times, spaced-out day range", () => {
+  const oh = "Mo - Su 09:00 - 19:00; Mo - Fr 13:15 - 13:45 off";
+  assert.equal(isOpenNow(oh, at(1, 9, 0)), "open");
+  assert.equal(isOpenNow(oh, at(1, 13, 30)), "closed");
+});
+
+// Only the first rule of a ;-group follows the replace/add rules above; a
+// rule after a "," never replaces on its own account, regardless of its
+// own selector — and does not inherit the selector of the rule before it.
+
+test("a comma rule after a replacing first rule only adds, on its own days", () => {
+  const oh = "Mo-Fr 08:00-18:00; We 16:00-20:00, Tu 12:00-13:00";
+  assert.equal(isOpenNow(oh, at(3, 10, 0)), "closed"); // We: the first rule of the group replaced it
+  assert.equal(isOpenNow(oh, at(2, 12, 30)), "open");  // Tu: within the base hours and the added span
+  // Tu 10:00 is inside the base Mo-Fr 08:00-18:00 hours, untouched by the
+  // comma rule (which only adds its own 12:00-13:00, it doesn't wipe
+  // Tuesday down to just that): the reference library agrees this stays
+  // open, even though it reads at first glance like the group "replaced"
+  // Tuesday too.
+  assert.equal(isOpenNow(oh, at(2, 10, 0)), "open");
+});
+
+test("a comma rule can re-add hours an off carved out of the same group", () => {
+  const oh = "Mo-Fr 08:00-18:00; We 12:00-14:00 off, We 13:00-13:30";
+  assert.equal(isOpenNow(oh, at(3, 13, 15)), "open");
+  assert.equal(isOpenNow(oh, at(3, 12, 30)), "closed");
+  assert.equal(isOpenNow(oh, at(3, 10, 0)), "open");
+});
+
+test("a comma off shared across days, followed by a comma add on one of them", () => {
+  const oh = "Mo-Fr 08:00-18:00; Tu,We 12:00-14:00 off, We 16:00-20:00";
+  assert.equal(isOpenNow(oh, at(3, 19, 0)), "open");
+});
+
+test("a group whose first rule is off never replaces, even across several comma rules", () => {
+  const oh = "We-Fr 11:30-14:30; Mo,Tu off, We-Fr 17:00-21:30, Sa 11:30-21:30, PH,Su 11:30-20:30";
+  assert.equal(isOpenNow(oh, at(3, 12, 0)), "open");
+  assert.equal(isOpenNow(oh, at(3, 18, 0)), "open");
+  assert.equal(isOpenNow(oh, at(1, 12, 0)), "closed");
+  assert.equal(isOpenNow(oh, at(6, 20, 0)), "open");
+});
+
+test("a later off-first group doesn't disturb a day only a comma rule of it covers", () => {
+  const oh = "Mo-Fr 08:00-15:00, Sa 09:30-13:00; PH,Su off, Mo-Fr 11:30-13:30";
+  assert.equal(isOpenNow(oh, at(1, 8, 0)), "open");
+});
+
+test("plain , union, no ; involved at all", () => {
+  assert.equal(isOpenNow("Mo-Fr 08:00-18:00, We 10:00-12:00", at(3, 15, 0)), "open");
+});
+
+test("a comma rule inside a date-prefixed group doesn't inherit that date selector", () => {
+  // The Sa,Su,PH rule in each group has no date selector of its own, so it
+  // holds all year — the later Nov-Mar group's own Sa,Su,PH rule only adds
+  // (redundantly) on top of it, it doesn't replace it.
+  const oh = "Apr-Oct: Mo-Fr 08:00-19:00, Sa,Su,PH 08:00-18:00; " +
+    "Nov-Mar: Mo-Fr 08:00-18:00, Sa,Su,PH 08:00-17:00";
+  assert.equal(isOpenNow(oh, on(2026, 2, 14, 17, 30)), "open"); // Saturday, in Nov-Mar
+});
+
+// A "||" fallback chain is evaluated purely on whether each alternative is
+// open right now, trying alternatives in order until one is open.
+
+test("|| tries the next alternative once the first evaluates to closed", () => {
+  const oh = "Mo-Fr 08:00-12:00 || Mo-Su 10:00-16:00";
+  assert.equal(isOpenNow(oh, at(3, 13, 0)), "open");   // first alt closed, second covers it
+  assert.equal(isOpenNow(oh, at(3, 7, 0)), "closed");  // neither alt is open
+});
+
+test("|| tries the next alternative once the first is closed via its own ; override", () => {
+  const oh = "Mo-Fr 08:00-12:00; We off || Mo-Su 10:00-16:00";
+  assert.equal(isOpenNow(oh, at(3, 11, 0)), "open");
+});
+
+test("|| tries the next alternative even when it's an off-only rule", () => {
+  const oh = "Mo-Fr 08:00-12:00 || We 11:00-13:00 off";
+  assert.equal(isOpenNow(oh, at(3, 11, 30)), "open");
+});
+
+test("|| falls through past a closed first alternative to an always-open one", () => {
+  assert.equal(isOpenNow("Mo-Fr 08:00-12:00 || 24/7", at(3, 20, 0)), "open");
+});
+
+test("|| with comments and overnight spans, alternatives tried strictly in order", () => {
+  const oh = '07:00-23:00 open "Restaurant" || Su-Th 07:00-01:00; Fr,Sa 07:00-02:00 open "McDrive"';
+  assert.equal(isOpenNow(oh, at(1, 23, 30)), "open"); // Restaurant closed, McDrive still running
+  assert.equal(isOpenNow(oh, at(2, 0, 30)), "open");  // McDrive spillover from Monday night
+  assert.equal(isOpenNow(oh, at(2, 3, 0)), "closed"); // past both alternatives' hours
+});
+
+test("|| gives unknown once it reaches an alternative that can't be parsed", () => {
+  const oh = 'Mo-Fr 08:00-12:00 || "call"';
+  assert.equal(isOpenNow(oh, at(3, 20, 0)), "unknown"); // first alt closed, second doesn't parse
+  assert.equal(isOpenNow(oh, at(3, 10, 0)), "open");    // first alt already open
+});
+
+// An end past 24:00 is always a wrap into the next day, even when the
+// folded end reads later than the start.
+
+test("00:00-24:59 folds correctly instead of reading as [0,59]", () => {
+  const oh = "Mo-Su,PH 00:00-24:59";
+  assert.equal(isOpenNow(oh, at(3, 12, 0)), "open");
+  assert.equal(isOpenNow(oh, at(4, 0, 30)), "open"); // spill from Wednesday's span
+});
+
+test("08:00-33:00 spills into the following day until 09:00", () => {
+  const oh = "Mo-Su 08:00-33:00";
+  assert.equal(isOpenNow(oh, at(4, 8, 30)), "open"); // covered by Thursday's own 08:00-24:00 portion
+  assert.equal(isOpenNow(oh, at(4, 9, 30)), "open"); // Thursday's own span, past the spill too
+});
+
+test("08:00-26:00 spills into the following day until 02:00", () => {
+  assert.equal(isOpenNow("Mo-Su 08:00-26:00", at(4, 1, 30)), "open"); // only reachable via yesterday's spill
+});
+
+// S7: the after-midnight part of a span belongs to the day the span
+// started; a later ; rule for the next day doesn't retroactively cancel it
+// (a deliberate difference from the reference library).
+
+test("an overnight spill isn't cancelled by a later ; rule for the day it lands on", () => {
+  assert.equal(isOpenNow("Mo-Th 20:00-02:00; Fr 10:00-12:00", at(5, 1, 0)), "open");
+});
+
+test("a partial off for the small hours also closes yesterday's spill", () => {
+  // 2026-02-14 is a Saturday: Friday's 20:00-02:00 runs into it.
+  const sat = (h, m) => new Date(2026, 1, 14, h, m);
+  assert.equal(isOpenNow("Fr 20:00-02:00; Sa 01:00-02:00 off", sat(1, 0)), "closed");
+  assert.equal(isOpenNow("Fr 20:00-02:00; Sa 01:00-02:00 off", sat(0, 30)), "open");
+  assert.equal(isOpenNow("Mo-Su 22:00-01:00; Mo-Su 00:30-00:45 off", sat(0, 30)), "closed");
+  assert.equal(isOpenNow("Mo-Su 22:00-01:00; Mo-Su 00:30-00:45 off", sat(0, 50)), "open");
+  // A whole-day off for the next day still leaves the spill alone.
+  assert.equal(isOpenNow("Fr 20:00-02:00; Sa off", sat(1, 0)), "open");
 });
