@@ -40,6 +40,22 @@ const shift = (at, min) => new Date(at.getTime() + min * 60000);
 // numbers it silently falls back to fixed 06:00/18:00 sun times.
 const nominatim = (lat, lon) => ({ lat: String(lat), lon: String(lon), address: ADDRESS });
 
+// Where the two deliberately differ: a span that runs past midnight
+// ("Th 20:00-02:00"). Ours keeps the after-midnight part with the day it
+// started on, so a later rule for the next day ("Fr 10:00-12:00") doesn't
+// cancel it; the reference re-evaluates it as part of the next day, where
+// such a rule overrides it. Disagreements before the latest such spill end are
+// counted as this known difference instead of failing the run.
+function spillEnd(value) {
+  let max = 0;
+  for (const [, sh, sm, eh, em] of value.matchAll(/(\d\d):(\d\d)\s*-\s*(\d\d):(\d\d)/g)) {
+    const start = sh * 60 + +sm, end = eh * 60 + +em;
+    if (end > 24 * 60) max = Math.max(max, end - 24 * 60);
+    else if (end <= start && !(start === 0 && end === 0)) max = Math.max(max, end);
+  }
+  return max;
+}
+
 async function load(src) {
   const text = /^https?:/.test(src)
     ? await (await fetch(src)).text()
@@ -86,6 +102,7 @@ for (const f of features) {
 
 const dates = sampleDates();
 let rejected = 0, gaps = 0, agreed = 0;
+const overnight = [];
 const disagreements = [];
 const rejectedButOursKnows = [];
 
@@ -98,7 +115,8 @@ for (const c of cases.values()) {
     rejected++;
   }
   const examples = [];
-  let bad = 0, knows = false, gap = false;
+  const spill = c.sun ? 0 : spillEnd(c.value);
+  let bad = 0, spillOnly = 0, knows = false, gap = false;
   for (const at of dates) {
     const ours = isOpenNow(c.value, at, coords);
     if (ours === "unknown") { gap = true; continue; }
@@ -109,12 +127,14 @@ for (const c of cases.values()) {
     // Sun times: the two use different solar models (ours NOAA, the reference
     // SunCalc), a few minutes apart. Ignore a mismatch right at a transition.
     if (c.sun && ref.getState(shift(at, -SUN_SLACK)) !== ref.getState(shift(at, SUN_SLACK))) continue;
+    if (at.getHours() * 60 + at.getMinutes() < spill) { spillOnly++; continue; }
     bad++;
     if (examples.length < EXAMPLES) examples.push(`${at.toString().slice(0, 21)}: ours ${ours}, reference ${theirs}`);
   }
   if (!ref && knows) rejectedButOursKnows.push(c);
   if (gap) gaps++;
   if (bad) disagreements.push({ ...c, bad, examples });
+  else if (spillOnly) overnight.push(c);
   else if (knows && ref) agreed++;
 }
 
@@ -123,6 +143,7 @@ console.log(`sun-dependent places outside Europe, skipped: ${farSun}`);
 console.log(`agree everywhere ours answers: ${agreed}`);
 console.log(`ours unknown at some timestamp (coverage gap): ${gaps}`);
 console.log(`reference rejects: ${rejected} (of which ours answers: ${rejectedButOursKnows.length})`);
+console.log(`known difference, after-midnight spill (not a failure): ${overnight.length}`);
 console.log(`disagreements: ${disagreements.length}`);
 
 disagreements.sort((a, b) => b.places - a.places);
