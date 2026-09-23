@@ -2,6 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { isOpenNow, parseOpeningHours } from "./opening-hours.js";
 
+// The module reads the clock in the device's timezone and assumes it is the
+// place's. The sun tests use Berlin coordinates with Berlin wall-clock times,
+// so pin the zone: CI runs in UTC.
+process.env.TZ = "Europe/Berlin";
+
 // Helper: a Date for a given ISO weekday (1 = Monday .. 7 = Sunday) and
 // HH:MM, anchored to a known Monday (2026-09-21) so day arithmetic is easy
 // to check by eye.
