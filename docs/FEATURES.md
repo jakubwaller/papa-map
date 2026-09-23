@@ -713,39 +713,51 @@ here touches CONTRACT.md.
 
 The parser understands `24/7`; day ranges and lists (`Mo-Fr`, `Mo,We`, with or
 without a space after the comma), including wrap-around ranges (`Fr-Mo`);
-several `;`-separated rules, a later one that matches a given day *replacing*
-that whole day's schedule rather than only the minutes its own spans mention
-(`Mo-Su 08:00-20:00; Tu off` closes all of Tuesday, not just the hours `Tu
-off` happens to list — Tuesday has none); several `,`-separated
-time spans in one rule (a lunch break); spans that cross midnight
-(`22:00-02:00`); and the `off`/`closed` modifiers. `PH` and `SH`
-(public/school holiday) rules are recognised and skipped outright — there is
-no calendar to check them against, so "PH off" neither opens nor closes
-anything here, rather than guessing at a holiday. Listed alongside weekdays
-(`PH,Su 10:00-17:00`), `PH`/`SH` are dropped from the selector and the weekdays
-kept, on the same not-a-holiday reading.
+several `,`-separated time spans in one rule (a lunch break); spans that
+cross midnight (`22:00-02:00`); and the `off`/`closed` modifiers. `PH` and
+`SH` (public/school holiday) rules are recognised and skipped outright —
+there is no calendar to check them against, so "PH off" neither opens nor
+closes anything here, rather than guessing at a holiday. Listed alongside
+weekdays (`PH,Su 10:00-17:00`), `PH`/`SH` are dropped from the selector and
+the weekdays kept, on the same not-a-holiday reading.
 
-`,` also works as OSM's *additional*-rule separator between two whole rules
-(`Mo-Fr 08:00-12:00, Sa 08:00-12:00`), distinct from `;`: it adds hours for
-the days it names rather than overriding what came before. The parser tells
+Several `;`-separated rule groups combine, each one built from one or more
+`,`-separated rules. Whether a group *replaces* the day's schedule so far,
+or only *adds* to it (or *subtracts*, for `off`), is decided once per group
+by its own first rule (the one before any comma): a non-`off` first rule
+that carries its own weekday or date selector replaces the whole day's
+schedule for the days it applies to, not just the minutes its own spans
+mention (`Mo-Su 08:00-20:00; Tu off` closes all of Tuesday, not just the
+hours `Tu off` happens to list — Tuesday has none). A first rule with
+neither a weekday nor a date selector (a bare time span, meant the same on
+every day) only replaces when it's the sole member of its group and this
+day hasn't already been explicitly named by an earlier rule — otherwise it
+just adds its spans to every day (`Mo-Fr 08:00-18:00; 10:00-12:00` adds
+those two hours everywhere, it doesn't wipe Monday-Friday down to just
+10-12). A first rule that's itself `off` never replaces either — it only
+subtracts its own hours from what's already there
+(`Mo-Fr 08:00-18:00; We 12:00-14:00 off` carves the lunch break out of
+Wednesday, rather than clearing the day and rebuilding it from just that).
+
+`,` works as OSM's *additional*-rule separator between two whole rules
+(`Mo-Fr 08:00-12:00, Sa 08:00-12:00`), distinct from `;`. The parser tells
 this apart from a day-list, time-span-list, or date-list comma by what
 follows it — a new rule starts with a day, `PH`/`SH`, or a month selector,
 only once what precedes the comma is already a complete rule (a time, or a
-trailing `off`/`closed`). Two comma-joined rules that share a weekday have
-their hours unioned (`Mo-Sa 10:00-20:00, Fr-Sa 20:00-22:00` — Friday and
-Saturday get both time spans); a comma-joined `off`/`closed` rule instead
-*carves its own hours back out* of whatever the group already built for the
-days it names (`Mo-Sa 09:00-19:00, Sa 13:00-19:00 off` — Saturday is open
-09:00-13:00 only), and only closes the whole day when it names no hours of
-its own. Order within the group matters, same as `;`: a rule after an `off`
-can re-add hours it took away (`We off, Mo-Fr 08:00-18:00` — Wednesday ends
-up open). An `off` with more than one comma-joined time span of its own
+trailing `off`/`closed`). A rule after a comma never replaces on its own
+account, no matter what selector it carries, and doesn't inherit the
+selector of the rule before it — it only adds (or, for `off`, subtracts)
+in order onto whatever the group has built so far
+(`Mo-Sa 09:00-19:00, Sa 13:00-19:00 off` — Saturday is open 09:00-13:00
+only), and two comma-joined rules that land on the same weekday simply
+union their hours, whether or not their own spans overlap
+(`Mo-Sa 10:00-20:00, Fr-Sa 20:00-22:00` — Friday and Saturday get both time
+spans). Order within a group matters: a rule after an `off` can re-add
+hours it took away (`We off, Mo-Fr 08:00-18:00` — Wednesday ends up open).
+An `off` with more than one comma-joined time span of its own
 (`Mo-Fr 08:00-18:00, 12:00-13:00 off`) can't be told apart from a genuine new
 rule that's missing its day selector, so it's `"unknown"` rather than a
-guess at which spans it was meant to close. Only when both rules carry their
-own (non-off) hours that genuinely overlap in time on a shared day — an
-override or a typo, indistinguishable from the text — does the whole value
-come back `"unknown"` rather than a guess.
+guess at which spans it was meant to close.
 
 Month and date selectors are understood ahead of, or instead of, a weekday
 selector: month ranges (`Apr-Oct`), wrapping ranges that cross the new year
@@ -754,22 +766,23 @@ day-precise ranges within or across months (`Nov 01-Mar 15`, `Apr 1-Oct 31`),
 and single dates or lists of them (`Dec 25 off`, `Dec 25-26,Jan 01 closed`).
 A day-only continuation names a day in the *same* month, so `Dec 20-05`
 isn't read as a year-wrapping range (there's no month to wrap into) — it's
-`"unknown"`. A date selector obeys the same `;` override and `,` addition
-rules as everything else — including the "a later ; rule that matches
-replaces the whole day" semantics above — and a rule whose date doesn't
-match today simply doesn't apply that day; hours that spill past midnight
-from a date-restricted rule are checked against *yesterday's* date, not
-today's.
+`"unknown"`. A date selector obeys the same replace/add rules as a weekday
+selector above, and a rule whose date doesn't match today simply doesn't
+apply that day; hours that spill past midnight from a date-restricted rule
+are checked against *yesterday's* date, not today's.
 
 "Open end" times are supported: `11:00+` opens from 11:00 to midnight
 (closed before 11:00), `00:00+` is open all day, and `a-b+` is read as the
 guaranteed `a-b` span (the `+`'s "maybe later" isn't modelled). Times past
-24:00 spell out the small hours of the next day on the *end* of a span
-(`Fr,Sa 08:00-25:00` = until 01:00 Saturday night into Sunday), and
-`00:00-00:00` means open all day; a *start* past 24:00 (`Fr 24:00-26:00`)
-isn't a real clock hour relative to Friday and makes the value `"unknown"`.
-Whitespace around `-` is tolerated in day and time ranges (`Mo - Sa 08:00 -
-19:00`), same as it already was around `,`.
+24:00 spell out the small hours of the next day on the *end* of a span —
+`Fr,Sa 08:00-25:00` = until 01:00 Saturday night into Sunday,
+`Mo-Su 08:00-33:00` = until 09:00 the day after — an end past 24:00 is
+*always* a wrap into the next day, even where the folded time of day would
+otherwise read as later than the start (`00:00-24:59` is not the single
+span `[00:00, 00:59)`). `00:00-00:00` means open all day; a *start* past
+24:00 (`Fr 24:00-26:00`) isn't a real clock hour relative to Friday and
+makes the value `"unknown"`. Whitespace around `-` is tolerated in day and
+time ranges (`Mo - Sa 08:00 - 19:00`), same as it already was around `,`.
 
 `sunrise`, `sunset`, civil `dawn`/`dusk` (-6°), and offsets from them
 (`(dusk-00:30)`, `(sunset+01:00)`) work as time-span endpoints, computed for
@@ -780,23 +793,25 @@ the module already makes. Without the place's coordinates, or on a date
 where the event doesn't occur at that latitude (polar day/night), a value
 that needs one is `"unknown"`.
 
-A `||` fallback chain tries its alternatives in order: the first one that
-actually says something about *today* — the right weekday, a date selector
-that matches, or a still-running spillover from yesterday — decides the
-answer, and one that's *positively shown* to be silent about today (wrong
-weekdays, a date that doesn't match, no evaluable rule at all) is skipped in
-favour of the next. An earlier alternative that instead *can't be
-evaluated* — it doesn't parse, or it needs a sun event this call can't
-resolve (no coordinates, or polar day/night) — is never silently skipped in
-favour of an easier later one: the real answer might depend on exactly that
-alternative, so the whole value comes back `"unknown"` right there
+A `||` fallback chain tries its alternatives in order, purely on whether
+each one is open *right now*: the first alternative that resolves to open
+decides the answer outright. One that resolves to closed (it parses and
+evaluates fine, it just isn't open at this instant) doesn't end the search —
+the next alternative is tried
+(`Mo-Fr 08:00-12:00 || 24/7` is open outside Mo-Fr's hours too, via the
+`24/7` fallback). One that carries no evaluable rule at all (e.g. it's only
+`PH off`) is silently skipped. But one that simply *can't be evaluated* — it
+doesn't parse, or it needs a sun event this call can't resolve (no
+coordinates, or polar day/night) — makes the whole value `"unknown"` right
+there rather than silently falling through to an easier later alternative
+that might have answered differently
 (`"call first" || Mo-Fr 10:00-18:00` is unknown at any time, even though the
-second alternative alone would resolve fine). Only when every alternative
-has been positively shown to say nothing does the value come back
-`"unknown"` for that reason instead; a plain value with no `||` at all keeps
-its old behaviour (a day the rules never mention is `"closed"`, not
-`"unknown"`). A trailing quoted comment is stripped and the rule evaluated
-normally when it follows an explicit state keyword
+second alternative alone would resolve fine). If every alternative that
+could be evaluated came back closed, the result is `"closed"`; `"unknown"`
+is reserved for when none could be evaluated at all — a plain value with no
+`||` at all keeps its old behaviour (a day the rules never mention is
+`"closed"`, not `"unknown"`). A trailing quoted comment is stripped and the
+rule evaluated normally when it follows an explicit state keyword
 (`07:00-23:00 open "Restaurant"`), but a comment with no state keyword
 (`24/7 "depends on the park"`) makes that alternative unparseable — there's
 no way to know what the comment is qualifying.
