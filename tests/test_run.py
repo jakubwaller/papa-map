@@ -187,6 +187,37 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     assert payload["global"]["source"] == "taginfo"
 
 
+def test_run_writes_per_area_bboxes(tmp_path, load_fixture):
+    # The delta follower's own country-coverage filter (v48 follow-up):
+    # one padded bbox per swept area, from that area's own features.
+    geojson = tmp_path / "changing_tables.geojson"
+    play_geojson = tmp_path / "play_places.geojson"
+    stats = tmp_path / "stats.json"
+    bbox_path = tmp_path / "areas-bbox.json"
+    run_pipeline(
+        geojson_path=str(geojson), stats_path=str(stats),
+        play_geojson_path=str(play_geojson), areas_bbox_path=str(bbox_path),
+        overpass_fetch=_fake_overpass(load_fixture), pages_dir=str(tmp_path / "pages"),
+        areas_path=str(tmp_path / "areas.json"), history_path=str(tmp_path / "history.json"),
+        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
+    )
+    boxes = json.loads(bbox_path.read_text(encoding="utf-8"))
+    # The fake sweep answers all 17 areas with the identical fixture, so
+    # every object's (type, id) collides across all of them — and ct_area
+    # keeps only the FIRST area's claim per object (dedup_elements' own
+    # rule, "first sweep wins"), same as a real object on a Länder boundary.
+    # One area's worth of bboxes is exactly the correct output here, not a
+    # gap in compute_area_bboxes: the real, disjoint sweep is covered by
+    # tests/test_delta.py's own compute_area_bboxes tests.
+    assert set(boxes) == {"Baden-Württemberg"}
+    bw = boxes["Baden-Württemberg"]
+    # The fixture's changing-table objects span roughly 9.9937-10.0065 lon,
+    # 53.5511-53.5637 lat (tests/fixtures/overpass_changing_tables.json),
+    # padded by 0.2 degrees each side.
+    assert bw[0] < 9.9937 - 0.19 and bw[2] > 10.0065 + 0.19
+    assert bw[1] < 53.5511 - 0.19 and bw[3] > 53.5637 + 0.19
+
+
 def test_key_locked_tables_ride_in_the_geojson_but_in_no_count(tmp_path, load_fixture):
     ct = load_fixture("overpass_changing_tables.json")
     ct["elements"].append({"type": "node", "id": 900, "lat": 53.55, "lon": 10.0,

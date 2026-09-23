@@ -56,6 +56,10 @@ services:
     # area (pipeline/config.py holds the per-country measurements).
     environment:
       - PAPAMAP_COUNTRIES=de,dk,be,nl,at,ch,cz,pl,se,gb,fr,no,fi,is,ie,ee,lv,lt,lu,li,ad,mc,sm,mt,es,pt,it,gr,cy,si,sk,hu,hr,ro,bg,rs,ba,me,al,mk,xk,md,ua,by,au,nz,us,ca,jp
+      # Per-area bboxes for pipeline.delta's country-coverage filter (v48
+      # follow-up) — never served, same /out/private/ directory as the ops
+      # service's own private-page path below.
+      - PAPAMAP_AREAS_BBOX_PATH=/out/private/areas-bbox.json
     volumes:
       - ./web-data:/out
     # Host network, not web_proxy. The job only makes outbound requests, and on
@@ -85,6 +89,7 @@ services:
     environment:
       - PAPAMAP_DELTA_PATH=/out/delta.json
       - PAPAMAP_DELTA_STATE_PATH=/out/private/delta-state.json
+      - PAPAMAP_AREAS_BBOX_PATH=/out/private/areas-bbox.json
     volumes:
       - ./web-data:/out
     network_mode: host

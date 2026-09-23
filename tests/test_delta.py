@@ -196,19 +196,146 @@ def test_new_toilet_without_table_is_flagged():
 
 
 def test_outside_bbox_new_object_dropped_but_known_object_kept():
-    bbox = (9.0, 53.0, 11.0, 54.0)
+    area_boxes = [(9.0, 53.0, 11.0, 54.0)]
     far_changes = delta.parse_osc(__import__("io").BytesIO(_osc(
         _node("create", 600, 1, "2026-09-23T10:14:00Z", 10.0, 100.0,
               {"changing_table": "yes"}))))
-    assert delta.process_changes(far_changes, _empty_dataset(), bbox=bbox) == []
+    assert delta.process_changes(far_changes, _empty_dataset(), area_boxes=area_boxes) == []
     url = "https://www.openstreetmap.org/node/601"
     base = {"tables": {url: {"geometry": {"coordinates": [100.0, 10.0]},
                              "properties": {"osm_url": url}}}, "places": {}}
     known_changes = delta.parse_osc(__import__("io").BytesIO(_osc(
         _node("modify", 601, 2, "2026-09-23T10:14:00Z", 10.0, 100.0,
               {"changing_table": "yes"}))))
-    events = delta.process_changes(known_changes, base, bbox=bbox)
-    assert len(events) == 1  # known objects are kept regardless of bbox
+    events = delta.process_changes(known_changes, base, area_boxes=area_boxes)
+    assert len(events) == 1  # known objects are kept regardless of the boxes
+
+
+def test_point_inside_one_of_several_area_boxes_is_kept():
+    # Two disjoint sweep-area boxes (e.g. a Land and a neighbouring country) —
+    # a new object inside either one is kept, never just the first.
+    area_boxes = [(9.0, 53.0, 11.0, 54.0), (2.0, 48.0, 4.0, 50.0)]
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 700, 1, "2026-09-23T10:15:00Z", 49.0, 3.0,
+              {"changing_table": "yes"}))))
+    events = delta.process_changes(changes, _empty_dataset(), area_boxes=area_boxes)
+    assert len(events) == 1
+
+
+def test_point_between_two_area_boxes_is_dropped():
+    # A gap between two covered sweep areas (e.g. mid-Channel, between a
+    # German Land's box and a French région's box) — not covered by either,
+    # so a brand-new object there is dropped, per the design.
+    area_boxes = [(9.0, 53.0, 11.0, 54.0), (2.0, 48.0, 4.0, 50.0)]
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 701, 1, "2026-09-23T10:15:00Z", 51.0, 6.5,
+              {"changing_table": "yes"}))))
+    assert delta.process_changes(changes, _empty_dataset(), area_boxes=area_boxes) == []
+
+
+# ---- per-area bboxes (web-data/private/areas-bbox.json) --------------------
+
+def test_compute_area_bboxes_pads_each_area_independently():
+    elements = [
+        (53.5, 9.9, "Hamburg"), (53.6, 10.1, "Hamburg"),
+        (48.8, 2.3, "Île-de-France"),
+        (None, None, "Hamburg"),      # no coordinates — skipped
+        (1.0, 1.0, None),             # no area — skipped
+    ]
+    boxes = delta.compute_area_bboxes(elements, pad_deg=0.2)
+    assert set(boxes) == {"Hamburg", "Île-de-France"}
+    assert boxes["Hamburg"] == [9.9 - 0.2, 53.5 - 0.2, 10.1 + 0.2, 53.6 + 0.2]
+    assert boxes["Île-de-France"] == [2.3 - 0.2, 48.8 - 0.2, 2.3 + 0.2, 48.8 + 0.2]
+
+
+def test_load_area_bboxes_reads_what_compute_area_bboxes_writes(tmp_path):
+    boxes = delta.compute_area_bboxes([(53.5, 9.9, "Hamburg")], pad_deg=0.2)
+    path = tmp_path / "areas-bbox.json"
+    delta.export.write_json_atomic(boxes, str(path))
+    assert delta.load_area_bboxes(str(path)) == boxes
+
+
+def test_load_area_bboxes_missing_file_returns_none(tmp_path):
+    assert delta.load_area_bboxes(str(tmp_path / "missing.json")) is None
+
+
+def test_load_area_bboxes_empty_or_malformed_returns_none(tmp_path):
+    path = tmp_path / "areas-bbox.json"
+    path.write_text("{}", encoding="utf-8")
+    assert delta.load_area_bboxes(str(path)) is None
+    path.write_text("not json", encoding="utf-8")
+    assert delta.load_area_bboxes(str(path)) is None
+
+
+def test_in_any_bbox_true_inside_any_box_false_otherwise():
+    boxes = [(9.0, 53.0, 11.0, 54.0), (2.0, 48.0, 4.0, 50.0)]
+    assert delta.in_any_bbox(10.0, 53.5, boxes) is True
+    assert delta.in_any_bbox(3.0, 49.0, boxes) is True
+    assert delta.in_any_bbox(6.5, 51.0, boxes) is False
+
+
+def test_in_any_bbox_no_boxes_means_no_filtering():
+    assert delta.in_any_bbox(180.0, -90.0, None) is True
+    assert delta.in_any_bbox(180.0, -90.0, []) is True
+
+
+def test_run_tick_uses_per_area_bboxes_when_the_file_exists(tmp_path):
+    stats_path = tmp_path / "stats.json"
+    geojson_path = tmp_path / "changing_tables.geojson"
+    play_path = tmp_path / "play_places.geojson"
+    delta_path = tmp_path / "delta.json"
+    bbox_path = tmp_path / "areas-bbox.json"
+    _write_stats(stats_path, "2026-09-23T08:00:00+00:00")
+    _write_fc(geojson_path, [])
+    _write_fc(play_path, [])
+    # A tight box far from the new object below — proves the per-area file,
+    # not the (much more permissive) whole-dataset fallback, is what's used.
+    bbox_path.write_text(json.dumps({"Hamburg": [9.7, 53.4, 10.3, 53.7]}), encoding="utf-8")
+
+    def fake_fetch_state(seq=None):
+        return {"seq": 1, "timestamp": "2026-09-23T08:00:00Z"}
+
+    def fake_fetch_osc(seq):
+        return _osc(_node("create", 1, 1, "2026-09-23T08:00:30Z", 10.0, 100.0,
+                          {"changing_table": "yes"}))   # nowhere near Hamburg
+
+    new_state, out = delta.run_tick(
+        None, geojson_path=str(geojson_path), play_geojson_path=str(play_path),
+        stats_path=str(stats_path), delta_path=str(delta_path),
+        areas_bbox_path=str(bbox_path),
+        fetch_state=fake_fetch_state, fetch_osc=fake_fetch_osc, now=NOW)
+    assert out["tables"]["upsert"] == []   # dropped: outside every area box
+
+
+def test_run_tick_falls_back_to_dataset_bbox_when_areas_bbox_file_is_missing(tmp_path, capsys):
+    stats_path = tmp_path / "stats.json"
+    geojson_path = tmp_path / "changing_tables.geojson"
+    play_path = tmp_path / "play_places.geojson"
+    delta_path = tmp_path / "delta.json"
+    _write_stats(stats_path, "2026-09-23T08:00:00+00:00")
+    # A base dataset with one object near Hamburg — the fallback bbox
+    # (dataset_bbox, ~2 degrees padded) is built from this.
+    _write_fc(geojson_path, [{
+        "type": "Feature", "geometry": {"type": "Point", "coordinates": [9.9, 53.5]},
+        "properties": {"osm_url": "https://www.openstreetmap.org/node/1"},
+    }])
+    _write_fc(play_path, [])
+
+    def fake_fetch_state(seq=None):
+        return {"seq": 1, "timestamp": "2026-09-23T08:00:00Z"}
+
+    def fake_fetch_osc(seq):
+        # Just inside dataset_bbox's ~2 degree pad around (9.9, 53.5).
+        return _osc(_node("create", 2, 1, "2026-09-23T08:00:30Z", 54.5, 10.5,
+                          {"changing_table": "yes"}))
+
+    new_state, out = delta.run_tick(
+        None, geojson_path=str(geojson_path), play_geojson_path=str(play_path),
+        stats_path=str(stats_path), delta_path=str(delta_path),
+        areas_bbox_path=str(tmp_path / "missing-areas-bbox.json"),
+        fetch_state=fake_fetch_state, fetch_osc=fake_fetch_osc, now=NOW)
+    assert len(out["tables"]["upsert"]) == 1   # kept via the fallback bbox
+    assert "not found yet" in capsys.readouterr().err
 
 
 # ---- accumulation ------------------------------------------------------------

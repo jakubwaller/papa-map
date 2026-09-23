@@ -1262,3 +1262,64 @@ test("pruneAnswerOverrides keeps an entry nothing has caught up with yet", () =>
   const overrides = { a: { t: "2026-09-23T08:00:00Z" } };
   assert.deepEqual(pruneAnswerOverrides(overrides, "2026-09-23T07:00:00Z", new Map()), overrides);
 });
+
+// ---- the play-place thin path, end to end through the pure functions -------
+// A room answered on a play place (not a grey table) promotes it to a
+// coloured pin, the promotion survives a reload (the override is just a
+// plain object — "reload" is re-running applyAnswerOverrides against it),
+// and it is dropped once a dataset/delta whose own data covers the answer's
+// edit time arrives — after which the object's real (now-promoted) table
+// feature carries the colour on its own, with no override needed at all.
+test("a play-place room answer promotes it, survives a reload, then is dropped once a newer build covers it", () => {
+  const url = "https://www.openstreetmap.org/node/42";
+  const basePlaces = { type: "FeatureCollection", features: [
+    feat(9.99, 53.55, { osm_url: url, kind: "cafe" }),
+  ] };
+  const baseTables = { type: "FeatureCollection", features: [] };
+  const overrides = { [url]: {
+    status: "accessible", changing_table: "yes", location_raw: "male_toilet",
+    t: "2026-09-23T10:00:00Z",
+  } };
+
+  // 1. The answer promotes the play place to a coloured table pin.
+  const answered = applyAnswerOverrides(baseTables, basePlaces, overrides);
+  assert.equal(answered.places.features.length, 0);
+  assert.equal(answered.fc.features.length, 1);
+  assert.equal(answered.fc.features[0].properties.status, "accessible");
+  assert.equal(answered.fc.features[0].properties.osm_url, url);
+
+  // 2. A reload: the base dataset is loaded fresh (still just the play
+  // place — no nightly build has run since the answer), and localStorage's
+  // overrides object — a plain, JSON-round-tripped copy of the same data —
+  // is re-applied on top of it. The promotion survives unchanged.
+  const reloadedOverrides = JSON.parse(JSON.stringify(overrides));
+  const afterReload = applyAnswerOverrides(baseTables, basePlaces, reloadedOverrides);
+  assert.deepEqual(afterReload, answered);
+
+  // 3. A dataset/delta lands whose own data covers the answer's edit time —
+  // it now carries the object as a real, already-classified table feature
+  // (the pipeline caught up), so the override is no longer needed and must
+  // not shadow a status the pipeline might have revised in the meantime.
+  const newerBaseTables = { type: "FeatureCollection", features: [
+    feat(9.99, 53.55, { osm_url: url, status: "accessible", changing_table: "yes" }),
+  ] };
+  const newerBasePlaces = { type: "FeatureCollection", features: [] };
+  const prunedByDataset = pruneAnswerOverrides(overrides, "2026-09-23T11:00:00+00:00", new Map());
+  assert.deepEqual(prunedByDataset, {});
+  const afterDatasetCatchUp = applyAnswerOverrides(newerBaseTables, newerBasePlaces, prunedByDataset);
+  assert.equal(afterDatasetCatchUp.fc.features.length, 1);
+  assert.equal(afterDatasetCatchUp.fc.features[0].properties.status, "accessible");
+
+  // Same outcome via a delta upsert instead of a full dataset refresh — the
+  // override is dropped because the delta's own edited_at for this osm_url
+  // is at or after the answer's t, per pruneAnswerOverrides' contract.
+  const editedAtByUrl = new Map([[url, "2026-09-23T10:05:00Z"]]);
+  const prunedByDelta = pruneAnswerOverrides(overrides, null, editedAtByUrl);
+  assert.deepEqual(prunedByDelta, {});
+
+  // And an edit time the dataset/delta do NOT yet cover keeps the override —
+  // the promotion must not flicker back to a play place mid-transit.
+  const notYetCovered = pruneAnswerOverrides(overrides, "2026-09-23T09:00:00+00:00",
+    new Map([[url, "2026-09-23T09:30:00Z"]]));
+  assert.deepEqual(notYetCovered, overrides);
+});

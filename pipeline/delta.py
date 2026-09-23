@@ -186,17 +186,59 @@ def load_base_dataset(geojson_path: str = GEOJSON_PATH,
             "places": _load_feature_collection(play_geojson_path)}
 
 
+# web-data/private/areas-bbox.json (never served, same directory as
+# delta-state.json): one padded bbox per sweep area, written by the nightly
+# build (pipeline.run.area_bboxes/compute_area_bboxes) from that area's own
+# features — real per-area coverage rather than one box around the whole
+# dataset. Missing on a fresh clone (no nightly build has run yet); run_tick
+# falls back to dataset_bbox below and logs why, per the design.
+AREAS_BBOX_PATH = os.environ.get("PAPAMAP_AREAS_BBOX_PATH", "web-data/private/areas-bbox.json")
+# Grown from an area's own features' extent (compute_area_bboxes) — generous
+# enough for an edit just outside a sweep area's own admin boundary (the
+# Overpass area query already includes some of that), not for a whole
+# neighbouring country the way dataset_bbox's 2 degrees has to be.
+AREA_BBOX_PAD_DEG = 0.2
+
+
+def compute_area_bboxes(elements_with_area, pad_deg: float = AREA_BBOX_PAD_DEG) -> dict:
+    """`elements_with_area`: an iterable of (lat, lon, area_name) — every
+    changing-table and play-place object the nightly sweep found, each
+    already knowing which area it came from (pipeline.run's ct_area/
+    play_area, the same per-area sweep authority the pages and the
+    leaderboard use). Returns {area_name: [min_lon, min_lat, max_lon,
+    max_lat]}, padded. An entry with no usable coordinates or no area is
+    skipped, never crashes the build."""
+    boxes: dict[str, list[float]] = {}
+    for lat, lon, area in elements_with_area:
+        if lat is None or lon is None or not area:
+            continue
+        b = boxes.setdefault(area, [lon, lat, lon, lat])
+        b[0], b[1] = min(b[0], lon), min(b[1], lat)
+        b[2], b[3] = max(b[2], lon), max(b[3], lat)
+    return {area: [b[0] - pad_deg, b[1] - pad_deg, b[2] + pad_deg, b[3] + pad_deg]
+            for area, b in boxes.items()}
+
+
+def load_area_bboxes(path: str = AREAS_BBOX_PATH) -> dict | None:
+    """The nightly build's per-area boxes, or None when the file doesn't
+    exist yet (a fresh clone before the first new-format nightly build) or
+    fails to parse — the caller logs and falls back to dataset_bbox."""
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) and data else None
+
+
 def dataset_bbox(base_dataset: dict, pad_deg: float = 2.0) -> tuple | None:
-    """A bounding box around every object the base dataset already has, the
-    'bbox we already have lying around' the design allows in place of real
-    per-country polygons — config.py has no bboxes at all (areas are
-    Overpass area *names*), so this is the approximation: readers near a
-    covered country's edge may see a delta object just across a border, and
-    a brand-new object in a gap of the dataset's own extent (e.g. a country
-    swept only in its interior) could be missed until the next nightly base.
-    Padded by pad_deg (~2 degrees, generous next to a Bundesland) so it
-    never clips a real edit inside a covered area. None (no filtering) when
-    the dataset is empty, e.g. right after a fresh clone."""
+    """A bounding box around every object the base dataset already has —
+    the fallback used only while web-data/private/areas-bbox.json does not
+    exist yet (a fresh clone, or a checkout that has not rebuilt since this
+    file started being written): config.py has no real per-country polygons
+    on hand either way, so this coarser approximation stands in until the
+    next nightly build produces real per-area boxes. Padded by pad_deg (~2
+    degrees, generous next to a Bundesland). None (no filtering) when the
+    dataset is empty, e.g. right after a fresh clone."""
     lons, lats = [], []
     for group in base_dataset.values():
         for f in group.values():
@@ -214,6 +256,16 @@ def in_bbox(lon: float, lat: float, bbox: tuple | None) -> bool:
         return True
     min_lon, min_lat, max_lon, max_lat = bbox
     return min_lon <= lon <= max_lon and min_lat <= lat <= max_lat
+
+
+def in_any_bbox(lon: float, lat: float, boxes) -> bool:
+    """True when (lon, lat) falls inside at least one of `boxes` (an
+    iterable of 4-tuples/lists). Empty or None -> no filtering, the same
+    'nothing to compare against, let it through' rule a single missing
+    dataset_bbox already followed."""
+    if not boxes:
+        return True
+    return any(in_bbox(lon, lat, tuple(b)) for b in boxes)
 
 
 def read_data_base(stats_path: str = STATS_PATH) -> str | None:
@@ -264,13 +316,17 @@ def find_start_seq(base_iso: str, fetch_state=fetch_state, max_backoff: int = 8,
 
 # ---- Turning diff objects into features, with the nightly build's own code -
 
-def process_changes(changes: list[dict], base_dataset: dict, bbox: tuple | None = None,
+def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
                     coord_fetch=None) -> list[tuple]:
     """changes (parse_osc's shape) -> a list of (osm_url, kind, feature_or_none)
     events, kind in {"table", "place", "toilet_no_table"}, feature_or_none
     being None for a removal. Features are built with export.build_features /
     export.build_play_features — the exact functions the nightly build
-    calls — never a re-derivation of status here."""
+    calls — never a re-derivation of status here. `area_boxes`: an iterable
+    of per-area bboxes (load_area_bboxes' values, or a single dataset_bbox
+    wrapped in a list as the fallback) — a brand-new object is kept only
+    inside at least one of them (in_any_bbox); an object already in the base
+    dataset is always kept, box or no box."""
     events = []
     for ch in changes:
         osm_type, osm_id = ch["type"], ch["id"]
@@ -297,8 +353,8 @@ def process_changes(changes: list[dict], base_dataset: dict, bbox: tuple | None 
                     lat, lon = got
         if lat is None or lon is None:
             continue  # no coordinate reachable — drop rather than guess
-        if not (was_table or was_place) and not in_bbox(lon, lat, bbox):
-            continue  # a brand-new object outside covered countries (approx.)
+        if not (was_table or was_place) and not in_any_bbox(lon, lat, area_boxes):
+            continue  # a brand-new object outside every covered sweep area
         el = {"type": osm_type, "id": osm_id, "tags": tags, "lat": lat, "lon": lon}
         table_feats = export.build_features({"elements": [el]})
         place_feats = export.build_play_features({"elements": [el]}, {"elements": []})
@@ -404,7 +460,8 @@ def save_state(state_path: str, state: dict) -> None:
 
 def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
             play_geojson_path: str = PLAY_GEOJSON_PATH, stats_path: str = STATS_PATH,
-            delta_path: str = DELTA_PATH, fetch_state=fetch_state, fetch_osc=fetch_osc,
+            delta_path: str = DELTA_PATH, areas_bbox_path: str = AREAS_BBOX_PATH,
+            fetch_state=fetch_state, fetch_osc=fetch_osc,
             coord_fetch=None, max_gap_h: float = MAX_GAP_H,
             now: datetime | None = None) -> tuple[dict, dict]:
     """One catch-up tick: process every sequence from state+1 up to the
@@ -417,7 +474,19 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
     if base_iso is None:
         raise RuntimeError("no data base yet — stats.json missing (build has not run)")
     base_dataset = load_base_dataset(geojson_path, play_geojson_path)
-    bbox = dataset_bbox(base_dataset)
+    area_boxes_by_name = load_area_bboxes(areas_bbox_path)
+    if area_boxes_by_name is None:
+        # First run before a new nightly build has written the file (a
+        # fresh clone, or a checkout mid-upgrade) — log it and fall back to
+        # one box around the whole loaded dataset, same as before this file
+        # existed.
+        print(f"  delta: {areas_bbox_path} not found yet — falling back to "
+              "the whole dataset's own extent for new-object filtering",
+              file=sys.stderr)
+        single = dataset_bbox(base_dataset)
+        area_boxes = [single] if single else None
+    else:
+        area_boxes = list(area_boxes_by_name.values())
 
     current = fetch_state()
     need_reset = state is None or state.get("base") != base_iso
@@ -435,7 +504,7 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
     for seq in range(last_seq + 1, current["seq"] + 1):
         raw = fetch_osc(seq)
         changes = parse_osc(io.BytesIO(raw))
-        apply_events(acc, process_changes(changes, base_dataset, bbox=bbox, coord_fetch=coord_fetch))
+        apply_events(acc, process_changes(changes, base_dataset, area_boxes=area_boxes, coord_fetch=coord_fetch))
         last_seq = seq
 
     delta = render_delta(acc, base_iso, last_seq, now=now)
