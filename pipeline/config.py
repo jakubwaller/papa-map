@@ -16,8 +16,10 @@ OVERPASS_URL = os.environ.get("OVERPASS_URL", "https://overpass-api.de/api/inter
 # the other stays current: lambert stopped replicating on 2026-09-22 and the
 # balancer kept routing this host to it, so the nightly failed for two nights
 # with a current backend a hostname away. gall comes second for exactly that
-# night — same operators, same per-IP slots — while the balancer stays first
-# so the ordinary night still spreads over both.
+# night — same operators, same per-IP slots. The balancer stays first because
+# it is the published entry point, not for load spreading: its DNS round-robin
+# hands a client one backend and the client sticks to it, so gall is reached
+# directly only as the fallback.
 OVERPASS_URLS = [u.strip() for u in os.environ.get(
     "OVERPASS_URLS",
     ",".join((
