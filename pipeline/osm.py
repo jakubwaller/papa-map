@@ -10,9 +10,10 @@ import requests
 from .classify import has_play_area
 from .config import (OVERPASS_BACKOFF_S, OVERPASS_HTTP_TIMEOUT,
                      OVERPASS_MAX_DATA_AGE_H, OVERPASS_RETRIES,
-                     OVERPASS_SLOT_WAIT_MAX_S, OVERPASS_STATUS_HOSTS,
-                     OVERPASS_TRIP_AFTER, OVERPASS_TRIP_COOLDOWN_S,
-                     OVERPASS_TRIP_MAX_S, OVERPASS_URLS, USER_AGENT)
+                     OVERPASS_SLOT_WAIT_MAX_S, OVERPASS_STALE_REST_S,
+                     OVERPASS_STATUS_HOSTS, OVERPASS_TRIP_AFTER,
+                     OVERPASS_TRIP_COOLDOWN_S, OVERPASS_TRIP_MAX_S,
+                     OVERPASS_URLS, USER_AGENT)
 
 # Transient responses worth retrying: rate limiting (429), gateway/overload
 # (5xx), and the 406 the main balancer returns when its backends are saturated.
@@ -126,7 +127,9 @@ def check_fresh(data: dict, url: str, now: datetime | None = None,
 # resting, fetch_overpass raises OverpassUnavailable at once and the caller
 # can wait breaker_wait_s() instead of failing area after area in
 # milliseconds. See config.OVERPASS_TRIP_* for the numbers and the night that
-# earned them.
+# earned them. A host caught serving a stale database (see StaleMirror /
+# _rest_stale) also gets `until` pushed out, but that rest is fixed and does
+# not touch strikes/trips — see config.OVERPASS_STALE_REST_S.
 _breaker: dict[str, dict] = {}
 
 
@@ -192,6 +195,20 @@ def _recover(url: str) -> None:
     st["strikes"] = st["trips"] = 0
 
 
+def _rest_stale(url: str, exc: "StaleMirror", now: float | None = None) -> None:
+    """A frozen database will not thaw in the next few seconds, but it is not
+    a failure streak either — the host is load-balanced (overpass-api.de:
+    lambert froze 2026-09-22T08:45Z while the other backend stayed fresh), so
+    a later probe may land on a healthy backend. Rest it through the breaker
+    for a fixed span without touching strikes/trips, and never shorten a
+    longer rest already in effect."""
+    st = _state(url)
+    now = time.monotonic() if now is None else now
+    st["until"] = max(st["until"], now + OVERPASS_STALE_REST_S)
+    print(f"  WARN {exc} — resting it for {OVERPASS_STALE_REST_S / 60:.0f} min",
+          file=sys.stderr)
+
+
 def _fetch_once(url: str, ql: str) -> dict:
     resp = requests.get(url, params={"data": ql},
                         headers={"User-Agent": USER_AGENT}, timeout=OVERPASS_HTTP_TIMEOUT)
@@ -212,8 +229,10 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
     """Fetch from Overpass, trying each mirror in turn and retrying transient
     failures (429/5xx/406, timeouts, transport errors) with exponential backoff.
     A non-transient status (e.g. 400) raises at once — mirrors won't differ. A
-    mirror answering from a stale database is skipped, not retried. Only when
-    every mirror is exhausted does the last transient error propagate."""
+    mirror answering from a stale database is not retried, and is rested
+    through the breaker for OVERPASS_STALE_REST_S so later calls skip it
+    outright. Only when every mirror is exhausted does the last transient
+    error propagate."""
     urls = urls or OVERPASS_URLS
     retries = OVERPASS_RETRIES if retries is None else retries
     backoff = OVERPASS_BACKOFF_S if backoff is None else backoff
@@ -236,7 +255,7 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
                     raise
                 last_exc = exc
             except StaleMirror as exc:
-                print(f"  WARN {exc} — skipping mirror", file=sys.stderr)
+                _rest_stale(url, exc)
                 last_exc = exc
                 break  # a frozen database will not thaw in five seconds
             except requests.RequestException as exc:  # timeouts, resets, DNS, etc.

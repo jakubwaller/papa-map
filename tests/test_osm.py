@@ -426,3 +426,100 @@ def test_rest_doubles_with_each_consecutive_trip_and_caps(monkeypatch):
     osm._recover("http://m1")
     osm._trip("http://m1", "refused")
     assert osm._state("http://m1")["until"] - clock[0] == 900  # a success resets the ladder
+
+
+# --- stale-host rest (2026-09-24 lambert incident) ---------------------------
+
+def _stale(ts="2026-09-22T08:45:00Z"):
+    return {"osm3s": {"timestamp_osm_base": ts}, "elements": []}
+
+
+def _fresh():
+    from datetime import datetime, timezone
+    return {"osm3s": {"timestamp_osm_base": datetime.now(timezone.utc).isoformat()},
+            "elements": [{"type": "node", "id": 1}]}
+
+
+def test_stale_host_is_rested_and_skipped_on_a_later_call(monkeypatch):
+    stale, fresh = _stale(), _fresh()
+    get, seen = _fake_get_json([stale, fresh, fresh])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    urls = ["http://a", "http://b"]
+    assert fetch_overpass("out;", urls=urls, retries=1, backoff=0) == fresh
+    assert seen == ["http://a", "http://b"]
+    # a's database froze; a later call must not pay to rediscover that.
+    assert fetch_overpass("out;", urls=urls, retries=1, backoff=0) == fresh
+    assert seen == ["http://a", "http://b", "http://b"]  # a not contacted again
+
+
+def test_stale_rest_length_and_strikes_and_trips_untouched(monkeypatch):
+    clock = [1000.0]
+    monkeypatch.setattr(osm.time, "monotonic", lambda: clock[0])
+    get, seen = _fake_get_json([_stale()])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    with pytest.raises(osm.StaleMirror):
+        fetch_overpass("out;", urls=["http://a"], retries=1, backoff=0)
+    st = osm._state("http://a")
+    assert st["until"] - clock[0] == config.OVERPASS_STALE_REST_S
+    assert st["strikes"] == 0 and st["trips"] == 0
+
+
+def test_stale_rest_expires_and_the_host_is_contacted_again(monkeypatch):
+    clock = [1000.0]
+    monkeypatch.setattr(osm.time, "monotonic", lambda: clock[0])
+    stale, fresh = _stale(), _fresh()
+    get, seen = _fake_get_json([stale, fresh])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    with pytest.raises(osm.StaleMirror):
+        fetch_overpass("out;", urls=["http://a"], retries=1, backoff=0)
+    clock[0] += config.OVERPASS_STALE_REST_S + 1  # rest over
+    assert fetch_overpass("out;", urls=["http://a"], retries=1, backoff=0) == fresh
+    assert seen == ["http://a", "http://a"]
+
+
+def test_every_host_stale_then_unavailable_without_contact(monkeypatch):
+    clock = [1000.0]
+    monkeypatch.setattr(osm.time, "monotonic", lambda: clock[0])
+    get, seen = _fake_get_json([_stale(), _stale()])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    urls = ["http://a", "http://b"]
+    with pytest.raises(osm.StaleMirror):
+        fetch_overpass("out;", urls=urls, retries=1, backoff=0)
+    assert seen == ["http://a", "http://b"]
+    with pytest.raises(osm.OverpassUnavailable):
+        fetch_overpass("out;", urls=urls, retries=1, backoff=0)
+    assert seen == ["http://a", "http://b"]  # not a single further request
+    assert osm.breaker_wait_s(urls) == config.OVERPASS_STALE_REST_S
+
+
+def test_stale_rest_does_not_shorten_a_longer_existing_rest(monkeypatch):
+    clock = [1000.0]
+    monkeypatch.setattr(osm.time, "monotonic", lambda: clock[0])
+    osm._state("http://a")["until"] = clock[0] + 7200
+    osm._state("http://a")["trips"] = 3
+    osm._rest_stale("http://a", osm.StaleMirror("http://a: database is 2 days old (ts)"))
+    st = osm._state("http://a")
+    assert st["until"] == clock[0] + 7200  # the longer rest wins
+    assert st["trips"] == 3  # untouched by the stale path
+
+
+def test_stale_is_not_retried_within_the_call(monkeypatch):
+    stale, fresh = _stale(), _fresh()
+    get, seen = _fake_get_json([stale, fresh])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    fetch_overpass("out;", urls=["http://a", "http://b"], retries=3, backoff=0)
+    assert seen.count("http://a") == 1  # one look, no retries, straight to b
+
+
+def test_stale_rest_logs_the_thirty_minutes(monkeypatch, capsys):
+    get, seen = _fake_get_json([_stale()])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    with pytest.raises(osm.StaleMirror):
+        fetch_overpass("out;", urls=["http://a"], retries=1, backoff=0)
+    assert "resting it for 30 min" in capsys.readouterr().err

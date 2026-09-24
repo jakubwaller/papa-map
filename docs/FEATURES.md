@@ -859,7 +859,12 @@ and a host without a 60 s connection cutoff (see `DEPLOY.md`).
 Every Overpass answer is checked for freshness (`osm3s.timestamp_osm_base`,
 `PAPAMAP_OVERPASS_MAX_DATA_AGE_H`, default 24 h): a mirror serving a frozen
 database is skipped, because a region quietly computed from months-old data is
-a data bug on the map and a fake mover on the leaderboard.
+a data bug on the map and a fake mover on the leaderboard. A host caught stale
+is also rested through the circuit breaker for a fixed span
+(`PAPAMAP_OVERPASS_STALE_REST_S`, default 30 min) so later queries that night
+skip it outright instead of paying the full query cost to rediscover the same
+frozen database — the gap overpass-api.de's load-balanced backends opened on
+2026-09-24, when one of its two backends had been frozen for two days.
 
 ## Mein PapaMap: your own numbers, and places worth going back to
 
