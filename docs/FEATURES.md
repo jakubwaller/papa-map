@@ -864,7 +864,11 @@ is also rested through the circuit breaker for a fixed span
 (`PAPAMAP_OVERPASS_STALE_REST_S`, default 30 min) so later queries that night
 skip it outright instead of paying the full query cost to rediscover the same
 frozen database — the gap overpass-api.de's load-balanced backends opened on
-2026-09-24, when one of its two backends had been frozen for two days.
+2026-09-24, when one of its two backends had been frozen for two days. Since
+that night the other backend, `gall.openstreetmap.de`, is the second host in
+the list (same operators, same per-IP slots, so it is a slot-status host like
+the balancer): a night on which the balancer hands out the frozen backend
+costs one query per 30 min, not the build.
 
 ## Mein PapaMap: your own numbers, and places worth going back to
 

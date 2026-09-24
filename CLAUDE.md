@@ -53,7 +53,10 @@ the failure and adds pins in the Caribbean, because the five overseas régions a
 (`AREA_SELECTORS`), never by name: a level-4 "Florida" is also a department of Uruguay. The
 other 44 answer whole. And a mirror can return HTTP
 200 from a database months out of date — `pipeline/osm.py` reads `osm3s.timestamp_osm_base` and
-raises `StaleMirror`, which is skipped rather than retried on the same host. Never "simplify" any of
+raises `StaleMirror`, which is skipped rather than retried on the same host. overpass-api.de itself
+is a balancer over two backends, lambert and gall, and one can freeze while the other is current
+(lambert, 2026-09-22 to at least the 24th) — that is why gall is the second host in
+`OVERPASS_URLS` and a slot-status host like the balancer. Never "simplify" any of
 these away.
 
 **`pipeline/osm.py` has a circuit breaker, and it is deliberately blunt.** A host whose port
