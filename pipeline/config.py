@@ -11,10 +11,20 @@ OVERPASS_URL = os.environ.get("OVERPASS_URL", "https://overpass-api.de/api/inter
 # instance (the 406/504 the main balancer hands back under load) no longer
 # fails the whole build. Override the whole list with a comma-separated
 # OVERPASS_URLS.
+# overpass-api.de is a balancer over two FOSSGIS backends, lambert and gall
+# (its /api/status names the "Announced endpoint"), and one can freeze while
+# the other stays current: lambert stopped replicating on 2026-09-22 and the
+# balancer kept routing this host to it, so the nightly failed for two nights
+# with a current backend a hostname away. gall comes second for exactly that
+# night — same operators, same per-IP slots. The balancer stays first because
+# it is the published entry point, not for load spreading: its DNS round-robin
+# hands a client one backend and the client sticks to it, so gall is reached
+# directly only as the fallback.
 OVERPASS_URLS = [u.strip() for u in os.environ.get(
     "OVERPASS_URLS",
     ",".join((
         OVERPASS_URL,
+        "https://gall.openstreetmap.de/api/interpreter",
         "https://overpass.private.coffee/api/interpreter",
         "https://overpass.kumi.systems/api/interpreter",
     )),
@@ -24,10 +34,12 @@ OVERPASS_RETRIES = int(os.environ.get("PAPAMAP_OVERPASS_RETRIES", "3"))
 # for ~40 s whatever the query's runtime (measured 2026-08-15: a 2.7 s query
 # and a 7 s query both left "slot available in ~36 s"). Its /api/status page
 # says so up front, so the fetcher asks before every query on these hosts and
-# sleeps the reported wait instead of collecting 429s. Mirrors have no such
-# page — for them the answer is always "go".
+# sleeps the reported wait instead of collecting 429s. gall, reached directly,
+# has the same page and 2 slots per IP (2026-09-24), so it is asked too; the
+# other mirrors have no such page — for them the answer is always "go".
 OVERPASS_STATUS_HOSTS = {h.strip() for h in os.environ.get(
-    "PAPAMAP_OVERPASS_STATUS_HOSTS", "overpass-api.de").split(",") if h.strip()}
+    "PAPAMAP_OVERPASS_STATUS_HOSTS",
+    "overpass-api.de,gall.openstreetmap.de").split(",") if h.strip()}
 OVERPASS_SLOT_WAIT_MAX_S = float(os.environ.get("PAPAMAP_OVERPASS_SLOT_WAIT_MAX_S", "120"))
 # A mirror can fall behind without ever failing: overpass.kumi.systems served a
 # database frozen on 2026-05-31 for weeks, HTTP 200 and no remark, and every

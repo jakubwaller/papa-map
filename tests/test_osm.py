@@ -1,3 +1,5 @@
+import os
+
 import pytest
 import requests
 
@@ -302,6 +304,19 @@ def test_slot_wait_is_capped_and_zero_for_mirrors_or_errors():
     assert osm.slot_wait_s("https://overpass.kumi.systems/api/interpreter",
                            get=boom) == 0
     assert osm.slot_wait_s("http://m1", get=boom) == 0
+
+
+def test_gall_is_asked_for_a_slot_like_the_balancer():
+    # overpass-api.de balances over lambert and gall; gall is reached directly
+    # as the second host since 2026-09-24 and rate-limits per IP the same way
+    # (2 slots, /api/status), so it must be asked before every query too.
+    gall = "https://gall.openstreetmap.de/api/interpreter"
+    busy = _Text("Rate limit: 2\n"
+                 "Slot available after: 2026-09-24T06:00:03Z, in 12 seconds.\n"
+                 "Slot available after: 2026-09-24T06:00:07Z, in 16 seconds.\n")
+    assert osm.slot_wait_s(gall, get=lambda *a, **k: busy) == 13
+    if "OVERPASS_URLS" not in os.environ:
+        assert osm.OVERPASS_URLS[1] == gall  # right behind the balancer
 
 
 def test_fetch_sleeps_the_reported_slot_wait_before_querying(monkeypatch):
