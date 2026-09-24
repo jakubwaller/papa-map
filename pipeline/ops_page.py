@@ -17,6 +17,7 @@ English-only, like the report it mirrors."""
 from __future__ import annotations
 
 import ast
+import math
 import re
 from datetime import date, datetime, timedelta, timezone
 
@@ -36,6 +37,21 @@ WARN_LINE = re.compile(r"^\s*WARN\b(?P<text>.*)$")
 ROUND_LINE = re.compile(r"^\s+round (?P<n>\d+): retrying (?P<names>.+)$")
 RESULT_LINE = re.compile(r"^\{'features': .*\}\s*$")
 LOG_TAIL_LINES = 5000
+
+# stats.json's area_name joins config.COUNTRY_LABELS with " & ", and those
+# name Germany and Denmark in their own language (a leftover from when the
+# label had German and Danish readers; the map translates via area_key). The
+# ops page is English-only, so it translates the two itself.
+ENGLISH_AREA_NAMES = {"Deutschland": "Germany", "Danmark": "Denmark"}
+
+
+def english_area(area_name: str) -> str:
+    """'Deutschland & Danmark & Belgium' → '3 countries: Germany, Denmark,
+    Belgium'; a single name passes through, translated if it needs to be."""
+    names = [ENGLISH_AREA_NAMES.get(n, n) for n in area_name.split(" & ")]
+    if len(names) == 1:
+        return names[0]
+    return f"{len(names)} countries: " + ", ".join(names)
 
 OPS_STYLE = """\
   :root { --amber: #b7791f; }
@@ -61,7 +77,18 @@ OPS_STYLE = """\
   .kpi b { display: block; font-size: 1.4rem; }
   .kpi span { color: var(--muted); font-size: 0.85rem; }
   details > summary { cursor: pointer; font-weight: 600; margin-top: 1.4rem; }
-  svg.spark { width: 100%; height: 4rem; display: block; margin: 0.4rem 0; }
+  /* The sparkline's y-axis is HTML beside the drawing, not SVG text: the
+     viewBox is stretched non-uniformly, which would warp glyphs. Each label
+     sits at its value's height and is centred on its gridline. */
+  .spark-wrap { display: flex; gap: 0.4rem; }
+  .spark-y { position: relative; flex: 0 0 auto; min-width: 2.2rem; height: 6rem;
+             margin: 0.4rem 0; font-size: 0.72rem; color: var(--muted);
+             font-variant-numeric: tabular-nums; }
+  .spark-y span { position: absolute; right: 0; line-height: 1;
+                  transform: translateY(50%); }
+  .spark-plot { flex: 1 1 auto; min-width: 0; }
+  svg.spark { width: 100%; height: 6rem; display: block; margin: 0.4rem 0;
+              overflow: visible; }
   /* Column charts, one flex column per calendar day — the Bürgerwecker admin
      pattern: no library, the exact numbers live in each column's title. */
   .bars { display: flex; align-items: flex-end; gap: 2px; height: 110px;
@@ -325,9 +352,9 @@ def _day_bars(rows: list[tuple], fill_var: str = "--green",
               labels: bool = False) -> str:
     """The column chart itself: bar height from the shared max, the coloured
     fill the named share of it, exact numbers in each column's title — and,
-    with `labels`, printed above every non-zero column too (the theme-edits
-    chart: single digits a day, which fit; the transitions chart runs to
-    three digits a day and keeps its numbers in the tooltips). Empty string
+    with `labels`, printed above every non-zero column too. Both charts label:
+    theme edits run to single digits a day and transitions to a few dozen at
+    most (30 on the busiest day to 2026-09-24), which fit. Empty string
     when no day has anything above zero — a flat row of stubs reads as a
     rendering bug, and the callers say 'nothing yet' in words instead."""
     top = max((v for _, _, v, _ in rows if v), default=0)
@@ -357,25 +384,52 @@ def _axis(first, last) -> str:
             f"<span>{esc(last)}</span></div>\n")
 
 
-def _sparkline(values: list[int], color_var: str) -> str:
-    """One polyline, no axes of its own: the caller says what the line is and
-    puts _axis() under it — SVG text is off the table because the viewBox is
+def _nice_top(hi: float) -> float:
+    """The smallest round number (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8 × a power of
+    ten) at or above `hi`: the top of a zero-based axis that the line nearly
+    fills, so 2,960 gets 3,000 rather than 5,000."""
+    if hi <= 0:
+        return 1
+    mag = 10 ** math.floor(math.log10(hi))
+    for m in (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10):
+        if m * mag >= hi:
+            return m * mag
+    return 10 * mag
+
+
+def _sparkline(values: list[int], color_var: str, first, last) -> str:
+    """One polyline on a zero-based y-axis with three labelled gridlines
+    (0, half, a round top), and the date axis under it. The labels are HTML
+    beside the SVG — SVG text is off the table because the viewBox is
     stretched non-uniformly (preserveAspectRatio="none"), which would warp
-    glyphs. Two points minimum, or there is no line to draw."""
+    glyphs. Zero-based on purpose: a min-to-max axis made 941 → 2,960 look
+    like the same climb as 2,950 → 2,960. Two points minimum, or there is no
+    line to draw, and then no axis either."""
     pts = [v for v in values if isinstance(v, (int, float))]
     if len(pts) < 2:
         return ""
     lo, hi = min(pts), max(pts)
-    span = (hi - lo) or 1
-    w, h = 600, 60
+    top = _nice_top(hi)
+    w, h = 600, 100
     step = w / (len(pts) - 1)
-    coords = " ".join(
-        f"{i * step:.1f},{h - 4 - (v - lo) / span * (h - 8):.1f}"
-        for i, v in enumerate(pts))
-    return (f'<svg class="spark" viewBox="0 0 {w} {h}" preserveAspectRatio="none" '
-            f'role="img" aria-label="{lo:,} to {hi:,}">'
+    coords = " ".join(f"{i * step:.1f},{h - v / top * h:.1f}"
+                      for i, v in enumerate(pts))
+    ticks = (0, top / 2, top)
+    grid = "".join(
+        f'<line x1="0" x2="{w}" y1="{h - t / top * h:.1f}" y2="{h - t / top * h:.1f}" '
+        'stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+        for t in ticks)
+    labels = "".join(f'<span style="bottom:{100 * t / top:.0f}%">{t:,.0f}</span>'
+                     for t in ticks)
+    return ('<div class="spark-wrap">'
+            f'<div class="spark-y" aria-hidden="true">{labels}</div>'
+            '<div class="spark-plot">'
+            f'<svg class="spark" viewBox="0 0 {w} {h}" preserveAspectRatio="none" '
+            f'role="img" aria-label="{lo:,} to {hi:,}">{grid}'
             f'<polyline fill="none" stroke="var({color_var})" stroke-width="2" '
-            f'points="{coords}"/></svg>')
+            'vector-effect="non-scaling-stroke" '
+            f'points="{coords}"/></svg>\n'
+            + _axis(first, last) + "</div></div>\n")
 
 
 def _age_hours(stats: dict | None, now: datetime) -> float | None:
@@ -454,8 +508,7 @@ def _visitors(visits: dict | None) -> str:
     if len(uniques) >= 2:
         parts.append(f'<p class="muted">Daily uniques, {esc(days[0][0])} → '
                      f"{esc(days[-1][0])}</p>\n")
-        parts.append(_sparkline(uniques, "--accent"))
-        parts.append(_axis(days[0][0], days[-1][0]))
+        parts.append(_sparkline(uniques, "--accent", days[0][0], days[-1][0]))
     # The whole history, newest first — the state keeps up to
     # ops.VISITS_HISTORY_DAYS of it and there is no reason for the page to
     # show less than it holds. It is inside a <details> and a scroll box.
@@ -604,7 +657,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                  if built else "no dataset")
     area = (stats or {}).get("area_name")
     p.append(f'<p class="muted">Report {stamp} · {built_txt}'
-             + (f" · {esc(area)}" if area else "") + "</p>\n")
+             + (f" · {esc(english_area(area))}" if area else "") + "</p>\n")
 
     # Status. Three states, not two: the anomaly rules tolerate one missed
     # night on purpose (48 h before the mail goes out), but a page that said
@@ -680,37 +733,48 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                               _sum_changes(window) if window else None))
     p.append("</tbody>\n</table>\n</div>\n")
 
-    chart = _day_bars(transition_rows(history))
+    chart = _day_bars(transition_rows(history), labels=True)
     if chart:
         p.append('<p class="muted">Status transitions per day — green is '
-                 "→ accessible, the grey rest the other transitions. Hover a "
-                 "day for its numbers, new/gone included.</p>\n")
+                 "→ accessible, the grey rest the other transitions; the "
+                 "number is the day's total. Hover a day for the split, "
+                 "new/gone included.</p>\n")
         p.append(chart)
 
     acc_series = [e.get("counts", {}).get("accessible") for e in history]
-    spark = _sparkline(acc_series, "--green")
+    first_d = str(history[0].get("date") or "") if history else ""
+    last_d = str(history[-1].get("date") or "") if history else ""
+    spark = _sparkline(acc_series, "--green", first_d, last_d)
     if spark:
-        first_d = str(history[0].get("date") or "")
-        last_d = str(history[-1].get("date") or "")
         p.append('<p class="muted">Accessible pins in total, one point per '
                  f"nightly run: {_n(acc_series[0])} on {esc(first_d)} → "
                  f"{_n(acc_series[-1])} on {esc(last_d)}. The line every "
                  "green bar above pushes upward.</p>\n")
         p.append(spark)
-        p.append(_axis(first_d, last_d))
 
     p.append(_edits_section(edits, edits_days, now))
 
     if private:
         p.append(_visitors(visits))
 
-    # Last build
+    # Last build. Collapsed when it finished — per-area counts and mirror
+    # warnings are for whoever runs the pipeline, not for a reader checking
+    # the site is alive — and open when it did not, because the status line
+    # at the top sends the reader here.
     p.append("<h2>Last build</h2>\n")
     if build is None:
         p.append('<p class="muted">No build found in pipeline.log.</p>\n')
     else:
+        r = build["result"] or {}
         if build["finished"]:
-            r = build["result"] or {}
+            head = "finished" + (f", {_n(r.get('features'))} features" if r else "")
+        else:
+            head = "failed" if build["error"] else "not finished"
+        if build["warns"]:
+            head += f" · {len(build['warns']):,} warnings"
+        p.append(f"<details{'' if build['finished'] else ' open'}>\n"
+                 f"<summary>{head}, details</summary>\n")
+        if build["finished"]:
             p.append('<p><span class="ok">finished</span>'
                      + (f' — {_n(r.get("features"))} features, '
                         f'{_n(r.get("play_places"))} play places'
@@ -751,6 +815,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                          f'<td>{_n(a["ct"])}</td><td>{_n(a["play"])}</td>'
                          f'<td>{_n(a["toilets"])}</td></tr>\n')
             p.append("</tbody>\n</table>\n</div>\n</details>\n")
+        p.append("</details>\n")
 
     # Regions and cities
     if regions["regions"] or regions["cities"]:
