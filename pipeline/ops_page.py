@@ -419,8 +419,13 @@ def _sparkline(values: list[int], color_var: str, first, last) -> str:
         f'<line x1="0" x2="{w}" y1="{h - t / top * h:.1f}" y2="{h - t / top * h:.1f}" '
         'stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>'
         for t in ticks)
-    labels = "".join(f'<span style="bottom:{100 * t / top:.0f}%">{t:,.0f}</span>'
-                     for t in ticks)
+    # A small top can be a half-step (1.5, 15), so half of it is not always a
+    # whole number; print the one decimal rather than round 7.5 to "8".
+    labels = "".join(
+        f'<span style="bottom:{100 * t / top:.0f}%">'
+        f'{t:,.0f}</span>' if t == int(t) else
+        f'<span style="bottom:{100 * t / top:.0f}%">{t:,.1f}</span>'
+        for t in ticks)
     return ('<div class="spark-wrap">'
             f'<div class="spark-y" aria-hidden="true">{labels}</div>'
             '<div class="spark-plot">'

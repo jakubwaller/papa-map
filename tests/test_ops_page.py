@@ -761,6 +761,12 @@ def test_sparkline_has_a_zero_based_labelled_y_axis():
     # 2,960 of 3,000 sits just under the top edge, 941 a third of the way up
     assert 'points="0.0,68.6 600.0,1.3"' in html
     assert 'class="bar-axis"' in html and "2026-09-24" in html
+    # a half-step top keeps its half exact rather than rounding 7.5 to "8"
+    html = ops_page._sparkline([3, 12], "--accent", "a", "b")
+    assert '<span style="bottom:50%">7.5</span>' in html
+    assert '<span style="bottom:100%">15</span>' in html
+    html = ops_page._sparkline([0, 0], "--accent", "a", "b")
+    assert ">0.5</span>" in html and ">1</span>" in html
 
 
 def test_last_build_is_collapsed_unless_it_went_wrong():
