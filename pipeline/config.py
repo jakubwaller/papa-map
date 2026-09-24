@@ -38,6 +38,18 @@ OVERPASS_SLOT_WAIT_MAX_S = float(os.environ.get("PAPAMAP_OVERPASS_SLOT_WAIT_MAX_
 # minutes, the main instance by hours on a bad day — a day is generous, a
 # season is not.
 OVERPASS_MAX_DATA_AGE_H = float(os.environ.get("PAPAMAP_OVERPASS_MAX_DATA_AGE_H", "24"))
+# A stale answer used to be forgotten the instant it was thrown away: the next
+# query tried the same frozen host again, waited out its rate limit, ran the
+# query and threw that away too. 2026-09-24: overpass-api.de load-balances
+# over two backends, and the one this host was routed to (lambert) had frozen
+# at 2026-09-22T08:45Z — every one of ~250 queries that night paid the full
+# cost of finding that out, and the run took over five hours. So a host caught
+# stale is rested through the circuit breaker below for a fixed span, same as
+# a tripped one, without touching its strikes/trips — it isn't a failure
+# streak, just a database that won't thaw in minutes, and since the balancer
+# may route a later probe to a fresh backend the rest is bounded rather than
+# "stale for the rest of the run".
+OVERPASS_STALE_REST_S = float(os.environ.get("PAPAMAP_OVERPASS_STALE_REST_S", "1800"))
 # Congested evenings 504 (or proxy-kill) for minutes at a stretch, not
 # seconds — 5s·2^n rides that out where the old 2s·2^n just burned attempts.
 OVERPASS_BACKOFF_S = float(os.environ.get("PAPAMAP_OVERPASS_BACKOFF_S", "5"))
