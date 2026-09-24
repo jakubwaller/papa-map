@@ -400,10 +400,11 @@ def test_edits_section_tiles_chart_labels_and_table():
     assert "changesets, last 30 days, 2026-08-13 → 2026-09-11" in html
     assert "changesets, all time, theme live since 2026-08-13" in html
     assert "<b>15</b>" in html and "<b>38</b>" in html and "<b>48</b>" in html
-    # the number sits above its column; the movement chart stays unlabelled
+    # the number sits above its column, on both charts: the 40 theme days
+    # plus the fixture's two days with transitions
     assert '<span class="bar-n">9</span><div class="bar" style="height:100.0%">' in html
-    assert html.count('data-labelled=""') == 1  # the CSS rule is the other mention
-    assert html.count('class="bar-n"') == 40
+    assert html.count('data-labelled=""') == 2  # the CSS rule is the other mention
+    assert html.count('class="bar-n"') == 40 + 2
     # every recorded day, newest first, in the details table
     assert "<summary>all 40 days</summary>" in html
     assert html.index('<td class="l">2026-09-11</td><td>9</td>') \
@@ -735,3 +736,43 @@ def test_run_check_fetches_visits_daily_and_writes_the_private_page(tmp_path):
     assert any("visits (Cloudflare, 7d): 2500 requests" in b for b in sent)
     state = json.loads(state_path.read_text())
     assert list(state["visits"]) == ["2026-08-22", "2026-08-23"]
+
+
+def test_area_label_is_english_and_counted():
+    """stats.json names Germany and Denmark in their own language; the
+    English-only ops page must not (asked 2026-09-24)."""
+    assert ops_page.english_area("Deutschland & Danmark & Belgium") == \
+        "3 countries: Germany, Denmark, Belgium"
+    assert ops_page.english_area("Danmark") == "Denmark"
+    html = render(stats={"generated_at": "2026-08-23T02:20:00+00:00",
+                         "area_name": "Deutschland & Danmark"})
+    assert "2 countries: Germany, Denmark" in html
+    assert "Danmark" not in html
+
+
+def test_sparkline_has_a_zero_based_labelled_y_axis():
+    assert ops_page._nice_top(2960) == 3000
+    assert ops_page._nice_top(941) == 1000
+    assert ops_page._nice_top(1821) == 2000
+    html = ops_page._sparkline([941, 2960], "--green", "2026-08-02", "2026-09-24")
+    assert '<span style="bottom:0%">0</span>' in html
+    assert '<span style="bottom:50%">1,500</span>' in html
+    assert '<span style="bottom:100%">3,000</span>' in html
+    # 2,960 of 3,000 sits just under the top edge, 941 a third of the way up
+    assert 'points="0.0,68.6 600.0,1.3"' in html
+    assert 'class="bar-axis"' in html and "2026-09-24" in html
+    # a half-step top keeps its half exact rather than rounding 7.5 to "8"
+    html = ops_page._sparkline([3, 12], "--accent", "a", "b")
+    assert '<span style="bottom:50%">7.5</span>' in html
+    assert '<span style="bottom:100%">15</span>' in html
+    html = ops_page._sparkline([0, 0], "--accent", "a", "b")
+    assert ">0.5</span>" in html and ">1</span>" in html
+
+
+def test_last_build_is_collapsed_unless_it_went_wrong():
+    html = render()
+    assert "<details>\n<summary>finished, 1,931 features · 2 warnings" in html
+    running = ops_page.parse_build_log(
+        FINISHED_BUILD + "  Bayern: ct=1 play=1 toilets=1\n")
+    html = render(build=running)
+    assert "<details open>\n<summary>not finished" in html
