@@ -5,19 +5,19 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
-         pinColorExpression, momCounts, nearestUsable, formatDistance, localAnswered,
+         pinColorExpression, viewOf, momCounts, nearestUsable, formatDistance, localAnswered,
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app50";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app51";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app50";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app51";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app50";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app51";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -25,7 +25,7 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app50";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app51";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -33,22 +33,22 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
-         onBrowserFinished, SITE } from "./native.js?v=app50";
+         onBrowserFinished, SITE } from "./native.js?v=app51";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app50";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app51";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app50";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app51";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app50";
+import { isOpenNow } from "./opening-hours.js?v=app51";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -658,7 +658,7 @@ const shareButtonHTML = () =>
   `<button type="button" class="btn icon-btn" data-share aria-label="${esc(t("popupShare"))}" title="${esc(t("popupShare"))}">${svgIcon(SHARE_PATH, "share-icon")}</button>`;
 
 function popupHTML(f) {
-  const s = viewFor(f.status, mode);
+  const s = viewOf(f, mode);
   // The two-tap answer, on the pins nobody has answered for. Not on a pin that
   // already carries a room in words the classifier does not read: that is
   // somebody's tag, and replacing it belongs in MapComplete, where the reader
@@ -916,7 +916,7 @@ function ensureSignMarker() {
 // question mark that follows the reading (ask for papa; woman-ask, dark ink,
 // for mama, CONTRACT.md v44). Only ever painted for a "table" object.
 function paintSignMarker(f) {
-  const view = viewFor(f.status, mode);
+  const view = viewOf(f, mode);
   signMarkerBody.innerHTML =
     signPinSvg(signPinKind(f.status, mode), BUCKET_COLOR[view.bucket], signPinInk(view.bucket));
 }
@@ -1522,7 +1522,7 @@ function searchRowIcon(row) {
   if (row.hit.kind === "place") dot.className = "dot play";
   else {
     dot.className = "dot";
-    dot.style.background = BUCKET_COLOR[viewFor(row.hit.obj.status, mode).bucket];
+    dot.style.background = BUCKET_COLOR[viewOf(row.hit.obj, mode).bucket];
   }
   return dot;
 }
@@ -2229,6 +2229,9 @@ async function answer(kind, obj, choice, freshToken = null) {
       // renderMergedDataset() — repaints this object without waiting on
       // localStorage to round-trip.
       const newStatus = lastStats?.answer_status?.[choice];
+      // v50: the same lookup for "the men's room only" — undefined in a
+      // stats.json from before it, which the override then leaves to the base.
+      const newMenOnly = lastStats?.answer_men_only?.[choice];
       if (newStatus !== undefined && newStatus !== null) {
         const t = new Date().toISOString();
         // out.version is the OSM object's version AFTER this write (writeTags,
@@ -2239,7 +2242,7 @@ async function answer(kind, obj, choice, freshToken = null) {
         // timestamp from DURING the write, routinely earlier than `t`, so a
         // time-only comparison against it would never clear this override.
         answerOverrides = { ...answerOverrides, [obj.osm_url]:
-          { status: newStatus, changing_table: obj.changing_table,
+          { status: newStatus, men_only: newMenOnly, changing_table: obj.changing_table,
             location_raw: obj.location_raw, t, version: out.version } };
         saveAnswerOverrides(answerOverrides);
         renderMergedDataset();
@@ -3395,7 +3398,7 @@ function openSavedPlace(row) {
 // it does not — never a status this project did not actually classify.
 function savedDotClass(osmUrl) {
   const f = featuresByOsmUrl.get(osmUrl);
-  if (f) return viewFor(f.status, mode).cls;
+  if (f) return viewOf(f, mode).cls;
   return placesByOsmUrl.has(osmUrl) ? "play" : "neutral";
 }
 

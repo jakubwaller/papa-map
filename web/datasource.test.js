@@ -7,7 +7,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
-         pinColorExpression, momCounts, localAnswered, usableStatuses, haversineKm,
+         pinColorExpression, viewOf, momCounts, localAnswered, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, webRouteHref, webRouteChoices, PAPAMAP_THEME_URL, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
@@ -361,12 +361,12 @@ test("MapComplete language: only codes it has, and the fragment stays last", () 
   assert.equal(withMapCompleteLanguage(null, "en"), null);
 });
 
-test("toFeatureCollection carries only {idx, status, play} and idx survives the reorder", () => {
+test("toFeatureCollection carries only {idx, status, men_only, play, key} and idx survives the reorder", () => {
   const v = loadFeatures(FC);
   const out = toFeatureCollection(filterByStatus(v, ["unknown", "accessible"]));
   assert.equal(out.type, "FeatureCollection");
   for (const f of out.features) {
-    assert.deepEqual(Object.keys(f.properties).sort(), ["idx", "key", "play", "status"]);
+    assert.deepEqual(Object.keys(f.properties).sort(), ["idx", "key", "men_only", "play", "status"]);
     const orig = v[f.properties.idx];  // the click-lookup the app does
     assert.equal(orig.status, f.properties.status);
     assert.equal(orig.play, f.properties.play);   // drives the halo layer filter
@@ -449,18 +449,58 @@ test("pickWheelchair: only a stored \"1\" turns the chip on", () => {
   for (const v of [null, undefined, "", "0", "true", "yes", 1]) assert.equal(pickWheelchair(v), false);
 });
 
-test("pinColorExpression is a MapLibre match over the three statuses", () => {
-  const expr = pinColorExpression("mama");
-  assert.deepEqual(expr.slice(0, 2), ["match", ["get", "status"]]);
+// Just enough of MapLibre's expression language to run the pin colour against
+// a feature's properties: the test checks what the map paints, not the tree.
+function evalExpr(e, props) {
+  if (!Array.isArray(e)) return e;
+  const [op, ...a] = e;
+  if (op === "get") return props[a[0]];
+  if (op === "==") return evalExpr(a[0], props) === evalExpr(a[1], props);
+  if (op === "all") return a.every((x) => evalExpr(x, props));
+  if (op === "case") {
+    for (let i = 0; i + 1 < a.length; i += 2) if (evalExpr(a[i], props)) return evalExpr(a[i + 1], props);
+    return evalExpr(a[a.length - 1], props);
+  }
+  if (op === "match") {
+    const v = evalExpr(a[0], props);
+    for (let i = 1; i + 1 < a.length; i += 2) if (a[i] === v) return evalExpr(a[i + 1], props);
+    return evalExpr(a[a.length - 1], props);
+  }
+  throw new Error(`unsupported op ${op}`);
+}
+
+test("pinColorExpression paints each status in each reading", () => {
+  const paint = (mode, status, men_only = false) =>
+    evalExpr(pinColorExpression(mode), { status, men_only });
   // accessible and female_only both green in mama mode, unknown orange.
-  assert.equal(expr[3], BUCKET_COLOR.good);
-  assert.equal(expr[5], BUCKET_COLOR.good);
-  assert.equal(expr[6], BUCKET_COLOR.maybe);
+  assert.equal(paint("mama", "accessible"), BUCKET_COLOR.good);
+  assert.equal(paint("mama", "female_only"), BUCKET_COLOR.good);
+  assert.equal(paint("mama", "unknown"), BUCKET_COLOR.maybe);
   // Papa keeps the three distinct colours it always had.
-  const papa = pinColorExpression("papa");
-  assert.equal(papa[3], BUCKET_COLOR.good);
-  assert.equal(papa[5], BUCKET_COLOR.bad);
-  assert.equal(papa[6], BUCKET_COLOR.ask);
+  assert.equal(paint("papa", "accessible"), BUCKET_COLOR.good);
+  assert.equal(paint("papa", "female_only"), BUCKET_COLOR.bad);
+  assert.equal(paint("papa", "unknown"), BUCKET_COLOR.ask);
+});
+
+test("pinColorExpression: the men's room alone is red for a mum, green for a dad (v50)", () => {
+  const paint = (mode, props) => evalExpr(pinColorExpression(mode), props);
+  assert.equal(paint("mama", { status: "accessible", men_only: true }), BUCKET_COLOR.bad);
+  assert.equal(paint("papa", { status: "accessible", men_only: true }), BUCKET_COLOR.good);
+  // A pre-v50 source has no men_only at all: today's green, not red.
+  assert.equal(paint("mama", { status: "accessible" }), BUCKET_COLOR.good);
+  // The papa expression stays the plain match it always was.
+  assert.equal(pinColorExpression("papa")[0], "match");
+});
+
+test("viewFor / viewOf: men_only changes only the mama reading of accessible", () => {
+  assert.equal(viewFor("accessible", "mama", true).bucket, "bad");
+  assert.equal(viewFor("accessible", "mama", true).labelKey, "stMenOnlyMama");
+  assert.deepEqual(viewFor("accessible", "papa", true), viewFor("accessible", "papa"));
+  // Never on another status, and never under an unknown mode (papa fallback).
+  assert.deepEqual(viewFor("unknown", "mama", true), viewFor("unknown", "mama"));
+  assert.deepEqual(viewFor("accessible", "papi", true), viewFor("accessible", "papa"));
+  assert.equal(viewOf({ status: "accessible", men_only: true }, "mama").bucket, "bad");
+  assert.equal(viewOf({ status: "accessible" }, "mama").bucket, "good");
 });
 
 test("momCounts adds the two rooms and keeps the unrecorded ones apart", () => {
@@ -471,6 +511,12 @@ test("momCounts adds the two rooms and keeps the unrecorded ones apart", () => {
   assert.deepEqual(momCounts({}), { good: 0, maybe: 0 });
   assert.deepEqual(momCounts(), { good: 0, maybe: 0 });
   assert.deepEqual(momCounts({ accessible: 4 }), { good: 4, maybe: 0 });
+});
+
+test("momCounts leaves the men's-room-only tables out of hers (v50)", () => {
+  // men_only is a subset of accessible, so it is taken away, never added.
+  assert.deepEqual(momCounts({ accessible: 10, female_only: 3, unknown: 9, men_only: 2 }),
+                   { good: 11, maybe: 9 });
 });
 
 // statsLocal (renderStats, web/app.js) and "Mein PapaMap"'s percentage
@@ -1460,4 +1506,43 @@ test("selectAddedPlace: the ordinary MapComplete flow (create v1, answer v2) res
   };
   const result = selectAddedPlace(delta, WATCH);
   assert.deepEqual(result, { type: "table", feature: delta.tables.upsert[0] });
+});
+
+// ---- v50: the men's room alone ----
+
+test("loadFeatures and toFeatureCollection carry men_only, strictly", () => {
+  const fc = { type: "FeatureCollection", features: [
+    feat(1, 1, { status: "accessible", men_only: true }),
+    feat(2, 2, { status: "accessible" }),            // a pre-v50 dataset
+    feat(3, 3, { status: "accessible", men_only: "yes" }),
+  ] };
+  const rows = loadFeatures(fc);
+  assert.deepEqual(rows.map((f) => f.men_only), [true, false, false]);
+  assert.deepEqual(toFeatureCollection(rows).features.map((f) => f.properties.men_only),
+    [true, false, false]);
+});
+
+test("nearestUsable sends a mum past the men's room alone, a dad into it", () => {
+  const rows = [
+    { id: "near-men", status: "accessible", men_only: true, key: null, lat: 53.5503, lon: 9.9920 },
+    { id: "far-both", status: "accessible", men_only: false, key: null, lat: 53.5528, lon: 10.0067 },
+  ];
+  assert.equal(nearestUsable(rows, 53.5503, 9.9920, "papa").feature.id, "near-men");
+  assert.equal(nearestUsable(rows, 53.5503, 9.9920, "mama").feature.id, "far-both");
+});
+
+test("applyAnswerOverrides sets men_only from the answer, keeps the base's without one", () => {
+  const url = "https://www.openstreetmap.org/node/1";
+  const fc = () => ({ type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: url, status: "accessible", men_only: true,
+                 changing_table: "yes", location_raw: "male_toilet" }),
+  ] });
+  const places = { type: "FeatureCollection", features: [] };
+  const both = applyAnswerOverrides(fc(), places, { [url]: { status: "accessible", men_only: false,
+    changing_table: "yes", location_raw: "female_toilet;male_toilet", t: "2026-09-25T10:00:00Z" } });
+  assert.equal(both.fc.features[0].properties.men_only, false);
+  // An override stored before v50 has no men_only: the base's value stands.
+  const old = applyAnswerOverrides(fc(), places, { [url]: { status: "accessible",
+    changing_table: "yes", location_raw: "male_toilet", t: "2026-09-25T10:00:00Z" } });
+  assert.equal(old.fc.features[0].properties.men_only, true);
 });

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .classify import classify
+from .classify import classify, men_only
 
 # Mirrors web/osm.js's ROOMS exactly — the vocabulary a reader's own tap
 # writes to OSM (roomPatch). Kept here, not imported (there is nothing to
@@ -31,4 +31,15 @@ def answer_status_table() -> dict:
     hand-copied into stats.json."""
     table = {choice: classify("yes", location) for choice, location in ROOM_CHOICES.items()}
     table["none"] = None
+    return table
+
+
+def answer_men_only_table() -> dict:
+    """{choice: bool} beside answer_status_table: whether the reader's own
+    answer puts the table in the men's room only (CONTRACT v50), so the
+    mama reading can recolour that answer instantly too without reading the
+    tag itself. Same keys, "none" included (always False)."""
+    table = {choice: classify("yes", location) == "accessible" and men_only(location)
+             for choice, location in ROOM_CHOICES.items()}
+    table["none"] = False
     return table

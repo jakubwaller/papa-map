@@ -163,17 +163,17 @@ aldri svarene selv.</p>
   <li><strong>Pappa</strong> (standard): grønn, rød og grå som beskrevet over.</li>
   <li><strong>Mamma</strong>: grønn betyr nå begge deler — det åpent tilgjengelige rommet
       <em>og</em> dametoalettet. Oransje står for «rom ikke registrert», altså vanligvis
-      brukbart.</li>
+      brukbart. Rødt vises bare for et bord som er registrert bare på herretoalettet.</li>
 </ul>
 <p>Det bryteren ikke gjør: den endrer ingen tag, den skriver ingenting til OSM, og den beregner
 ingen ny klassifisering. Den er bare en annen lesning av de samme tre verdiene, lagret kun i din
 egen nettleser, under <code>papamap-mode</code>. Tallene i filtrene er de samme i begge
 modusene.</p>
-<p>Ett unntak står her fordi det ser grønt ut i mamma-modus, uten helt å være det: et bord som
-ifølge <code>changing_table:location</code> bare står på herretoalettet (bare
-<code>male_toilet</code>), telles med som grønt. Det er sjeldent, men det skjer. Derfor sier
-teksten på punktet «i sjeldne tilfeller bare på herretoalettet», og tallet over sier
-«sannsynligvis».</p>
+<p>Ett tilfelle klarer ikke de tre fargene alene: et bord som ifølge
+<code>changing_table:location</code> bare står på herretoalettet (bare <code>male_toilet</code>),
+er tilgjengelig for en pappa, men ikke for en mamma. Pipelinen markerer disse bordene separat, så
+i mamma-modus er de røde og telles ikke med i tallet over. Eldre versjoner av appen kan fortsatt
+vise dem grønne, inntil de er oppdatert.</p>
 
 <h2>Den blå ringen: lekeområde</h2>
 <p>Et punkt med en blå ring har også et lekeområde &mdash; et sted der du ikke bare skifter på barnet,

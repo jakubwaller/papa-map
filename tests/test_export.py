@@ -55,6 +55,7 @@ def test_feature_properties_match_data_contract(load_fixture):
         "osm_type": "node", "osm_id": 1, "name": "Hauptbahnhof WC",
         "amenity": "toilets", "changing_table": "yes",
         "location_raw": "male_toilet", "status": "accessible",
+        "men_only": True,
         "play": None,
         "wheelchair": None, "toilets_wheelchair": None,
         "wheelchair_description": None, "key": None,
@@ -70,6 +71,11 @@ def test_feature_properties_match_data_contract(load_fixture):
     assert feats[3]["location_raw"] is None
     assert feats[4]["fee"] == "no"  # changing_table:fee wins over fee=yes
     assert feats[7]["location_raw"] == "hinten im Flur beim Personalraum"
+    # v50: only the men's room alone is men_only — both rooms, the women's
+    # room and an unrecorded room never are.
+    assert feats[8]["men_only"] is False  # female_toilet;male_toilet
+    assert feats[2]["men_only"] is False  # female_toilet
+    assert feats[3]["men_only"] is False  # no location
 
 
 def test_wheelchair_is_a_tri_state_never_a_status():

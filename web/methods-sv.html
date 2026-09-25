@@ -162,16 +162,17 @@ till vänster i filterraden ändrar därför bara hur samma tre svar läses, ald
 <ul>
   <li><strong>Pappa</strong> (standard): grönt, rött och grått som beskrivet ovan.</li>
   <li><strong>Mamma</strong>: grönt betyder nu båda — det fritt tillgängliga rummet <em>och</em>
-      damtoaletten. Orange står för &rdquo;Rum ej registrerat&rdquo;, alltså oftast användbart.</li>
+      damtoaletten. Orange står för &rdquo;Rum ej registrerat&rdquo;, alltså oftast användbart.
+      Rött visas bara för ett bord registrerat enbart på herrtoaletten.</li>
 </ul>
 <p>Det omkopplaren inte gör: den ändrar ingen tagg, den skriver ingenting till OSM, och den
 räknar ingen ny klassificering. Den är en andra läsning av samma tre värden, sparad bara i din
 webbläsare under <code>papamap-mode</code>. Siffrorna i filtren är desamma i båda lägena.</p>
-<p>Ett undantag står här, för det ser grönt ut i mamma-läget men är det inte riktigt: ett bord
-som enligt <code>changing_table:location</code> bara står på herrtoaletten
-(<code>male_toilet</code> ensamt), räknas till de gröna. Det är sällsynt, men det förekommer.
-Därför säger texten vid nålen &rdquo;i sällsynta fall bara på herrtoaletten&rdquo; och siffran
-ovan säger &rdquo;troligen&rdquo;.</p>
+<p>Ett fall kan de tre färgerna inte bära själva: ett bord som enligt
+<code>changing_table:location</code> bara står på herrtoaletten (<code>male_toilet</code>
+ensamt), är nåbart för en pappa men inte för en mamma. Pipelinen markerar dessa bord separat, så
+i mamma-läget är de röda och räknas inte med i siffran ovan. Äldre versioner av appen kan
+fortfarande visa dem gröna, tills de uppdateras.</p>
 
 <h2>Den blå ringen: lekhörna</h2>
 <p>En nål med blå ring har dessutom en lekhörna &mdash; en plats där man inte bara byter blöja utan
