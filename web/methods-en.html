@@ -160,16 +160,17 @@ answers themselves.</p>
 <ul>
   <li><strong>Dad</strong> (default): green, red and grey as described above.</li>
   <li><strong>Mum</strong>: green now means both — the openly accessible room <em>and</em> the
-      women's room. Orange stands for &ldquo;room not recorded&rdquo;, so usually usable.</li>
+      women's room. Orange stands for &ldquo;room not recorded&rdquo;, so usually usable. Red
+      appears only for a table recorded in the men's room alone.</li>
 </ul>
 <p>What the switch does not do: it doesn't change a tag, it writes nothing to OSM, and it computes
 no new classification. It's a second reading of the same three values, stored only in your browser
 under <code>papamap-mode</code>. The numbers on the chips are the same in both modes.</p>
-<p>One exception is noted here because it looks green in mum mode without quite being so: a table
-that, according to <code>changing_table:location</code>, stands only in the men's room
-(<code>male_toilet</code> alone) counts as green. That's rare, but it happens. That's why the pin
-text says &ldquo;in rare cases the men's room only&rdquo; and the number above says
-&ldquo;probably&rdquo;.</p>
+<p>One case the three colours can't carry on their own: a table that, according to
+<code>changing_table:location</code>, stands only in the men's room (<code>male_toilet</code>
+alone) is reachable for a dad but not for a mum. The pipeline marks these tables separately, so in
+mum mode they are red and are left out of the number above. Older versions of the app may still
+show them green until they are updated.</p>
 
 <h2>The blue ring: play area</h2>
 <p>A pin with a blue ring also has a play area. The <em>With play area</em> chip filters down to

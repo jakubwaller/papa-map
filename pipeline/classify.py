@@ -168,6 +168,19 @@ def central_key(tags: dict, location: str | None = None) -> str | None:
     return _v(tags, "centralkey")
 
 
+def men_only(location: str | None) -> bool:
+    """True when the only room a table is recorded in is the men's room:
+    `male_toilet` is the one ACCESSIBLE_TOKENS entry present and there is no
+    `female_toilet`. Such a table is `accessible` — a dad can reach it — but
+    a mum cannot, which is what the mama reading paints it for (CONTRACT
+    v50). Exact tokens, like classify: `female_toilet` alone is never this.
+    `male_toilet;wheelchair_toilet` is not either — the accessible cubicle
+    is open to her too. A `status` modifier, never a fourth status."""
+    toks = tokens(location)
+    return ({t for t in toks if t in ACCESSIBLE_TOKENS} == {"male_toilet"}
+            and FEMALE_TOKEN not in toks)
+
+
 def classify(changing_table: str | None, location: str | None,
              tags: dict | None = None) -> str | None:
     """Status of one OSM object: 'accessible' | 'female_only' | 'unknown', or

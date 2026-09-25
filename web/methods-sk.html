@@ -164,16 +164,15 @@ samotné.</p>
   <li><strong>Otec</strong> (predvolené): zelená, červená a sivá ako vyššie.</li>
   <li><strong>Mama</strong>: Zelená teraz znamená oboje — voľne prístupná miestnosť <em>a</em>
       dámske WC. Oranžová znamená &bdquo;Miestnosť nezaznamenaná&ldquo;, teda väčšinou
-      použiteľná.</li>
+      použiteľná. Červená zostáva len pre pult zaznamenaný výlučne na pánskom WC.</li>
 </ul>
 <p>Čo prepínač nerobí: nemení žiadny tag, nič nezapisuje do OSM a nepočíta žiadnu novú
 klasifikáciu. Je to druhé čítanie tých istých troch hodnôt, uložené len v tvojom prehliadači pod
 kľúčom <code>papamap-mode</code>. Čísla vo filtroch sú v oboch režimoch rovnaké.</p>
-<p>Jedna výnimka patrí sem, pretože v režime Mama vyzerá zelene, a celkom presne to tak nie je:
-Pult, ktorý je podľa <code>changing_table:location</code> len na pánskom WC
-(<code>male_toilet</code> samotné), sa počíta medzi zelené. Je to zriedkavé, ale stáva sa to.
-Preto text pri špendlíku hovorí &bdquo;výnimočne len na pánskom WC&ldquo; a číslo vyššie hovorí
-&bdquo;pravdepodobne&ldquo;.</p>
+<p>Jeden prípad tri farby samy neunesú: pult, ktorý je podľa <code>changing_table:location</code>
+len na pánskom WC (<code>male_toilet</code> samotné), je dostupný pre otca, ale nie pre mamu.
+Pipeline tieto pulty označuje osobitne, takže v režime Mama sú červené a nepočítajú sa do čísla
+vyššie. Staršie verzie aplikácie ich môžu stále zobrazovať zelené, kým nie sú aktualizované.</p>
 
 <h2>Modrý krúžok: detský kútik</h2>
 <p>Špendlík s modrým krúžkom má navyše aj detský kútik &mdash; miesto, kde dieťa nielen prebalíš,

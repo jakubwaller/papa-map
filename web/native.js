@@ -807,7 +807,8 @@ export function onBrowserFinished(onReturn) {
 
 // ---- The widget and the Siri shortcut (iOS) ----
 // A compact copy of the dataset for the Swift side: one row per table, five
-// decimals (about a metre), status, name, OSM URL. Written on every load;
+// decimals (about a metre), status, name, OSM URL, and (v50, appended so an
+// older widget reading the first five still parses the row) men_only. Written on every load;
 // the widget re-reads it from the App Group container and recomputes the
 // nearest table with the phone's own location, which never comes here.
 export function shareDataset(features) {
@@ -815,6 +816,7 @@ export function shareDataset(features) {
   if (!p) return;
   const rows = features.map((f) => [
     +f.lat.toFixed(5), +f.lon.toFixed(5), f.status, f.name || "", f.osm_url || "",
+    f.men_only === true,
   ]);
   p.writeDataset({ json: JSON.stringify(rows) }).catch(() => {});
 }

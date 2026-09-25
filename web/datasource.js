@@ -37,6 +37,10 @@ export function loadFeatures(fc) {
       changing_table: p.changing_table ?? null,
       location_raw: p.location_raw ?? null,
       status: STATUSES.includes(p.status) ? p.status : "unknown",
+      // The men's room alone (CONTRACT v50): a modifier on `accessible`, read
+      // only by the mama reading. Strict === true, like play: a dataset from
+      // before v50 leaves it undefined, and that must read as today's green.
+      men_only: p.men_only === true,
       // Strict === true: a dataset written before this property existed leaves
       // it undefined, and "no play corner recorded" must never render as one.
       play: p.play === true,
@@ -264,7 +268,8 @@ export function toFeatureCollection(features) {
     features: ordered.map((f) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [f.lon, f.lat] },
-      properties: { idx: f.idx, status: f.status, play: f.play, key: f.key !== null },
+      properties: { idx: f.idx, status: f.status, men_only: f.men_only === true,
+                    play: f.play, key: f.key !== null },
     })),
   };
 }
@@ -336,11 +341,25 @@ const VIEW = {
   },
 };
 
+// The one row VIEW cannot hold, because it is not a status: an `accessible`
+// table the pipeline marked `men_only` (CONTRACT v50). A dad reaches it, so the
+// papa reading keeps it green; a mum does not, so hers paints it red.
+const MEN_ONLY_MAMA =
+  { bucket: "bad", cls: "bad", labelKey: "stMenOnlyMama", metaKey: "metaMenOnlyMama" };
+
 // An unknown mode or status degrades to the papa reading rather than throwing:
-// a hand-typed ?mode=papi must render the map, not a blank page.
-export function viewFor(status, mode) {
+// a hand-typed ?mode=papi must render the map, not a blank page. `menOnly` is
+// the pipeline's own flag, passed through — never worked out from the tags.
+export function viewFor(status, mode, menOnly = false) {
   const rows = VIEW[mode] ?? VIEW[DEFAULT_MODE];
+  if (menOnly && status === "accessible" && rows === VIEW.mama) return MEN_ONLY_MAMA;
   return rows[status] ?? VIEW[DEFAULT_MODE].unknown;
+}
+
+// viewFor for a loaded table: what every pin, popup and dot paints from. The
+// chips alone call viewFor with a bare status — they filter the literal one.
+export function viewOf(f, mode) {
+  return viewFor(f.status, mode, f.men_only === true);
 }
 
 // The one place "how many tables are answered" is computed from stats.json's
@@ -369,18 +388,23 @@ export const BUCKET_COLOR = {
 // mode is then one setPaintProperty on a layer whose source data never
 // moves, so 26k pins recolour without a setData() or a re-fetch.
 export function pinColorExpression(mode) {
-  return ["match", ["get", "status"],
+  const byStatus = ["match", ["get", "status"],
     "accessible", BUCKET_COLOR[viewFor("accessible", mode).bucket],
     "female_only", BUCKET_COLOR[viewFor("female_only", mode).bucket],
     /* unknown */ BUCKET_COLOR[viewFor("unknown", mode).bucket]];
+  const menOnly = BUCKET_COLOR[viewFor("accessible", mode, true).bucket];
+  if (menOnly === BUCKET_COLOR[viewFor("accessible", mode).bucket]) return byStatus;
+  return ["case",
+    ["all", ["==", ["get", "status"], "accessible"], ["==", ["get", "men_only"], true]],
+    menOnly, byStatus];
 }
 
-// The mama reading of the local stats sentence: the two rooms add up, the
-// unrecorded ones stay their own number. Same three fields stats.json already
-// carries — no new pipeline field, no new query, nothing added to the
-// contract's emitted shape.
-export function momCounts({ accessible = 0, female_only = 0, unknown = 0 } = {}) {
-  return { good: accessible + female_only, maybe: unknown };
+// The mama reading of the local stats sentence: the two rooms add up, less the
+// tables in the men's room alone (`men_only`, a subset of `accessible` the
+// pipeline counts since v50 — 0 in an older stats.json), and the unrecorded
+// ones stay their own number.
+export function momCounts({ accessible = 0, female_only = 0, unknown = 0, men_only = 0 } = {}) {
+  return { good: accessible - men_only + female_only, maybe: unknown };
 }
 
 // ---- Nearest usable table ----
@@ -423,10 +447,9 @@ export function haversineKm(aLat, aLon, bLat, bLon) {
 // on is asking for a table they can get to, not the closest one of any kind.
 export function nearestUsable(features, lat, lon, mode, wheelchairOnly = false) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-  const ok = new Set(usableStatuses(mode));
   let best = null;
   for (const f of pinFeatures(features, wheelchairOnly)) {
-    if (!ok.has(f.status)) continue;
+    if (viewOf(f, mode).bucket !== "good") continue;
     if (!Number.isFinite(f.lat) || !Number.isFinite(f.lon)) continue;
     const km = haversineKm(lat, lon, f.lat, f.lon);
     if (best === null || km < best.km) best = { feature: f, km };
@@ -958,7 +981,8 @@ export function resolveDataUrl(path, native, site) {
 // place -> table promotion a room answer on a play place causes (both a
 // grey table's room and a play place's own room question can move an
 // object's status). `overrides` is localStorage's papamap-answer-overrides
-// shape: {osm_url: {status, changing_table, location_raw, t}}. An override
+// shape: {osm_url: {status, men_only, changing_table, location_raw, t}}
+// (men_only since v50; an override stored before it keeps the base's). An override
 // for an object neither collection has any more (deleted, or never loaded)
 // is silently skipped. `status` present promotes/keeps the object as a
 // table (out.fc); its absence (a play answer with no room, e.g. "none") — or
@@ -973,7 +997,8 @@ export function applyAnswerOverrides(fc, places, overrides) {
     if (!base) continue;
     const patched = { ...base, properties: { ...base.properties,
       changing_table: o.changing_table, location_raw: o.location_raw,
-      status: o.status ?? base.properties.status } };
+      status: o.status ?? base.properties.status,
+      men_only: o.men_only ?? base.properties.men_only } };
     if (o.status) { tableByUrl.set(url, patched); placeByUrl.delete(url); }
     else placeByUrl.set(url, patched);
   }

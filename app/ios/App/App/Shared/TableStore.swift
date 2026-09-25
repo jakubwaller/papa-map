@@ -31,15 +31,18 @@ public struct Table: Equatable {
     public let status: String     // accessible | female_only | unknown
     public let name: String
     public let osmUrl: String
+    // The men's room alone (CONTRACT v50): accessible to a father, not to a
+    // mother. The sixth column; a row written by an older app has five.
+    public var menOnly: Bool = false
 
     public func usable(mode: String) -> Bool {
-        mode == "mama" ? status != "unknown" : status == "accessible"
+        mode == "mama" ? status != "unknown" && !menOnly : status == "accessible"
     }
 
     // The pin's colour in the reader's reading, as the map paints it.
     public func colorHex(mode: String) -> String {
         switch status {
-        case "accessible": return "#009e73"
+        case "accessible": return mode == "mama" && menOnly ? "#d55e00" : "#009e73"
         case "female_only": return mode == "mama" ? "#009e73" : "#d55e00"
         default: return mode == "mama" ? "#e69f00" : "#3d4247"   // BUCKET_COLOR.ask, datasource.js
         }
@@ -66,7 +69,9 @@ public enum TableStore {
             guard r.count >= 5, let lat = r[0] as? Double, let lon = r[1] as? Double,
                   let status = r[2] as? String, let name = r[3] as? String,
                   let osm = r[4] as? String else { return nil }
-            return Table(lat: lat, lon: lon, status: status, name: name, osmUrl: osm)
+            let menOnly = r.count >= 6 ? (r[5] as? Bool) ?? false : false
+            return Table(lat: lat, lon: lon, status: status, name: name, osmUrl: osm,
+                         menOnly: menOnly)
         }
     }
 
