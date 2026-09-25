@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { locateNative, loadJSONNative, loadDatasetNative, budget,
-         checkLocationPermissionNative, locateNativeCoarse } from "./native.js";
+         checkLocationPermissionNative, locateNativeCoarse, downloadInto } from "./native.js";
 
 // A Geolocation plugin that plays back fixes: [ms, accuracy in metres].
 function fakeGeo(fixes, { permission = "granted" } = {}) {
@@ -900,4 +900,36 @@ test("onBrowserFinished is a no-op outside Capacitor — no plugin, nothing thro
   globalThis.Capacitor = undefined;
   try { assert.doesNotThrow(() => onBrowserFinished(() => {})); }
   finally { globalThis.Capacitor = before; }
+});
+
+// Android's downloadFile ignores `recursive` and needs the folder to exist.
+function fakeFs({ dirExists = false } = {}) {
+  const calls = [];
+  return {
+    calls,
+    mkdir: async (o) => { calls.push(["mkdir", o]); if (dirExists) throw new Error("Directory exists"); },
+    downloadFile: async (o) => { calls.push(["downloadFile", o]); return { path: o.path }; },
+  };
+}
+
+test("downloadInto makes the file's folder before downloading into it", async () => {
+  const fs = fakeFs();
+  const opts = { url: "https://papamap.de/data/stats.json", path: "papamap/data/stats.json.new", directory: "DATA", recursive: true };
+  assert.deepEqual(await downloadInto(fs, opts), { path: "papamap/data/stats.json.new" });
+  assert.deepEqual(fs.calls, [
+    ["mkdir", { path: "papamap/data", directory: "DATA", recursive: true }],
+    ["downloadFile", opts],
+  ]);
+});
+
+test("downloadInto: a folder that is already there does not stop the download", async () => {
+  const fs = fakeFs({ dirExists: true });
+  await downloadInto(fs, { url: "u", path: "papamap/tiles/hamburg.pmtiles", directory: "DATA" });
+  assert.deepEqual(fs.calls.map(([name]) => name), ["mkdir", "downloadFile"]);
+});
+
+test("downloadInto: a file at the root needs no folder", async () => {
+  const fs = fakeFs();
+  await downloadInto(fs, { url: "u", path: "x.json", directory: "DATA" });
+  assert.deepEqual(fs.calls.map(([name]) => name), ["downloadFile"]);
 });
