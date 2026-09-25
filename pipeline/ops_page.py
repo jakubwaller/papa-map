@@ -126,7 +126,7 @@ def parse_build_log(text: str | None) -> dict | None:
     """The last build in an append-only log, as data. None when there is no
     build in it at all. A build is the lines up to a result line; lines after
     the last result line are a build that has not finished — a run in
-    progress at 05:30, or one that died, which the caller tells apart by
+    progress at 07:30, or one that died, which the caller tells apart by
     whether there is a traceback."""
     if not text:
         return None

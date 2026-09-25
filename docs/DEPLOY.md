@@ -122,7 +122,7 @@ Outside Docker the equivalent line is
 
 **02:00, and it stays there — do not move it earlier.** The 46-country build measured 80
 minutes from 02:00 on 2026-09-05, when it was still 208 queries (73 sweeps, 73 counts, 62
-leaderboard cities); the ops mail below runs at 05:30, and a build still writing when the
+leaderboard cities); the ops mail below runs at 07:30, and a build still writing when the
 digest reads `stats.json` is the one health signal the site has reporting a half-finished
 dataset. (02:00 was the move for Europe-complete on 2026-08-22, 03:30 for the UK and
 France before that.) What keeps the build from growing with the areas is the toilets-count
@@ -131,7 +131,17 @@ than every night, so a night costs one query per area plus a seventh of the coun
 is the room waves 2 and 3 took the same day: the US per state and Canada per province add
 64 areas, Japan per prefecture 47 more, for about 270 queries a night (184 areas + 62
 cities) — a third above the pre-rota night's 208, so expect ~105 minutes and a finish near
-03:45, still an hour and three quarters before the ops mail.
+03:45, well before the ops mail. A night when Overpass is struggling runs longer by design: failed
+areas are retried in rounds until 4.5 h after the start (`PAPAMAP_SWEEP_DEADLINE_S`), so the
+last round starts by about 06:30. That limits when a round *starts*, not when it ends: if an outage
+ends just before 06:30, the last round can take as long as a normal night, and the ops mail
+then says "not finished" about a build that succeeds later. An area that keeps failing with
+an error a retry cannot fix (a 400 or a pipeline bug) stops the sweep after six tries instead of
+waiting for the deadline. An empty answer is not such an error: a mirror whose area database is
+broken returns one, so it waits for the deadline like an outage. The ops mail moved from 05:30 to 07:30 on 2026-09-25 so it reads
+that night's outcome rather than a build still in progress. (Until then the rounds were a fixed six, and on
+2026-09-25 stale mirrors used them all up in 45 minutes of waiting while the good hosts were
+resting.)
 **Earlier than 02:00 is not an option on this host:** the VPS runs Europe/Berlin, and 01:00
 CEST is 23:00 UTC of the *previous* day. The rota dates its entries and the leaderboard its
 history in UTC, so on the night of the spring clock change two builds would share one UTC
@@ -262,11 +272,11 @@ docker compose run --build --rm ops        # first run: writes the state and bot
 ```
 
 ```cron
-30 5 * * * cd /path/to/papa-map && docker compose run --build --rm ops >> ops.log 2>&1
+30 7 * * * cd /path/to/papa-map && docker compose run --build --rm ops >> ops.log 2>&1
 ```
 
 Outside Docker the equivalent line is
-`30 5 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1`
+`30 7 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1`
 with the state at `ops-state.json` in the repo directory (`PAPAMAP_OPS_STATE_PATH`).
 
 To rewrite the page right now — after a deploy, say — without touching the real state or
@@ -279,7 +289,7 @@ cd ~/papa-map && cp ops-data/ops-state.json ops-data/preview.json && \
 ```
 
 (The copy gains a second entry for today, so the page's "since yesterday" row reads zeros
-until the next 05:30 run regenerates it from the real state.)
+until the next 07:30 run regenerates it from the real state.)
 
 The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
 the report as a page plus what the mail has no room for: per-area results and warnings from
@@ -374,7 +384,7 @@ bind-mounted. **The pipeline is different if you run it under Docker:** its code
 lives in the image, so a `git pull` alone leaves the old build logic in place. Add
 `docker compose build pipeline` (or use `run --build`, as in the cron above) after
 any change under `pipeline/`. The ops cron already rebuilds on every run, so an ops change
-is live at the next 05:30 after the pull; to see it sooner, use the preview run above.
+is live at the next 07:30 after the pull; to see it sooner, use the preview run above.
 
 ## Verify
 

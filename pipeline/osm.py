@@ -133,6 +133,19 @@ def check_fresh(data: dict, url: str, now: datetime | None = None,
 _breaker: dict[str, dict] = {}
 
 
+def is_transient(exc: BaseException) -> bool:
+    """Whether a later round could plausibly succeed. Yes for a transport
+    failure, a retryable status, a stale mirror or a resting host, and for
+    run.py's own checks on a mirror's answer (RuntimeError: an area that
+    resolves to zero objects, a missing count). A mirror without an area
+    database answers exactly that way, and the next round may reach a healthy
+    host. No for a non-retryable status (400: the query itself is wrong) and
+    for anything else, which is a bug in the pipeline."""
+    if isinstance(exc, requests.HTTPError):
+        return exc.response is not None and exc.response.status_code in _RETRY_STATUS
+    return isinstance(exc, (requests.RequestException, RuntimeError))
+
+
 class OverpassUnavailable(requests.RequestException):
     """Every configured host is resting after failures; nothing was contacted."""
 

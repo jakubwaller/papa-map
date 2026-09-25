@@ -7,8 +7,9 @@ from datetime import datetime, timezone
 from . import delta, export, leaderboard, osm, pages, stats, toilet_counts
 from .room_choices import answer_status_table
 from .config import (AREAS_PATH, BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTORY_PATH,
-                     PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_PAUSE_S,
-                     SWEEP_ROUNDS, TOILETS_COUNTS_PATH,
+                     PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_FIXED_ROUNDS,
+                     SWEEP_DEADLINE_S, SWEEP_PAUSE_S, SWEEP_ROUNDS,
+                     TOILETS_COUNTS_PATH,
                      TOILETS_COUNTS_PERIOD_DAYS, changing_table_ids_ql,
                      display_area as configured_area, sweep_areas, sweep_ql,
                      toilets_counts_ql)
@@ -17,7 +18,8 @@ from .config import (AREAS_PATH, BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTOR
 def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                  display_area=None, area_key=None, overpass_fetch=osm.fetch_overpass,
                  taginfo_fetch=stats.fetch_taginfo, now=None,
-                 sweep_rounds=None, sweep_pause_s=None, pages_dir=PAGES_DIR,
+                 sweep_rounds=None, sweep_pause_s=None,
+                 sweep_deadline_s=None, pages_dir=PAGES_DIR,
                  cities=None, history_path=HISTORY_PATH,
                  play_geojson_path=PLAY_GEOJSON_PATH,
                  counts_path=None, counts_period_days=None,
@@ -28,9 +30,10 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     it. An area whose queries fail on every
     mirror — including one that resolves to zero objects (stale mirror area
     database, typo'd PAPAMAP_AREA_NAME) — is retried in later sweep rounds
-    after a cool-down; only an area still failing after every round aborts the
-    build, before anything is written (old files survive). A taginfo failure
-    only degrades the global block to the previous one."""
+    after a cool-down, until SWEEP_DEADLINE_S; only an area still failing
+    when no further round fits aborts the build, before anything is written
+    (old files survive). A taginfo failure only degrades the global block to
+    the previous one."""
     areas = areas or sweep_areas()
     # The leaderboard compares regions over time, so it only makes sense on
     # the full default build: a partial or single-area sweep writing history
@@ -48,6 +51,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         area_key = configured_key if area_key is None else area_key
     rounds = SWEEP_ROUNDS if sweep_rounds is None else sweep_rounds
     pause = SWEEP_PAUSE_S if sweep_pause_s is None else sweep_pause_s
+    budget = SWEEP_DEADLINE_S if sweep_deadline_s is None else sweep_deadline_s
     # Resolved at call time, not in the signature, so a test can point the
     # module at a temp file and never touch the checkout's web/data.
     counts_path = TOILETS_COUNTS_PATH if counts_path is None else counts_path
@@ -107,18 +111,49 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     remaining = list(areas)
     remaining_cities = list(cities)
     last_exc: Exception | None = None
-    for rnd in range(rounds):
-        if rnd and (remaining or remaining_cities):
+    deadline = time.monotonic() + budget
+    # Per area/city: failures a later round cannot fix (osm.is_transient).
+    # Keyed by kind as well: Berlin and Hamburg are both an area and a city.
+    hard_fails: dict[tuple[str, str], int] = {}
+    given_up_cities: list = []
+    rnd = 0
+    while True:
+        if rnd:
+            if not remaining and not remaining_cities:
+                break
+            if rounds is not None and rnd >= rounds:
+                break
+            # Only the leaderboard is left: it gets the old fixed rounds, not
+            # the deadline — the map is not held until 06:30 for a city.
+            if not remaining and rnd >= SWEEP_FIXED_ROUNDS:
+                break
+            # An area that keeps failing the same way dooms the build; stop
+            # now instead of retrying it until the deadline. A city like it
+            # is only dropped from today's leaderboard.
+            if any(hard_fails.get(("area", name), 0) >= SWEEP_FIXED_ROUNDS
+                   for name, _ in remaining):
+                break
+            hopeless = [c for c in remaining_cities
+                        if hard_fails.get(("city", c[0]), 0) >= SWEEP_FIXED_ROUNDS]
+            if hopeless:
+                given_up_cities.extend(hopeless)
+                remaining_cities = [c for c in remaining_cities if c not in hopeless]
+                if not remaining and not remaining_cities:
+                    break
+            # When every host is resting (osm.py's breaker), a 120 s pause
+            # would only spend the round on instant failures — wait for the
+            # first host to come back instead. Each consecutive trip doubles
+            # that rest, so rounds against a dead service stretch over
+            # hours with a handful of requests, not thousands.
+            rest = osm.breaker_wait_s()
+            if time.monotonic() + max(pause, rest) > deadline:
+                print(f"  no round {rnd + 1}: it would start past the "
+                      f"{budget / 3600:g} h sweep deadline", file=sys.stderr)
+                break
             names = ([name for name, _ in remaining]
                      + [display for display, _, _ in remaining_cities])
             print(f"  round {rnd + 1}: retrying {', '.join(names)}",
                   file=sys.stderr)
-            # When every host is resting (osm.py's breaker), a 120 s pause
-            # would only spend the round on instant failures — wait for the
-            # first host to come back instead. Each consecutive trip doubles
-            # that rest, so six rounds against a dead service stretch over
-            # hours with a handful of requests, not thousands.
-            rest = osm.breaker_wait_s()
             if rest > pause:
                 print(f"  every Overpass host is resting — waiting "
                       f"{rest / 60:.0f} min before round {rnd + 1}", file=sys.stderr)
@@ -192,6 +227,9 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             except Exception as exc:
                 print(f"  WARN {area_name}: {exc}", file=sys.stderr)
                 last_exc = exc
+                if not osm.is_transient(exc):
+                    key = ("area", area_name)
+                    hard_fails[key] = hard_fails.get(key, 0) + 1
                 failed.append((area_name, admin_level))
                 continue
             # A retried area re-fetches both queries; dedup absorbs any
@@ -234,22 +272,25 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 break
             except Exception as exc:
                 print(f"  WARN {display}: {exc}", file=sys.stderr)
+                if not osm.is_transient(exc):
+                    key = ("city", display)
+                    hard_fails[key] = hard_fails.get(key, 0) + 1
                 failed_cities.append((display, area_name, admin_level))
                 continue
             city_ids[display] = {(el.get("type"), el.get("id"))
                                  for el in ids["elements"]}
         remaining, remaining_cities = failed, failed_cities
-        if not remaining and not remaining_cities:
-            break
+        rnd += 1
     if remaining:
         raise RuntimeError(
             f"sweep failed for {', '.join(name for name, _ in remaining)} "
-            f"after {rounds} rounds — refusing to overwrite existing data "
+            f"after {rnd} rounds — refusing to overwrite existing data "
             f"(last error: {last_exc})")
+    remaining_cities = given_up_cities + remaining_cities
     if remaining_cities:
         print(f"  WARN: leaderboard skips "
               f"{', '.join(d for d, _, _ in remaining_cities)} today "
-              f"(city sweep failed after {rounds} rounds)", file=sys.stderr)
+              f"(city sweep failed after {rnd} rounds)", file=sys.stderr)
     # An object on (or area-assigned across) a Länder boundary shows up in two
     # sweeps — count and plot it once.
     ct_data = {"elements": osm.dedup_elements(ct_elements)}
