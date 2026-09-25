@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f2f5f3">
 <title>PapaMap als App</title>
-<meta name="description" content="Die iPhone-App ist im Test, die Android-App in Arbeit. Bis dahin legt sich PapaMap ohne Store auf den Homescreen und läuft dort wie eine App. Offline, der nächste Wickeltisch, Papa oder Mama, Antworten in zwei Tipps.">
+<meta name="description" content="Die iPhone-App ist im App Store, die Android-App in Arbeit. Ohne Store legt sich PapaMap auf den Homescreen und läuft dort wie eine App. Offline, der nächste Wickeltisch, Papa oder Mama, Antworten in zwei Tipps.">
 <link rel="canonical" href="https://papamap.de/app.html">
 <link rel="alternate" hreflang="de" href="https://papamap.de/app.html">
 <link rel="alternate" hreflang="en" href="https://papamap.de/app-en.html">
 <link rel="alternate" hreflang="x-default" href="https://papamap.de/app.html">
 <meta property="og:title" content="PapaMap als App">
-<meta property="og:description" content="Die iPhone-App ist im Test, die Android-App in Arbeit. Bis dahin legt sich PapaMap ohne Store auf den Homescreen.">
+<meta property="og:description" content="Die iPhone-App ist im App Store, die Android-App in Arbeit. Ohne Store legt sich PapaMap auf den Homescreen.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://papamap.de/app.html">
 <meta property="og:image" content="https://papamap.de/og-image.jpg?v=w50">
@@ -61,18 +61,22 @@
   .back.langs { color: var(--muted); }
   .back.langs strong { color: var(--ink); font-weight: 600; }
 
-  .install {
+  /* The store app is the green box now; until 2026-09-25 the home-screen
+     steps were, because they were the only thing that worked. */
+  .store {
     margin: 1.2rem 0 1.6rem; padding: 1.1rem 1.2rem 1rem;
     border: 1px solid var(--line); border-radius: 14px; background: var(--green-soft);
   }
-  .install h2 { margin: 0 0 0.8rem; font-size: 1.15rem; }
-  .install p { margin: 0.6rem 0; }
-  .install b { color: var(--green-strong); }
+  .store h2 { margin: 0 0 0.6rem; font-size: 1.15rem; }
+  .store p { margin: 0.6rem 0; }
+  .store a.badge { font-size: 1.1rem; font-weight: 700; color: var(--green-strong); }
 
-  /* The store apps, before they exist: plain text on the page's own
-     background, so it doesn't compete with the green box that works today. */
-  .stores { margin: 0 0 1.2rem; padding: 0 0 0 0.9rem; border-left: 3px solid var(--line); }
-  .stores p { margin: 0.45rem 0; }
+  /* Android until it ships, and the home-screen route for both: plain text
+     on the page's own background, so it doesn't compete with the store box. */
+  .aside { margin: 0 0 1.4rem; padding: 0 0 0 0.9rem; border-left: 3px solid var(--line); }
+  .aside h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+  .aside p { margin: 0.45rem 0; }
+  .aside b { color: var(--ink); }
 
   ul.adds { padding-left: 1.2rem; margin: 0.6rem 0; }
   ul.adds li { margin: 0.55rem 0; }
@@ -86,19 +90,25 @@
 <p class="back langs"><strong lang="de">Deutsch</strong> &middot; <a href="app-en.html" hreflang="en" lang="en">English</a></p>
 
 <h1>PapaMap als App</h1>
-<p class="lead">Die Karte legt sich schon heute ohne Store auf den Homescreen und läuft dort wie eine App. Offline, mit dem nächsten Tisch, Antworten in zwei Tipps.</p>
+<p class="lead">Für das iPhone im App Store. Für Android in Arbeit; bis dahin legt sich die Karte ohne Store auf den Homescreen und läuft dort wie eine App.</p>
+
+<section class="store" aria-labelledby="store-h">
+  <h2 id="store-h">iPhone: im App Store</h2>
+  <p><a class="badge" href="https://apps.apple.com/de/app/papamap/id6813376985">PapaMap im App Store laden</a></p>
+  <p>Kostenlos, ohne Werbung, ohne eigenes Konto.</p>
+</section>
 
 <!-- A mailto, not a signup form: the site stores nothing, and the Datenschutz
-     already covers contact by e-mail. One subject per platform, so the
-     launch mail goes to the right people. -->
-<section class="stores" aria-label="Apps im Store">
-  <p><b>iPhone:</b> die App ist im Test und kommt bald in den App Store. <a href="mailto:papamap@jakubwaller.eu?subject=Bescheid%20geben%3A%20iPhone-App">Bescheid geben, wenn sie da ist</a></p>
+     already covers contact by e-mail. The iPhone line carried the same offer
+     until the app reached the store (2026-09-25); the launch mail to those
+     addresses goes out by hand from the inbox, and then they are deleted. -->
+<section class="aside" aria-label="Android">
   <p><b>Android:</b> die App ist in Arbeit. <a href="mailto:papamap@jakubwaller.eu?subject=Bescheid%20geben%3A%20Android-App">Bescheid geben, wenn sie da ist</a></p>
   <p>Eine E-Mail, wenn es so weit ist, danach wird die Adresse gelöscht.</p>
 </section>
 
-<section class="install" aria-labelledby="install-h">
-  <h2 id="install-h">Bis dahin: so kommt sie aufs Handy</h2>
+<section class="aside" aria-labelledby="install-h">
+  <h2 id="install-h">Ohne Store: so kommt die Karte aufs Handy</h2>
   <p><b>iPhone:</b> Teilen-Symbol, dann „Zum Home-Bildschirm“. Geht in jedem Browser, nur nicht aus Instagram oder Bluesky heraus.</p>
   <p><b>Android:</b> Browsermenü, dann „Installieren“ oder „Zum Startbildschirm hinzufügen“. Chrome, Firefox, Samsung Internet, alle anderen auch.</p>
 </section>
@@ -110,6 +120,7 @@
   <li><b>Papa oder Mama.</b> Einmal einstellen. Als Papa färbt die Karte die Tische danach ein, ob du an sie herankommst; als Mama zählt jeder Tisch.</li>
   <li><b>Grauer Pin? Zwei Tipps.</b> „In welchem Raum steht der Tisch?“ Deine Antwort geht direkt nach OpenStreetMap, mit deinem eigenen Konto dort.</li>
   <li><b>Tisch eintragen, wo du stehst.</b> Ein fehlender Wickeltisch ist in einer Minute drin, für alle, die nach dir kommen.</li>
+  <li><b>Nur in der iPhone-App:</b> Stadt offline speichern, Hamburg sind 27 MB, dann geht auch die Karte darunter ohne Netz. Siri, Widget und Kontrollzentrum zeigen den nächsten Wickeltisch, ohne dass du die App öffnest.</li>
 </ul>
 <p>Kostenlos, wie die Karte. Die Daten bleiben OpenStreetMap; die App hat keine eigenen und sammelt keine.</p>
 <p class="foot">Fragen, Ideen, ein Wickeltisch, der fehlt? <a href="methods.html#contribute">Editieren, Schritt für Schritt</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="https://jakubwaller.eu" rel="author">Made with ♥ in Hamburg by Jakub Waller</a></p>

@@ -32,7 +32,7 @@ Live at [papamap.de](https://papamap.de).
 - One static page per Bundesland, country and région, in the language people search in.
 - A leaderboard that ranks regions by how much their share of answered pins grew in the last week.
 - Works offline, except the basemap: the OSM tile policy forbids caching tiles.
-- A store app (`app/`, in TestFlight): the same map with a whole city's basemap offline, a Siri shortcut, a home-screen widget and a Control Center button.
+- A store app (`app/`, on the [App Store](https://apps.apple.com/de/app/papamap/id6813376985) for iPhone, Android in development): the same map with a whole city's basemap offline, a Siri shortcut, a home-screen widget and a Control Center button.
 
 How each of these works and why it was built that way: [`docs/FEATURES.md`](docs/FEATURES.md).
 

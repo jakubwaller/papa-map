@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f2f5f3">
 <title>PapaMap as an app</title>
-<meta name="description" content="The iPhone app is in testing, the Android app in development. Until then PapaMap goes on your home screen without a store and runs there like an app. Offline, the nearest changing table, dad or mum, answers in two taps.">
+<meta name="description" content="The iPhone app is on the App Store, the Android app in development. Without a store, PapaMap goes on your home screen and runs there like an app. Offline, the nearest changing table, dad or mum, answers in two taps.">
 <link rel="canonical" href="https://papamap.de/app-en.html">
 <link rel="alternate" hreflang="de" href="https://papamap.de/app.html">
 <link rel="alternate" hreflang="en" href="https://papamap.de/app-en.html">
 <link rel="alternate" hreflang="x-default" href="https://papamap.de/app.html">
 <meta property="og:title" content="PapaMap as an app">
-<meta property="og:description" content="The iPhone app is in testing, the Android app in development. Until then PapaMap goes on your home screen without a store.">
+<meta property="og:description" content="The iPhone app is on the App Store, the Android app in development. Without a store, PapaMap goes on your home screen.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://papamap.de/app-en.html">
 <meta property="og:image" content="https://papamap.de/og-image-en.jpg?v=w50">
@@ -61,18 +61,22 @@
   .back.langs { color: var(--muted); }
   .back.langs strong { color: var(--ink); font-weight: 600; }
 
-  .install {
+  /* The store app is the green box now; until 2026-09-25 the home-screen
+     steps were, because they were the only thing that worked. */
+  .store {
     margin: 1.2rem 0 1.6rem; padding: 1.1rem 1.2rem 1rem;
     border: 1px solid var(--line); border-radius: 14px; background: var(--green-soft);
   }
-  .install h2 { margin: 0 0 0.8rem; font-size: 1.15rem; }
-  .install p { margin: 0.6rem 0; }
-  .install b { color: var(--green-strong); }
+  .store h2 { margin: 0 0 0.6rem; font-size: 1.15rem; }
+  .store p { margin: 0.6rem 0; }
+  .store a.badge { font-size: 1.1rem; font-weight: 700; color: var(--green-strong); }
 
-  /* The store apps, before they exist: plain text on the page's own
-     background, so it doesn't compete with the green box that works today. */
-  .stores { margin: 0 0 1.2rem; padding: 0 0 0 0.9rem; border-left: 3px solid var(--line); }
-  .stores p { margin: 0.45rem 0; }
+  /* Android until it ships, and the home-screen route for both: plain text
+     on the page's own background, so it doesn't compete with the store box. */
+  .aside { margin: 0 0 1.4rem; padding: 0 0 0 0.9rem; border-left: 3px solid var(--line); }
+  .aside h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+  .aside p { margin: 0.45rem 0; }
+  .aside b { color: var(--ink); }
 
   ul.adds { padding-left: 1.2rem; margin: 0.6rem 0; }
   ul.adds li { margin: 0.55rem 0; }
@@ -86,19 +90,25 @@
 <p class="back langs"><a href="app.html" hreflang="de" lang="de">Deutsch</a> &middot; <strong lang="en">English</strong></p>
 
 <h1>PapaMap as an app</h1>
-<p class="lead">The map already goes on your home screen without a store and runs there like an app. Offline, with the nearest table, answers in two taps.</p>
+<p class="lead">On the App Store for iPhone. In development for Android; until then the map goes on your home screen without a store and runs there like an app.</p>
+
+<section class="store" aria-labelledby="store-h">
+  <h2 id="store-h">iPhone: on the App Store</h2>
+  <p><a class="badge" href="https://apps.apple.com/app/papamap/id6813376985">Get PapaMap on the App Store</a></p>
+  <p>Free, no ads, no account of its own.</p>
+</section>
 
 <!-- A mailto, not a signup form: the site stores nothing, and the Datenschutz
-     already covers contact by e-mail. One subject per platform, so the
-     launch mail goes to the right people. -->
-<section class="stores" aria-label="Store apps">
-  <p><b>iPhone:</b> the app is in testing and comes to the App Store soon. <a href="mailto:papamap@jakubwaller.eu?subject=Notify%20me%3A%20iPhone%20app">Tell me when it’s out</a></p>
+     already covers contact by e-mail. The iPhone line carried the same offer
+     until the app reached the store (2026-09-25); the launch mail to those
+     addresses goes out by hand from the inbox, and then they are deleted. -->
+<section class="aside" aria-label="Android">
   <p><b>Android:</b> the app is in development. <a href="mailto:papamap@jakubwaller.eu?subject=Notify%20me%3A%20Android%20app">Tell me when it’s out</a></p>
   <p>One e-mail when it’s ready, then the address is deleted.</p>
 </section>
 
-<section class="install" aria-labelledby="install-h">
-  <h2 id="install-h">Until then: how to get it on your phone</h2>
+<section class="aside" aria-labelledby="install-h">
+  <h2 id="install-h">Without a store: how to get the map on your phone</h2>
   <p><b>iPhone:</b> the Share icon, then “Add to Home Screen”. Works in every browser, just not from inside Instagram or Bluesky.</p>
   <p><b>Android:</b> the browser menu, then “Install” or “Add to Home screen”. Chrome, Firefox, Samsung Internet, all the others too.</p>
 </section>
@@ -110,6 +120,7 @@
   <li><b>Dad or mum.</b> Set once. As a dad, the map colours tables by whether you can get to them; as a mum, every table counts.</li>
   <li><b>Grey pin? Two taps.</b> “Which room is the table in?” Your answer goes straight to OpenStreetMap, under your own account there.</li>
   <li><b>Add a table where you stand.</b> A missing changing table is in within a minute, for everyone who comes after you.</li>
+  <li><b>iPhone app only:</b> save a city offline, Hamburg is 27 MB, and the map underneath works without a signal too. Siri, a widget and a Control Center control show the nearest table without opening the app.</li>
 </ul>
 <p>Free, like the map. The data stays OpenStreetMap; the app has none of its own and collects none.</p>
 <p class="foot">Questions, ideas, a table that is missing? <a href="methods-en.html#contribute">Editing, step by step</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="https://jakubwaller.eu" rel="author">Made with ♥ in Hamburg by Jakub Waller</a></p>
