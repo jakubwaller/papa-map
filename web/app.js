@@ -12,13 +12,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app51";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app52";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app51";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app52";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app51";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app52";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -26,7 +26,7 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app51";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app52";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -34,22 +34,22 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
-         onBrowserFinished, SITE } from "./native.js?v=app51";
+         onBrowserFinished, SITE } from "./native.js?v=app52";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app51";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app52";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app51";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app52";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app51";
+import { isOpenNow } from "./opening-hours.js?v=app52";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -58,9 +58,11 @@ import { isOpenNow } from "./opening-hours.js?v=app51";
 // navigator.languages, not navigator.language: it is the full ordered
 // preference list, so a reader whose first choice we don't speak still gets
 // their second rather than falling straight to German.
+// A crawler is handed the address's language only (i18n.js, isCrawler).
+const crawler = isCrawler(navigator.userAgent);
 let lang = pickLang(new URLSearchParams(location.search).get("lang"),
-                    localStorage.getItem("papamap-lang"),
-                    navigator.languages ?? navigator.language);
+                    crawler ? null : localStorage.getItem("papamap-lang"),
+                    crawler ? null : navigator.languages ?? navigator.language);
 const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 
 // Which OSM this page writes to: the live API on papamap.de, the sandbox
@@ -101,7 +103,7 @@ function applyHeadTags() {
   const desc = document.querySelector('meta[name="description"]');
   if (desc) desc.content = t("metaDescription");
   const canonical = document.querySelector('link[rel="canonical"]');
-  if (canonical) canonical.href = langUrl(lang);
+  if (canonical) canonical.href = canonicalUrl(new URLSearchParams(location.search).get("lang"));
 }
 
 // Swap every static string in index.html: data-i18n = textContent,
