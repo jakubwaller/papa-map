@@ -163,17 +163,19 @@ cambia por eso solo cómo se leen esas mismas tres respuestas, nunca las respues
   <li><strong>Papá</strong> (por defecto): verde, rojo y gris, como se describe arriba.</li>
   <li><strong>Mamá</strong>: Verde significa ahora ambas cosas &mdash; la sala de acceso libre
       <em>y</em> el baño de mujeres. Naranja significa &ldquo;Sala no registrada&rdquo;, es decir,
-      casi siempre utilizable.</li>
+      casi siempre utilizable. El rojo solo aparece para un cambiador registrado únicamente en el
+      baño de hombres.</li>
 </ul>
 <p>Lo que el interruptor no hace: no cambia ninguna etiqueta, no escribe nada en OSM y no calcula
-ninguna clasificación nueva. Es una segunda forma de leer los mismos tres valores, guardada solo
-en tu navegador bajo <code>papamap-mode</code>. Los números de los chips son los mismos en ambos
-modos.</p>
-<p>Hay una excepción aquí, porque en el modo mamá parece verde sin serlo del todo: un cambiador
-que, según <code>changing_table:location</code>, está solo en el baño de hombres
-(<code>male_toilet</code> a solas), cuenta entre los verdes. Es poco frecuente, pero pasa. Por eso
-el texto del pin dice &ldquo;en raras ocasiones, solo en el baño de hombres&rdquo; y la cifra de
-arriba dice &ldquo;probablemente&rdquo;.</p>
+ninguna clasificación propia. Lee los mismos tres valores, más la marca descrita más abajo, y se
+guarda solo en tu navegador bajo <code>papamap-mode</code>. Los chips siguen los colores: en modo
+mamá, los cambiadores registrados únicamente en el baño de hombres reciben su propio chip rojo,
+así que el número del chip verde es menor que en modo papá exactamente por esos.</p>
+<p>Hay un caso que los tres colores solos no pueden llevar: un cambiador que, según
+<code>changing_table:location</code>, está solo en el baño de hombres (<code>male_toilet</code>
+a solas), es accesible para un papá pero no para una mamá. El pipeline marca estos cambiadores
+por separado, así que en modo mamá aparecen en rojo y no cuentan en la cifra de arriba. Versiones
+más antiguas de la app aún pueden mostrarlos en verde hasta que se actualicen.</p>
 
 <h2>El anillo azul: zona de juegos</h2>
 <p>Un pin con anillo azul tiene además una zona de juegos &mdash; un sitio donde no solo cambias al

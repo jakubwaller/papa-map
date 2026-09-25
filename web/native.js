@@ -216,6 +216,19 @@ function backgroundRefresh(io, url, oldText, path, fresh, drawnFrom, { gate = nu
   })().catch(() => ({ ok: false, json: null }));   // belt and braces: see loadJSONNative's own note on a throw from io.download
 }
 
+// Filesystem.downloadFile, with the folder made first. `recursive: true` is
+// honoured on iOS only: Android's downloader (LegacyFilesystemImplementation,
+// @capacitor/filesystem 8.1) opens a FileOutputStream on the path as it is, so
+// on a fresh install every dataset download failed with ENOENT for
+// papamap/data/ — and the Android app drew no pins at all (Honor 9,
+// 2026-09-25). mkdir fails when the folder is already there, which is the
+// usual case and fine; a real failure surfaces from the download itself.
+export async function downloadInto(fs, opts) {
+  const cut = opts.path.lastIndexOf("/");
+  if (cut > 0) await fs.mkdir({ path: opts.path.slice(0, cut), directory: opts.directory, recursive: true }).catch(() => {});
+  return fs.downloadFile(opts);
+}
+
 function nativeIO(fs = plugin("Filesystem")) {
   const local = async (path, as) => {
     const { uri } = await fs.getUri({ path, directory: DIR });
@@ -227,8 +240,8 @@ function nativeIO(fs = plugin("Filesystem")) {
     // The same bound said again where the OS can act on it: the page stops
     // waiting either way, and these keep the abandoned task from holding the
     // connection — a fetch left queued is one the next launch waits behind.
-    download: (url, path) => fs.downloadFile({ url, path, directory: DIR, recursive: true,
-                                               connectTimeout: NET_MS, readTimeout: NET_MS }),
+    download: (url, path) => downloadInto(fs, { url, path, directory: DIR, recursive: true,
+                                                connectTimeout: NET_MS, readTimeout: NET_MS }),
     // Parsed, for the paths that need the object itself.
     read: (path) => local(path, "json"),
     // Raw, for the one path that only needs to know whether two files say the
@@ -245,7 +258,7 @@ function nativeIO(fs = plugin("Filesystem")) {
     },
     remove: (path) => fs.deleteFile({ path, directory: DIR }).catch(() => {}),
     get: async (url) => {
-      const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(NET_MS) });
+      const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout?.(NET_MS) });   // ?.: Chrome 103+, and an Android WebView can be older
       if (!r.ok) throw new Error(String(r.status));
       return r.json();
     },
@@ -827,16 +840,18 @@ export function onBrowserFinished(onReturn) {
 
 // ---- The widget, and on iOS the Siri shortcut ----
 // A compact copy of the dataset for the native side: one row per table, five
-// decimals (about a metre), status, name, OSM URL. Written on every load;
-// the widget re-reads it (the App Group container on iOS, the app's own files
-// on Android — PapaMapSharePlugin, one per platform, same name and methods)
-// and recomputes the nearest table with the phone's own location, which
-// never comes here.
+// decimals (about a metre), status, name, OSM URL, and (v50, appended so an
+// older widget reading the first five still parses the row) men_only. Written
+// on every load; the widget re-reads it (the App Group container on iOS, the
+// app's own files on Android — PapaMapSharePlugin, one per platform, same
+// name and methods) and recomputes the nearest table with the phone's own
+// location, which never comes here.
 export function shareDataset(features) {
   const p = plugin("PapaMapShare");
   if (!p) return;
   const rows = features.map((f) => [
     +f.lat.toFixed(5), +f.lon.toFixed(5), f.status, f.name || "", f.osm_url || "",
+    f.men_only === true,
   ]);
   p.writeDataset({ json: JSON.stringify(rows) }).catch(() => {});
 }
@@ -883,8 +898,8 @@ export async function downloadCity(city, onProgress = () => {}) {
       onProgress(Math.min(1, p.bytes / p.contentLength));
   });
   try {
-    await fs.downloadFile({ url: `${SITE}tiles/${city.slug}.pmtiles`, path, directory: DIR,
-                            recursive: true, progress: true });
+    await downloadInto(fs, { url: `${SITE}tiles/${city.slug}.pmtiles`, path, directory: DIR,
+                             recursive: true, progress: true });
   } finally {
     handle.remove();
   }

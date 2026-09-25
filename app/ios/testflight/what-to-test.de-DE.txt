@@ -5,4 +5,5 @@
 – Eine Stadt offline laden, Flugmodus an, Karte öffnen.
 – Optional mit OpenStreetMap-Konto: bei einem grauen Ort die Raum-Frage beantworten.
 – Neu: Beantwortest du bei einem grauen Ort die Raum-Frage, wechselt er sofort die Farbe; in MapComplete hinzugefügte Orte erscheinen nach wenigen Minuten.
+– Neu in der Mama-Ansicht: Ein Wickeltisch nur im Herren-WC ist jetzt rot und hat einen eigenen Chip „Nur Herren-WC“. Stimmt das bei Orten, die du kennst?
 Alles, was unklar ist oder hakt: Screenshot machen und über TestFlight schicken.

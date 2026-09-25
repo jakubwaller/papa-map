@@ -15,6 +15,8 @@ def test_local_stats_counts_every_bucket(load_fixture):
         "ct_yes": 6, "ct_no": 1, "ct_limited": 1,
         "yes_location_known": 5, "yes_location_unknown": 1,
         "accessible": 3, "female_only": 2, "unknown": 2,
+        # node 1, male_toilet alone — inside `accessible`, not beside it (v50)
+        "men_only": 1,
         "centralkey_locked": 0,
         # One fixture pin carries kids_area=yes; no play half was passed in,
         # which is the single-argument caller's honest zero.

@@ -166,17 +166,20 @@ canvia la manera com es llegeixen les mateixes tres respostes, mai les respostes
       amunt.</li>
   <li><strong>Mare</strong>: el verd ara vol dir totes dues coses — la sala d'accés obert
       <em>i</em> el lavabo de dones. El taronja vol dir &ldquo;Sala no registrada&rdquo;, és a
-      dir, normalment utilitzable.</li>
+      dir, normalment utilitzable. El vermell només apareix per a un canviador registrat
+      exclusivament al lavabo d'homes.</li>
 </ul>
 <p>Què no fa el commutador: no canvia cap etiqueta, no escriu res a OSM, i no calcula cap
-classificació nova. És una segona lectura dels mateixos tres valors, desada només al teu
-navegador sota <code>papamap-mode</code>. Els números als filtres són els mateixos en tots dos
-modes.</p>
-<p>Hi ha una excepció aquí, perquè en el mode mare sembla verd i no ho és del tot: un canviador
+classificació pròpia. Llegeix els mateixos tres valors, més la marca descrita més avall, i es
+desa només al teu navegador sota <code>papamap-mode</code>. Els filtres segueixen els colors: en
+mode mare, els canviadors registrats només al lavabo d'homes obtenen el seu propi filtre vermell,
+per això el número del filtre verd és més petit que en mode pare, exactament per aquests.</p>
+<p>Hi ha un cas que els tres colors sols no poden portar: un canviador
 que, segons <code>changing_table:location</code>, només és al lavabo d'homes
-(<code>male_toilet</code> tot sol), es compta entre els verds. És rar, però passa. Per això el
-text al pin diu &ldquo;en casos rars, només al lavabo d'homes&rdquo;, i el número de dalt diu
-&ldquo;probablement&rdquo;.</p>
+(<code>male_toilet</code> tot sol), és accessible per a un pare però no per a una mare. El
+pipeline marca aquests canviadors per separat, per això en mode mare són vermells i no compten en
+el número de dalt. Versions més antigues de l'aplicació poden encara mostrar-los en verd fins que
+s'actualitzin.</p>
 
 <h2>L'anell blau: racó de jocs</h2>
 <p>Un pin amb un anell blau també té un racó de jocs &mdash; un lloc on no només canvies el nadó,

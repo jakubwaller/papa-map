@@ -44,9 +44,10 @@
 
   <!-- One URL serves all thirty-two languages (?lang= is honoured on load), so each
        language needs its own address before a search engine can index it —
-       until 2026-08-04 Google only ever saw the German view. app.js rewrites
-       the canonical below to match the language it renders, otherwise the
-       ?lang= views advertised here would all fold back into the German one.
+       until 2026-08-04 Google only ever saw the German view. app.js sets
+       the canonical below to the address's own ?lang= (never the language it
+       drew from the browser), otherwise the ?lang= views advertised here fold
+       back into the German one — or / folds into ?lang=en for Googlebot.
        Absolute URLs: relative hreflang hrefs are ignored.
        Keep in sync with i18n.js's LANGS and with sitemap.xml. -->
   <link rel="canonical" href="https://papamap.de/" />
@@ -190,14 +191,14 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app51" />
+  <link rel="stylesheet" href="style.css?v=app53" />
 
   <!-- Classic and blocking, in the head on purpose: it puts the .in-app class
        on <html> before the first paint when the store app opened this page in
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app51"></script>
+  <script src="in-app.js?v=app53"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -461,6 +462,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app51"></script>
+  <script type="module" src="app.js?v=app53"></script>
 </body>
 </html>

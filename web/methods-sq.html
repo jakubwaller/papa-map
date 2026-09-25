@@ -164,17 +164,19 @@ si lexohen të njëjtat tri përgjigje, kurrë vetë përgjigjet.</p>
   <li><strong>Baba</strong> (parazgjedhje): e gjelbër, e kuqe dhe gri, si më sipër.</li>
   <li><strong>Nënë</strong>: E gjelbërta tani do të thotë të dyja — dhoma e hapur <em>dhe</em>
       tualeti i grave. Portokalli do të thotë «Dhomë e paregjistruar», pra zakonisht e
-      përdorshme.</li>
+      përdorshme. E kuqja shfaqet vetëm për një tavolinë të regjistruar vetëm te tualeti i
+      burrave.</li>
 </ul>
 <p>Çfarë nuk bën ndërruesi: nuk ndryshon asnjë etiketë, nuk shkruan asgjë në OSM, dhe nuk llogarit
-asnjë klasifikim të ri. Është një lexim i dytë i të njëjtave tri vlera, i ruajtur vetëm në
-shfletuesin tënd me çelësin <code>papamap-mode</code>. Numrat në filtra janë të njëjtë në të dy
-leximet.</p>
-<p>Këtu qëndron një përjashtim, sepse në modin Nënë duket e gjelbër, dhe nuk është plotësisht
-kështu: një tavolinë, e cila sipas <code>changing_table:location</code> ndodhet vetëm te tualeti
-i burrave (<code>male_toilet</code> vetëm), llogaritet tek të gjelbërat. Kjo është e rrallë, por
-ndodh. Prandaj teksti te shenjuesi thotë «në raste të rralla, vetëm te tualeti i burrave», dhe
-numri më sipër thotë «me shumë gjasa».</p>
+asnjë klasifikim të vetin. Lexon të njëjtat tri vlera, plus shenjën e përshkruar më poshtë, dhe
+ruhet vetëm në shfletuesin tënd me çelësin <code>papamap-mode</code>. Filtrat ndjekin ngjyrat: në
+modin Nënë, tavolinat e regjistruara vetëm te tualeti i burrave marrin filtrin e tyre të kuq, kështu
+që numri te filtri i gjelbër është më i vogël se në modin Baba, saktësisht me aq sa ato.</p>
+<p>Një rast që tri ngjyrat vetë nuk mund ta bartin: një tavolinë, e cila sipas
+<code>changing_table:location</code> ndodhet vetëm te tualeti i burrave (<code>male_toilet</code>
+vetëm), është e arritshme për një baba, por jo për një nënë. Pipeline-i i shënon këto tavolina
+veçmas, prandaj në modin Nënë ato janë të kuqe dhe nuk llogariten në numrin më sipër. Versionet më
+të vjetra të aplikacionit mund t'i shfaqin ende të gjelbra, derisa të përditësohen.</p>
 
 <h2>Rrethi blu: hapësirë lojërash</h2>
 <p>Një shenjues me rreth blu ka gjithashtu edhe një hapësirë lojërash &mdash; një vend ku nuk

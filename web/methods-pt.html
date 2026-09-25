@@ -166,16 +166,19 @@ apenas a forma de ler as mesmas três respostas, nunca as respostas em si.</p>
   <li><strong>Pai</strong> (por defeito): verde, vermelho e cinzento, como descrito acima.</li>
   <li><strong>Mãe</strong>: o verde passa a significar as duas coisas — a sala abertamente
       acessível <em>e</em> a casa de banho feminina. O laranja significa «sala não registada»,
-      ou seja, normalmente utilizável.</li>
+      ou seja, normalmente utilizável. O vermelho só aparece para um fraldário registado
+      exclusivamente na casa de banho masculina.</li>
 </ul>
 <p>O que o seletor não faz: não altera nenhuma tag, não escreve nada no OSM, e não calcula
-nenhuma classificação nova. É apenas uma segunda leitura dos mesmos três valores, guardada só
-no teu navegador, sob <code>papamap-mode</code>. Os números nos chips são os mesmos nos dois
-modos.</p>
-<p>Fica aqui uma exceção, porque no modo mãe parece verde, sem ser bem assim: um fraldário que,
-segundo <code>changing_table:location</code>, está só na casa de banho masculina (só
-<code>male_toilet</code>), conta como verde. É raro, mas acontece. Por isso o texto do pin diz
-«em casos raros, só na casa de banho masculina», e o número acima diz «provavelmente».</p>
+nenhuma classificação própria. Lê os mesmos três valores, mais a marca descrita abaixo, e é
+guardado só no teu navegador, sob <code>papamap-mode</code>. Os chips seguem as cores: no modo
+mãe, os fraldários registados exclusivamente na casa de banho masculina recebem o seu próprio
+chip vermelho, por isso o número do chip verde é menor do que no modo pai, exatamente por esses.</p>
+<p>Há um caso que as três cores sozinhas não conseguem carregar: um fraldário que, segundo
+<code>changing_table:location</code>, está só na casa de banho masculina (só
+<code>male_toilet</code>), é acessível a um pai mas não a uma mãe. O pipeline marca estes
+fraldários à parte, por isso no modo mãe são vermelhos e não contam para o número acima. Versões
+mais antigas da app podem ainda mostrá-los a verde, até serem atualizadas.</p>
 
 <h2>O anel azul: cantinho de brincar</h2>
 <p>Um pin com um anel azul também tem um cantinho de brincar &mdash; um local onde não te limitas a

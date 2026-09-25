@@ -1,5 +1,76 @@
 # papa-map — build contract (v0)
 
+> **v51 amendment (25 Sep 2026, the mum's fourth chip): no shape change.** v50
+> painted the men's-room-only tables red in the mother's reading but left them
+> under her green "openly accessible" chip, counted there, so a mum filtering
+> on green saw red pins and a chip number above the stats sentence's. The chips
+> now follow the reading's colours: `chipKeys(mode)` is papa's three statuses
+> and, for mama, `accessible`, `female_only`, `men_only`, `unknown`. `chipKey(f,
+> mode)` puts a table under `men_only` exactly when the reading is mama, its
+> status `accessible` and the pipeline's `men_only` flag true, and under its
+> status otherwise. `countsByStatus` and `filterByStatus` take the mode (papa
+> by default, so every existing caller and the papa chips are unchanged), and
+> `chipView` gives the fourth chip v50's `stMenOnlyMama` label and red.
+> **This retires v24's "identical counts in both readings"**: the green chip
+> of the mother's reading is smaller by the men-only tables. v24's reason for
+> not collapsing the chips holds — her women's-room chip is still her own.
+> `men_only` is a chip key, never a status: `STATUSES` and the emitted shape
+> do not move. The chip is left out when no loaded table carries the flag (a
+> dataset from before v50), rather than showing a permanent 0. The chip state
+> is in memory only and starts with every chip of both readings on, so a
+> switch to mama never hides the new chip's pins. Nothing new is needed for
+> live edits: a reader's own answer already stores `men_only` (v50) and the
+> chips recount from the merged features. Shell pin `app50` → `app51`.
+>
+> **v50 amendment (25 Sep 2026, the men's room alone): shape change — three
+> additions, nothing removed.** v24's one disclosed simplification is retired:
+> a table whose `changing_table:location` names the men's room and no other
+> room was green in the mother's reading, although she cannot reach it (69
+> tables on the live build of 25 Sep 2026, about 2 % of `accessible`).
+>
+> 1. **Every table feature gains `men_only`** (bool), true exactly when
+>    `status` is `accessible` and `pipeline.classify.men_only` holds: once the
+>    tokens are split exactly as `classify` splits them, `male_toilet` is the
+>    only `ACCESSIBLE_TOKENS` entry and `female_toilet` is absent. So
+>    `male_toilet;wheelchair_toilet` is not men-only (the accessible cubicle
+>    is hers too), nor is `female_toilet;male_toilet`. **It is a modifier on
+>    `accessible`, never a fourth status:** `status` and its three values do
+>    not move, the papa reading ignores the field, and every count keyed on
+>    status (chips, pages, leaderboard, history, ops) is untouched. The delta
+>    follower builds features with `export.build_features`, so its upserts
+>    carry it too.
+> 2. **`stats.json`'s `local` gains `men_only`**, the count of those features
+>    — a subset of `local.accessible`, never added to it, so the three
+>    statuses still partition the tables. `momCounts` takes it off the
+>    mother's "good" number.
+> 3. **`stats.json` gains `answer_men_only`**, `{choice: bool}` over the same
+>    keys as `answer_status` (`room_choices.answer_men_only_table`; only
+>    `"male"` is true). The reader's own confirmed answer stores it in its
+>    override beside `status`, so answering "men's room" recolours red for a
+>    mother at once, and answering "both" over a men-only pin turns it green
+>    without waiting for the delta. An override stored before v50 has no
+>    `men_only`; `applyAnswerOverrides` then keeps the base feature's.
+>
+> The frontend still re-derives nothing from tags: `viewFor(status, mode,
+> menOnly)` returns a fourth row, `bad` / `stMenOnlyMama`, only for mama +
+> `accessible` + the pipeline's flag, and `viewOf(f, mode)` passes a loaded
+> table's flag through for every pin, popup, search dot, saved-place dot and
+> nearest-table search. The chips keep calling `viewFor` with a bare status
+> and keep filtering the literal one, with identical counts in both readings,
+> as v24 set out. `pinColorExpression("mama")` wraps the status `match` in a
+> `case` on `men_only`; papa's expression is the plain `match` it was.
+> `toFeatureCollection` emits `men_only` on each pin for that.
+>
+> **Backward compatible in both directions.** A pre-v50 dataset or
+> `stats.json` has no `men_only` / `answer_men_only`; `loadFeatures` reads
+> only a strict `true`, `momCounts` defaults it to 0, and the map is exactly
+> v49's. A store app built before v50 keeps its bundled JavaScript, ignores the
+> new field and keeps painting these tables green until it is updated — the
+> methods pages say so. The widget's compact rows (`native.js` →
+> `TableStore.swift`) gain `men_only` as a **sixth** column, after the five an
+> older widget reads by position (it guards on `count >= 5`), and the new
+> widget treats a five-column row as `false`. Shell pin `app49` → `app50`.
+>
 > **v49 amendment (23 Sep 2026, the delta survives the app's refresh): no shape change.**
 > `applyDataset` keeps the current delta while `isDeltaFresh(delta.base, stats.data_base)`
 > still holds, instead of dropping it on every dataset swap, and `watchRefresh` polls the

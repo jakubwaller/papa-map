@@ -196,7 +196,7 @@ def test_osmcha_second_query_failing_keeps_the_theme_count(monkeypatch):
 def test_osmcha_edits_groups_by_complete_day(monkeypatch):
     """The chart's series: one count per complete day the window covers —
     a day without a changeset is a 0, not a hole, and today (partial at
-    05:30) is left for tomorrow's window to report whole."""
+    07:30) is left for tomorrow's window to report whole."""
     monkeypatch.setenv("OSMCHA_TOKEN", "token")
     features = [{"properties": {"date": d}} for d in
                 ("2026-08-02T09:15:00Z", "2026-08-02T18:00:00Z",

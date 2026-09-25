@@ -27,6 +27,18 @@ public class TablesTest {
         assertEquals(WOMEN, Tables.nearest(53.5600, 9.9600, "mama", ALL).table);
     }
 
+    // CONTRACT v50: the men's room alone is green for papa, red for mama.
+    private static final Tables.Table MEN = new Tables.Table(53.5600, 9.9600, "accessible", "Men", "https://www.openstreetmap.org/node/4", true);
+
+    @Test
+    public void mamaSkipsTheMensRoomAloneAndPapaTakesIt() {
+        List<Tables.Table> tables = Arrays.asList(MEN, OPEN);
+        assertEquals(MEN, Tables.nearest(53.5600, 9.9600, "papa", tables).table);
+        assertEquals(OPEN, Tables.nearest(53.5600, 9.9600, "mama", tables).table);
+        assertEquals(0xFF009E73, MEN.color("papa"));
+        assertEquals(0xFFD55E00, MEN.color("mama"));
+    }
+
     @Test
     public void nothingUsableIsNull() {
         assertNull(Tables.nearest(53.56, 9.96, "papa", Arrays.asList(WOMEN, GREY)));

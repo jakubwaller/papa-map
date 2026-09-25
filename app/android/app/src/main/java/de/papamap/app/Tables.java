@@ -8,8 +8,9 @@ import java.util.Locale;
 // can hold it to the same answers. Classification stays in the pipeline:
 // `status` is read, never derived, and "usable" is datasource.js's
 // nearestUsable — a father needs an accessible room, a mother any recorded
-// room. The rows arrive already narrowed by the wheelchair chip (app.js,
-// shareTables), so the chip never has to be known here.
+// room that is not the men's alone (CONTRACT v50). The rows arrive already
+// narrowed by the wheelchair chip (app.js, shareTables), so the chip never
+// has to be known here.
 public final class Tables {
     private Tables() {}
 
@@ -18,17 +19,25 @@ public final class Tables {
         public final String status;   // accessible | female_only | unknown
         public final String name;
         public final String osmUrl;
+        // The men's room alone (CONTRACT v50): accessible to a father, not to a
+        // mother. The sixth column; a row written by an older app has five.
+        public final boolean menOnly;
 
         public Table(double lat, double lon, String status, String name, String osmUrl) {
+            this(lat, lon, status, name, osmUrl, false);
+        }
+
+        public Table(double lat, double lon, String status, String name, String osmUrl, boolean menOnly) {
             this.lat = lat;
             this.lon = lon;
             this.status = status;
             this.name = name;
             this.osmUrl = osmUrl;
+            this.menOnly = menOnly;
         }
 
         public boolean usable(String mode) {
-            return "mama".equals(mode) ? !"unknown".equals(status) : "accessible".equals(status);
+            return "mama".equals(mode) ? !"unknown".equals(status) && !menOnly : "accessible".equals(status);
         }
 
         // The pin's colour in the reader's reading, as the map paints it
@@ -36,7 +45,7 @@ public final class Tables {
         public int color(String mode) {
             boolean mama = "mama".equals(mode);
             switch (status) {
-                case "accessible": return 0xFF009E73;
+                case "accessible": return mama && menOnly ? 0xFFD55E00 : 0xFF009E73;
                 case "female_only": return mama ? 0xFF009E73 : 0xFFD55E00;
                 default: return mama ? 0xFFE69F00 : 0xFF3D4247;
             }

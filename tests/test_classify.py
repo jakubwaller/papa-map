@@ -1,6 +1,6 @@
 import pytest
 
-from pipeline.classify import (ACCESSIBLE_TOKENS, central_key, classify, play_state,
+from pipeline.classify import (ACCESSIBLE_TOKENS, central_key, classify, men_only, play_state,
                                tokens, wheelchair_state)
 
 
@@ -131,3 +131,26 @@ def test_a_playground_is_its_own_answer_so_the_popup_never_asks():
     assert play_state({"amenity": "cafe"}) is None
     # leisure=indoor_play was already True, by the tag and not by this rule.
     assert play_state({"leisure": "indoor_play"}) is True
+
+
+@pytest.mark.parametrize("location", ["male_toilet", " Male_Toilet ", "male_toilet;baby_room",
+                                      "male_toilet;male_toilet"])
+def test_mens_room_alone_is_men_only(location):
+    assert classify("yes", location) == "accessible"
+    assert men_only(location)
+
+
+@pytest.mark.parametrize("location", [
+    None, "", "female_toilet",                    # never accessible to begin with
+    "female_toilet;male_toilet",                  # both rooms: she has hers
+    "male_toilet;wheelchair_toilet",              # the accessible cubicle is open to her
+    "male_toilet;unisex_toilet", "unisex_toilet", "room",
+])
+def test_anything_else_is_not_men_only(location):
+    assert not men_only(location)
+
+
+def test_men_only_never_matches_female_toilet_by_substring():
+    # "female_toilet" contains "male_toilet" — the same trap classify guards.
+    assert not men_only("female_toilet")
+    assert not men_only("female_toilet;baby_room")

@@ -165,17 +165,21 @@ elles-mêmes.</p>
   <li><strong>Papa</strong> (par défaut) : vert, rouge et gris comme décrit plus haut.</li>
   <li><strong>Maman</strong> : Vert veut désormais dire les deux à la fois — la pièce librement
       accessible <em>et</em> les WC femmes. Orange signifie « pièce non renseignée », donc
-      généralement utilisable.</li>
+      généralement utilisable. Le rouge n'apparaît que pour une table recensée uniquement dans
+      les WC hommes.</li>
 </ul>
 <p>Ce que le sélecteur ne fait pas : il ne change aucun tag, il n'écrit rien sur OSM, et il ne
-calcule aucune nouvelle classification. C'est une seconde lecture des trois mêmes valeurs,
-enregistrée seulement dans ton navigateur sous <code>papamap-mode</code>. Les chiffres des filtres
-sont les mêmes dans les deux modes.</p>
-<p>Une exception est signalée ici parce qu'elle paraît verte en mode maman sans l'être vraiment :
-une table qui, selon <code>changing_table:location</code>, se trouve seulement dans les WC hommes
-(<code>male_toilet</code> seul), compte comme verte. C'est rare, mais cela arrive. C'est pourquoi le
-texte du marqueur dit « dans de rares cas, uniquement les WC hommes » et le chiffre ci-dessus dit
-« probablement ».</p>
+calcule aucune classification qui lui soit propre. Il lit les trois mêmes valeurs, plus le repère
+décrit plus bas, et c'est enregistré seulement dans ton navigateur sous <code>papamap-mode</code>.
+Les filtres suivent les couleurs : en mode maman, les tables recensées uniquement dans les WC
+hommes reçoivent leur propre filtre rouge, donc le chiffre du filtre vert est plus petit qu'en
+mode papa, exactement de ces tables-là.</p>
+<p>Un cas que les trois couleurs ne peuvent pas porter seules : une table qui, selon
+<code>changing_table:location</code>, se trouve seulement dans les WC hommes
+(<code>male_toilet</code> seul), est accessible à un papa mais pas à une maman. Le pipeline
+marque ces tables à part, donc en mode maman elles sont rouges et ne comptent pas dans le chiffre
+ci-dessus. D'anciennes versions de l'application peuvent encore les afficher en vert, en attendant
+d'être mises à jour.</p>
 
 <h2>L'anneau bleu : le coin jeux</h2>
 <p>Un marqueur avec un anneau bleu a en plus un coin jeux &mdash; un endroit où l'on ne fait pas que

@@ -264,7 +264,7 @@ def cf_visits(days=CF_HISTORY_DAYS, report_days=CF_REPORT_DAYS,
         groups = r.json()["data"]["viewer"]["zones"][0]["httpRequests1dGroups"]
         # by_day is the whole fetched window and feeds the private page's
         # history; the totals are the mail's week. Today is excluded from the
-        # totals — at 05:30 it is a fifth of a day and would drag the week
+        # totals — at 07:30 it is a third of a day and would drag the week
         # down — but kept out of by_day by merge_visits, not here.
         by_day = {g["dimensions"]["date"]: {
             "requests": g["sum"]["requests"],
@@ -530,7 +530,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
 
 def merge_visits(kept: dict, visits: dict | None, now: datetime) -> dict:
     """The per-day visit history, updated with what today's fetch returned.
-    Today is left out — at 05:30 it is a fifth of a day — and every earlier
+    Today is left out — at 07:30 it is a third of a day — and every earlier
     day in the answer overwrites the stored one, so a partial figure stored
     by a run that happened late in the day heals on the next. Capped, and
     returned sorted by date so the page can draw it as it is."""

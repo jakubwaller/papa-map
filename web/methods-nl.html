@@ -166,17 +166,20 @@ dezelfde drie antwoorden worden gelezen, nooit de antwoorden zelf.</p>
   <li><strong>Papa</strong> (standaard): groen, rood en grijs zoals hierboven beschreven.</li>
   <li><strong>Mama</strong>: Groen betekent nu allebei — de vrij toegankelijke ruimte <em>en</em>
       het damestoilet. Oranje staat voor &ldquo;ruimte niet vastgelegd&rdquo;, dus meestal
-      bruikbaar.</li>
+      bruikbaar. Rood verschijnt alleen voor een tafel die uitsluitend op het herentoilet is
+      vastgelegd.</li>
 </ul>
 <p>Wat de schakelaar niet doet: hij verandert geen tag, hij schrijft niets naar OSM, en hij berekent
-geen nieuwe classificatie. Het is een tweede manier om dezelfde drie waarden te lezen, opgeslagen
-alleen in je browser onder <code>papamap-mode</code>. De getallen in de chips zijn in beide modi
-hetzelfde.</p>
-<p>Eén uitzondering staat hier, omdat hij in mama-modus groen lijkt zonder dat helemaal te zijn: een
-tafel die volgens <code>changing_table:location</code> alleen op het herentoilet staat
-(<code>male_toilet</code> alleen), telt mee als groen. Dat is zeldzaam, maar het komt voor. Daarom
-staat er bij de pin &ldquo;in zeldzame gevallen alleen het herentoilet&rdquo; en zegt het getal
-hierboven &ldquo;waarschijnlijk&rdquo;.</p>
+geen eigen classificatie. Hij leest dezelfde drie waarden, plus het ene kenmerk dat hieronder
+wordt beschreven, en dat wordt alleen in je browser opgeslagen onder <code>papamap-mode</code>. De
+chips volgen de kleuren: in mama-modus krijgen de tafels die uitsluitend op het herentoilet zijn
+vastgelegd hun eigen rode chip, dus het getal op de groene chip is kleiner dan in papa-modus, precies
+met die tafels.</p>
+<p>Eén geval kunnen de drie kleuren niet alleen dragen: een tafel die volgens
+<code>changing_table:location</code> alleen op het herentoilet staat (<code>male_toilet</code>
+alleen), is bereikbaar voor een papa maar niet voor een mama. De pipeline markeert deze tafels
+apart, dus in mama-modus zijn ze rood en tellen ze niet mee in het getal hierboven. Oudere versies
+van de app kunnen ze nog groen tonen totdat ze zijn bijgewerkt.</p>
 
 <h2>De blauwe ring: speelhoek</h2>
 <p>Een pin met een blauwe ring heeft ook een speelhoek &mdash; een plek waar je niet alleen

@@ -45,7 +45,8 @@ public final class TableStore {
     // synchronized: every writeDataset call runs on a thread of its own, and two
     // that overlap (boot's applyDataset and watchRefresh's, or two quick taps on
     // the wheelchair chip) would otherwise interleave their bytes in the one
-    // .new file. Serialized, the last write is the one that stays.
+    // .new file. Serialized, each write lands whole — though a monitor is not
+    // fair, so two calls started within microseconds may land in either order.
     public static synchronized void save(Context c, String json) throws IOException {
         File dir = c.getFilesDir();
         File tmp = new File(dir, DATASET_FILE + ".new");
@@ -67,7 +68,7 @@ public final class TableStore {
                 JSONArray r = rows.optJSONArray(i);
                 if (r == null || r.length() < 5) continue;
                 out.add(new Tables.Table(r.getDouble(0), r.getDouble(1), r.getString(2),
-                        r.optString(3, ""), r.optString(4, "")));
+                        r.optString(3, ""), r.optString(4, ""), r.optBoolean(5, false)));
             }
             return out;
         } catch (Exception e) {

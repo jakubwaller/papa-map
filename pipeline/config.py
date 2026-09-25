@@ -879,7 +879,33 @@ def display_area() -> tuple[str, str | None]:
 # instance, which flaps 504/200 within seconds when busy (2026-08-15: one
 # Land missed three rounds in a row). Rounds only re-query the failures, so
 # a healthy night still costs nothing extra.
-SWEEP_ROUNDS = int(os.environ.get("PAPAMAP_SWEEP_ROUNDS", "6"))
+#
+# The rounds are bounded by time, not by count (2026-09-25). A count
+# let the stale mirrors burn the rounds: each came back from its 30 min stale
+# rest alone, answered one query with months-old data, was rested again,
+# and the round failed as "every host resting". Four of six rounds went to that
+# while gall sat out a 60 min rest, and the build died at 04:10 with about 45 min of
+# actual waiting. The breaker already keeps an unbounded number of rounds cheap
+# (a round against resting hosts sends nothing), so the limit is wall clock:
+# no new round starts once it would begin more than SWEEP_DEADLINE_S after the
+# sweep started. 4.5 h from the 02:00 cron puts the last round's start at
+# 06:30, and the ops cron moved from 05:30 to 07:30. The limit is on when a
+# round starts, not when it ends: a round that starts at 06:29 with most areas still
+# to do takes about as long as a normal night (~105 min). The 07:30 mail then
+# honestly says "not finished" about a build that succeeds later, which beats
+# cutting off a round that is working. PAPAMAP_SWEEP_ROUNDS stays as an
+# optional hard cap (unset = none) for tests and one-off runs.
+SWEEP_DEADLINE_S = float(os.environ.get("PAPAMAP_SWEEP_DEADLINE_S", str(4.5 * 3600)))
+SWEEP_ROUNDS = (int(os.environ["PAPAMAP_SWEEP_ROUNDS"])
+                if os.environ.get("PAPAMAP_SWEEP_ROUNDS") else None)
+# The old six rounds survive in two places where waiting for the deadline
+# buys nothing: leaderboard cities left over once every sweep area is in (the
+# map is not held back for them), and an area or city that failed six times with
+# an error a later round cannot fix (osm.is_transient: a 400, a pipeline bug).
+# One such area dooms the build, so the sweep stops right away rather than
+# retrying it every 120 s until 06:30. An area that resolves to zero objects is
+# NOT one of those: a mirror without an area database answers that way.
+SWEEP_FIXED_ROUNDS = 6
 SWEEP_PAUSE_S = float(os.environ.get("PAPAMAP_SWEEP_PAUSE_S", "120"))
 
 # The query budget stays under the observed 60 s cutoff so the server answers
