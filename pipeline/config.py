@@ -901,9 +901,10 @@ SWEEP_ROUNDS = (int(os.environ["PAPAMAP_SWEEP_ROUNDS"])
 # The old six rounds survive in two places where waiting for the deadline
 # buys nothing: leaderboard cities left over once every sweep area is in (the
 # map is not held back for them), and an area or city that failed six times with
-# an error a later round cannot fix (osm.is_transient: a 400, an area that
-# resolves to zero objects). One such area dooms the build, so the sweep stops
-# right away rather than retrying it every 120 s until 06:30.
+# an error a later round cannot fix (osm.is_transient: a 400, a pipeline bug).
+# One such area dooms the build, so the sweep stops right away rather than
+# retrying it every 120 s until 06:30. An area that resolves to zero objects is
+# NOT one of those: a mirror without an area database answers that way.
 SWEEP_FIXED_ROUNDS = 6
 SWEEP_PAUSE_S = float(os.environ.get("PAPAMAP_SWEEP_PAUSE_S", "120"))
 

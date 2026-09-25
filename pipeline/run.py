@@ -113,7 +113,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     last_exc: Exception | None = None
     deadline = time.monotonic() + budget
     # Per area/city: failures a later round cannot fix (osm.is_transient).
-    hard_fails: dict[str, int] = {}
+    # Keyed by kind as well: Berlin and Hamburg are both an area and a city.
+    hard_fails: dict[tuple[str, str], int] = {}
     given_up_cities: list = []
     rnd = 0
     while True:
@@ -129,11 +130,11 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             # An area that keeps failing the same way dooms the build; stop
             # now instead of retrying it until the deadline. A city like it
             # is only dropped from today's leaderboard.
-            if any(hard_fails.get(name, 0) >= SWEEP_FIXED_ROUNDS
+            if any(hard_fails.get(("area", name), 0) >= SWEEP_FIXED_ROUNDS
                    for name, _ in remaining):
                 break
             hopeless = [c for c in remaining_cities
-                        if hard_fails.get(c[0], 0) >= SWEEP_FIXED_ROUNDS]
+                        if hard_fails.get(("city", c[0]), 0) >= SWEEP_FIXED_ROUNDS]
             if hopeless:
                 given_up_cities.extend(hopeless)
                 remaining_cities = [c for c in remaining_cities if c not in hopeless]
@@ -227,7 +228,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 print(f"  WARN {area_name}: {exc}", file=sys.stderr)
                 last_exc = exc
                 if not osm.is_transient(exc):
-                    hard_fails[area_name] = hard_fails.get(area_name, 0) + 1
+                    key = ("area", area_name)
+                    hard_fails[key] = hard_fails.get(key, 0) + 1
                 failed.append((area_name, admin_level))
                 continue
             # A retried area re-fetches both queries; dedup absorbs any
@@ -271,7 +273,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             except Exception as exc:
                 print(f"  WARN {display}: {exc}", file=sys.stderr)
                 if not osm.is_transient(exc):
-                    hard_fails[display] = hard_fails.get(display, 0) + 1
+                    key = ("city", display)
+                    hard_fails[key] = hard_fails.get(key, 0) + 1
                 failed_cities.append((display, area_name, admin_level))
                 continue
             city_ids[display] = {(el.get("type"), el.get("id"))
