@@ -64,6 +64,8 @@ has seen, and the run number only goes up. `versionName` stays `1.0` in
 - **Safe areas**: Capacitor 8 pads the WebView itself on WebViews older than
   140 and passes the insets through on newer ones, so `env(safe-area-inset-*)`
   in `style.css` is right either way.
-- **No widget, no Assistant shortcut** yet — the iOS ones are Swift.
+- **A home-screen widget and a launcher shortcut** (`NearestWidget`, `papamap://nearest`), the
+  Java twins of the iOS widget's rule (`Tables.java`, held to it by `TablesTest`). No Assistant
+  shortcut yet: Siri's is Swift.
 - `allowBackup="false"`: the dataset copy and saved cities are re-downloaded,
   never restored from someone else's backup.
