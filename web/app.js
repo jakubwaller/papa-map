@@ -12,13 +12,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app52";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app53";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app52";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app53";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app52";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app53";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -26,7 +26,7 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app52";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app53";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -34,22 +34,22 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
-         onBrowserFinished, SITE } from "./native.js?v=app52";
+         onBrowserFinished, onBackButton, SITE } from "./native.js?v=app53";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app52";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app53";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app52";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app53";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app52";
+import { isOpenNow } from "./opening-hours.js?v=app53";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -1777,6 +1777,15 @@ let lastFix = null;   // { lat, lon, at }
 
 function noteFix(lat, lon) {
   lastFix = { lat, lon, at: Date.now() };
+  redrawWidget();
+}
+
+// A fresh fix is the moment the widget can show a distance again: it reads
+// the phone's last known position itself (never this one, which stays in the
+// page), and that has just been renewed. setSettings is the plugin's redraw;
+// the settings it carries are unchanged.
+function redrawWidget() {
+  if (isNative()) shareSettings({ mode, lang });
 }
 
 function hideRoomCard() {
@@ -1860,6 +1869,20 @@ function onPopupClosed(closedPopup) {
   syncNearestBtn();
   if (suppressCardOnClose) { suppressCardOnClose = false; return; }
   queueMicrotask(evaluateRoomCard);
+}
+
+// Android's back key (onBackButton in native.js): one layer per press, top
+// first — a dialog, then the search list, then the popup, then the room card.
+// The popup goes the reader's own way (its "close" event, so the room card may
+// follow it), and the card by its ×, so a back press is remembered as the same
+// "not this one" a tap would be. False when nothing was open.
+function closeTopmost() {
+  const dialogs = document.querySelectorAll("dialog[open]");
+  if (dialogs.length) { dialogs[dialogs.length - 1].close(); return true; }
+  if (!searchList.hidden) { closeSearch(); return true; }
+  if (popup) { popup.remove(); return true; }
+  if (!roomCardEl.hidden) { document.getElementById("room-card-close").click(); return true; }
+  return false;
 }
 
 // Used where the popup is torn down as a side effect of something else
@@ -2704,6 +2727,15 @@ async function completeLogin(href) {
 // bookmark) flies nowhere and says so once, rather than doing nothing —
 // which the widget and the shortcut inherit for free, not only the share link.
 let pendingPin = null;
+// papamap://nearest (Android's widget and launcher shortcut, native.js): the
+// map's own "nearest" button, pressed for the reader — the same fix, the same
+// permission question, the same answer. Before the data is here it waits,
+// like a pin; nearestBtn would only say "no data yet".
+let pendingNearest = false;
+function runNearest() {
+  if (!dataReady) { pendingNearest = true; return; }
+  nearestBtn.click();
+}
 function openPin(osmUrl) {
   if (!osmUrl) return;
   if (!dataReady) { pendingPin = osmUrl; return; }
@@ -3005,6 +3037,7 @@ async function boot() {
     if (!coords) return;
     const at = [coords.longitude, coords.latitude];
     showYou(at);
+    redrawWidget();   // not noteFix (above); only the widget's redraw
     if (touchedBeforeFix || pinOpenedBeforeFix || popup?.isOpen()) return;
     const zoom = Math.max(map.getZoom(), 14);
     // Early: the map simply opens there, no motion to notice. Late: the
@@ -3017,6 +3050,7 @@ async function boot() {
   // an appUrlOpen already fired) or this load's own ?osm= — opens it now that
   // there is a dataset to look it up in. jumpTo overrides fitHome's view.
   if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
+  if (pendingNearest) { pendingNearest = false; runNearest(); }
   // A return from OSM's consent screen lands here with ?code= and ?state=.
   await completeLogin(location.href);
   if (isNative()) {
@@ -3069,7 +3103,8 @@ function bootNative() {
   about.hidden = false;
   positionZoomCtrl();   // applyI18n placed the column under the taller header a moment ago
   offlineBtn.hidden = false;
-  onAppUrl({ auth: (url) => completeLogin(url), table: openPin });
+  onAppUrl({ auth: (url) => completeLogin(url), table: openPin, nearest: runNearest });
+  onBackButton(closeTopmost);
   // The in-app Browser sheet (every OSM/MapComplete link, and MapComplete's
   // own OAuth screen) never hides this page, so visibilitychange alone would
   // never tell the app a reader came back from it (native.js's own comment).

@@ -862,6 +862,26 @@ test("a cold start asks for the launch URL, and only a table opens a pin", async
   assert.equal(opened.length, 1);
 });
 
+// Android's widget with no position to hand, and its launcher shortcut:
+// the page runs its own "nearest" button. Warm (appUrlOpen) and cold
+// (getLaunchUrl) alike, and never mistaken for a table.
+test("papamap://nearest runs the nearest search, warm or cold", async () => {
+  const opened = [];
+  let ran = 0;
+  const cold = fakeApp("papamap://nearest");
+  withApp(cold.plugin, () => onAppUrl({ auth: () => {}, table: (o) => opened.push(o), nearest: () => ran++ }));
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(ran, 1);
+  cold.open("papamap://nearest");
+  assert.deepEqual([ran, opened.length], [2, 0]);
+});
+
+test("a caller without a nearest callback survives the link", () => {
+  const app = fakeApp();
+  withApp(app.plugin, () => onAppUrl({ auth: () => {}, table: () => {} }));
+  app.open("papamap://nearest");
+});
+
 test("the OSM login's return leg is not mistaken for a table", () => {
   const app = fakeApp();
   const back = [], opened = [];
@@ -900,6 +920,31 @@ test("onBrowserFinished is a no-op outside Capacitor — no plugin, nothing thro
   globalThis.Capacitor = undefined;
   try { assert.doesNotThrow(() => onBrowserFinished(() => {})); }
   finally { globalThis.Capacitor = before; }
+});
+
+// ---- Android's back key ----
+import { onBackButton } from "./native.js";
+
+test("the back key closes what is open, and only with nothing open leaves the app", () => {
+  const listeners = {};
+  let minimized = 0;
+  const app = {
+    addListener: (event, fn) => { (listeners[event] ||= []).push(fn); },
+    minimizeApp: async () => { minimized++; },
+  };
+  const open = ["dialog", "popup"];
+  withApp(app, () => onBackButton(() => open.pop() !== undefined));
+  const press = () => { for (const fn of listeners.backButton ?? []) fn({ canGoBack: false }); };
+  press(); press();
+  assert.deepEqual([open.length, minimized], [0, 0]);
+  press();
+  assert.equal(minimized, 1);
+});
+
+test("the back key is left alone outside the app", () => {
+  const before = globalThis.Capacitor;
+  delete globalThis.Capacitor;
+  try { assert.doesNotThrow(() => onBackButton(() => false)); } finally { globalThis.Capacitor = before; }
 });
 
 // Android's downloadFile ignores `recursive` and needs the folder to exist.

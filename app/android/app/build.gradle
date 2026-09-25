@@ -7,7 +7,9 @@ android {
         applicationId "de.papamap.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        // The workflow's run number, as on iOS (github.run_number is shared by
+        // both jobs of a run, and only ever grows); 1 for a local build.
+        versionCode((System.getenv("VERSION_CODE") ?: "1") as int)
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -16,8 +18,27 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // The key comes from the environment, and only the `play` task in
+    // .github/workflows/app-build.yml sets it; without it a release build is
+    // simply unsigned. It is the UPLOAD key: Play App Signing holds the key
+    // phones see, so a lost upload key is a reset request to Google, not the end
+    // of the app. PKCS12, made with openssl (app/android/PLAY.md) — no
+    // JDK on the Mac is needed to make or renew it.
+    signingConfigs {
+        release {
+            def keystore = System.getenv("ANDROID_KEYSTORE")
+            if (keystore) {
+                storeFile file(keystore)
+                storeType "pkcs12"
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "upload"
+                keyPassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
+            if (System.getenv("ANDROID_KEYSTORE")) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

@@ -28,4 +28,4 @@ jobs:
         with:
           node-version: "22"
       - run: node --test web/*.test.js
-      - run: node --test app/*.test.mjs app/ios/*.test.mjs
+      - run: node --test app/*.test.mjs app/ios/*.test.mjs app/android/*.test.mjs

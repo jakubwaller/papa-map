@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="widget_title">Nächster Wickeltisch</string>
+    <string name="widget_description">Der nächste Wickeltisch, den du auch erreichst, mit Entfernung.</string>
+    <string name="shortcut_nearest_short">Wickeltisch</string>
+    <string name="shortcut_nearest_long">Nächster Wickeltisch</string>
+</resources>
