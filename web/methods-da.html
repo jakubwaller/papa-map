@@ -166,8 +166,10 @@ aldrig svarene selv.</p>
       brugbart. Rød vises kun for et bord, der udelukkende er registreret på herretoilettet.</li>
 </ul>
 <p>Det, kontakten ikke gør: den ændrer ikke noget tag, den skriver ingenting til OSM, og den
-beregner ingen ny klassifikation. Det er en anden læsning af de samme tre værdier, gemt kun i din
-browser under <code>papamap-mode</code>. Tallene i chipsene er de samme i begge tilstande.</p>
+beregner ingen egen klassifikation. Den læser de samme tre værdier, plus det ene mærke der er
+beskrevet nedenfor, og gemmes kun i din browser under <code>papamap-mode</code>. Chipsene følger
+farverne: i mor-tilstand får de borde, der udelukkende er registreret på herretoilettet, deres
+egen røde chip, så tallet på den grønne chip er mindre end i far-tilstand med præcis dem.</p>
 <p>Én ting kan de tre farver ikke bære alene: et bord, der ifølge
 <code>changing_table:location</code> kun står på herretoilettet (<code>male_toilet</code> alene),
 kan nås af en far, men ikke af en mor. Pipelinen markerer disse borde særskilt, så de i

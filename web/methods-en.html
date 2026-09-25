@@ -164,8 +164,10 @@ answers themselves.</p>
       appears only for a table recorded in the men's room alone.</li>
 </ul>
 <p>What the switch does not do: it doesn't change a tag, it writes nothing to OSM, and it computes
-no new classification. It's a second reading of the same three values, stored only in your browser
-under <code>papamap-mode</code>. The numbers on the chips are the same in both modes.</p>
+no classification of its own. It reads the same three values, plus the one mark described below,
+and it is stored only in your browser under <code>papamap-mode</code>. The chips follow the
+colours: in mum mode the tables in the men's room alone get their own red chip, so the green
+chip's number is smaller than in dad mode by exactly those.</p>
 <p>One case the three colours can't carry on their own: a table that, according to
 <code>changing_table:location</code>, stands only in the men's room (<code>male_toilet</code>
 alone) is reachable for a dad but not for a mum. The pipeline marks these tables separately, so in

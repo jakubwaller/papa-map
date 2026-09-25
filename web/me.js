@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app51";
-import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app51";
+import { CREATED_BY } from "./osm.js?v=app52";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app52";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);

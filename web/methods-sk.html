@@ -166,9 +166,11 @@ samotné.</p>
       dámske WC. Oranžová znamená &bdquo;Miestnosť nezaznamenaná&ldquo;, teda väčšinou
       použiteľná. Červená zostáva len pre pult zaznamenaný výlučne na pánskom WC.</li>
 </ul>
-<p>Čo prepínač nerobí: nemení žiadny tag, nič nezapisuje do OSM a nepočíta žiadnu novú
-klasifikáciu. Je to druhé čítanie tých istých troch hodnôt, uložené len v tvojom prehliadači pod
-kľúčom <code>papamap-mode</code>. Čísla vo filtroch sú v oboch režimoch rovnaké.</p>
+<p>Čo prepínač nerobí: nemení žiadny tag, nič nezapisuje do OSM a nepočíta žiadnu vlastnú
+klasifikáciu. Číta tie isté tri hodnoty, plus jedno označenie popísané nižšie, a ukladá sa len v
+tvojom prehliadači pod kľúčom <code>papamap-mode</code>. Filtre sa riadia farbami: v režime Mama
+dostanú pulty zaznamenané výlučne na pánskom WC vlastný červený filter, preto je číslo pri
+zelenom filtri menšie ako v režime Otec presne o ne.</p>
 <p>Jeden prípad tri farby samy neunesú: pult, ktorý je podľa <code>changing_table:location</code>
 len na pánskom WC (<code>male_toilet</code> samotné), je dostupný pre otca, ale nie pre mamu.
 Pipeline tieto pulty označuje osobitne, takže v režime Mama sú červené a nepočítajú sa do čísla

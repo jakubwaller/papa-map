@@ -166,8 +166,10 @@ place the pipeline had to help (CONTRACT v50): a table recorded in the men's
 room alone is `accessible` — a dad reaches it — but not a mum's, so the
 pipeline puts a `men_only` flag on it and the mother's reading paints it red,
 leaves it out of her count and skips it when looking for her nearest table.
-The flag is a modifier, not a fourth status, so nothing that counts statuses
-moved. The default stays `papa`:
+The flag is a modifier, not a fourth status, so nothing the pipeline counts
+moved. The mother's chips follow her colours (v51): she gets a fourth, red
+"men's room only" chip, and her green chip is smaller by exactly those tables.
+Her women's-room chip stays separate, so she can still ask for those alone. The default stays `papa`:
 it is the rendering every screenshot and every og: description describes, so a
 mother's map is a deliberate opt-in rather than a silent redefinition for
 everyone. Switching mode is one `setPaintProperty` on a layer whose source data

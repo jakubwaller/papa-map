@@ -169,9 +169,11 @@ elles-mêmes.</p>
       les WC hommes.</li>
 </ul>
 <p>Ce que le sélecteur ne fait pas : il ne change aucun tag, il n'écrit rien sur OSM, et il ne
-calcule aucune nouvelle classification. C'est une seconde lecture des trois mêmes valeurs,
-enregistrée seulement dans ton navigateur sous <code>papamap-mode</code>. Les chiffres des filtres
-sont les mêmes dans les deux modes.</p>
+calcule aucune classification qui lui soit propre. Il lit les trois mêmes valeurs, plus le repère
+décrit plus bas, et c'est enregistré seulement dans ton navigateur sous <code>papamap-mode</code>.
+Les filtres suivent les couleurs : en mode maman, les tables recensées uniquement dans les WC
+hommes reçoivent leur propre filtre rouge, donc le chiffre du filtre vert est plus petit qu'en
+mode papa, exactement de ces tables-là.</p>
 <p>Un cas que les trois couleurs ne peuvent pas porter seules : une table qui, selon
 <code>changing_table:location</code>, se trouve seulement dans les WC hommes
 (<code>male_toilet</code> seul), est accessible à un papa mais pas à une maman. Le pipeline
