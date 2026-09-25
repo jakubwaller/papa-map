@@ -42,7 +42,11 @@ public final class TableStore {
 
     // Written beside the old copy and renamed over it, so the widget never
     // reads half a file.
-    public static void save(Context c, String json) throws IOException {
+    // synchronized: every writeDataset call runs on a thread of its own, and two
+    // that overlap (boot's applyDataset and watchRefresh's, or two quick taps on
+    // the wheelchair chip) would otherwise interleave their bytes in the one
+    // .new file. Serialized, the last write is the one that stays.
+    public static synchronized void save(Context c, String json) throws IOException {
         File dir = c.getFilesDir();
         File tmp = new File(dir, DATASET_FILE + ".new");
         try (FileOutputStream out = new FileOutputStream(tmp)) {

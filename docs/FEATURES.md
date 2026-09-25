@@ -1028,8 +1028,11 @@ PapaMap does not ask for, and a fix older than half an hour counts as none. So "
 ordinary state there: the widget says "tap and PapaMap finds it", and the tap opens
 `papamap://nearest`, which runs the map's own "nearest" button — the same fix, the same permission
 question, the same answer. The launcher shortcut (long-press the icon, or drag it onto the home
-screen) is that same link and nothing else. Opening the app refreshes the widget, and while the
-app is on screen the last known position is usually fresh, so the distance comes back then.
+screen) is that same link and nothing else. The app redraws the widget whenever it gets a fix
+of its own (at launch, and on the locate and nearest buttons), since that is when the phone's
+last known position has just been renewed; the widget still only ever reads that position, so on
+a phone whose location service does not share the app's fix it can stay without a distance until
+its next half-hourly update.
 
 All of them end at the same deep link, `papamap://table?osm=…`, and only the widget's tap takes it
 through the OS. Siri's cannot: `OpenURLIntent` is the universal-link API, and handed the app's

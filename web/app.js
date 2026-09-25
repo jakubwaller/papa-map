@@ -1771,6 +1771,15 @@ let lastFix = null;   // { lat, lon, at }
 
 function noteFix(lat, lon) {
   lastFix = { lat, lon, at: Date.now() };
+  redrawWidget();
+}
+
+// A fresh fix is the moment the widget can show a distance again: it reads
+// the phone's last known position itself (never this one, which stays in the
+// page), and that has just been renewed. setSettings is the plugin's redraw;
+// the settings it carries are unchanged.
+function redrawWidget() {
+  if (isNative()) shareSettings({ mode, lang });
 }
 
 function hideRoomCard() {
@@ -3015,6 +3024,7 @@ async function boot() {
     if (!coords) return;
     const at = [coords.longitude, coords.latitude];
     showYou(at);
+    redrawWidget();   // not noteFix (above); only the widget's redraw
     if (touchedBeforeFix || pinOpenedBeforeFix || popup?.isOpen()) return;
     const zoom = Math.max(map.getZoom(), 14);
     // Early: the map simply opens there, no motion to notice. Late: the
