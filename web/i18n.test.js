@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { STRINGS, LANGS, NUMBER_LOCALE, pickLang, fmt,
+import { STRINGS, LANGS, NUMBER_LOCALE, pickLang, fmt, canonicalUrl, isCrawler,
          langUrl, DEFAULT_LANG } from "./i18n.js";
 
 const tokens = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
@@ -163,4 +163,27 @@ test("every language advertises its own generated leaderboard page", () => {
     assert.equal(STRINGS[lang].boardHref, built(lang),
       `${lang}.boardHref must be its own generated page`);
   }
+});
+
+test("canonicalUrl follows the address, not the language drawn", () => {
+  assert.equal(canonicalUrl(null), "https://papamap.de/");
+  assert.equal(canonicalUrl("de"), "https://papamap.de/");
+  assert.equal(canonicalUrl("en"), "https://papamap.de/?lang=en");
+  assert.equal(canonicalUrl("ja"), "https://papamap.de/?lang=ja");
+  assert.equal(canonicalUrl("xx"), "https://papamap.de/");
+});
+
+test("isCrawler: the search engines' renderers, and no real browser", () => {
+  for (const ua of [
+    "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.122 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.1938.76 Safari/537.36",
+    "Mozilla/5.0 (compatible; Google-InspectionTool/1.0;)",
+    "DuckDuckBot/1.1; (+http://duckduckgo.com/duckduckbot.html)",
+  ]) assert.ok(isCrawler(ua), ua);
+  for (const ua of [
+    "Mozilla/5.0 (Linux; Android 9; STF-L09) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    undefined,
+  ]) assert.ok(!isCrawler(ua), String(ua));
 });

@@ -78,6 +78,25 @@ export function langUrl(lang, base = "https://papamap.de/") {
   return lang === DEFAULT_LANG ? base : `${base}?lang=${lang}`;
 }
 
+// The canonical is the address's own language, never the one the page drew.
+// A reader whose browser speaks English sees English at the bare URL, and the
+// canonical there must still say the bare URL: pointing it at ?lang=en made
+// Googlebot (which reports en-US) read / as a duplicate of ?lang=en, fold the
+// German and English views into one entry, and drop it from English-language
+// results for "papamap" (2026-09-25).
+export function canonicalUrl(query) {
+  return langUrl(LANGS.includes(query) ? query : DEFAULT_LANG);
+}
+
+// A crawler gets what the address says and nothing else: German at the bare
+// URL, as index.html's hreflang declares it, whatever language its renderer
+// reports. Every reader with no preference of their own sees the same page.
+const CRAWLER = /bot\b|bot\/|crawl|spider|slurp|Google-InspectionTool/i;
+
+export function isCrawler(ua) {
+  return CRAWLER.test(String(ua ?? ""));
+}
+
 // Tiny {token} interpolation; unknown tokens stay literal so a missing var is
 // visible instead of silently vanishing.
 export function fmt(template, vars = {}) {
