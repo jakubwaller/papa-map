@@ -2516,6 +2516,10 @@ function applyMode() {
   }
   renderStats(lastStats);
   renderChips();
+  // The filter reads `mode` too since v51: a men_only table sits under the
+  // red chip in mama and the green one in papa, so a chip switched off in one
+  // reading hides a different set in the other. Re-filter, as ensureVisible does.
+  refreshPins();
   positionZoomCtrl();   // the sentence can wrap to a different height
   // After, not before: positionZoomCtrl can move the column popupPan avoids,
   // and renderStats can change the topbar height panPopupIntoView reads.
