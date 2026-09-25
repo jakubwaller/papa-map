@@ -113,16 +113,42 @@ export function loadPlaces(fc) {
   return out;
 }
 
-// Keep only features whose status is in `visible` (a Set or array of statuses).
-export function filterByStatus(features, visible) {
-  const set = visible instanceof Set ? visible : new Set(visible);
-  return features.filter((f) => set.has(f.status));
+// The chips a reading shows, in legend order (CONTRACT v51). Papa's are the
+// three statuses. Mama's add one for the tables the pipeline marked men_only,
+// which her reading paints red: without it they would sit under the green
+// "openly accessible" chip and be counted there. A chip key, not a status —
+// STATUSES and what the pipeline emits do not change.
+export const MEN_ONLY_CHIP = "men_only";
+export function chipKeys(mode) {
+  return mode === "mama"
+    ? ["accessible", "female_only", MEN_ONLY_CHIP, "unknown"]
+    : [...STATUSES];
 }
 
-// { accessible: n, female_only: n, unknown: n } — always all three keys.
-export function countsByStatus(features) {
-  const counts = Object.fromEntries(STATUSES.map((s) => [s, 0]));
-  for (const f of features) counts[f.status] += 1;
+// Which chip a loaded table falls under in a reading: its status, except a
+// men_only table in the mama reading. Reads the pipeline's flag, never a tag.
+export function chipKey(f, mode) {
+  return mode === "mama" && f.status === "accessible" && f.men_only === true
+    ? MEN_ONLY_CHIP : f.status;
+}
+
+// The chip's own colour and label: the men_only chip reads as the pin does.
+export function chipView(key, mode) {
+  return key === MEN_ONLY_CHIP ? viewFor("accessible", mode, true) : viewFor(key, mode);
+}
+
+// Keep only features whose chip is in `visible` (a Set or array of chip keys).
+// Without a mode this is the literal status, as it always was.
+export function filterByStatus(features, visible, mode = "papa") {
+  const set = visible instanceof Set ? visible : new Set(visible);
+  return features.filter((f) => set.has(chipKey(f, mode)));
+}
+
+// { accessible: n, female_only: n, unknown: n } — always every chip key of
+// the reading, so the UI renders zero badges; mama adds men_only.
+export function countsByStatus(features, mode = "papa") {
+  const counts = Object.fromEntries(chipKeys(mode).map((s) => [s, 0]));
+  for (const f of features) counts[chipKey(f, mode)] += 1;
   return counts;
 }
 
@@ -165,8 +191,9 @@ export function pinFeatures(features, wheelchairOnly = false) {
 // and never add — an untagged object is unrecorded, not known to lack a play
 // corner or a level entrance, so switching one on promises "these definitely
 // have it", not "the rest definitely don't".
-export function filterFeatures(features, visible, playOnly = false, wheelchairOnly = false) {
-  const byStatus = filterByStatus(pinFeatures(features, wheelchairOnly), visible);
+export function filterFeatures(features, visible, playOnly = false, wheelchairOnly = false,
+                               mode = "papa") {
+  const byStatus = filterByStatus(pinFeatures(features, wheelchairOnly), visible, mode);
   return playOnly ? byStatus.filter((f) => f.play) : byStatus;
 }
 

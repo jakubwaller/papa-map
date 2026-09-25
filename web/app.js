@@ -1,23 +1,24 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus, countPlay,
+         chipKeys, chipKey, chipView, MEN_ONLY_CHIP,
          countWheelchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, BUCKET_COLOR,
          pinColorExpression, viewOf, momCounts, nearestUsable, formatDistance, localAnswered,
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app50";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app51";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         langUrl } from "./i18n.js?v=app50";
+         langUrl } from "./i18n.js?v=app51";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app50";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app51";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -25,7 +26,7 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app50";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app51";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -33,22 +34,22 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
-         onBrowserFinished, SITE } from "./native.js?v=app50";
+         onBrowserFinished, SITE } from "./native.js?v=app51";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app50";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app51";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app50";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app51";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app50";
+import { isOpenNow } from "./opening-hours.js?v=app51";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -235,12 +236,9 @@ const svgIcon = (path, cls) =>
 // the wheelchair chip's ring stays one glyph.
 const STAR_PATH = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
 
-// The legend order. The label and the colour of each row are read from
-// viewFor(status, mode) rather than stored here: there are two readings and
-// only one of them may be baked into a constant.
-const STATUS_DEFS = [
-  { value: "accessible" }, { value: "female_only" }, { value: "unknown" },
-];
+// The legend order is chipKeys(mode) in datasource.js, and each chip's label
+// and colour come from chipView(key, mode) rather than a constant here: there
+// are two readings, and mama has one more chip (the men's room alone, v51).
 
 const OSM_STYLE = {
   version: 8,
@@ -364,7 +362,7 @@ let myFeatureGrid = null;   // buildFeatureGrid(allFeatures) — "Mein PapaMap"'
 // themselves are rebuilt.
 let featuresByOsmUrl = new Map();
 let placesByOsmUrl = new Map();
-let visible = new Set(STATUS_DEFS.map((d) => d.value));   // toggled-on statuses
+let visible = new Set(chipKeys("mama"));   // toggled-on chips, a superset of either reading
 let playOnly = false;                                     // narrow to play corners
 // narrow to wheelchair=yes (v26), remembered on the device
 let wheelchairOnly = (() => {
@@ -550,7 +548,7 @@ function addTableLayer() {
 
 function refreshPins() {
   if (!dataReady) return;
-  const shown = filterFeatures(allFeatures, visible, playOnly, wheelchairOnly);
+  const shown = filterFeatures(allFeatures, visible, playOnly, wheelchairOnly, mode);
   // The count stays a count of changing tables even with the prospects on —
   // they are not tables, and folding them in would inflate the one number the
   // whole map is about. They get their own clause instead. The total is the
@@ -1016,24 +1014,29 @@ function panPopupIntoView() {
 function renderChips() {
   // Over the same universe the map draws: with the wheelchair chip on, the
   // keyed tables it brings back count in their badge like any other pin.
-  const counts = countsByStatus(pinFeatures(allFeatures, wheelchairOnly));
+  const counts = countsByStatus(pinFeatures(allFeatures, wheelchairOnly), mode);
+  // A dataset from before v50 carries no men_only at all: no fourth chip then,
+  // rather than one that always reads 0.
+  const hasMenOnly = allFeatures.some((f) => f.men_only === true);
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
   const frag = document.createDocumentFragment();
-  for (const d of STATUS_DEFS) {
-    const v = viewFor(d.value, mode);
+  for (const key of chipKeys(mode)) {
+    if (key === MEN_ONLY_CHIP && !hasMenOnly) continue;
+    const v = chipView(key, mode);
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "chip" + (visible.has(d.value) ? "" : " off");
-    b.setAttribute("aria-pressed", String(visible.has(d.value)));
-    // The count is the same number in both readings: the chips filter the
-    // literal status, and a mother who wants only the women's-room tables
-    // (a room with a door, not a shared unisex one) can still ask for them.
+    b.className = "chip" + (visible.has(key) ? "" : " off");
+    b.setAttribute("aria-pressed", String(visible.has(key)));
+    // The chips follow the pin colours of the reading (v51): a mother gets a
+    // red chip for the men's room alone, and her green chips count only what
+    // she can use. The women's-room chip stays her own, so she can still ask
+    // for those tables alone (a room with a door, not a shared unisex one).
     b.innerHTML = `<span class="dot" style="background:${BUCKET_COLOR[v.bucket]}"></span>` +
-      `${esc(t(v.labelKey))} <span class="cnt">${counts[d.value]}</span>`;
+      `${esc(t(v.labelKey))} <span class="cnt">${counts[key]}</span>`;
     b.addEventListener("click", () => {
-      if (visible.has(d.value)) visible.delete(d.value); else visible.add(d.value);
-      b.classList.toggle("off", !visible.has(d.value));
-      b.setAttribute("aria-pressed", String(visible.has(d.value)));
+      if (visible.has(key)) visible.delete(key); else visible.add(key);
+      b.classList.toggle("off", !visible.has(key));
+      b.setAttribute("aria-pressed", String(visible.has(key)));
       refreshPins();
     });
     frag.appendChild(b);
@@ -1368,7 +1371,8 @@ async function openAtLocationFix() {
 // name a pin the "unknown" chip has since been switched off (CONTRACT.md v38).
 function ensureVisible(f) {
   let refilter = false;
-  if (!visible.has(f.status)) { visible.add(f.status); refilter = true; }
+  const key = chipKey(f, mode);
+  if (!visible.has(key)) { visible.add(key); refilter = true; }
   if (playOnly && !f.play) { playOnly = false; refilter = true; }
   if (refilter) { renderChips(); refreshPins(); }
 }
@@ -2512,6 +2516,10 @@ function applyMode() {
   }
   renderStats(lastStats);
   renderChips();
+  // The filter reads `mode` too since v51: a men_only table sits under the
+  // red chip in mama and the green one in papa, so a chip switched off in one
+  // reading hides a different set in the other. Re-filter, as ensureVisible does.
+  refreshPins();
   positionZoomCtrl();   // the sentence can wrap to a different height
   // After, not before: positionZoomCtrl can move the column popupPan avoids,
   // and renderStats can change the topbar height panPopupIntoView reads.
