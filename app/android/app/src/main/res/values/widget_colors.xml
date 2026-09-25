@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The iOS widget's card (#f2f5f3), and its dark twin in values-night. -->
+    <color name="widget_background">#FFF2F5F3</color>
+    <color name="widget_primary">#FF1B1F22</color>
+    <color name="widget_secondary">#FF5B6166</color>
+</resources>

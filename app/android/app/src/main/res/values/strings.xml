@@ -1,7 +1,15 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">PapaMap</string>
-    <string name="title_activity_main">PapaMap</string>
-    <string name="package_name">de.papamap.app</string>
-    <string name="custom_url_scheme">de.papamap.app</string>
+    <string name="app_name" translatable="false">PapaMap</string>
+    <string name="title_activity_main" translatable="false">PapaMap</string>
+    <string name="package_name" translatable="false">de.papamap.app</string>
+    <string name="custom_url_scheme" translatable="false">de.papamap.app</string>
+    <!-- The widget picker and the launcher shortcut follow the phone's
+         language (German here, English otherwise); the widget's own text
+         follows the map's, like on iOS (NearestWidget.Words). -->
+    <string name="widget_title">Nearest changing table</string>
+    <string name="widget_description">The nearest changing table you can actually reach, with the distance.</string>
+    <string name="widget_loading" translatable="false">…</string>
+    <string name="shortcut_nearest_short">Nearest table</string>
+    <string name="shortcut_nearest_long">Nearest changing table</string>
 </resources>

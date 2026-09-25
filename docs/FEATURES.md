@@ -1018,6 +1018,19 @@ layout, the build and the signing):
   shows no distance: Control Center is drawn from a process with no fresh fix, and a number
   quietly hours old is worse than none.
 
+**On Android** there is a home-screen widget and a launcher shortcut, and no Siri or Control
+Center. The widget is the iOS one's twin in Java (`NearestWidget`, over the same compact rows,
+written by a `PapaMapShare` plugin of the same name and methods, and the same rule in `Tables`,
+which a JUnit test holds to the map's), with one honest difference: it has no fix of its own to
+ask for. It reads the phone's last known position and drops it; on Android 10 and later an app
+that is not on screen may be handed none without the background location permission, which
+PapaMap does not ask for, and a fix older than half an hour counts as none. So "no position" is an
+ordinary state there: the widget says "tap and PapaMap finds it", and the tap opens
+`papamap://nearest`, which runs the map's own "nearest" button — the same fix, the same permission
+question, the same answer. The launcher shortcut (long-press the icon, or drag it onto the home
+screen) is that same link and nothing else. Opening the app refreshes the widget, and while the
+app is on screen the last known position is usually fresh, so the distance comes back then.
+
 All of them end at the same deep link, `papamap://table?osm=…`, and only the widget's tap takes it
 through the OS. Siri's cannot: `OpenURLIntent` is the universal-link API, and handed the app's
 own scheme iOS brings the app to the front and drops the URL — `application(_:open:)` never
