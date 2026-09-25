@@ -6,7 +6,7 @@ from pathlib import Path
 
 import requests
 
-from .classify import centralkey_locked, classify, has_play_area, tokens
+from .classify import centralkey_locked, classify, has_play_area, men_only, tokens
 from .config import TAGINFO_STATS_URL, TAGINFO_VALUES_URL, USER_AGENT
 from .osm import element_coords
 
@@ -36,7 +36,7 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
     downloading ~74k of them for two counters was about 12 MB of the nightly
     ~28 MB."""
     ct_yes = ct_no = ct_limited = yes_location_known = locked = play_tables = 0
-    play_places_no = 0
+    play_places_no = men_only_count = 0
     status_counts = {"accessible": 0, "female_only": 0, "unknown": 0}
     elements = ct_data.get("elements", [])
     for el in elements:
@@ -63,6 +63,8 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
         status = classify(value, location)
         if status:
             status_counts[status] += 1
+            if status == "accessible" and men_only(location):
+                men_only_count += 1  # a subset of accessible, never added to it
             if has_play_area(tags):
                 play_tables += 1  # counted over pins only, like the statuses
     toilets = toilets_counts or {}
@@ -75,6 +77,9 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
         "accessible": status_counts["accessible"],
         "female_only": status_counts["female_only"],
         "unknown": status_counts["unknown"],
+        # How many of `accessible` are in the men's room only (v50) — already
+        # inside that count, so the three statuses still partition the tables.
+        "men_only": men_only_count,
         "centralkey_locked": locked,
         # Two different things, kept apart: pins that also have a play corner,
         # and places with a play corner that are not pins at all because

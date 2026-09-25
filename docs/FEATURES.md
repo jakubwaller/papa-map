@@ -159,16 +159,23 @@ that one table:
 | `accessible`  | good — green             | good — green             |
 | `female_only` | bad — orange             | good — green             |
 | `unknown`     | ask — grey               | maybe — amber            |
+| `accessible` + `men_only` | good — green | bad — orange             |
 
-Nothing is re-derived from the raw tags in JavaScript, no pipeline field was
-added and `CONTRACT.md`'s emitted shape did not move. The default stays `papa`:
+Nothing is re-derived from the raw tags in JavaScript. The last row is the one
+place the pipeline had to help (CONTRACT v50): a table recorded in the men's
+room alone is `accessible` — a dad reaches it — but not a mum's, so the
+pipeline puts a `men_only` flag on it and the mother's reading paints it red,
+leaves it out of her count and skips it when looking for her nearest table.
+The flag is a modifier, not a fourth status, so nothing that counts statuses
+moved. The default stays `papa`:
 it is the rendering every screenshot and every og: description describes, so a
 mother's map is a deliberate opt-in rather than a silent redefinition for
 everyone. Switching mode is one `setPaintProperty` on a layer whose source data
 never changes, so 26k pins recolour without a re-fetch.
 
-The one simplification the switch inherits is disclosed on the methods pages: a
-table tagged `male_toilet` only is counted as reachable in both readings.
+Until v50 that last row was a disclosed simplification: those tables were
+green in both readings. A store app built before v50 still paints them green,
+since its JavaScript is bundled; the methods pages say so.
 
 ### The selected-place marker
 

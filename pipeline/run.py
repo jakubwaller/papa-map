@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timezone
 
 from . import delta, export, leaderboard, osm, pages, stats, toilet_counts
-from .room_choices import answer_status_table
+from .room_choices import answer_men_only_table, answer_status_table
 from .config import (AREAS_PATH, BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTORY_PATH,
                      PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_FIXED_ROUNDS,
                      SWEEP_DEADLINE_S, SWEEP_PAUSE_S, SWEEP_ROUNDS,
@@ -337,6 +337,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
         # lookup the frontend may use for its own answer, in room_choices.py
         # so both this and pipeline.delta build it the same way.
         "answer_status": answer_status_table(),
+        # Its v50 companion: whether that answer is the men's room only.
+        "answer_men_only": answer_men_only_table(),
     }, stats_path)
     # One padded bbox per sweep area (pipeline.delta's real country-coverage
     # filter, v48 follow-up) — never served (web-data/private/, like

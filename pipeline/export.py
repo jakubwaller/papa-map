@@ -5,7 +5,8 @@ import os
 import tempfile
 from pathlib import Path
 
-from .classify import central_key, classify, has_play_area, play_state, wheelchair_state
+from .classify import (central_key, classify, has_play_area, men_only, play_state,
+                       wheelchair_state)
 from .osm import element_coords
 
 
@@ -73,6 +74,9 @@ def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]
                 "name": tags.get("name"), "amenity": amenity,
                 "changing_table": value, "location_raw": location,
                 "status": status,
+                # A modifier on `accessible`, never a status of its own (v50):
+                # the men's room alone, which a dad reaches and a mum does not.
+                "men_only": status == "accessible" and men_only(location),
                 # Free: the sweep already asks for every tag on these objects,
                 # so the play corner costs no extra Overpass query. Tri-state
                 # since v30: false is "somebody answered, there is none", null

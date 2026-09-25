@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from pipeline.room_choices import ROOM_CHOICES, answer_status_table
+from pipeline.room_choices import ROOM_CHOICES, answer_men_only_table, answer_status_table
 
 WEB_OSM_JS = Path(__file__).resolve().parents[1] / "web" / "osm.js"
 
@@ -53,3 +53,9 @@ def test_both_is_accessible():
 
 def test_female_is_female_only():
     assert answer_status_table()["female"] == "female_only"
+
+
+def test_answer_men_only_is_the_mens_room_alone():
+    table = answer_men_only_table()
+    assert set(table) == set(ROOM_CHOICES) | {"none"}
+    assert [c for c, v in table.items() if v] == ["male"]
