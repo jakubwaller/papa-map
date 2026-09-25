@@ -109,7 +109,8 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx cap sync android
-      - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug --no-daemon
+      # testDebugUnitTest: the widget's rule (TablesTest) against the map's.
+      - run: chmod +x android/gradlew && cd android && ./gradlew testDebugUnitTest assembleDebug --no-daemon
 
   # The Android counterpart of `testflight`. The bundle is always kept as an
   # artifact: Play takes an app's very first bundle only through the Console's

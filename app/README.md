@@ -58,12 +58,16 @@ app/
                         TestFlight "What to Test" text and beta group distribution
   ios/distribution.csr  the request the distribution certificate was signed from (no secret in it)
   ios/testflight/       what-to-test.<locale>.txt, one per TestFlight locale (below)
-  android/              the Android project (feature 1 only for now: no widget, no Assistant)
+  android/              the Android project; its app/src/main/java/de/papamap/app/ holds
+                        MainActivity (registers the plugin), PapaMapSharePlugin, TableStore,
+                        Tables (the rule, JUnit-tested) and NearestWidget. The launcher
+                        shortcut is res/xml/shortcuts.xml. No Assistant
 ```
 
 Bundle id `de.papamap.app` on both stores (the other PapaMap, papamap.com, holds
 `com.papamap.app`). URL scheme `papamap://` — `papamap://auth` is the OSM login's return leg,
-`papamap://table?osm=…` opens a pin (the widget, the shortcut).
+`papamap://table?osm=…` opens a pin (the widget, the shortcut), `papamap://nearest` runs the
+map's own "nearest" button (Android's widget when it has no position, and its launcher shortcut).
 
 The widget's tap hands that link to the OS; the Siri answer's tap cannot, because
 `OpenURLIntent` is the universal-link API and drops a custom scheme on the way (docs/FEATURES.md

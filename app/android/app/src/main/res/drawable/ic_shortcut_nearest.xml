@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The launcher shortcut's icon: a map pin on the brand green. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="#009E73" android:pathData="M24,0a24,24 0,1 1,0 48a24,24 0,1 1,0 -48z" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M24,11c-5,0 -9,4 -9,9c0,6.8 9,17 9,17s9,-10.2 9,-17c0,-5 -4,-9 -9,-9zM24,23.2a3.2,3.2 0,1 1,0 -6.4a3.2,3.2 0,1 1,0 6.4z" />
+</vector>
