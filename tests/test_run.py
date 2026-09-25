@@ -769,6 +769,60 @@ def test_round_pause_waits_for_the_first_host_to_come_back(tmp_path, load_fixtur
     assert slept == [600.0]  # the breaker's wait, not the 120 s pause
 
 
+def test_rounds_run_until_the_deadline_not_a_round_count(tmp_path, load_fixture,
+                                                         monkeypatch, capsys):
+    # 2026-09-25: the stale mirrors came back from their rest one at a time and
+    # used up the six counted rounds while gall sat out a 60 min rest. Rounds are
+    # bounded by the clock now: the area that only answers after ten rounds lands,
+    # and the one that never answers fails when no further round fits.
+    clock = [0.0]
+    attempts = {"Bayern": 0}
+
+    def flaky(ql, **kwargs):
+        if '"Saarland"' in ql:
+            raise requests.ConnectionError("still dead")
+        if '"Bayern"' in ql and attempts["Bayern"] < 10:
+            attempts["Bayern"] += 1
+            raise requests.ConnectionError("resting")
+        return _fake_overpass(load_fixture)(ql, **kwargs)
+
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(run.time, "sleep",
+                        lambda s: clock.__setitem__(0, clock[0] + s))
+    monkeypatch.setattr(run.osm, "breaker_wait_s", lambda urls=None, now=None: 0.0)
+    with pytest.raises(RuntimeError, match=r"sweep failed for Saarland after 31 rounds"):
+        run_pipeline(geojson_path=str(tmp_path / "ct.geojson"),
+                     stats_path=str(tmp_path / "stats.json"),
+                     overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
+                     history_path=str(tmp_path / "history.json"), now=NOW,
+                     sweep_pause_s=600, sweep_deadline_s=5 * 3600)
+    assert attempts["Bayern"] == 10  # landed on round 11, not dropped at round 6
+    assert clock[0] == 30 * 600  # round 31 started at 5 h, round 32 would be past it
+    assert "no round 32: it would start past the 5 h sweep deadline" in capsys.readouterr().err
+
+
+def test_leftover_cities_keep_the_fixed_rounds(tmp_path, load_fixture, monkeypatch):
+    # Every area is in and only a leaderboard city keeps failing: the map
+    # must not wait until the deadline for it.
+    calls = []
+
+    def city_down(ql, **kwargs):
+        if '"München"' in ql and "out ids" in ql:
+            calls.append(1)
+            raise requests.ConnectionError("still dead")
+        return _fake_overpass(load_fixture)(ql, **kwargs)
+
+    monkeypatch.setattr(run.time, "sleep", lambda s: None)
+    monkeypatch.setattr(run.osm, "breaker_wait_s", lambda urls=None, now=None: 0.0)
+    run_pipeline(geojson_path=str(tmp_path / "ct.geojson"),
+                 stats_path=str(tmp_path / "stats.json"),
+                 overpass_fetch=city_down, taginfo_fetch=_fake_taginfo(load_fixture),
+                 pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+                 history_path=str(tmp_path / "history.json"), now=NOW,
+                 sweep_pause_s=0, sweep_deadline_s=5 * 3600)
+    assert len(calls) == config.SWEEP_CITY_ROUNDS
+
+
 def test_wave_two_chunks_the_us_and_canada_by_iso_code(monkeypatch):
     # Both die whole (CONTRACT v19's timings), so they join the way Germany
     # and France did — chunked into level-4 areas — but selected by ISO

@@ -879,7 +879,25 @@ def display_area() -> tuple[str, str | None]:
 # instance, which flaps 504/200 within seconds when busy (2026-08-15: one
 # Land missed three rounds in a row). Rounds only re-query the failures, so
 # a healthy night still costs nothing extra.
-SWEEP_ROUNDS = int(os.environ.get("PAPAMAP_SWEEP_ROUNDS", "6"))
+#
+# The rounds are bounded by time, not by count (2026-09-25). A count
+# let the stale mirrors burn the rounds: each came back from its 30 min stale
+# rest alone, answered one query with months-old data, was rested again,
+# and the round failed as "every host resting". Four of six rounds went to that
+# while gall sat out a 60 min rest, and the build died at 04:10 with about 45 min of
+# actual waiting. The breaker already keeps an unbounded number of rounds cheap
+# (a round against resting hosts sends nothing), so the limit is wall clock:
+# no new round starts once it would begin more than SWEEP_DEADLINE_S after the
+# sweep started. 4.5 h from the 02:00 cron puts the last round's start at
+# 06:30, leaving that round and the writes an hour before the ops cron, which
+# moved from 05:30 to 07:30 so it reads a finished build. PAPAMAP_SWEEP_ROUNDS stays as an
+# optional hard cap (unset = none) for tests and one-off runs.
+SWEEP_DEADLINE_S = float(os.environ.get("PAPAMAP_SWEEP_DEADLINE_S", str(4.5 * 3600)))
+SWEEP_ROUNDS = (int(os.environ["PAPAMAP_SWEEP_ROUNDS"])
+                if os.environ.get("PAPAMAP_SWEEP_ROUNDS") else None)
+# Once every sweep area is in, the leaderboard cities left over keep the
+# old six rounds: the map is not held back until the deadline for them.
+SWEEP_CITY_ROUNDS = 6
 SWEEP_PAUSE_S = float(os.environ.get("PAPAMAP_SWEEP_PAUSE_S", "120"))
 
 # The query budget stays under the observed 60 s cutoff so the server answers

@@ -49,7 +49,7 @@ services:
     # (184 sweeps + roughly a seventh of the 184 toilets counts, on the rota
     # of 2026-09-05 + 62 leaderboard cities; the 46-country night was 208
     # before the rota, measured at 80 min). The cron sits at 02:00
-    # (docs/DEPLOY.md, and why not earlier): the 05:30 ops mail must not
+    # (docs/DEPLOY.md, and why not earlier): the 07:30 ops mail must not
     # read a half-written stats.json. de, fr, us, ca and jp are chunked (16
     # Länder, 13 régions, 50 states + DC, 13 provinces and territories, 47
     # prefectures); every other country answers whole as one admin_level=2
@@ -108,14 +108,14 @@ services:
       - ./web-data:/out
     network_mode: host
 
-  # The daily ops check: `docker compose run --build --rm ops` at 05:30
+  # The daily ops check: `docker compose run --build --rm ops` at 07:30
   # (docs/DEPLOY.md). The same image as the build, so the host needs no
   # Python at all; `--build` on every run keeps the image at the checkout,
   # which keeps `git pull` the whole deploy for an ops change (a cached
   # rebuild is seconds). No container_name on purpose: `run` then gets a
   # unique generated name per run, so a build that overruns, a preview run
   # during the cron, or a container left behind by a reboot can never block
-  # the next 05:30 with "name already in use".
+  # the next 07:30 with "name already in use".
   ops:
     build: .
     profiles: ["tools"]
