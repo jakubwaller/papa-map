@@ -7,8 +7,12 @@
 #   testflight       archive, sign, upload to App Store Connect (TestFlight). A second job,
 #                    beta-text (ubuntu-latest, needs: testflight — no Xcode, no reason to wait
 #                    on Apple's processing on the Mac runner), then pushes
-#                    app/ios/testflight/what-to-test.*.txt to that build and, if the repo
-#                    variable ASC_BETA_GROUP is set, adds the build to that beta group
+#                    app/ios/testflight/what-to-test.*.txt to that build. The upload alone
+#                    reaches internal testers and is the build an App Store release attaches;
+#                    only with the `distribute` input ticked (and the repo variable
+#                    ASC_BETA_GROUP set) is the build also added to that beta group and
+#                    submitted for Beta App Review, which serialises per version and costs
+#                    a day — off by default since the app is on the App Store
 #   apple-setup      once per account: bundle ids, App Groups capability, the
 #                    distribution certificate for app/ios/distribution.csr
 #   beta-text-pull   print what TestFlight currently shows, no build needed
@@ -39,6 +43,10 @@ on:
         type: choice
         default: build
         options: [build, testflight, apple-setup, beta-text-pull]
+      distribute:
+        description: "testflight only: also add the build to the ASC_BETA_GROUP beta group and submit it for Beta App Review"
+        type: boolean
+        default: false
 
 concurrency:
   group: app-build-${{ github.ref }}-${{ github.event.label.name || inputs.task || 'build' }}
@@ -280,8 +288,9 @@ jobs:
       # the same build number the testflight job just archived and uploaded.
       - name: Push TestFlight text
         run: node ios/asc.mjs beta-text push --build "${{ github.run_number }}"
+      # Opt-in: the label route and a plain dispatch never reach the beta group.
       - name: Add build to the beta group
-        if: vars.ASC_BETA_GROUP != ''
+        if: inputs.distribute == true && vars.ASC_BETA_GROUP != ''
         env:
           ASC_BETA_GROUP: ${{ vars.ASC_BETA_GROUP }}
         run: node ios/asc.mjs beta-text distribute --build "${{ github.run_number }}" --group "$ASC_BETA_GROUP"

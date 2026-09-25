@@ -147,10 +147,15 @@ waiting on Apple):
    right away rather than waiting out the clock);
 2. creates or updates one `betaBuildLocalizations` record per file — idempotent, so a rerun
    only ever PATCHes what already exists;
-3. if the repository variable `ASC_BETA_GROUP` is set, adds the build to that beta group and,
-   for an external group, submits it for Beta App Review (`asc.mjs beta-text distribute --build
-   <n> --group <name>`) — an already-submitted or already-approved build is left alone. With
-   `ASC_BETA_GROUP` unset, only the text goes out.
+3. only when the dispatch ticked the `distribute` input **and** the repository variable
+   `ASC_BETA_GROUP` is set, adds the build to that beta group and, for an external group,
+   submits it for Beta App Review (`asc.mjs beta-text distribute --build <n> --group <name>`)
+   — an already-submitted or already-approved build is left alone. The default dispatch, and
+   every label-triggered build, stops after the text: the upload alone is what internal
+   testers see in TestFlight and what an App Store release attaches, while Beta App Review
+   takes about a day for a version's first build and allows one build per version in review
+   at a time (a second one fails with `ANOTHER_BUILD_IN_REVIEW`). Tick `distribute` only for a
+   build meant for the external group before it is on the App Store.
 
 Splitting this into its own job (rather than two more steps in `testflight`) means a problem
 here (a stale `processingState`, an over-limit file) shows up as its own red job and never
