@@ -39,9 +39,10 @@
 
   <!-- One URL serves all thirty-two languages (?lang= is honoured on load), so each
        language needs its own address before a search engine can index it —
-       until 2026-08-04 Google only ever saw the German view. app.js rewrites
-       the canonical below to match the language it renders, otherwise the
-       ?lang= views advertised here would all fold back into the German one.
+       until 2026-08-04 Google only ever saw the German view. app.js sets
+       the canonical below to the address's own ?lang= (never the language it
+       drew from the browser), otherwise the ?lang= views advertised here fold
+       back into the German one — or / folds into ?lang=en for Googlebot.
        Absolute URLs: relative hreflang hrefs are ignored.
        Keep in sync with i18n.js's LANGS and with sitemap.xml. -->
   <link rel="canonical" href="https://papamap.de/?lang=en" />

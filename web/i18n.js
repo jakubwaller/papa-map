@@ -91,7 +91,9 @@ export function canonicalUrl(query) {
 // A crawler gets what the address says and nothing else: German at the bare
 // URL, as index.html's hreflang declares it, whatever language its renderer
 // reports. Every reader with no preference of their own sees the same page.
-const CRAWLER = /bot\b|bot\/|crawl|spider|slurp|Google-InspectionTool/i;
+// Crawlers name themselves "Somebot/1.0"; a bare "bot" would also catch phones
+// whose model ends in it (a CUBOT X30 puts "CUBOT X30" in its user agent).
+const CRAWLER = /bot\/|crawl|spider|slurp|Google-InspectionTool/i;
 
 export function isCrawler(ua) {
   return CRAWLER.test(String(ua ?? ""));
