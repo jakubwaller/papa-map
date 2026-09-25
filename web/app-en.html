@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f2f5f3">
 <title>PapaMap as an app</title>
-<meta name="description" content="No store, no download: PapaMap goes on your home screen and runs there like an app. Offline, the nearest changing table, dad or mum, answers in two taps.">
+<meta name="description" content="The iPhone app is in testing, the Android app in development. Until then PapaMap goes on your home screen without a store and runs there like an app. Offline, the nearest changing table, dad or mum, answers in two taps.">
 <link rel="canonical" href="https://papamap.de/app-en.html">
 <link rel="alternate" hreflang="de" href="https://papamap.de/app.html">
 <link rel="alternate" hreflang="en" href="https://papamap.de/app-en.html">
 <link rel="alternate" hreflang="x-default" href="https://papamap.de/app.html">
 <meta property="og:title" content="PapaMap as an app">
-<meta property="og:description" content="No store, no download: PapaMap goes on your home screen and runs there like an app.">
+<meta property="og:description" content="The iPhone app is in testing, the Android app in development. Until then PapaMap goes on your home screen without a store.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://papamap.de/app-en.html">
 <meta property="og:image" content="https://papamap.de/og-image-en.jpg?v=w50">
@@ -69,6 +69,11 @@
   .install p { margin: 0.6rem 0; }
   .install b { color: var(--green-strong); }
 
+  /* The store apps, before they exist: plain text on the page's own
+     background, so it doesn't compete with the green box that works today. */
+  .stores { margin: 0 0 1.2rem; padding: 0 0 0 0.9rem; border-left: 3px solid var(--line); }
+  .stores p { margin: 0.45rem 0; }
+
   ul.adds { padding-left: 1.2rem; margin: 0.6rem 0; }
   ul.adds li { margin: 0.55rem 0; }
   ul.adds b { color: var(--ink); }
@@ -81,10 +86,19 @@
 <p class="back langs"><a href="app.html" hreflang="de" lang="de">Deutsch</a> &middot; <strong lang="en">English</strong></p>
 
 <h1>PapaMap as an app</h1>
-<p class="lead">No store, no download. The map goes on your home screen and runs there like an app. Offline, with the nearest table, answers in two taps.</p>
+<p class="lead">The map already goes on your home screen without a store and runs there like an app. Offline, with the nearest table, answers in two taps.</p>
+
+<!-- A mailto, not a signup form: the site stores nothing, and the Datenschutz
+     already covers contact by e-mail. One subject per platform, so the
+     launch mail goes to the right people. -->
+<section class="stores" aria-label="Store apps">
+  <p><b>iPhone:</b> the app is in testing and comes to the App Store soon. <a href="mailto:papamap@jakubwaller.eu?subject=Notify%20me%3A%20iPhone%20app">Tell me when it’s out</a></p>
+  <p><b>Android:</b> the app is in development. <a href="mailto:papamap@jakubwaller.eu?subject=Notify%20me%3A%20Android%20app">Tell me when it’s out</a></p>
+  <p>One e-mail when it’s ready, then the address is deleted.</p>
+</section>
 
 <section class="install" aria-labelledby="install-h">
-  <h2 id="install-h">How to get it on your phone</h2>
+  <h2 id="install-h">Until then: how to get it on your phone</h2>
   <p><b>iPhone:</b> the Share icon, then “Add to Home Screen”. Works in every browser, just not from inside Instagram or Bluesky.</p>
   <p><b>Android:</b> the browser menu, then “Install” or “Add to Home screen”. Chrome, Firefox, Samsung Internet, all the others too.</p>
 </section>

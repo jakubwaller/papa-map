@@ -89,3 +89,18 @@ test("the header pill, the sitemap and the pages know each other", () => {
   assert.ok(read("app.html").includes('hreflang="en" href="https://papamap.de/app-en.html"'));
   assert.ok(read("app-en.html").includes('hreflang="de" href="https://papamap.de/app.html"'));
 });
+
+test("both pages say where the store apps stand and offer a mail when they ship", () => {
+  // A mailto rather than a signup form: nothing is stored by the site, and
+  // the Datenschutz's e-mail section is what covers the address.
+  for (const [f, words] of [["app.html", ["im Test", "in Arbeit"]], ["app-en.html", ["in testing", "in development"]]]) {
+    const html = read(f);
+    for (const w of words) assert.ok(html.includes(w), `${f}: ${w}`);
+    const subjects = [...html.matchAll(/href="mailto:papamap@jakubwaller\.eu\?subject=([^"]+)"/g)]
+      .map((m) => decodeURIComponent(m[1]));
+    assert.equal(subjects.length, 2, f);
+    assert.ok(subjects.some((s) => s.includes("iPhone")) && subjects.some((s) => s.includes("Android")), f);
+    assert.ok(!html.includes("<form"), f);
+  }
+  assert.ok(read("datenschutz.html").includes("Kontakt per E-Mail"));
+});
