@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
+         chipKeys, chipView,
          isWheelchairOk, countWheelchair, pinFeatures, placeFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
@@ -1545,4 +1546,59 @@ test("applyAnswerOverrides sets men_only from the answer, keeps the base's witho
   const old = applyAnswerOverrides(fc(), places, { [url]: { status: "accessible",
     changing_table: "yes", location_raw: "male_toilet", t: "2026-09-25T10:00:00Z" } });
   assert.equal(old.fc.features[0].properties.men_only, true);
+});
+
+// ---- v51: the mum's fourth chip ----
+
+const MIXED = () => loadFeatures({ type: "FeatureCollection", features: [
+  feat(1, 1, { status: "accessible", men_only: true }),
+  feat(2, 2, { status: "accessible" }),
+  feat(3, 3, { status: "female_only" }),
+  feat(4, 4, { status: "unknown" }),
+] });
+
+test("chipKeys: papa keeps the three statuses, mama adds the men's room alone", () => {
+  assert.deepEqual(chipKeys("papa"), STATUSES);
+  assert.deepEqual(chipKeys("nonsense"), STATUSES);
+  assert.deepEqual(chipKeys("mama"), ["accessible", "female_only", "men_only", "unknown"]);
+});
+
+test("countsByStatus in mama moves men_only tables out of the green chip", () => {
+  assert.deepEqual(countsByStatus(MIXED()), { accessible: 2, female_only: 1, unknown: 1 });
+  assert.deepEqual(countsByStatus(MIXED(), "mama"),
+    { accessible: 1, female_only: 1, men_only: 1, unknown: 1 });
+  assert.deepEqual(countsByStatus([], "mama"),
+    { accessible: 0, female_only: 0, men_only: 0, unknown: 0 });
+});
+
+test("filterByStatus in mama: the men_only chip alone hides or shows them", () => {
+  const ids = (xs) => xs.map((f) => f.idx);
+  assert.deepEqual(ids(filterByStatus(MIXED(), ["accessible"], "mama")), [1]);  // idx of feat 2
+  assert.deepEqual(ids(filterByStatus(MIXED(), ["men_only"], "mama")), [0]);
+  // Papa never sees a men_only chip key: the table is under accessible there.
+  assert.deepEqual(ids(filterByStatus(MIXED(), ["accessible"])), [0, 1]);
+  assert.deepEqual(ids(filterByStatus(MIXED(), ["men_only"])), []);
+});
+
+test("chipView: the men_only chip is red and carries its own label", () => {
+  assert.equal(chipView("men_only", "mama").bucket, "bad");
+  assert.equal(chipView("men_only", "mama").labelKey, "stMenOnlyMama");
+  assert.deepEqual(chipView("accessible", "mama"), viewFor("accessible", "mama"));
+});
+
+test("a reader's own answer moves the table between the mum's chips at once", () => {
+  // The live-edit path: stats.json's answer tables -> the stored override ->
+  // applyAnswerOverrides -> loadFeatures -> the chip counts renderChips shows.
+  const url = "https://www.openstreetmap.org/node/7";
+  const base = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: url, status: "unknown", changing_table: "yes", location_raw: null }),
+  ] };
+  const places = { type: "FeatureCollection", features: [] };
+  const answer = (status, men_only, location_raw) => countsByStatus(loadFeatures(
+    applyAnswerOverrides(base, places, { [url]: { status, men_only, changing_table: "yes",
+      location_raw, t: "2026-09-25T20:00:00Z" } }).fc), "mama");
+  assert.deepEqual(answer("accessible", true, "male_toilet"),
+    { accessible: 0, female_only: 0, men_only: 1, unknown: 0 });
+  assert.deepEqual(answer("accessible", false, "female_toilet;male_toilet"),
+    { accessible: 1, female_only: 0, men_only: 0, unknown: 0 });
 });

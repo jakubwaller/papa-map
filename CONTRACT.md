@@ -1,5 +1,27 @@
 # papa-map — build contract (v0)
 
+> **v51 amendment (25 Sep 2026, the mum's fourth chip): no shape change.** v50
+> painted the men's-room-only tables red in the mother's reading but left them
+> under her green "openly accessible" chip, counted there, so a mum filtering
+> on green saw red pins and a chip number above the stats sentence's. The chips
+> now follow the reading's colours: `chipKeys(mode)` is papa's three statuses
+> and, for mama, `accessible`, `female_only`, `men_only`, `unknown`. `chipKey(f,
+> mode)` puts a table under `men_only` exactly when the reading is mama, its
+> status `accessible` and the pipeline's `men_only` flag true, and under its
+> status otherwise. `countsByStatus` and `filterByStatus` take the mode (papa
+> by default, so every existing caller and the papa chips are unchanged), and
+> `chipView` gives the fourth chip v50's `stMenOnlyMama` label and red.
+> **This retires v24's "identical counts in both readings"**: the green chip
+> of the mother's reading is smaller by the men-only tables. v24's reason for
+> not collapsing the chips holds — her women's-room chip is still her own.
+> `men_only` is a chip key, never a status: `STATUSES` and the emitted shape
+> do not move. The chip is left out when no loaded table carries the flag (a
+> dataset from before v50), rather than showing a permanent 0. The chip state
+> is in memory only and starts with every chip of both readings on, so a
+> switch to mama never hides the new chip's pins. Nothing new is needed for
+> live edits: a reader's own answer already stores `men_only` (v50) and the
+> chips recount from the merged features. Shell pin `app50` → `app51`.
+>
 > **v50 amendment (25 Sep 2026, the men's room alone): shape change — three
 > additions, nothing removed.** v24's one disclosed simplification is retired:
 > a table whose `changing_table:location` names the men's room and no other
