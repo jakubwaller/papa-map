@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from . import delta, export, leaderboard, osm, pages, stats, toilet_counts
 from .room_choices import answer_status_table
 from .config import (AREAS_PATH, BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTORY_PATH,
-                     PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_CITY_ROUNDS,
+                     PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_FIXED_ROUNDS,
                      SWEEP_DEADLINE_S, SWEEP_PAUSE_S, SWEEP_ROUNDS,
                      TOILETS_COUNTS_PATH,
                      TOILETS_COUNTS_PERIOD_DAYS, changing_table_ids_ql,
@@ -112,6 +112,9 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     remaining_cities = list(cities)
     last_exc: Exception | None = None
     deadline = time.monotonic() + budget
+    # Per area/city: failures a later round cannot fix (osm.is_transient).
+    hard_fails: dict[str, int] = {}
+    given_up_cities: list = []
     rnd = 0
     while True:
         if rnd:
@@ -121,8 +124,21 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 break
             # Only the leaderboard is left: it gets the old fixed rounds, not
             # the deadline — the map is not held until 06:30 for a city.
-            if not remaining and rnd >= SWEEP_CITY_ROUNDS:
+            if not remaining and rnd >= SWEEP_FIXED_ROUNDS:
                 break
+            # An area that keeps failing the same way dooms the build; stop
+            # now instead of retrying it until the deadline. A city like it
+            # is only dropped from today's leaderboard.
+            if any(hard_fails.get(name, 0) >= SWEEP_FIXED_ROUNDS
+                   for name, _ in remaining):
+                break
+            hopeless = [c for c in remaining_cities
+                        if hard_fails.get(c[0], 0) >= SWEEP_FIXED_ROUNDS]
+            if hopeless:
+                given_up_cities.extend(hopeless)
+                remaining_cities = [c for c in remaining_cities if c not in hopeless]
+                if not remaining and not remaining_cities:
+                    break
             # When every host is resting (osm.py's breaker), a 120 s pause
             # would only spend the round on instant failures — wait for the
             # first host to come back instead. Each consecutive trip doubles
@@ -210,6 +226,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             except Exception as exc:
                 print(f"  WARN {area_name}: {exc}", file=sys.stderr)
                 last_exc = exc
+                if not osm.is_transient(exc):
+                    hard_fails[area_name] = hard_fails.get(area_name, 0) + 1
                 failed.append((area_name, admin_level))
                 continue
             # A retried area re-fetches both queries; dedup absorbs any
@@ -252,6 +270,8 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
                 break
             except Exception as exc:
                 print(f"  WARN {display}: {exc}", file=sys.stderr)
+                if not osm.is_transient(exc):
+                    hard_fails[display] = hard_fails.get(display, 0) + 1
                 failed_cities.append((display, area_name, admin_level))
                 continue
             city_ids[display] = {(el.get("type"), el.get("id"))
@@ -263,6 +283,7 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
             f"sweep failed for {', '.join(name for name, _ in remaining)} "
             f"after {rnd} rounds — refusing to overwrite existing data "
             f"(last error: {last_exc})")
+    remaining_cities = given_up_cities + remaining_cities
     if remaining_cities:
         print(f"  WARN: leaderboard skips "
               f"{', '.join(d for d, _, _ in remaining_cities)} today "

@@ -133,6 +133,16 @@ def check_fresh(data: dict, url: str, now: datetime | None = None,
 _breaker: dict[str, dict] = {}
 
 
+def is_transient(exc: BaseException) -> bool:
+    """Whether a later round could plausibly succeed: a transport failure,
+    a retryable status, a stale mirror or a resting host. A non-retryable
+    status (400: the query itself is wrong) and the pipeline's own checks
+    (an area that resolves to zero objects) fail the same way every time."""
+    if isinstance(exc, requests.HTTPError):
+        return exc.response is not None and exc.response.status_code in _RETRY_STATUS
+    return isinstance(exc, requests.RequestException)
+
+
 class OverpassUnavailable(requests.RequestException):
     """Every configured host is resting after failures; nothing was contacted."""
 
