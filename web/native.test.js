@@ -901,3 +901,28 @@ test("onBrowserFinished is a no-op outside Capacitor — no plugin, nothing thro
   try { assert.doesNotThrow(() => onBrowserFinished(() => {})); }
   finally { globalThis.Capacitor = before; }
 });
+
+// ---- Android's back key ----
+import { onBackButton } from "./native.js";
+
+test("the back key closes what is open, and only with nothing open leaves the app", () => {
+  const listeners = {};
+  let minimized = 0;
+  const app = {
+    addListener: (event, fn) => { (listeners[event] ||= []).push(fn); },
+    minimizeApp: async () => { minimized++; },
+  };
+  const open = ["dialog", "popup"];
+  withApp(app, () => onBackButton(() => open.pop() !== undefined));
+  const press = () => { for (const fn of listeners.backButton ?? []) fn({ canGoBack: false }); };
+  press(); press();
+  assert.deepEqual([open.length, minimized], [0, 0]);
+  press();
+  assert.equal(minimized, 1);
+});
+
+test("the back key is left alone outside the app", () => {
+  const before = globalThis.Capacitor;
+  delete globalThis.Capacitor;
+  try { assert.doesNotThrow(() => onBackButton(() => false)); } finally { globalThis.Capacitor = before; }
+});

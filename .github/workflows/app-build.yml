@@ -12,6 +12,10 @@
 #   apple-setup      once per account: bundle ids, App Groups capability, the
 #                    distribution certificate for app/ios/distribution.csr
 #   beta-text-pull   print what TestFlight currently shows, no build needed
+#   play             build the Android App Bundle, sign it with the upload key, keep it
+#                    as an artifact and, if PLAY_SERVICE_ACCOUNT_JSON is set, send it to
+#                    Google Play (track: repo variable PLAY_TRACK, default alpha = closed
+#                    testing; status: PLAY_RELEASE_STATUS, default draft)
 #
 # Ask from the Actions tab (Run workflow → task) or by putting the label of
 # that name on a pull request, which builds that PR's branch. The label route
@@ -38,7 +42,7 @@ on:
         description: "What to run"
         type: choice
         default: build
-        options: [build, testflight, apple-setup, beta-text-pull]
+        options: [build, testflight, apple-setup, beta-text-pull, play]
 
 concurrency:
   group: app-build-${{ github.ref }}-${{ github.event.label.name || inputs.task || 'build' }}
@@ -106,6 +110,72 @@ jobs:
       - run: npm run build
       - run: npx cap sync android
       - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug --no-daemon
+
+  # The Android counterpart of `testflight`. The bundle is always kept as an
+  # artifact: Play takes an app's very first bundle only through the Console's
+  # web page, and that is the file to drag in. The upload key signs it, Play App
+  # Signing re-signs it with the key phones see (app/android/PLAY.md).
+  play:
+    if: inputs.task == 'play' || (github.event.action == 'labeled' && github.event.label.name == 'play')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Upload key
+        env:
+          ANDROID_UPLOAD_KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE }}
+        run: |
+          [ -n "$ANDROID_UPLOAD_KEYSTORE" ] || { echo "::error::secret ANDROID_UPLOAD_KEYSTORE is not set (app/android/PLAY.md)"; exit 1; }
+          echo "$ANDROID_UPLOAD_KEYSTORE" | base64 --decode > "$RUNNER_TEMP/upload.p12"
+      # The version code is the run number, as the iOS build number is: Play
+      # refuses a code it has seen, and this one only goes up.
+      - name: Signed App Bundle
+        env:
+          ANDROID_KEYSTORE: ${{ runner.temp }}/upload.p12
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+          VERSION_CODE: ${{ github.run_number }}
+        run: chmod +x android/gradlew && cd android && ./gradlew bundleRelease --no-daemon
+      # Gradle signs a release it has a key for and leaves it unsigned
+      # otherwise, silently; Play would then refuse it minutes later with a
+      # vaguer message. jarsigner says so here.
+      - name: Check the signature
+        run: |
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          jarsigner -verify "$AAB" | tee "$RUNNER_TEMP/verify.log"
+          grep -q "jar verified" "$RUNNER_TEMP/verify.log"
+          mkdir -p "$RUNNER_TEMP/out" && cp "$AAB" "$RUNNER_TEMP/out/papamap-${{ github.run_number }}.aab"
+      - name: Forget the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.p12"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: papamap-aab-${{ github.run_number }}
+          path: ${{ runner.temp }}/out/*.aab
+          retention-days: 30
+      - name: Send to Google Play
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::notice::PLAY_SERVICE_ACCOUNT_JSON not set: the bundle is only an artifact of this run."
+            exit 0
+          fi
+          node android/play.mjs upload "$RUNNER_TEMP"/out/*.aab \
+            --track "${{ vars.PLAY_TRACK || 'alpha' }}" --status "${{ vars.PLAY_RELEASE_STATUS || 'draft' }}"
 
   # Once per Apple account, and harmless to repeat: every step looks before it
   # makes. The certificate comes back as an artifact (public material, it is in

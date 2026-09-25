@@ -788,6 +788,20 @@ export function onAppUrl({ auth, table }) {
   }).catch(() => {});
 }
 
+// Android's back key. With no listener the App plugin only steps back through
+// the WebView's history, and the map is one page with none, so the key did
+// nothing at all. `closeTop` closes whatever is on top and says whether there
+// was anything; with nothing open the app goes to the background, which is what
+// the back key does on Android's own launcher-level screens (since Android 12 it
+// no longer finishes the activity). iOS has no back key and never fires this.
+export function onBackButton(closeTop) {
+  const app = plugin("App");
+  if (!app) return;
+  app.addListener("backButton", () => {
+    if (!closeTop()) app.minimizeApp?.()?.catch?.(() => {});
+  });
+}
+
 // The in-app Browser sheet (openExternal, interceptLinks — every OSM/
 // MapComplete link opens here rather than backgrounding the app) never hides
 // the page behind it: document.hidden stays false the whole time a reader is
