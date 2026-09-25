@@ -90,16 +90,23 @@ test("the header pill, the sitemap and the pages know each other", () => {
   assert.ok(read("app-en.html").includes('hreflang="de" href="https://papamap.de/app.html"'));
 });
 
-test("both pages say where the store apps stand and offer a mail when they ship", () => {
-  // A mailto rather than a signup form: nothing is stored by the site, and
-  // the Datenschutz's e-mail section is what covers the address.
-  for (const [f, words] of [["app.html", ["im Test", "in Arbeit"]], ["app-en.html", ["in testing", "in development"]]]) {
+test("both pages link the iPhone app in the store, say where Android stands and offer a mail when it ships", () => {
+  // The iPhone line became the store link when 1.0 went live (2026-09-25).
+  // Android keeps a mailto rather than a signup form: nothing is stored by
+  // the site, and the Datenschutz's e-mail section is what covers the address.
+  // The German page links the German storefront; the English one leaves the
+  // country to Apple, which sends the reader to their own.
+  for (const [f, store, words] of [
+    ["app.html", "https://apps.apple.com/de/app/papamap/id6813376985", ["im App Store", "in Arbeit"]],
+    ["app-en.html", "https://apps.apple.com/app/papamap/id6813376985", ["on the App Store", "in development"]],
+  ]) {
     const html = read(f);
+    assert.ok(html.includes(`href="${store}"`), `${f}: store link`);
+    assert.ok(!/im Test|in testing/.test(html), `${f}: still says the app is in testing`);
     for (const w of words) assert.ok(html.includes(w), `${f}: ${w}`);
     const subjects = [...html.matchAll(/href="mailto:papamap@jakubwaller\.eu\?subject=([^"]+)"/g)]
       .map((m) => decodeURIComponent(m[1]));
-    assert.equal(subjects.length, 2, f);
-    assert.ok(subjects.some((s) => s.includes("iPhone")) && subjects.some((s) => s.includes("Android")), f);
+    assert.deepEqual(subjects.map((s) => s.includes("Android")), [true], `${f}: ${subjects}`);
     assert.ok(!html.includes("<form"), f);
   }
   assert.ok(read("datenschutz.html").includes("Kontakt per E-Mail"));
