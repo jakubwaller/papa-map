@@ -202,8 +202,10 @@ def test_healthy_page_carries_every_section():
     assert "Bayern" in html and "Berlin" in html
     assert "2026-08-21" in html and 'class="spark"' in html
     assert html.count('class="bars"') == 2  # transitions + theme edits
-    # Every drawing carries a date axis: two bar charts plus the sparkline.
+    # Every drawing carries a date axis and a value axis: two bar charts
+    # plus the sparkline.
     assert html.count('class="bar-axis"') == 3
+    assert html.count('class="chart-y"') == 3
     # The sparkline's caption says what the line is, in dates and numbers.
     assert ("Accessible pins in total, one point per nightly run: 1,810 on "
             "2026-08-21 → 1,821 on 2026-08-23") in html
@@ -333,11 +335,19 @@ def test_charts_scale_bars_and_carry_the_numbers_in_tooltips():
     assert "Status transitions per day" in html
     assert "Changesets through the PapaMap theme per day" in html
     # 2026-08-22 is the tallest movement day (9 transitions, all accessible);
-    # 2026-08-23 is a third of it. The exact split rides in the title.
+    # 2026-08-23 is a third of it. The exact split rides in the title; the
+    # bars are measured against the axis top of 10, not against the 9.
     assert 'title="2026-08-22 · 9 → accessible, 0 → female-only, 0 → unknown · +5 new, -0 gone"' in html
-    assert '<div class="bar" style="height:100.0%">' in html
-    assert '<div class="bar" style="height:33.3%">' in html
+    assert '<div class="bar" style="height:90.0%">' in html
+    assert '<div class="bar" style="height:30.0%">' in html
+    assert '<span style="bottom:50%">5</span><span style="bottom:100%">10</span>' in html
+    # The theme chart tops out at 3 changesets, drawn against 4 so that the
+    # half label is a whole 2, never "1.5".
     assert 'title="2026-08-22 · 3 changesets"' in html
+    assert '<div class="bar" style="height:75.0%">' in html
+    assert '<div class="bar" style="height:25.0%">' in html
+    assert '<span style="bottom:50%">2</span><span style="bottom:100%">4</span>' in html
+    assert ">1.5</span>" not in html
     assert "background:var(--green)" in html and "background:var(--accent)" in html
     # 2026-08-21 had zero transitions and one changeset: an empty stub in the
     # first chart, a real bar in the second.
@@ -402,7 +412,7 @@ def test_edits_section_tiles_chart_labels_and_table():
     assert "<b>15</b>" in html and "<b>38</b>" in html and "<b>48</b>" in html
     # the number sits above its column, on both charts: the 40 theme days
     # plus the fixture's two days with transitions
-    assert '<span class="bar-n">9</span><div class="bar" style="height:100.0%">' in html
+    assert '<span class="bar-n">9</span><div class="bar" style="height:90.0%">' in html
     assert html.count('data-labelled=""') == 2  # the CSS rule is the other mention
     assert html.count('class="bar-n"') == 40 + 2
     # every recorded day, newest first, in the details table
@@ -750,6 +760,42 @@ def test_area_label_is_english_and_counted():
     assert "Danmark" not in html
 
 
+def test_nice_top_with_a_whole_half_skips_the_odd_tops():
+    """A column chart of counts labels 0, half and top: the top must halve
+    to a whole number, so 1, 3, 5, 15 and 25 are skipped for the next round
+    number up. Hundreds and above always halve whole."""
+    for hi, top in ((1, 2), (2, 2), (3, 4), (5, 6), (7, 8), (9, 10),
+                    (12, 20), (15, 20), (21, 30), (25, 30), (30, 30),
+                    (101, 150), (150, 150), (0, 2)):
+        assert ops_page._nice_top(hi, whole_half=True) == top, hi
+    # the sparkline's plain rule is unchanged
+    assert ops_page._nice_top(3) == 3 and ops_page._nice_top(15) == 15
+
+
+def test_column_charts_carry_the_axis_a_phone_needs():
+    """Below 560 px the number above each column is hidden (the columns are
+    too narrow), and a title tooltip needs a mouse — so on a phone the
+    charts said nothing (Trello feedback, 2026-09-27). Every column chart
+    now sits in the same frame as the sparkline, with the value axis in the
+    left column and the date axis under the drawing."""
+    rows = [("2026-09-01", "a", 7, 7), ("2026-09-02", "b", 0, 0),
+            ("2026-09-03", "c", 2, 1)]
+    html = ops_page._day_bars(rows, "--accent", labels=True)
+    assert html.startswith('<div class="chart" data-labelled="">'
+                           '<div class="chart-y" aria-hidden="true">'
+                           '<span style="bottom:0%">0</span>'
+                           '<span style="bottom:50%">4</span>'
+                           '<span style="bottom:100%">8</span></div>'
+                           '<div class="bars">')
+    assert html.count('class="bar-col"') == 3
+    assert 'style="height:87.5%"' in html and 'style="height:25.0%"' in html
+    assert html.endswith('<div class="bar-axis"><span>2026-09-01</span>'
+                         '<span>2026-09-03</span></div>\n</div>\n')
+    # an unlabelled chart is the same frame without the headroom attribute
+    assert ops_page._day_bars(rows).startswith('<div class="chart"><div class="chart-y"')
+    assert ops_page._day_bars([("2026-09-01", "a", 0, 0)]) == ""
+
+
 def test_sparkline_has_a_zero_based_labelled_y_axis():
     assert ops_page._nice_top(2960) == 3000
     assert ops_page._nice_top(941) == 1000
@@ -761,6 +807,9 @@ def test_sparkline_has_a_zero_based_labelled_y_axis():
     # 2,960 of 3,000 sits just under the top edge, 941 a third of the way up
     assert 'points="0.0,68.6 600.0,1.3"' in html
     assert 'class="bar-axis"' in html and "2026-09-24" in html
+    # the same frame as the column charts, axis first, date axis last
+    assert html.startswith('<div class="chart"><div class="chart-y" aria-hidden="true">')
+    assert html.endswith('</div>\n</div>\n')
     # a half-step top keeps its half exact rather than rounding 7.5 to "8"
     html = ops_page._sparkline([3, 12], "--accent", "a", "b")
     assert '<span style="bottom:50%">7.5</span>' in html

@@ -77,22 +77,35 @@ OPS_STYLE = """\
   .kpi b { display: block; font-size: 1.4rem; }
   .kpi span { color: var(--muted); font-size: 0.85rem; }
   details > summary { cursor: pointer; font-weight: 600; margin-top: 1.4rem; }
-  /* The sparkline's y-axis is HTML beside the drawing, not SVG text: the
-     viewBox is stretched non-uniformly, which would warp glyphs. Each label
+  /* Every chart is one frame: the value axis in the left column, the
+     drawing and its date axis in the right. The axis is HTML beside the
+     drawing rather than part of it (SVG text would be warped by the
+     sparkline's non-uniform viewBox stretch, and the column charts are
+     plain divs), stretched to the drawing's grid row so that its
+     percentages and the drawing's refer to the same height. That is why
+     the drawing itself carries no margin or padding: box-sizing is
+     border-box, so a padding on it would shrink the box its bars are
+     measured in while the axis beside it kept the full height. Each label
      sits at its value's height and is centred on its gridline. */
-  .spark-wrap { display: flex; gap: 0.4rem; }
-  .spark-y { position: relative; flex: 0 0 auto; min-width: 2.2rem; height: 6rem;
-             margin: 0.4rem 0; font-size: 0.72rem; color: var(--muted);
+  .chart { display: grid; grid-template-columns: auto 1fr; column-gap: 0.4rem;
+           row-gap: 0.15rem; margin: 0.4rem 0; }
+  .chart-y { grid-area: 1 / 1; position: relative; min-width: 2.2rem;
+             font-size: 0.72rem; color: var(--muted);
              font-variant-numeric: tabular-nums; }
-  .spark-y span { position: absolute; right: 0; line-height: 1;
+  .chart-y span { position: absolute; right: 0; line-height: 1;
                   transform: translateY(50%); }
-  .spark-plot { flex: 1 1 auto; min-width: 0; }
-  svg.spark { width: 100%; height: 6rem; display: block; margin: 0.4rem 0;
-              overflow: visible; }
+  .chart > .spark, .chart > .bars { grid-area: 1 / 2; min-width: 0; }
+  .chart > .bar-axis { grid-area: 2 / 2; }
+  svg.spark { width: 100%; height: 6rem; display: block; overflow: visible; }
   /* Column charts, one flex column per calendar day — the Bürgerwecker admin
-     pattern: no library, the exact numbers live in each column's title. */
+     pattern: no library, the exact numbers live in each column's title. The
+     background is the axis's three gridlines (0, half, top), drawn behind
+     the bars without an element each. */
   .bars { display: flex; align-items: flex-end; gap: 2px; height: 110px;
-          margin: 0.4rem 0 0.15rem; }
+          background:
+            linear-gradient(var(--line), var(--line)) 0 0 / 100% 1px no-repeat,
+            linear-gradient(var(--line), var(--line)) 0 50% / 100% 1px no-repeat,
+            linear-gradient(var(--line), var(--line)) 0 100% / 100% 1px no-repeat; }
   .bar-col { flex: 1 1 0; min-width: 0; height: 100%; display: flex;
              flex-direction: column; justify-content: flex-end; }
   .bar-col .bar { border-radius: 2px 2px 0 0; background: var(--line);
@@ -102,12 +115,13 @@ OPS_STYLE = """\
   .bar-col:hover .bar { filter: brightness(1.12); }
   .bar-col .bar.empty { min-height: 2px; opacity: 0.45; }
   /* A labelled chart prints each non-zero value above its column; the
-     tallest column plus its label overflows the 110px into this padding
-     (flex-shrink: 0 on the bar above — without it the tallest bars would
-     shrink to make room and the drawn ratios would stop matching the
+     tallest column plus its label overflows the 110px into the frame's
+     padding (flex-shrink: 0 on the bar above — without it the tallest bars
+     would shrink to make room and the drawn ratios would stop matching the
      printed numbers). Below phone width the columns are too narrow for a
-     digit each, and the table under the chart carries the numbers. */
-  .bars[data-labelled] { padding-top: 0.9rem; }
+     digit each; there the axis and the table under the chart carry the
+     numbers. */
+  .chart[data-labelled] { padding-top: 0.9rem; }
   .bar-col .bar-n { font-size: 0.66rem; line-height: 1; text-align: center;
                     color: var(--muted); margin-bottom: 2px;
                     font-variant-numeric: tabular-nums; }
@@ -354,12 +368,18 @@ def _day_bars(rows: list[tuple], fill_var: str = "--green",
     fill the named share of it, exact numbers in each column's title — and,
     with `labels`, printed above every non-zero column too. Both charts label:
     theme edits run to single digits a day and transitions to a few dozen at
-    most (30 on the busiest day to 2026-09-24), which fit. Empty string
-    when no day has anything above zero — a flat row of stubs reads as a
-    rendering bug, and the callers say 'nothing yet' in words instead."""
-    top = max((v for _, _, v, _ in rows if v), default=0)
-    if not top:
+    most (30 on the busiest day to 2026-09-24), which fit — on a wide
+    screen; a phone hides them (the columns are too narrow), which is why
+    every chart also has the labelled y-axis, the one the sparkline got
+    first (Trello feedback, 2026-09-27). The bars are measured against a
+    round top whose half is a whole number, never the tallest value itself,
+    so the axis reads 0 / 5 / 10 and not 0 / 4.5 / 9. Empty string when no
+    day has anything above zero — a flat row of stubs reads as a rendering
+    bug, and the callers say 'nothing yet' in words instead."""
+    hi = max((v for _, _, v, _ in rows if v), default=0)
+    if not hi:
         return ""
+    top = _nice_top(hi, whole_half=True)
     cols = []
     for d, tip, value, fill in rows:
         if value:
@@ -373,38 +393,56 @@ def _day_bars(rows: list[tuple], fill_var: str = "--green",
             bar = '<div class="bar empty"></div>'
         cols.append(f'<div class="bar-col" title="{esc(tip)}">{bar}</div>')
     attr = ' data-labelled=""' if labels else ""
-    return (f'<div class="bars"{attr}>' + "".join(cols) + "</div>\n"
-            + _axis(rows[0][0], rows[-1][0]))
+    return (f'<div class="chart"{attr}>{_y_labels(top)}'
+            '<div class="bars">' + "".join(cols) + "</div>\n"
+            + _axis(rows[0][0], rows[-1][0]) + "</div>\n")
 
 
 def _axis(first, last) -> str:
-    """The one axis any of the charts gets: the date range, first and last
-    under the ends of the drawing. Values live in captions and tooltips."""
+    """The date axis every chart gets: the range, first and last under the
+    ends of the drawing. The exact values live in captions and tooltips."""
     return (f'<div class="bar-axis"><span>{esc(first)}</span>'
             f"<span>{esc(last)}</span></div>\n")
 
 
-def _nice_top(hi: float) -> float:
+def _nice_top(hi: float, whole_half: bool = False) -> float:
     """The smallest round number (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8 × a power of
     ten) at or above `hi`: the top of a zero-based axis that the line nearly
-    fills, so 2,960 gets 3,000 rather than 5,000."""
+    fills, so 2,960 gets 3,000 rather than 5,000. With `whole_half`, only a
+    top whose half is a whole number (2, 4, 6, 8, 10, 20, 30, … never 1, 3,
+    5, 15 or 25): a chart of counts should not label a gridline "1.5". The
+    price is a tallest column at 75 % or 83 % now and then instead of 100 %."""
     if hi <= 0:
-        return 1
+        return 2 if whole_half else 1
     mag = 10 ** math.floor(math.log10(hi))
     for m in (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10):
-        if m * mag >= hi:
-            return m * mag
+        top = m * mag
+        if top >= hi and not (whole_half and top % 2):
+            return top
     return 10 * mag
+
+
+def _y_labels(top: float) -> str:
+    """The value axis every chart carries: 0, half and `top`, HTML beside the
+    drawing at the heights the drawing uses (see .chart in OPS_STYLE). A
+    small top can be a half-step (1.5, 15), so half of it is not always a
+    whole number; print the one decimal rather than round 7.5 to "8"."""
+    labels = "".join(
+        f'<span style="bottom:{100 * t / top:.0f}%">'
+        f'{t:,.0f}</span>' if t == int(t) else
+        f'<span style="bottom:{100 * t / top:.0f}%">{t:,.1f}</span>'
+        for t in (0, top / 2, top))
+    return f'<div class="chart-y" aria-hidden="true">{labels}</div>'
 
 
 def _sparkline(values: list[int], color_var: str, first, last) -> str:
     """One polyline on a zero-based y-axis with three labelled gridlines
     (0, half, a round top), and the date axis under it. The labels are HTML
-    beside the SVG — SVG text is off the table because the viewBox is
-    stretched non-uniformly (preserveAspectRatio="none"), which would warp
-    glyphs. Zero-based on purpose: a min-to-max axis made 941 → 2,960 look
-    like the same climb as 2,950 → 2,960. Two points minimum, or there is no
-    line to draw, and then no axis either."""
+    beside the SVG (_y_labels) — SVG text is off the table because the
+    viewBox is stretched non-uniformly (preserveAspectRatio="none"), which
+    would warp glyphs. Zero-based on purpose: a min-to-max axis made
+    941 → 2,960 look like the same climb as 2,950 → 2,960. Two points
+    minimum, or there is no line to draw, and then no axis either."""
     pts = [v for v in values if isinstance(v, (int, float))]
     if len(pts) < 2:
         return ""
@@ -419,22 +457,13 @@ def _sparkline(values: list[int], color_var: str, first, last) -> str:
         f'<line x1="0" x2="{w}" y1="{h - t / top * h:.1f}" y2="{h - t / top * h:.1f}" '
         'stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>'
         for t in ticks)
-    # A small top can be a half-step (1.5, 15), so half of it is not always a
-    # whole number; print the one decimal rather than round 7.5 to "8".
-    labels = "".join(
-        f'<span style="bottom:{100 * t / top:.0f}%">'
-        f'{t:,.0f}</span>' if t == int(t) else
-        f'<span style="bottom:{100 * t / top:.0f}%">{t:,.1f}</span>'
-        for t in ticks)
-    return ('<div class="spark-wrap">'
-            f'<div class="spark-y" aria-hidden="true">{labels}</div>'
-            '<div class="spark-plot">'
+    return (f'<div class="chart">{_y_labels(top)}'
             f'<svg class="spark" viewBox="0 0 {w} {h}" preserveAspectRatio="none" '
             f'role="img" aria-label="{lo:,} to {hi:,}">{grid}'
             f'<polyline fill="none" stroke="var({color_var})" stroke-width="2" '
             'vector-effect="non-scaling-stroke" '
             f'points="{coords}"/></svg>\n'
-            + _axis(first, last) + "</div></div>\n")
+            + _axis(first, last) + "</div>\n")
 
 
 def _age_hours(stats: dict | None, now: datetime) -> float | None:
@@ -603,8 +632,8 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
     chart = _day_bars(edits_rows(edits_days), "--accent", labels=True)
     if chart:
         p.append('<p class="muted">Changesets through the PapaMap theme per '
-                 "day, the number above each column that has any; hover a "
-                 "column for its date.</p>\n")
+                 "day, the number above each column that has any where the "
+                 "screen is wide enough; hover a column for its date.</p>\n")
         p.append(chart)
     else:
         p.append(f'<p class="muted">No changesets through the theme in the '
@@ -742,7 +771,8 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
     if chart:
         p.append('<p class="muted">Status transitions per day — green is '
                  "→ accessible, the grey rest the other transitions; the "
-                 "number is the day's total. Hover a day for the split, "
+                 "number above a column, where the screen is wide enough "
+                 "for it, is the day's total. Hover a day for the split, "
                  "new/gone included.</p>\n")
         p.append(chart)
 
