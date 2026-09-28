@@ -18,6 +18,7 @@
 // the app is out of draft, "completed" sends the release straight to the track.
 import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 
 export const PACKAGE = "de.papamap.app";
 const API = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE}`;
@@ -104,7 +105,7 @@ async function upload(file, { track, status }) {
   console.log(`${track}: version code ${bundle.versionCode} as ${status}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [cmd, ...rest] = process.argv.slice(2);
   const run = async () => {
     if (cmd === "upload") {
