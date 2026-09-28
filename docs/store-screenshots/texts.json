@@ -1,0 +1,86 @@
+{
+  "de": {
+    "01": {
+      "headline": "Wickeltische, an die *Papa* rankommt",
+      "subline": "Grün: beide Eltern. Rot: nur Damen-WC. Grau: noch keiner weiß es."
+    },
+    "02": {
+      "headline": "Der *nächste* Wickeltisch, den du auch erreichst",
+      "subline": "Mit Entfernung. Auch per Siri, Widget und Kontrollzentrum."
+    },
+    "03": {
+      "headline": "Grauer Pin? Sag, in welchem *Raum* der Tisch ist",
+      "subline": "Die Antwort geht direkt nach OpenStreetMap."
+    },
+    "04": {
+      "headline": "*Route* zum Wickeltisch",
+      "subline": "Öffnet deine Navi-App: Apple Maps, Google Maps, Waze oder Organic Maps."
+    },
+    "05": {
+      "headline": "*Suche* nach Ort oder Adresse",
+      "subline": "Orte auf der Karte und Adressen weltweit."
+    },
+    "06": {
+      "headline": "*Mama*-Ansicht, Spielecke, Barrierefrei",
+      "subline": "Die Karte zeigt nur, was du brauchst."
+    },
+    "07": {
+      "headline": "Stadt *offline* speichern",
+      "subline": "Hamburg sind 27 MB. Dann geht die Karte auch ohne Netz."
+    },
+    "08": {
+      "headline": "*Mein* PapaMap",
+      "subline": "Deine Antworten, gemerkte Orte, und wie viel in deiner Stadt schon beantwortet ist."
+    },
+    "09": {
+      "headline": "Der nächste Tisch auf dem *Homescreen*",
+      "subline": "Widget für Home- und Sperrbildschirm."
+    },
+    "10": {
+      "headline": "*Siri* und Kontrollzentrum",
+      "subline": "„Nächster Wickeltisch“, ohne die App zu öffnen."
+    }
+  },
+  "en": {
+    "01": {
+      "headline": "Changing tables *dads* can get to",
+      "subline": "Green: both parents. Red: ladies' room only. Grey: nobody knows yet."
+    },
+    "02": {
+      "headline": "The *nearest* table you can actually reach",
+      "subline": "With the distance. Also via Siri, widget and Control Center."
+    },
+    "03": {
+      "headline": "Grey pin? Say which *room* the table is in",
+      "subline": "Your answer goes straight to OpenStreetMap."
+    },
+    "04": {
+      "headline": "*Route* to the table",
+      "subline": "Opens your navigation app: Apple Maps, Google Maps, Waze or Organic Maps."
+    },
+    "05": {
+      "headline": "*Search* a place or an address",
+      "subline": "Places on this map and addresses worldwide."
+    },
+    "06": {
+      "headline": "*Mum* view, play corner, accessible",
+      "subline": "The map shows only what you need."
+    },
+    "07": {
+      "headline": "Save a city *offline*",
+      "subline": "Hamburg is 27 MB. The map then works without a connection."
+    },
+    "08": {
+      "headline": "*My* PapaMap",
+      "subline": "Your answers, saved places, and how much of your city is answered already."
+    },
+    "09": {
+      "headline": "The nearest table on your *home screen*",
+      "subline": "Widget for the home and lock screen."
+    },
+    "10": {
+      "headline": "*Siri* and Control Center",
+      "subline": "\"Nearest changing table\", without opening the app."
+    }
+  }
+}
