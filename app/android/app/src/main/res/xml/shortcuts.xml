@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press on the app icon: "Nearest changing table", which can also be
+     dragged onto the home screen. It opens papamap://nearest, and the page
+     runs its own "nearest" button (web/native.js onAppUrl), so the search,
+     the permission question and the answer are the map's, not a copy. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="nearest"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_nearest"
+        android:shortcutShortLabel="@string/shortcut_nearest_short"
+        android:shortcutLongLabel="@string/shortcut_nearest_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="papamap://nearest"
+            android:targetPackage="de.papamap.app"
+            android:targetClass="de.papamap.app.MainActivity" />
+    </shortcut>
+</shortcuts>

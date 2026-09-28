@@ -12,8 +12,9 @@
 //     from papamap.de/tiles/, rendered with the Protomaps style over the
 //     usual raster tiles — offline, or simply always, once it is there);
 //   - log in to OSM through the in-app browser and come back by URL;
-//   - hand the tables to the iOS widget and the Siri shortcut (PapaMapShare,
-//     a plugin of the app's own, app/ios/App/App/PapaMapSharePlugin.swift).
+//   - hand the tables to the widget and the Siri shortcut (PapaMapShare, a
+//     plugin of the app's own: app/ios/App/App/PapaMapSharePlugin.swift and
+//     app/android/app/src/main/java/de/papamap/app/PapaMapSharePlugin.java).
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
 // nothing is sent that the website does not send: a download is a GET.
 
@@ -780,9 +781,11 @@ export function nativeNavigate(url) {
   plugin("Browser").open({ url });
 }
 
-// One listener for every URL the OS hands the app: the OAuth return and the
-// widget's deep link. Returns nothing; the callbacks decide.
-export function onAppUrl({ auth, table }) {
+// One listener for every URL the OS hands the app: the OAuth return, the
+// widget's deep link to a table, and papamap://nearest — Android's widget with
+// no position to hand and its launcher shortcut, which ask the page to run its
+// own "nearest" button. Returns nothing; the callbacks decide.
+export function onAppUrl({ auth, table, nearest = () => {} }) {
   const app = plugin("App");
   if (!app) return;
   app.addListener("appUrlOpen", ({ url }) => {
@@ -792,13 +795,30 @@ export function onAppUrl({ auth, table }) {
       auth(url);
     } else if (url.startsWith("papamap://table")) {
       table(new URL(url).searchParams.get("osm"));
+    } else if (url.startsWith("papamap://nearest")) {
+      nearest();
     }
   });
   // Cold start from a deep link: the listener above is attached too late for
   // the URL the app was launched with, so ask once.
   app.getLaunchUrl?.().then((r) => {
     if (r?.url?.startsWith("papamap://table")) table(new URL(r.url).searchParams.get("osm"));
+    else if (r?.url?.startsWith("papamap://nearest")) nearest();
   }).catch(() => {});
+}
+
+// Android's back key. With no listener the App plugin only steps back through
+// the WebView's history, and the map is one page with none, so the key did
+// nothing at all. `closeTop` closes whatever is on top and says whether there
+// was anything; with nothing open the app goes to the background, which is what
+// the back key does on Android's own launcher-level screens (since Android 12 it
+// no longer finishes the activity). iOS has no back key and never fires this.
+export function onBackButton(closeTop) {
+  const app = plugin("App");
+  if (!app) return;
+  app.addListener("backButton", () => {
+    if (!closeTop()) app.minimizeApp?.()?.catch?.(() => {});
+  });
 }
 
 // The in-app Browser sheet (openExternal, interceptLinks — every OSM/
@@ -818,12 +838,14 @@ export function onBrowserFinished(onReturn) {
   b.addListener("browserFinished", () => onReturn());
 }
 
-// ---- The widget and the Siri shortcut (iOS) ----
-// A compact copy of the dataset for the Swift side: one row per table, five
+// ---- The widget, and on iOS the Siri shortcut ----
+// A compact copy of the dataset for the native side: one row per table, five
 // decimals (about a metre), status, name, OSM URL, and (v50, appended so an
-// older widget reading the first five still parses the row) men_only. Written on every load;
-// the widget re-reads it from the App Group container and recomputes the
-// nearest table with the phone's own location, which never comes here.
+// older widget reading the first five still parses the row) men_only. Written
+// on every load; the widget re-reads it (the App Group container on iOS, the
+// app's own files on Android — PapaMapSharePlugin, one per platform, same
+// name and methods) and recomputes the nearest table with the phone's own
+// location, which never comes here.
 export function shareDataset(features) {
   const p = plugin("PapaMapShare");
   if (!p) return;

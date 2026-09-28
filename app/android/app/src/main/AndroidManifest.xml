@@ -21,17 +21,36 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- The OSM login's return leg (papamap://auth) and the deep link
-                 to a pin (papamap://table?osm=...), both handled in
-                 web/native.js. -->
+            <!-- The OSM login's return leg (papamap://auth), the deep link
+                 to a pin (papamap://table?osm=...) and the nearest search
+                 (papamap://nearest, the widget and the shortcut), all
+                 handled in web/native.js. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="papamap" />
             </intent-filter>
+            <!-- The long-press shortcut, papamap://nearest. -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
 
         </activity>
+
+        <!-- The home-screen widget (NearestWidget): the nearest reachable
+             table from the phone's last known position. -->
+        <receiver
+            android:name=".NearestWidget"
+            android:label="@string/widget_title"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_nearest_info" />
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"
