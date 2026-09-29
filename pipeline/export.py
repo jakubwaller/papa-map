@@ -84,7 +84,7 @@ def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]
                 # the popup's play question.
                 "play": play_state(tags),
                 # Free for the same reason. Tri-state or null, shown verbatim
-                # in the popup; only wheelchair=yes drives a filter.
+                # in the popup; wheelchair=yes and limited drive the chip (v53).
                 "wheelchair": wheelchair_state(tags),
                 "toilets_wheelchair": wheelchair_state(tags, "toilets:wheelchair"),
                 "wheelchair_description": tags.get("wheelchair:description"),
