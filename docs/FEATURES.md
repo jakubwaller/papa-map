@@ -686,11 +686,17 @@ derived from them: `wheelchair` (`yes|limited|no|null`), `toilets_wheelchair`
 mapper's free text) and `key` — the central-key system that locks the door
 (`eurokey`, `nks`, …) or null. On a shop or a café `wheelchair=*` describes the
 entrance, on a toilet block the toilet itself. The popup shows all of it; the
-chip bar gains a last chip that narrows to `wheelchair=yes` and nothing else.
-`limited` is one step of up to 7 cm or help needed (the wiki's definition, and
-what Wheelmap paints orange), and `toilets:wheelchair=yes` alone would admit a
-place with a step at the door, so both stay in the popup and out of the
-filter. Like play it is a badge, never a status: an untagged place is
+chip bar gains a last chip that narrows to `wheelchair=yes` and
+`wheelchair=limited`. `limited` is one step of up to 7 cm or help needed (the
+wiki's definition, and what Wheelmap paints orange), so it is marked rather
+than left out: under the chip a `limited` pin carries a white exclamation mark
+inside it and a `limited` ring an ink one, both from zoom 13, and only while
+the chip is on. A keyed `limited` table shows the key alone, the harder
+condition, and the popup states both. The mark is never a colour, the pin keeps
+its status colour. `toilets:wheelchair=yes` alone would admit a place with a
+step at the door, so it stays in the popup and out of the filter. Until v53 the
+chip took `yes` alone; the father who asked for the chip in the first place
+asked for `limited` too, and can judge the step himself. Like play it is a badge, never a status: an untagged place is
 unrecorded, not inaccessible, so the chip starts off and subtracts. Switched on,
 it stays on for that device (`localStorage`, `papamap-wheelchair`). The play
 places carry the same three tags since v28, and the chip narrows their rings

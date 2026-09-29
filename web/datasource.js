@@ -159,14 +159,20 @@ export function countPlay(features) {
   return features.reduce((n, f) => n + (f.play ? 1 : 0), 0);
 }
 
-// The wheelchair chip's rule, in one place: `wheelchair=yes` and nothing
-// else. `limited` is heterogeneous by the wiki's definition (one step of up
-// to 7 cm, or help needed) and Wheelmap keeps it orange, never green;
-// `toilets:wheelchair=yes` alone would admit places with a step or a "no" at
-// the door. Both stay visible in the popup — the information is worth more
-// than the filter — but neither gets a place under the chip.
+// The wheelchair chip's rule, in one place: `wheelchair=yes` or
+// `wheelchair=limited`. `limited` is heterogeneous by the wiki's definition
+// (one step of up to 7 cm, or help needed), so it is admitted and marked
+// rather than left out (v53): the chip's audience asked to see those places
+// and judge the step themselves. `toilets:wheelchair=yes` alone still does
+// not pass, since it would admit places with a step or a "no" at the door.
+// It stays visible in the popup, but gets no place under the chip.
 export function isWheelchairOk(f) {
-  return f.wheelchair === "yes";
+  return f.wheelchair === "yes" || f.wheelchair === "limited";
+}
+
+// The half of the chip's rule that gets a mark on the map (v53).
+export function isWheelchairLimited(f) {
+  return f.wheelchair === "limited";
 }
 
 export function countWheelchair(features) {
@@ -177,7 +183,7 @@ export function countWheelchair(features) {
 // default it is every pin — the features with no central key on the door
 // (CONTRACT v5: a Euro key is issued only against proof of disability, so a
 // door it gates is closed to most dads). Under the wheelchair chip it is
-// every table that passes the chip's rule, keyed or not: the chip's audience
+// every table that passes the chip's rule (yes or limited), keyed or not: the chip's audience
 // is exactly who holds the key, so the tables v5 took away come back here,
 // marked, and nowhere else.
 export function pinFeatures(features, wheelchairOnly = false) {
@@ -283,11 +289,12 @@ export function mapCompleteVenueUrl(lon, lat, zoom, lang) {
 }
 
 // Rebuild a FeatureCollection for the map source. Properties carry only
-// {idx, status, play, key}: status drives the data-driven circle color, play
-// the halo layer's filter, key the key-icon layer's, idx the click lookup. "unknown" features are emitted
-// last so their grey circles draw on top of the others — the untagged rooms
+// {idx, status, play, key, limited}: status drives the data-driven circle
+// color, play the halo layer's filter, key the key-icon layer's, limited the
+// exclamation-mark layer's (true only with the chip on, v53), idx the click
+// lookup. "unknown" features are emitted last so their grey circles draw on top of the others — the untagged rooms
 // are the call to action.
-export function toFeatureCollection(features) {
+export function toFeatureCollection(features, wheelchairOnly = false) {
   const ordered = [...features].sort(
     (a, b) => (a.status === "unknown") - (b.status === "unknown"));
   return {
@@ -296,21 +303,24 @@ export function toFeatureCollection(features) {
       type: "Feature",
       geometry: { type: "Point", coordinates: [f.lon, f.lat] },
       properties: { idx: f.idx, status: f.status, men_only: f.men_only === true,
-                    play: f.play, key: f.key !== null },
+                    play: f.play, key: f.key !== null,
+                    limited: wheelchairOnly && isWheelchairLimited(f) },
     })),
   };
 }
 
 // The same for the play places, which need no status and no ordering — one
 // uniform ring layer, and idx for the click lookup.
-export function placesToFeatureCollection(places) {
+export function placesToFeatureCollection(places, wheelchairOnly = false) {
   return {
     type: "FeatureCollection",
     features: places.map((p) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-      // `no` picks the dashed ring over the hollow one.
-      properties: { idx: p.idx, no: p.changing_table === "no" },
+      // `no` picks the dashed ring over the hollow one; `limited` (only with
+      // the wheelchair chip on, v53) picks the exclamation mark in it.
+      properties: { idx: p.idx, no: p.changing_table === "no",
+                    limited: wheelchairOnly && isWheelchairLimited(p) },
     })),
   };
 }

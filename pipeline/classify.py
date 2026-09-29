@@ -151,7 +151,7 @@ def wheelchair_state(tags: dict, key: str = "wheelchair") -> str | None:
     On a shop or a café `wheelchair=*` describes the entrance, on an
     `amenity=toilets` object the toilet itself; `toilets:wheelchair=*` says the
     place has an accessible toilet. The frontend shows both as they are and
-    filters on `wheelchair=yes` alone (CONTRACT v26) — neither says where the
+    filters on `wheelchair=yes` or `limited` (CONTRACT v26, v53) — neither says where the
     table is, which stays `changing_table:location`'s job."""
     value = _v(tags, key)
     return value if value in WHEELCHAIR_VALUES else None

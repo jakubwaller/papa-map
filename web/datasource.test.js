@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
          chipKeys, chipView,
-         isWheelchairOk, countWheelchair, pinFeatures, placeFeatures,
+         isWheelchairOk, isWheelchairLimited, countWheelchair, pinFeatures, placeFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
@@ -113,9 +113,9 @@ test("play places narrow under the wheelchair chip by the tables' rule", () => {
   assert.deepEqual(places.map((p) => p.wheelchair), ["yes", "limited", null, null, null]);
   assert.equal(places[0].toilets_wheelchair, "no");
   assert.equal(places[0].wheelchair_description, "Aufzug");
-  // off: every place; on: wheelchair=yes and nothing else
+  // off: every place; on: wheelchair=yes or limited, nothing else
   assert.equal(placeFeatures(places).length, 5);
-  assert.deepEqual(placeFeatures(places, true).map((p) => p.idx), [0]);
+  assert.deepEqual(placeFeatures(places, true).map((p) => p.idx), [0, 1]);
   // a dataset from before v28 has no tag on any place, so the chip shows none
   assert.deepEqual(placeFeatures(loadPlaces(PLACES_FC), true), []);
 });
@@ -133,11 +133,12 @@ test("loadPlaces tolerates a missing or malformed file", () => {
   assert.deepEqual(loadPlaces({ features: "nope" }), []);
 });
 
-test("placesToFeatureCollection carries idx and the no flag", () => {
+test("placesToFeatureCollection carries idx, the no flag and limited", () => {
   const out = placesToFeatureCollection(loadPlaces(PLACES_FC));
   assert.equal(out.type, "FeatureCollection");
   assert.deepEqual(out.features.map((f) => f.properties),
-    [{ idx: 0, no: false }, { idx: 1, no: false }, { idx: 2, no: true }]);
+    [{ idx: 0, no: false, limited: false }, { idx: 1, no: false, limited: false },
+     { idx: 2, no: true, limited: false }]);
   assert.deepEqual(out.features[0].geometry.coordinates, [9.98, 53.54]);
   assert.deepEqual(placesToFeatureCollection([]).features, []);
 });
@@ -269,16 +270,71 @@ test("wheelchair is a tri-state or null — never derived, never a status", () =
   assert.equal(load({ wheelchair: "no", status: "accessible" }).status, "accessible");
 });
 
-test("the wheelchair chip admits wheelchair=yes and nothing else", () => {
+test("the wheelchair chip admits wheelchair=yes and limited, nothing else", () => {
   assert.equal(isWheelchairOk({ wheelchair: "yes" }), true);
-  assert.equal(isWheelchairOk({ wheelchair: "limited" }), false);
+  assert.equal(isWheelchairOk({ wheelchair: "limited" }), true);
   assert.equal(isWheelchairOk({ wheelchair: "no" }), false);
   assert.equal(isWheelchairOk({ wheelchair: null }), false);
+  assert.equal(isWheelchairOk({}), false);
+  assert.equal(isWheelchairOk({ wheelchair: "Yes" }), false);
   // an accessible toilet at a place with a step at the door is not enough
   assert.equal(isWheelchairOk({ wheelchair: null, toilets_wheelchair: "yes" }), false);
-  assert.equal(isWheelchairOk({ wheelchair: "limited", toilets_wheelchair: "yes" }), false);
+  assert.equal(isWheelchairOk({ wheelchair: "no", toilets_wheelchair: "yes" }), false);
+  assert.equal(isWheelchairOk({ wheelchair: "limited", toilets_wheelchair: "no" }), true);
   assert.equal(countWheelchair([{ wheelchair: "yes" }, { wheelchair: "yes", key: "eurokey" },
-                                { wheelchair: "limited" }, {}]), 2);
+                                { wheelchair: "limited" }, {}]), 3);
+});
+
+test("isWheelchairLimited is true for limited alone", () => {
+  assert.equal(isWheelchairLimited({ wheelchair: "limited" }), true);
+  assert.equal(isWheelchairLimited({ wheelchair: "yes" }), false);
+  assert.equal(isWheelchairLimited({ wheelchair: null }), false);
+});
+
+const WC_ROWS = () => [
+  { idx: 0, status: "accessible", wheelchair: "yes", key: null },
+  { idx: 1, status: "accessible", wheelchair: "limited", key: null },
+  { idx: 2, status: "accessible", wheelchair: "no", key: null },
+  { idx: 3, status: "unknown", wheelchair: null, key: null },
+  { idx: 4, status: "accessible", wheelchair: "yes", key: "eurokey" },
+  { idx: 5, status: "accessible", wheelchair: "limited", key: "nks" },
+  { idx: 6, status: "accessible", wheelchair: "no", key: "eurokey" },
+];
+
+test("under the chip the pins are yes and limited, keyed or not", () => {
+  const fs = WC_ROWS();
+  assert.deepEqual(pinFeatures(fs, true).map((f) => f.idx), [0, 1, 4, 5]);
+  assert.deepEqual(pinFeatures(fs, false).map((f) => f.idx), [0, 1, 2, 3]);
+  assert.equal(countWheelchair(fs), 4);
+});
+
+test("filterFeatures under the chip and the play filter keeps a limited table with play", () => {
+  const fs = [
+    { idx: 0, status: "accessible", wheelchair: "limited", key: null, play: true },
+    { idx: 1, status: "accessible", wheelchair: "limited", key: null, play: false },
+  ];
+  assert.deepEqual(filterFeatures(fs, new Set(STATUSES), true, true).map((f) => f.idx), [0]);
+});
+
+test("the map sources mark limited places only with the chip on", () => {
+  const fs = WC_ROWS().map((f) => ({ ...f, lon: 1, lat: 1, play: false }));
+  assert.ok(toFeatureCollection(fs).features.every((f) => f.properties.limited === false));
+  // unknown pins are emitted last, so compare by idx
+  const on = toFeatureCollection(fs, true).features
+    .sort((a, b) => a.properties.idx - b.properties.idx);
+  assert.deepEqual(on.map((f) => f.properties.limited),
+    fs.map((f) => f.wheelchair === "limited"));
+  // the key flag is unchanged by the chip
+  assert.deepEqual(on.map((f) => f.properties.key), fs.map((f) => f.key !== null));
+  const places = [
+    { idx: 0, lon: 1, lat: 1, wheelchair: "limited", changing_table: null },
+    { idx: 1, lon: 1, lat: 1, wheelchair: "yes", changing_table: null },
+    { idx: 2, lon: 1, lat: 1, wheelchair: "limited", changing_table: "no" },
+  ];
+  assert.ok(placesToFeatureCollection(places).features.every((f) => f.properties.limited === false));
+  const pon = placesToFeatureCollection(places, true).features;
+  assert.deepEqual(pon.map((f) => f.properties.limited), [true, false, true]);
+  assert.deepEqual(pon.map((f) => f.properties.no), [false, false, true]);
 });
 
 test("keyed tables are hidden by default and come back only under the chip", () => {
@@ -295,16 +351,17 @@ test("keyed tables are hidden by default and come back only under the chip", () 
   // rows without the property at all (older callers, tests) are pins
   assert.equal(pinFeatures([{ status: "unknown" }]).length, 1);
   // under the chip: the rule alone decides, and the Euro-key table is back
-  assert.deepEqual(pinFeatures(v, true).map((f) => f.idx), [0, 1]);
-  assert.deepEqual(filterFeatures(v, new Set(STATUSES), false, true).map((f) => f.idx), [0, 1]);
+  assert.deepEqual(pinFeatures(v, true).map((f) => f.idx), [0, 1, 2]);
+  assert.deepEqual(filterFeatures(v, new Set(STATUSES), false, true).map((f) => f.idx), [0, 1, 2]);
   // a keyed table that fails the rule stays hidden either way
-  assert.ok(!filterFeatures(v, new Set(STATUSES), false, true).some((f) => f.idx === 2));
+  const noKeyed = loadFeatures({ features: [feat(5, 5, { status: "unknown", wheelchair: "no", key: "nks" })] });
+  assert.deepEqual(filterFeatures(noKeyed, new Set(STATUSES), false, true), []);
   // the status toggles and the play filter still narrow on top
-  assert.deepEqual(filterFeatures(v, new Set(["unknown"]), false, true), []);
+  assert.deepEqual(filterFeatures(v, new Set(["unknown"]), false, true).map((f) => f.idx), [2]);
   assert.deepEqual(filterFeatures(v, new Set(STATUSES), true, true), []);
   // the map source carries the key as a flag for the icon layer
   assert.deepEqual(toFeatureCollection(pinFeatures(v, true)).features.map((f) => f.properties.key),
-    [false, true]);
+    [false, true, true]);
 });
 
 test("nearestUsable skips keyed tables unless the chip is on, then obeys it", () => {
@@ -315,7 +372,9 @@ test("nearestUsable skips keyed tables unless the chip is on, then obeys it", ()
   ];
   assert.equal(nearestUsable(rows, 53.5503, 9.9920, "papa").feature.id, "mid-step");
   assert.equal(nearestUsable(rows, 53.5503, 9.9920, "papa", true).feature.id, "near-keyed");
-  assert.equal(nearestUsable(rows.slice(1), 53.5503, 9.9920, "papa", true).feature.id, "far-level");
+  // under the chip a limited table is a candidate, and here the nearest one
+  assert.equal(nearestUsable(rows.slice(1), 53.5503, 9.9920, "papa", true).feature.id, "mid-step");
+  assert.equal(nearestUsable(rows.slice(2), 53.5503, 9.9920, "papa", true).feature.id, "far-level");
 });
 
 test("toFeatureCollection emits unknown last so grey pins draw on top", () => {
@@ -362,12 +421,12 @@ test("MapComplete language: only codes it has, and the fragment stays last", () 
   assert.equal(withMapCompleteLanguage(null, "en"), null);
 });
 
-test("toFeatureCollection carries only {idx, status, men_only, play, key} and idx survives the reorder", () => {
+test("toFeatureCollection carries only {idx, status, men_only, play, key, limited} and idx survives the reorder", () => {
   const v = loadFeatures(FC);
   const out = toFeatureCollection(filterByStatus(v, ["unknown", "accessible"]));
   assert.equal(out.type, "FeatureCollection");
   for (const f of out.features) {
-    assert.deepEqual(Object.keys(f.properties).sort(), ["idx", "key", "men_only", "play", "status"]);
+    assert.deepEqual(Object.keys(f.properties).sort(), ["idx", "key", "limited", "men_only", "play", "status"]);
     const orig = v[f.properties.idx];  // the click-lookup the app does
     assert.equal(orig.status, f.properties.status);
     assert.equal(orig.play, f.properties.play);   // drives the halo layer filter
