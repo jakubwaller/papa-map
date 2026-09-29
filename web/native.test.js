@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { locateNative, loadJSONNative, loadDatasetNative, budget,
-         checkLocationPermissionNative, locateNativeCoarse, downloadInto } from "./native.js";
+         checkLocationPermissionNative, locateNativeCoarse, downloadInto,
+         countAnswer, answerCounter, requestReview, ANSWER_COUNT_KEY } from "./native.js";
 
 // A Geolocation plugin that plays back fixes: [ms, accuracy in metres].
 function fakeGeo(fixes, { permission = "granted" } = {}) {
@@ -977,4 +978,108 @@ test("downloadInto: a file at the root needs no folder", async () => {
   const fs = fakeFs();
   await downloadInto(fs, { url: "u", path: "x.json", directory: "DATA" });
   assert.deepEqual(fs.calls.map(([name]) => name), ["downloadFile"]);
+});
+
+// ---- The store-rating ask ----
+test("countAnswer counts up to three and asks only on the step from 2 to 3", () => {
+  const cases = [
+    [null, 1, false], [undefined, 1, false], ["", 1, false], ["0", 1, false],
+    ["1", 2, false], ["2", 3, true], ["3", 3, false], ["7", 3, false],
+    ["-4", 1, false], ["abc", 1, false], ["2abc", 1, false], [" 2 ", 3, true],
+    ["2.5", 1, false], [2, 3, true], ["Infinity", 1, false],
+  ];
+  for (const [stored, count, ask] of cases) {
+    assert.deepEqual(countAnswer(stored), { count, ask }, `stored ${JSON.stringify(stored)}`);
+  }
+});
+
+function counterRig({ initial, get, set, ask } = {}) {
+  const store = new Map(initial === undefined ? [] : [[ANSWER_COUNT_KEY, initial]]);
+  const scheduled = [];
+  const asked = [];
+  const note = answerCounter({
+    get: get || ((k) => store.get(k)),
+    set: set || ((k, v) => { store.set(k, v); }),
+    ask: ask || (() => { asked.push(1); }),
+    later: (f) => scheduled.push(f),
+  });
+  return { note, store, scheduled, asked };
+}
+
+test("answerCounter: three answers schedule one ask, which runs later", () => {
+  const r = counterRig();
+  r.note(); r.note();
+  assert.equal(r.scheduled.length, 0);
+  r.note();
+  assert.equal(r.scheduled.length, 1);
+  assert.equal(r.asked.length, 0);
+  r.scheduled[0]();
+  assert.equal(r.asked.length, 1);
+  assert.equal(r.store.get(ANSWER_COUNT_KEY), "3");
+});
+
+test("answerCounter: ten answers ask once in total", () => {
+  const r = counterRig();
+  for (let i = 0; i < 10; i++) r.note();
+  r.scheduled.forEach((f) => f());
+  assert.equal(r.asked.length, 1);
+  assert.equal(r.store.get(ANSWER_COUNT_KEY), "3");
+});
+
+test("answerCounter: a stored 2 asks on the next answer", () => {
+  const r = counterRig({ initial: "2" });
+  r.note();
+  assert.equal(r.scheduled.length, 1);
+});
+
+test("answerCounter: a stored 3 never asks", () => {
+  const r = counterRig({ initial: "3" });
+  for (let i = 0; i < 5; i++) r.note();
+  assert.equal(r.scheduled.length, 0);
+});
+
+test("answerCounter: blocked storage counts in memory, one ask per launch", () => {
+  const boom = () => { throw new Error("blocked"); };
+  const r = counterRig({ get: boom, set: boom });
+  const seen = [];
+  for (let i = 0; i < 5; i++) { r.note(); seen.push(r.scheduled.length); }
+  assert.deepEqual(seen, [0, 0, 1, 1, 1]);
+});
+
+test("answerCounter: storage that reads but cannot write carries on in memory", () => {
+  const r = counterRig({ initial: "1", set: () => { throw new Error("full"); } });
+  r.note();
+  assert.equal(r.scheduled.length, 0);
+  r.note();
+  assert.equal(r.scheduled.length, 1);
+  r.note();
+  assert.equal(r.scheduled.length, 1);
+});
+
+test("answerCounter: an ask that throws does not escape the scheduled callback", () => {
+  const r = counterRig({ initial: "2", ask: () => { throw new Error("no store"); } });
+  r.note();
+  assert.doesNotThrow(() => r.scheduled[0]());
+});
+
+test("requestReview is inert without a plugin or without the method", () => {
+  assert.doesNotThrow(() => requestReview(undefined));
+  assert.doesNotThrow(() => requestReview({}));
+});
+
+test("requestReview swallows a rejection", async () => {
+  const escaped = [];
+  const on = (e) => escaped.push(e);
+  process.on("unhandledRejection", on);
+  try {
+    requestReview({ requestReview: () => Promise.reject(new Error("nope")) });
+    await new Promise((r) => setTimeout(r, 10));
+  } finally { process.off("unhandledRejection", on); }
+  assert.deepEqual(escaped, []);
+});
+
+test("requestReview calls the plugin once", () => {
+  let n = 0;
+  requestReview({ requestReview: () => { n++; return Promise.resolve(); } });
+  assert.equal(n, 1);
 });

@@ -12,13 +12,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app53";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app54";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app53";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app54";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app53";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app54";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -26,7 +26,7 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app53";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app54";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -34,22 +34,23 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
-         onBrowserFinished, onBackButton, SITE } from "./native.js?v=app53";
+         onBrowserFinished, onBackButton, SITE,
+         answerCounter } from "./native.js?v=app54";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app53";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app54";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app53";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app54";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app53";
+import { isOpenNow } from "./opening-hours.js?v=app54";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -74,6 +75,10 @@ const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 // the registration.
 // host: the changeset's `host` tag stays the site's address — the redirect is
 // only the OAuth return leg, and papamap://auth is no provenance for an edit.
+// Counts the reader's successful answers and, once, asks the store for a
+// rating (native.js, answerCounter). Only in the app: the website neither
+// counts nor asks, and writes no key for it.
+const noteAnswer = isNative() ? answerCounter() : null;
 const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT, host: LIVE.redirect } : endpoints(location);
 const CHANGESET_COMMENT = {
   table: "Changing table: which room (answered on papamap.de)",
@@ -2296,6 +2301,7 @@ async function answer(kind, obj, choice, freshToken = null) {
     const tags = {};
     for (const k of (play ? PLAY_TAGS : TABLE_TAGS)) if (out.tags[k]) tags[k] = out.tags[k];
     setEditNote(rec, "found", "editFound", tags);
+    noteAnswer?.();
   } catch (err) {
     btns.forEach((b) => { b.disabled = false; });
     // A dead token is not the reader's problem: log in again, answer in hand.

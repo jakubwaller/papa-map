@@ -1,5 +1,20 @@
 # papa-map — build contract (v0)
 
+> **v52 amendment (29 Sep 2026, asking for a rating): no shape change.** The
+> store app asks the store for a rating once, after the reader's third
+> successful answer on this device, never on launch. `answerCounter(io)`
+> (`web/native.js`) counts successful `answer()` writes of every kind (room,
+> place, play) in one new device key, `papamap-answer-count` (app only, capped
+> at 3, named in both Datenschutz pages), and asks on the step from 2 to 3,
+> two seconds later; blocked storage falls back to a count in memory, so at
+> most once per launch. Answers given before this build do not count. The ask
+> is `PapaMapShare.requestReview`, a third method on the app's own plugin:
+> `AppStore.requestReview(in:)` on iOS, Play's In-App Review on Android
+> (`com.google.android.play:review`). Whether the store shows its sheet is the
+> store's call, and nothing comes back to the page. The website neither counts
+> nor asks. No new i18n keys: the sheet is the system's. Shell pin `app53` →
+> `app54`.
+>
 > **v51 amendment (25 Sep 2026, the mum's fourth chip): no shape change.** v50
 > painted the men's-room-only tables red in the mother's reading but left them
 > under her green "openly accessible" chip, counted there, so a mum filtering

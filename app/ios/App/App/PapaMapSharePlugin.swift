@@ -2,11 +2,13 @@ import Foundation
 import UIKit
 import Capacitor
 import WidgetKit
+import StoreKit
 
 // The app's own plugin: what web/native.js calls to hand the widget and the
-// Siri shortcut what they need. Two methods, both write-only into the App
-// Group container; nothing comes back to the page, and nothing leaves the
-// phone. Registered in MainViewController, not by macro: an app-target
+// Siri shortcut what they need. Three methods, all write-only: two into the
+// App Group container, and a third, requestReview, that asks the store to show
+// its rating sheet. Nothing comes back to the page (whether the sheet appears
+// is Apple's call), and nothing leaves the phone. Registered in MainViewController, not by macro: an app-target
 // plugin has no package for the Capacitor CLI to discover.
 //
 // It carries one thing the other way: the table a tapped Siri answer left in
@@ -19,6 +21,7 @@ public class PapaMapSharePlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "writeDataset", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setSettings", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "requestReview", returnType: CAPPluginReturnPromise),
     ]
     private var observers: [NSObjectProtocol] = []
 
@@ -76,5 +79,16 @@ public class PapaMapSharePlugin: CAPPlugin, CAPBridgedPlugin {
         if let lang = call.getString("lang") { d?.set(lang, forKey: PapaMap.langKey) }
         reloadSurfaces()
         call.resolve()
+    }
+
+    // The page calls this once, after the reader's third answer. StoreKit
+    // decides whether the sheet shows (it rate-limits it), and says nothing back.
+    @objc func requestReview(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            if let scene = self.bridge?.viewController?.view.window?.windowScene {
+                AppStore.requestReview(in: scene)
+            }
+            call.resolve()
+        }
     }
 }

@@ -859,6 +859,62 @@ export function shareSettings({ mode, lang }) {
   plugin("PapaMapShare")?.setSettings({ mode, lang }).catch(() => {});
 }
 
+// ---- Asking for a store rating ----
+// The app asks the store for its rating sheet once, after the reader's third
+// successful answer — the moment they have just done something for the map and
+// seen their pin change, and never on launch, when nobody has had a reason to
+// like it yet. The count is one device key, capped at 3: after the step from 2
+// to 3 it never asks again on this device. Answers given before this build are
+// not counted; the count starts at 0. The website neither counts nor asks
+// (app.js only builds the counter when isNative()), so it writes no new key.
+//
+// Whether the store then shows anything is the store's call — Apple and Google
+// both rate-limit the sheet, and neither says whether it appeared — so nothing
+// comes back to the page and nothing is sent to papamap.de.
+export const ANSWER_COUNT_KEY = "papamap-answer-count";
+export const REVIEW_AT = 3;
+// Long enough for the reader to see the pin recolour and read the success note
+// before a system sheet covers both.
+export const REVIEW_DELAY_MS = 2000;
+
+// `stored` is whatever storage handed back (a string, null, undefined) or a
+// number. Parsed strictly, so "2abc", "-4", "2.5" and "Infinity" are all 0
+// rather than something a lenient parseInt would half-believe.
+export function countAnswer(stored) {
+  const s = String(stored).trim();
+  const parsed = /^\d+$/.test(s) ? Number(s) : 0;
+  const base = Math.min(parsed, REVIEW_AT);
+  return { count: Math.min(base + 1, REVIEW_AT), ask: base === REVIEW_AT - 1 };
+}
+
+// Through the app's own plugin, like the two methods above. Inert on the
+// website (no plugin) and on an older build of the app whose plugin lacks the
+// method; a rejection is swallowed, because there is nothing to do about it.
+export function requestReview(p = plugin("PapaMapShare")) {
+  try {
+    Promise.resolve(p?.requestReview?.()).catch(() => {});
+  } catch { /* a plugin that throws synchronously is as good as none */ }
+}
+
+// One counter per launch; call the returned note() once per successful answer.
+// If storage is blocked the count is kept in `mem` for the rest of the launch,
+// so a device that cannot remember still asks at most once per launch.
+export function answerCounter(io = {}) {
+  const get = io.get || ((k) => localStorage.getItem(k));
+  const set = io.set || ((k, v) => localStorage.setItem(k, v));
+  const ask = io.ask || (() => requestReview());
+  const later = io.later || ((f) => setTimeout(f, REVIEW_DELAY_MS));
+  let mem = null;   // this launch's own count, used once storage has failed
+  return function note() {
+    let stored;
+    if (mem === null) { try { stored = get(ANSWER_COUNT_KEY); } catch { mem = 0; } }
+    const { count, ask: doAsk } = countAnswer(mem ?? stored);
+    if (mem !== null) mem = count;
+    else { try { set(ANSWER_COUNT_KEY, String(count)); } catch { mem = count; } }
+    if (doAsk) later(() => { try { ask(); } catch { /* the store's call, not ours */ } });
+  };
+}
+
 // ---- Offline cities ----
 // The catalogue is built weekly on the server (pipeline/tiles.py) and lists
 // each city's slug, name, bbox and size; the file itself is a PMTiles

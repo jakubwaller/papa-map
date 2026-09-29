@@ -1027,6 +1027,14 @@ layout, the build and the signing):
   shows no distance: Control Center is drawn from a process with no fresh fix, and a number
   quietly hours old is worse than none.
 
+- **One request for a store rating, after the third answer.** The app counts the reader's
+  successful answers (room, place and play, on this device only; `papamap-answer-count`, capped at
+  3) and on the third asks the store for its rating sheet, two seconds later so the reader first
+  sees the pin recolour. Never on launch: a reader who has just helped the map is the one with a
+  reason to rate it, and one who has only opened it is not. One ask per device, ever; whether the
+  sheet appears is Apple's or Google's call (both rate-limit it) and nothing comes back to the
+  page. The website neither counts nor asks (CONTRACT.md v52).
+
 **On Android** there is a home-screen widget and a launcher shortcut, and no Siri or Control
 Center. The widget is the iOS one's twin in Java (`NearestWidget`, over the same compact rows,
 written by a `PapaMapShare` plugin of the same name and methods, and the same rule in `Tables`,

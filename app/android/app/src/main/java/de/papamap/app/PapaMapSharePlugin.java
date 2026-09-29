@@ -4,11 +4,14 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.google.android.play.core.review.ReviewManager;
+import com.google.android.play.core.review.ReviewManagerFactory;
 
-// The app's own plugin, under the same name and with the same two methods as
+// The app's own plugin, under the same name and with the same three methods as
 // PapaMapSharePlugin.swift, so web/native.js hands the widget its tables the
-// same way on both platforms. Both are write-only: nothing comes back to the
-// page, and nothing leaves the phone. Registered in MainActivity: an app's own
+// same way on both platforms. All are write-only: two write what the widget
+// reads, the third asks the store to show its rating sheet. Nothing comes back
+// to the page, and nothing leaves the phone. Registered in MainActivity: an app's own
 // plugin has no package for the Capacitor CLI to discover.
 //
 // iOS's third job, carrying a tapped Siri answer back to the page, has no
@@ -43,5 +46,21 @@ public class PapaMapSharePlugin extends Plugin {
         e.apply();
         NearestWidget.refresh(getContext());
         call.resolve();
+    }
+
+    // Google Play In-App Review, asked once after the reader's third answer.
+    // Play rate-limits the sheet and says nothing about whether it showed, and
+    // it only appears in a copy installed from Google Play — a sideloaded or
+    // debug build resolves quietly without one.
+    @PluginMethod
+    public void requestReview(PluginCall call) {
+        ReviewManager manager = ReviewManagerFactory.create(getContext());
+        manager.requestReviewFlow().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && getActivity() != null) {
+                manager.launchReviewFlow(getActivity(), task.getResult()).addOnCompleteListener(done -> call.resolve());
+            } else {
+                call.resolve();
+            }
+        });
     }
 }
