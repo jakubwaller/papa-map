@@ -859,6 +859,107 @@ export function shareSettings({ mode, lang }) {
   plugin("PapaMapShare")?.setSettings({ mode, lang }).catch(() => {});
 }
 
+// ---- Asking for a store rating ----
+// The app asks the store for its rating sheet once per device, never on launch
+// and never in the middle of something. A device becomes eligible after the
+// reader's third successful answer (room, place or play) or on the third
+// separate local day on which they opened a pin, whichever comes first — a
+// reader who only looks things up is as much a user as one who answers. The
+// ask itself fires only at a pin close, a second later, and only if the moment
+// is still calm (no pin, dialog, room card or search up, the app in front):
+// closing one pin to open the next is not the moment. Days on which the app was merely
+// launched do not count, and nothing from before this build does. The website
+// neither counts nor asks (app.js only builds the tracker when isNative()), so
+// it writes no key.
+//
+// Whether the store then shows anything is the store's call — Apple and Google
+// both rate-limit the sheet, and neither says whether it appeared — so nothing
+// comes back to the page and nothing is sent to papamap.de.
+export const REVIEW_KEY = "papamap-review";
+export const REVIEW_AT = 3;
+// Long enough for a pin that is being swapped for the next one to be open again.
+export const CLOSE_DELAY_MS = 1000;
+
+const REVIEW_DEFAULT = { answers: 0, days: 0, day: null, asked: false };
+
+// The local calendar day, not UTC: "another day" is the reader's own.
+export function localDay(date = new Date()) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
+}
+
+// Strict: whatever storage hands back that is not exactly this shape counts as
+// nothing, field by field, rather than something half-believed.
+export function parseReview(raw) {
+  let o;
+  try { o = JSON.parse(raw); } catch { return { ...REVIEW_DEFAULT }; }
+  if (o === null || typeof o !== "object" || Array.isArray(o)) return { ...REVIEW_DEFAULT };
+  const n = (v) => (Number.isInteger(v) ? Math.min(Math.max(v, 0), REVIEW_AT) : 0);
+  return {
+    answers: n(o.answers),
+    days: n(o.days),
+    day: typeof o.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(o.day) ? o.day : null,
+    asked: o.asked === true,
+  };
+}
+
+// A different day, not a later one: a clock that went back still counts.
+export function afterPinOpen(state, today) {
+  if (state.day === today) return { ...state };
+  return { ...state, days: Math.min(state.days + 1, REVIEW_AT), day: today };
+}
+export function afterAnswer(state) {
+  return { ...state, answers: Math.min(state.answers + 1, REVIEW_AT) };
+}
+export function reviewDue(state) {
+  return !state.asked && (state.answers >= REVIEW_AT || state.days >= REVIEW_AT);
+}
+
+// Through the app's own plugin, like the two methods above. Inert on the
+// website (no plugin) and on an older build of the app whose plugin lacks the
+// method; a rejection is swallowed, because there is nothing to do about it.
+export function requestReview(p = plugin("PapaMapShare")) {
+  try {
+    Promise.resolve(p?.requestReview?.()).catch(() => {});
+  } catch { /* a plugin that throws synchronously is as good as none */ }
+}
+
+// One tracker per launch. The state is read from storage on every call; if
+// storage is blocked (a read that throws, or a write that has ever thrown) it
+// is kept in memory for the rest of the launch instead, so a device that
+// cannot remember still asks at most once per launch. `calm` is app.js's
+// judgement of the moment; the default says yes to everything.
+export function reviewTracker(io = {}) {
+  const get = io.get || ((k) => localStorage.getItem(k));
+  const set = io.set || ((k, v) => localStorage.setItem(k, v));
+  const ask = io.ask || (() => requestReview());
+  const later = io.later || ((f) => setTimeout(f, CLOSE_DELAY_MS));
+  const today = io.today || (() => localDay());
+  const calm = io.calm || (() => true);
+  let mem = null;
+  const read = () => {
+    if (mem !== null) return mem;
+    try { return parseReview(get(REVIEW_KEY)); } catch { return (mem = { ...REVIEW_DEFAULT }); }
+  };
+  const write = (s) => {
+    if (mem !== null) { mem = s; return; }
+    try { set(REVIEW_KEY, JSON.stringify(s)); } catch { mem = s; }
+  };
+  return {
+    pinOpened() { write(afterPinOpen(read(), today())); },
+    answered() { write(afterAnswer(read())); },
+    pinClosed() {
+      if (!reviewDue(read())) return;
+      later(() => {
+        const s = read();
+        if (!reviewDue(s) || !calm()) return;
+        write({ ...s, asked: true });
+        try { ask(); } catch { /* the store's call, not ours */ }
+      });
+    },
+  };
+}
+
 // ---- Offline cities ----
 // The catalogue is built weekly on the server (pipeline/tiles.py) and lists
 // each city's slug, name, bbox and size; the file itself is a PMTiles

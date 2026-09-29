@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { locateNative, loadJSONNative, loadDatasetNative, budget,
-         checkLocationPermissionNative, locateNativeCoarse, downloadInto } from "./native.js";
+         checkLocationPermissionNative, locateNativeCoarse, downloadInto,
+         parseReview, localDay, afterPinOpen, afterAnswer, reviewDue, reviewTracker,
+         requestReview, REVIEW_KEY } from "./native.js";
 
 // A Geolocation plugin that plays back fixes: [ms, accuracy in metres].
 function fakeGeo(fixes, { permission = "granted" } = {}) {
@@ -977,4 +979,177 @@ test("downloadInto: a file at the root needs no folder", async () => {
   const fs = fakeFs();
   await downloadInto(fs, { url: "u", path: "x.json", directory: "DATA" });
   assert.deepEqual(fs.calls.map(([name]) => name), ["downloadFile"]);
+});
+
+// ---- The store-rating ask ----
+const RDEF = { answers: 0, days: 0, day: null, asked: false };
+
+test("parseReview: strict, field by field", () => {
+  assert.deepEqual(parseReview(null), RDEF);
+  assert.deepEqual(parseReview("not json"), RDEF);
+  assert.deepEqual(parseReview('{"answers":2,"days":1,"day":"2026-09-28","asked":false}'),
+    { answers: 2, days: 1, day: "2026-09-28", asked: false });
+  assert.deepEqual(parseReview('{"answers":9,"days":-1,"day":"x","asked":"yes"}'),
+    { answers: 3, days: 0, day: null, asked: false });
+  assert.equal(parseReview('{"answers":2.5}').answers, 0);
+  for (const raw of ["[]", '"3"', "null"]) assert.deepEqual(parseReview(raw), RDEF, raw);
+  assert.deepEqual(parseReview('{"asked":true}'), { ...RDEF, asked: true });
+});
+
+test("localDay is the local calendar day, zero-padded", () => {
+  assert.equal(localDay(new Date(2026, 8, 29, 23, 59)), "2026-09-29");
+  assert.equal(localDay(new Date(2026, 0, 5, 0, 0)), "2026-01-05");
+});
+
+test("afterPinOpen counts a day once, whichever way the clock moves", () => {
+  assert.deepEqual(afterPinOpen(RDEF, "2026-09-29"), { ...RDEF, days: 1, day: "2026-09-29" });
+  const same = { ...RDEF, days: 1, day: "2026-09-29" };
+  assert.deepEqual(afterPinOpen(same, "2026-09-29"), same);
+  assert.equal(afterPinOpen({ ...RDEF, days: 1, day: "2026-09-28" }, "2026-09-29").days, 2);
+  assert.deepEqual(afterPinOpen({ ...RDEF, days: 3, day: "2026-09-28" }, "2026-09-30"),
+    { ...RDEF, days: 3, day: "2026-09-30" });
+  assert.equal(afterPinOpen({ ...RDEF, days: 1, day: "2026-09-30" }, "2026-09-29").days, 2);
+});
+
+test("afterAnswer caps at three", () => {
+  assert.equal(afterAnswer(RDEF).answers, 1);
+  assert.equal(afterAnswer({ ...RDEF, answers: 2 }).answers, 3);
+  assert.equal(afterAnswer({ ...RDEF, answers: 3 }).answers, 3);
+});
+
+test("reviewDue: three answers or three days, and not yet asked", () => {
+  assert.equal(reviewDue({ ...RDEF, answers: 3 }), true);
+  assert.equal(reviewDue({ ...RDEF, days: 3 }), true);
+  assert.equal(reviewDue({ ...RDEF, answers: 2, days: 2 }), false);
+  assert.equal(reviewDue({ ...RDEF, answers: 3, asked: true }), false);
+});
+
+function trackerRig({ get, set, ask } = {}) {
+  const r = { store: new Map(), day: "2026-09-27", calm: true, scheduled: [], asked: 0 };
+  r.t = reviewTracker({
+    get: get || ((k) => r.store.get(k)),
+    set: set || ((k, v) => { r.store.set(k, v); }),
+    ask: ask || (() => { r.asked++; }),
+    later: (f) => r.scheduled.push(f),
+    today: () => r.day,
+    calm: () => r.calm,
+  });
+  r.state = () => JSON.parse(r.store.get(REVIEW_KEY));
+  r.threeDays = () => { for (const d of ["2026-09-27", "2026-09-28", "2026-09-29"]) { r.day = d; r.t.pinOpened(); } };
+  return r;
+}
+
+test("reviewTracker: three days of pins, then a close, asks once", () => {
+  const r = trackerRig();
+  r.threeDays();
+  assert.equal(r.scheduled.length, 0);
+  r.t.pinClosed();
+  assert.equal(r.scheduled.length, 1);
+  assert.equal(r.asked, 0);
+  r.scheduled[0]();
+  assert.equal(r.asked, 1);
+  assert.equal(r.state().asked, true);
+});
+
+test("reviewTracker: a close before the device is due schedules nothing", () => {
+  const r = trackerRig();
+  r.t.pinOpened(); r.t.answered(); r.t.pinClosed();
+  assert.equal(r.scheduled.length, 0);
+});
+
+test("reviewTracker: an uncalm moment marks nothing; the next close asks", () => {
+  const r = trackerRig();
+  r.threeDays(); r.t.pinClosed();
+  r.calm = false;
+  r.scheduled[0]();
+  assert.equal(r.asked, 0);
+  assert.equal(r.state().asked, false);
+  r.calm = true;
+  r.t.pinClosed();
+  r.scheduled[1]();
+  assert.equal(r.asked, 1);
+});
+
+test("reviewTracker: after the ask nothing schedules again", () => {
+  const r = trackerRig();
+  r.threeDays(); r.t.pinClosed(); r.scheduled[0]();
+  const n = r.scheduled.length;
+  r.day = "2026-10-05"; r.t.pinOpened(); r.t.answered(); r.t.pinClosed();
+  assert.equal(r.scheduled.length, n);
+});
+
+test("reviewTracker: three answers on one day, then a close, asks", () => {
+  const r = trackerRig();
+  r.t.answered(); r.t.answered(); r.t.answered(); r.t.pinClosed();
+  assert.equal(r.scheduled.length, 1);
+  r.scheduled[0]();
+  assert.equal(r.asked, 1);
+});
+
+test("reviewTracker: three answers and no close never ask", () => {
+  const r = trackerRig();
+  r.t.answered(); r.t.answered(); r.t.answered();
+  assert.equal(r.scheduled.length, 0);
+  assert.equal(r.asked, 0);
+});
+
+test("reviewTracker: several pin opens on one day are one day", () => {
+  const r = trackerRig();
+  for (let i = 0; i < 5; i++) r.t.pinOpened();
+  assert.equal(r.state().days, 1);
+});
+
+test("reviewTracker: blocked storage works in memory, one ask per launch", () => {
+  const boom = () => { throw new Error("blocked"); };
+  const r = trackerRig({ get: boom, set: boom });
+  r.t.answered(); r.t.answered(); r.t.answered();
+  r.t.pinClosed();
+  assert.equal(r.scheduled.length, 1);
+  r.scheduled[0]();
+  assert.equal(r.asked, 1);
+  r.t.pinClosed();
+  assert.equal(r.scheduled.length, 1);
+});
+
+test("reviewTracker: an ask that throws is recorded and does not escape", () => {
+  const r = trackerRig({ ask: () => { throw new Error("no store"); } });
+  r.threeDays(); r.t.pinClosed();
+  assert.doesNotThrow(() => r.scheduled[0]());
+  assert.equal(r.state().asked, true);
+});
+
+test("reviewTracker: two closes while due ask exactly once", () => {
+  const r = trackerRig();
+  r.threeDays(); r.t.pinClosed(); r.t.pinClosed();
+  assert.equal(r.scheduled.length, 2);
+  r.scheduled.forEach((f) => f());
+  assert.equal(r.asked, 1);
+});
+
+test("reviewTracker: the stored shape after the first pin open", () => {
+  const r = trackerRig();
+  r.day = "2026-09-29"; r.t.pinOpened();
+  assert.equal(r.store.get(REVIEW_KEY), '{"answers":0,"days":1,"day":"2026-09-29","asked":false}');
+});
+
+test("requestReview is inert without a plugin or without the method", () => {
+  assert.doesNotThrow(() => requestReview(undefined));
+  assert.doesNotThrow(() => requestReview({}));
+});
+
+test("requestReview swallows a rejection", async () => {
+  const escaped = [];
+  const on = (e) => escaped.push(e);
+  process.on("unhandledRejection", on);
+  try {
+    requestReview({ requestReview: () => Promise.reject(new Error("nope")) });
+    await new Promise((r) => setTimeout(r, 10));
+  } finally { process.off("unhandledRejection", on); }
+  assert.deepEqual(escaped, []);
+});
+
+test("requestReview calls the plugin once", () => {
+  let n = 0;
+  requestReview({ requestReview: () => { n++; return Promise.resolve(); } });
+  assert.equal(n, 1);
 });

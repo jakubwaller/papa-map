@@ -1,5 +1,25 @@
 # papa-map — build contract (v0)
 
+> **v52 amendment (29 Sep 2026, asking for a rating): no shape change.** The
+> store app asks the store for a rating once per device, never on launch and
+> never in the middle of something: at the first pin close after the reader's
+> third successful answer (room, place or play) or after the third separate
+> day on which they opened a pin, whichever comes first. `reviewTracker(io)`
+> (`web/native.js`) keeps this in one new device key, `papamap-review` (app
+> only; JSON with answers and days each capped at 3, the last counted local
+> date and whether it has asked; named in both Datenschutz pages). A close
+> asks one second later, and only if no pin, dialog, room card or search is
+> up by then, so closing one pin to open the next (or to answer the room card
+> the close brought up) is not the moment; a close caused by a
+> language or mode switch does not count. Blocked storage falls back to memory
+> for the launch. Days and answers from before this build do not count. The
+> ask is `PapaMapShare.requestReview`, a third method on the app's own plugin:
+> `AppStore.requestReview(in:)` on iOS, Play's In-App Review on Android
+> (`com.google.android.play:review`). Whether the store shows its sheet is the
+> store's call, and nothing comes back to the page. The website neither counts
+> nor asks. No new i18n keys: the sheet is the system's. Shell pin `app53` →
+> `app54`.
+>
 > **v51 amendment (25 Sep 2026, the mum's fourth chip): no shape change.** v50
 > painted the men's-room-only tables red in the mother's reading but left them
 > under her green "openly accessible" chip, counted there, so a mum filtering
