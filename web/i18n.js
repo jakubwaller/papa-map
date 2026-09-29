@@ -216,9 +216,9 @@ export const STRINGS = {
     popupPlay: "Spielecke zum Bleiben",
 
     // Der Rollstuhl-Chip (v26): auch ein Filter, kein Status. Die Werte
-    // stehen wörtlich im Popup; gefiltert wird nur auf wheelchair=yes.
+    // stehen wörtlich im Popup; gefiltert wird auf wheelchair=yes oder limited.
     stWheelchair: "Barrierefrei",
-    ariaWheelchair: "Nur Orte mit rollstuhlgerechtem Zugang zeigen (wheelchair=yes); Tische hinter Euroschlüssel kommen dazu",
+    ariaWheelchair: "Nur Orte zeigen, die ganz oder eingeschränkt rollstuhlgerecht sind (wheelchair=yes oder limited, eingeschränkte mit Ausrufezeichen); Tische hinter Euroschlüssel kommen dazu",
     popupWheelchair: "Rollstuhlgerecht",
     popupToiletsWheelchair: "Barrierefreies WC",
     wcYes: "ja",
@@ -434,7 +434,7 @@ export const STRINGS = {
     popupPlay: "Play area — worth staying",
 
     stWheelchair: "Wheelchair",
-    ariaWheelchair: "Show only places with step-free access (wheelchair=yes); tables behind a Euro or RADAR key are added",
+    ariaWheelchair: "Show only places with full or limited wheelchair access (wheelchair=yes or limited, limited ones marked with an exclamation mark); tables behind a Euro or RADAR key are added",
     popupWheelchair: "Wheelchair access",
     popupToiletsWheelchair: "Accessible toilet",
     wcYes: "yes",
@@ -640,7 +640,7 @@ export const STRINGS = {
     popupPlay: "Legeområde — værd at blive",
 
     stWheelchair: "Kørestol",
-    ariaWheelchair: "Vis kun steder med niveaufri adgang (wheelchair=yes); borde bag en euronøgle tages med",
+    ariaWheelchair: "Vis kun steder med fuld eller begrænset kørestolsadgang (wheelchair=yes eller limited, begrænsede markeret med et udråbstegn); borde bag en euronøgle tages med",
     popupWheelchair: "Kørestoladgang",
     popupToiletsWheelchair: "Handicaptoilet",
     wcYes: "ja",
@@ -844,7 +844,7 @@ export const STRINGS = {
     popupPlay: "Speelhoek — om even te blijven",
 
     stWheelchair: "Rolstoel",
-    ariaWheelchair: "Alleen plekken met rolstoeltoegang tonen (wheelchair=yes); tafels achter een eurosleutel komen erbij",
+    ariaWheelchair: "Alleen plekken met volledige of beperkte rolstoeltoegang tonen (wheelchair=yes of limited, beperkte met een uitroepteken); tafels achter een eurosleutel komen erbij",
     popupWheelchair: "Rolstoeltoegankelijk",
     popupToiletsWheelchair: "Toegankelijk toilet",
     wcYes: "ja",
@@ -1046,7 +1046,7 @@ export const STRINGS = {
     popupPlay: "Coin jeux — de quoi rester",
 
     stWheelchair: "Fauteuil roulant",
-    ariaWheelchair: "N'afficher que les lieux accessibles en fauteuil (wheelchair=yes) ; les tables derrière une clé Euro sont ajoutées",
+    ariaWheelchair: "N'afficher que les lieux accessibles en fauteuil, totalement ou de façon limitée (wheelchair=yes ou limited, les limités marqués d'un point d'exclamation) ; les tables derrière une clé Euro sont ajoutées",
     popupWheelchair: "Accès fauteuil roulant",
     popupToiletsWheelchair: "WC accessible",
     wcYes: "oui",
@@ -1248,7 +1248,7 @@ export const STRINGS = {
     popupPlay: "Angolo giochi — vale la pena fermarsi",
 
     stWheelchair: "Sedia a rotelle",
-    ariaWheelchair: "Mostra solo i luoghi accessibili in sedia a rotelle (wheelchair=yes); i fasciatoi dietro una chiave Euro vengono aggiunti",
+    ariaWheelchair: "Mostra solo i luoghi accessibili in sedia a rotelle, del tutto o in modo limitato (wheelchair=yes o limited, quelli limitati con un punto esclamativo); i fasciatoi dietro una chiave Euro vengono aggiunti",
     popupWheelchair: "Accesso in sedia a rotelle",
     popupToiletsWheelchair: "Bagno accessibile",
     wcYes: "sì",
@@ -1450,7 +1450,7 @@ export const STRINGS = {
     popupPlay: "Dětský koutek — vyplatí se zůstat",
 
     stWheelchair: "Bezbariérové",
-    ariaWheelchair: "Zobrazit jen místa s bezbariérovým přístupem (wheelchair=yes); pulty za euroklíčem se přidají",
+    ariaWheelchair: "Zobrazit jen místa s plným nebo omezeným bezbariérovým přístupem (wheelchair=yes nebo limited, omezená s vykřičníkem); pulty za euroklíčem se přidají",
     popupWheelchair: "Bezbariérový přístup",
     popupToiletsWheelchair: "Bezbariérové WC",
     wcYes: "ano",
@@ -1652,7 +1652,7 @@ export const STRINGS = {
     popupPlay: "Kącik zabaw — warto zostać",
 
     stWheelchair: "Wózek",
-    ariaWheelchair: "Pokaż tylko miejsca dostępne na wózku (wheelchair=yes); przewijaki za eurokluczem zostają dodane",
+    ariaWheelchair: "Pokaż tylko miejsca w pełni lub częściowo dostępne na wózku (wheelchair=yes lub limited, częściowo dostępne z wykrzyknikiem); przewijaki za eurokluczem zostają dodane",
     popupWheelchair: "Dostęp na wózku",
     popupToiletsWheelchair: "Toaleta dostępna",
     wcYes: "tak",
@@ -1854,7 +1854,7 @@ export const STRINGS = {
     popupPlay: "Lekhörna — värt att stanna kvar",
 
     stWheelchair: "Rullstol",
-    ariaWheelchair: "Visa bara platser med rullstolstillgång (wheelchair=yes); skötbord bakom eurokey läggs till",
+    ariaWheelchair: "Visa bara platser med full eller begränsad rullstolstillgång (wheelchair=yes eller limited, begränsade markerade med ett utropstecken); skötbord bakom eurokey läggs till",
     popupWheelchair: "Rullstolstillgänglig",
     popupToiletsWheelchair: "Tillgänglig toalett",
     wcYes: "ja",
@@ -2055,7 +2055,7 @@ export const STRINGS = {
     popupPlay: "Kutak za igru — vrijedi ostati",
 
     stWheelchair: "Kolica",
-    ariaWheelchair: "Prikaži samo mjesta pristupačna kolicima (wheelchair=yes); stolovi iza euroključa se dodaju",
+    ariaWheelchair: "Prikaži samo mjesta s punom ili ograničenom pristupačnošću kolicima (wheelchair=yes ili limited, ograničena označena uskličnikom); stolovi iza euroključa se dodaju",
     popupWheelchair: "Pristup kolicima",
     popupToiletsWheelchair: "Pristupačan WC",
     wcYes: "da",
@@ -2256,7 +2256,7 @@ export const STRINGS = {
     popupPlay: "Racó de jocs — val la pena quedar-s'hi",
 
     stWheelchair: "Cadira de rodes",
-    ariaWheelchair: "Mostra només llocs accessibles en cadira de rodes (wheelchair=yes); s'hi afegeixen els canviadors darrere una clau Euro",
+    ariaWheelchair: "Mostra només llocs amb accés en cadira de rodes total o limitat (wheelchair=yes o limited, els limitats marcats amb un signe d'exclamació); s'hi afegeixen els canviadors darrere una clau Euro",
     popupWheelchair: "Accés en cadira de rodes",
     popupToiletsWheelchair: "Lavabo accessible",
     wcYes: "sí",
@@ -2457,7 +2457,7 @@ export const STRINGS = {
     popupPlay: "Mänguala — tasub jääda",
 
     stWheelchair: "Ratastool",
-    ariaWheelchair: "Näita ainult ratastooliga ligipääsetavaid kohti (wheelchair=yes); eurovõtme taga olevad lauad lisatakse",
+    ariaWheelchair: "Näita ainult kohti, kuhu pääseb ratastooliga täielikult või piiratult (wheelchair=yes või limited, piiratud hüüumärgiga); eurovõtme taga olevad lauad lisatakse",
     popupWheelchair: "Ratastooliga ligipääs",
     popupToiletsWheelchair: "Ligipääsetav WC",
     wcYes: "jah",
@@ -2658,7 +2658,7 @@ export const STRINGS = {
     popupPlay: "Zona de juegos — para quedarse un rato",
 
     stWheelchair: "Silla de ruedas",
-    ariaWheelchair: "Mostrar solo lugares accesibles en silla de ruedas (wheelchair=yes); se añaden los cambiadores tras una llave Euro",
+    ariaWheelchair: "Mostrar solo lugares con acceso en silla de ruedas total o limitado (wheelchair=yes o limited, los limitados marcados con un signo de exclamación); se añaden los cambiadores tras una llave Euro",
     popupWheelchair: "Acceso en silla de ruedas",
     popupToiletsWheelchair: "Aseo accesible",
     wcYes: "sí",
@@ -2859,7 +2859,7 @@ export const STRINGS = {
     popupPlay: "Dječji kutak — vrijedi ostati",
 
     stWheelchair: "Kolica",
-    ariaWheelchair: "Prikaži samo mjesta pristupačna kolicima (wheelchair=yes); stolovi iza euroključa se dodaju",
+    ariaWheelchair: "Prikaži samo mjesta s punom ili ograničenom pristupačnošću kolicima (wheelchair=yes ili limited, ograničena označena uskličnikom); stolovi iza euroključa se dodaju",
     popupWheelchair: "Pristup kolicima",
     popupToiletsWheelchair: "Pristupačan WC",
     wcYes: "da",
@@ -3060,7 +3060,7 @@ export const STRINGS = {
     popupPlay: "Leiksvæði — þess virði að staldra við",
 
     stWheelchair: "Hjólastóll",
-    ariaWheelchair: "Sýna aðeins staði með hjólastólaaðgengi (wheelchair=yes); borð bak við evrulykil bætast við",
+    ariaWheelchair: "Sýna aðeins staði með fullu eða takmörkuðu hjólastólaaðgengi (wheelchair=yes eða limited, takmörkuð merkt með upphrópunarmerki); borð bak við evrulykil bætast við",
     popupWheelchair: "Hjólastólaaðgengi",
     popupToiletsWheelchair: "Aðgengilegt salerni",
     wcYes: "já",
@@ -3261,7 +3261,7 @@ export const STRINGS = {
     popupPlay: "Rotaļu stūrītis — vērts palikt",
 
     stWheelchair: "Ratiņkrēsls",
-    ariaWheelchair: "Rādīt tikai ratiņkrēslam pieejamas vietas (wheelchair=yes); galdi aiz eiroatslēgas tiek pievienoti",
+    ariaWheelchair: "Rādīt tikai vietas ar pilnu vai ierobežotu ratiņkrēsla pieejamību (wheelchair=yes vai limited, ierobežotās ar izsaukuma zīmi); galdi aiz eiroatslēgas tiek pievienoti",
     popupWheelchair: "Piekļuve ratiņkrēslam",
     popupToiletsWheelchair: "Pieejama tualete",
     wcYes: "jā",
@@ -3462,7 +3462,7 @@ export const STRINGS = {
     popupPlay: "Žaidimų kampelis — verta pasilikti",
 
     stWheelchair: "Vežimėlis",
-    ariaWheelchair: "Rodyti tik vežimėliu pasiekiamas vietas (wheelchair=yes); stalai už euro rakto pridedami",
+    ariaWheelchair: "Rodyti tik vietas su visiškai arba iš dalies vežimėliu pasiekiamu patekimu (wheelchair=yes arba limited, dalinės pažymėtos šauktuku); stalai už euro rakto pridedami",
     popupWheelchair: "Prieiga vežimėliu",
     popupToiletsWheelchair: "Pritaikytas tualetas",
     wcYes: "taip",
@@ -3663,7 +3663,7 @@ export const STRINGS = {
     popupPlay: "Játszósarok — érdemes maradni",
 
     stWheelchair: "Kerekesszék",
-    ariaWheelchair: "Csak kerekesszékkel elérhető helyek (wheelchair=yes); az eurokulcs mögötti asztalok is megjelennek",
+    ariaWheelchair: "Csak a teljesen vagy korlátozottan kerekesszékkel elérhető helyek (wheelchair=yes vagy limited, a korlátozottak felkiáltójellel); az eurokulcs mögötti asztalok is megjelennek",
     popupWheelchair: "Kerekesszékes hozzáférés",
     popupToiletsWheelchair: "Akadálymentes mosdó",
     wcYes: "igen",
@@ -3864,7 +3864,7 @@ export const STRINGS = {
     popupPlay: "Lekeområde — verdt å bli",
 
     stWheelchair: "Rullestol",
-    ariaWheelchair: "Vis bare steder med rullestoltilgang (wheelchair=yes); stellebord bak euronøkkel tas med",
+    ariaWheelchair: "Vis bare steder med full eller begrenset rullestoltilgang (wheelchair=yes eller limited, begrensede merket med utropstegn); stellebord bak euronøkkel tas med",
     popupWheelchair: "Rullestoltilgang",
     popupToiletsWheelchair: "Tilgjengelig toalett",
     wcYes: "ja",
@@ -4065,7 +4065,7 @@ export const STRINGS = {
     popupPlay: "Cantinho de brincar — vale a pena ficar",
 
     stWheelchair: "Cadeira de rodas",
-    ariaWheelchair: "Mostrar só locais acessíveis em cadeira de rodas (wheelchair=yes); os fraldários atrás de uma chave Euro são adicionados",
+    ariaWheelchair: "Mostrar só locais com acesso total ou limitado em cadeira de rodas (wheelchair=yes ou limited, os limitados marcados com ponto de exclamação); os fraldários atrás de uma chave Euro são adicionados",
     popupWheelchair: "Acesso em cadeira de rodas",
     popupToiletsWheelchair: "Casa de banho acessível",
     wcYes: "sim",
@@ -4266,7 +4266,7 @@ export const STRINGS = {
     popupPlay: "Zonă de joacă — merită să rămâi",
 
     stWheelchair: "Scaun rulant",
-    ariaWheelchair: "Afișează doar locurile accesibile cu scaunul rulant (wheelchair=yes); mesele din spatele unei chei Euro sunt adăugate",
+    ariaWheelchair: "Afișează doar locurile cu acces complet sau limitat cu scaunul rulant (wheelchair=yes sau limited, cele limitate marcate cu semn de exclamare); mesele din spatele unei chei Euro sunt adăugate",
     popupWheelchair: "Acces cu scaun rulant",
     popupToiletsWheelchair: "Toaletă accesibilă",
     wcYes: "da",
@@ -4467,7 +4467,7 @@ export const STRINGS = {
     popupPlay: "Hapësirë lojërash — ia vlen të rrish",
 
     stWheelchair: "Karrige me rrota",
-    ariaWheelchair: "Shfaq vetëm vendet e aksesueshme me karrige me rrota (wheelchair=yes); tavolinat pas çelësit Euro shtohen",
+    ariaWheelchair: "Shfaq vetëm vendet me akses të plotë ose të kufizuar me karrige me rrota (wheelchair=yes ose limited, të kufizuarat me pikëçuditëse); tavolinat pas çelësit Euro shtohen",
     popupWheelchair: "Akses me karrige me rrota",
     popupToiletsWheelchair: "Tualet i aksesueshëm",
     wcYes: "po",
@@ -4668,7 +4668,7 @@ export const STRINGS = {
     popupPlay: "Detský kútik — oplatí sa zostať",
 
     stWheelchair: "Bezbariérové",
-    ariaWheelchair: "Zobraziť len miesta s bezbariérovým prístupom (wheelchair=yes); pulty za eurokľúčom sa pridajú",
+    ariaWheelchair: "Zobraziť len miesta s plným alebo obmedzeným bezbariérovým prístupom (wheelchair=yes alebo limited, obmedzené s výkričníkom); pulty za eurokľúčom sa pridajú",
     popupWheelchair: "Bezbariérový prístup",
     popupToiletsWheelchair: "Bezbariérové WC",
     wcYes: "áno",
@@ -4869,7 +4869,7 @@ export const STRINGS = {
     popupPlay: "Igralni kotiček — splača se ostati",
 
     stWheelchair: "Invalidski voziček",
-    ariaWheelchair: "Prikaži le kraje, dostopne z vozičkom (wheelchair=yes); mize za evroključem se dodajo",
+    ariaWheelchair: "Prikaži le kraje s polnim ali omejenim dostopom z vozičkom (wheelchair=yes ali limited, omejene z klicajem); mize za evroključem se dodajo",
     popupWheelchair: "Dostop z vozičkom",
     popupToiletsWheelchair: "Dostopno stranišče",
     wcYes: "da",
@@ -5070,7 +5070,7 @@ export const STRINGS = {
     popupPlay: "Leikkinurkka — kannattaa jäädä",
 
     stWheelchair: "Pyörätuoli",
-    ariaWheelchair: "Näytä vain pyörätuolilla esteettömät paikat (wheelchair=yes); euroavaimen takana olevat pöydät lisätään",
+    ariaWheelchair: "Näytä vain paikat, joihin pääsee pyörätuolilla täysin tai rajoitetusti (wheelchair=yes tai limited, rajoitetut huutomerkillä); euroavaimen takana olevat pöydät lisätään",
     popupWheelchair: "Pyörätuolilla esteetön",
     popupToiletsWheelchair: "Esteetön WC",
     wcYes: "kyllä",
@@ -5271,7 +5271,7 @@ export const STRINGS = {
     popupPlay: "Παιδική γωνιά — αξίζει να μείνεις",
 
     stWheelchair: "Αναπηρικό αμαξίδιο",
-    ariaWheelchair: "Μόνο μέρη προσβάσιμα με αμαξίδιο (wheelchair=yes)· προστίθενται τα τραπέζια πίσω από κλειδί Euro",
+    ariaWheelchair: "Μόνο μέρη με πλήρη ή περιορισμένη πρόσβαση με αμαξίδιο (wheelchair=yes ή limited, τα περιορισμένα με θαυμαστικό)· προστίθενται τα τραπέζια πίσω από κλειδί Euro",
     popupWheelchair: "Πρόσβαση με αμαξίδιο",
     popupToiletsWheelchair: "Προσβάσιμη τουαλέτα",
     wcYes: "ναι",
@@ -5472,7 +5472,7 @@ export const STRINGS = {
     popupPlay: "Гульнявы куток — варта затрымацца",
 
     stWheelchair: "Інвалідны вазок",
-    ariaWheelchair: "Паказваць толькі месцы, даступныя на вазку (wheelchair=yes); сталы за еўраключом дадаюцца",
+    ariaWheelchair: "Паказваць толькі месцы з поўнай або абмежаванай даступнасцю на вазку (wheelchair=yes або limited, абмежаваныя з клічнікам); сталы за еўраключом дадаюцца",
     popupWheelchair: "Доступ на вазку",
     popupToiletsWheelchair: "Даступны туалет",
     wcYes: "так",
@@ -5673,7 +5673,7 @@ export const STRINGS = {
     popupPlay: "Кът за игра — струва си да останеш",
 
     stWheelchair: "Инвалидна количка",
-    ariaWheelchair: "Само места, достъпни с количка (wheelchair=yes); масите зад евроключ се добавят",
+    ariaWheelchair: "Само места с пълен или ограничен достъп с количка (wheelchair=yes или limited, ограничените с удивителен знак); масите зад евроключ се добавят",
     popupWheelchair: "Достъп с количка",
     popupToiletsWheelchair: "Достъпна тоалетна",
     wcYes: "да",
@@ -5874,7 +5874,7 @@ export const STRINGS = {
     popupPlay: "Простор за игра — вреди да се остане",
 
     stWheelchair: "Инвалидска количка",
-    ariaWheelchair: "Само места достапни со количка (wheelchair=yes); масите зад евроклуч се додаваат",
+    ariaWheelchair: "Само места со целосен или ограничен пристап со количка (wheelchair=yes или limited, ограничените со извичник); масите зад евроклуч се додаваат",
     popupWheelchair: "Пристап со количка",
     popupToiletsWheelchair: "Пристапен тоалет",
     wcYes: "да",
@@ -6075,7 +6075,7 @@ export const STRINGS = {
     popupPlay: "Играоница — вреди остати",
 
     stWheelchair: "Инвалидска колица",
-    ariaWheelchair: "Прикажи само места приступачна колицима (wheelchair=yes); столови иза еврокључа се додају",
+    ariaWheelchair: "Прикажи само места с потпуним или ограниченим приступом колицима (wheelchair=yes или limited, ограничена означена узвичником); столови иза еврокључа се додају",
     popupWheelchair: "Приступ колицима",
     popupToiletsWheelchair: "Приступачан тоалет",
     wcYes: "да",
@@ -6276,7 +6276,7 @@ export const STRINGS = {
     popupPlay: "Дитячий куточок — варто затриматися",
 
     stWheelchair: "Інвалідний візок",
-    ariaWheelchair: "Показувати лише місця, доступні на візку (wheelchair=yes); столи за євроключем додаються",
+    ariaWheelchair: "Показувати лише місця з повною або обмеженою доступністю на візку (wheelchair=yes або limited, обмежені зі знаком оклику); столи за євроключем додаються",
     popupWheelchair: "Доступ на візку",
     popupToiletsWheelchair: "Доступний туалет",
     wcYes: "так",
@@ -6481,7 +6481,7 @@ export const STRINGS = {
     popupPlay: "遊び場あり — ゆっくりできます",
 
     stWheelchair: "車いす",
-    ariaWheelchair: "車いすで入れる場所のみ表示（wheelchair=yes）。ユーロキー等が必要な台も加わります",
+    ariaWheelchair: "車いすで完全に、または限定的に入れる場所のみ表示（wheelchair=yes または limited、limited は感嘆符付き）。ユーロキー等が必要な台も加わります",
     popupWheelchair: "車いす対応",
     popupToiletsWheelchair: "バリアフリートイレ",
     wcYes: "はい",

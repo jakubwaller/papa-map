@@ -12,13 +12,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app54";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app55";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app54";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app55";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app54";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app55";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -26,7 +26,7 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app54";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app55";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -35,22 +35,22 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app54";
+         reviewTracker } from "./native.js?v=app55";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app54";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app55";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app54";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app55";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app54";
+import { isOpenNow } from "./opening-hours.js?v=app55";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -241,6 +241,10 @@ const PLAY_COLOR = "#0072b2";
 // the popup, never as a fifth pin colour: wheelchair access is a badge on a
 // pin that already has its status colour, exactly like the play halo.
 const ISA_PATH = "M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm7 11v-2c-1.54.02-3.09-.75-4.07-1.83l-1.29-1.43c-.17-.19-.38-.34-.61-.45-.01 0-.01-.01-.02-.01H13c-.35-.2-.75-.3-1.19-.26C10.76 7.11 10 8.04 10 9.09V15c0 1.1.9 2 2 2h5v5h2v-5.5c0-1.1-.9-2-2-2h-3v-3.45c1.29 1.07 3.25 1.94 5 1.95zm-6.17 5c-.41 1.16-1.52 2-2.83 2-1.66 0-3-1.34-3-3 0-1.31.84-2.41 2-2.83V12.1c-2.28.46-4 2.48-4 4.9 0 2.76 2.24 5 5 5 2.42 0 4.44-1.72 4.9-4h-2.07z";
+// Material "priority_high": the exclamation mark for `limited` places under
+// the wheelchair chip (v53), white in a pin and ink in a ring.
+const LIMITED_INK = "#1c2b26";   // --ink, the chip's ISA icon
+const LIMITED_PATH = "M10 3h4v12h-4zM12 17a2 2 0 1 1 0 4 2 2 0 1 1 0-4z";
 const KEY_PATH = "M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z";
 const svgIcon = (path, cls) =>
   `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>`;
@@ -378,7 +382,7 @@ let featuresByOsmUrl = new Map();
 let placesByOsmUrl = new Map();
 let visible = new Set(chipKeys("mama"));   // toggled-on chips, a superset of either reading
 let playOnly = false;                                     // narrow to play corners
-// narrow to wheelchair=yes (v26), remembered on the device
+// narrow to wheelchair=yes or limited (v26, v53), remembered on the device
 let wheelchairOnly = (() => {
   try { return pickWheelchair(localStorage.getItem(WHEELCHAIR_KEY)); } catch { return false; }
 })();
@@ -406,8 +410,10 @@ const searchList = document.getElementById("search-results");
 const SRC = "tables";
 const PLAY_LAYER = "tables-play";
 const KEY_LAYER = "tables-key";
+const LIMITED_LAYER = "tables-limited";   // exclamation mark in a pin (v53)
 const PLACES = "play-places";
 const PLACES_NO = "play-places-no";   // the dashed rings: answered, no table (v27)
+const PLACES_LIMITED = "play-places-limited";   // exclamation mark in a ring (v53)
 const IS_UNKNOWN = ["==", ["get", "status"], "unknown"];
 
 // Pin radius by zoom, grey one size up. Shared so the halo can be defined as
@@ -447,6 +453,14 @@ function addTableLayer() {
   keyImg.onload = () => { if (!map.hasImage("key")) map.addImage("key", keyImg, { pixelRatio: 2 }); };
   keyImg.src = "data:image/svg+xml," + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48"><path fill="#fff" d="${KEY_PATH}"/></svg>`);
+  // The exclamation marks for `limited` places under the wheelchair chip
+  // (v53), white for the pins and ink for the rings, registered like the key.
+  for (const [name, fill] of [["limited", "#fff"], ["limited-ink", LIMITED_INK]]) {
+    const img = new Image(48, 48);
+    img.onload = () => { if (!map.hasImage(name)) map.addImage(name, img, { pixelRatio: 2 }); };
+    img.src = "data:image/svg+xml," + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48"><path fill="${fill}" d="${LIMITED_PATH}"/></svg>`);
+  }
   // The dashed ring for the places where somebody answered "no" (v27). A
   // circle layer cannot dash its stroke, so these are symbols: one ring
   // drawn on a canvas at the zoom-17 size (the hollow ring's radius 10 +
@@ -486,6 +500,18 @@ function addTableLayer() {
       "icon-image": "ring-dashed",
       "icon-size": ["interpolate", ["linear"], ["zoom"],
         5, 0.24, 10, 0.48, 14, 0.76, 17, 1],
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
+    },
+  });
+  // The exclamation mark in a `limited` ring, ink, centred, from zoom 13 and
+  // the key glyph's size. Above the rings and below the pins.
+  map.addLayer({
+    id: PLACES_LIMITED, type: "symbol", source: PLACES, minzoom: 13,
+    filter: ["==", ["get", "limited"], true],
+    layout: {
+      "icon-image": "limited-ink",
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 13, 0.4, 17, 0.7],
       "icon-allow-overlap": true,
       "icon-ignore-placement": true,
     },
@@ -532,22 +558,36 @@ function addTableLayer() {
       "icon-ignore-placement": true,
     },
   });
+  // A white exclamation mark in a `limited` pin under the wheelchair chip
+  // (v53), the key glyph's size and zoom. A keyed table shows the key alone,
+  // the harder condition; the popup states both. Never a colour: the pin
+  // keeps its status colour.
+  map.addLayer({
+    id: LIMITED_LAYER, type: "symbol", source: SRC, minzoom: 13,
+    filter: ["all", ["==", ["get", "limited"], true], ["!=", ["get", "key"], true]],
+    layout: {
+      "icon-image": "limited",
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 13, 0.4, 17, 0.7],
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
+    },
+  });
   // Both circle layers, so the halo's extra 5.5 px is part of the hit target
   // rather than a dead ring around a clickable pin; the key glyph too, so the
   // tap does not fall through the middle of the pin it sits on.
-  for (const layer of [PLAY_LAYER, SRC, KEY_LAYER]) {
+  for (const layer of [PLAY_LAYER, SRC, KEY_LAYER, LIMITED_LAYER]) {
     map.on("click", layer, (e) => {
       const f = allFeatures[e.features[0].properties.idx];
       if (f) openPopup(f);
     });
   }
-  for (const layer of [PLACES, PLACES_NO]) {
+  for (const layer of [PLACES, PLACES_NO, PLACES_LIMITED]) {
     map.on("click", layer, (e) => {
       const p = allPlaces[e.features[0].properties.idx];
       if (p) openPlacePopup(p);
     });
   }
-  for (const layer of [PLAY_LAYER, SRC, KEY_LAYER, PLACES, PLACES_NO]) {
+  for (const layer of [PLAY_LAYER, SRC, KEY_LAYER, LIMITED_LAYER, PLACES, PLACES_NO, PLACES_LIMITED]) {
     map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
   }
@@ -576,8 +616,8 @@ function refreshPins() {
       + (places.length ? t("countPlaces", { n: places.length }) : "")
     : t("countNoData");
   if (!styleReady) return;
-  map.getSource(SRC).setData(toFeatureCollection(shown));
-  map.getSource(PLACES).setData(placesToFeatureCollection(places));
+  map.getSource(SRC).setData(toFeatureCollection(shown, wheelchairOnly));
+  map.getSource(PLACES).setData(placesToFeatureCollection(places, wheelchairOnly));
 }
 
 // ---- Popup ----
@@ -1102,7 +1142,8 @@ function placesChip(count) {
 }
 
 // The wheelchair chip (v26), last in the strip and off by default: switched
-// on it narrows to the tables whose place is tagged `wheelchair=yes` — and
+// on it narrows to the tables whose place is tagged `wheelchair=yes` or
+// `limited` (the limited ones marked with an exclamation mark, v53) — and
 // brings back, marked with a key, the tables behind a Euro key that the
 // default map leaves out, because the people this chip is for are exactly
 // the people who hold one. Ink, not a colour: it is a badge, like play, and

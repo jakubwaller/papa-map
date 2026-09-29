@@ -1,5 +1,24 @@
 # papa-map — build contract (v0)
 
+> **v53 amendment (29 Sep 2026, `limited` under the wheelchair chip): no shape
+> change.** The chip now admits `wheelchair=limited` as well as `yes`
+> (`web/datasource.js::isWheelchairOk`) — for the tables, for the keyed tables
+> it brings back, and for the play-place rings — and its count and the nearest
+> search follow. v26 kept `limited` out because it is heterogeneous (one step
+> of up to 7 cm, or help needed). The chip's audience asked to see those places
+> and judge the step themselves, so the distinction moves from the filter to a
+> mark: under the chip a `limited` pin carries a white exclamation mark inside
+> it from zoom 13 (symbol layer `tables-limited`, the key glyph's size and
+> zoom), and a `limited` ring an ink one (`play-places-limited`). A keyed
+> `limited` table shows the key, the harder condition; the popup states both.
+> The mark is never a colour, the pin keeps its status colour, and it is drawn
+> only with the chip on: `toFeatureCollection` and `placesToFeatureCollection`
+> take the chip state and set `limited` only then. `toilets:wheelchair=yes`
+> alone still does not pass. Nothing in the emitted data changes; `wheelchair`
+> has carried `limited` since v26. Live data, 29 Sep 2026: 1,531 `limited`
+> table pins beside 17,582 `yes` (plus 5 keyed), 146 play places beside 584.
+> Shell pin `app54` → `app55`.
+>
 > **v52 amendment (29 Sep 2026, asking for a rating): no shape change.** The
 > store app asks the store for a rating once per device, never on launch and
 > never in the middle of something: at the first pin close after the reader's
