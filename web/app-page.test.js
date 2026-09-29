@@ -111,3 +111,22 @@ test("both pages link the iPhone app in the store, say where Android stands and 
   }
   assert.ok(read("datenschutz.html").includes("Kontakt per E-Mail"));
 });
+
+test("both privacy pages cover the Android app, and the manifest keeps their two promises", () => {
+  // The pages are the Play listing's privacy URL, so the Android app has to
+  // be on them before any Play release (issue #124). Two of their sentences
+  // only the manifest can make true: the app stays out of cloud backup
+  // (allowBackup="false") and never asks for location in the background.
+  const manifest = read("../app/android/app/src/main/AndroidManifest.xml");
+  assert.ok(manifest.includes('android:allowBackup="false"'), "the pages say: no cloud backup");
+  assert.ok(!manifest.includes("ACCESS_BACKGROUND_LOCATION"), "the pages say: no background location");
+  for (const [f, words] of [
+    ["datenschutz.html", ["Die App (iPhone, iPad und Android)", "App: Google (Google Play)",
+                          "Datensicherung in der Cloud", "Zugriff im Hintergrund"]],
+    ["datenschutz-en.html", ["The app (iPhone, iPad and Android)", "App: Google (Google Play)",
+                             "cloud backup", "access in the background"]],
+  ]) {
+    const html = read(f);
+    for (const w of words) assert.ok(html.includes(w), `${f}: ${w}`);
+  }
+});

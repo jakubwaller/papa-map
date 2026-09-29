@@ -138,23 +138,28 @@
      link to the clipboard. Whoever opens such a link requests papamap.de with <code>?osm=…</code>
      appended; it names only the place and, like any requested address, appears in the server log
      (see above).</p>
-  <h2>The app (iPhone, iPad)</h2>
-  <p>PapaMap is also available as an app, distributed through the App Store and through TestFlight.
-     The app is the same map in a native shell. The same principle applies: no account with us, no
+  <h2>The app (iPhone, iPad and Android)</h2>
+  <p>PapaMap is also available as an app: for iPhone and iPad through the App Store and through
+     TestFlight, for Android through Google Play. The app is the same map in a native shell. The same principle applies: no account with us, no
      analytics, tracking or advertising components, no crash-reporting system of our own, no push
      notifications. The app itself talks to three servers — papamap.de for the changing-table data
      and the offline cities, openstreetmap.org for map tiles and for your answers, and, only while
      you are typing in the search field, photon.komoot.io for the worldwide place search. On top of that
-     comes whatever you open through a link, and Apple's role in distribution; both are covered
+     comes whatever you open through a link, and the part Apple and Google play in
+     distribution; both are covered
      further below. The following sections describe what is different or additional in the app;
      otherwise the above applies accordingly.</p>
+  <p>Where the following sections mention a device backup: on iPhone and iPad that is a backup to
+     iCloud or to a computer, if you have set one up. On Android the app does not take part in cloud
+     backup (Google Drive); only when you set up a new device directly from the old one can Android
+     carry the app's data across.</p>
   <h2>App: data from papamap.de</h2>
   <p>On startup, the app loads the changing-table data from papamap.de and keeps a copy in the
      app's own data directory, so the map shows pins even without a network connection. These are
      ordinary requests for fixed files; the server sees the same thing as during a website visit
      (see "Hosting / server logs" and "Cloudflare" above). The requests contain no information
      about you personally and no location. The copy stays only on your device — apart from a device
-     backup (iCloud or computer), if you have set one up (§ 25(2) no. 2 TDDDG).</p>
+     backup as described under "The app" (§ 25(2) no. 2 TDDDG).</p>
   <h2>App: map data and offline cities</h2>
   <p>The app, too, loads map tiles from tile.openstreetmap.org; this transmits your IP address to
      the OpenStreetMap Foundation (see above). The tiles loaded are those of the map section
@@ -166,18 +171,31 @@
      device; without a network connection, no tiles at all are requested. "Delete" in the same
      dialog removes a city again.</p>
   <h2>App: location</h2>
-  <p>The locate button, the search for the nearest changing table, the Siri Shortcut, the
-     home-screen widget and the "Nearest changing table" control in Control Center (also on the
-     Lock Screen or the Action button) request your location through iOS — only after your explicit permission
-     ("While Using the App"), which you can revoke at any time in iOS Settings. Your position is
-     processed exclusively on your device: the search for the nearest usable changing table runs
-     against the data that is already on the device anyway. If you have already given the app this
-     permission, it also reads your position once when it opens, to show the map where you are.
-     Your location is not transmitted to this server or to any third party, not stored and not
-     logged — not from the widget, the Shortcut or Control Center either. The widget recalculates the nearest changing table on the device at
-     regular intervals as long as it sits on the home screen or the lock screen. After you tap the
-     locate button, or when the map already opens at your position as described above, it shows
-     your surroundings; it then loads the tiles for that section from tile.openstreetmap.org.</p>
+  <p>On iPhone and iPad, the locate button, the search for the nearest changing table, the Siri
+     Shortcut, the home-screen widget and the "Nearest changing table" control in Control Center
+     (also on the Lock Screen or the Action button) request your location through iOS — only after
+     your explicit permission ("While Using the App"), which you can revoke at any time in iOS
+     Settings. The widget recalculates the nearest changing table on the device at regular
+     intervals as long as it sits on the home screen or the lock screen.</p>
+  <p>On Android, the locate button and the search for the nearest changing table — also when you
+     start it from the app icon (long press) or the widget — request your location through
+     Android, only after your explicit permission, which you can revoke at any time in Android
+     settings. The app does not ask for access in the background. The home-screen widget does not
+     request a location fix itself: it only reads the last position Android already knows, and
+     only if you have given permission and that position is at most half an hour old; it uses it
+     to work out the nearest changing table and then discards it. Android determines the position
+     itself — on devices with Google services, through the location services of Google Play
+     services. Whether these exchange data with Google for it, for example to locate you more
+     precisely using Wi-Fi and mobile networks, depends on your device settings and on Google's
+     privacy policy; the app only receives the result.</p>
+  <p>On both systems your position is processed exclusively on your device: the search for the
+     nearest usable changing table runs against the data that is already on the device anyway. If
+     you have already given the app permission, it also reads your position once when it opens, to
+     show the map where you are. The app does not transmit your location to this server or to any
+     third party, does not store it and does not log it — not from the widget, the Shortcut or
+     Control Center either. After you tap the locate button, or when the map already opens at your
+     position as described above, it shows your surroundings; it then loads the tiles for that
+     section from tile.openstreetmap.org.</p>
   <h2>App: search</h2>
   <p>The search field works in the app as it does on the website (see “Search (place or address)”
      above): the app finds matches among the map's own changing tables and places on the device,
@@ -192,8 +210,9 @@
   <p>So that the widget and the Shortcut name the same changing table as the map, the app keeps a
      shortened copy of the changing-table data (coordinates, status, name, OSM link) as well as
      your two settings — dad or mum view and language — in a shared area on the device that only
-     the app and its widget can read. Both stay, apart from a device backup (iCloud or computer),
-     on the device (§ 25(2) no. 2 TDDDG). Siri and Shortcuts are a feature of iOS; how Apple
+     the app and its widget can read; on Android both sit in the app's own storage, from which the
+     app draws its widget itself. Both stay, apart from a device backup (see "The app"), on the
+     device (§ 25(2) no. 2 TDDDG). Siri and Shortcuts are a feature of iOS; how Apple
      processes a spoken request is governed by Apple's own privacy policy.</p>
   <h2>App: settings on the device</h2>
   <p>The app stores the same functional keys as the website — language (<code>papamap-lang</code>),
@@ -201,14 +220,14 @@
      (<code>papamap-wheelchair</code>) and, after signing in, the access token and your OSM display
      name (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>), plus the saved places
      (<code>papamap-saved</code>), your own answers (<code>papamap-my-answers</code>) and the
-     closed room notes (<code>papamap-card-dismissed</code>) and, in the app only, a mark that the
+     closed room notes (<code>papamap-card-dismissed</code>) and, in the iPhone and iPad app only, a mark that the
      one-time hint about the Control Center and the widget has been shown
      (<code>papamap-tip-seen</code>), and, for the one-time request for a rating, a tally of how
      many answers you have given in the app and on how many days you have opened a pin (both
      counted only up to three), the date of the day last counted, and whether the request has been
      made (<code>papamap-review</code>) — just in the app's own storage instead of the browser's. Purely functional, without tracking, only on your device —
-     and, like everything the app stores, in a device backup (iCloud or computer), if you have set
-     one up (§ 25(2) no. 2 TDDDG).</p>
+     and, like everything the app stores, in a device backup as described under
+     "The app" (§ 25(2) no. 2 TDDDG).</p>
   <h2>App: signing in to OpenStreetMap</h2>
   <p>Sign-in works as on the website (OAuth 2 with PKCE), with one difference: openstreetmap.org's
      sign-in page opens the app in the system's in-app browser view, which the app itself cannot
@@ -247,14 +266,26 @@
      you send feedback — that feedback along with the details Apple supplies with it, such as the
      email address you were invited with. We use this exclusively for troubleshooting (Art. 6(1)(f)
      GDPR). The app itself sends us none of this.</p>
+  <h2>App: Google (Google Play)</h2>
+  <p>Distribution through Google Play is Google's responsibility. Google is independently
+     responsible for this and processes the data involved under its own privacy policy. From the
+     Google Play Console we receive metrics such as install numbers only in aggregated form. We
+     receive crash reports only from devices on which sharing usage and diagnostics data is switched
+     on; they tell us the device model, the Android version and where the error occurred, not your
+     name or your Google account. If you take part in a closed test through Google Play, we process
+     the email address of the Google account you take part with: we add it to the testers list so
+     that Google unlocks the test for you. If you send feedback on the test through Google Play, we
+     receive it along with the details Google supplies with it. We use this exclusively to run the
+     test and to find errors (Art. 6(1)(f) GDPR); at your request we remove your address from the
+     list at any time. The app itself sends us none of this.</p>
   <h2>App: withdrawal and deletion</h2>
-  <p>You withdraw location sharing in iOS Settings under PapaMap; you delete saved cities with
+  <p>You withdraw location sharing in the iOS or Android settings under PapaMap; you delete saved cities with
      "Delete" in the "Save a city offline" dialog; you sign out of OpenStreetMap with "Log out" in
      the pin. If you delete the app, everything it stored on the device disappears with it: the
      copy of the changing-table data, the offline cities, the settings, the saved places, the list
      of your own answers and the access token.
-     Whatever of that lives in a device backup you have set up is managed by iOS; it disappears
-     with that backup. What you have written to OpenStreetMap stays there — that is the whole
+     Whatever of that lives in a backup to iCloud or a computer is managed by iOS; it disappears
+     with that backup. On Android the app keeps nothing in a cloud backup. What you have written to OpenStreetMap stays there — that is the whole
      point.</p>
   <h2>Contact by email or form</h2>
   <p>When you contact us by email, the details you provide are processed only to handle your
