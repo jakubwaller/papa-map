@@ -33,6 +33,7 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
+         cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
          reviewTracker } from "./native.js?v=app55";
@@ -3238,7 +3239,11 @@ async function mountCity(city) {
     if (n >= MAX_CITY_FAILURES) {
       failures.delete(city.slug);
       unreadable.add(city.slug);
-      toast(t("offlineFailed"));
+      // Not offlineFailed: that one says "download failed", and this download
+      // may have gone through minutes earlier (the list shows the city as
+      // saved). A reader told the download failed only downloads again; told
+      // the saved map would not open, they know to delete it and start over.
+      toast(t("offlineUnreadable", { city: city.name }));
     } else {
       failures.set(city.slug, n);
     }
@@ -3277,33 +3282,87 @@ async function mountSavedCities() {
 
 // The dialog: every city in the catalogue, nearest to the map's centre
 // first, with its size; saved ones can be deleted. Progress is written
-// into the button while a download runs.
+// into the city's button while its download runs — the button of the list
+// on screen NOW, which after a close and reopen is not the one that was
+// tapped (`downloading`, `loadButtons`).
+//
+// Only the latest render writes (`latestOnly`): the list is rendered on open
+// and again when a download or delete ends, and those overlap. With the
+// catalogue answered from memory after its first read (native.js,
+// `catalogueMemo`) a render rarely waits at all, but the one that does must
+// not append under a newer one.
+const nextOfflineRender = latestOnly();
+// slug → progress (0..1) of every download this session has running.
+const downloading = new Map();
+// slug → the download button standing for that city in the list on screen.
+let loadButtons = new Map();
+
+function showProgress(slug) {
+  const btn = loadButtons.get(slug);
+  if (!btn || !downloading.has(slug)) return;
+  btn.disabled = true;
+  btn.textContent = t("offlineLoading", { pct: cityRowState(slug, new Set(), downloading).pct });
+}
+
+async function startCityDownload(city) {
+  if (downloading.has(city.slug)) return;   // one download per file: two would write into each other
+  downloading.set(city.slug, 0);
+  showProgress(city.slug);
+  try {
+    savedList = await downloadCity(city, (p) => { downloading.set(city.slug, p); showProgress(city.slug); });
+    unreadable.delete(city.slug);
+    failures.delete(city.slug);
+    syncCities();
+    toast(t("offlineDone", { city: city.name }));
+  } catch {
+    toast(t("offlineFailed"));
+  } finally {
+    downloading.delete(city.slug);
+  }
+  renderOfflineList();
+}
+
 async function renderOfflineList() {
+  const latest = nextOfflineRender();
   offlineList.replaceChildren();
+  loadButtons = new Map();
   const [cat, saved] = await Promise.all([cityCatalogue(), savedCities()]);
+  if (!latest()) return;
   if (!cat?.cities?.length) {
+    // A way out of the error that is not closing the dialog: nothing else
+    // renders this list again until a download or delete ends, and with no
+    // list there is neither (David, 2026-09-29: the line stayed until he
+    // closed and reopened).
     const li = document.createElement("li");
-    li.textContent = t("offlineNoList");
+    const msg = document.createElement("span");
+    msg.className = "name";
+    msg.textContent = t("offlineNoList");
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.textContent = t("offlineRetry");
+    retry.addEventListener("click", () => { retry.disabled = true; renderOfflineList(); });
+    li.append(msg, retry);
     offlineList.append(li);
     return;
   }
   const c = map.getCenter();
-  const savedBy = new Map(saved.map((x) => [x.slug, x]));
+  const savedSlugs = new Set(saved.map((x) => x.slug));
   const cities = [...cat.cities].sort((a, b) => {
     const ca = bboxCentre(a.bbox), cb = bboxCentre(b.bbox);
     return kmBetween(c.lat, c.lng, ca.lat, ca.lon) - kmBetween(c.lat, c.lng, cb.lat, cb.lon);
   });
   for (const city of cities) {
+    const row = cityRowState(city.slug, savedSlugs, downloading);
     const li = document.createElement("li");
     const name = document.createElement("span");
     name.className = "name";
     name.textContent = city.name;
     const small = document.createElement("small");
-    small.textContent = savedBy.has(city.slug) ? t("offlineSaved") : `${formatMB(city.bytes, NUMBER_LOCALE[lang])} MB`;
+    small.textContent = row.kind === "saved" ? t("offlineSaved") : `${formatMB(city.bytes, NUMBER_LOCALE[lang])} MB`;
     name.append(small);
     const btn = document.createElement("button");
     btn.type = "button";
-    if (savedBy.has(city.slug)) {
+    if (row.kind === "saved") {
       btn.className = "saved";
       btn.textContent = t("offlineDelete");
       btn.addEventListener("click", async () => {
@@ -3320,20 +3379,14 @@ async function renderOfflineList() {
         renderOfflineList();
       });
     } else {
-      btn.textContent = t("offlineLoad", { mb: formatMB(city.bytes, NUMBER_LOCALE[lang]) });
-      btn.addEventListener("click", async () => {
+      loadButtons.set(city.slug, btn);
+      if (row.kind === "loading") {
         btn.disabled = true;
-        try {
-          savedList = await downloadCity(city, (p) => { btn.textContent = t("offlineLoading", { pct: Math.round(p * 100) }); });
-          unreadable.delete(city.slug);
-          failures.delete(city.slug);
-          syncCities();
-          toast(t("offlineDone", { city: city.name }));
-        } catch {
-          toast(t("offlineFailed"));
-        }
-        renderOfflineList();
-      });
+        btn.textContent = t("offlineLoading", { pct: row.pct });
+      } else {
+        btn.textContent = t("offlineLoad", { mb: formatMB(city.bytes, NUMBER_LOCALE[lang]) });
+        btn.addEventListener("click", () => startCityDownload(city));
+      }
     }
     li.append(name, btn);
     offlineList.append(li);

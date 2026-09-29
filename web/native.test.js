@@ -172,6 +172,82 @@ test("zoomed out there is no opinion, so nothing is unmounted or read", () => {
   assert.equal(citiesToMount([HH, MUC], [-10, 35, 30, 60], { lat: 50, lon: 10 }, 5), null);
 });
 
+// ---- The offline dialog: catalogue in memory, rows, overlapping renders ----
+import { catalogueMemo, cityRowState, latestOnly } from "./native.js";
+const CAT = { cities: [HH, MUC] };
+
+test("the catalogue is read once and then answered from memory", async () => {
+  let loads = 0;
+  const cat = catalogueMemo(async () => { loads++; return { json: CAT, fromStore: true, refreshed: new Promise(() => {}) }; });
+  assert.equal(await cat(), CAT);
+  assert.equal(await cat(), CAT);
+  assert.equal(loads, 1);
+});
+
+test("a reopen while the first load is still running shares it", async () => {
+  let loads = 0, release;
+  const cat = catalogueMemo(() => { loads++; return new Promise((ok) => { release = ok; }); });
+  const a = cat(), b = cat();
+  release({ json: CAT, refreshed: Promise.resolve({ ok: true, json: null }) });
+  assert.deepEqual(await Promise.all([a, b]), [CAT, CAT]);
+  assert.equal(loads, 1);
+});
+
+test("a failed catalogue load is not remembered: the next ask tries again", async () => {
+  let loads = 0;
+  const answers = [
+    () => null,
+    () => { throw new Error("plugin"); },
+    () => ({ json: CAT, refreshed: Promise.resolve({ ok: false, json: null }) }),
+  ];
+  const cat = catalogueMemo(async () => answers[loads++]());
+  assert.equal(await cat(), null);
+  assert.equal(await cat(), null);   // a throw reads as "no list", never as a rejected render
+  assert.equal(await cat(), CAT);
+  assert.equal(loads, 3);
+});
+
+test("a background refresh that found a newer catalogue replaces the one in memory", async () => {
+  const newer = { cities: [HH, MUC, HB] };
+  let done;
+  const refreshed = new Promise((ok) => { done = ok; });
+  const cat = catalogueMemo(async () => ({ json: CAT, refreshed }));
+  assert.equal(await cat(), CAT);
+  done({ ok: true, json: newer });
+  await refreshed;
+  assert.equal(await cat(), newer);
+});
+
+test("a city with a download in flight renders as in progress, not as a fresh download", () => {
+  const saved = new Set(["bremen"]);
+  const inFlight = new Map([["praha", 0.371]]);
+  assert.deepEqual(cityRowState("praha", saved, inFlight), { kind: "loading", pct: 37 });
+  assert.deepEqual(cityRowState("praha", saved, new Map([["praha", 0]])), { kind: "loading", pct: 0 });
+  assert.deepEqual(cityRowState("bremen", saved, inFlight), { kind: "saved" });
+  assert.deepEqual(cityRowState("hamburg", saved, inFlight), { kind: "load" });
+});
+
+test("only the latest of overlapping renders may write", async () => {
+  // The reopen's render and the end of the first download's render, as on
+  // David's phone: the older one resolves last and must not append.
+  const next = latestOnly();
+  const list = [];
+  const render = async (label, wait) => {
+    const latest = next();
+    list.length = 0;
+    await wait;
+    if (!latest()) return;
+    list.push(label);
+  };
+  let slow;
+  const first = render("first", new Promise((ok) => { slow = ok; }));
+  const second = render("second", Promise.resolve());
+  await second;
+  slow();
+  await first;
+  assert.deepEqual(list, ["second"]);
+});
+
 // The phone's files and the network, played back: `net` is whether papamap.de
 // answers, `files` what is on the phone. Every call is logged.
 //

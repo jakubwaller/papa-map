@@ -967,9 +967,40 @@ export function reviewTracker(io = {}) {
 // downloader (no CORS, no range requests) into the app's data dir.
 const SAVED_KEY = "papamap-offline-cities";
 
+// The catalogue, once read, answered from memory for the rest of the session.
+// Every open of the dialog used to read the stored copy through the plugins
+// again AND start another background download of it — beside a city
+// download that may still be running — and a reopen during a Praha download
+// showed "could not be loaded" twice instead of the list (David, Android,
+// build 201, 2026-09-29). The file changes once a week, so one good read is
+// the answer for the session; a background refresh that finds a newer file
+// replaces it. Concurrent callers share the one load in flight, and a load
+// that found nothing (null) is not remembered: the next ask tries again.
+// `load` resolves to loadJSONNative's shape, `{ json, refreshed }` or null.
+export function catalogueMemo(load) {
+  let held = null;
+  let running = null;
+  return () => {
+    if (held) return Promise.resolve(held);
+    if (!running) {
+      running = (async () => {
+        try {
+          const r = await load();
+          if (!r?.json) return null;
+          held = r.json;
+          r.refreshed?.then((f) => { if (f?.json) held = f.json; }, () => {});
+          return held;
+        } catch { return null; }
+        finally { running = null; }
+      })();
+    }
+    return running;
+  };
+}
+
 // Kept like the dataset (as papamap/data/index.json), so the list of cities
 // opens without a network too — to delete one, if nothing else.
-export async function cityCatalogue() {
+const catalogue = catalogueMemo(() => {
   // Build 18 kept it under another name; that copy is nobody's any more.
   // Never awaited — a slow delete must not hold the catalogue back — and
   // guarded twice over: `remove()` already swallows a rejected delete, but a
@@ -978,7 +1009,34 @@ export async function cityCatalogue() {
   // this whole load.
   try { nativeIO().remove(`${DATA_PATH}/tiles-index.json`).catch(() => {}); }
   catch { /* no Filesystem plugin */ }
-  return (await loadJSONNative("tiles/index.json"))?.json ?? null;
+  return loadJSONNative("tiles/index.json");
+});
+export const cityCatalogue = () => catalogue();
+
+// What one row of the offline dialog offers. A download in flight shows its
+// progress in whichever list the dialog is showing now: the download belongs
+// to the session, not to the button that started it. Closing and reopening
+// the dialog during one used to draw a fresh, enabled download button for the
+// same city, and a second tap started a second download into the same file.
+// `inFlight` maps slug → progress (0..1).
+export function cityRowState(slug, savedSlugs, inFlight) {
+  if (inFlight.has(slug)) return { kind: "loading", pct: Math.round((inFlight.get(slug) ?? 0) * 100) };
+  if (savedSlugs.has(slug)) return { kind: "saved" };
+  return { kind: "load" };
+}
+
+// Only the latest of several overlapping async renders may write. Each call
+// of the returned function starts a render and hands back its own "am I
+// still the latest?" check. The offline list is rendered on open and again
+// at the end of every download or delete; two of those overlapping each
+// cleared the list before their await and appended after it, so a reopen
+// during a download could end with every row, or the error line, twice.
+export function latestOnly() {
+  let n = 0;
+  return () => {
+    const mine = ++n;
+    return () => mine === n;
+  };
 }
 
 export async function savedCities() {

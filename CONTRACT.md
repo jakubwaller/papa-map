@@ -1,5 +1,18 @@
 # papa-map — build contract (v0)
 
+> **v54 amendment (30 Sep 2026, the offline-cities dialog): no shape change.**
+> The store app's city catalogue is read once per session and then answered
+> from memory (`catalogueMemo`, `web/native.js`); a background refresh that
+> finds a newer `tiles/index.json` replaces it, and a failed load is not
+> remembered. Only the latest render writes the list (`latestOnly`), and a
+> city whose download is running shows its percentage in every list drawn
+> meanwhile (`cityRowState`) rather than a second download button. Two new
+> i18n keys in all 32 languages: `offlineRetry`, a button beside
+> `offlineNoList` that renders the list again, and `offlineUnreadable`
+> (`{city}`), the toast for a saved city whose file would not open three times
+> — which used to borrow `offlineFailed`, "download failed". Shell pin `app55`
+> → `app56`.
+>
 > **v53 amendment (29 Sep 2026, `limited` under the wheelchair chip): no shape
 > change.** The chip now admits `wheelchair=limited` as well as `yes`
 > (`web/datasource.js::isWheelchairOk`) — for the tables, for the keyed tables
