@@ -211,12 +211,13 @@
      (<code>papamap-my-answers</code>) und die geschlossenen Raum-Hinweise
      (<code>papamap-card-dismissed</code>) sowie, nur in der App, den Vermerk, dass der einmalige
      Hinweis auf Kontrollzentrum und Widget schon gezeigt wurde (<code>papamap-tip-seen</code>),
-     und für die einmalige Bitte um eine Bewertung, wie viele Antworten Sie in der App gegeben und
-     an wie vielen Tagen Sie einen Pin geöffnet haben, beides gezählt nur bis drei, dazu das Datum
-     des letzten dieser Tage und ob die Bitte schon gestellt wurde (<code>papamap-review</code>)
-     — nur eben im Speicher der App statt im Browser. Rein
-     funktional, ohne Tracking, nur auf Ihrem Gerät — und, wie alles, was die App ablegt, in einer Gerätesicherung (iCloud oder Computer),
-     falls Sie eine eingerichtet haben (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+     und für die einmalige Bitte um eine Bewertung einen Zählerstand: wie viele Antworten Sie in
+     der App gegeben und an wie vielen Tagen Sie einen Pin geöffnet haben (beides nur bis drei
+     gezählt), dazu das Datum des zuletzt gezählten Tages und ob die Bitte schon gestellt wurde
+     (<code>papamap-review</code>) — nur eben im Speicher der App statt im Browser. Rein
+     funktional, ohne Tracking, nur auf Ihrem Gerät — und, wie alles, was die App ablegt, in einer
+     Gerätesicherung (iCloud oder Computer), falls Sie eine eingerichtet haben
+     (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>App: Anmeldung bei OpenStreetMap</h2>
   <p>Die Anmeldung läuft wie auf der Website (OAuth 2 mit PKCE), mit einem Unterschied: Die
      Anmeldeseite von openstreetmap.org öffnet die App in einer Browser-Ansicht des Systems, in
@@ -239,13 +240,17 @@
      (§ 25 Abs. 2 Nr. 2 TDDDG). Ab dort gilt die Datenschutzerklärung des jeweiligen Angebots; für die
      Seiten dieser Website gilt diese Erklärung.</p>
   <h2>App: Bitte um eine Bewertung</h2>
-  <p>Nach Ihrer dritten Antwort in der App oder am dritten Tag, an dem Sie einen Pin geöffnet
-     haben, bittet die App das Betriebssystem einmal — sobald Sie danach einen Pin schließen —,
-     den Bewertungsdialog des App Store bzw. von Google Play anzuzeigen. Ob und wann er erscheint,
-     entscheiden Apple bzw. Google; die App erfährt weder das noch, ob oder wie Sie bewerten. Eine
-     Bewertung geben Sie direkt gegenüber Apple bzw. Google ab, die dafür eigenständig
-     verantwortlich sind und sie nach ihren eigenen Datenschutzbestimmungen verarbeiten. Die App
-     sendet dafür nichts an diesen Server.</p>
+  <p>Haben Sie in der App drei Antworten gegeben oder an drei verschiedenen Tagen einen Pin
+     geöffnet, bittet die App das Betriebssystem einmalig, beim nächsten Schließen eines Pins den
+     Bewertungsdialog des App Store bzw. von Google Play anzuzeigen. Ob und wann er erscheint,
+     entscheiden Apple bzw. Google; die App erfährt weder, ob er erscheint, noch, ob oder wie Sie
+     bewerten. Die Bitte geht an das Betriebssystem bzw. an Google Play auf Ihrem Gerät, die sich
+     dafür gegebenenfalls mit Apple bzw. Google verbinden; eine Bewertung geben Sie direkt bei
+     Apple bzw. Google ab. Der jeweilige Anbieter ist dafür eigenständig verantwortlich und
+     verarbeitet die Daten nach seinen eigenen Datenschutzbestimmungen. An diesen Server sendet
+     die App dafür nichts. Den Zählerstand dafür (<code>papamap-review</code>, siehe „App:
+     Einstellungen auf dem Gerät“) nutzt die App allein, um die Bitte nicht zu früh und nicht
+     mehrfach zu stellen; sie sendet ihn nirgendwohin.</p>
   <h2>App: Apple (App Store und TestFlight)</h2>
   <p>Die Verteilung über den App Store und über TestFlight ist Sache von Apple. Apple ist dafür
      eigenständig verantwortlich und verarbeitet die dabei anfallenden Daten nach seinen eigenen

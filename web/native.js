@@ -866,8 +866,8 @@ export function shareSettings({ mode, lang }) {
 // separate local day on which they opened a pin, whichever comes first — a
 // reader who only looks things up is as much a user as one who answers. The
 // ask itself fires only at a pin close, a second later, and only if the moment
-// is still calm (no pin, no dialog open, the app in the foreground): closing
-// one pin to open the next is not the moment. Days on which the app was merely
+// is still calm (no pin, dialog or room card up, the app in the foreground):
+// closing one pin to open the next is not the moment. Days on which the app was merely
 // launched do not count, and nothing from before this build does. The website
 // neither counts nor asks (app.js only builds the tracker when isNative()), so
 // it writes no key.

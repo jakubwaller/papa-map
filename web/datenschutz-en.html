@@ -203,11 +203,10 @@
      (<code>papamap-saved</code>), your own answers (<code>papamap-my-answers</code>) and the
      closed room notes (<code>papamap-card-dismissed</code>) and, in the app only, a mark that the
      one-time hint about the Control Center and the widget has been shown
-     (<code>papamap-tip-seen</code>), and, for the one-time request for a rating, how many
-     answers you have given in the app and on how many days you have opened a pin, both counted
-     only up to three, along with the date of the last such day and whether the request has been
-     made (<code>papamap-review</code>) — just in the app's own storage
-     instead of the browser's. Purely functional, without tracking, only on your device —
+     (<code>papamap-tip-seen</code>), and, for the one-time request for a rating, a tally of how
+     many answers you have given in the app and on how many days you have opened a pin (both
+     counted only up to three), the date of the day last counted, and whether the request has been
+     made (<code>papamap-review</code>) — just in the app's own storage instead of the browser's. Purely functional, without tracking, only on your device —
      and, like everything the app stores, in a device backup (iCloud or computer), if you have set
      one up (§ 25(2) no. 2 TDDDG).</p>
   <h2>App: signing in to OpenStreetMap</h2>
@@ -229,12 +228,16 @@
      entry expires when you close the view (§ 25(2) no. 2 TDDDG). From that point on, the privacy
      policy of the respective service applies; this policy applies to the pages of this website.</p>
   <h2>App: asking for a rating</h2>
-  <p>After your third answer in the app, or on the third day on which you have opened a pin,
-     the app asks the operating system once — as soon as you next close a pin — to show the
-     rating dialog of the App Store or Google Play. Whether and when it appears is up to Apple or
-     Google; the app learns neither that nor whether or how you rate. You give a rating directly to
-     Apple or Google, who are independently responsible for it and process it under their own
-     privacy policies. The app sends nothing to this server for it.</p>
+  <p>Once you have given three answers in the app, or have opened a pin on three different days,
+     the app asks the operating system, once, to show the rating dialog of the App Store or Google
+     Play the next time you close a pin. Whether and when it appears is up to Apple or Google; the
+     app learns neither whether it appeared nor whether or how you rate. The request goes to the
+     operating system or to Google Play on your device, which may connect to Apple or Google for
+     it; you give a rating directly to Apple or Google. Each is independently responsible for this
+     and processes the data under its own privacy policy. The app sends nothing to this server for
+     it. The app uses the tally behind it (<code>papamap-review</code>, see "App: settings on the
+     device") only to make the request neither too early nor more than once; it sends it
+     nowhere.</p>
   <h2>App: Apple (App Store and TestFlight)</h2>
   <p>Distribution through the App Store and through TestFlight is Apple's responsibility. Apple is
      independently responsible for this and processes the data involved under its own privacy
