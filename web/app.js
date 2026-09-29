@@ -80,9 +80,11 @@ const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT, host: LIVE.redirect
 // the third answer or the third day of opening pins, at a calm pin close. Only
 // in the app: the website neither counts nor asks, and writes no key for it.
 // Calm includes the room card: a close can bring it up (evaluateRoomCard), and
-// the store's sheet must not cover a question of our own.
+// the store's sheet must not cover a question of our own. And the search: a
+// reader who closed a pin to type a place name is in the middle of something.
 const review = isNative() ? reviewTracker({
   calm: () => !popup && !document.querySelector("dialog[open]") && roomCardEl.hidden
+    && searchList.hidden && document.activeElement !== searchInput
     && document.visibilityState === "visible",
 }) : null;
 const CHANGESET_COMMENT = {

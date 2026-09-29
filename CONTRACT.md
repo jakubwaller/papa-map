@@ -8,7 +8,7 @@
 > (`web/native.js`) keeps this in one new device key, `papamap-review` (app
 > only; JSON with answers and days each capped at 3, the last counted local
 > date and whether it has asked; named in both Datenschutz pages). A close
-> asks one second later, and only if no pin, no dialog and no room card is
+> asks one second later, and only if no pin, dialog, room card or search is
 > up by then, so closing one pin to open the next (or to answer the room card
 > the close brought up) is not the moment; a close caused by a
 > language or mode switch does not count. Blocked storage falls back to memory
