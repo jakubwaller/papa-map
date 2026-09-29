@@ -75,11 +75,11 @@ const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 // the registration.
 // host: the changeset's `host` tag stays the site's address — the redirect is
 // only the OAuth return leg, and papamap://auth is no provenance for an edit.
+const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT, host: LIVE.redirect } : endpoints(location);
 // Counts the reader's successful answers and, once, asks the store for a
 // rating (native.js, answerCounter). Only in the app: the website neither
 // counts nor asks, and writes no key for it.
 const noteAnswer = isNative() ? answerCounter() : null;
-const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT, host: LIVE.redirect } : endpoints(location);
 const CHANGESET_COMMENT = {
   table: "Changing table: which room (answered on papamap.de)",
   place: "Changing table: added, with its room (answered on papamap.de)",

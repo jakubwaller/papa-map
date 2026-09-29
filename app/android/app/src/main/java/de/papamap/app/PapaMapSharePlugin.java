@@ -11,8 +11,8 @@ import com.google.android.play.core.review.ReviewManagerFactory;
 // PapaMapSharePlugin.swift, so web/native.js hands the widget its tables the
 // same way on both platforms. All are write-only: two write what the widget
 // reads, the third asks the store to show its rating sheet. Nothing comes back
-// to the page, and nothing leaves the phone. Registered in MainActivity: an app's own
-// plugin has no package for the Capacitor CLI to discover.
+// to the page, and nothing leaves the phone. Registered in MainActivity: an
+// app's own plugin has no package for the Capacitor CLI to discover.
 //
 // iOS's third job, carrying a tapped Siri answer back to the page, has no
 // Android counterpart: the widget's and the shortcut's taps are ordinary

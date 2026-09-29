@@ -8,8 +8,9 @@ import StoreKit
 // Siri shortcut what they need. Three methods, all write-only: two into the
 // App Group container, and a third, requestReview, that asks the store to show
 // its rating sheet. Nothing comes back to the page (whether the sheet appears
-// is Apple's call), and nothing leaves the phone. Registered in MainViewController, not by macro: an app-target
-// plugin has no package for the Capacitor CLI to discover.
+// is Apple's call), and nothing leaves the phone. Registered in
+// MainViewController, not by macro: an app-target plugin has no package for
+// the Capacitor CLI to discover.
 //
 // It carries one thing the other way: the table a tapped Siri answer left in
 // PendingTable, posted as an opened URL so it arrives at the page down the
