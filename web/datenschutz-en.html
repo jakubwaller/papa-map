@@ -203,8 +203,10 @@
      (<code>papamap-saved</code>), your own answers (<code>papamap-my-answers</code>) and the
      closed room notes (<code>papamap-card-dismissed</code>) and, in the app only, a mark that the
      one-time hint about the Control Center and the widget has been shown
-     (<code>papamap-tip-seen</code>), and how many answers you have given in the app, counted
-     only up to three (<code>papamap-answer-count</code>) — just in the app's own storage
+     (<code>papamap-tip-seen</code>), and, for the one-time request for a rating, how many
+     answers you have given in the app and on how many days you have opened a pin, both counted
+     only up to three, along with the date of the last such day and whether the request has been
+     made (<code>papamap-review</code>) — just in the app's own storage
      instead of the browser's. Purely functional, without tracking, only on your device —
      and, like everything the app stores, in a device backup (iCloud or computer), if you have set
      one up (§ 25(2) no. 2 TDDDG).</p>
@@ -227,7 +229,8 @@
      entry expires when you close the view (§ 25(2) no. 2 TDDDG). From that point on, the privacy
      policy of the respective service applies; this policy applies to the pages of this website.</p>
   <h2>App: asking for a rating</h2>
-  <p>After your third answer in the app, the app asks the operating system once to show the
+  <p>After your third answer in the app, or on the third day on which you have opened a pin,
+     the app asks the operating system once — as soon as you next close a pin — to show the
      rating dialog of the App Store or Google Play. Whether and when it appears is up to Apple or
      Google; the app learns neither that nor whether or how you rate. You give a rating directly to
      Apple or Google, who are independently responsible for it and process it under their own

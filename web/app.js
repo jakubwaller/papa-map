@@ -35,7 +35,7 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         answerCounter } from "./native.js?v=app54";
+         reviewTracker } from "./native.js?v=app54";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
@@ -76,10 +76,12 @@ const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 // host: the changeset's `host` tag stays the site's address — the redirect is
 // only the OAuth return leg, and papamap://auth is no provenance for an edit.
 const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT, host: LIVE.redirect } : endpoints(location);
-// Counts the reader's successful answers and, once, asks the store for a
-// rating (native.js, answerCounter). Only in the app: the website neither
-// counts nor asks, and writes no key for it.
-const noteAnswer = isNative() ? answerCounter() : null;
+// Decides when to ask the store for a rating (native.js, reviewTracker): after
+// the third answer or the third day of opening pins, at a calm pin close. Only
+// in the app: the website neither counts nor asks, and writes no key for it.
+const review = isNative() ? reviewTracker({
+  calm: () => !popup && !document.querySelector("dialog[open]") && document.visibilityState === "visible",
+}) : null;
 const CHANGESET_COMMENT = {
   table: "Changing table: which room (answered on papamap.de)",
   place: "Changing table: added, with its room (answered on papamap.de)",
@@ -865,6 +867,7 @@ function openPopup(f) {
     .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
   p.on("close", () => onPopupClosed(p));
   popup = p;
+  review?.pinOpened();
   syncNearestBtn();
   attachEditNote();
   updateSignMarker();
@@ -881,6 +884,7 @@ function openPlacePopup(p) {
     .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
   pop.on("close", () => onPopupClosed(pop));
   popup = pop;
+  review?.pinOpened();
   syncNearestBtn();
   attachEditNote();
   updateSignMarker();
@@ -1873,6 +1877,7 @@ function onPopupClosed(closedPopup) {
   if (popup === closedPopup) { popup = null; popupObj = null; updateSignMarker(); }
   syncNearestBtn();
   if (suppressCardOnClose) { suppressCardOnClose = false; return; }
+  review?.pinClosed();   // a switch of language or mode returned above: not the reader closing a pin
   queueMicrotask(evaluateRoomCard);
 }
 
@@ -2301,7 +2306,7 @@ async function answer(kind, obj, choice, freshToken = null) {
     const tags = {};
     for (const k of (play ? PLAY_TAGS : TABLE_TAGS)) if (out.tags[k]) tags[k] = out.tags[k];
     setEditNote(rec, "found", "editFound", tags);
-    noteAnswer?.();
+    review?.answered();
   } catch (err) {
     btns.forEach((b) => { b.disabled = false; });
     // A dead token is not the reader's problem: log in again, answer in hand.

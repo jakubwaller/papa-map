@@ -1,14 +1,18 @@
 # papa-map — build contract (v0)
 
 > **v52 amendment (29 Sep 2026, asking for a rating): no shape change.** The
-> store app asks the store for a rating once, after the reader's third
-> successful answer on this device, never on launch. `answerCounter(io)`
-> (`web/native.js`) counts successful `answer()` writes of every kind (room,
-> place, play) in one new device key, `papamap-answer-count` (app only, capped
-> at 3, named in both Datenschutz pages), and asks on the step from 2 to 3,
-> two seconds later; blocked storage falls back to a count in memory, so at
-> most once per launch. Answers given before this build do not count. The ask
-> is `PapaMapShare.requestReview`, a third method on the app's own plugin:
+> store app asks the store for a rating once per device, never on launch and
+> never in the middle of something: at the first pin close after the reader's
+> third successful answer (room, place or play) or after the third separate
+> day on which they opened a pin, whichever comes first. `reviewTracker(io)`
+> (`web/native.js`) keeps this in one new device key, `papamap-review` (app
+> only; JSON with answers and days each capped at 3, the last counted local
+> date and whether it has asked; named in both Datenschutz pages). A close
+> asks one second later, and only if no pin and no dialog is open by then, so
+> closing one pin to open the next is not the moment; a close caused by a
+> language or mode switch does not count. Blocked storage falls back to memory
+> for the launch. Days and answers from before this build do not count. The
+> ask is `PapaMapShare.requestReview`, a third method on the app's own plugin:
 > `AppStore.requestReview(in:)` on iOS, Play's In-App Review on Android
 > (`com.google.android.play:review`). Whether the store shows its sheet is the
 > store's call, and nothing comes back to the page. The website neither counts

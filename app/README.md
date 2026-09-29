@@ -28,8 +28,9 @@ the dataset comes from papamap.de, answers go to OpenStreetMap under the reader'
 The Swift side reads a compact copy of the dataset that `web/native.js` hands over through
 the app's own plugin (`PapaMapSharePlugin.swift`), via an App Group container.
 
-The plugin's third method, `requestReview`, asks the store for its rating sheet once, after the
-reader's third answer (`answerCounter` in `web/native.js`): `AppStore.requestReview(in:)` on iOS,
+The plugin's third method, `requestReview`, asks the store for its rating sheet once, at a pin
+close after the reader's third answer or third day of opening pins (`reviewTracker` in
+`web/native.js`): `AppStore.requestReview(in:)` on iOS,
 Google Play In-App Review (`com.google.android.play:review`) on Android, where the sheet only
 appears in a copy installed from Google Play.
 

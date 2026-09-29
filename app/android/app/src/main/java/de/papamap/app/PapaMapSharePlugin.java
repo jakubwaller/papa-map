@@ -48,7 +48,8 @@ public class PapaMapSharePlugin extends Plugin {
         call.resolve();
     }
 
-    // Google Play In-App Review, asked once after the reader's third answer.
+    // Google Play In-App Review, asked once, at a calm pin close after the reader's
+    // third answer or third day of opening pins.
     // Play rate-limits the sheet and says nothing about whether it showed, and
     // it only appears in a copy installed from Google Play — a sideloaded or
     // debug build resolves quietly without one.
