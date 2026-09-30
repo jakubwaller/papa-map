@@ -186,14 +186,14 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app60" />
+  <link rel="stylesheet" href="style.css?v=app61" />
 
   <!-- Classic and blocking, in the head on purpose: it puts the .in-app class
        on <html> before the first paint when the store app opened this page in
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app60"></script>
+  <script src="in-app.js?v=app61"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -381,8 +381,9 @@
   <!-- Add-a-place dialog: everything lands in OpenStreetMap, not here -->
   <dialog id="add-dialog">
     <h3 data-i18n="dlgTitle">Fehlenden Ort hinzufügen</h3>
-    <p data-i18n="dlgIntro">PapaMap hat keine eigenen Daten — neue Orte gehen in OpenStreetMap
-    und erscheinen hier nach dem nächtlichen Update.</p>
+    <p data-i18n="dlgIntro">Neue Orte trägst du in MapComplete ein, dem Editor von OpenStreetMap;
+    PapaMap hat keine eigenen Daten. Er öffnet sich am aktuellen Kartenausschnitt — dort die
+    Wickeltisch-Fragen beantworten und zurückkommen, der Ort erscheint hier nach wenigen Minuten.</p>
     <a id="add-toilet-link" class="btn primary" href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json" target="_blank" rel="noopener">
       <span data-i18n="dlgToilet">Eine öffentliche Toilette fehlt</span>
       <span class="hint" data-i18n="dlgToiletHint">Öffnet MapComplete am aktuellen Kartenausschnitt — Toilette hinzufügen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OSM-Login.</span>
@@ -469,6 +470,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app60"></script>
+  <script type="module" src="app.js?v=app61"></script>
 </body>
 </html>

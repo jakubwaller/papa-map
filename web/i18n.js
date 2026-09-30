@@ -352,7 +352,7 @@ export const STRINGS = {
     loginFailed: "Anmeldung bei OSM fehlgeschlagen.",
 
     dlgTitle: "Fehlenden Ort hinzufügen",
-    dlgIntro: "PapaMap hat keine eigenen Daten — neue Orte gehen in OpenStreetMap und erscheinen hier nach dem nächtlichen Update.",
+    dlgIntro: "Neue Orte trägst du in MapComplete ein, dem Editor von OpenStreetMap; PapaMap hat keine eigenen Daten. Er öffnet sich am aktuellen Kartenausschnitt — dort die Wickeltisch-Fragen beantworten und zurückkommen, der Ort erscheint hier nach wenigen Minuten.",
     dlgToilet: "Eine öffentliche Toilette fehlt",
     dlgToiletHint: "Öffnet MapComplete am aktuellen Kartenausschnitt — Toilette hinzufügen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OSM-Login.",
     dlgVenue: "Ein Café / Laden / Restaurant hat einen Tisch",
@@ -575,7 +575,7 @@ export const STRINGS = {
     loginFailed: "Logging in to OSM failed.",
 
     dlgTitle: "Add a missing place",
-    dlgIntro: "PapaMap has no data of its own — new places go into OpenStreetMap and show up here after the nightly refresh.",
+    dlgIntro: "New places are added in MapComplete, the OpenStreetMap editor; PapaMap has no data of its own. It opens on the map you are looking at — answer the changing-table questions there and come back, and the place shows up here within a few minutes.",
     dlgToilet: "A public toilet is missing",
     dlgToiletHint: "Opens MapComplete at this map view — add it and answer the changing-table questions. Needs a free OSM login.",
     dlgVenue: "A café / shop / restaurant has a table",
@@ -795,7 +795,7 @@ export const STRINGS = {
     loginFailed: "Login hos OSM mislykkedes.",
 
     dlgTitle: "Tilføj et sted, der mangler",
-    dlgIntro: "PapaMap har ingen egne data — nye steder kommer ind i OpenStreetMap og dukker op her efter den natlige opdatering.",
+    dlgIntro: "Nye steder tilføjes i MapComplete, OpenStreetMaps editor; PapaMap har ingen egne data. Den åbner på det kortudsnit, du kigger på — besvar spørgsmålene om puslebord dér og kom tilbage, så dukker stedet op her inden for få minutter.",
     dlgToilet: "Et offentligt toilet mangler",
     dlgToiletHint: "Åbner MapComplete på dette kortudsnit — tilføj toilettet og besvar spørgsmålene om puslebord. Kræver et gratis OSM-login.",
     dlgVenue: "En café / butik / restaurant har et puslebord",
@@ -1013,7 +1013,7 @@ export const STRINGS = {
     loginFailed: "Inloggen bij OSM mislukt.",
 
     dlgTitle: "Ontbrekende plek toevoegen",
-    dlgIntro: "PapaMap heeft geen eigen gegevens — nieuwe plekken gaan naar OpenStreetMap en verschijnen hier na de nachtelijke update.",
+    dlgIntro: "Nieuwe plekken voeg je toe in MapComplete, de editor van OpenStreetMap; PapaMap heeft geen eigen gegevens. Het opent op het kaartbeeld waar je nu naar kijkt — beantwoord daar de vragen over de verschoontafel en kom terug, dan verschijnt de plek hier binnen een paar minuten.",
     dlgToilet: "Er ontbreekt een openbaar toilet",
     dlgToiletHint: "Opent MapComplete op dit kaartbeeld — voeg het toilet toe en beantwoord de vragen over de verschoontafel. Vereist een gratis OSM-account.",
     dlgVenue: "Een café / winkel / restaurant heeft een tafel",
@@ -1229,7 +1229,7 @@ export const STRINGS = {
     loginFailed: "La connexion à OSM a échoué.",
 
     dlgTitle: "Ajouter un lieu manquant",
-    dlgIntro: "PapaMap n'a pas de données à lui — les nouveaux lieux vont dans OpenStreetMap et apparaissent ici après la mise à jour nocturne.",
+    dlgIntro: "Les nouveaux lieux s'ajoutent dans MapComplete, l'éditeur d'OpenStreetMap ; PapaMap n'a pas de données à lui. Il s'ouvre sur la vue de la carte que tu regardes — réponds là-bas aux questions sur la table à langer et reviens, le lieu apparaît ici en quelques minutes.",
     dlgToilet: "Il manque des toilettes publiques",
     dlgToiletHint: "Ouvre MapComplete sur la vue actuelle — ajoute-les et réponds aux questions sur la table à langer. Nécessite un compte OSM gratuit.",
     dlgVenue: "Un café / magasin / restaurant a une table",
@@ -1445,7 +1445,7 @@ export const STRINGS = {
     loginFailed: "Accesso a OSM non riuscito.",
 
     dlgTitle: "Aggiungi un luogo che manca",
-    dlgIntro: "PapaMap non ha dati propri — i nuovi luoghi finiscono in OpenStreetMap e compaiono qui dopo l'aggiornamento notturno.",
+    dlgIntro: "I nuovi luoghi si aggiungono in MapComplete, l'editor di OpenStreetMap; PapaMap non ha dati propri. Si apre sulla porzione di mappa che stai guardando — rispondi lì alle domande sul fasciatoio e torna indietro: il luogo compare qui entro pochi minuti.",
     dlgToilet: "Manca un bagno pubblico",
     dlgToiletHint: "Apre MapComplete su questa porzione di mappa — aggiungi il bagno e rispondi alle domande sul fasciatoio. Serve un account OSM gratuito.",
     dlgVenue: "Un bar / negozio / ristorante ha un fasciatoio",
@@ -1661,7 +1661,7 @@ export const STRINGS = {
     loginFailed: "Přihlášení k OSM se nezdařilo.",
 
     dlgTitle: "Přidat chybějící místo",
-    dlgIntro: "PapaMap nemá vlastní data — nová místa se zapisují do OpenStreetMap a objeví se tady po noční aktualizaci.",
+    dlgIntro: "Nová místa se přidávají v MapComplete, editoru OpenStreetMap; PapaMap nemá vlastní data. Otevře se na výřezu mapy, který právě vidíš — odpověz tam na otázky k přebalovacímu pultu a vrať se, místo se tu objeví během několika minut.",
     dlgToilet: "Chybí veřejné WC",
     dlgToiletHint: "Otevře MapComplete na aktuálním výřezu mapy — přidej WC a odpověz na otázky k přebalovacímu pultu. Je potřeba bezplatné přihlášení k OSM.",
     dlgVenue: "Kavárna / obchod / restaurace má pult",
@@ -1877,7 +1877,7 @@ export const STRINGS = {
     loginFailed: "Logowanie do OSM nie powiodło się.",
 
     dlgTitle: "Dodaj brakujące miejsce",
-    dlgIntro: "PapaMap nie ma własnych danych — nowe miejsca trafiają do OpenStreetMap i pojawiają się tutaj po nocnej aktualizacji.",
+    dlgIntro: "Nowe miejsca dodaje się w MapComplete, edytorze OpenStreetMap; PapaMap nie ma własnych danych. Otwiera się na wycinku mapy, który właśnie oglądasz — odpowiedz tam na pytania o przewijak i wróć, a miejsce pojawi się tutaj w ciągu kilku minut.",
     dlgToilet: "Brakuje toalety publicznej",
     dlgToiletHint: "Otwiera MapComplete na tym wycinku mapy — dodaj toaletę i odpowiedz na pytania o przewijak. Potrzebne darmowe konto OSM.",
     dlgVenue: "Kawiarnia / sklep / restauracja ma przewijak",
@@ -2093,7 +2093,7 @@ export const STRINGS = {
     loginFailed: "Inloggningen hos OSM misslyckades.",
 
     dlgTitle: "Lägg till en plats som saknas",
-    dlgIntro: "PapaMap har inga egna data — nya platser hamnar i OpenStreetMap och dyker upp här efter den nattliga uppdateringen.",
+    dlgIntro: "Nya platser läggs till i MapComplete, OpenStreetMaps redigerare; PapaMap har inga egna data. Den öppnas vid det kartutsnitt du tittar på — svara på skötbordsfrågorna där och kom tillbaka, så dyker platsen upp här inom några minuter.",
     dlgToilet: "En offentlig toalett saknas",
     dlgToiletHint: "Öppnar MapComplete vid det här kartutsnittet — lägg till toaletten och svara på skötbordsfrågorna. Kräver en gratis OSM-inloggning.",
     dlgVenue: "Café / butik / restaurang har ett skötbord",
@@ -2308,7 +2308,7 @@ export const STRINGS = {
     loginFailed: "Prijava na OSM nije uspjela.",
 
     dlgTitle: "Dodaj mjesto koje nedostaje",
-    dlgIntro: "PapaMap nema svoje podatke — nova mjesta idu u OpenStreetMap i ovdje se pojavljuju nakon noćnog ažuriranja.",
+    dlgIntro: "Nova mjesta se dodaju u MapComplete, uređivaču OpenStreetMapa; PapaMap nema svoje podatke. Otvara se na dijelu karte koji gledaš — tamo odgovori na pitanja o stolu za previjanje i vrati se, mjesto će se ovdje pojaviti za nekoliko minuta.",
     dlgToilet: "Nedostaje javni WC",
     dlgToiletHint: "Otvara MapComplete na ovom dijelu karte — dodaj ga i odgovori na pitanja o stolu za previjanje. Potreban je besplatan OSM nalog.",
     dlgVenue: "Kafić / prodavnica / restoran ima sto za previjanje",
@@ -2523,7 +2523,7 @@ export const STRINGS = {
     loginFailed: "No s'ha pogut iniciar sessió a OSM.",
 
     dlgTitle: "Afegeix un lloc que falta",
-    dlgIntro: "PapaMap no té dades pròpies — els llocs nous van a OpenStreetMap i apareixen aquí després de l'actualització nocturna.",
+    dlgIntro: "Els llocs nous s'afegeixen a MapComplete, l'editor d'OpenStreetMap; PapaMap no té dades pròpies. S'obre a la vista del mapa que estàs mirant — respon-hi les preguntes sobre el canviador i torna, i el lloc apareixerà aquí en pocs minuts.",
     dlgToilet: "Falta un lavabo públic",
     dlgToiletHint: "Obre MapComplete en aquesta vista del mapa — afegeix-lo i respon les preguntes sobre el canviador. Cal un compte gratuït d'OSM.",
     dlgVenue: "Un cafè / botiga / restaurant té un canviador",
@@ -2738,7 +2738,7 @@ export const STRINGS = {
     loginFailed: "OSM-i sisselogimine ebaõnnestus.",
 
     dlgTitle: "Lisa puuduv koht",
-    dlgIntro: "PapaMapil pole oma andmeid — uued kohad lähevad OpenStreetMapi ja ilmuvad siia pärast öist uuendust.",
+    dlgIntro: "Uusi kohti lisatakse MapComplete'is, OpenStreetMapi redaktoris; PapaMapil pole oma andmeid. See avaneb kaardivaates, mida praegu vaatad — vasta seal mähkimislaua küsimustele ja tule tagasi, koht ilmub siia mõne minuti jooksul.",
     dlgToilet: "Avalik tualett puudub",
     dlgToiletHint: "Avab MapComplete'i praeguses kaardivaates — lisa tualett ja vasta mähkimislaua küsimustele. Vajalik on tasuta OSM-konto.",
     dlgVenue: "Kohvikus / poes / restoranis on mähkimislaud",
@@ -2953,7 +2953,7 @@ export const STRINGS = {
     loginFailed: "No se pudo iniciar sesión en OSM.",
 
     dlgTitle: "Añadir un lugar que falta",
-    dlgIntro: "PapaMap no tiene datos propios — los lugares nuevos se añaden a OpenStreetMap y aparecen aquí después de la actualización nocturna.",
+    dlgIntro: "Los lugares nuevos se añaden en MapComplete, el editor de OpenStreetMap; PapaMap no tiene datos propios. Se abre en la vista del mapa que estás viendo — responde allí a las preguntas sobre el cambiador y vuelve, y el lugar aparecerá aquí en unos minutos.",
     dlgToilet: "Falta un aseo público",
     dlgToiletHint: "Abre MapComplete en esta vista del mapa — añade el aseo y responde a las preguntas sobre el cambiador. Requiere una cuenta de OSM gratuita.",
     dlgVenue: "Una cafetería, tienda o restaurante tiene un cambiador",
@@ -3168,7 +3168,7 @@ export const STRINGS = {
     loginFailed: "Prijava na OSM nije uspjela.",
 
     dlgTitle: "Dodaj mjesto koje nedostaje",
-    dlgIntro: "PapaMap nema vlastite podatke — nova mjesta idu u OpenStreetMap i ovdje se pojave nakon noćnog osvježavanja podataka.",
+    dlgIntro: "Nova mjesta dodaju se u MapComplete, uređivaču OpenStreetMapa; PapaMap nema vlastite podatke. Otvara se na dijelu karte koji gledaš — ondje odgovori na pitanja o stolu za previjanje i vrati se, mjesto će se ovdje pojaviti za nekoliko minuta.",
     dlgToilet: "Nedostaje javni WC",
     dlgToiletHint: "Otvara MapComplete na ovom dijelu karte — dodaj ga i odgovori na pitanja o stolu za previjanje. Potreban je besplatan OSM račun.",
     dlgVenue: "Kafić / trgovina / restoran ima stol",
@@ -3383,7 +3383,7 @@ export const STRINGS = {
     loginFailed: "Innskráning hjá OSM mistókst.",
 
     dlgTitle: "Bæta við stað sem vantar",
-    dlgIntro: "PapaMap á engin eigin gögn — nýir staðir fara inn í OpenStreetMap og birtast hér eftir næturuppfærsluna.",
+    dlgIntro: "Nýjum stöðum er bætt við í MapComplete, ritlinum í OpenStreetMap; PapaMap á engin eigin gögn. Hann opnast á kortasvæðinu sem þú ert að skoða — svaraðu spurningunum um skiptiborðið þar og komdu aftur, þá birtist staðurinn hér innan fárra mínútna.",
     dlgToilet: "Almenningssalerni vantar",
     dlgToiletHint: "Opnar MapComplete á þessu kortasvæði — bættu því við og svaraðu spurningunum um skiptiborðið. Krefst ókeypis OSM-innskráningar.",
     dlgVenue: "Kaffihús / verslun / veitingastaður er með skiptiborð",
@@ -3598,7 +3598,7 @@ export const STRINGS = {
     loginFailed: "Neizdevās pieslēgties OSM.",
 
     dlgTitle: "Pievienot trūkstošu vietu",
-    dlgIntro: "PapaMapam nav savu datu — jaunas vietas nonāk OpenStreetMap kartē un šeit parādās pēc nakts atjaunināšanas.",
+    dlgIntro: "Jaunas vietas pievieno MapComplete — OpenStreetMap redaktorā; PapaMapam nav savu datu. Tas atveras kartes skatā, kuru tu skaties — atbildi tur uz jautājumiem par pārtinamo galdiņu un atgriezies, vieta šeit parādīsies dažu minūšu laikā.",
     dlgToilet: "Trūkst publiskās tualetes",
     dlgToiletHint: "Atver MapComplete šajā kartes skatā — pievieno to un atbildi uz jautājumiem par pārtinamo galdiņu. Nepieciešams bezmaksas OSM konts.",
     dlgVenue: "Kafejnīcā / veikalā / restorānā ir galdiņš",
@@ -3813,7 +3813,7 @@ export const STRINGS = {
     loginFailed: "Nepavyko prisijungti prie OSM.",
 
     dlgTitle: "Pridėti trūkstamą vietą",
-    dlgIntro: "PapaMap neturi savo duomenų — naujos vietos pridedamos į OpenStreetMap ir čia atsiranda po naktinio atnaujinimo.",
+    dlgIntro: "Naujos vietos pridedamos MapComplete – OpenStreetMap redaktoriuje; PapaMap neturi savo duomenų. Jis atsidaro žemėlapio vaizde, kurį dabar žiūri — atsakyk ten į klausimus apie pervystymo stalą ir grįžk, vieta čia atsiras per kelias minutes.",
     dlgToilet: "Trūksta viešo tualeto",
     dlgToiletHint: "Atveria MapComplete šiame žemėlapio vaizde — pridėk jį ir atsakyk į klausimus apie pervystymo stalą. Reikia nemokamos OSM paskyros.",
     dlgVenue: "Kavinė / parduotuvė / restoranas turi stalą",
@@ -4028,7 +4028,7 @@ export const STRINGS = {
     loginFailed: "Az OSM-bejelentkezés nem sikerült.",
 
     dlgTitle: "Hiányzó hely hozzáadása",
-    dlgIntro: "A PapaMapnek nincs saját adata — az új helyek az OpenStreetMapbe kerülnek, és az éjszakai frissítés után jelennek meg itt.",
+    dlgIntro: "Új helyeket a MapCompleteben adhatsz hozzá, az OpenStreetMap szerkesztőjében; a PapaMapnek nincs saját adata. Az éppen nézett térképnézetnél nyílik meg — válaszolj ott a pelenkázóasztalra vonatkozó kérdésekre, és gyere vissza, a hely néhány percen belül megjelenik itt.",
     dlgToilet: "Hiányzik egy nyilvános mosdó",
     dlgToiletHint: "Megnyitja a MapCompletet ennél a térképnézetnél — add hozzá, és válaszolj a pelenkázóasztalra vonatkozó kérdésekre. Ingyenes OSM-bejelentkezés szükséges hozzá.",
     dlgVenue: "Egy kávézónak / boltnak / étteremnek van pelenkázóasztala",
@@ -4243,7 +4243,7 @@ export const STRINGS = {
     loginFailed: "Innlogging hos OSM mislyktes.",
 
     dlgTitle: "Legg til et sted som mangler",
-    dlgIntro: "PapaMap har ingen egne data — nye steder legges inn i OpenStreetMap (OSM) og vises her igjen etter den nattlige oppdateringen.",
+    dlgIntro: "Nye steder legges inn i MapComplete, redigeringsverktøyet til OpenStreetMap; PapaMap har ingen egne data. Det åpnes på kartutsnittet du ser på — svar på spørsmålene om stellebordet der og kom tilbake, så dukker stedet opp her i løpet av få minutter.",
     dlgToilet: "Et offentlig toalett mangler",
     dlgToiletHint: "Åpner MapComplete på dette kartutsnittet — legg til toalettet, og svar på spørsmålene om stellebordet. Krever en OSM-bruker (gratis).",
     dlgVenue: "En kafé / butikk / restaurant har et stellebord",
@@ -4458,7 +4458,7 @@ export const STRINGS = {
     loginFailed: "Não foi possível iniciar sessão no OSM.",
 
     dlgTitle: "Adicionar um local em falta",
-    dlgIntro: "O PapaMap não tem dados próprios — os locais novos vão para o OpenStreetMap e aparecem aqui depois da atualização noturna.",
+    dlgIntro: "Os locais novos adicionam-se no MapComplete, o editor do OpenStreetMap; o PapaMap não tem dados próprios. Abre na vista do mapa que estás a ver — responde lá às perguntas sobre o fraldário e volta, e o local aparece aqui em poucos minutos.",
     dlgToilet: "Falta uma casa de banho pública",
     dlgToiletHint: "Abre o MapComplete nesta vista do mapa — adiciona-a e responde às perguntas sobre o fraldário. É preciso um login gratuito no OSM.",
     dlgVenue: "Um café / loja / restaurante tem um fraldário",
@@ -4673,7 +4673,7 @@ export const STRINGS = {
     loginFailed: "Conectarea la OSM a eșuat.",
 
     dlgTitle: "Adaugă un loc lipsă",
-    dlgIntro: "PapaMap nu are date proprii — locurile noi ajung în OpenStreetMap și apar aici după actualizarea de peste noapte.",
+    dlgIntro: "Locurile noi se adaugă în MapComplete, editorul OpenStreetMap; PapaMap nu are date proprii. Se deschide la zona hărții pe care o vezi acum — răspunde acolo la întrebările despre masa de înfășat și revino, iar locul apare aici în câteva minute.",
     dlgToilet: "Lipsește o toaletă publică",
     dlgToiletHint: "Deschide MapComplete la această zonă a hărții — adaugă toaleta și răspunde la întrebările despre masa de înfășat. Necesită un cont OSM gratuit.",
     dlgVenue: "O cafenea / un magazin / un restaurant are o masă",
@@ -4888,7 +4888,7 @@ export const STRINGS = {
     loginFailed: "Hyrja në OSM dështoi.",
 
     dlgTitle: "Shto një vend që mungon",
-    dlgIntro: "PapaMap nuk ka të dhëna të veta — vendet e reja shkojnë në OpenStreetMap dhe shfaqen këtu pas përditësimit të natës.",
+    dlgIntro: "Vendet e reja shtohen në MapComplete, redaktorin e OpenStreetMap; PapaMap nuk ka të dhëna të veta. Hapet te pamja e hartës që po shikon — përgjigju atje pyetjeve për tavolinën e ndërrimit dhe kthehu, dhe vendi shfaqet këtu brenda pak minutash.",
     dlgToilet: "Mungon një tualet publik",
     dlgToiletHint: "Hap MapComplete te kjo pamje e hartës — shtoje dhe përgjigju pyetjeve për tavolinën e ndërrimit. Nevojitet një llogari falas në OSM.",
     dlgVenue: "Një kafene / dyqan / restorant ka tavolinë ndërrimi",
@@ -5103,7 +5103,7 @@ export const STRINGS = {
     loginFailed: "Prihlásenie do OSM zlyhalo.",
 
     dlgTitle: "Pridať chýbajúce miesto",
-    dlgIntro: "PapaMap nemá vlastné dáta — nové miesta sa zapisujú do OpenStreetMap a objavia sa tu po nočnej aktualizácii.",
+    dlgIntro: "Nové miesta sa pridávajú v MapComplete, editore OpenStreetMap; PapaMap nemá vlastné dáta. Otvorí sa na výreze mapy, ktorý práve vidíš — odpovedz tam na otázky o prebaľovacom pulte a vráť sa, miesto sa tu objaví o niekoľko minút.",
     dlgToilet: "Chýba verejné WC",
     dlgToiletHint: "Otvorí MapComplete na aktuálnom výreze mapy — pridaj WC a odpovedz na otázky o prebaľovacom pulte. Treba bezplatné prihlásenie na OSM.",
     dlgVenue: "Kaviareň / obchod / reštaurácia má pult",
@@ -5318,7 +5318,7 @@ export const STRINGS = {
     loginFailed: "Prijava v OSM ni uspela.",
 
     dlgTitle: "Dodaj manjkajoč kraj",
-    dlgIntro: "PapaMap nima lastnih podatkov — novi kraji gredo v OpenStreetMap in se tu pojavijo po nočni posodobitvi.",
+    dlgIntro: "Nove kraje dodajaš v MapComplete, urejevalniku OpenStreetMap; PapaMap nima lastnih podatkov. Odpre se na izseku zemljevida, ki ga gledaš — tam odgovori na vprašanja o previjalni mizi in se vrni, kraj se bo tu pojavil v nekaj minutah.",
     dlgToilet: "Manjka javno stranišče",
     dlgToiletHint: "Odpre MapComplete na tem izseku zemljevida — dodaj stranišče in odgovori na vprašanja o previjalni mizi. Potrebuješ brezplačen račun OSM.",
     dlgVenue: "Kavarna / trgovina / restavracija ima mizo",
@@ -5533,7 +5533,7 @@ export const STRINGS = {
     loginFailed: "Kirjautuminen OSM:ään epäonnistui.",
 
     dlgTitle: "Lisää puuttuva paikka",
-    dlgIntro: "PapaMapilla ei ole omaa dataa — uudet paikat lisätään OpenStreetMapiin ja ilmestyvät tänne yöllisen päivityksen jälkeen.",
+    dlgIntro: "Uudet paikat lisätään MapCompletessa, OpenStreetMapin editorissa; PapaMapilla ei ole omaa dataa. Se avautuu karttanäkymään, jota katsot — vastaa siellä hoitopöytäkysymyksiin ja palaa takaisin, paikka ilmestyy tänne muutamassa minuutissa.",
     dlgToilet: "Julkinen WC puuttuu",
     dlgToiletHint: "Avaa MapCompleten nykyiseen karttanäkymään — lisää WC ja vastaa hoitopöytäkysymyksiin. Vaatii ilmaisen OSM-tunnuksen.",
     dlgVenue: "Kahvilalla / kaupalla / ravintolalla on hoitopöytä",
@@ -5748,7 +5748,7 @@ export const STRINGS = {
     loginFailed: "Η σύνδεση στο OSM απέτυχε.",
 
     dlgTitle: "Προσθήκη μέρους που λείπει",
-    dlgIntro: "Το PapaMap δεν έχει δικά του δεδομένα — τα νέα μέρη καταχωρούνται στο OpenStreetMap και εμφανίζονται εδώ μετά τη νυχτερινή ενημέρωση.",
+    dlgIntro: "Τα νέα μέρη προστίθενται στο MapComplete, τον επεξεργαστή του OpenStreetMap· το PapaMap δεν έχει δικά του δεδομένα. Ανοίγει στην προβολή του χάρτη που βλέπεις — απάντησε εκεί στις ερωτήσεις για την αλλαξιέρα και γύρνα πίσω, το μέρος θα εμφανιστεί εδώ σε λίγα λεπτά.",
     dlgToilet: "Λείπει μια δημόσια τουαλέτα",
     dlgToiletHint: "Ανοίγει το MapComplete σε αυτή την προβολή του χάρτη — πρόσθεσέ την και απάντησε στις ερωτήσεις για την αλλαξιέρα. Χρειάζεται δωρεάν σύνδεση OSM.",
     dlgVenue: "Μια καφετέρια / ένα κατάστημα / εστιατόριο έχει αλλαξιέρα",
@@ -5963,7 +5963,7 @@ export const STRINGS = {
     loginFailed: "Не ўдалося ўвайсці ў OSM.",
 
     dlgTitle: "Дадаць адсутнае месца",
-    dlgIntro: "PapaMap не мае ўласных дадзеных — новыя месцы трапляюць у OpenStreetMap і з'яўляюцца тут пасля начнога абнаўлення.",
+    dlgIntro: "Новыя месцы дадаюцца ў MapComplete, рэдактары OpenStreetMap; PapaMap не мае ўласных дадзеных. Ён адкрываецца на выглядзе карты, які ты глядзіш — адкажы там на пытанні пра стол для спавівання і вярніся, месца з'явіцца тут праз некалькі хвілін.",
     dlgToilet: "Не хапае грамадскага туалета",
     dlgToiletHint: "Адкрывае MapComplete на бягучым выглядзе карты — дадай яго і адкажы на пытанні пра стол для спавівання. Патрабуецца бясплатны ўваход праз OSM.",
     dlgVenue: "У кафэ / краме / рэстаране ёсць стол",
@@ -6178,7 +6178,7 @@ export const STRINGS = {
     loginFailed: "Влизането в OSM не успя.",
 
     dlgTitle: "Добави липсващо място",
-    dlgIntro: "PapaMap няма собствени данни — новите места отиват в OpenStreetMap и се появяват тук след нощната актуализация.",
+    dlgIntro: "Новите места се добавят в MapComplete, редактора на OpenStreetMap; PapaMap няма собствени данни. Отваря се на изгледа на картата, който гледаш — отговори там на въпросите за масата за повиване и се върни, мястото ще се появи тук след броени минути.",
     dlgToilet: "Липсва обществена тоалетна",
     dlgToiletHint: "Отваря MapComplete на текущия изглед на картата — добави я и отговори на въпросите за масата за повиване. Изисква безплатен OSM акаунт.",
     dlgVenue: "Кафене / магазин / ресторант има маса",
@@ -6393,7 +6393,7 @@ export const STRINGS = {
     loginFailed: "Најавата на OSM не успеа.",
 
     dlgTitle: "Додади место што недостасува",
-    dlgIntro: "PapaMap нема сопствени податоци — новите места одат во OpenStreetMap и се појавуваат тука по ноќното ажурирање.",
+    dlgIntro: "Новите места се додаваат во MapComplete, уредникот на OpenStreetMap; PapaMap нема сопствени податоци. Се отвора на прегледот на мапата што го гледаш — одговори таму на прашањата за масата за пеленање и врати се, местото ќе се појави тука за неколку минути.",
     dlgToilet: "Недостасува јавен тоалет",
     dlgToiletHint: "Го отвора MapComplete на овој преглед на мапата — додади го и одговори на прашањата за масата за пеленање. Потребна е бесплатна OSM-сметка.",
     dlgVenue: "Кафуле / продавница / ресторан има маса",
@@ -6608,7 +6608,7 @@ export const STRINGS = {
     loginFailed: "Пријава на OSM није успела.",
 
     dlgTitle: "Додај место које недостаје",
-    dlgIntro: "PapaMap нема сопствене податке — нова места иду у OpenStreetMap и појављују се овде после ноћног освежавања.",
+    dlgIntro: "Нова места се додају у MapComplete, уређивачу OpenStreetMap-а; PapaMap нема сопствене податке. Отвара се на делу мапе који гледаш — тамо одговори на питања о столу за превијање и врати се, место ће се овде појавити за неколико минута.",
     dlgToilet: "Недостаје јавни тоалет",
     dlgToiletHint: "Отвара MapComplete на овом делу мапе — додај тоалет и одговори на питања о столу за превијање. Потребна је бесплатна OSM пријава.",
     dlgVenue: "Кафић / продавница / ресторан има сто",
@@ -6823,7 +6823,7 @@ export const STRINGS = {
     loginFailed: "Не вдалося увійти в OSM.",
 
     dlgTitle: "Додати місце, якого бракує",
-    dlgIntro: "PapaMap не має власних даних — нові місця потрапляють в OpenStreetMap і з'являються тут після нічного оновлення.",
+    dlgIntro: "Нові місця додаються в MapComplete, редакторі OpenStreetMap; PapaMap не має власних даних. Він відкривається на поточному виді карти — дай там відповіді на запитання про пеленальний столик і повернися, місце з'явиться тут за кілька хвилин.",
     dlgToilet: "Бракує громадського туалету",
     dlgToiletHint: "Відкриває MapComplete з поточним видом карти — додай його і дай відповіді на запитання про пеленальний столик. Потрібен безкоштовний обліковий запис OSM.",
     dlgVenue: "Кафе / магазин / ресторан має столик",
@@ -7042,7 +7042,7 @@ export const STRINGS = {
     loginFailed: "OSMへのログインに失敗しました。",
 
     dlgTitle: "足りない場所を追加",
-    dlgIntro: "PapaMapは独自のデータを持っていません — 新しい場所はOpenStreetMapに登録され、夜間更新のあとここに表示されます。",
+    dlgIntro: "新しい場所は、OpenStreetMapのエディタであるMapCompleteで追加します。PapaMapは独自のデータを持っていません。今見ている地図の範囲でMapCompleteが開くので、そこでおむつ交換台の質問に答えて戻ってください。数分以内にここに表示されます。",
     dlgToilet: "公衆トイレが載っていない",
     dlgToiletHint: "この地図の表示範囲でMapCompleteを開きます — トイレを追加し、おむつ交換台の質問に答えてください。無料のOSMログインが必要です。",
     dlgVenue: "カフェ・店・レストランに交換台がある",
