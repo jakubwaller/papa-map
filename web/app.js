@@ -1945,10 +1945,15 @@ function closeTopmost() {
 // The header logo in the store app. It used to be a link to "./", which
 // interceptLinks() opened as papamap.de in the in-app browser: a full website
 // on top of the app (tester finding, 2026-09-29). Now it is a home button:
-// close what is open, then the view the app opens on. The loop is bounded so
-// a layer that fails to close cannot spin.
+// close what is open, then the view the app opens on. The popup goes the
+// silent way — the reader asked for the map, not for the room card that an
+// ordinary close would bring back a microtask later — and the loop is bounded
+// so a layer that fails to close cannot spin.
 function homeView() {
-  for (let i = 0; i < 6 && closeTopmost(); i++);
+  for (let i = 0; i < 6; i++) {
+    if (popup) { closePopupSilently(); continue; }
+    if (!closeTopmost()) break;
+  }
   if (youMarker && youMarker.getLngLat()) map.flyTo({ center: youMarker.getLngLat(), zoom: 14 });
   else fitHome();
 }
