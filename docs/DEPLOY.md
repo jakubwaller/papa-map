@@ -99,6 +99,12 @@ service does not rebuild itself on a plain restart. `docker logs -f papamap-delt
 per tick (sequence number, tables/places upserted); a network error is logged and the previous
 `delta.json` is left exactly as it was, retried the next minute — it never crash-loops.
 
+A way or relation carries no coordinates in the diff, so one that is not already in the base needs
+an OSM API lookup; when that fails it is queued in `delta-state.json` and retried every tick (up to
+30 retries, at most 200 queued) instead of waiting for the nightly build. The log names every failed
+lookup, every give-up and every eviction, and the per-tick line ends with `N lookup(s) pending`
+while the queue is non-empty.
+
 The delta's own country-coverage filter reads `web-data/private/areas-bbox.json`
 (`PAPAMAP_AREAS_BBOX_PATH` on both the `pipeline` and `delta` services, since the nightly build
 writes it and the delta reads it) — one padded bbox per sweep area, written by every nightly build
