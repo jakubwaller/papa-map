@@ -91,8 +91,8 @@ docker compose up -d delta
 ```
 
 No cron entry — `restart: unless-stopped` in `docker-compose.yml` keeps it running across reboots
-and container restarts the same way the `papamap` service does. It shares the pipeline's image and
-`web-data/` mount (`PAPAMAP_DELTA_PATH`/`PAPAMAP_DELTA_STATE_PATH` point it at
+and container restarts the same way the `papamap` service does. It is built from the same Dockerfile
+as the pipeline (into an image of its own, see below) and shares its `web-data/` mount (`PAPAMAP_DELTA_PATH`/`PAPAMAP_DELTA_STATE_PATH` point it at
 `/out/delta.json`/`/out/private/delta-state.json`), so a code change under `pipeline/` needs
 `docker compose up -d --build delta`. Every `build: .` service has an image of its own
 (`papa-map-delta` here), so `docker compose build pipeline` rebuilds only the nightly build's
@@ -399,7 +399,9 @@ No restart — the server picks up changed web files immediately, because they a
 bind-mounted. **The pipeline is different if you run it under Docker:** its code
 lives in the image, so a `git pull` alone leaves the old build logic in place. Add
 `docker compose build pipeline` (or use `run --build`, as in the cron above) after
-any change under `pipeline/`. The ops cron already rebuilds on every run, so an ops change
+any change under `pipeline/` — **and `docker compose up -d --build delta` for the live-updates
+follower**, which builds the same code into an image of its own and keeps running the old one
+otherwise (see Live updates). The ops cron already rebuilds on every run, so an ops change
 is live at the next 07:30 after the pull; to see it sooner, use the preview run above.
 
 ## Verify
