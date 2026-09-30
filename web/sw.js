@@ -30,20 +30,20 @@ const SHELL = [
   "index-en.html",
   "vendor/maplibre-gl.css",
   "vendor/maplibre-gl.js",
-  "style.css?v=app57",
-  "app.js?v=app57",
-  "datasource.js?v=app57",
-  "i18n.js?v=app57",
-  "osm.js?v=app57",
-  "me.js?v=app57",
-  "native.js?v=app57",
-  "sign-pin.js?v=app57",
-  "opening-hours.js?v=app57",
-  "search.js?v=app57",
+  "style.css?v=app58",
+  "app.js?v=app58",
+  "datasource.js?v=app58",
+  "i18n.js?v=app58",
+  "osm.js?v=app58",
+  "me.js?v=app58",
+  "native.js?v=app58",
+  "sign-pin.js?v=app58",
+  "opening-hours.js?v=app58",
+  "search.js?v=app58",
   // index.html loads this one from the head, blocking. Left out of the
   // precache, a shell served from this cache would sit on a network request
   // for it before painting anything — offline, until that request fails.
-  "in-app.js?v=app57",
+  "in-app.js?v=app58",
 ];
 
 // One cache per shell pin (the ?v= above). A deploy that bumps the pin

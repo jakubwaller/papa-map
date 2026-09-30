@@ -34,6 +34,10 @@ public struct Table: Equatable {
     // The men's room alone (CONTRACT v50): accessible to a father, not to a
     // mother. The sixth column; a row written by an older app has five.
     public var menOnly: Bool = false
+    // wheelchair=limited under the wheelchair chip (CONTRACT v56): still
+    // usable, never a colour, said in words. The seventh column; a row from an
+    // older app has six or five.
+    public var limited: Bool = false
 
     public func usable(mode: String) -> Bool {
         mode == "mama" ? status != "unknown" && !menOnly : status == "accessible"
@@ -70,8 +74,9 @@ public enum TableStore {
                   let status = r[2] as? String, let name = r[3] as? String,
                   let osm = r[4] as? String else { return nil }
             let menOnly = r.count >= 6 ? (r[5] as? Bool) ?? false : false
+            let limited = r.count >= 7 ? (r[6] as? Bool) ?? false : false
             return Table(lat: lat, lon: lon, status: status, name: name, osmUrl: osm,
-                         menOnly: menOnly)
+                         menOnly: menOnly, limited: limited)
         }
     }
 
@@ -154,7 +159,16 @@ public enum L {
     public static func nearestFound(_ n: Nearest, mode: String, lang: String) -> String {
         let dist = TableStore.formatDistance(n.metres, lang: lang)
         let name = n.table.name.isEmpty ? (lang == "de" ? "Wickeltisch" : "Changing table") : n.table.name
-        return lang == "de" ? "\(name), \(dist) entfernt" : "\(name), \(dist) away"
+        let sentence = lang == "de" ? "\(name), \(dist) entfernt" : "\(name), \(dist) away"
+        return n.table.limited ? sentence + ", " + limited(lang) : sentence
+    }
+    // The map's exclamation mark, as words (CONTRACT v56).
+    public static func limited(_ lang: String) -> String {
+        lang == "de" ? "eingeschränkt barrierefrei" : "limited wheelchair access"
+    }
+    // The one-line Lock Screen widget has no room for the full phrase.
+    public static func limitedShort(_ lang: String) -> String {
+        lang == "de" ? "eingeschränkt" : "limited access"
     }
     public static func none(lang: String) -> String {
         lang == "de" ? "Kein erreichbarer Wickeltisch in den Daten" : "No reachable changing table in the data"

@@ -1,7 +1,9 @@
 package de.papamap.app;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,6 +39,22 @@ public class TablesTest {
         assertEquals(OPEN, Tables.nearest(53.5600, 9.9600, "mama", tables).table);
         assertEquals(0xFF009E73, MEN.color("papa"));
         assertEquals(0xFFD55E00, MEN.color("mama"));
+    }
+
+    // CONTRACT v56: the seventh column is a mark in words, never a colour, and
+    // never a reason to skip a table.
+    @Test
+    public void limitedChangesNeitherUsableNorColour() {
+        Tables.Table plain = new Tables.Table(53.5600, 9.9600, "accessible", "P", "https://www.openstreetmap.org/node/5", false, false);
+        Tables.Table marked = new Tables.Table(53.5600, 9.9600, "accessible", "P", "https://www.openstreetmap.org/node/5", false, true);
+        assertTrue(marked.limited);
+        assertFalse(plain.limited);
+        for (String mode : new String[] {"papa", "mama"}) {
+            assertEquals(plain.usable(mode), marked.usable(mode));
+            assertEquals(plain.color(mode), marked.color(mode));
+        }
+        assertFalse(WOMEN.limited);   // the five-argument constructor
+        assertFalse(MEN.limited);     // the six-argument constructor
     }
 
     @Test

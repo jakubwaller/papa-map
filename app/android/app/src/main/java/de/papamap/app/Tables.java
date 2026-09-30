@@ -22,18 +22,27 @@ public final class Tables {
         // The men's room alone (CONTRACT v50): accessible to a father, not to a
         // mother. The sixth column; a row written by an older app has five.
         public final boolean menOnly;
+        // wheelchair=limited under the wheelchair chip (CONTRACT v56): still
+        // usable, never a colour, said in words. The seventh column; a row
+        // from an older app has six or five.
+        public final boolean limited;
 
         public Table(double lat, double lon, String status, String name, String osmUrl) {
             this(lat, lon, status, name, osmUrl, false);
         }
 
         public Table(double lat, double lon, String status, String name, String osmUrl, boolean menOnly) {
+            this(lat, lon, status, name, osmUrl, menOnly, false);
+        }
+
+        public Table(double lat, double lon, String status, String name, String osmUrl, boolean menOnly, boolean limited) {
             this.lat = lat;
             this.lon = lon;
             this.status = status;
             this.name = name;
             this.osmUrl = osmUrl;
             this.menOnly = menOnly;
+            this.limited = limited;
         }
 
         public boolean usable(String mode) {

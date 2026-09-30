@@ -26,7 +26,8 @@ things a website cannot do:
 Everything the page promises still holds: the position is used on the phone and never sent,
 the dataset comes from papamap.de, answers go to OpenStreetMap under the reader's own account.
 The Swift side reads a compact copy of the dataset that `web/native.js` hands over through
-the app's own plugin (`PapaMapSharePlugin.swift`), via an App Group container.
+the app's own plugin (`PapaMapSharePlugin.swift`), via an App Group container. A row is `[lat, lon, status, name, osm_url, men_only, limited]`;
+`limited` (CONTRACT v56) is true only under the wheelchair chip, and is shown in words, never a colour.
 
 The plugin's third method, `requestReview`, asks the store for its rating sheet once, at a pin
 close after the reader's third answer or third day of opening pins (`reviewTracker` in

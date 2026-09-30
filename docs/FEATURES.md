@@ -1025,7 +1025,9 @@ layout, the build and the signing):
   pin's colour. Both run in Swift over a compact copy of the tables the app writes into its App
   Group container — already narrowed by the wheelchair chip and read with the reader's
   Papa/Mama setting, so the widget, the shortcut and the app's own button name the same table.
-  `status` is read there, never derived.
+  `status` is read there, never derived. Under the chip a `wheelchair=limited` table is named
+  as such in words on the widget and in Siri's sentence ("limited wheelchair access", the
+  map's exclamation mark), never as a colour.
 - **A button in Control Center** (iOS 18), which is also a Lock Screen button and the Action
   button: one tap on the nearest reachable table, no app to find first. It asks the same
   question as the shortcut — one lookup, `NearestLookup`, so the two cannot drift apart — from

@@ -76,7 +76,9 @@ public class NearestWidget extends AppWidgetProvider {
             v.setViewVisibility(R.id.widget_note, View.GONE);
             v.setInt(R.id.widget_dot, "setColorFilter", hit.table.color(mode));
             v.setTextViewText(R.id.widget_distance, Tables.formatDistance(hit.metres, lang));
-            v.setTextViewText(R.id.widget_name, hit.table.name.isEmpty() ? Words.unnamed(lang) : hit.table.name);
+            String name = hit.table.name.isEmpty() ? Words.unnamed(lang) : hit.table.name;
+            // The mark first: with two lines and an ellipsis, a long name is what gets cut, not the warning.
+            v.setTextViewText(R.id.widget_name, hit.table.limited ? Words.limited(lang) + " · " + name : name);
             link = "papamap://table?osm=" + Uri.encode(hit.table.osmUrl);
         } else {
             v.setViewVisibility(R.id.widget_row, View.GONE);
@@ -133,6 +135,9 @@ public class NearestWidget extends AppWidgetProvider {
         }
         static String unnamed(String lang) {
             return "de".equals(lang) ? "Wickeltisch" : "Changing table";
+        }
+        static String limited(String lang) {
+            return "de".equals(lang) ? "eingeschränkt barrierefrei" : "limited wheelchair access";
         }
         static String noData(String lang) {
             return "de".equals(lang) ? "PapaMap einmal öffnen, dann liegen die Tische auf dem Handy"

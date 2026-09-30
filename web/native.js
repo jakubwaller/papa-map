@@ -18,6 +18,8 @@
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
 // nothing is sent that the website does not send: a download is a GET.
 
+import { isWheelchairLimited } from "./datasource.js?v=app58";
+
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";
 
@@ -841,17 +843,20 @@ export function onBrowserFinished(onReturn) {
 // ---- The widget, and on iOS the Siri shortcut ----
 // A compact copy of the dataset for the native side: one row per table, five
 // decimals (about a metre), status, name, OSM URL, and (v50, appended so an
-// older widget reading the first five still parses the row) men_only. Written
-// on every load; the widget re-reads it (the App Group container on iOS, the
+// older widget reading the first five still parses the row) men_only, and
+// (v56, the seventh, so a widget reading the first six still parses it) limited:
+// true only when `markLimited` is set — the wheelchair chip is on — and the
+// place is wheelchair=limited, the map's own rule and moment for its mark.
+// Written on every load; the widget re-reads it (the App Group container on iOS, the
 // app's own files on Android — PapaMapSharePlugin, one per platform, same
 // name and methods) and recomputes the nearest table with the phone's own
 // location, which never comes here.
-export function shareDataset(features) {
+export function shareDataset(features, markLimited = false) {
   const p = plugin("PapaMapShare");
   if (!p) return;
   const rows = features.map((f) => [
     +f.lat.toFixed(5), +f.lon.toFixed(5), f.status, f.name || "", f.osm_url || "",
-    f.men_only === true,
+    f.men_only === true, markLimited && isWheelchairLimited(f),
   ]);
   p.writeDataset({ json: JSON.stringify(rows) }).catch(() => {});
 }
