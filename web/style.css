@@ -316,7 +316,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
 }
 
-/* In the app the count stands in the header, off the scrolling row. */
+/* In the app the count leaves the chip row for the header, and shows there
+   only when the dataset is empty: the chips' badges carry the numbers. */
+.native header .count:not(.nodata) { display: none; }
 .native header .count {
   margin-left: auto;
   font-size: 12px;
@@ -959,7 +961,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   .chip-bar { padding-left: 14px; padding-right: 14px; gap: 8px; }
   .chip { padding: 7px 10px; font-size: 12px; }
   .chip.wc .label { display: none; }
-  .native header .count { max-width: 50%; font-size: 11px; }
+  .native header .count { max-width: 60%; font-size: 11px; }
   /* Matches .chip exactly: the toggle is the first thing in that row and
      must not stand a size taller than the chips it repaints. */
   .mode-btn { padding: 7px 11px; font-size: 12px; }

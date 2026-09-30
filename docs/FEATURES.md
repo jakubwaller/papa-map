@@ -651,7 +651,9 @@ It is a badge, not a fourth status. A missing `kids_area` is silent across all
 there is no "unknown" state to render and no call to action attached to it. The
 chip therefore starts **off** and subtracts, while the three status chips start
 on. Every chip wears the same look (v57): dashed border = not applied, solid border
-and a tint of its colour = applied. Costs no extra Overpass query: the sweep already returns every tag on these
+and a tint of its colour = applied. In the app the count line leaves the chip
+row for the header and shows only when the dataset is empty; the chips' badges
+carry the numbers. Costs no extra Overpass query: the sweep already returns every tag on these
 objects. Measured on the DE+DK build of 17 Aug 2026: 828 objects pass the rule
 and 111 of them are already pins (48 accessible / 13 female_only / 50 unknown).
 Those are DE+DK figures and the 46-country sweep is larger, so the served

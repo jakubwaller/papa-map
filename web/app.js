@@ -616,6 +616,8 @@ function refreshPins() {
     ? t("countShown", { shown: shown.length, total })
       + (places.length ? t("countPlaces", { n: places.length }) : "")
     : t("countNoData");
+  // In the app the count shows only when there is nothing to count.
+  countEl.classList.toggle("nodata", !total);
   if (!styleReady) return;
   map.getSource(SRC).setData(toFeatureCollection(shown, wheelchairOnly));
   map.getSource(PLACES).setData(placesToFeatureCollection(places, wheelchairOnly));
