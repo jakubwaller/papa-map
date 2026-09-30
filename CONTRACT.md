@@ -1,5 +1,16 @@
 # papa-map — build contract (v0)
 
+> **v59 amendment (30 Sep 2026, the add-place dialog's wording): no shape
+> change.** A tester read "+ Add a place" as not implemented because the
+> dialog sends him to MapComplete in the browser sheet. The hand-off stays (an
+> in-app editor is a project of its own); the dialog's opening line now says
+> that adding happens in MapComplete, the OpenStreetMap editor, that it opens at
+> the current view, that the reader answers the changing-table questions there
+> and comes back, and that the place shows up within minutes — the old line
+> still promised "after the nightly update", which v48's delta follower made
+> untrue. `dlgIntro` reworded in all 32 languages; nothing else changes. Shell
+> pin `app60` → `app61`.
+
 > **v58 amendment (30 Sep 2026, the first-launch intro and what's-new): no
 > shape change.** The store app shows one dialog on its first launch (what the
 > app is, the features nobody guesses, a language picker) and, after an update,
