@@ -73,8 +73,10 @@ services:
   # The live-updates follower (pipeline/delta.py): a long-running loop, not a
   # cron — started with the stack (`docker compose up -d delta`) and kept
   # running (restart: unless-stopped), NOT under the `tools` profile the
-  # one-shot jobs above use. Same image as pipeline (it needs the same
-  # export/classify code, reused rather than duplicated) and the same /out
+  # one-shot jobs above use. Same Dockerfile as pipeline (it needs the same
+  # export/classify code, reused rather than duplicated) but an image of its
+  # own, papa-map-delta — `docker compose build pipeline` does not refresh it,
+  # `docker compose up -d --build delta` does (docs/DEPLOY.md) — and the same /out
   # mount, so it reads tonight's changing_tables.geojson/play_places.geojson/
   # stats.json and writes web-data/delta.json + web-data/private/
   # delta-state.json right next to them — no mount of its own. Host network
