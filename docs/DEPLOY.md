@@ -230,8 +230,10 @@ when Denmark was added.
 
 `python -m pipeline.ops` compares today's dataset against yesterday's snapshot (state in
 `ops-data/ops-state.json`, gitignored) and mails only on an anomaly — stale `generated_at` (>48 h),
-missing files, a >20% drop **or a >25% jump** in the total or accessible count — plus one
-all-clear digest every
+missing files, a >20% drop **or a >25% jump** in the total or accessible count, a
+`delta.json` that is missing, older than 30 minutes (`PAPAMAP_OPS_DELTA_STALE_MIN`) or whose
+`base` is behind the dataset's `data_base` — the live-updates follower dead, stuck or not
+rebased — plus one all-clear digest every
 Monday, so a silent week means the watcher itself died. The digest carries the day's and week's
 changes (new features, grey→green transitions = answered room questions) and, per configured
 token, zone-level visit totals (Cloudflare) and the count of changesets made through the
@@ -300,8 +302,9 @@ until the next 07:30 run regenerates it from the real state.)
 The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
 the report as a page plus what the mail has no room for: per-area results and warnings from
 last night's `pipeline.log`, per-region counts with a week's delta from `history.json`, the
-daily run history, theme changesets summed over 7/30/all days with a per-day chart and
-table, and two per-day movement charts — status
+daily run history, a Live updates section (the follower's last tick, replication sequence,
+base, pins since the base, pending coordinate lookups), theme changesets summed over 7/30/all
+days with a per-day chart and table, and two per-day movement charts — status
 transitions, and changesets through the site's theme. Everything on it is aggregate; the one number
 it deliberately omits is the Cloudflare request total, because `methods.html` promises
 "keine Analytics" and a traffic figure on a public page reads as exactly that.
@@ -313,6 +316,10 @@ pulling it, `docker compose restart papamap` (the Caddyfile is a bind mount; a r
 container does not re-read it). `PAPAMAP_BUILD_LOG_PATH` (default `pipeline.log`, i.e. the
 build cron's log in the repo directory; the ops service mounts it read-only) feeds the build
 section; absent, the page says so.
+The live-updates check finds `delta.json` and the follower's `private/delta-state.json` next
+to `stats.json` by default (`PAPAMAP_OPS_DELTA_PATH`, `PAPAMAP_OPS_DELTA_STATE_PATH`); an
+empty `PAPAMAP_OPS_DELTA_PATH=` disables both the check and the section, and an unreadable
+state file only makes the pending count unknown.
 Set `PAPAMAP_OPS_HTML_PATH=` (empty) to not write the page at all. A page that fails to
 render or write is a WARN in `ops.log`, never a failed check.
 

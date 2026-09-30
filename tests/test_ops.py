@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -25,8 +25,32 @@ def fresh_stats(generated=None):
     return {"generated_at": (generated or NOW).isoformat(timespec="seconds")}
 
 
-def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None):
+def fresh_delta(stats, now, minutes=2):
+    """A healthy delta.json: ticked `minutes` ago, based on the dataset."""
+    base = ((stats or {}).get("data_base") or (stats or {}).get("generated_at")
+            or now.isoformat(timespec="seconds"))
+    return {"generated": (now - timedelta(minutes=minutes)).isoformat(
+                timespec="seconds"),
+            "base": base, "seq": 7307321,
+            "tables": {"upsert": [], "remove": []},
+            "places": {"upsert": [], "remove": []},
+            "new_toilets_no_table": []}
+
+
+def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None,
+        delta="fresh", delta_state=None):
     state_path = tmp_path / "state.json"
+    if delta == "off":
+        delta_path = ""
+    elif delta is None:
+        delta_path = str(tmp_path / "absent-delta.json")
+    else:
+        delta_path = write(tmp_path / "delta.json",
+                           fresh_delta(stats, now) if delta == "fresh"
+                           else delta)
+    delta_state_path = (write(tmp_path / "delta-state.json", delta_state)
+                        if delta_state is not None
+                        else str(tmp_path / "absent-delta-state.json"))
     if state is not None:
         write(state_path, state)
     sent = mails if mails is not None else []
@@ -40,7 +64,8 @@ def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None):
         visits_fetch=lambda **kw: None,
         edits_fetch=lambda **kw: None,
         html_path=str(tmp_path / "ops.html"),
-        private_html_path=str(tmp_path / "private-ops.html"))
+        private_html_path=str(tmp_path / "private-ops.html"),
+        delta_path=delta_path, delta_state_path=delta_state_path)
     return anomalies, report, sent, state_path
 
 
@@ -371,7 +396,7 @@ def test_digest_carries_edits_line(tmp_path):
         mail=lambda subject, body: sent.append((subject, body)),
         visits_fetch=lambda **kw: None,
         edits_fetch=lambda **kw: {"days": 7, "changesets": 2},
-        html_path="", private_html_path="")
+        html_path="", private_html_path="", delta_path="")
     assert "edits via papamap theme (OSMCha, 7d): 2 changesets" in sent[0][1]
 
 
@@ -425,3 +450,119 @@ def test_feature_statuses_skip_the_key_locked_tables():
                                                   "status": "accessible", **props}}
     fc = {"features": [feat(1), feat(2, key="eurokey"), feat(3, key=None)]}
     assert ops.feature_statuses(fc) == {"node/1": "accessible", "node/3": "accessible"}
+
+
+# ---- Live updates (delta.json) -------------------------------------------------
+
+def test_healthy_with_fresh_delta_reports_the_live_updates_line(tmp_path):
+    anomalies, report, sent, _ = run(
+        tmp_path, stats=fresh_stats(), gj=geojson([("node", 1, "unknown")]),
+        now=TUESDAY)
+    assert anomalies == [] and sent == []
+    assert ("live updates: seq 7,307,321, last tick 2026-08-04T05:28:00+00:00 "
+            "(2 min ago), +0/-0 tables, +0/-0 places since the base") in report
+
+
+def test_missing_delta_alerts(tmp_path):
+    anomalies, _, sent, _ = run(
+        tmp_path, stats=fresh_stats(TUESDAY), gj=geojson([("node", 1, "unknown")]),
+        now=TUESDAY, delta=None)
+    assert anomalies == [
+        "delta.json is missing or unreadable — is the live-updates follower "
+        "running? (docker compose up -d delta)"]
+    assert sent[0][0].startswith("[papamap] ALERT")
+
+
+def test_empty_delta_path_disables_the_check(tmp_path):
+    anomalies, report, sent, _ = run(
+        tmp_path, stats=fresh_stats(TUESDAY), gj=geojson([("node", 1, "unknown")]),
+        now=TUESDAY, delta="off")
+    assert anomalies == [] and sent == []
+    assert "live updates" not in report
+
+
+def test_stale_delta_alerts(tmp_path):
+    stats = fresh_stats(TUESDAY)
+    anomalies, _, _, _ = run(
+        tmp_path, stats=stats, gj=geojson([("node", 1, "unknown")]),
+        now=TUESDAY, delta=fresh_delta(stats, TUESDAY, minutes=45))
+    assert len(anomalies) == 1
+    assert "live updates are stale" in anomalies[0]
+    assert "45 min old (limit 30 min)" in anomalies[0]
+
+
+def test_delta_base_behind_alerts_after_the_grace_period(tmp_path):
+    two_h_ago = TUESDAY - timedelta(hours=2)
+    stats = {"generated_at": two_h_ago.isoformat(timespec="seconds"),
+             "data_base": "2026-08-03T02:00:00Z"}
+    delta = fresh_delta(stats, TUESDAY)
+    delta["base"] = "2026-08-02T02:00:00Z"
+    anomalies, report, _, _ = run(
+        tmp_path, stats=stats, gj=geojson([("node", 1, "unknown")]),
+        now=TUESDAY, delta=delta)
+    assert len(anomalies) == 1
+    assert "base 2026-08-02T02:00:00Z is behind the dataset's data_base " \
+           "2026-08-03T02:00:00Z" in anomalies[0]
+    assert "base BEHIND the dataset" in report
+
+    # The build wrote stats.json three minutes ago: the follower needs a tick.
+    stats["generated_at"] = (TUESDAY - timedelta(minutes=3)).isoformat(
+        timespec="seconds")
+    anomalies, _, _, _ = run(
+        tmp_path, stats=stats, gj=geojson([("node", 1, "unknown")]),
+        now=TUESDAY, delta=delta)
+    assert anomalies == []
+
+
+def test_unparsable_delta_generated_alerts(tmp_path):
+    stats = fresh_stats(TUESDAY)
+    delta = fresh_delta(stats, TUESDAY)
+    delta["generated"] = "yesterday-ish"
+    anomalies, _, _, _ = run(
+        tmp_path, stats=stats, gj=geojson([("node", 1, "unknown")]),
+        now=TUESDAY, delta=delta)
+    assert anomalies == [
+        "delta.json has no parsable generated ('yesterday-ish')"]
+
+
+def test_delta_summary_counts_and_pending():
+    delta = {"generated": "2026-08-03T05:29:00+00:00", "base": "B", "seq": 5,
+             "tables": {"upsert": [{}, {}], "remove": ["u"]},
+             "places": {"upsert": [{}], "remove": []},
+             "new_toilets_no_table": [{}, {}, {}]}
+    state = {"seq": 5, "base": "B", "pending": [
+        {"type": "node", "id": 1, "version": 2, "attempts": 0,
+         "since": "2026-08-03T05:00:00+00:00"},
+        {"type": "way", "id": 2, "version": 1, "attempts": 3,
+         "since": "2026-08-02T23:00:00+00:00"}]}
+    s = ops.delta_summary(delta, state, {"generated_at": "B"}, NOW)
+    assert (s["tables_upsert"], s["tables_remove"]) == (2, 1)
+    assert (s["places_upsert"], s["places_remove"]) == (1, 0)
+    assert s["toilets_no_table"] == 3 and s["seq"] == 5
+    assert s["age_min"] == 1.0 and s["stale"] is False
+    assert s["data_base"] == "B" and s["base_ok"] is True
+    assert s["pending"] == 2
+    assert s["pending_oldest"] == "2026-08-02T23:00:00+00:00"
+    assert s["pending_max_attempts"] == 3
+
+    # An older follower wrote no queue: nothing pending is the honest answer.
+    s = ops.delta_summary(delta, {"seq": 5, "base": "B"}, None, NOW)
+    assert s["pending"] == 0 and s["pending_oldest"] is None
+    assert s["pending_max_attempts"] is None
+    assert s["data_base"] is None and s["base_ok"] is None
+
+    s = ops.delta_summary(delta, None, None, NOW)
+    assert s["pending"] is None
+    assert ops.delta_summary(None, None, None, NOW) is None
+
+
+def test_delta_summary_survives_garbage():
+    s = ops.delta_summary({"tables": "nope", "generated": 5},
+                          {"pending": "x"}, {"generated_at": 7}, NOW)
+    assert s["stale"] is True and s["age_min"] is None
+    assert s["tables_upsert"] == 0 and s["places_remove"] == 0
+    assert s["pending"] is None
+    s = ops.delta_summary({"tables": {"upsert": 3}, "places": [1]},
+                          {"pending": [1, {"since": 3, "attempts": "x"}]},
+                          None, NOW)
+    assert s["tables_upsert"] == 0
