@@ -1661,3 +1661,11 @@ test("a reader's own answer moves the table between the mum's chips at once", ()
   assert.deepEqual(answer("accessible", false, "female_toilet;male_toilet"),
     { accessible: 1, female_only: 0, men_only: 0, unknown: 0 });
 });
+
+test("an unrecorded room has one label in both readings; the meta keeps the mother's", () => {
+  const papa = viewFor("unknown", "papa"), mama = viewFor("unknown", "mama");
+  assert.equal(papa.labelKey, "stUnknown");
+  assert.equal(mama.labelKey, "stUnknown");
+  assert.notEqual(papa.metaKey, mama.metaKey);
+  assert.equal(mama.bucket, "maybe");
+});
