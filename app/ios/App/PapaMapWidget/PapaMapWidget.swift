@@ -73,8 +73,9 @@ struct NearestView: View {
                         Text(TableStore.formatDistance(n.metres, lang: entry.lang))
                             .font(.title2).fontWeight(.bold).minimumScaleFactor(0.7)
                     }
-                    Text(n.table.name.isEmpty ? (entry.lang == "de" ? "Wickeltisch" : "Changing table") : n.table.name)
-                        .font(.footnote).lineLimit(family == .systemSmall ? 2 : 1)
+                    let name = n.table.name.isEmpty ? (entry.lang == "de" ? "Wickeltisch" : "Changing table") : n.table.name
+                    Text(n.table.limited ? "\(name) · \(L.limited(entry.lang))" : name)
+                        .font(.footnote).lineLimit(family == .systemSmall || n.table.limited ? 2 : 1)
                 }
             case .noData: Text(L.noData(lang: entry.lang)).font(.footnote)
             case .noLocation: Text(L.noLocation(lang: entry.lang)).font(.footnote)
@@ -95,7 +96,9 @@ struct LockView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(L.title(lang: entry.lang)).font(.caption2).foregroundStyle(.secondary)
                 if let n = entry.nearest, entry.state == .ok {
-                    Text("\(TableStore.formatDistance(n.metres, lang: entry.lang)) · \(n.table.name.isEmpty ? "—" : n.table.name)")
+                    let dist = TableStore.formatDistance(n.metres, lang: entry.lang)
+                    let name = n.table.name.isEmpty ? "—" : n.table.name
+                    Text(n.table.limited ? "\(dist) · \(L.limited(entry.lang)) · \(name)" : "\(dist) · \(name)")
                         .font(.footnote).fontWeight(.semibold).lineLimit(1)
                 } else {
                     Text(entry.state == .noData ? L.noData(lang: entry.lang)

@@ -68,7 +68,7 @@ public final class TableStore {
                 JSONArray r = rows.optJSONArray(i);
                 if (r == null || r.length() < 5) continue;
                 out.add(new Tables.Table(r.getDouble(0), r.getDouble(1), r.getString(2),
-                        r.optString(3, ""), r.optString(4, ""), r.optBoolean(5, false)));
+                        r.optString(3, ""), r.optString(4, ""), r.optBoolean(5, false), r.optBoolean(6, false)));
             }
             return out;
         } catch (Exception e) {

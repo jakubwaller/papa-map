@@ -1229,3 +1229,67 @@ test("requestReview calls the plugin once", () => {
   requestReview({ requestReview: () => { n++; return Promise.resolve(); } });
   assert.equal(n, 1);
 });
+
+// ---- shareDataset: the widget's rows (CONTRACT v56) ----
+import { shareDataset } from "./native.js";
+
+function withShare(plugin, run) {
+  const before = globalThis.Capacitor;
+  globalThis.Capacitor = plugin === undefined ? undefined
+    : { isNativePlatform: () => true, Plugins: { PapaMapShare: plugin } };
+  try { return run(); } finally { globalThis.Capacitor = before; }
+}
+function fakeShare() {
+  const written = [];
+  return { written, writeDataset: ({ json }) => { written.push(JSON.parse(json)); return Promise.resolve(); } };
+}
+const SHARED = {
+  lat: 53.550123456, lon: 9.99012345, status: "accessible", name: "Café",
+  osm_url: "https://www.openstreetmap.org/node/1", men_only: true, wheelchair: "limited",
+};
+
+test("shareDataset writes seven columns, the seventh false without the chip", () => {
+  const p = fakeShare();
+  withShare(p, () => shareDataset([SHARED], false));
+  assert.deepEqual(p.written, [[[53.55012, 9.99012, "accessible", "Café",
+    "https://www.openstreetmap.org/node/1", true, false]]]);
+  assert.equal(p.written[0][0].length, 7);
+  const q = fakeShare();
+  withShare(q, () => shareDataset([SHARED]));
+  assert.equal(q.written[0][0][6], false);
+});
+
+test("shareDataset marks a limited place only under the chip", () => {
+  const p = fakeShare();
+  withShare(p, () => shareDataset([SHARED, { ...SHARED, wheelchair: "yes" },
+    { ...SHARED, wheelchair: null }], true));
+  assert.deepEqual(p.written[0].map((r) => r[6]), [true, false, false]);
+});
+
+test("shareDataset reads men_only strictly and defaults name and url", () => {
+  const p = fakeShare();
+  const bare = { lat: 1, lon: 2, status: "unknown" };
+  withShare(p, () => shareDataset([bare, { ...bare, men_only: "yes" }, { ...bare, men_only: true }], true));
+  const rows = p.written[0];
+  assert.equal(rows[0][5], false);
+  assert.equal(rows[1][5], false);
+  assert.equal(rows[2][5], true);
+  assert.equal(rows[0][3], "");
+  assert.equal(rows[0][4], "");
+});
+
+test("shareDataset without a plugin does nothing and does not throw", () => {
+  assert.doesNotThrow(() => withShare(undefined, () => shareDataset([SHARED], true)));
+});
+
+test("shareDataset swallows a rejected write", async () => {
+  const unhandled = [];
+  const on = (e) => unhandled.push(e);
+  process.on("unhandledRejection", on);
+  try {
+    withShare({ writeDataset: () => Promise.reject(new Error("disk full")) },
+      () => shareDataset([SHARED], true));
+    await new Promise((r) => setTimeout(r, 10));
+  } finally { process.off("unhandledRejection", on); }
+  assert.deepEqual(unhandled, []);
+});

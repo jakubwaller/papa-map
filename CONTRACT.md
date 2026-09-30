@@ -1,5 +1,19 @@
 # papa-map — build contract (v0)
 
+> **v56 amendment (30 Sep 2026, the widget's limited mark): shape change — the
+> rows `shareDataset` hands the widget and the iOS Siri shortcut gain a seventh
+> column, `limited`.** Under the wheelchair chip a `wheelchair=limited` table
+> carries the exclamation mark on the map (v53), but the widget's nearest row
+> could name one with no mark at all (a tester saw it). `limited` is written
+> only under the chip — the same rule and moment as the map's mark,
+> `isWheelchairLimited` — as `shareDataset(features, markLimited)`; app.js passes
+> the chip state. Both the iOS side (`TableStore.swift`) and the Android side
+> (`Tables.java`, `TableStore.java`) read it; an older widget still parses the
+> first six (and five). `usable` and the colour are unchanged: a limited place
+> is still the nearest reachable one. The widget and the Siri sentence say it in
+> words in the two phone-side languages ("eingeschränkt barrierefrei" /
+> "limited wheelchair access"), never as a colour. Shell pin `app57` → `app58`.
+>
 > **v55 amendment (30 Sep 2026, two app-tester fixes): no shape change.** One
 > label for an unrecorded room in both readings: `stUnknownMama` is removed
 > from all 32 languages, `VIEW.mama.unknown` points at `stUnknown`, the meta
