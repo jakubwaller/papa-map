@@ -74,7 +74,7 @@ struct NearestView: View {
                             .font(.title2).fontWeight(.bold).minimumScaleFactor(0.7)
                     }
                     let name = n.table.name.isEmpty ? (entry.lang == "de" ? "Wickeltisch" : "Changing table") : n.table.name
-                    Text(n.table.limited ? "\(name) · \(L.limited(entry.lang))" : name)
+                    Text(n.table.limited ? "\(L.limited(entry.lang)) · \(name)" : name)   // the mark first: a long name is what gets cut
                         .font(.footnote).lineLimit(family == .systemSmall || n.table.limited ? 2 : 1)
                 }
             case .noData: Text(L.noData(lang: entry.lang)).font(.footnote)
@@ -98,7 +98,7 @@ struct LockView: View {
                 if let n = entry.nearest, entry.state == .ok {
                     let dist = TableStore.formatDistance(n.metres, lang: entry.lang)
                     let name = n.table.name.isEmpty ? "—" : n.table.name
-                    Text(n.table.limited ? "\(dist) · \(L.limited(entry.lang)) · \(name)" : "\(dist) · \(name)")
+                    Text(n.table.limited ? "\(dist) · \(L.limitedShort(entry.lang)) · \(name)" : "\(dist) · \(name)")
                         .font(.footnote).fontWeight(.semibold).lineLimit(1)
                 } else {
                     Text(entry.state == .noData ? L.noData(lang: entry.lang)

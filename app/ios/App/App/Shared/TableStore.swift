@@ -166,6 +166,10 @@ public enum L {
     public static func limited(_ lang: String) -> String {
         lang == "de" ? "eingeschränkt barrierefrei" : "limited wheelchair access"
     }
+    // The one-line Lock Screen widget has no room for the full phrase.
+    public static func limitedShort(_ lang: String) -> String {
+        lang == "de" ? "eingeschränkt" : "limited access"
+    }
     public static func none(lang: String) -> String {
         lang == "de" ? "Kein erreichbarer Wickeltisch in den Daten" : "No reachable changing table in the data"
     }
