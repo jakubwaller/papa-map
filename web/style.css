@@ -1017,6 +1017,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .offline-list li:first-child { border-top: none; }
 .offline-list .name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .offline-list .name small { display: block; color: var(--muted-2); font-size: 12px; }
+/* The error row: on a 360 px phone the sentence lost to the retry button and
+   ended in "Die Liste der Städ…" (Galaxy A3, 2026-09-30). */
+.offline-list li.note .name { white-space: normal; }
 .offline-list button {
   flex: 0 0 auto; padding: 6px 12px; border-radius: 999px;
   border: 1px solid var(--green); background: var(--green); color: #fff;

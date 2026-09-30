@@ -356,6 +356,8 @@ export const STRINGS = {
     offlineDone: "{city} ist jetzt offline da.",
     offlineFailed: "Laden fehlgeschlagen — später noch einmal versuchen.",
     offlineNoList: "Die Liste der Städte konnte nicht geladen werden.",
+    offlineRetry: "Noch einmal versuchen",
+    offlineUnreadable: "Die gespeicherte Karte von {city} ließ sich nicht öffnen.",
     routeTitle: "Route öffnen in …",
   },
   en: {
@@ -565,6 +567,8 @@ export const STRINGS = {
     offlineDone: "{city} is now available offline.",
     offlineFailed: "Download failed — try again later.",
     offlineNoList: "The list of cities could not be loaded.",
+    offlineRetry: "Try again",
+    offlineUnreadable: "The saved map of {city} could not be opened.",
     routeTitle: "Open route in …",
   },
   da: {
@@ -771,6 +775,8 @@ export const STRINGS = {
     offlineDone: "{city} er nu tilgængelig offline.",
     offlineFailed: "Hentning mislykkedes — prøv igen senere.",
     offlineNoList: "Listen over byer kunne ikke hentes.",
+    offlineRetry: "Prøv igen",
+    offlineUnreadable: "Det gemte kort over {city} kunne ikke åbnes.",
     routeTitle: "Åbn rute i …",
   },
 
@@ -975,6 +981,8 @@ export const STRINGS = {
     offlineDone: "{city} is nu offline beschikbaar.",
     offlineFailed: "Downloaden mislukt — probeer het later opnieuw.",
     offlineNoList: "De lijst met steden kon niet worden geladen.",
+    offlineRetry: "Opnieuw proberen",
+    offlineUnreadable: "De opgeslagen kaart van {city} kon niet worden geopend.",
     routeTitle: "Route openen in …",
   },
   // Français — added 19 Aug 2026 with the UK and France; France, Wallonia and Romandy.
@@ -1177,6 +1185,8 @@ export const STRINGS = {
     offlineDone: "{city} est maintenant disponible hors ligne.",
     offlineFailed: "Téléchargement échoué — réessaie plus tard.",
     offlineNoList: "La liste des villes n'a pas pu être chargée.",
+    offlineRetry: "Réessayer",
+    offlineUnreadable: "Impossible d'ouvrir la carte enregistrée de {city}.",
     routeTitle: "Ouvrir l’itinéraire dans …",
   },
   // Italiano — added 19 Aug 2026 with the UK and France; Ticino and the Italian-speaking Grisons.
@@ -1379,6 +1389,8 @@ export const STRINGS = {
     offlineDone: "{city} è ora disponibile offline.",
     offlineFailed: "Download non riuscito — riprova più tardi.",
     offlineNoList: "Impossibile caricare l'elenco delle città.",
+    offlineRetry: "Riprova",
+    offlineUnreadable: "Impossibile aprire la mappa salvata di {city}.",
     routeTitle: "Apri il percorso in …",
   },
   // Čeština — added 19 Aug 2026 with the UK and France; Czechia.
@@ -1581,6 +1593,8 @@ export const STRINGS = {
     offlineDone: "{city} je teď dostupné offline.",
     offlineFailed: "Stažení se nezdařilo — zkus to později znovu.",
     offlineNoList: "Seznam měst se nepodařilo načíst.",
+    offlineRetry: "Zkusit znovu",
+    offlineUnreadable: "Uloženou mapu se nepodařilo otevřít: {city}.",
     routeTitle: "Otevřít trasu v …",
   },
   // Polski — added 19 Aug 2026 with the UK and France; Poland.
@@ -1783,6 +1797,8 @@ export const STRINGS = {
     offlineDone: "{city} jest teraz dostępne offline.",
     offlineFailed: "Pobieranie nie powiodło się — spróbuj później.",
     offlineNoList: "Nie udało się wczytać listy miast.",
+    offlineRetry: "Spróbuj ponownie",
+    offlineUnreadable: "Nie udało się otworzyć zapisanej mapy: {city}.",
     routeTitle: "Otwórz trasę w …",
   },
   // Svenska — added 19 Aug 2026 with the UK and France; Sweden.
@@ -1985,6 +2001,8 @@ export const STRINGS = {
     offlineDone: "{city} finns nu offline.",
     offlineFailed: "Hämtningen misslyckades — försök igen senare.",
     offlineNoList: "Listan över städer kunde inte hämtas.",
+    offlineRetry: "Försök igen",
+    offlineUnreadable: "Den sparade kartan över {city} kunde inte öppnas.",
     routeTitle: "Öppna rutt i …",
   },
   bs: {
@@ -2186,6 +2204,8 @@ export const STRINGS = {
     offlineDone: "{city} je sada dostupan offline.",
     offlineFailed: "Preuzimanje nije uspjelo — pokušaj kasnije.",
     offlineNoList: "Lista gradova nije mogla biti učitana.",
+    offlineRetry: "Pokušaj ponovo",
+    offlineUnreadable: "Sačuvanu kartu nije bilo moguće otvoriti: {city}.",
     routeTitle: "Otvori rutu u …",
   },
   ca: {
@@ -2387,6 +2407,8 @@ export const STRINGS = {
     offlineDone: "{city} ara és disponible fora de línia.",
     offlineFailed: "La baixada ha fallat — torna-ho a provar més tard.",
     offlineNoList: "No s'ha pogut carregar la llista de ciutats.",
+    offlineRetry: "Torna-ho a provar",
+    offlineUnreadable: "No s'ha pogut obrir el mapa desat de {city}.",
     routeTitle: "Obre la ruta a …",
   },
   et: {
@@ -2588,6 +2610,8 @@ export const STRINGS = {
     offlineDone: "{city} on nüüd võrguühenduseta saadaval.",
     offlineFailed: "Allalaadimine ebaõnnestus — proovi hiljem uuesti.",
     offlineNoList: "Linnade loendit ei õnnestunud laadida.",
+    offlineRetry: "Proovi uuesti",
+    offlineUnreadable: "Salvestatud kaarti ei õnnestunud avada: {city}.",
     routeTitle: "Ava marsruut rakenduses …",
   },
   es: {
@@ -2789,6 +2813,8 @@ export const STRINGS = {
     offlineDone: "{city} ya está disponible sin conexión.",
     offlineFailed: "La descarga ha fallado — inténtalo más tarde.",
     offlineNoList: "No se pudo cargar la lista de ciudades.",
+    offlineRetry: "Reintentar",
+    offlineUnreadable: "No se pudo abrir el mapa guardado de {city}.",
     routeTitle: "Abrir la ruta en …",
   },
   hr: {
@@ -2990,6 +3016,8 @@ export const STRINGS = {
     offlineDone: "{city} je sada dostupan offline.",
     offlineFailed: "Preuzimanje nije uspjelo — pokušaj kasnije.",
     offlineNoList: "Popis gradova nije bilo moguće učitati.",
+    offlineRetry: "Pokušaj ponovno",
+    offlineUnreadable: "Spremljenu kartu nije bilo moguće otvoriti: {city}.",
     routeTitle: "Otvori rutu u …",
   },
   is: {
@@ -3191,6 +3219,8 @@ export const STRINGS = {
     offlineDone: "{city} er nú aðgengileg án nettengingar.",
     offlineFailed: "Niðurhal mistókst — reyndu aftur síðar.",
     offlineNoList: "Ekki tókst að sækja listann yfir borgir.",
+    offlineRetry: "Reyna aftur",
+    offlineUnreadable: "Ekki tókst að opna vistaða kortið: {city}.",
     routeTitle: "Opna leiðina í …",
   },
   lv: {
@@ -3392,6 +3422,8 @@ export const STRINGS = {
     offlineDone: "{city} tagad ir pieejama bezsaistē.",
     offlineFailed: "Lejupielāde neizdevās — mēģini vēlāk vēlreiz.",
     offlineNoList: "Neizdevās ielādēt pilsētu sarakstu.",
+    offlineRetry: "Mēģināt vēlreiz",
+    offlineUnreadable: "Neizdevās atvērt saglabāto karti: {city}.",
     routeTitle: "Atvērt maršrutu lietotnē …",
   },
   lt: {
@@ -3593,6 +3625,8 @@ export const STRINGS = {
     offlineDone: "{city} dabar pasiekiamas neprisijungus.",
     offlineFailed: "Atsisiųsti nepavyko — pabandyk vėliau.",
     offlineNoList: "Nepavyko įkelti miestų sąrašo.",
+    offlineRetry: "Bandyti dar kartą",
+    offlineUnreadable: "Nepavyko atidaryti išsaugoto žemėlapio: {city}.",
     routeTitle: "Atidaryti maršrutą programoje …",
   },
   hu: {
@@ -3794,6 +3828,8 @@ export const STRINGS = {
     offlineDone: "{city} mostantól offline is elérhető.",
     offlineFailed: "A letöltés nem sikerült — próbáld újra később.",
     offlineNoList: "A városok listáját nem sikerült betölteni.",
+    offlineRetry: "Újra",
+    offlineUnreadable: "A mentett térképet nem sikerült megnyitni: {city}.",
     routeTitle: "Útvonal megnyitása itt: …",
   },
   no: {
@@ -3995,6 +4031,8 @@ export const STRINGS = {
     offlineDone: "{city} er nå tilgjengelig offline.",
     offlineFailed: "Nedlastingen mislyktes — prøv igjen senere.",
     offlineNoList: "Listen over byer kunne ikke lastes.",
+    offlineRetry: "Prøv igjen",
+    offlineUnreadable: "Det lagrede kartet over {city} kunne ikke åpnes.",
     routeTitle: "Åpne rute i …",
   },
   pt: {
@@ -4196,6 +4234,8 @@ export const STRINGS = {
     offlineDone: "{city} está agora disponível offline.",
     offlineFailed: "A transferência falhou — tenta mais tarde.",
     offlineNoList: "Não foi possível carregar a lista de cidades.",
+    offlineRetry: "Tentar de novo",
+    offlineUnreadable: "Não foi possível abrir o mapa guardado de {city}.",
     routeTitle: "Abrir a rota em …",
   },
   ro: {
@@ -4397,6 +4437,8 @@ export const STRINGS = {
     offlineDone: "{city} este acum disponibil offline.",
     offlineFailed: "Descărcarea a eșuat — încearcă din nou mai târziu.",
     offlineNoList: "Lista orașelor nu a putut fi încărcată.",
+    offlineRetry: "Încearcă din nou",
+    offlineUnreadable: "Harta salvată nu a putut fi deschisă: {city}.",
     routeTitle: "Deschide ruta în …",
   },
   sq: {
@@ -4598,6 +4640,8 @@ export const STRINGS = {
     offlineDone: "{city} tani është i disponueshëm offline.",
     offlineFailed: "Shkarkimi dështoi — provo më vonë.",
     offlineNoList: "Lista e qyteteve nuk u ngarkua dot.",
+    offlineRetry: "Provo përsëri",
+    offlineUnreadable: "Harta e ruajtur nuk u hap dot: {city}.",
     routeTitle: "Hap itinerarin në …",
   },
   sk: {
@@ -4799,6 +4843,8 @@ export const STRINGS = {
     offlineDone: "{city} je teraz dostupné offline.",
     offlineFailed: "Sťahovanie zlyhalo — skús to neskôr znova.",
     offlineNoList: "Zoznam miest sa nepodarilo načítať.",
+    offlineRetry: "Skúsiť znova",
+    offlineUnreadable: "Uloženú mapu sa nepodarilo otvoriť: {city}.",
     routeTitle: "Otvoriť trasu v …",
   },
   sl: {
@@ -5000,6 +5046,8 @@ export const STRINGS = {
     offlineDone: "{city} je zdaj na voljo brez povezave.",
     offlineFailed: "Prenos ni uspel — poskusi znova pozneje.",
     offlineNoList: "Seznama mest ni bilo mogoče naložiti.",
+    offlineRetry: "Poskusi znova",
+    offlineUnreadable: "Shranjenega zemljevida ni bilo mogoče odpreti: {city}.",
     routeTitle: "Odpri pot v …",
   },
   fi: {
@@ -5201,6 +5249,8 @@ export const STRINGS = {
     offlineDone: "{city} on nyt käytettävissä offline-tilassa.",
     offlineFailed: "Lataus epäonnistui — yritä myöhemmin uudelleen.",
     offlineNoList: "Kaupunkien luetteloa ei voitu ladata.",
+    offlineRetry: "Yritä uudelleen",
+    offlineUnreadable: "Tallennettua karttaa ei voitu avata: {city}.",
     routeTitle: "Avaa reitti sovelluksessa …",
   },
   el: {
@@ -5402,6 +5452,8 @@ export const STRINGS = {
     offlineDone: "Η πόλη {city} είναι τώρα διαθέσιμη εκτός σύνδεσης.",
     offlineFailed: "Η λήψη απέτυχε — δοκίμασε ξανά αργότερα.",
     offlineNoList: "Δεν ήταν δυνατή η φόρτωση της λίστας πόλεων.",
+    offlineRetry: "Δοκίμασε ξανά",
+    offlineUnreadable: "Ο αποθηκευμένος χάρτης δεν άνοιξε: {city}.",
     routeTitle: "Άνοιγμα διαδρομής σε …",
   },
   be: {
@@ -5603,6 +5655,8 @@ export const STRINGS = {
     offlineDone: "{city} цяпер даступны афлайн.",
     offlineFailed: "Спампаваць не ўдалося — паспрабуй пазней.",
     offlineNoList: "Не ўдалося загрузіць спіс гарадоў.",
+    offlineRetry: "Паспрабаваць зноў",
+    offlineUnreadable: "Не ўдалося адкрыць захаваную карту: {city}.",
     routeTitle: "Адкрыць маршрут у …",
   },
   bg: {
@@ -5804,6 +5858,8 @@ export const STRINGS = {
     offlineDone: "{city} вече е наличен офлайн.",
     offlineFailed: "Изтеглянето не успя — опитай отново по-късно.",
     offlineNoList: "Списъкът с градове не можа да се зареди.",
+    offlineRetry: "Опитай отново",
+    offlineUnreadable: "Запазената карта не можа да се отвори: {city}.",
     routeTitle: "Отваряне на маршрута в …",
   },
   mk: {
@@ -6005,6 +6061,8 @@ export const STRINGS = {
     offlineDone: "{city} сега е достапен офлајн.",
     offlineFailed: "Преземањето не успеа — обиди се повторно подоцна.",
     offlineNoList: "Списокот на градови не можеше да се вчита.",
+    offlineRetry: "Обиди се повторно",
+    offlineUnreadable: "Зачуваната карта не можеше да се отвори: {city}.",
     routeTitle: "Отвори ја рутата во …",
   },
   sr: {
@@ -6206,6 +6264,8 @@ export const STRINGS = {
     offlineDone: "{city} је сада доступан офлајн.",
     offlineFailed: "Преузимање није успело — покушај касније.",
     offlineNoList: "Листа градова није могла да се учита.",
+    offlineRetry: "Покушај поново",
+    offlineUnreadable: "Сачувана карта није могла да се отвори: {city}.",
     routeTitle: "Отвори руту у …",
   },
   uk: {
@@ -6407,6 +6467,8 @@ export const STRINGS = {
     offlineDone: "{city} тепер доступне офлайн.",
     offlineFailed: "Завантаження не вдалося — спробуй пізніше.",
     offlineNoList: "Не вдалося завантажити список міст.",
+    offlineRetry: "Спробувати ще раз",
+    offlineUnreadable: "Не вдалося відкрити збережену карту: {city}.",
     routeTitle: "Відкрити маршрут у …",
   },
 
@@ -6612,6 +6674,8 @@ export const STRINGS = {
     offlineDone: "{city}はオフラインで使えるようになりました。",
     offlineFailed: "ダウンロードに失敗しました。あとでもう一度お試しください。",
     offlineNoList: "都市の一覧を読み込めませんでした。",
+    offlineRetry: "もう一度試す",
+    offlineUnreadable: "{city}の保存した地図を開けませんでした。",
     routeTitle: "経路を開くアプリ …",
   },
 };
