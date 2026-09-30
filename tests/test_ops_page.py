@@ -160,6 +160,15 @@ def test_region_rows_handles_missing_history():
 
 # ---- Rendering -------------------------------------------------------------
 
+HEALTHY_DELTA = {
+    "generated": "2026-08-23T05:28:00+00:00", "age_min": 2.0, "stale": False,
+    "seq": 7307321, "base": "2026-08-23T02:20:00+00:00",
+    "data_base": "2026-08-23T02:20:00+00:00", "base_ok": True,
+    "tables_upsert": 3, "tables_remove": 1, "places_upsert": 2,
+    "places_remove": 0, "toilets_no_table": 4, "pending": 0,
+    "pending_oldest": None, "pending_max_attempts": None}
+
+
 def render(**kw):
     args = dict(now=NOW, stats={"generated_at": "2026-08-23T02:20:00+00:00",
                                 "area_name": "Europe",
@@ -180,7 +189,8 @@ def render(**kw):
                 regions=ops_page.region_rows(history_json([
                     ("2026-08-22", {"Bayern": [110, 20, 495]},
                      {"Berlin": [13, 1, 298]})])),
-                build=ops_page.parse_build_log(FINISHED_BUILD))
+                build=ops_page.parse_build_log(FINISHED_BUILD),
+                delta=dict(HEALTHY_DELTA), delta_expected=True)
     args.update(kw)
     return ops_page.render_page(**args)
 
@@ -210,6 +220,58 @@ def test_healthy_page_carries_every_section():
     assert ("Accessible pins in total, one point per nightly run: 1,810 on "
             "2026-08-21 → 1,821 on 2026-08-23") in html
     assert "no analytics" in html
+    assert "<h2>Live updates</h2>" in html and "7,307,321" in html
+    assert html.index("<h2>Dataset</h2>") < html.index("<h2>Live updates</h2>") \
+        < html.index("<h2>Movement</h2>")
+
+
+def test_live_updates_section_absent_when_not_expected():
+    assert "Live updates" not in render(delta=None, delta_expected=False)
+
+
+def test_live_updates_missing_message():
+    html = render(delta=None)
+    assert ('<p class="bad">delta.json is missing — the live-updates follower '
+            "is not running.</p>") in html
+    assert "7,307,321" not in html
+
+
+def test_live_updates_rows_when_healthy():
+    html = render()
+    assert "2026-08-23T05:28:00+00:00 (2 min ago)" in html
+    assert "+3 / −1" in html and "+2 / −0" in html
+    assert "matches the dataset" in html
+    assert "<td>0</td>" in html  # pending lookups
+    assert "unknown (state file not readable)" not in html
+
+
+def test_live_updates_stale_tick_is_red():
+    html = render(delta={**HEALTHY_DELTA, "stale": True, "age_min": 95.0})
+    assert '<td class="bad">2026-08-23T05:28:00+00:00 (95 min ago)</td>' in html
+
+
+def test_live_updates_base_behind_and_unknown():
+    html = render(delta={**HEALTHY_DELTA, "base_ok": False,
+                         "base": "2026-08-22T02:20:00+00:00"})
+    assert ("BEHIND the dataset (2026-08-23T02:20:00+00:00) — readers ignore "
+            "this delta") in html
+    html = render(delta={**HEALTHY_DELTA, "base_ok": None, "data_base": None})
+    assert "dataset base unknown" in html
+
+
+def test_live_updates_pending_rows():
+    html = render(delta={**HEALTHY_DELTA, "pending": 2,
+                         "pending_oldest": "2026-08-23T01:00:00+00:00",
+                         "pending_max_attempts": 3})
+    assert ("2, oldest queued 2026-08-23T01:00:00+00:00, up to 3 retries"
+            in html)
+    html = render(delta={**HEALTHY_DELTA, "pending": None})
+    assert "unknown (state file not readable)" in html
+
+
+def test_live_updates_escapes_file_strings():
+    html = render(delta={**HEALTHY_DELTA, "base": "<b>x</b>"})
+    assert "<b>x</b>" not in html and "&lt;b&gt;x&lt;/b&gt;" in html
 
 
 def test_young_edit_history_is_explained_not_silent():
@@ -459,12 +521,16 @@ def test_page_and_history_default_next_to_stats(monkeypatch):
     monkeypatch.setenv("PAPAMAP_STATS_PATH", "/srv/out/stats.json")
     monkeypatch.delenv("PAPAMAP_HISTORY_PATH", raising=False)
     monkeypatch.delenv("PAPAMAP_OPS_HTML_PATH", raising=False)
+    monkeypatch.delenv("PAPAMAP_OPS_DELTA_PATH", raising=False)
+    monkeypatch.delenv("PAPAMAP_OPS_DELTA_STATE_PATH", raising=False)
     from pipeline import config
     importlib.reload(config)
     mod = importlib.reload(ops)
     try:
         assert mod.OPS_HTML_PATH == "/srv/out/ops.html"
         assert mod.OPS_HISTORY_PATH == "/srv/out/history.json"
+        assert mod.OPS_DELTA_PATH == "/srv/out/delta.json"
+        assert mod.OPS_DELTA_STATE_PATH == "/srv/out/private/delta-state.json"
     finally:
         monkeypatch.delenv("PAPAMAP_STATS_PATH")
         importlib.reload(config)
@@ -494,7 +560,8 @@ def test_run_check_writes_the_page_and_caches_edits(tmp_path):
             edits_fetch=lambda **kw: edits,
             html_path=str(html_path), history_path=str(tmp_path / "history.json"),
             build_log_path=str(tmp_path / "pipeline.log"),
-            private_html_path=str(tmp_path / "out" / "private" / "ops.html"))
+            private_html_path=str(tmp_path / "out" / "private" / "ops.html"),
+            delta_path="")
 
     # Fetched every run, Sunday included — the per-day chart is built run by
     # run, the way the visits history is.
@@ -540,7 +607,7 @@ def test_run_check_with_empty_html_path_writes_nothing(tmp_path):
                   geojson_path=str(tmp_path / "absent.json"),
                   mail=lambda *a: None, visits_fetch=lambda **kw: None,
                   edits_fetch=lambda **kw: None, html_path="",
-                  private_html_path="")
+                  private_html_path="", delta_path="")
     assert not list(tmp_path.glob("**/*.html"))
 
 
@@ -555,7 +622,7 @@ def test_unwritable_page_does_not_fail_the_check(tmp_path, capsys):
         geojson_path=str(tmp_path / "absent.json"),
         mail=lambda *a: None, visits_fetch=lambda **kw: None,
         edits_fetch=lambda **kw: None, html_path=str(blocker / "ops.html"),
-        private_html_path="")
+        private_html_path="", delta_path="")
     assert "ops page not written" in capsys.readouterr().err
     assert report  # the check itself still answered
 
@@ -728,7 +795,7 @@ def test_run_check_fetches_visits_daily_and_writes_the_private_page(tmp_path):
             edits_fetch=lambda **kw: None,
             html_path=str(public_path), private_html_path=str(private_path),
             history_path=str(tmp_path / "none.json"),
-            build_log_path=str(tmp_path / "none.log"))
+            build_log_path=str(tmp_path / "none.log"), delta_path="")
 
     # A Sunday: fetched (for the history) but not mailed.
     run(NOW, {"2026-08-22": {"requests": 2400, "uniques": 590},

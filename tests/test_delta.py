@@ -601,11 +601,12 @@ def test_make_coord_fetch_tolerates_failures():
 def test_run_forever_wires_a_capped_coord_fetch_when_none_is_given(monkeypatch):
     # run_forever must not leave coord_fetch as the dead None default
     # (issue: process_changes never got one, so a new way/relation was
-    # always dropped) — it builds one from make_coord_fetch every tick.
-    seen_coord_fetch = []
+    # always dropped) — it hands run_tick a factory, so every sequence (and
+    # the retry pass) gets a fresh make_coord_fetch with its own cap.
+    seen = []
 
-    def fake_run_tick(state, *, delta_path, coord_fetch, **kwargs):
-        seen_coord_fetch.append(coord_fetch)
+    def fake_run_tick(state, *, delta_path, coord_fetch_factory=None, coord_fetch=None, **kwargs):
+        seen.append((coord_fetch, coord_fetch_factory))
         raise SystemExit  # stop run_forever's infinite loop right away
 
     monkeypatch.setattr(delta, "run_tick", fake_run_tick)
@@ -614,9 +615,13 @@ def test_run_forever_wires_a_capped_coord_fetch_when_none_is_given(monkeypatch):
         delta.run_forever(poll_s=0, state_path="unused", delta_path="unused")
     except SystemExit:
         pass
-    assert len(seen_coord_fetch) == 1
-    assert callable(seen_coord_fetch[0])
-    assert seen_coord_fetch[0] is not None
+    assert len(seen) == 1
+    coord_fetch, factory = seen[0]
+    assert coord_fetch is None
+    assert callable(factory)
+    first, second = factory(), factory()
+    assert callable(first) and callable(second)
+    assert first is not second
 
 
 # ---- area_for_point / carrying `area` over into delta upserts (fix) --------
@@ -708,7 +713,7 @@ def test_run_tick_catches_up_a_sequence_gap(tmp_path):
         stats_path=str(stats_path), delta_path=str(delta_path),
         fetch_state=fake_fetch_state, fetch_osc=fake_fetch_osc, now=NOW)
 
-    assert new_state == {"seq": 103, "base": "2026-09-23T08:00:00+00:00"}
+    assert new_state == {"seq": 103, "base": "2026-09-23T08:00:00+00:00", "pending": []}
     urls = {f["properties"]["osm_url"] for f in out["tables"]["upsert"]}
     assert urls == {"https://www.openstreetmap.org/node/1", "https://www.openstreetmap.org/node/2"}
     # node/1 was created then modified within the gap — the later version
@@ -803,3 +808,285 @@ def test_read_data_base_falls_back_to_generated_at(tmp_path):
 
 def test_read_data_base_none_when_stats_missing(tmp_path):
     assert delta.read_data_base(str(tmp_path / "missing.json")) is None
+
+
+# ---- a failed coordinate lookup is retried, not dropped ---------------------
+
+BASE_ISO = "2026-09-23T08:00:00+00:00"
+WAY_TAGS = {"amenity": "toilets", "changing_table": "yes",
+            "changing_table:location": "unisex_toilet"}
+
+
+def test_process_changes_records_a_way_whose_lookup_failed():
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("modify", 900, 11, "2026-09-23T10:00:00Z", WAY_TAGS))))
+    dropped = []
+    events = delta.process_changes(changes, _empty_dataset(),
+                                   coord_fetch=lambda t, i: None, dropped=dropped)
+    assert events == []
+    assert len(dropped) == 1
+    assert dropped[0]["type"] == "way" and dropped[0]["id"] == 900
+    assert dropped[0]["version"] == 11 and dropped[0]["tags"] == WAY_TAGS
+    assert dropped[0]["action"] == "modify"
+    assert dropped[0]["timestamp"] == "2026-09-23T10:00:00Z"
+
+
+def test_process_changes_records_a_way_when_there_is_no_fetcher_at_all():
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("modify", 901, 3, "2026-09-23T10:00:00Z", WAY_TAGS))))
+    dropped = []
+    assert delta.process_changes(changes, _empty_dataset(), dropped=dropped) == []
+    assert [(d["type"], d["id"]) for d in dropped] == [("way", 901)]
+
+
+def _change(id_, version, type_="way", action="modify"):
+    return {"action": action, "type": type_, "id": id_, "version": version,
+            "timestamp": "2026-09-23T10:00:00Z", "tags": dict(WAY_TAGS)}
+
+
+def test_queue_pending_replaces_an_older_version_of_the_same_object():
+    pending = [dict(_change(1, 3), attempts=4, since="2026-09-23T09:00:00+00:00"),
+               dict(_change(2, 1), attempts=1, since="2026-09-23T09:00:00+00:00")]
+    out = delta.queue_pending(pending, [_change(1, 4)], NOW)
+    assert [(e["id"], e["version"]) for e in out] == [(2, 1), (1, 4)]
+    newer = out[1]
+    assert newer["attempts"] == 0
+    assert newer["since"] == NOW.isoformat(timespec="seconds")
+
+
+def test_queue_pending_evicts_the_oldest_beyond_the_cap(monkeypatch, capsys):
+    monkeypatch.setattr(delta, "PENDING_MAX", 2)
+    out = delta.queue_pending([], [_change(1, 1), _change(2, 1), _change(3, 5)], NOW)
+    assert [e["id"] for e in out] == [2, 3]
+    err = capsys.readouterr().err
+    assert ("pending lookups over 2, dropping way/1 v1 after 0 retries "
+            f"(queued since {NOW.isoformat(timespec='seconds')})") in err
+
+
+def test_queue_pending_evicts_by_queue_time_not_position(monkeypatch, capsys):
+    # After a round-robin retry the front of the queue is the least recently
+    # retried entry, not the one waiting longest — eviction goes by `since`.
+    monkeypatch.setattr(delta, "PENDING_MAX", 2)
+    pending = [dict(_change(7, 1), attempts=1, since="2026-09-23T09:30:00+00:00"),
+               dict(_change(8, 1), attempts=3, since="2026-09-23T09:00:00+00:00")]
+    out = delta.queue_pending(pending, [_change(9, 2)], NOW)
+    assert [e["id"] for e in out] == [7, 9]
+    assert "dropping way/8 v1 after 3 retries (queued since 2026-09-23T09:00:00+00:00)" in capsys.readouterr().err
+
+
+def _run(tmp_path, state, osc_by_seq, head, **kwargs):
+    """One run_tick against files under tmp_path, writing delta.json back
+    the way run_forever does so the next tick's accumulator sees it."""
+    stats_path = tmp_path / "stats.json"
+    geojson_path = tmp_path / "changing_tables.geojson"
+    play_path = tmp_path / "play_places.geojson"
+    delta_path = tmp_path / "delta.json"
+    if not stats_path.exists():
+        _write_stats(stats_path, BASE_ISO)
+        _write_fc(geojson_path, [])
+        _write_fc(play_path, [])
+
+    def fake_fetch_state(seq=None):
+        return {"seq": head, "timestamp": "2026-09-23T10:00:00Z"}
+
+    new_state, out = delta.run_tick(
+        state, geojson_path=str(geojson_path), play_geojson_path=str(play_path),
+        stats_path=str(stats_path), delta_path=str(delta_path),
+        areas_bbox_path=str(tmp_path / "missing-areas-bbox.json"),
+        fetch_state=fake_fetch_state, fetch_osc=lambda seq: osc_by_seq.get(seq, _osc()),
+        now=kwargs.pop("now", NOW), **kwargs)
+    delta.export.write_json_atomic(out, str(delta_path))
+    return new_state, out
+
+
+class _Fetch:
+    """A coord_fetch whose answers can be flipped between ticks."""
+
+    def __init__(self, answers=None):
+        self.answers = answers or {}
+        self.calls = []
+
+    def __call__(self, osm_type, osm_id):
+        self.calls.append((osm_type, osm_id))
+        return self.answers.get((osm_type, osm_id))
+
+
+def _table_urls(out):
+    return {f["properties"]["osm_url"] for f in out["tables"]["upsert"]}
+
+
+def test_run_tick_queues_a_way_whose_lookup_failed(tmp_path):
+    osc = {101: _osc(_way("modify", 900, 11, "2026-09-23T10:00:00Z", WAY_TAGS))}
+    state, out = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, osc, 101, coord_fetch=_Fetch())
+    assert out["tables"]["upsert"] == []
+    assert len(state["pending"]) == 1
+    entry = state["pending"][0]
+    assert (entry["type"], entry["id"], entry["version"]) == ("way", 900, 11)
+    assert entry["attempts"] == 0
+    assert entry["since"] == NOW.isoformat(timespec="seconds")
+    path = tmp_path / "delta-state.json"
+    delta.save_state(str(path), state)
+    assert delta.load_state(str(path)) == state
+
+
+@pytest.mark.parametrize("version,created", [(11, False), (1, True)])
+def test_run_tick_retries_a_pending_lookup_next_tick(tmp_path, capsys, version, created):
+    action = "create" if version == 1 else "modify"
+    osc = {101: _osc(_way(action, 900, version, "2026-09-23T10:00:00Z", WAY_TAGS))}
+    fetch = _Fetch()
+    state, _ = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, osc, 101, coord_fetch=fetch)
+    assert len(state["pending"]) == 1
+
+    fetch.answers[("way", 900)] = (53.55, 9.93)
+    state, out = _run(tmp_path, state, osc, 101, coord_fetch=fetch)
+    assert state["pending"] == []
+    feat = next(f for f in out["tables"]["upsert"]
+                if f["properties"]["osm_url"] == "https://www.openstreetmap.org/way/900")
+    assert feat["properties"]["osm_version"] == version
+    assert feat["properties"]["edited_at"] == "2026-09-23T10:00:00Z"
+    assert feat["properties"]["created"] is created
+    assert feat["geometry"]["coordinates"] == [9.93, 53.55]
+    assert f"way/900 v{version} resolved on retry 1" in capsys.readouterr().err
+
+
+def test_run_tick_newer_version_supersedes_a_pending_entry(tmp_path):
+    fetch = _Fetch()
+    osc = {101: _osc(_way("modify", 900, 11, "2026-09-23T10:00:00Z", WAY_TAGS)),
+           102: _osc(_way("modify", 900, 12, "2026-09-23T10:01:00Z", WAY_TAGS)),
+           103: _osc(_delete("way", 900, 13, "2026-09-23T10:02:00Z"))}
+    state, _ = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, osc, 101, coord_fetch=fetch)
+    state, _ = _run(tmp_path, state, osc, 102, coord_fetch=fetch)
+    assert [(e["id"], e["version"]) for e in state["pending"]] == [(900, 12)]
+    assert state["pending"][0]["attempts"] == 0
+    state, _ = _run(tmp_path, state, osc, 103, coord_fetch=fetch)
+    assert state["pending"] == []
+
+
+def test_run_tick_gives_up_after_the_last_attempt(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(delta, "PENDING_MAX_ATTEMPTS", 2)
+    fetch = _Fetch()
+    osc = {101: _osc(_way("modify", 900, 11, "2026-09-23T10:00:00Z", WAY_TAGS))}
+    state, _ = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, osc, 101, coord_fetch=fetch)
+    state, _ = _run(tmp_path, state, osc, 101, coord_fetch=fetch)
+    assert state["pending"][0]["attempts"] == 1
+    capsys.readouterr()
+    state, _ = _run(tmp_path, state, osc, 101, coord_fetch=fetch)
+    assert state["pending"] == []
+    err = capsys.readouterr().err
+    assert "giving up on way/900 v11 after 2 lookup attempts" in err
+    assert NOW.isoformat(timespec="seconds") in err
+
+
+def test_run_tick_retry_pass_is_capped(tmp_path, monkeypatch):
+    monkeypatch.setattr(delta, "COORD_FETCH_MAX_PER_SEQ", 1)
+    since = "2026-09-23T09:00:00+00:00"
+    state = {"seq": 100, "base": BASE_ISO, "pending": [
+        dict(_change(900, 11), attempts=0, since=since),
+        dict(_change(901, 2), attempts=0, since=since)]}
+    fetch = _Fetch()
+    state, _ = _run(tmp_path, state, {}, 100, coord_fetch=fetch)
+    assert fetch.calls == [("way", 900)]
+    # The failed entry rotates to the back, so 901 is next in line.
+    assert [(e["id"], e["attempts"]) for e in state["pending"]] == [(901, 0), (900, 1)]
+
+
+def test_run_tick_reset_discards_pending(tmp_path):
+    state = {"seq": 100, "base": "2026-09-22T02:00:00+00:00", "pending": [
+        dict(_change(900, 11), attempts=3, since="2026-09-22T09:00:00+00:00")]}
+    fetch = _Fetch({("way", 900): (53.55, 9.93)})
+    state, out = _run(tmp_path, state, {101: _osc()}, 101, coord_fetch=fetch)
+    assert state["pending"] == []
+    assert fetch.calls == []
+    assert out["tables"]["upsert"] == []
+
+
+def test_run_tick_lookup_cap_is_per_sequence_not_per_tick(tmp_path):
+    fake = _Fetch({("way", 900): (53.55, 9.93), ("way", 901): (53.56, 9.94)})
+    osc = {101: _osc(_way("modify", 900, 11, "2026-09-23T10:00:00Z", WAY_TAGS)),
+           102: _osc(_way("modify", 901, 4, "2026-09-23T10:01:00Z", WAY_TAGS))}
+    state, out = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, osc, 102,
+                      coord_fetch_factory=lambda: delta.make_coord_fetch(1, fetch=fake))
+    assert _table_urls(out) == {"https://www.openstreetmap.org/way/900",
+                                "https://www.openstreetmap.org/way/901"}
+    assert state["pending"] == []
+
+
+def test_run_tick_retried_upsert_lends_its_coordinates_to_a_later_version(tmp_path):
+    since = "2026-09-23T09:00:00+00:00"
+    state = {"seq": 100, "base": BASE_ISO, "pending": [
+        dict(_change(900, 11), attempts=2, since=since)]}
+    osc = {101: _osc(_way("modify", 900, 12, "2026-09-23T10:01:00Z", WAY_TAGS))}
+    fetch = _Fetch({("way", 900): (53.55, 9.93)})
+    state, out = _run(tmp_path, state, osc, 101, coord_fetch=fetch)
+    assert fetch.calls == [("way", 900)]
+    feat = next(iter(out["tables"]["upsert"]))
+    assert feat["properties"]["osm_version"] == 12
+    assert feat["geometry"]["coordinates"] == [9.93, 53.55]
+    assert state["pending"] == []
+
+
+def test_make_coord_fetch_logs_a_failed_lookup(capsys):
+    def failing_fetch(osm_type, osm_id):
+        raise RuntimeError("network is sad")
+
+    assert delta.make_coord_fetch(5, fetch=failing_fetch)("way", 900) is None
+    err = capsys.readouterr().err
+    assert "WARN delta: centroid lookup way/900 failed: RuntimeError: network is sad" in err
+
+
+def test_make_coord_fetch_logs_the_cap_once(capsys):
+    coord_fetch = delta.make_coord_fetch(1, fetch=lambda t, i: (1.0, 2.0))
+    coord_fetch("way", 1)
+    for i in range(2, 6):
+        assert coord_fetch("way", i) is None
+    err = capsys.readouterr().err
+    assert err.count("coordinate lookup cap (1) reached") == 1
+
+
+def test_run_tick_a_version_superseded_within_the_same_diff_is_not_queued(tmp_path):
+    # Two versions of one way in a single minutely diff: v11's lookup fails,
+    # v12's succeeds and is upserted. v11 must NOT be queued — a retry of it
+    # would take v12's coordinates from the accumulator and overwrite the
+    # newer version's status with the older one's.
+    answers = [None, (53.55, 9.93)]
+    calls = []
+
+    def flaky(osm_type, osm_id):
+        calls.append((osm_type, osm_id))
+        return answers.pop(0)
+
+    female = dict(WAY_TAGS, **{"changing_table:location": "female_toilet"})
+    osc = {101: _osc(_way("modify", 900, 11, "2026-09-23T10:00:00Z", female),
+                     _way("modify", 900, 12, "2026-09-23T10:00:30Z", WAY_TAGS))}
+    state, out = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, osc, 101, coord_fetch=flaky)
+    assert calls == [("way", 900), ("way", 900)]
+    assert state["pending"] == []
+    feat = next(f for f in out["tables"]["upsert"] if f["properties"]["osm_id"] == 900)
+    assert feat["properties"]["osm_version"] == 12
+    # ...and a second tick has nothing to retry: v12 stays.
+    state, out = _run(tmp_path, state, {}, 101, coord_fetch=flaky)
+    assert calls == [("way", 900), ("way", 900)]
+    feat = next(f for f in out["tables"]["upsert"] if f["properties"]["osm_id"] == 900)
+    assert feat["properties"]["osm_version"] == 12
+
+
+def test_run_tick_both_versions_failing_queues_only_the_newer_one(tmp_path):
+    osc = {101: _osc(_way("modify", 900, 11, "2026-09-23T10:00:00Z", WAY_TAGS),
+                     _way("modify", 900, 12, "2026-09-23T10:00:30Z", WAY_TAGS))}
+    state, _ = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, osc, 101, coord_fetch=_Fetch())
+    assert [(e["id"], e["version"]) for e in state["pending"]] == [(900, 12)]
+
+
+def test_retry_pending_rotates_a_failed_entry_to_the_back():
+    since = "2026-09-23T09:00:00+00:00"
+    pending = [dict(_change(900, 11), attempts=0, since=since),
+               dict(_change(901, 2), attempts=0, since=since),
+               dict(_change(902, 5), attempts=0, since=since)]
+    fetch = _Fetch()  # every lookup fails
+    events, remaining = delta.retry_pending(pending, 1, _empty_dataset(), coord_fetch=fetch)
+    assert events == [] and fetch.calls == [("way", 900)]
+    assert [(e["id"], e["attempts"]) for e in remaining] == [(901, 0), (902, 0), (900, 1)]
+    # Next pass: 901's turn, and 900 waits at the back.
+    events, remaining = delta.retry_pending(remaining, 1, _empty_dataset(), coord_fetch=fetch)
+    assert fetch.calls == [("way", 900), ("way", 901)]
+    assert [(e["id"], e["attempts"]) for e in remaining] == [(902, 0), (900, 1), (901, 1)]

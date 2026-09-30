@@ -50,6 +50,22 @@ OPS_HTML_PATH = os.environ.get(
 OPS_PRIVATE_HTML_PATH = os.environ.get(
     "PAPAMAP_OPS_PRIVATE_HTML_PATH",
     str(Path(STATS_PATH).parent / "private" / "ops.html"))
+# The live-updates follower (pipeline/delta.py) writes delta.json next to
+# stats.json and its private retry queue under private/; the ops service mounts
+# the same directory, so the siblings are the right defaults. Empty string
+# disables the live-updates check and section. The state file is optional:
+# unreadable only means the pending count is unknown.
+OPS_DELTA_PATH = os.environ.get(
+    "PAPAMAP_OPS_DELTA_PATH", str(Path(STATS_PATH).parent / "delta.json"))
+OPS_DELTA_STATE_PATH = os.environ.get(
+    "PAPAMAP_OPS_DELTA_STATE_PATH",
+    str(Path(STATS_PATH).parent / "private" / "delta-state.json"))
+# The follower ticks every minute; half an hour without one at 07:30 means it
+# is stuck or dead.
+DELTA_STALE_AFTER_MIN = float(os.environ.get("PAPAMAP_OPS_DELTA_STALE_MIN", "30"))
+# After a nightly build writes a new stats.json the follower needs a tick to
+# rebase; a base mismatch inside this window is not an anomaly.
+DELTA_REBASE_GRACE_MIN = 10
 VISITS_HISTORY_DAYS = 400
 # The per-day theme-changeset history, same idea as the visits history: kept
 # far longer than any chart shows, because the state file is the only place
@@ -156,9 +172,79 @@ def diff_statuses(prev: dict[str, str], cur: dict[str, str]) -> dict[str, int]:
     return d
 
 
-def find_anomalies(stats, counts, last_counts, now) -> list[str]:
+def _parse_time(value):
+    try:
+        return datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _list_len(container, key) -> int:
+    try:
+        v = container[key]
+    except (TypeError, KeyError, IndexError):
+        return 0
+    return len(v) if isinstance(v, list) else 0
+
+
+def delta_summary(delta, delta_state, stats, now) -> dict | None:
+    """What the ops check and page need to know about the live-updates
+    follower, from delta.json, its state file and stats.json (each None when
+    unreadable). None when there is no delta.json. Never raises."""
+    if delta is None:
+        return None
+    if not isinstance(delta, dict):
+        delta = {}
+    generated = delta.get("generated")
+    age_min = None
+    parsed = _parse_time(generated) if isinstance(generated, str) else None
+    if parsed is not None:
+        try:
+            age_min = (now - parsed).total_seconds() / 60
+        except TypeError:  # naive vs aware
+            age_min = None
+    data_base = None
+    if isinstance(stats, dict):
+        data_base = stats.get("data_base") or stats.get("generated_at")
+    base = delta.get("base")
+    tables, places = delta.get("tables"), delta.get("places")
+    pending = pending_oldest = pending_max = None
+    entries = None
+    if isinstance(delta_state, dict):
+        # No key at all is an older follower: nothing queued.
+        entries = delta_state.get("pending", [])
+    if isinstance(entries, list):
+        entries = [e for e in entries if isinstance(e, dict)]
+        pending = len(entries)
+        sinces = [e["since"] for e in entries if isinstance(e.get("since"), str)]
+        attempts = [e["attempts"] for e in entries
+                    if isinstance(e.get("attempts"), int)
+                    and not isinstance(e.get("attempts"), bool)]
+        pending_oldest = min(sinces) if sinces else None
+        pending_max = max(attempts) if attempts else None
+    return {
+        "generated": generated, "age_min": age_min,
+        "stale": age_min is None or age_min > DELTA_STALE_AFTER_MIN,
+        "seq": delta.get("seq"), "base": base, "data_base": data_base,
+        "base_ok": None if data_base is None else str(base) >= str(data_base),
+        "tables_upsert": _list_len(tables, "upsert"),
+        "tables_remove": _list_len(tables, "remove"),
+        "places_upsert": _list_len(places, "upsert"),
+        "places_remove": _list_len(places, "remove"),
+        "toilets_no_table": (len(delta["new_toilets_no_table"])
+                             if isinstance(delta.get("new_toilets_no_table"), list)
+                             else 0),
+        "pending": pending, "pending_oldest": pending_oldest,
+        "pending_max_attempts": pending_max,
+    }
+
+
+def find_anomalies(stats, counts, last_counts, now, delta=None,
+                   delta_expected=False) -> list[str]:
     """Human-readable anomaly lines; empty list = healthy. `counts`/`stats`
-    are None when the corresponding file is missing."""
+    are None when the corresponding file is missing. `delta` is
+    delta_summary()'s dict; with `delta_expected` a missing or stale
+    delta.json, or one based on an older dataset, is an anomaly too."""
     anomalies = []
     if stats is None:
         anomalies.append("stats.json is missing or unreadable")
@@ -192,11 +278,42 @@ def find_anomalies(stats, counts, last_counts, now) -> list[str]:
                     f"(>{JUMP_ALERT_PCT:.0f}%) — sweep widened rather than "
                     "mapping activity? the 'since yesterday' and 7-day "
                     "figures below count the new area as new pins")
+    if delta_expected:
+        if delta is None:
+            anomalies.append(
+                "delta.json is missing or unreadable — is the live-updates "
+                "follower running? (docker compose up -d delta)")
+        elif delta["age_min"] is None:
+            anomalies.append(
+                f"delta.json has no parsable generated ({delta['generated']!r})")
+        elif delta["stale"]:
+            anomalies.append(
+                f"live updates are stale: delta.json generated "
+                f"{delta['generated']} is {delta['age_min']:.0f} min old "
+                f"(limit {DELTA_STALE_AFTER_MIN:.0f} min) — follower stuck or "
+                "dead? (docker logs papamap-delta)")
+        if delta is not None and delta["base_ok"] is False:
+            built = _parse_time((stats or {}).get("generated_at"))
+            try:
+                old = (built is None
+                       or (now - built).total_seconds() / 60 > DELTA_REBASE_GRACE_MIN)
+            except TypeError:
+                old = True
+            if old:
+                anomalies.append(
+                    f"delta.json base {delta['base']} is behind the dataset's "
+                    f"data_base {delta['data_base']} — the follower has not "
+                    "rebased on last night's build, readers ignore the delta "
+                    "until it does")
     return anomalies
 
 
+def _seq(v) -> str:
+    return f"{v:,}" if isinstance(v, int) and not isinstance(v, bool) else str(v)
+
+
 def render_report(counts, changes, history, anomalies, visits=None,
-                  edits=None) -> str:
+                  edits=None, delta=None) -> str:
     lines = []
     if anomalies:
         lines.append("ANOMALIES:")
@@ -233,6 +350,20 @@ def render_report(counts, changes, history, anomalies, visits=None,
             lines.append(
                 f"answers on the map itself (OSMCha, created_by=PapaMap, "
                 f"{edits['days']}d): {edits['web_changesets']} changesets")
+    if delta:
+        age = ("(age unknown)" if delta["age_min"] is None
+               else f"({delta['age_min']:.0f} min ago)")
+        pending = delta["pending"]
+        lines.append(
+            f"live updates: seq {_seq(delta['seq'])}, last tick "
+            f"{delta['generated']} {age}, "
+            f"+{delta['tables_upsert']}/-{delta['tables_remove']} tables, "
+            f"+{delta['places_upsert']}/-{delta['places_remove']} places "
+            "since the base"
+            + (f", {pending} lookup(s) pending"
+               if isinstance(pending, int) and pending > 0 else "")
+            + (" — base BEHIND the dataset" if delta["base_ok"] is False
+               else ""))
     if visits and visits["days"]:
         lines.append(
             f"visits (Cloudflare, {visits['days']}d): "
@@ -453,10 +584,11 @@ def send_mail(subject, body, smtp=smtplib.SMTP) -> bool:
 def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
               mail=send_mail, visits_fetch=cf_visits, edits_fetch=osmcha_edits,
               html_path=None, history_path=None, build_log_path=None,
-              private_html_path=None):
+              private_html_path=None, delta_path=None, delta_state_path=None):
     """Returns (anomalies, report). State is updated every run so the daily
     diff stays daily even when no mail goes out, and the ops page is
-    rewritten every run from the same numbers. html_path="" skips the page."""
+    rewritten every run from the same numbers. html_path="" skips the page;
+    delta_path="" skips the live-updates check."""
     now = now or datetime.now(timezone.utc)
     state_path = Path(state_path or STATE_PATH)
     stats = load_json(stats_path or STATS_PATH)
@@ -475,7 +607,15 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     changes = (diff_statuses(prev_statuses, cur_statuses)
                if cur_statuses is not None and prev_statuses else None)
 
-    anomalies = find_anomalies(stats, counts, last_counts, now)
+    delta_path = OPS_DELTA_PATH if delta_path is None else delta_path
+    delta_state_path = (OPS_DELTA_STATE_PATH if delta_state_path is None
+                        else delta_state_path)
+    summary = (delta_summary(load_json(delta_path),
+                             load_json(delta_state_path) if delta_state_path
+                             else None, stats, now)
+               if delta_path else None)
+    anomalies = find_anomalies(stats, counts, last_counts, now,
+                               delta=summary, delta_expected=bool(delta_path))
     weekly = now.weekday() == WEEKLY_DIGEST_WEEKDAY
     # Visits and edits every run, not just digest days: the page's per-day
     # charts are built run by run — the visits curve from figures Cloudflare
@@ -484,7 +624,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     visits = visits_fetch(now=now)
     edits = edits_fetch(now=now)
     report = render_report(counts, changes, history, anomalies,
-                           visits if (anomalies or weekly) else None, edits)
+                           visits if (anomalies or weekly) else None, edits,
+                           delta=summary)
     visits_history = merge_visits(state.get("visits") or {}, visits, now)
     edits_days = merge_edits(state.get("edits_days") or {}, edits)
 
@@ -513,6 +654,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     ctx = dict(now=now, stats=stats, counts=counts, changes=changes,
                history=history[-HISTORY_DAYS:], anomalies=anomalies,
                edits=cached_edits, edits_days=edits_days,
+               delta=summary, delta_expected=bool(delta_path),
                history_path=history_path or OPS_HISTORY_PATH,
                build_log_path=build_log_path or BUILD_LOG_PATH)
     if html_path:

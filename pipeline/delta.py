@@ -164,32 +164,55 @@ def fetch_osm_full_centroid(osm_type: str, osm_id: int, get=None) -> tuple[float
 
 # A way/relation with no coordinate reachable any other way is rare ("a few
 # a day", per the design) — but unbounded, one API call per object could
-# still hammer api.openstreetmap.org on a bad tick (a burst of way edits, or
-# a bug elsewhere sending more objects through than expected). Capped per
-# tick rather than per run: run_forever builds a fresh one every iteration,
-# so a quiet tick after a busy one is never left short by a previous tick's
-# spending.
-COORD_FETCH_MAX_PER_TICK = 50
+# still hammer api.openstreetmap.org on a bad minute (a burst of way edits,
+# or a bug elsewhere sending more objects through than expected). Capped per
+# replication SEQUENCE, not per tick: one tick walks every sequence from
+# state+1 to the head, so a per-tick budget let the first sequence of a
+# catch-up starve the rest. run_tick builds a fresh fetcher per sequence (and
+# one for the retry pass, see retry_pending) from run_forever's factory.
+COORD_FETCH_MAX_PER_SEQ = 50
 
 
-def make_coord_fetch(max_lookups: int = COORD_FETCH_MAX_PER_TICK, fetch=fetch_osm_full_centroid):
+def make_coord_fetch(max_lookups: int = COORD_FETCH_MAX_PER_SEQ, fetch=fetch_osm_full_centroid):
     """A process_changes-shaped coord_fetch(osm_type, osm_id) backed by
     `fetch` (fetch_osm_full_centroid by default), capped at `max_lookups`
     calls total and tolerant of any failure — a timeout, a 404, a rate
     limit — which is treated exactly like "no coordinate reachable"
-    (returns None) rather than aborting the tick. `fetch` is injectable for
-    tests; production code never needs to pass it."""
+    (returns None) rather than aborting the tick. Both a failure and the
+    cap being reached are logged (the cap once per fetcher): the caller
+    queues the object for a retry (queue_pending), and the log is the only
+    way to tell a lookup that failed from one that was never attempted.
+    `fetch` is injectable for tests; production code never needs to pass it."""
     remaining = [max_lookups]
+    cap_logged = [False]
 
     def _fetch(osm_type, osm_id):
         if remaining[0] <= 0:
+            if not cap_logged[0]:
+                cap_logged[0] = True
+                print(f"  delta: coordinate lookup cap ({max_lookups}) reached — "
+                      "the rest wait for a retry", file=sys.stderr)
             return None
         remaining[0] -= 1
         try:
             return fetch(osm_type, osm_id)
-        except Exception:  # noqa: BLE001 — one bad lookup must not sink the tick
+        except Exception as exc:  # noqa: BLE001 — one bad lookup must not sink the tick
+            print(f"  WARN delta: centroid lookup {osm_type}/{osm_id} failed: "
+                  f"{exc.__class__.__name__}: {exc}", file=sys.stderr)
             return None
     return _fetch
+
+
+# A way/relation whose coordinate lookup failed (or was refused by the cap)
+# used to be dropped outright — and a dropped diff entry never comes back
+# until the nightly build, because the next tick starts at the next
+# sequence. It is queued in the private state file instead (never served,
+# not part of CONTRACT.md) and retried at the start of every tick. Bounded
+# both ways: the queue by length (queued longest ago evicted first) and each entry by
+# the number of retries, so a lookup that can never succeed (a deleted way
+# whose delete we missed, an API that 404s it) cannot stay forever.
+PENDING_MAX = int(os.environ.get("PAPAMAP_DELTA_PENDING_MAX", "200"))
+PENDING_MAX_ATTEMPTS = int(os.environ.get("PAPAMAP_DELTA_PENDING_ATTEMPTS", "30"))
 
 
 # ---- Base dataset (the nightly build's output, read back) ------------------
@@ -364,7 +387,8 @@ def find_start_seq(base_iso: str, fetch_state=fetch_state, max_backoff: int = 8,
 
 def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
                     coord_fetch=None, acc: dict | None = None,
-                    area_boxes_by_name: dict | None = None) -> list[tuple]:
+                    area_boxes_by_name: dict | None = None,
+                    dropped: list | None = None) -> list[tuple]:
     """changes (parse_osc's shape) -> a list of (osm_url, kind, feature_or_none)
     events, kind in {"table", "place", "toilet_no_table"}, feature_or_none
     being None for a removal. Features are built with export.build_features /
@@ -394,7 +418,13 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
     silently leaving a stale upsert in the accumulator forever. `known_*`
     below is updated as changes are walked, so two changes to the same
     object within one .osc (created, then deleted, in the same diff) are
-    handled correctly too, not just across ticks/files."""
+    handled correctly too, not just across ticks/files.
+
+    `dropped`: when given, every relevant change that had to be skipped
+    because no coordinate was reachable (a way/relation not in the base or
+    the accumulator whose lookup failed, or with no coord_fetch at all) is
+    appended to it as a copy of the change — run_tick queues those for a
+    retry (queue_pending) instead of losing them until the nightly build."""
     known_tables = set(base_dataset["tables"])
     known_places = set(base_dataset["places"])
     # Whether an object is "created" — the add-a-place flow's own meaning of
@@ -422,7 +452,13 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         for u, t in acc["new_toilets_no_table"].items():
             created_by_url[u] = bool(t.get("created"))
     events = []
-    for ch in changes:
+    # For `dropped`: a change superseded by a later change to the same object
+    # in this very batch (two versions of a way in one minutely diff) is not
+    # worth a retry — the later one decides the object's state now, and a
+    # retried older version would overwrite it, or resurrect a pin the later
+    # version retagged away.
+    last_pos = {(c["type"], c["id"]): i for i, c in enumerate(changes)}
+    for i, ch in enumerate(changes):
         osm_type, osm_id = ch["type"], ch["id"]
         url = _osm_url(osm_type, osm_id)
         was_table = url in known_tables
@@ -450,7 +486,9 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
                 if got:
                     lat, lon = got
         if lat is None or lon is None:
-            continue  # no coordinate reachable — drop rather than guess
+            if dropped is not None and last_pos[(osm_type, osm_id)] == i:
+                dropped.append({**ch, "tags": dict(tags)})
+            continue  # no coordinate reachable — never guess; the caller may retry
         if not (was_table or was_place) and not in_any_bbox(lon, lat, area_boxes):
             continue  # a brand-new object outside every covered sweep area
         el = {"type": osm_type, "id": osm_id, "tags": tags, "lat": lat, "lon": lon}
@@ -512,6 +550,71 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
                           {"osm_url": url, "lon": lon, "lat": lat, "t": ch.get("timestamp"),
                            "version": ch.get("version"), "created": created}))
     return events
+
+
+def _obj_key(change: dict) -> tuple:
+    return change["type"], change["id"]
+
+
+def queue_pending(pending: list, dropped: list, now: datetime) -> list:
+    """Adds process_changes' `dropped` changes to the retry queue (the
+    `pending` list in the state file) and returns the new queue. Each entry
+    is the change itself plus `attempts` (retries so far, 0 here) and
+    `since` (when it was first queued). One entry per object: a newer
+    version replaces an older one — the newer diff entry is what decides the
+    object's state now. Over PENDING_MAX, the entries queued longest ago are
+    evicted, logged, never silently."""
+    out = list(pending)
+    since = now.isoformat(timespec="seconds")
+    for ch in dropped:
+        key = _obj_key(ch)
+        out = [e for e in out if _obj_key(e) != key]
+        out.append({**ch, "tags": dict(ch.get("tags") or {}), "attempts": 0, "since": since})
+    while len(out) > PENDING_MAX:
+        # By queue time, not position: retry_pending rotates a failed entry
+        # to the back, so the front is the least recently retried, not the
+        # longest waiting.
+        e = min(out, key=lambda e: str(e.get("since") or ""))
+        out.remove(e)
+        print(f"  WARN delta: pending lookups over {PENDING_MAX}, dropping "
+              f"{e['type']}/{e['id']} v{e.get('version')} after "
+              f"{e.get('attempts', 0)} retries (queued since {e.get('since')})", file=sys.stderr)
+    return out
+
+
+def retry_pending(pending: list, max_batch: int, base_dataset: dict, *, area_boxes=None,
+                  coord_fetch=None, acc: dict | None = None,
+                  area_boxes_by_name: dict | None = None) -> tuple[list, list]:
+    """One retry pass over the queue: the first `max_batch` entries (FIFO,
+    oldest first) go back through process_changes as their original
+    changes, so a resolved upsert carries the original version, timestamp
+    and created flag. Returns (events, remaining queue). An entry that fails
+    again goes to the BACK with one more attempt — until
+    PENDING_MAX_ATTEMPTS, when it is given up on, logged — so with more
+    than `max_batch` queued every entry gets its turn, round robin, rather
+    than the same front batch failing every tick while the rest wait.
+    Entries beyond `max_batch` are left as they are and spend no attempt."""
+    batch, rest = pending[:max_batch], pending[max_batch:]
+    if not batch:
+        return [], list(rest)
+    changes = [{k: v for k, v in e.items() if k not in ("attempts", "since")} for e in batch]
+    dropped: list = []
+    events = process_changes(changes, base_dataset, area_boxes=area_boxes,
+                             coord_fetch=coord_fetch, acc=acc,
+                             area_boxes_by_name=area_boxes_by_name, dropped=dropped)
+    failed = {_obj_key(d) for d in dropped}
+    still = []
+    for e in batch:
+        n = e.get("attempts", 0) + 1
+        label = f"{e['type']}/{e['id']} v{e.get('version')}"
+        if _obj_key(e) not in failed:
+            print(f"  delta: {label} resolved on retry {n}", file=sys.stderr)
+        elif n >= PENDING_MAX_ATTEMPTS:
+            print(f"  WARN delta: giving up on {label} after {n} lookup attempts "
+                  f"(queued since {e.get('since')})", file=sys.stderr)
+        else:
+            still.append({**e, "attempts": n})
+    return events, list(rest) + still
 
 
 def new_accumulator() -> dict:
@@ -602,13 +705,20 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
             play_geojson_path: str = PLAY_GEOJSON_PATH, stats_path: str = STATS_PATH,
             delta_path: str = DELTA_PATH, areas_bbox_path: str = AREAS_BBOX_PATH,
             fetch_state=fetch_state, fetch_osc=fetch_osc,
-            coord_fetch=None, max_gap_h: float = MAX_GAP_H,
+            coord_fetch=None, coord_fetch_factory=None, max_gap_h: float = MAX_GAP_H,
             now: datetime | None = None) -> tuple[dict, dict]:
-    """One catch-up tick: process every sequence from state+1 up to the
-    replication head, so downtime is caught up automatically. Returns
-    (new_state, delta_dict). Raises on a hard failure (no data base yet,
-    network down) — the caller (run_forever) is what keeps the last good
-    delta.json and retries."""
+    """One catch-up tick: first a retry pass over the lookups still pending
+    from earlier ticks (retry_pending), then every sequence from state+1 up
+    to the replication head, so downtime is caught up automatically. Returns
+    (new_state, delta_dict), new_state carrying the retry queue as
+    `pending`. Raises on a hard failure (no data base yet, network down) —
+    the caller (run_forever) is what keeps the last good delta.json and
+    retries.
+
+    `coord_fetch` is used as-is for the retry pass and every sequence (tests
+    inject it); otherwise `coord_fetch_factory` is called once for the retry
+    pass and once per sequence, so the lookup cap is per sequence. Neither
+    -> no lookups: a way/relation without known coordinates is queued."""
     now = now or datetime.now(timezone.utc)
     base_iso = read_data_base(stats_path)
     if base_iso is None:
@@ -637,48 +747,81 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
         start_seq = find_start_seq(base_iso, fetch_state=fetch_state)
         acc = new_accumulator()
         last_seq = start_seq - 1
+        pending: list = []   # the diffs are re-walked from the base anyway
     else:
         acc = load_accumulator(delta_path, base_iso)
         last_seq = state["seq"]
+        pending = list(state.get("pending") or [])
+
+    def _fetcher():
+        if coord_fetch is not None:
+            return coord_fetch
+        return coord_fetch_factory() if coord_fetch_factory is not None else None
+
+    # Older changes first, so a later version of the same object in this
+    # tick's sequences finds the retried upsert's coordinates in `acc`.
+    # Capped at one sequence's lookup budget, so a fresh fetcher never
+    # refuses a retry. Skipped without any fetcher: a retry could not
+    # succeed and would only burn the entry's attempts.
+    if pending and (coord_fetch is not None or coord_fetch_factory is not None):
+        events, pending = retry_pending(pending, COORD_FETCH_MAX_PER_SEQ, base_dataset,
+                                        area_boxes=area_boxes, coord_fetch=_fetcher(),
+                                        acc=acc, area_boxes_by_name=area_boxes_by_name)
+        apply_events(acc, events)
 
     for seq in range(last_seq + 1, current["seq"] + 1):
         raw = fetch_osc(seq)
         changes = parse_osc(io.BytesIO(raw))
+        dropped: list = []
         apply_events(acc, process_changes(changes, base_dataset, area_boxes=area_boxes,
-                                          coord_fetch=coord_fetch, acc=acc,
-                                          area_boxes_by_name=area_boxes_by_name))
+                                          coord_fetch=_fetcher(), acc=acc,
+                                          area_boxes_by_name=area_boxes_by_name,
+                                          dropped=dropped))
+        # A newer diff entry for a pending object decides its fate now — a
+        # delete or a retag away from relevance included — so the older
+        # pending entry goes, whatever this one did.
+        touched = {_obj_key(ch) for ch in changes}
+        if pending and touched:
+            pending = [e for e in pending if _obj_key(e) not in touched]
+        pending = queue_pending(pending, dropped, now)
         last_seq = seq
 
     delta = render_delta(acc, base_iso, last_seq, now=now)
-    return {"seq": last_seq, "base": base_iso}, delta
+    return {"seq": last_seq, "base": base_iso, "pending": pending}, delta
 
 
 def run_forever(poll_s: float = POLL_INTERVAL_S, state_path: str = STATE_PATH,
                 delta_path: str = DELTA_PATH, coord_fetch=None,
-                coord_fetch_cap: int = COORD_FETCH_MAX_PER_TICK, **kwargs) -> None:
+                coord_fetch_cap: int = COORD_FETCH_MAX_PER_SEQ, **kwargs) -> None:
     """The `delta` compose service's entrypoint. Never crash-loops: a
     network error (or any other tick failure) is logged and the previous
     delta.json is left exactly as it was, retried next tick.
 
-    `coord_fetch`: wired to make_coord_fetch (fetch_osm_full_centroid,
-    capped at `coord_fetch_cap` per tick) unless a caller supplies its own —
-    without this, a way/relation created or newly relevant after the base
-    can never get a coordinate and process_changes silently drops it. A
-    fresh one is built every tick, not once for the whole run, so the cap
-    is per tick as the design asks, not a lifetime budget."""
+    `coord_fetch`: unless a caller supplies its own, run_tick gets a factory
+    for make_coord_fetch (fetch_osm_full_centroid, capped at
+    `coord_fetch_cap`) and builds a fresh fetcher per replication sequence
+    and one for the retry pass — so the cap is per sequence, never a
+    lifetime or per-tick budget. Without it, a way/relation created or newly
+    relevant after the base could never get a coordinate. A lookup that
+    fails anyway is queued in the state file and retried next tick."""
     print(f"  delta: following {REPLICATION_BASE}, polling every {poll_s:.0f}s",
           file=sys.stderr)
     while True:
         try:
             state = load_state(state_path)
-            tick_coord_fetch = coord_fetch or make_coord_fetch(coord_fetch_cap)
-            new_state, delta = run_tick(state, delta_path=delta_path,
-                                        coord_fetch=tick_coord_fetch, **kwargs)
+            if coord_fetch is not None:
+                fetch_kw = {"coord_fetch": coord_fetch}
+            else:
+                fetch_kw = {"coord_fetch_factory": lambda: make_coord_fetch(coord_fetch_cap)}
+            new_state, delta = run_tick(state, delta_path=delta_path, **fetch_kw, **kwargs)
             export.write_json_atomic(delta, delta_path)
             save_state(state_path, new_state)
+            n_pending = len(new_state.get("pending") or [])
+            pending_note = f", {n_pending} lookup(s) pending" if n_pending else ""
             print(f"  delta: seq {new_state['seq']} base {new_state['base']} — "
                   f"{len(delta['tables']['upsert'])} table(s), "
-                  f"{len(delta['places']['upsert'])} place(s) upserted", file=sys.stderr)
+                  f"{len(delta['places']['upsert'])} place(s) upserted{pending_note}",
+                  file=sys.stderr)
         except Exception as exc:  # noqa: BLE001 — must never crash-loop
             print(f"  WARN delta tick failed, keeping last good delta.json: {exc}",
                   file=sys.stderr)

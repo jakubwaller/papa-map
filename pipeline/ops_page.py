@@ -649,13 +649,63 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
     return "".join(p)
 
 
+def _live_updates(d: dict | None) -> str:
+    """The follower's section: what delta.json and its state file say."""
+    if d is None:
+        return ('<h2>Live updates</h2>\n<p class="bad">delta.json is missing — '
+                "the live-updates follower is not running.</p>\n")
+    age = ("age unknown" if d["age_min"] is None
+           else f"{d['age_min']:.0f} min ago")
+    tick = f"{esc(str(d['generated']))} ({age})"
+    if d["base_ok"] is True:
+        base_note = ' · <span class="ok">matches the dataset</span>'
+    elif d["base_ok"] is False:
+        base_note = (f' · <span class="bad">BEHIND the dataset '
+                     f'({esc(str(d["data_base"]))}) — readers ignore this '
+                     "delta</span>")
+    else:
+        base_note = ' · <span class="muted">dataset base unknown</span>'
+    pending = d["pending"]
+    if pending is None:
+        pending_txt = "unknown (state file not readable)"
+    else:
+        pending_txt = _n(pending)
+        if pending > 0:
+            pending_txt += (f", oldest queued {esc(str(d['pending_oldest']))}, "
+                            f"up to {_n(d['pending_max_attempts'])} retries")
+    seq = d["seq"]
+    seq_txt = (_n(seq) if isinstance(seq, int) and not isinstance(seq, bool)
+               else esc(str(seq)))
+    rows = [
+        ("last tick", tick, ' class="bad"' if d["stale"] else ""),
+        ("replication sequence", seq_txt, ""),
+        ("base", esc(str(d["base"])) + base_note, ""),
+        ("tables since the base",
+         f"+{_n(d['tables_upsert'])} / −{_n(d['tables_remove'])}", ""),
+        ("play places since the base",
+         f"+{_n(d['places_upsert'])} / −{_n(d['places_remove'])}", ""),
+        ("new toilets without a table answer", _n(d["toilets_no_table"]), ""),
+        ("pending coordinate lookups", pending_txt, ""),
+    ]
+    out = ['<h2>Live updates</h2>\n<p class="muted">A follower reads '
+           "OpenStreetMap's minutely diffs and writes delta.json; the map "
+           "merges it over the nightly dataset, so an edit anywhere shows "
+           "within a few minutes instead of after the next build.</p>\n"
+           "<table>\n<tbody>\n"]
+    out.extend(f'<tr><td class="l">{label}</td><td{cls}>{val}</td></tr>\n'
+               for label, val, cls in rows)
+    out.append("</tbody>\n</table>\n")
+    return "".join(out)
+
+
 def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                 changes: dict | None, history: list[dict],
                 anomalies: list[str], edits: dict | None = None,
                 edits_days: dict | None = None,
                 regions: dict | None = None, build: dict | None = None,
                 site_url: str = "https://papamap.de",
-                private: bool = False, visits: dict | None = None) -> str:
+                private: bool = False, visits: dict | None = None,
+                delta: dict | None = None, delta_expected: bool = False) -> str:
     """The whole page. `history` is the ops state's daily list (oldest first,
     the entry for today already appended); `regions` is region_rows()'s
     output; `build` is parse_build_log()'s; `edits` the cached OSMCha line,
@@ -743,6 +793,9 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                      f'{esc(str(glob.get("data_until", "")))[:10]})</td>'
                      f'<td>{_n(glob["ct_total"])}</td></tr>\n')
         p.append("</tbody>\n</table>\n")
+
+    if delta_expected:
+        p.append(_live_updates(delta))
 
     # Movement
     p.append("<h2>Movement</h2>\n"
