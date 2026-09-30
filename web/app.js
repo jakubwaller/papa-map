@@ -12,13 +12,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app58";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app59";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app58";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app59";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app58";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app59";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -26,7 +26,7 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app58";
+         appTips, TIP_SEEN_KEY } from "./me.js?v=app59";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -36,22 +36,22 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app58";
+         reviewTracker } from "./native.js?v=app59";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app58";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app59";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app58";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app59";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app58";
+import { isOpenNow } from "./opening-hours.js?v=app59";
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -616,6 +616,9 @@ function refreshPins() {
     ? t("countShown", { shown: shown.length, total })
       + (places.length ? t("countPlaces", { n: places.length }) : "")
     : t("countNoData");
+  // In the app the count shows only when there is nothing to count.
+  countEl.classList.toggle("nodata", !total);
+  updateBarFade();   // on the website the count is the row's last item: its width moves the edge
   if (!styleReady) return;
   map.getSource(SRC).setData(toFeatureCollection(shown, wheelchairOnly));
   map.getSource(PLACES).setData(placesToFeatureCollection(places, wheelchairOnly));
@@ -1082,8 +1085,9 @@ function renderChips() {
     const v = chipView(key, mode);
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "chip" + (visible.has(key) ? "" : " off");
+    b.className = "chip" + (visible.has(key) ? " on" : "");
     b.setAttribute("aria-pressed", String(visible.has(key)));
+    b.style.setProperty("--chip", BUCKET_COLOR[v.bucket]);
     // The chips follow the pin colours of the reading (v51): a mother gets a
     // red chip for the men's room alone, and her green chips count only what
     // she can use. The women's-room chip stays her own, so she can still ask
@@ -1092,7 +1096,7 @@ function renderChips() {
       `${esc(t(v.labelKey))} <span class="cnt">${counts[key]}</span>`;
     b.addEventListener("click", () => {
       if (visible.has(key)) visible.delete(key); else visible.add(key);
-      b.classList.toggle("off", !visible.has(key));
+      b.classList.toggle("on", visible.has(key));
       b.setAttribute("aria-pressed", String(visible.has(key)));
       refreshPins();
     });
@@ -1104,7 +1108,17 @@ function renderChips() {
   // Not firstChild: the mode toggle is static markup and holds that slot, so
   // the generated chips go in front of the spacer instead.
   filterBar.insertBefore(frag, filterBar.querySelector(".spacer"));
+  updateBarFade();
 }
+
+// The row scrolls sideways and nothing on it says so: fade the edge that has
+// more behind it (.more-left / .more-right, style.css).
+function updateBarFade() {
+  filterBar.classList.toggle("more-right", filterBar.scrollLeft + filterBar.clientWidth < filterBar.scrollWidth - 1);
+  filterBar.classList.toggle("more-left", filterBar.scrollLeft > 1);
+}
+filterBar.addEventListener("scroll", updateBarFade, { passive: true });
+window.addEventListener("resize", updateBarFade);
 
 // The two blue chips are deliberately not one. "Mit Spielecke" narrows the
 // table pins; "Nur Spielecke" adds a different dataset that has no table
@@ -1158,7 +1172,7 @@ function wheelchairChip(count) {
   b.setAttribute("aria-label", t("ariaWheelchair"));
   b.title = t("ariaWheelchair");
   b.innerHTML = svgIcon(ISA_PATH, "isa") +
-    `${esc(t("stWheelchair"))} <span class="cnt">${count}</span>`;
+    `<span class="label">${esc(t("stWheelchair"))}</span> <span class="cnt">${count}</span>`;
   b.addEventListener("click", () => {
     wheelchairOnly = !wheelchairOnly;
     try {
@@ -3176,6 +3190,8 @@ function bootNative() {
   const about = document.getElementById("me-about");
   about.append(document.querySelector(".stats-wrap"), document.querySelector(".header-actions"));
   about.hidden = false;
+  // The count stands in the header, off the scrolling chip row.
+  document.querySelector("header").append(countEl);
   positionZoomCtrl();   // applyI18n placed the column under the taller header a moment ago
   offlineBtn.hidden = false;
   onAppUrl({ auth: (url) => completeLogin(url), table: openPin, nearest: runNearest });

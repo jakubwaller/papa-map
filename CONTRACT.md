@@ -1,5 +1,18 @@
 # papa-map — build contract (v0)
 
+> **v57 amendment (30 Sep 2026, one language for the chips): no shape change.**
+> A tester asked why half the buttons behave differently: the three status chips
+> started solid and faded when tapped, the play, places and wheelchair chips
+> started dashed and filled. Every chip now carries `on` when applied and nothing
+> when not (the `off` class is gone): dashed border = not applied, solid border
+> plus a tint of the chip's own colour (`--chip`) = applied. The semantics still
+> differ (status chips subtract, the others narrow) but the look no longer does.
+> The bar is also shorter on a phone: in the app the count leaves the chip row
+> for the header, where it shows only when the dataset is empty (`countNoData`,
+> class `nodata`) because the chips' badges carry the numbers; the wheelchair
+> chip shows only its icon and count under 640px, and a fade marks the edge that
+> has more chips behind it.
+
 > **v56 amendment (30 Sep 2026, the widget's limited mark): shape change — the
 > rows `shareDataset` hands the widget and the iOS Siri shortcut gain a seventh
 > column, `limited`.** Under the wheelchair chip a `wheelchair=limited` table

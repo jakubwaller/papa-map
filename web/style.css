@@ -259,11 +259,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   color: var(--ink);
   cursor: pointer;
   font-family: inherit;
-  transition: opacity .12s ease, border-color .12s ease;
+  transition: border-color .12s ease, background-color .12s ease;
 }
-.chip:hover { border-color: var(--green); }
-/* Toggled off: washed out, but the dot keeps its color so the legend reads. */
-.chip.off { opacity: .4; }
+.chip:hover { border-color: var(--chip, var(--green)); }
 .chip .dot {
   width: 11px;
   height: 11px;
@@ -272,23 +270,24 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .35);
 }
 .chip .cnt { opacity: .55; font-weight: 500; }
-
-/* The play chip inverts the status chips: those start on and subtract, this
-   starts off and narrows, so "off" here is its resting state and must not look
-   disabled the way .chip.off does. Switching it on fills it in instead. */
-.chip.play { border-style: dashed; }
-.chip.play:hover { border-color: var(--play); }
+/* One language for every chip: dashed = not applied, solid + a tint of the
+   chip's own colour (--chip) = applied. The meaning differs — the three status
+   chips start on and subtract when switched off, the play, places and
+   wheelchair chips start off and narrow when switched on — the look does not. */
+.chip { border-style: dashed; }
+.chip.on {
+  border-style: solid;
+  border-color: var(--chip);
+  background: #fff;
+  background: color-mix(in srgb, var(--chip) 14%, var(--bar));
+}
+.chip.play { --chip: var(--play); }
 .chip.play .ring {
   width: 11px;
   height: 11px;
   border-radius: 50%;
   border: 2.5px solid var(--play);
   flex: 0 0 auto;
-}
-.chip.play.on {
-  border-style: solid;
-  border-color: var(--play);
-  background: var(--play-soft);
 }
 .chip.play.on .ring { background: var(--play); }
 /* The prospects chip keeps its ring hollow even when switched on — that is
@@ -297,19 +296,38 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    "nobody has said". */
 .chip.play.hollow.on .ring { background: #fff; }
 
-/* The wheelchair chip (v26): same resting/narrowing logic as the play chip,
-   but in ink — the International Symbol of Access is its own signal and a
-   fifth colour would put it in competition with the three statuses. */
-.chip.wc { border-style: dashed; }
-.chip.wc:hover { border-color: var(--ink); }
+/* The wheelchair chip (v26): in ink — the International Symbol of Access is
+   its own signal and a fifth colour would put it in competition with the
+   three statuses. */
+.chip.wc { --chip: var(--ink); }
 .chip.wc .isa { width: 14px; height: 14px; fill: currentColor; flex: 0 0 auto; }
-.chip.wc.on {
-  border-style: solid;
-  border-color: var(--ink);
-  background: var(--ink);
-  color: #fff;
+
+/* A row that scrolls says so: a fade on the edge that has more behind it. */
+.chip-bar.more-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
 }
-.chip.wc.on .cnt { opacity: .75; }
+.chip-bar.more-left {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+}
+.chip-bar.more-left.more-right {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
+
+/* In the app the count leaves the chip row for the header, and shows there
+   only when the dataset is empty: the chips' badges carry the numbers. */
+.native header .count:not(.nodata) { display: none; }
+.native header .count {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-2);
+  white-space: normal;
+  text-align: right;
+  line-height: 1.25;
+}
 
 /* ---------- Zoom controls ---------- */
 #zoom-ctrl {
@@ -940,8 +958,10 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   .add-btn { padding: 6px 11px; font-size: 12px; }
   .app-btn { padding: 6px 11px; font-size: 12px; }
   #stats { padding: 6px 14px; gap: 2px 18px; font-size: 12px; }
-  .chip-bar { padding-left: 14px; padding-right: 14px; }
-  .chip { padding: 7px 11px; font-size: 12px; }
+  .chip-bar { padding-left: 14px; padding-right: 14px; gap: 8px; }
+  .chip { padding: 7px 10px; font-size: 12px; }
+  .chip.wc .label { display: none; }
+  .native header .count { max-width: 60%; font-size: 11px; }
   /* Matches .chip exactly: the toggle is the first thing in that row and
      must not stand a size taller than the chips it repaints. */
   .mode-btn { padding: 7px 11px; font-size: 12px; }
