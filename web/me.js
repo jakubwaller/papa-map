@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app59";
-import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app59";
+import { CREATED_BY } from "./osm.js?v=app60";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app60";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -368,19 +368,55 @@ export function reopenGap(before, oldWatermark, previousBackfill) {
 }
 
 // ---- "Mehr aus der App": what nobody would guess a map app has ----
-// The Control Center control, the home-screen widget and the Siri phrase are
-// all reached from iOS's own screens, never from this one, so a reader who is
-// not told never finds them. iOS app only: the website and the Android app
-// have none of the three. The Siri line only where the app ships phrases
+// The Control Center control, the home-screen widget and the Siri phrase (iOS),
+// the home-screen widget and the launcher shortcut (Android) are all reached
+// from the phone's own screens, never from this one, so a reader who is not
+// told never finds them. The store apps only: the website has none of them.
+// The Siri line only where the app ships phrases
 // (app/ios/App/App/de.lproj/AppShortcuts.strings, and English in the intent
 // itself) — Siri answers in the phone's language, and a phrase it was never
-// given is a promise that fails out loud. Returns i18n keys, in order.
+// given is a promise that fails out loud. Shown in Mein PapaMap ("Mehr aus der
+// App", both apps) and closing the first-launch intro. Returns i18n keys, in order.
 export const SIRI_LANGS = ["de", "en"];
-export const TIP_SEEN_KEY = "papamap-tip-seen";
 
 export function appTips(platform, lang) {
+  if (platform === "android") return ["tipWidgetAndroid", "tipShortcutAndroid"];
   if (platform !== "ios") return [];
   return ["tipControl", "tipWidget", ...(SIRI_LANGS.includes(lang) ? ["tipSiri"] : [])];
+}
+
+// ---- The first-launch intro and what's new (store app only) ----
+// The one device key holds the shell pin (`app60`) the reader last saw the
+// start screen for. Nothing stored: the intro. An older pin: the notes of the
+// releases in between, if any release had something to say, else nothing.
+export const INTRO_KEY = "papamap-intro";
+
+// "app60" -> 60; anything else -> null.
+export function pinNumber(pin) {
+  const m = typeof pin === "string" ? /^app(\d+)$/.exec(pin) : null;
+  return m ? Number(m[1]) : null;
+}
+
+// Entries are { since: <pin number>, keys: [<i18n keys>] } — shown once to a
+// reader whose acknowledged pin is older than `since`. A release with
+// something to say adds one entry and translates its keys in all 32
+// languages; a release without one shows nothing.
+export const WHATS_NEW = [];
+
+export function introKind(stored, current, notes = WHATS_NEW) {
+  const now = pinNumber(current);
+  if (now === null) return null;
+  const was = pinNumber(stored);
+  if (was === null) return { kind: "intro" };
+  if (was >= now) return null;   // same, or a downgrade / a seeded flag: nothing to say
+  const keys = notes.filter((n) => was < n.since && n.since <= now).flatMap((n) => n.keys);
+  return keys.length ? { kind: "news", keys } : null;
+}
+
+// What the intro lists: the features nobody guesses, then the phone's own.
+export const INTRO_FEATURES = ["introNearest", "introMode", "introAnswer", "introOffline", "introMe"];
+export function introTips(platform, lang) {
+  return [...INTRO_FEATURES, ...appTips(platform, lang)];
 }
 
 // ---- Saved places (device only, papamap-saved) ----

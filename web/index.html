@@ -191,14 +191,14 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app59" />
+  <link rel="stylesheet" href="style.css?v=app60" />
 
   <!-- Classic and blocking, in the head on purpose: it puts the .in-app class
        on <html> before the first paint when the store app opened this page in
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app59"></script>
+  <script src="in-app.js?v=app60"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -459,9 +459,21 @@
     <button id="me-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
   </dialog>
 
+  <!-- Store app only (app.js maybeShowIntro): once on first launch, and after an
+       update when WHATS_NEW (me.js) has something to say. -->
+  <dialog id="intro-dialog">
+    <h3 id="intro-title" data-i18n="introTitle">Willkommen bei PapaMap</h3>
+    <p id="intro-lead" data-i18n="introLead">Eine Karte der Wickeltische aus OpenStreetMap — grün, wenn ein Vater sie erreicht. Fehlt einer, trag ihn selbst ein.</p>
+    <h4 id="intro-heading" data-i18n="introFeaturesHeading">Was die App kann</h4>
+    <ul id="intro-list" class="tips-list"></ul>
+    <label class="intro-lang"><span data-i18n="introLang">Sprache</span>
+      <select id="intro-lang" class="lang-btn" aria-label="Sprache wählen" data-i18n-aria="ariaLang"></select></label>
+    <button id="intro-ok" type="button" autofocus class="btn primary" data-i18n="introStart">Los geht's</button>
+  </dialog>
+
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app59"></script>
+  <script type="module" src="app.js?v=app60"></script>
 </body>
 </html>

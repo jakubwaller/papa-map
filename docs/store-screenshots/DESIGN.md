@@ -80,7 +80,7 @@ the chooser only appears on a phone without Apple Maps and with two nav apps, so
 misrepresented the app. Shot 6 no longer scrolls the chip bar (the toggle went off screen and
 the accent chip was cut); it shows Mama view with Mit Spielecke active. Hamburg's offline city
 is 27 MB in the catalogue, not 26. Also: every shot from 3 on starts from a reloaded page, and the
-tip toast is suppressed by `papamap-tip-seen` in localStorage. Tables above updated in place.
+first-launch intro is suppressed by seeding `papamap-intro` in localStorage. Tables above updated in place.
 
 **Update 2026-09-22 (19:00): shot 6 is the Mama view alone.** With a chip filter active the
 active chip sits off screen on iPhone (the chip bar is wider than the screen and scrolling it

@@ -12,13 +12,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app59";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app60";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app59";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app60";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app59";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app60";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -26,7 +26,7 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, TIP_SEEN_KEY } from "./me.js?v=app59";
+         appTips, INTRO_KEY, introKind, introTips } from "./me.js?v=app60";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -36,22 +36,24 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app59";
+         reviewTracker } from "./native.js?v=app60";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app59";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app60";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app59";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app60";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app59";
+import { isOpenNow } from "./opening-hours.js?v=app60";
+// The bundled shell's pin (`?v=app60`), what the intro key records.
+const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own
@@ -1505,7 +1507,6 @@ nearestBtn.addEventListener("click", (e) => {
         name: f.name
           || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed"),
       }));
-      maybeToastTip();
       // The room card follows this popup, not this fix, the way locate's own
       // fix would if a popup were not about to cover it: openPopup above hid
       // it, and closing this one (whenever that happens — this same object,
@@ -3135,6 +3136,9 @@ async function boot() {
     if (Date.now() - fitHomeAt > LATE_FIX_MS) map.flyTo({ center: at, zoom, duration: LATE_FIX_FLY_MS });
     else map.jumpTo({ center: at, zoom });
   }).catch(() => {});
+  // The store app's first-launch intro / what's-new, once the boot's fix has
+  // settled and the camera stands where it will; see maybeShowIntro.
+  if (isNative()) locationFix.catch(() => null).then(() => maybeShowIntro());
   // Whatever queued a pin above the data — the app's own deep link (bootNative,
   // an appUrlOpen already fired) or this load's own ?osm= — opens it now that
   // there is a dataset to look it up in. jumpTo overrides fitHome's view.
@@ -3934,36 +3938,73 @@ function renderMeTips() {
   }));
 }
 
-// Said once, after the first "nearest" that found something: the moment the
-// reader has just used the very thing the control and the widget do in one
-// tap. Waits out the "x m away" toast instead of replacing it. A tap opens
-// Mein PapaMap, where the three are spelled out. The flag is set when the
-// toast is shown — not when it is tapped, a hint that returns until it is
-// obeyed is an advert; and not when it is scheduled, an app killed in the
-// wait would have spent its one hint unseen. It also waits its turn: never
-// over another toast (one with a tap of its own would lose it) and never
-// under an open dialog, where it could be read but not tapped. A few tries,
-// then it is left for the next "nearest". Storage blocked: once per launch.
-const TIP_DELAY_MS = 4500, TIP_TRIES = 4;
-let tipPending = false, tipSaidThisLaunch = false;
-function maybeToastTip() {
-  if (tipPending || tipSaidThisLaunch || appTips(platform(), lang).length === 0) return;
-  try { if (localStorage.getItem(TIP_SEEN_KEY)) return; } catch { /* no storage: fall through */ }
-  tipPending = true;
-  let tries = 0;
-  const say = () => {
-    const busy = document.getElementById("toast").classList.contains("show")
-      || document.querySelector("dialog[open]");
-    if (busy) {
-      if (++tries < TIP_TRIES) setTimeout(say, TIP_DELAY_MS); else tipPending = false;
-      return;
-    }
-    tipPending = false;
-    tipSaidThisLaunch = true;
-    try { localStorage.setItem(TIP_SEEN_KEY, "1"); } catch { /* said once per launch instead */ }
-    toast(t("toastTip"), { ms: 8000, onTap: () => meBtn.click() });
-  };
-  setTimeout(say, TIP_DELAY_MS);
+// ---- The first-launch intro and what's new (store app only, CONTRACT v58) ----
+// One screen the first time the app opens: what it is, then the features
+// nobody guesses a map app has, and the language picker (two testers asked for
+// the intro; one could not find the language switch). After an update the same
+// dialog carries the release's notes, but only when WHATS_NEW (me.js) has an
+// entry for it. The key stores the shell pin acknowledged; it is written when
+// the dialog is shown, not when it is closed — a hint that returns until it is
+// obeyed is an advert, and an app killed mid-show has spent it. Replaces the
+// one-time toast (v42). Shown after the boot's location fix has settled — the
+// camera has landed, nothing moves under the dialog. (Boot never prompts for
+// permission, openAtLocationFix only follows a grant already given.)
+const introDialog = document.getElementById("intro-dialog");
+const introLangSelect = document.getElementById("intro-lang");
+introLangSelect.replaceChildren(...LANGS.map((code) => {
+  const opt = document.createElement("option");
+  opt.value = code;
+  opt.textContent = STRINGS[code]?.langName ?? code;
+  return opt;
+}));
+introLangSelect.value = lang;
+let introKeys = [];
+function fillIntroList(keys) {
+  introKeys = keys;
+  document.getElementById("intro-list").replaceChildren(...keys.map((key) => {
+    const li = document.createElement("li");
+    li.textContent = key === "introMe" ? t("introMe", { me: t("meTitle") }) : t(key);
+    return li;
+  }));
+}
+let introNews = false;   // what the open dialog shows: the release's notes, or the intro
+introLangSelect.addEventListener("change", () => {
+  langSelect.value = introLangSelect.value;
+  langSelect.dispatchEvent(new Event("change"));   // the existing handler does the rest
+  // Its items are rendered here, not by applyI18n — and the intro's list is
+  // recomputed, because it depends on the language (the Siri line is de/en only).
+  fillIntroList(introNews ? introKeys : introTips(platform(), lang));
+});
+langSelect.addEventListener("change", () => { introLangSelect.value = langSelect.value; });
+introDialog.addEventListener("click", (e) => { if (e.target === introDialog) introDialog.close(); });
+document.getElementById("intro-ok").addEventListener("click", () => introDialog.close());
+
+function maybeShowIntro() {
+  if (!isNative()) return;
+  let stored = null;
+  try { stored = localStorage.getItem(INTRO_KEY); } catch { /* no storage: treated as first launch */ }
+  const r = introKind(stored, SHELL_PIN);
+  if (!r) {
+    // A silent catch-up, so a later release's notes are measured from here.
+    if (stored !== SHELL_PIN && SHELL_PIN) try { localStorage.setItem(INTRO_KEY, SHELL_PIN); } catch { /* next launch */ }
+    return;
+  }
+  // A widget tap opened a pin at boot: it shows at the next launch instead.
+  if (document.querySelector("dialog[open]") || popup?.isOpen()) return;
+  const news = r.kind === "news";
+  introNews = news;
+  document.getElementById("intro-title").dataset.i18n = news ? "whatsNewTitle" : "introTitle";
+  document.getElementById("intro-ok").dataset.i18n = news ? "whatsNewOk" : "introStart";
+  for (const id of ["intro-lead", "intro-heading"]) document.getElementById(id).hidden = news;
+  document.querySelector(".intro-lang").hidden = news;
+  introLangSelect.value = lang;
+  applyI18n();
+  fillIntroList(news ? r.keys : introTips(platform(), lang));
+  introDialog.showModal();
+  try {
+    localStorage.setItem(INTRO_KEY, SHELL_PIN);
+    localStorage.removeItem("papamap-tip-seen");   // the toast's key (v42), which the privacy pages no longer list
+  } catch { /* shown again next launch */ }
 }
 
 function renderMeDialog() {

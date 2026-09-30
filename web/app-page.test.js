@@ -75,6 +75,10 @@ test("nothing of the vote counter is left: no buttons, no POST paths, no Caddy l
   const caddy = read("../deploy/papamap.Caddyfile");
   assert.ok(!caddy.includes("/app/ja/") && !caddy.includes("log_skip") && !caddy.includes("respond 204"));
   const ds = read("datenschutz.html");
+  for (const f of ["datenschutz.html", "datenschutz-en.html"]) {
+    assert.ok(read(f).includes("<code>papamap-intro</code>"), f);
+    assert.ok(!read(f).includes("papamap-tip-seen"), f);
+  }
   assert.ok(!ds.includes("papamap-app") && ds.includes("<code>papamap-mode</code>"));
 });
 

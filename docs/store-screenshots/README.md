@@ -186,11 +186,11 @@ and asserts `#mode-papa` carries the active state afterwards.
 shooting. It also re-centres the map on the same wide Hamburg zoom-13 view
 every shot starts from.
 
-The stub also pre-seeds `localStorage`'s `papamap-tip-seen` flag (the key
-`web/me.js` exports as `TIP_SEEN_KEY`) before any page script runs, so the
-"also reachable from Control Center/widget/Siri" tip toast — which
-`app.js`'s `maybeToastTip()` otherwise queues 4.5s after a successful
-nearest-table fix — never floats over a later shot's own popup or dialog.
+The stub also pre-seeds `localStorage`'s `papamap-intro` key with `app99999` (the
+key `web/me.js` exports as `INTRO_KEY`) before any page script runs — a pin far
+ahead of the shell's, so `app.js`'s `maybeShowIntro()` finds neither the
+first-launch intro nor release notes to float over a later shot's own popup or
+dialog.
 
 ## If a raw shot fails
 
