@@ -1,5 +1,14 @@
 # papa-map — build contract (v0)
 
+> **v55 amendment (30 Sep 2026, two app-tester fixes): no shape change.** One
+> label for an unrecorded room in both readings: `stUnknownMama` is removed
+> from all 32 languages, `VIEW.mama.unknown` points at `stUnknown`, the meta
+> sentence (`metaUnknownMama`) keeps the mother's reading, and the methods
+> pages' orange sentence re-quotes the label. And in the store app the header
+> logo is a home button (`homeView`: closes what is open, flies to the
+> reader's marker at zoom 14 or refits the home view) instead of a link that
+> opened papamap.de in the in-app browser. Shell pin `app56` → `app57`.
+>
 > **v54 amendment (30 Sep 2026, the offline-cities dialog): no shape change.**
 > The store app's city catalogue is read once per session and then answered
 > from memory (`catalogueMemo`, `web/native.js`); a background refresh that

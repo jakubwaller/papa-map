@@ -685,6 +685,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    the stats strip, moved in here so the first screen is the map. The strip
    shows every line — there is no map underneath to save room for. */
 .native .tagline { display: none; }
+.native .brandmark { cursor: pointer; }
 .me-about { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .me-about[hidden] { display: none; }
 #me-about #stats { padding: 0 0 10px; border-top: none; background: none; cursor: default; }

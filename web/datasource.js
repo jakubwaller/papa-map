@@ -374,7 +374,8 @@ const VIEW = {
     // is usually still her room, so grey would overstate the doubt.
     accessible:  { bucket: "good",  cls: "ok",    labelKey: "stAccessibleMama", metaKey: "metaAccessibleMama" },
     female_only: { bucket: "good",  cls: "ok",    labelKey: "stFemaleOnlyMama", metaKey: "metaFemaleOnlyMama" },
-    unknown:     { bucket: "maybe", cls: "maybe", labelKey: "stUnknownMama",    metaKey: "metaUnknownMama" },
+    // Same data state, one label; the meta sentence keeps the mother's reading.
+    unknown:     { bucket: "maybe", cls: "maybe", labelKey: "stUnknown",        metaKey: "metaUnknownMama" },
   },
 };
 
