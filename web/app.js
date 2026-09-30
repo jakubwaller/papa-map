@@ -618,6 +618,7 @@ function refreshPins() {
     : t("countNoData");
   // In the app the count shows only when there is nothing to count.
   countEl.classList.toggle("nodata", !total);
+  updateBarFade();   // on the website the count is the row's last item: its width moves the edge
   if (!styleReady) return;
   map.getSource(SRC).setData(toFeatureCollection(shown, wheelchairOnly));
   map.getSource(PLACES).setData(placesToFeatureCollection(places, wheelchairOnly));
