@@ -3334,6 +3334,7 @@ async function renderOfflineList() {
     // list there is neither (David, 2026-09-29: the line stayed until he
     // closed and reopened).
     const li = document.createElement("li");
+    li.className = "note";   // the sentence wraps; a city name gets an ellipsis
     const msg = document.createElement("span");
     msg.className = "name";
     msg.textContent = t("offlineNoList");
