@@ -142,24 +142,32 @@
      oder schlägt sie fehl, kopiert die Seite den Link in die Zwischenablage. Wer einen solchen Link öffnet, ruft
      papamap.de mit dem Zusatz <code>?osm=…</code> auf; er nennt nur den Ort und steht wie jede
      abgerufene Adresse im Server-Log (siehe oben).</p>
-  <h2>Die App (iPhone, iPad)</h2>
-  <p>PapaMap gibt es zusätzlich als App, verteilt über den App Store und über TestFlight. Die App
-     ist dieselbe Karte in einer nativen Hülle. Es gilt derselbe Grundsatz: kein Konto bei uns,
+  <h2>Die App (iPhone, iPad und Android)</h2>
+  <p>PapaMap gibt es zusätzlich als App: für iPhone und iPad über den App Store und über
+     TestFlight, für Android über Google Play. Die App ist dieselbe Karte in einer nativen Hülle. Es gilt derselbe Grundsatz: kein Konto bei uns,
      keine Analyse-, Tracking- oder Werbebausteine, kein eigenes Absturz-Meldesystem, keine
      Push-Nachrichten. Die App selbst spricht mit drei Servern — papamap.de für die
      Wickeltisch-Daten und die Offline-Städte, openstreetmap.org für Kartenkacheln und für Ihre
      Antworten und, nur während Sie im Suchfeld tippen, photon.komoot.io für die weltweite
-     Ortssuche. Hinzu kommt, was Sie über einen Link öffnen, und Apples Rolle bei der Verteilung;
+     Ortssuche. Unter Android läuft die Karte in der WebView des Systems; deren eingebauter
+     Schutz vor gefährlichen Websites (Google Safe Browsing) gleicht die Adressen, die die App
+     lädt, mit Listen von Google ab und kann sich dafür mit Google verbinden. Hinzu kommt, was
+     Sie über einen Link öffnen, und die Rolle von Apple und Google
+     bei der Verteilung;
      beides steht weiter unten. Die folgenden Abschnitte beschreiben, was in der App anders oder
      zusätzlich passiert; sonst gilt das oben Gesagte entsprechend.</p>
+  <p>Wo im Folgenden von einer Gerätesicherung die Rede ist: Auf iPhone und iPad ist das eine
+     Sicherung in iCloud oder auf einem Computer, falls Sie eine eingerichtet haben. Unter Android
+     nimmt die App an der Datensicherung in der Cloud (Google Drive) nicht teil; nur wenn Sie ein
+     neues Gerät direkt vom alten aus einrichten, kann Android die Daten der App dabei mit
+     übertragen.</p>
   <h2>App: Daten von papamap.de</h2>
   <p>Beim Start lädt die App die Wickeltisch-Daten von papamap.de und legt eine Kopie im eigenen
      Datenverzeichnis der App ab, damit die Karte auch ohne Netz Pins zeigt. Das sind gewöhnliche
      Abrufe fester Dateien; dabei sieht der Server dasselbe wie bei einem Website-Besuch (siehe
      „Hosting / Server-Logs“ und „Cloudflare“ oben). Die Abrufe enthalten keine Angaben zu Ihrer
      Person und keinen Standort. Die Kopie liegt nur auf Ihrem Gerät —
-     abgesehen von einer Gerätesicherung (iCloud oder Computer), falls Sie eine eingerichtet haben
-     (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+     abgesehen von einer Gerätesicherung, wie unter „Die App“ beschrieben (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>App: Kartenmaterial und Offline-Städte</h2>
   <p>Auch die App lädt Kartenkacheln von tile.openstreetmap.org; dabei wird Ihre IP-Adresse an die
      OpenStreetMap Foundation übertragen (siehe oben). Geladen werden die Kacheln des gerade
@@ -171,21 +179,34 @@
      der Datei auf dem Gerät; ohne Netz werden gar keine Kacheln abgerufen. Mit „Löschen“ im selben
      Dialog entfernen Sie eine Stadt wieder.</p>
   <h2>App: Standort</h2>
-  <p>Der Standort-Knopf, die Suche nach dem nächsten Wickeltisch, der Siri-Kurzbefehl, das
-     Home-Bildschirm-Widget und die Schaltfläche „Nächster Wickeltisch“ im Kontrollzentrum (auch
-     auf dem Sperrbildschirm oder der Aktionstaste) fragen Ihren Standort über iOS ab — erst nach Ihrer ausdrücklichen
-     Erlaubnis („Beim Verwenden der App“), die Sie in den iOS-Einstellungen jederzeit widerrufen
-     können. Die Position wird ausschließlich auf Ihrem Gerät verarbeitet: Die Suche nach dem
-     nächsten nutzbaren Wickeltisch läuft gegen die Daten, die ohnehin schon auf dem Gerät liegen.
-     Haben Sie der App diese Erlaubnis bereits erteilt, fragt sie Ihre Position auch beim Öffnen
-     einmal ab, um die Karte gleich dort zu zeigen, wo Sie sind. Der Standort wird nicht an diesen
-     Server und nicht an Dritte übertragen, nicht gespeichert und nicht protokolliert — auch nicht
-     aus dem Widget, dem Kurzbefehl oder dem Kontrollzentrum heraus. Das
-     Widget rechnet den nächsten Wickeltisch in regelmäßigen Abständen auf dem Gerät neu, solange
-     es auf dem Home-Bildschirm oder dem Sperrbildschirm liegt. Nach einem Fingertipp auf den
-     Standort-Knopf, oder wenn die Karte wie oben beschrieben schon beim Öffnen an Ihrer Position
-     startet, zeigt sie Ihre Umgebung; die Kacheln für diesen Ausschnitt lädt sie dann von
-     tile.openstreetmap.org.</p>
+  <p>Auf iPhone und iPad fragen der Standort-Knopf, die Suche nach dem nächsten Wickeltisch, der
+     Siri-Kurzbefehl, das Home-Bildschirm-Widget und die Schaltfläche „Nächster Wickeltisch“ im
+     Kontrollzentrum (auch auf dem Sperrbildschirm oder der Aktionstaste) Ihren Standort über iOS
+     ab — erst nach Ihrer ausdrücklichen Erlaubnis („Beim Verwenden der App“), die Sie in den
+     iOS-Einstellungen jederzeit widerrufen können. Das Widget rechnet den nächsten Wickeltisch in
+     regelmäßigen Abständen auf dem Gerät neu, solange es auf dem Home-Bildschirm oder dem
+     Sperrbildschirm liegt.</p>
+  <p>Unter Android fragen der Standort-Knopf und die Suche nach dem nächsten Wickeltisch — auch
+     wenn Sie diese über das App-Symbol (langes Drücken) oder das Widget starten — Ihren Standort
+     über Android ab, erst nach Ihrer ausdrücklichen Erlaubnis, die Sie in den
+     Android-Einstellungen jederzeit widerrufen können. Einen Zugriff im Hintergrund verlangt die
+     App nicht. Das Home-Bildschirm-Widget fordert selbst keine Ortung an: Es liest nur die letzte
+     Position, die Android ohnehin schon kennt, und nur, wenn Sie die Erlaubnis erteilt haben und
+     diese Position höchstens eine halbe Stunde alt ist; damit rechnet es den nächsten Wickeltisch
+     aus und verwirft sie wieder. Die Position selbst ermittelt Android — auf Geräten mit
+     Google-Diensten über die Standortdienste der Google-Play-Dienste. Ob diese dafür Daten mit
+     Google austauschen, etwa um den Standort über WLAN und Mobilfunk genauer zu bestimmen, richtet
+     sich nach den Einstellungen Ihres Geräts und nach den Datenschutzbestimmungen von Google; die
+     App erhält davon nur das Ergebnis.</p>
+  <p>Auf beiden Systemen wird die Position ausschließlich auf Ihrem Gerät verarbeitet: Die Suche
+     nach dem nächsten nutzbaren Wickeltisch läuft gegen die Daten, die ohnehin schon auf dem Gerät
+     liegen. Haben Sie der App die Erlaubnis bereits erteilt, fragt sie Ihre Position auch beim
+     Öffnen einmal ab, um die Karte gleich dort zu zeigen, wo Sie sind. Die App überträgt den
+     Standort nicht an diesen Server und nicht an Dritte, speichert ihn nicht und protokolliert ihn
+     nicht — auch nicht aus dem Widget, dem Kurzbefehl oder dem Kontrollzentrum heraus. Nach einem
+     Fingertipp auf den Standort-Knopf, oder wenn die Karte wie oben beschrieben schon beim Öffnen
+     an Ihrer Position startet, zeigt sie Ihre Umgebung; die Kacheln für diesen Ausschnitt lädt sie
+     dann von tile.openstreetmap.org.</p>
   <h2>App: Suche</h2>
   <p>Das Suchfeld arbeitet in der App wie auf der Website (siehe „Suche (Ort oder Adresse)“ oben):
      Treffer unter den Wickeltischen und Orten der Karte findet die App auf dem Gerät, ohne etwas
@@ -199,8 +220,9 @@
   <p>Damit das Widget und der Kurzbefehl denselben Wickeltisch nennen wie die Karte, legt die App
      eine verkürzte Kopie der Wickeltisch-Daten (Koordinaten, Zustand, Name, OSM-Link) sowie Ihre
      beiden Einstellungen — Papa- oder Mama-Sicht und Sprache — in einem gemeinsamen Bereich auf
-     dem Gerät ab, den nur die App und ihr Widget lesen können. Beides bleibt, von einer
-     Gerätesicherung (iCloud oder Computer) abgesehen, auf dem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG). Siri und Kurzbefehle sind eine Funktion von iOS; wie Apple eine
+     dem Gerät ab, den nur die App und ihr Widget lesen können; unter Android liegt beides im eigenen
+     Speicher der App, aus dem sie ihr Widget selbst zeichnet. Beides bleibt, von einer
+     Gerätesicherung abgesehen (siehe „Die App“), auf dem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG). Siri und Kurzbefehle sind eine Funktion von iOS; wie Apple eine
      gesprochene Anfrage verarbeitet, richtet sich nach Apples Datenschutzbestimmungen.</p>
   <h2>App: Einstellungen auf dem Gerät</h2>
   <p>Die App speichert dieselben funktionalen Schlüssel wie die Website — Sprache
@@ -209,15 +231,14 @@
      und Ihren OSM-Anzeigenamen (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>),
      dazu die gemerkten Orte (<code>papamap-saved</code>), Ihre eigenen Antworten
      (<code>papamap-my-answers</code>) und die geschlossenen Raum-Hinweise
-     (<code>papamap-card-dismissed</code>) sowie, nur in der App, den Vermerk, dass der einmalige
+     (<code>papamap-card-dismissed</code>) sowie, nur in der App für iPhone und iPad, den Vermerk, dass der einmalige
      Hinweis auf Kontrollzentrum und Widget schon gezeigt wurde (<code>papamap-tip-seen</code>),
      und für die einmalige Bitte um eine Bewertung einen Zählerstand: wie viele Antworten Sie in
      der App gegeben und an wie vielen Tagen Sie einen Pin geöffnet haben (beides nur bis drei
      gezählt), dazu das Datum des zuletzt gezählten Tages und ob die Bitte schon gestellt wurde
      (<code>papamap-review</code>) — nur eben im Speicher der App statt im Browser. Rein
      funktional, ohne Tracking, nur auf Ihrem Gerät — und, wie alles, was die App ablegt, in einer
-     Gerätesicherung (iCloud oder Computer), falls Sie eine eingerichtet haben
-     (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+     Gerätesicherung, wie unter „Die App“ beschrieben (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>App: Anmeldung bei OpenStreetMap</h2>
   <p>Die Anmeldung läuft wie auf der Website (OAuth 2 mit PKCE), mit einem Unterschied: Die
      Anmeldeseite von openstreetmap.org öffnet die App in einer Browser-Ansicht des Systems, in
@@ -261,13 +282,30 @@
      samt den Angaben, die Apple dazu mitliefert, etwa der E-Mail-Adresse, mit der Sie eingeladen
      wurden. Wir verwenden das ausschließlich zur Fehlersuche (Art. 6 Abs. 1 lit. f DSGVO). Die App
      selbst sendet uns nichts davon.</p>
+  <h2>App: Google (Google Play)</h2>
+  <p>Die Verteilung über Google Play ist Sache von Google. Google ist dafür eigenständig
+     verantwortlich und verarbeitet die dabei anfallenden Daten nach seinen eigenen
+     Datenschutzbestimmungen. Aus der Google Play Console erhalten wir Kennzahlen wie
+     Installationszahlen nur in zusammengefasster Form. Absturzberichte erhalten wir nur von
+     Geräten, auf denen das Teilen von Nutzungs- und Diagnosedaten eingeschaltet ist, und nur als
+     anonyme Berichte, die Google erst ab einer Mindestzahl von Fällen zeigt: Sie nennen uns
+     Gerätemodell, Android- und App-Version und die Fehlerstelle, nicht Ihren Namen oder Ihr
+     Google-Konto.
+     Nehmen Sie an einem geschlossenen Test über Google Play teil, verarbeiten wir die
+     E-Mail-Adresse des Google-Kontos, mit dem Sie teilnehmen: Wir tragen sie in die Testerliste
+     ein, damit Google Ihnen den Test freischaltet. Senden Sie über Google Play eine Rückmeldung
+     zum Test, erhalten wir diese samt den Angaben, die Google dazu mitliefert. Wir verwenden das
+     ausschließlich, um den Test durchzuführen und Fehler zu finden (Art. 6 Abs. 1 lit. f DSGVO);
+     auf Ihren Wunsch nehmen wir Ihre Adresse jederzeit aus der Liste. Die App selbst sendet uns
+     nichts davon.</p>
   <h2>App: Widerruf und Löschen</h2>
-  <p>Die Standortfreigabe widerrufen Sie in den iOS-Einstellungen bei PapaMap; gespeicherte Städte
+  <p>Die Standortfreigabe widerrufen Sie in den Einstellungen von iOS bzw. Android bei PapaMap; gespeicherte Städte
      löschen Sie im Dialog „Stadt offline speichern“ mit „Löschen“; von OpenStreetMap melden Sie
      sich im Pin mit „Abmelden“ ab. Löschen Sie die App, verschwindet damit alles, was sie auf dem
      Gerät abgelegt hat: die Kopie der Wickeltisch-Daten, die Offline-Städte, die Einstellungen, die
-     gemerkten Orte, die Liste Ihrer eigenen Antworten und das Zugriffstoken. Was davon in einer Gerätesicherung liegt, die Sie eingerichtet haben,
-     verwaltet iOS; es verschwindet mit dieser Sicherung. Was Sie zu OpenStreetMap geschrieben haben, bleibt dort — das ist der Sinn
+     gemerkten Orte, die Liste Ihrer eigenen Antworten und das Zugriffstoken. Was davon in einer Sicherung in iCloud oder auf einem Computer liegt,
+     verwaltet iOS; es verschwindet mit dieser Sicherung. Unter Android legt die App nichts in
+     einer Sicherung in der Cloud ab. Was Sie zu OpenStreetMap geschrieben haben, bleibt dort — das ist der Sinn
      der Sache.</p>
   <h2>Kontakt per E-Mail oder Formular</h2>
   <p>Bei Kontakt per E-Mail werden die übermittelten Angaben nur zur Bearbeitung des Anliegens
