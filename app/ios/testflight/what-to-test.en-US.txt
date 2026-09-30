@@ -2,8 +2,8 @@
 – New: every filter chip works the same way: dashed = off, filled in colour = on. The bar is shorter.
 – New: tap the PapaMap logo to get back to where you are.
 – New: "Room unknown" now reads the same in the dad and mum views.
-– New: downloading a city for offline use keeps showing its progress when you close and reopen the sheet; after a failure there is a "Try again" button.
-– New: the widget says "limited access" when the wheelchair filter is on and the nearest table is only partly accessible.
-– New: "+ Add a place" now says that you continue in MapComplete. Does that read clearly?
+– New: downloading a city for offline use keeps showing its progress when you close and reopen the sheet; if the city list cannot load, there is a "Try again" button.
+– New: the widget says "limited wheelchair access" (on the lock screen "limited access") when the wheelchair filter is on and the nearest table is only partly accessible.
+– New: "+ Add a place" now explains up front that you continue in MapComplete and that the place shows up within minutes. Does that read clearly?
 – As always: "Nearest changing table", colours for places you know, Siri, the widget.
 Anything unclear or broken: take a screenshot and send it through TestFlight.

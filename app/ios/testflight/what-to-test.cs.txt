@@ -2,8 +2,8 @@
 – Novinka: všechny filtry vypadají stejně: čárkovaný = vypnutý, barevně vyplněný = zapnutý. Lišta je kratší.
 – Novinka: ťuknutí na logo PapaMap tě vrátí na tvou polohu.
 – Novinka: „Neznámá místnost“ se teď jmenuje stejně v zobrazení pro táty i pro mámy.
-– Novinka: při stahování města offline zůstane vidět průběh, i když okno zavřeš a znovu otevřeš; po chybě je tu tlačítko „Zkusit znovu“.
-– Novinka: widget ukáže „limited access“ (zatím jen anglicky nebo německy), když je zapnutý filtr pro vozíčkáře a nejbližší pult je přístupný jen omezeně.
-– Novinka: „+ Přidat místo“ teď říká, že pokračuješ v MapComplete. Je to jasné?
+– Novinka: při stahování města offline zůstane vidět průběh, i když okno zavřeš a znovu otevřeš; když se nenačte seznam měst, je tu tlačítko „Zkusit znovu“.
+– Novinka: widget ukáže „limited wheelchair access“ (na zamčené obrazovce „limited access“; zatím jen anglicky nebo německy), když je zapnutý filtr pro vozíčkáře a nejbližší pult je přístupný jen omezeně.
+– Novinka: „+ Přidat místo“ teď hned nahoře vysvětlí, že pokračuješ v MapComplete a místo se objeví během pár minut. Je to jasné?
 – Jako vždy: „Nejbližší přebalovací pult“, barvy u míst, která znáš, Siri, widget.
 Cokoli je nejasné nebo nefunguje: udělej snímek obrazovky a pošli ho přes TestFlight.
