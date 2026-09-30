@@ -27,8 +27,6 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
          appTips, INTRO_KEY, introKind, introTips } from "./me.js?v=app60";
-// The bundled shell's pin (`?v=app60`), what the intro key records.
-const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -54,6 +52,8 @@ import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
 import { isOpenNow } from "./opening-hours.js?v=app60";
+// The bundled shell's pin (`?v=app60`), what the intro key records.
+const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
 // ?lang= link wins over the stored choice, which wins over the browser's own

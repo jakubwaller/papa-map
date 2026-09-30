@@ -623,8 +623,6 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 /* ---------- Add-a-place dialog ---------- */
 #add-dialog, #offline-dialog, #route-dialog, #me-dialog, #intro-dialog {
   max-width: min(92vw, 430px);
-  max-height: 88vh;
-  overflow: auto;
   border: none;
   border-radius: 14px;
   padding: 20px 22px;
@@ -703,7 +701,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #me-dialog .btn.primary:hover, #intro-dialog .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
 .intro-lang { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: 13px; color: var(--muted-2); }
 #intro-dialog h4 { margin: 0 0 6px; font-size: 13.5px; }
-#intro-dialog .tips-list { font-size: 13px; color: var(--ink); }
+#intro-dialog { max-height: 88vh; }
+#intro-dialog[open] { display: flex; flex-direction: column; }
+#intro-dialog .tips-list { font-size: 13px; color: var(--ink); flex: 1 1 auto; min-height: 0; overflow: auto; }
 #intro-dialog .btn.primary { width: 100%; margin-top: 4px; }
 /* Store app only (bootNative): the header's links, the language picker and
    the stats strip, moved in here so the first screen is the map. The strip
