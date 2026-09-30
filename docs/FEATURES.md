@@ -995,8 +995,8 @@ language switch.
   the app is, then the features nobody guesses (nearest table, Papa/Mama,
   answering a grey pin, offline cities, Mein PapaMap) followed by the phone's
   own (`introTips`), and a language picker that drives the header's own. It
-  waits for the location fix to settle, so the OS permission prompt comes first,
-  and it never opens over another dialog or a pin a widget tap opened (it then
+  waits for the boot's location fix to settle, so the camera has landed and nothing
+  moves under it, and it never opens over another dialog or a pin a widget tap opened (it then
   shows at the next launch). The website shows none of it.
 - **The key** (`papamap-intro`) holds the shell pin the reader last saw the
   screen for, and is written when the dialog is *shown*, not closed: a hint that

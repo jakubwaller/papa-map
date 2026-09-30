@@ -3136,8 +3136,8 @@ async function boot() {
     if (Date.now() - fitHomeAt > LATE_FIX_MS) map.flyTo({ center: at, zoom, duration: LATE_FIX_FLY_MS });
     else map.jumpTo({ center: at, zoom });
   }).catch(() => {});
-  // The store app's first-launch intro / what's-new, once the fix (and with it
-  // the OS permission prompt) has settled; see maybeShowIntro.
+  // The store app's first-launch intro / what's-new, once the boot's fix has
+  // settled and the camera stands where it will; see maybeShowIntro.
   if (isNative()) locationFix.catch(() => null).then(() => maybeShowIntro());
   // Whatever queued a pin above the data — the app's own deep link (bootNative,
   // an appUrlOpen already fired) or this load's own ?osm= — opens it now that
@@ -3946,8 +3946,9 @@ function renderMeTips() {
 // entry for it. The key stores the shell pin acknowledged; it is written when
 // the dialog is shown, not when it is closed — a hint that returns until it is
 // obeyed is an advert, and an app killed mid-show has spent it. Replaces the
-// one-time toast (v42). Shown after the location fix has settled, so the OS
-// permission prompt comes first and the intro never sits on top of it.
+// one-time toast (v42). Shown after the boot's location fix has settled — the
+// camera has landed, nothing moves under the dialog. (Boot never prompts for
+// permission, openAtLocationFix only follows a grant already given.)
 const introDialog = document.getElementById("intro-dialog");
 const introLangSelect = document.getElementById("intro-lang");
 introLangSelect.replaceChildren(...LANGS.map((code) => {
@@ -3966,10 +3967,13 @@ function fillIntroList(keys) {
     return li;
   }));
 }
+let introNews = false;   // what the open dialog shows: the release's notes, or the intro
 introLangSelect.addEventListener("change", () => {
   langSelect.value = introLangSelect.value;
   langSelect.dispatchEvent(new Event("change"));   // the existing handler does the rest
-  fillIntroList(introKeys);   // its items are rendered here, not by applyI18n
+  // Its items are rendered here, not by applyI18n — and the intro's list is
+  // recomputed, because it depends on the language (the Siri line is de/en only).
+  fillIntroList(introNews ? introKeys : introTips(platform(), lang));
 });
 langSelect.addEventListener("change", () => { introLangSelect.value = langSelect.value; });
 introDialog.addEventListener("click", (e) => { if (e.target === introDialog) introDialog.close(); });
@@ -3988,6 +3992,7 @@ function maybeShowIntro() {
   // A widget tap opened a pin at boot: it shows at the next launch instead.
   if (document.querySelector("dialog[open]") || popup?.isOpen()) return;
   const news = r.kind === "news";
+  introNews = news;
   document.getElementById("intro-title").dataset.i18n = news ? "whatsNewTitle" : "introTitle";
   document.getElementById("intro-ok").dataset.i18n = news ? "whatsNewOk" : "introStart";
   for (const id of ["intro-lead", "intro-heading"]) document.getElementById(id).hidden = news;
@@ -3996,7 +4001,10 @@ function maybeShowIntro() {
   applyI18n();
   fillIntroList(news ? r.keys : introTips(platform(), lang));
   introDialog.showModal();
-  try { localStorage.setItem(INTRO_KEY, SHELL_PIN); } catch { /* shown again next launch */ }
+  try {
+    localStorage.setItem(INTRO_KEY, SHELL_PIN);
+    localStorage.removeItem("papamap-tip-seen");   // the toast's key (v42), which the privacy pages no longer list
+  } catch { /* shown again next launch */ }
 }
 
 function renderMeDialog() {
