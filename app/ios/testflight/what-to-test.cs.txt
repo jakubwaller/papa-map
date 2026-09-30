@@ -1,8 +1,9 @@
-– „Nejbližší přebalovací pult": sedí místo a funguje trasa ve tvé mapové aplikaci?
-– Sedí barvy u míst, která znáš? Chybí ti nějaké místo? I to je užitečná zpětná vazba.
-– Přidej si widget a ovládací prvek v Ovládacím centru (návod je dole v „Můj PapaMap"). Jmenují se zatím anglicky: „Nearest changing table".
-– Stáhni si město offline, zapni režim Letadlo a otevři mapu.
-– Volitelně s účtem OpenStreetMap: odpověz u šedého místa, ve které místnosti pult je.
-– Novinka: po odpovědi šedé místo hned změní barvu; místa přidaná v MapComplete se objeví během pár minut.
-– Novinka v zobrazení pro mámy: přebalovací pult jen na pánském WC je teď červený a má vlastní filtr „Jen na pánském WC“. Sedí to u míst, která znáš?
+– Novinka: při prvním spuštění (a jednou po této aktualizaci) tě aplikace přivítá a vysvětlí, co umí — včetně volby jazyka. Je to srozumitelné? Chybí něco?
+– Novinka: všechny filtry vypadají stejně: čárkovaný = vypnutý, barevně vyplněný = zapnutý. Lišta je kratší.
+– Novinka: ťuknutí na logo PapaMap tě vrátí na tvou polohu.
+– Novinka: „Neznámá místnost“ se teď jmenuje stejně v zobrazení pro táty i pro mámy.
+– Novinka: při stahování města offline zůstane vidět průběh, i když okno zavřeš a znovu otevřeš; po chybě je tu tlačítko „Zkusit znovu“.
+– Novinka: widget ukáže „limited access“ (zatím jen anglicky nebo německy), když je zapnutý filtr pro vozíčkáře a nejbližší pult je přístupný jen omezeně.
+– Novinka: „+ Přidat místo“ teď říká, že pokračuješ v MapComplete. Je to jasné?
+– Jako vždy: „Nejbližší přebalovací pult“, barvy u míst, která znáš, Siri, widget.
 Cokoli je nejasné nebo nefunguje: udělej snímek obrazovky a pošli ho přes TestFlight.

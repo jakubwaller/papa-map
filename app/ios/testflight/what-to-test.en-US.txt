@@ -1,9 +1,9 @@
-– "Nearest changing table": is the place right, and does the route open in your maps app?
-– Are the colours right for places you know? Is a place missing? That helps too.
-– Add the widget and the Control Center control (steps are at the foot of "My PapaMap").
-– Siri: "Nearest changing table in PapaMap".
-– Download a city for offline use, switch on Airplane Mode, open the map.
-– Optional, with an OpenStreetMap account: answer "which room?" for a grey place.
-– New: answer the room question for a grey place and it changes colour straight away; places added in MapComplete appear within a few minutes.
-– New in the mum view: a changing table in the men's room alone is now red and has its own chip "Men's room only". Does that match places you know?
+– New: on first launch (and once after this update) the app welcomes you and explains what it can do, with a language picker. Clear? Anything missing?
+– New: every filter chip works the same way: dashed = off, filled in colour = on. The bar is shorter.
+– New: tap the PapaMap logo to get back to where you are.
+– New: "Room unknown" now reads the same in the dad and mum views.
+– New: downloading a city for offline use keeps showing its progress when you close and reopen the sheet; after a failure there is a "Try again" button.
+– New: the widget says "limited access" when the wheelchair filter is on and the nearest table is only partly accessible.
+– New: "+ Add a place" now says that you continue in MapComplete. Does that read clearly?
+– As always: "Nearest changing table", colours for places you know, Siri, the widget.
 Anything unclear or broken: take a screenshot and send it through TestFlight.
