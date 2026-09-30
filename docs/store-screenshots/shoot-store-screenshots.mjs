@@ -79,8 +79,8 @@
 // Geolocation is the one plugin the stub carries (installNativeStub,
 // below) — without it the nearest-table button's fix fails outright, see
 // that function's own comment for why. The stub also seeds localStorage's
-// tip-seen flag before any page script runs, so the "also reachable from
-// Control Center" toast never floats over a later shot.
+// intro key before any page script runs, so the welcome screen never sits
+// over a shot.
 //
 // That absolute fetch hits the *same* /data/* path the bundled shell's
 // relative fetch does, just against papamap.de directly instead of this
@@ -263,12 +263,10 @@ async function installTilesProxy(page) {
 // Hamburg Rathaus, so the fix behaves exactly as the website's own
 // non-native locate() path already did.
 //
-// The stub's addInitScript also pre-seeds localStorage's papamap-tip-seen
-// flag (the key app.js imports as TIP_SEEN_KEY from web/me.js) before any
-// page script runs, so maybeToastTip() — fired from the nearest-table
-// button's success handler, 4.5s after the "x m away" toast — never queues
-// the "also reachable from Control Center/widget/Siri" tip toast over a
-// later shot's own popup or dialog.
+// The stub's addInitScript also pre-seeds localStorage's papamap-intro key
+// with a pin far ahead of the shell's ("app99999"), before any page script
+// runs, so maybeShowIntro() finds neither an intro nor notes to show over a
+// shot's own popup or dialog.
 //
 // No AppLauncher plugin: native.js's planRoute (the Route button's iOS
 // cascade) throws "no AppLauncher" with none present, and app.js's own
@@ -277,7 +275,8 @@ async function installTilesProxy(page) {
 // the chooser dialog was dropped).
 async function installNativeStub(context) {
   await context.addInitScript(() => {
-    try { localStorage.setItem("papamap-tip-seen", "1"); } catch { /* storage blocked: the tip would only show once anyway */ }
+    // A pin far ahead of the shell's, so introKind shows neither the intro nor notes.
+    try { localStorage.setItem("papamap-intro", "app99999"); } catch { /* storage blocked: the intro would show over the shots */ }
     const geolocationPlugin = {
       checkPermissions: () => Promise.resolve({ location: "granted", coarseLocation: "granted" }),
       requestPermissions: () => Promise.resolve({ location: "granted", coarseLocation: "granted" }),
@@ -364,7 +363,7 @@ async function settleMap(page) {
 
 // Full state reset between shots: reload the same page rather than
 // undoing each shot's own UI changes by hand. A reload keeps the context's
-// addInitScript (the Capacitor stub, including the tip-seen flag) and the
+// addInitScript (the Capacitor stub, including the intro key) and the
 // page's own route handlers (installDataProxy, installTilesProxy) — both
 // survive navigation on the same page/context — while wiping every bit of
 // pure in-page JS state a previous shot touched: the chip filters (`visible`,

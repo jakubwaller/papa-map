@@ -7,7 +7,7 @@ import {
   answeredPercent, areaAnswered, areaPercent,
   buildFeatureGrid, answerArea, answersInArea, totalAnswers,
   sentenceParts, greyNearby, circleBounds,
-  MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, appTips, SIRI_LANGS, changesetAnswer, extractAnswers,
+  MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, appTips, SIRI_LANGS, pinNumber, introKind, introTips, INTRO_FEATURES, changesetAnswer, extractAnswers,
   mergeAnswers, newestClosedAt, oldestClosedAt,
   EPOCH, changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap,
   SAVED_MAX, isSaved, addSaved, removeSaved, refreshApplies,
@@ -460,14 +460,43 @@ test("refreshApplies: only when the generation has not moved since the refresh b
   assert.equal(refreshApplies(0, 0), true);
 });
 
-test("appTips: the iOS app only, and Siri only where the app ships phrases", () => {
+test("appTips: both apps, Siri only on iOS where the app ships phrases", () => {
   assert.deepEqual(appTips("ios", "de"), ["tipControl", "tipWidget", "tipSiri"]);
   assert.deepEqual(appTips("ios", "en"), ["tipControl", "tipWidget", "tipSiri"]);
   // Siri answers in the phone's language; a French phrase was never registered.
   assert.deepEqual(appTips("ios", "fr"), ["tipControl", "tipWidget"]);
-  // Neither the website nor the Android app has a control, a widget or phrases.
+  // The website has no control, widget or shortcut; Android has a widget and a launcher shortcut.
   assert.deepEqual(appTips("web", "de"), []);
-  assert.deepEqual(appTips("android", "de"), []);
+  assert.deepEqual(appTips("android", "de"), ["tipWidgetAndroid", "tipShortcutAndroid"]);
+});
+
+test("pinNumber: the integer of a shell pin, else null", () => {
+  assert.equal(pinNumber("app60"), 60);
+  assert.equal(pinNumber("app"), null);
+  assert.equal(pinNumber("x12"), null);
+  assert.equal(pinNumber(12), null);
+  assert.equal(pinNumber(null), null);
+});
+
+test("introKind: the intro when nothing usable is stored, notes only for releases in between", () => {
+  const notes = [{ since: 58, keys: ["a"] }, { since: 61, keys: ["b", "c"] }, { since: 70, keys: ["z"] }];
+  assert.deepEqual(introKind(null, "app60"), { kind: "intro" });
+  assert.deepEqual(introKind("garbage", "app60"), { kind: "intro" });
+  assert.equal(introKind("app60", "app60"), null);
+  assert.deepEqual(introKind("app57", "app60", notes), { kind: "news", keys: ["a"] });
+  assert.deepEqual(introKind("app57", "app61", notes), { kind: "news", keys: ["a", "b", "c"] });
+  assert.equal(introKind("app57", "app60", []), null);
+  assert.equal(introKind("app62", "app69", notes), null);   // the only note is above current
+  assert.equal(introKind("app99999", "app60", notes), null);   // downgrade or seeded flag
+  assert.equal(introKind("app57", "garbage", notes), null);
+  assert.equal(introKind(null, null), null);
+});
+
+test("introTips: the features, then whatever the phone has", () => {
+  assert.deepEqual(introTips("ios", "de"), [...INTRO_FEATURES, "tipControl", "tipWidget", "tipSiri"]);
+  assert.deepEqual(introTips("ios", "fr"), [...INTRO_FEATURES, "tipControl", "tipWidget"]);
+  assert.deepEqual(introTips("android", "de"), [...INTRO_FEATURES, "tipWidgetAndroid", "tipShortcutAndroid"]);
+  assert.deepEqual(introTips("web", "de"), INTRO_FEATURES);
 });
 
 test("SIRI_LANGS is exactly the languages the app has App Shortcut phrases in", () => {

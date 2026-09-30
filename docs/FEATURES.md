@@ -979,28 +979,42 @@ dialog lists them newest first, with tonight's pin colour when the place is
 still on the map and a plain dot when it is not, and the distance from
 wherever the reader last stood.
 
-### "Mehr aus der App": the features iOS hides
+### The first-launch intro, what's new, and "Mehr aus der App"
 
-The Control Center control, the home-screen widget and the Siri phrase are all
-reached from iOS's own screens, never from the map, so a reader who is not told
-never finds them (the owner, on TestFlight build 24: "I'd probably never guess
-from such an app"). Three answers were agreed, and an onboarding carousel was
-not one of them — it stands between a parent and the map on the first launch,
-and it needs 32 translations of text people swipe past.
+The Control Center control, the home-screen widget and the Siri phrase (iOS),
+the widget and the launcher shortcut (Android) are all reached from the phone's
+own screens, never from the map, so a reader who is not told never finds them
+(the owner, on TestFlight build 24: "I'd probably never guess from such an
+app"). The first answer was no onboarding: it stands between a parent and the
+map on the first launch. **On 2026-09-28 the owner reversed that** after two
+testers asked for an intro independently, one of whom also could not find the
+language switch.
 
-- **The store screenshots carry most of it**: one feature per picture.
-- **A block at the foot of "Mein PapaMap", iOS app only** (`appTips`,
-  `web/me.js`): three plain lines. German and English name iOS's own buttons
-  ("Steuerelement hinzufügen"); the other 30 languages stay general and quote
-  the control by the English name it carries there, because the native side
-  is German and English only. The Siri line shows in German and English
-  alone: Siri answers in the phone's language, and the app ships phrases in
-  those two (`SIRI_LANGS`, tied by a test to the `.lproj` folders).
-- **One toast, once** (`toastTip`): after the first "nearest" that found a
-  table — the moment the reader has just done by hand what the control does
-  in one tap — and after the "x m away" toast has had its four seconds. A tap
-  opens the dialog. The flag (`papamap-tip-seen`) is set when it is shown,
-  not when it is tapped: a hint that returns until it is obeyed is an advert.
+- **The intro, store app only** (`maybeShowIntro`, `web/app.js`; the pure part
+  in `web/me.js`): one dialog on the first launch, once. One sentence on what
+  the app is, then the features nobody guesses (nearest table, Papa/Mama,
+  answering a grey pin, offline cities, Mein PapaMap) followed by the phone's
+  own (`introTips`), and a language picker that drives the header's own. It
+  waits for the location fix to settle, so the OS permission prompt comes first,
+  and it never opens over another dialog or a pin a widget tap opened (it then
+  shows at the next launch). The website shows none of it.
+- **The key** (`papamap-intro`) holds the shell pin the reader last saw the
+  screen for, and is written when the dialog is *shown*, not closed: a hint that
+  returns until it is obeyed is an advert. It replaces the one-time toast
+  (`toastTip`, `papamap-tip-seen`), which is gone.
+- **What's new**: after an update the same dialog lists the release's notes,
+  but only when `WHATS_NEW` (`web/me.js`) has an entry whose `since` is newer
+  than the acknowledged pin. A release with something to say adds one entry
+  and translates its keys in all 32 languages; a release without one shows
+  nothing, and the key is caught up silently so the next release's notes are
+  measured from here. A downgrade or a seeded key shows nothing.
+- **A block at the foot of "Mein PapaMap", both apps** (`appTips`): plain
+  lines. German and English name the phone's own buttons; the other 30
+  languages stay general and quote them by the English name they carry there.
+  The Siri line shows in German and English alone: Siri answers in the phone's
+  language, and the app ships phrases in those two (`SIRI_LANGS`, tied by a
+  test to the `.lproj` folders).
+- **The store screenshots carry the rest**: one feature per picture.
 
 ## The store app
 

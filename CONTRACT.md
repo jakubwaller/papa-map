@@ -1,5 +1,22 @@
 # papa-map — build contract (v0)
 
+> **v58 amendment (30 Sep 2026, the first-launch intro and what's-new): no
+> shape change.** The store app shows one dialog on its first launch (what the
+> app is, the features nobody guesses, a language picker) and, after an update,
+> the same dialog with the release's notes — but only when `WHATS_NEW`
+> (`web/me.js`) has an entry newer than the acknowledged pin. It waits for the
+> location fix to settle, and never opens over another dialog or an open pin
+> (it then shows at the next launch). The website shows none of it. One device
+> key, `papamap-intro`, holds the shell pin last acknowledged and is written
+> when the dialog is shown; it replaces `papamap-tip-seen`. `toastTip` is
+> removed and 14 keys added in all 32 languages (`introTitle`, `introLead`,
+> `introFeaturesHeading`, `introNearest`, `introMode`, `introAnswer`,
+> `introOffline`, `introMe` (`{me}`), `introLang`, `introStart`,
+> `tipWidgetAndroid`, `tipShortcutAndroid`, `whatsNewTitle`, `whatsNewOk`).
+> Android now gets "Mehr aus der App" too (`appTips`). The store-screenshot
+> script seeds `papamap-intro` with `app99999`. Supersedes v42's toast. Shell
+> pin `app59` → `app60`.
+
 > **v57 amendment (30 Sep 2026, one language for the chips): no shape change.**
 > A tester asked why half the buttons behave differently: the three status chips
 > started solid and faded when tapped, the play, places and wheelchair chips
@@ -35,6 +52,7 @@
 > logo is a home button (`homeView`: closes what is open, flies to the
 > reader's marker at zoom 14 or refits the home view) instead of a link that
 > opened papamap.de in the in-app browser. Shell pin `app56` → `app57`.
+
 >
 > **v54 amendment (30 Sep 2026, the offline-cities dialog): no shape change.**
 > The store app's city catalogue is read once per session and then answered
