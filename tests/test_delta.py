@@ -859,7 +859,19 @@ def test_queue_pending_evicts_the_oldest_beyond_the_cap(monkeypatch, capsys):
     out = delta.queue_pending([], [_change(1, 1), _change(2, 1), _change(3, 5)], NOW)
     assert [e["id"] for e in out] == [2, 3]
     err = capsys.readouterr().err
-    assert "pending lookups over 2, dropping way/1 v1 unretried" in err
+    assert ("pending lookups over 2, dropping way/1 v1 after 0 retries "
+            f"(queued since {NOW.isoformat(timespec='seconds')})") in err
+
+
+def test_queue_pending_evicts_by_queue_time_not_position(monkeypatch, capsys):
+    # After a round-robin retry the front of the queue is the least recently
+    # retried entry, not the one waiting longest — eviction goes by `since`.
+    monkeypatch.setattr(delta, "PENDING_MAX", 2)
+    pending = [dict(_change(7, 1), attempts=1, since="2026-09-23T09:30:00+00:00"),
+               dict(_change(8, 1), attempts=3, since="2026-09-23T09:00:00+00:00")]
+    out = delta.queue_pending(pending, [_change(9, 2)], NOW)
+    assert [e["id"] for e in out] == [7, 9]
+    assert "dropping way/8 v1 after 3 retries (queued since 2026-09-23T09:00:00+00:00)" in capsys.readouterr().err
 
 
 def _run(tmp_path, state, osc_by_seq, head, **kwargs):

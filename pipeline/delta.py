@@ -208,7 +208,7 @@ def make_coord_fetch(max_lookups: int = COORD_FETCH_MAX_PER_SEQ, fetch=fetch_osm
 # until the nightly build, because the next tick starts at the next
 # sequence. It is queued in the private state file instead (never served,
 # not part of CONTRACT.md) and retried at the start of every tick. Bounded
-# both ways: the queue by length (oldest evicted first) and each entry by
+# both ways: the queue by length (queued longest ago evicted first) and each entry by
 # the number of retries, so a lookup that can never succeed (a deleted way
 # whose delete we missed, an API that 404s it) cannot stay forever.
 PENDING_MAX = int(os.environ.get("PAPAMAP_DELTA_PENDING_MAX", "200"))
@@ -562,8 +562,8 @@ def queue_pending(pending: list, dropped: list, now: datetime) -> list:
     is the change itself plus `attempts` (retries so far, 0 here) and
     `since` (when it was first queued). One entry per object: a newer
     version replaces an older one — the newer diff entry is what decides the
-    object's state now. Over PENDING_MAX, the oldest entries are evicted,
-    logged, never silently."""
+    object's state now. Over PENDING_MAX, the entries queued longest ago are
+    evicted, logged, never silently."""
     out = list(pending)
     since = now.isoformat(timespec="seconds")
     for ch in dropped:
@@ -571,9 +571,14 @@ def queue_pending(pending: list, dropped: list, now: datetime) -> list:
         out = [e for e in out if _obj_key(e) != key]
         out.append({**ch, "tags": dict(ch.get("tags") or {}), "attempts": 0, "since": since})
     while len(out) > PENDING_MAX:
-        e = out.pop(0)
+        # By queue time, not position: retry_pending rotates a failed entry
+        # to the back, so the front is the least recently retried, not the
+        # longest waiting.
+        e = min(out, key=lambda e: str(e.get("since") or ""))
+        out.remove(e)
         print(f"  WARN delta: pending lookups over {PENDING_MAX}, dropping "
-              f"{e['type']}/{e['id']} v{e.get('version')} unretried", file=sys.stderr)
+              f"{e['type']}/{e['id']} v{e.get('version')} after "
+              f"{e.get('attempts', 0)} retries (queued since {e.get('since')})", file=sys.stderr)
     return out
 
 
