@@ -93,9 +93,12 @@ docker compose up -d delta
 No cron entry — `restart: unless-stopped` in `docker-compose.yml` keeps it running across reboots
 and container restarts the same way the `papamap` service does. It shares the pipeline's image and
 `web-data/` mount (`PAPAMAP_DELTA_PATH`/`PAPAMAP_DELTA_STATE_PATH` point it at
-`/out/delta.json`/`/out/private/delta-state.json`), so a code change under `pipeline/` needs the
-same `docker compose build pipeline` (or `up -d --build delta`) the nightly build does — the
-service does not rebuild itself on a plain restart. `docker logs -f papamap-delta` shows one line
+`/out/delta.json`/`/out/private/delta-state.json`), so a code change under `pipeline/` needs
+`docker compose up -d --build delta`. Every `build: .` service has an image of its own
+(`papa-map-delta` here), so `docker compose build pipeline` rebuilds only the nightly build's
+image, and a plain `up -d delta` after it keeps the old container running — which is how the
+2026-09-30 deploy left the follower on the previous code. The service does not rebuild itself
+on a plain restart either. `docker logs -f papamap-delta` shows one line
 per tick (sequence number, tables/places upserted); a network error is logged and the previous
 `delta.json` is left exactly as it was, retried the next minute — it never crash-loops.
 
