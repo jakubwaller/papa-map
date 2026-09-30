@@ -974,7 +974,8 @@ def test_run_tick_retry_pass_is_capped(tmp_path, monkeypatch):
     fetch = _Fetch()
     state, _ = _run(tmp_path, state, {}, 100, coord_fetch=fetch)
     assert fetch.calls == [("way", 900)]
-    assert [(e["id"], e["attempts"]) for e in state["pending"]] == [(900, 1), (901, 0)]
+    # The failed entry rotates to the back, so 901 is next in line.
+    assert [(e["id"], e["attempts"]) for e in state["pending"]] == [(901, 0), (900, 1)]
 
 
 def test_run_tick_reset_discards_pending(tmp_path):
@@ -1028,3 +1029,52 @@ def test_make_coord_fetch_logs_the_cap_once(capsys):
         assert coord_fetch("way", i) is None
     err = capsys.readouterr().err
     assert err.count("coordinate lookup cap (1) reached") == 1
+
+
+def test_run_tick_a_version_superseded_within_the_same_diff_is_not_queued(tmp_path):
+    # Two versions of one way in a single minutely diff: v11's lookup fails,
+    # v12's succeeds and is upserted. v11 must NOT be queued — a retry of it
+    # would take v12's coordinates from the accumulator and overwrite the
+    # newer version's status with the older one's.
+    answers = [None, (53.55, 9.93)]
+    calls = []
+
+    def flaky(osm_type, osm_id):
+        calls.append((osm_type, osm_id))
+        return answers.pop(0)
+
+    female = dict(WAY_TAGS, **{"changing_table:location": "female_toilet"})
+    osc = {101: _osc(_way("modify", 900, 11, "2026-09-23T10:00:00Z", female),
+                     _way("modify", 900, 12, "2026-09-23T10:00:30Z", WAY_TAGS))}
+    state, out = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, osc, 101, coord_fetch=flaky)
+    assert calls == [("way", 900), ("way", 900)]
+    assert state["pending"] == []
+    feat = next(f for f in out["tables"]["upsert"] if f["properties"]["osm_id"] == 900)
+    assert feat["properties"]["osm_version"] == 12
+    # ...and a second tick has nothing to retry: v12 stays.
+    state, out = _run(tmp_path, state, {}, 101, coord_fetch=flaky)
+    assert calls == [("way", 900), ("way", 900)]
+    feat = next(f for f in out["tables"]["upsert"] if f["properties"]["osm_id"] == 900)
+    assert feat["properties"]["osm_version"] == 12
+
+
+def test_run_tick_both_versions_failing_queues_only_the_newer_one(tmp_path):
+    osc = {101: _osc(_way("modify", 900, 11, "2026-09-23T10:00:00Z", WAY_TAGS),
+                     _way("modify", 900, 12, "2026-09-23T10:00:30Z", WAY_TAGS))}
+    state, _ = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, osc, 101, coord_fetch=_Fetch())
+    assert [(e["id"], e["version"]) for e in state["pending"]] == [(900, 12)]
+
+
+def test_retry_pending_rotates_a_failed_entry_to_the_back():
+    since = "2026-09-23T09:00:00+00:00"
+    pending = [dict(_change(900, 11), attempts=0, since=since),
+               dict(_change(901, 2), attempts=0, since=since),
+               dict(_change(902, 5), attempts=0, since=since)]
+    fetch = _Fetch()  # every lookup fails
+    events, remaining = delta.retry_pending(pending, 1, _empty_dataset(), coord_fetch=fetch)
+    assert events == [] and fetch.calls == [("way", 900)]
+    assert [(e["id"], e["attempts"]) for e in remaining] == [(901, 0), (902, 0), (900, 1)]
+    # Next pass: 901's turn, and 900 waits at the back.
+    events, remaining = delta.retry_pending(remaining, 1, _empty_dataset(), coord_fetch=fetch)
+    assert fetch.calls == [("way", 900), ("way", 901)]
+    assert [(e["id"], e["attempts"]) for e in remaining] == [(902, 0), (900, 1), (901, 1)]

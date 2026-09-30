@@ -452,7 +452,13 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         for u, t in acc["new_toilets_no_table"].items():
             created_by_url[u] = bool(t.get("created"))
     events = []
-    for ch in changes:
+    # For `dropped`: a change superseded by a later change to the same object
+    # in this very batch (two versions of a way in one minutely diff) is not
+    # worth a retry — the later one decides the object's state now, and a
+    # retried older version would overwrite it, or resurrect a pin the later
+    # version retagged away.
+    last_pos = {(c["type"], c["id"]): i for i, c in enumerate(changes)}
+    for i, ch in enumerate(changes):
         osm_type, osm_id = ch["type"], ch["id"]
         url = _osm_url(osm_type, osm_id)
         was_table = url in known_tables
@@ -480,7 +486,7 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
                 if got:
                     lat, lon = got
         if lat is None or lon is None:
-            if dropped is not None:
+            if dropped is not None and last_pos[(osm_type, osm_id)] == i:
                 dropped.append({**ch, "tags": dict(tags)})
             continue  # no coordinate reachable — never guess; the caller may retry
         if not (was_table or was_place) and not in_any_bbox(lon, lat, area_boxes):
@@ -578,9 +584,11 @@ def retry_pending(pending: list, max_batch: int, base_dataset: dict, *, area_box
     oldest first) go back through process_changes as their original
     changes, so a resolved upsert carries the original version, timestamp
     and created flag. Returns (events, remaining queue). An entry that fails
-    again stays at the front with one more attempt — until
-    PENDING_MAX_ATTEMPTS, when it is given up on, logged. Entries beyond
-    `max_batch` are left as they are and spend no attempt."""
+    again goes to the BACK with one more attempt — until
+    PENDING_MAX_ATTEMPTS, when it is given up on, logged — so with more
+    than `max_batch` queued every entry gets its turn, round robin, rather
+    than the same front batch failing every tick while the rest wait.
+    Entries beyond `max_batch` are left as they are and spend no attempt."""
     batch, rest = pending[:max_batch], pending[max_batch:]
     if not batch:
         return [], list(rest)
@@ -601,7 +609,7 @@ def retry_pending(pending: list, max_batch: int, base_dataset: dict, *, area_box
                   f"(queued since {e.get('since')})", file=sys.stderr)
         else:
             still.append({**e, "attempts": n})
-    return events, still + list(rest)
+    return events, list(rest) + still
 
 
 def new_accumulator() -> dict:
