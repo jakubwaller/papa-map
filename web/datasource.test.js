@@ -8,7 +8,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
-         pinColorExpression, viewOf, momCounts, localAnswered, usableStatuses, haversineKm,
+         pinColorExpression, viewOf, localAnswered, usableStatuses, haversineKm,
          nearestUsable, formatDistance, geoUri, webRouteHref, webRouteChoices, PAPAMAP_THEME_URL, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
@@ -561,22 +561,6 @@ test("viewFor / viewOf: men_only changes only the mama reading of accessible", (
   assert.deepEqual(viewFor("accessible", "papi", true), viewFor("accessible", "papa"));
   assert.equal(viewOf({ status: "accessible", men_only: true }, "mama").bucket, "bad");
   assert.equal(viewOf({ status: "accessible" }, "mama").bucket, "good");
-});
-
-test("momCounts adds the two rooms and keeps the unrecorded ones apart", () => {
-  assert.deepEqual(momCounts({ accessible: 2, female_only: 3, unknown: 9 }),
-                   { good: 5, maybe: 9 });
-  // stats.json may be missing, or missing a key: the sentence renders zeros
-  // rather than NaN, the way the papa sentence already degrades.
-  assert.deepEqual(momCounts({}), { good: 0, maybe: 0 });
-  assert.deepEqual(momCounts(), { good: 0, maybe: 0 });
-  assert.deepEqual(momCounts({ accessible: 4 }), { good: 4, maybe: 0 });
-});
-
-test("momCounts leaves the men's-room-only tables out of hers (v50)", () => {
-  // men_only is a subset of accessible, so it is taken away, never added.
-  assert.deepEqual(momCounts({ accessible: 10, female_only: 3, unknown: 9, men_only: 2 }),
-                   { good: 11, maybe: 9 });
 });
 
 // statsLocal (renderStats, web/app.js) and "Mein PapaMap"'s percentage

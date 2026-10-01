@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app61";
-import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app61";
+import { CREATED_BY } from "./osm.js?v=app62";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app62";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -159,18 +159,33 @@ export function totalAnswers(answers) {
 // link can never read differently) and the sentence keys are written not to
 // need a preposition or a declined form on top of it (web/i18n.js).
 // `percent`/`yours`/`greyCount` are numbers or null when unknown.
-export function sentenceParts({ area, percent, yours, greyCount, hasFix, mama }) {
+export function sentenceParts({ area, percent, tables, known, greyCount, hasFix, mama }) {
+  // One area line for both readings (CONTRACT.md v60): the share with a
+  // recorded room is the same game whoever is looking, and the Mama reading's
+  // old "probably usable for you" put that same percentage under a claim it
+  // never measured. Mama differs only in the colour the pins clause names.
   const areaPart = (area && percent != null)
-    ? { key: mama ? "meAreaSentenceMama" : "meAreaSentence", vars: { area, percent } }
+    ? { key: "meAreaSentence", vars: { area, tables: tables ?? 0, known: known ?? 0, percent } }
     : null;
-  const yoursPart = yours == null ? null
-    : yours > 0 ? { key: "meYours", vars: { n: yours } }
-                : { key: "meYoursZero" };
   const greyPart = !hasFix ? { locate: true }
     : greyCount > 0
       ? { key: mama ? "meGreyNearbyMama" : "meGreyNearby", vars: { n: greyCount } }
       : { key: mama ? "meGreyNearbyZeroMama" : "meGreyNearbyZero" };
-  return { area: areaPart, yours: yoursPart, grey: greyPart };
+  return { area: areaPart, grey: greyPart };
+}
+
+// The reader's own line under the sentence: answers in the area the sentence
+// names, and everywhere. Both are changeset counts (changesetAnswer, below),
+// never places — a reader who answered one table twice has two — which is why
+// the line relates answers to answers and never claims a share of the area's
+// recorded rooms. `inArea` is null when there is no area to count in (open
+// sea, zoomed out past every area, stats.json missing): then only the total
+// is said — "in this area" with nothing above it to be that area would claim
+// one that does not exist.
+export function yoursParts({ inArea, total }) {
+  if (!(total > 0)) return { key: "meYoursZero" };
+  if (inArea == null) return { key: "meYoursTotal", vars: { total } };
+  return { key: "meYours", vars: { n: inArea, total } };
 }
 
 // ---- Grey pins nearby ----
@@ -367,7 +382,7 @@ export function reopenGap(before, oldWatermark, previousBackfill) {
   return { oldest_scanned: before, done: false, floor: previousBackfill?.done ? oldWatermark : null };
 }
 
-// ---- "Mehr aus der App": what nobody would guess a map app has ----
+// ---- The phone's own tips: what nobody would guess a map app has ----
 // The Control Center control, the home-screen widget and the Siri phrase (iOS),
 // the home-screen widget and the launcher shortcut (Android) are all reached
 // from the phone's own screens, never from this one, so a reader who is not
@@ -375,8 +390,10 @@ export function reopenGap(before, oldWatermark, previousBackfill) {
 // The Siri line only where the app ships phrases
 // (app/ios/App/App/de.lproj/AppShortcuts.strings, and English in the intent
 // itself) — Siri answers in the phone's language, and a phrase it was never
-// given is a promise that fails out loud. Shown in Mein PapaMap ("Mehr aus der
-// App", both apps) and closing the first-launch intro. Returns i18n keys, in order.
+// given is a promise that fails out loud. Shown closing the first-launch intro
+// (introTips, below) — the "Mehr aus der App" block Mein PapaMap carried until
+// CONTRACT v60 is gone; the dialog is the reader's, the intro is the phone's.
+// Returns i18n keys, in order.
 export const SIRI_LANGS = ["de", "en"];
 
 export function appTips(platform, lang) {
@@ -386,12 +403,12 @@ export function appTips(platform, lang) {
 }
 
 // ---- The first-launch intro and what's new (store app only) ----
-// The one device key holds the shell pin (`app61`) the reader last saw the
+// The one device key holds the shell pin (`app62`) the reader last saw the
 // start screen for. Nothing stored: the intro. An older pin: the notes of the
 // releases in between, if any release had something to say, else nothing.
 export const INTRO_KEY = "papamap-intro";
 
-// "app61" -> 61; anything else -> null.
+// "app62" -> 62; anything else -> null.
 export function pinNumber(pin) {
   const m = typeof pin === "string" ? /^app(\d+)$/.exec(pin) : null;
   return m ? Number(m[1]) : null;

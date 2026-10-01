@@ -705,19 +705,20 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #intro-dialog[open] { display: flex; flex-direction: column; }
 #intro-dialog .tips-list { font-size: 13px; color: var(--ink); flex: 1 1 auto; min-height: 0; overflow: auto; }
 #intro-dialog .btn.primary { width: 100%; margin-top: 4px; }
-/* Store app only (bootNative): the header's links, the language picker and
-   the stats strip, moved in here so the first screen is the map. The strip
-   shows every line — there is no map underneath to save room for. */
+/* Store app only (bootNative): the header's links and the language picker,
+   moved in here so the first screen is the map. The stats strip stays out
+   of the dialog and off the app's screen altogether (CONTRACT v60): it is
+   the site's copy, and the pages behind these links carry its numbers. */
 .native .tagline { display: none; }
+.native .stats-wrap { display: none; }
 .native .brandmark { cursor: pointer; }
 .me-about { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .me-about[hidden] { display: none; }
-#me-about #stats { padding: 0 0 10px; border-top: none; background: none; cursor: default; }
-#me-about #stats .stat { display: block; }
-.me-about .stats-toggle { display: none; }
 .me-about .header-actions { order: 0; flex: none; justify-content: flex-start; flex-wrap: wrap; gap: 8px 14px; }
 .me-saved h4 { margin: 4px 0 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
-.me-tips h4 { margin: 14px 0 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
+.me-feedback { margin: 14px 0 0; font-size: 12.5px; color: var(--muted-2); }
+#me-dialog .me-feedback { margin-bottom: 0; }
+.me-feedback a { font-weight: 600; }
 .tips-list { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
 .tips-list li { margin-bottom: 5px; }
 .saved-list { list-style: none; margin: 0; padding: 0; max-height: 40vh; overflow-y: auto; }

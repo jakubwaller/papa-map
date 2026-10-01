@@ -6,7 +6,7 @@ import { haversineKm } from "./datasource.js";
 import {
   answeredPercent, areaAnswered, areaPercent,
   buildFeatureGrid, answerArea, answersInArea, totalAnswers,
-  sentenceParts, greyNearby, circleBounds,
+  sentenceParts, yoursParts, greyNearby, circleBounds,
   MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, appTips, SIRI_LANGS, pinNumber, introKind, introTips, INTRO_FEATURES, changesetAnswer, extractAnswers,
   mergeAnswers, newestClosedAt, oldestClosedAt,
   EPOCH, changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap,
@@ -24,33 +24,46 @@ test("answeredPercent: the same tables/known split statsLocal renders from", () 
   assert.equal(answeredPercent(null), null);
 });
 
-test("sentenceParts: the zero case invites rather than reporting a zero", () => {
-  const base = { area: "Hamburg", percent: 61, hasFix: true, mama: false };
-  assert.deepEqual(sentenceParts({ ...base, yours: 0, greyCount: 3 }).yours, { key: "meYoursZero" });
-  assert.deepEqual(sentenceParts({ ...base, yours: 4, greyCount: 3 }).yours,
-    { key: "meYours", vars: { n: 4 } });
-  assert.equal(sentenceParts({ ...base, yours: null, greyCount: 0 }).yours, null);
+test("sentenceParts: one area line for both readings, with the counts behind the percentage", () => {
+  const base = { area: "Hamburg", percent: 33, tables: 133, known: 44, greyCount: 3, hasFix: true };
+  const dad = sentenceParts({ ...base, mama: false }), mama = sentenceParts({ ...base, mama: true });
+  // The Mama reading used to put the same percentage under "probably usable
+  // for you" (CONTRACT v60): one key now, the vars the same either way.
+  assert.deepEqual(dad.area, { key: "meAreaSentence", vars: { area: "Hamburg", tables: 133, known: 44, percent: 33 } });
+  assert.deepEqual(mama.area, dad.area);
+  assert.equal("yours" in dad, false);   // the reader's line left the sentence (yoursParts)
+  assert.equal(sentenceParts({ area: null, percent: null, greyCount: 0, hasFix: true, mama: false }).area, null);
+});
+
+test("yoursParts: answers in the area and everywhere; the zero case invites", () => {
+  assert.deepEqual(yoursParts({ inArea: 4, total: 7 }), { key: "meYours", vars: { n: 4, total: 7 } });
+  assert.deepEqual(yoursParts({ inArea: 0, total: 7 }), { key: "meYours", vars: { n: 0, total: 7 } });
+  // No area to count in (open sea, stats.json missing): only the total, never
+  // "in this area" with no area above it.
+  assert.deepEqual(yoursParts({ inArea: null, total: 7 }), { key: "meYoursTotal", vars: { total: 7 } });
+  assert.deepEqual(yoursParts({ inArea: 0, total: 0 }), { key: "meYoursZero" });
+  assert.deepEqual(yoursParts({ inArea: null, total: 0 }), { key: "meYoursZero" });
 });
 
 test("sentenceParts: no location fix asks to use one, never a zero count", () => {
-  const parts = sentenceParts({ area: "Hamburg", percent: 61, yours: 1, greyCount: 0, hasFix: false, mama: false });
+  const parts = sentenceParts({ area: "Hamburg", percent: 61, greyCount: 0, hasFix: false, mama: false });
   assert.deepEqual(parts.grey, { locate: true });
 });
 
 test("sentenceParts: mama mode reads the grey pins as amber, same literal status", () => {
-  const dad = sentenceParts({ area: "Hamburg", percent: 61, yours: 1, greyCount: 5, hasFix: true, mama: false });
-  const mama = sentenceParts({ area: "Hamburg", percent: 61, yours: 1, greyCount: 5, hasFix: true, mama: true });
+  const dad = sentenceParts({ area: "Hamburg", percent: 61, greyCount: 5, hasFix: true, mama: false });
+  const mama = sentenceParts({ area: "Hamburg", percent: 61, greyCount: 5, hasFix: true, mama: true });
   assert.equal(dad.grey.key, "meGreyNearby");
   assert.equal(mama.grey.key, "meGreyNearbyMama");
   assert.deepEqual(dad.grey.vars, mama.grey.vars);
-  assert.equal(sentenceParts({ area: "H", percent: 1, yours: 0, greyCount: 0, hasFix: true, mama: true }).grey.key,
+  assert.equal(sentenceParts({ area: "H", percent: 1, greyCount: 0, hasFix: true, mama: true }).grey.key,
     "meGreyNearbyZeroMama");
-  assert.equal(sentenceParts({ area: "H", percent: 1, yours: 0, greyCount: 0, hasFix: true, mama: false }).grey.key,
+  assert.equal(sentenceParts({ area: "H", percent: 1, greyCount: 0, hasFix: true, mama: false }).grey.key,
     "meGreyNearbyZero");
 });
 
 test("sentenceParts: no area (stats.json missing) names no clause at all", () => {
-  assert.equal(sentenceParts({ area: null, percent: null, yours: 1, greyCount: 0, hasFix: true, mama: false }).area,
+  assert.equal(sentenceParts({ area: null, percent: null, greyCount: 0, hasFix: true, mama: false }).area,
     null);
 });
 

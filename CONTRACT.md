@@ -1,5 +1,32 @@
 # papa-map — build contract (v0)
 
+> **v60 amendment (1 Oct 2026, "Mein PapaMap" is the reader's): no shape
+> change.** A Czech tester read the dialog as machine translation; the cause was
+> the German template. "{percent} % beantwortet. {n} davon sind von dir." gave
+> "davon" nothing to point at, the Mama reading put that same percentage under
+> "wahrscheinlich … für dich nutzbar" when it is the share with a recorded room
+> in both readings, and every counted fragment was wrong at one. The dialog now
+> holds the reader's things only: one area line for both readings with the
+> counts behind the percentage (`meAreaSentence`: `{area}`, `{tables}`,
+> `{known}`, `{percent}`), the pins clause with its number last (`meGreyNearby`,
+> `meGreyNearbyMama`: `{n}`), the reader's line relating answers to answers
+> (`meYours`: `{n}` in that area, `{total}` everywhere — changesets, never
+> places, so no share of the recorded rooms is claimed; `meYoursTotal` with
+> `{total}` alone when there is no area to count in; `yoursParts`,
+> `web/me.js`), saved places, and a "Feedback" line (`meFeedback`) whose visible
+> text is the Impressum's address and whose mailto body names the shell pin and
+> the platform. Gone: "Mehr aus der App" (`meTipsHeading`; the intro keeps the
+> tips), `meAreaSentenceMama`, `meStatsTotal`, `meStatsTotalZero`, and in the
+> store app the stats strip, which no longer rides into the dialog foot
+> (`.native .stats-wrap` is hidden; the links and the picker still move) — it is
+> the site's copy, and the area pages, the leaderboard and the methods page
+> carry its numbers. The website strip's local line takes the same shape in
+> both readings (`statsLocal`, `statsLocalMama`: `{tables}`, `{area}`,
+> `{known}`, `{percent}`; `momCounts` is gone), so the room split is said once,
+> in the worldwide line. Czech addresses the reader as "ty" throughout (the
+> intro and tips said "vy"). Ten keys reworded, replaced or added in all 32
+> languages. Shell pin `app61` → `app62`.
+
 > **v59 amendment (30 Sep 2026, the add-place dialog's wording): no shape
 > change.** A tester read "+ Add a place" as not implemented because the
 > dialog sends him to MapComplete in the browser sheet. The hand-off stays (an
