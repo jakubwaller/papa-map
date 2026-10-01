@@ -719,8 +719,10 @@ const shareButtonHTML = () =>
 // data-edit-check: that attribute arms the return-from-editor check, and a
 // mail is not an OSM edit. No target: a mailto opens no page. Empty when the
 // place has no usable address, so the caller can spread it unconditionally.
-function reportLink(obj, title) {
-  const url = reportMailto(obj.email, t("reportSubject", { name: title }),
+// The subject is the caller's: a table names the changing table, a play place
+// cannot (nobody has recorded one there) and gets the neutral "PapaMap: name".
+function reportLink(obj, subject) {
+  const url = reportMailto(obj.email, subject,
                            t("reportBody", { url: shareUrl(obj.osm_url) }));
   return url ? [`<a class="btn" href="${esc(url)}">${esc(t("popupReport"))}</a>`] : [];
 }
@@ -790,7 +792,7 @@ function popupHTML(f) {
   links.push(shareButtonHTML());
   if (osmUrl)
     links.push(`<a class="btn" data-edit-check href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
-  links.push(...reportLink(f, title));
+  links.push(...reportLink(f, t("reportSubject", { name: title })));
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
   const sub = f.amenity ? `<div class="sub">${esc(f.amenity.replace(/_/g, " "))}</div>` : "";
   return `<div class="popup"><h3>${esc(title)}${starHTML(f.osm_url, title)}</h3>${sub}${rows.join("")}</div>`;
@@ -909,7 +911,7 @@ function placeHTML(p) {
   links.push(shareButtonHTML());
   if (osmUrl)
     links.push(`<a class="btn" data-edit-check href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
-  links.push(...reportLink(p, title));
+  links.push(...reportLink(p, `PapaMap: ${title}`));
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
   const sub = p.kind ? `<div class="sub">${esc(p.kind.replace(/_/g, " "))}</div>` : "";
   return `<div class="popup"><h3>${esc(title)}${starHTML(p.osm_url, title)}</h3>${sub}${rows.join("")}</div>`;

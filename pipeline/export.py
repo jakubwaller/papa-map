@@ -57,7 +57,7 @@ def contact_email(tags: dict) -> str | None:
     for key in EMAIL_KEYS:
         for token in re.split(r"[;,]", tags.get(key) or ""):
             token = _MAILTO.sub("", token.strip())
-            if len(token) <= EMAIL_MAX_LEN and EMAIL_RE.match(token):
+            if len(token) <= EMAIL_MAX_LEN and EMAIL_RE.fullmatch(token):
                 return token
     return None
 

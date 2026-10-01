@@ -654,7 +654,8 @@ reads the property through the same check (`isContactEmail`,
 `web/datasource.js`, kept in lockstep with the Python and tested against the
 same list), so a stale or odd value never becomes a link.
 
-The link is a plain `mailto:` with the subject "Changing table at {name}" and
+The link is a plain `mailto:` with the subject "Changing table at {name}" on a
+table — "PapaMap: {name}" on a play place, which has no table to name — and
 the pin's share link in the body, so the place knows which entry the reader
 means. It opens the reader's own mail app, which sends the mail: nothing
 passes through PapaMap, and PapaMap never learns that a mail was written.

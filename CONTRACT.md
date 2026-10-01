@@ -11,13 +11,15 @@
 > stripped of a leading `mailto:` (any case); a key with no valid token falls
 > through to the next. Valid means at most 254 characters, one `@`, a dot in
 > the domain, a TLD of two or more, and none of whitespace, `;`, `,`, `<`,
-> `>`, quotes, parentheses, brackets or a backslash; case is kept verbatim.
+> `>`, quotes, parentheses, brackets, a backslash, `?`, `&`, `=`, `#`, `%`,
+> `/` or `:` (nothing that could add a mailto header); case is kept verbatim.
 > `null` when nothing passes. The delta follower carries it through the shared
 > builders, as every other property. Where `email` passes the same check in
 > the frontend (`web/datasource.js::isContactEmail`, kept in lockstep with the
 > Python), the table popup and the place popup add a "Report a problem" link
 > after "View on OSM": a `mailto:` with the subject "Changing table at
-> {name}" and the pin's share link in the body (`popupReport`,
+> {name}" on a table, "PapaMap: {name}" on a play place (it has no table to
+> name), and the pin's share link in the body (`popupReport`,
 > `reportSubject` (`{name}`), `reportBody` (`{url}`), new in all 32
 > languages). Nothing passes through PapaMap: the mail leaves from the
 > reader's own mail app. Shell pin `app61` → `app62`.

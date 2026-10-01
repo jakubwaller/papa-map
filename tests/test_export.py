@@ -352,3 +352,10 @@ def test_contact_email_limit_is_inclusive_at_254():
     ok = "a" * (254 - len("@example.com")) + "@example.com"
     assert len(ok) == 254 and len(_LONG) == 255
     assert contact_email({"email": ok}) == ok
+
+
+def test_email_re_rejects_a_trailing_newline():
+    # `$` alone would accept "a@example.com\n"; fullmatch keeps the Python
+    # rule as strict as the JS one.
+    from pipeline.export import EMAIL_RE
+    assert EMAIL_RE.fullmatch("a@example.com") and not EMAIL_RE.fullmatch("a@example.com\n")
