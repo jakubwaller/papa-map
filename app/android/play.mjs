@@ -45,23 +45,10 @@ function serviceAccount() {
   return key;
 }
 
-async function accessToken(key) {
-  const res = await fetch(key.token_uri, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: assertion(key),
-    }),
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(`token: ${res.status} ${JSON.stringify(json)}`);
-  return json.access_token;
-}
-
 // Play answers a transient 503 now and then mid-edit (run 255, 1 Oct 2026),
 // and one of those used to fail the whole upload. 429 and 5xx are retried with
-// a doubling pause; anything else is the request's fault and fails at once.
+// a doubling pause, the token request included; anything else is the
+// request's fault and fails at once.
 export const retryable = (status) => status === 429 || status >= 500;
 
 export async function withRetry(send, { tries = 4, pause = 2000, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
@@ -71,6 +58,20 @@ export async function withRetry(send, { tries = 4, pause = 2000, sleep = (ms) =>
     console.log(`${res.status}, retrying in ${pause * 2 ** (i - 1) / 1000} s`);
     await sleep(pause * 2 ** (i - 1));
   }
+}
+
+async function accessToken(key) {
+  const res = await withRetry(() => fetch(key.token_uri, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: assertion(key),
+    }),
+  }));
+  const json = await res.json();
+  if (!res.ok) throw new Error(`token: ${res.status} ${JSON.stringify(json)}`);
+  return json.access_token;
 }
 
 async function call(bearer, method, url, { json, body, type } = {}) {
