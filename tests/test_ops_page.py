@@ -225,6 +225,15 @@ def test_healthy_page_carries_every_section():
         < html.index("<h2>Movement</h2>")
 
 
+def test_live_updates_values_wrap_on_a_phone():
+    # The shared td rule is nowrap; this table's values are sentences with
+    # timestamps in them and pushed the page to 850px on a 375px screen.
+    html = render()
+    section = html[html.index("<h2>Live updates</h2>"):html.index("<h2>Movement</h2>")]
+    assert '<table class="kv">' in section
+    assert "table.kv td { white-space: normal; overflow-wrap: anywhere;" in html
+
+
 def test_live_updates_section_absent_when_not_expected():
     assert "Live updates" not in render(delta=None, delta_expected=False)
 

@@ -128,6 +128,13 @@ OPS_STYLE = """\
   @media (max-width: 560px) { .bar-col .bar-n { display: none; } }
   .bar-axis { display: flex; justify-content: space-between; font-size: 0.72rem;
               color: var(--muted); margin-bottom: 0.8rem; }
+  /* A label/value table whose values are sentences with timestamps in them
+     (the follower section). The shared td rule is nowrap for number columns;
+     here that made one row 850px wide on a 375px phone and dragged the whole
+     page sideways. The values wrap instead, and a bare ISO timestamp may break
+     anywhere once there are no spaces left to break on. */
+  table.kv td { white-space: normal; overflow-wrap: anywhere; text-align: left; }
+  table.kv td.l { width: 40%; }
   td.pos { color: var(--green); } td.neg { color: var(--red); }
   footer { margin-top: 3rem; font-size: 0.85rem; color: var(--muted);
            border-top: 1px solid var(--line); padding-top: 0.8rem; }
@@ -691,7 +698,7 @@ def _live_updates(d: dict | None) -> str:
            "OpenStreetMap's minutely diffs and writes delta.json; the map "
            "merges it over the nightly dataset, so an edit anywhere shows "
            "within a few minutes instead of after the next build.</p>\n"
-           "<table>\n<tbody>\n"]
+           '<table class="kv">\n<tbody>\n']
     out.extend(f'<tr><td class="l">{label}</td><td{cls}>{val}</td></tr>\n'
                for label, val, cls in rows)
     out.append("</tbody>\n</table>\n")
