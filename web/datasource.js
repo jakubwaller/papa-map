@@ -870,12 +870,18 @@ export function pickArea(areas, features, center, view) {
 // that language or has no English twin (an English page, a US state), else
 // the twin. A reader with the UI in Czech looking at Hamburg gets
 // deutschland-en.html, not a German page they cannot read. The label is the
-// target page's own h1, so the link says where it leads in the language it
-// leads to.
-export function areaLink(area, lang) {
+// target page's own h1, except on that fallback: there the twin's English
+// h1 would put "Changing tables in Germany" into a Czech dialog, so
+// countryLabel (cc -> a phrase in the UI language, or null) names the
+// country instead, from the row's ISO code (CONTRACT.md v61). `en: true`
+// marks the fallback, so the caller can say the page it opens is English.
+// With no countryLabel, no `cc` (an older areas.json) or no name for the
+// code, the twin's own h1 stands.
+export function areaLink(area, lang, countryLabel) {
   if (!area) return null;
   if (area.lang === lang || !area.en) return { href: area.href, label: area.label };
-  return { href: area.en.href, label: area.en.label };
+  const local = lang !== "en" && area.cc && countryLabel ? countryLabel(area.cc) : null;
+  return { href: area.en.href, label: local || area.en.label, en: true };
 }
 
 // The set of `f.area` values an areas.json row covers — a chunk (Land,
@@ -912,9 +918,9 @@ export function areaKeysFor(row) {
 // up by its `parent` href once a fallback to it is detected; with no match
 // (a stale areas.json, a row missing its `parent`) this degrades to the
 // chunk's own area rather than an empty score.
-export function areaForLabel(row, lang, rows) {
+export function areaForLabel(row, lang, rows, countryLabel) {
   if (!row) return { label: null, keys: new Set() };
-  const link = areaLink(row, lang);
+  const link = areaLink(row, lang, countryLabel);
   const fellBackToParentTwin = row.area && row.lang !== lang && !!row.en;
   if (fellBackToParentTwin) {
     const parent = (Array.isArray(rows) ? rows : []).find((r) => r.href === row.parent);

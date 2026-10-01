@@ -1140,11 +1140,32 @@ test("pickArea weighs the voters by nearness, so a close cluster outvotes one ne
 test("areaLink reads the page in the UI language, else its English twin", () => {
   const hh = AREAS[1];
   assert.deepEqual(areaLink(hh, "de"), { href: "wickeltische/hamburg.html", label: "Wickeltische in Hamburg" });
-  assert.deepEqual(areaLink(hh, "en"), { href: "wickeltische/deutschland-en.html", label: "Changing tables in Germany" });
-  assert.deepEqual(areaLink(hh, "cs"), { href: "wickeltische/deutschland-en.html", label: "Changing tables in Germany" });
+  assert.deepEqual(areaLink(hh, "en"), { ...DE_EN, en: true });
+  assert.deepEqual(areaLink(hh, "cs"), { ...DE_EN, en: true });
   // An English page is its own English reading, for every UI language.
   assert.deepEqual(areaLink(AREAS.find((a) => a.area === "Florida"), "de"), { href: "wickeltische/florida.html", label: "Changing tables in Florida" });
   assert.equal(areaLink(null, "de"), null);
+});
+
+test("areaLink names the country in the UI language when it falls back to the English twin (v61)", () => {
+  const hh = { ...AREAS[1], cc: "de" };
+  const cs = (cc) => (cc === "de" ? "Přebalovací pulty – Německo" : null);
+  assert.deepEqual(areaLink(hh, "cs", cs), { href: DE_EN.href, label: "Přebalovací pulty – Německo", en: true });
+  // English readers get the twin's own h1, which is already theirs.
+  assert.deepEqual(areaLink(hh, "en", cs), { ...DE_EN, en: true });
+  // No name for the code, or no code at all (an older areas.json): the twin's h1 stands.
+  assert.equal(areaLink({ ...hh, cc: "zz" }, "cs", cs).label, DE_EN.label);
+  assert.equal(areaLink(AREAS[1], "cs", cs).label, DE_EN.label);
+  // A page in the reader's own language is never relabelled.
+  assert.deepEqual(areaLink(hh, "de", cs), { href: "wickeltische/hamburg.html", label: "Wickeltische in Hamburg" });
+  // The dialog's sentence takes the same label, and still scores the whole country.
+  const { label, keys } = areaForLabel(hh, "cs", AREAS, cs);
+  assert.equal(label, "Přebalovací pulty – Německo");
+  assert.deepEqual([...keys].sort(), ["Bayern", "Hamburg", "Schleswig-Holstein"]);
+});
+
+test("every language has an areaCountry phrase with a {country} slot", () => {
+  for (const l of LANGS) assert.match(STRINGS[l].areaCountry ?? "", /\{country\}/, l);
 });
 
 test("areaKeysFor: a chunk's own one area, a country's several, nothing for null", () => {
