@@ -4,7 +4,7 @@ import { generateKeyPairSync } from "node:crypto";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { listingsPush, pickEditable, _resetBearerForTests } from "./asc.mjs";
+import { listingsPush, pickEditable, marketingVersion, _resetBearerForTests } from "./asc.mjs";
 import { ascVersionAttributes, privacyUrl } from "../listings.mjs";
 
 // api() signs a real JWT; the key is never sent anywhere since fetch is faked.
@@ -23,26 +23,32 @@ const LISTING = {
   playDescription: "PapaMap shows changing tables that dads can actually get to.",
 };
 
-function tmpListings(files) {
+// A listings directory, and beside it a project.pbxproj that says 1.2 twice
+// (Debug and Release, as Xcode writes it) — unless the test says otherwise.
+function tmpListings(files, pbxproj = "MARKETING_VERSION = 1.2;\nMARKETING_VERSION = 1.2;\n") {
   const dir = mkdtempSync(join(tmpdir(), "papamap-listings-"));
   for (const [lang, listing] of Object.entries(files)) writeFileSync(join(dir, `${lang}.json`), JSON.stringify(listing));
+  writeFileSync(join(dir, "project.pbxproj"), pbxproj);
   return dir;
 }
+const pushFrom = (dir) => listingsPush({ dir, pbxproj: join(dir, "project.pbxproj") });
 
 // Routes are matched in order on method + path (query included); `body` is
-// the canned JSON answer, or a function of the request body. Every call is
-// recorded so a test can say exactly what went out.
+// the canned JSON answer, `bodies` a sequence handed out call by call (the
+// last one repeats). Every call is recorded so a test can say exactly what
+// went out.
 function fakeFetch(routes) {
   const calls = [];
+  const queues = routes.map((r) => ({ ...r, bodies: r.bodies ? [...r.bodies] : undefined }));
   const fn = async (url, opts = {}) => {
     const u = new URL(url);
     const method = opts.method ?? "GET";
     const path = u.pathname + u.search;
     const body = opts.body ? JSON.parse(opts.body) : undefined;
     calls.push({ method, path, body });
-    const route = routes.find((r) => r.method === method && r.pattern.test(path));
+    const route = queues.find((r) => r.method === method && r.pattern.test(path));
     if (!route) throw new Error(`no fake route for ${method} ${path}`);
-    const res = typeof route.body === "function" ? route.body(body) : route.body;
+    const res = route.bodies ? (route.bodies.length > 1 ? route.bodies.shift() : route.bodies[0]) : route.body;
     return { status: 200, ok: true, json: async () => res ?? null };
   };
   return { fn, calls };
@@ -99,7 +105,7 @@ test("push PATCHes a changed locale, POSTs a missing one, leaves an unchanged on
     et: { ...LISTING, subtitle: "Mähkimislauad isadele" },
   });
   try {
-    await listingsPush({ dir });
+    await pushFrom(dir);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -132,19 +138,66 @@ test("push PATCHes a changed locale, POSTs a missing one, leaves an unchanged on
   assert.ok(!calls.some((c) => /V11|I1\b/.test(c.path)));
 });
 
-test("push stops before any write when no version is being prepared", async (t) => {
+test("with no version in preparation, push creates the project's MARKETING_VERSION first and fills that", async (t) => {
+  const live = { id: "V11", attributes: { versionString: "1.1", appVersionState: "READY_FOR_DISTRIBUTION" } };
+  const prep = { id: "V12", attributes: { versionString: "1.2", appVersionState: "PREPARE_FOR_SUBMISSION" } };
   const calls = withFetch(t, [
     appRoute,
-    { method: "GET", pattern: /^\/v1\/apps\/APP\/appStoreVersions/,
-      body: { data: [{ id: "V11", attributes: { versionString: "1.1", appVersionState: "READY_FOR_DISTRIBUTION" } }] } },
+    { method: "GET", pattern: /^\/v1\/apps\/APP\/appStoreVersions/, bodies: [{ data: [live] }, { data: [live, prep] }] },
+    { method: "POST", pattern: /^\/v1\/appStoreVersions$/, body: { data: { id: "V12" } } },
+    { method: "GET", pattern: /^\/v1\/apps\/APP\/appInfos/,
+      body: { data: [{ id: "I1", attributes: { state: "READY_FOR_DISTRIBUTION" } }, { id: "I2", attributes: { state: "PREPARE_FOR_SUBMISSION" } }] } },
+    { method: "GET", pattern: /^\/v1\/appInfos\/I2\/appInfoLocalizations/, body: { data: [] } },
+    { method: "GET", pattern: /^\/v1\/appStoreVersions\/V12\/appStoreVersionLocalizations/, body: { data: [] } },
+    { method: "POST", pattern: /^\/v1\/appInfoLocalizations$/, body: { data: { id: "AI-new" } } },
+    { method: "POST", pattern: /^\/v1\/appStoreVersionLocalizations$/, body: { data: { id: "VL-new" } } },
   ]);
   const dir = tmpListings({ en: LISTING });
   try {
-    await assert.rejects(() => listingsPush({ dir }), /no App Store version is being prepared/);
+    await pushFrom(dir);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  const writes = calls.filter((c) => c.method !== "GET");
+  assert.deepEqual(writes.map((c) => `${c.method} ${c.path}`), [
+    "POST /v1/appStoreVersions",
+    "POST /v1/appInfoLocalizations",
+    "POST /v1/appStoreVersionLocalizations",
+  ]);
+  assert.deepEqual(writes[0].body.data, {
+    type: "appStoreVersions",
+    attributes: { versionString: "1.2", platform: "IOS" },
+    relationships: { app: { data: { type: "apps", id: "APP" } } },
+  });
+  assert.equal(writes[2].body.data.relationships.appStoreVersion.data.id, "V12");
+});
+
+test("push refuses to create a version whose string already exists, and writes nothing", async (t) => {
+  const calls = withFetch(t, [
+    appRoute,
+    { method: "GET", pattern: /^\/v1\/apps\/APP\/appStoreVersions/,
+      body: { data: [{ id: "V12", attributes: { versionString: "1.2", appVersionState: "READY_FOR_DISTRIBUTION" } }] } },
+  ]);
+  const dir = tmpListings({ en: LISTING });
+  try {
+    await assert.rejects(() => pushFrom(dir), /1\.2 already exists \(READY_FOR_DISTRIBUTION\) — bump MARKETING_VERSION/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
   assert.ok(calls.every((c) => c.method === "GET"));
+});
+
+test("marketingVersion reads the one value Xcode repeats per configuration and refuses two", () => {
+  const dir = tmpListings({}, "\t\t\t\tMARKETING_VERSION = 1.2;\n\t\t\t\tMARKETING_VERSION = 1.2;\n");
+  try {
+    assert.equal(marketingVersion(join(dir, "project.pbxproj")), "1.2");
+    writeFileSync(join(dir, "project.pbxproj"), "MARKETING_VERSION = 1.2;\nMARKETING_VERSION = 1.3;\n");
+    assert.throws(() => marketingVersion(join(dir, "project.pbxproj")), /MARKETING_VERSION is 1\.2 and 1\.3/);
+    writeFileSync(join(dir, "project.pbxproj"), "nothing here\n");
+    assert.throws(() => marketingVersion(join(dir, "project.pbxproj")), /MARKETING_VERSION is missing/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("without an app info in preparation only the version's texts are pushed", async (t) => {
@@ -159,7 +212,7 @@ test("without an app info in preparation only the version's texts are pushed", a
   ]);
   const dir = tmpListings({ en: LISTING });
   try {
-    await listingsPush({ dir });
+    await pushFrom(dir);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -171,7 +224,7 @@ test("a file over a store limit fails before the first request", async (t) => {
   const calls = withFetch(t, [appRoute]);
   const dir = tmpListings({ en: { ...LISTING, subtitle: "x".repeat(31) } });
   try {
-    await assert.rejects(() => listingsPush({ dir }), /en\.json: "subtitle" is 31 characters/);
+    await assert.rejects(() => pushFrom(dir), /en\.json: "subtitle" is 31 characters/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

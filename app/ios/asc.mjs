@@ -426,6 +426,46 @@ export function pickEditable(records, state) {
   return hits[0] ?? null;
 }
 
+// The Xcode project's MARKETING_VERSION: the version string every build
+// carries, so the one an App Store version page has to be named for.
+const defaultPbxproj = join(dirname(fileURLToPath(import.meta.url)), "App", "App.xcodeproj", "project.pbxproj");
+
+export function marketingVersion(pbxproj = defaultPbxproj) {
+  const found = [...new Set([...readFileSync(pbxproj, "utf8").matchAll(/MARKETING_VERSION = ([^;\s]+);/g)].map((m) => m[1]))];
+  if (found.length !== 1) {
+    throw new Error(`MARKETING_VERSION is ${found.length ? found.join(" and ") : "missing"} in ${pbxproj} — expected exactly one value`);
+  }
+  return found[0];
+}
+
+// A live version is sealed, so new locales need a version page in
+// preparation. When there is none, the next one is created here under the
+// project's own MARKETING_VERSION — the page the next release would have made
+// by hand — unless a version of that string already exists, in which case the
+// project needs a bump, not App Store Connect a duplicate.
+async function editableVersion(app, pbxproj) {
+  const versions = await appStoreVersions(app);
+  const have = pickEditable(versions, versionState);
+  if (have) return have;
+  const want = marketingVersion(pbxproj);
+  const clash = versions.find((v) => v.attributes.versionString === want);
+  if (clash) {
+    throw new Error(`no App Store version is being prepared, and ${want} already exists (${versionState(clash)}) — ` +
+                    "bump MARKETING_VERSION in the Xcode project first");
+  }
+  const made = await api("POST", "/appStoreVersions", {
+    data: {
+      type: "appStoreVersions",
+      attributes: { versionString: want, platform: "IOS" },
+      relationships: { app: { data: { type: "apps", id: app } } },
+    },
+  });
+  console.log(`created App Store version ${want} (${made.data.id}): none was being prepared`);
+  const fresh = pickEditable(await appStoreVersions(app), versionState);
+  if (!fresh) throw new Error(`version ${want} was created but is not listed as being prepared — look at App Store Connect`);
+  return fresh;
+}
+
 const appInfos = async (app) => (await api("GET", `/apps/${app}/appInfos?limit=200`)).data;
 const appInfoLocalizations = async (info) => (await api("GET", `/appInfos/${info}/appInfoLocalizations?limit=200`)).data;
 const appStoreVersions = async (app) =>
@@ -469,14 +509,12 @@ async function upsertLocalization(type, have, locale, attributes, relationships)
   }
 }
 
-export async function listingsPush({ dir = listingsDir } = {}) {
+export async function listingsPush({ dir = listingsDir, pbxproj = defaultPbxproj } = {}) {
   const listings = readListings(dir);   // every file validated before the first request
   const app = await appId();
-  const version = pickEditable(await appStoreVersions(app), versionState);
-  if (!version) {
-    throw new Error("no App Store version is being prepared — a live version cannot take new locales; " +
-                    "create the next version in App Store Connect (or let the version PR's build do it) and push again");
-  }
+  const version = await editableVersion(app, pbxproj);
+  // Read after the version: a new version page is what makes an app info
+  // (name, subtitle) editable, and it shows up as a second record.
   const info = pickEditable(await appInfos(app), infoState);
   console.log(`version ${version.attributes.versionString} (${versionState(version)}, ${version.id})` +
               (info ? `, app info ${info.id} (${infoState(info)})` : ", no app info being prepared"));
