@@ -179,10 +179,13 @@ export function sentenceParts({ area, percent, tables, known, greyCount, hasFix,
 // never places — a reader who answered one table twice has two — which is why
 // the line relates answers to answers and never claims a share of the area's
 // recorded rooms. `inArea` is null when there is no area to count in (open
-// sea, stats.json missing): then the total stands for both.
+// sea, zoomed out past every area, stats.json missing): then only the total
+// is said — "in this area" with nothing above it to be that area would claim
+// one that does not exist.
 export function yoursParts({ inArea, total }) {
   if (!(total > 0)) return { key: "meYoursZero" };
-  return { key: "meYours", vars: { n: inArea ?? total, total } };
+  if (inArea == null) return { key: "meYoursTotal", vars: { total } };
+  return { key: "meYours", vars: { n: inArea, total } };
 }
 
 // ---- Grey pins nearby ----
@@ -405,7 +408,7 @@ export function appTips(platform, lang) {
 // releases in between, if any release had something to say, else nothing.
 export const INTRO_KEY = "papamap-intro";
 
-// "app62" -> 61; anything else -> null.
+// "app62" -> 62; anything else -> null.
 export function pinNumber(pin) {
   const m = typeof pin === "string" ? /^app(\d+)$/.exec(pin) : null;
   return m ? Number(m[1]) : null;

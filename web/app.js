@@ -3912,7 +3912,8 @@ function renderMeStats() {
   const inArea = keys ? answersInArea(answers, myFeatureGrid, keys) : null;
   const yours = yoursParts({ inArea, total });
   const first = answers.length ? answers.reduce((a, b) => ((a.closed_at ?? "") < (b.closed_at ?? "") ? a : b)) : null;
-  const lines = [`<p>${esc(t(yours.key, yours.vars ? { n: num(yours.vars.n), total: num(yours.vars.total) } : {}))}</p>`];
+  const yoursVars = yours.vars ? Object.fromEntries(Object.entries(yours.vars).map(([k, v]) => [k, num(v)])) : {};
+  const lines = [`<p>${esc(t(yours.key, yoursVars))}</p>`];
   if (first?.closed_at) {
     // The full month, not the abbreviated one: German abbreviates with a
     // trailing period of its own ("1. Aug."), which collided with the

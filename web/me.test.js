@@ -38,8 +38,9 @@ test("sentenceParts: one area line for both readings, with the counts behind the
 test("yoursParts: answers in the area and everywhere; the zero case invites", () => {
   assert.deepEqual(yoursParts({ inArea: 4, total: 7 }), { key: "meYours", vars: { n: 4, total: 7 } });
   assert.deepEqual(yoursParts({ inArea: 0, total: 7 }), { key: "meYours", vars: { n: 0, total: 7 } });
-  // No area to count in (open sea, stats.json missing): the total stands for both.
-  assert.deepEqual(yoursParts({ inArea: null, total: 7 }), { key: "meYours", vars: { n: 7, total: 7 } });
+  // No area to count in (open sea, stats.json missing): only the total, never
+  // "in this area" with no area above it.
+  assert.deepEqual(yoursParts({ inArea: null, total: 7 }), { key: "meYoursTotal", vars: { total: 7 } });
   assert.deepEqual(yoursParts({ inArea: 0, total: 0 }), { key: "meYoursZero" });
   assert.deepEqual(yoursParts({ inArea: null, total: 0 }), { key: "meYoursZero" });
 });
