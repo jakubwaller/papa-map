@@ -209,9 +209,11 @@ function updateRegionsLink() {
     currentArea = pickArea(areaIndex, allFeatures, [c.lng, c.lat], view);
     link = areaLink(currentArea, lang, countryLabel);
   } catch { currentArea = null; }
-  // The fallback opens an English page; the label is in the reader's own
-  // language now (areaLink), so it says where it leads.
-  const label = link ? link.label + (link.en && lang !== "en" ? " (English)" : "") : t("regions");
+  // The fallback opens an English page; when areaLink has named the country
+  // in the reader's own language, the hint says where it leads. A label that
+  // is still the twin's English h1 says so itself.
+  const english = link?.en && link.label !== currentArea?.en?.label;
+  const label = link ? link.label + (english ? " (English)" : "") : t("regions");
   el.href = link ? link.href : t("regionsHref");
   if (el.textContent === label) return;
   el.textContent = label;

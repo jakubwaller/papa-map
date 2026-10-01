@@ -481,7 +481,7 @@ export const STRINGS = {
     statsGlobalMissing: "Worldwide room-tag stats unavailable right now.",
     ariaMe: "My PapaMap",
     meTitle: "My PapaMap",
-    meAreaSentence: "{area}: {tables}, of which {known} have the room recorded ({percent}%).",
+    meAreaSentence: "{area}: {tables}, of which {known} with the room recorded ({percent}%).",
     areaCountry: "Changing tables in {country}",
     meYours: "Your answers: {n} in this area, {total} in total.",
     meYoursTotal: "Your answers in total: {total}.",
