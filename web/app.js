@@ -207,9 +207,11 @@ function updateRegionsLink() {
     const c = raw.wrap(), dx = c.lng - raw.lng;
     const view = rawBounds.map(([x, y]) => [x + dx, y]);
     currentArea = pickArea(areaIndex, allFeatures, [c.lng, c.lat], view);
-    link = areaLink(currentArea, lang);
+    link = areaLink(currentArea, lang, countryLabel);
   } catch { currentArea = null; }
-  const label = link ? link.label : t("regions");
+  // The fallback opens an English page; the label is in the reader's own
+  // language now (areaLink), so it says where it leads.
+  const label = link ? link.label + (link.en && lang !== "en" ? " (English)" : "") : t("regions");
   el.href = link ? link.href : t("regionsHref");
   if (el.textContent === label) return;
   el.textContent = label;
@@ -1199,6 +1201,18 @@ function wheelchairChip(count) {
 // into them is num()'d or esc()'d here first. lastStats feeds the re-render
 // when the language toggles.
 const num = (n) => Number(n ?? 0).toLocaleString(NUMBER_LOCALE[lang] ?? "en-GB");
+// A country's name in the UI language, from its ISO code (areas.json `cc`),
+// inside the language's own "changing tables" phrase — what the area link
+// and "Mein PapaMap" say when the page they point at is an English twin.
+// Null when the runtime has no name for the code (it echoes the code back),
+// and areaLink then keeps the twin's English h1.
+function countryLabel(cc) {
+  try {
+    const code = String(cc).toUpperCase();
+    const name = new Intl.DisplayNames([NUMBER_LOCALE[lang] ?? lang], { type: "region" }).of(code);
+    return name && name !== code ? t("areaCountry", { country: name }) : null;
+  } catch { return null; }
+}
 let lastStats = null;
 
 // The pipeline names the swept area twice: area_key for the sets it knows
@@ -3842,7 +3856,7 @@ function meAreaNumbers() {
     // alone would still only be that one chunk's own area, scoring Hamburg's
     // 131 tables under "Changing tables in Germany". `areaIndex` is the full
     // areas.json list, needed to look the parent row up when that happens.
-    const { label: area, keys } = areaForLabel(currentArea, lang, areaIndex);
+    const { label: area, keys } = areaForLabel(currentArea, lang, areaIndex, countryLabel);
     const { tables, known } = areaAnswered(allFeatures, keys);
     return { area, percent: areaPercent(allFeatures, keys), tables, known, keys };
   }

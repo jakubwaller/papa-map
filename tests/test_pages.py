@@ -670,7 +670,9 @@ def test_area_index_maps_every_page_to_its_box_and_english_reading(tmp_path):
         if r["bbox"]:
             w, s, e, n = r["bbox"]
             assert w < e and s < n, r["href"]
-        assert set(r) <= {"href", "lang", "label", "bbox", "en", "area", "areas", "parent"}
+        assert set(r) <= {"href", "lang", "label", "bbox", "en", "area", "areas", "parent", "cc"}
+        # Every row names its country, so the frontend can say it in any language.
+        assert len(r["cc"]) == 2 and r["cc"].islower(), r["href"]
         assert ("area" in r) != ("areas" in r), r["href"]
         if "area" in r:
             assert r["parent"] in by_href and "areas" in by_href[r["parent"]]
@@ -709,6 +711,8 @@ def test_area_index_maps_every_page_to_its_box_and_english_reading(tmp_path):
     assert br["en"] == fr["en"] == {"href": "wickeltische/france-en.html",
                                     "label": "Changing tables in France"}
     assert fr["bbox"] == br["bbox"]   # the hub's box is the union of its chunks
+    assert hh["cc"] == de["cc"] == "de" and dk["cc"] == "dk" and ch["cc"] == "ch"
+    assert br["cc"] == fr["cc"] == "fr"
 
 
 def test_area_index_union_skips_chunks_without_a_box():

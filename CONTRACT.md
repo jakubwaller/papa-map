@@ -1,10 +1,18 @@
 # papa-map — build contract (v0)
 
-> **v61 amendment (1 Oct 2026, the area line's two numbers): no shape change.**
+> **v61 amendment (1 Oct 2026, the area line in the reader's language): `cc` added.**
 > English read "Changing tables in Germany: 6,277, 1,283 with the room recorded":
 > two comma-grouped numbers separated by a comma. `meAreaSentence` now says "of
 > which" between them in English, and the same in the three languages that also
 > put the second number straight after the comma (Catalan, Spanish, Portuguese).
+> And a Czech reader over Germany read "Changing tables in Germany" in a Czech
+> dialog, because the label was the English twin's h1. Every `areas.json` row
+> now carries `cc` (an additive field), and where `areaLink` falls back to the
+> English twin for a reader in another language, the label is the country's
+> name from `Intl.DisplayNames` inside `areaCountry`, one key per language
+> taken from the pages' own h1 ("Přebalovací pulty – Německo"). The footer
+> link adds "(English)", because the page it opens is English. With no `cc`
+> (yesterday's areas.json) or no name for the code, the twin's h1 stands.
 > Shell pin `app62` → `app63`.
 
 > **v60 amendment (1 Oct 2026, "Mein PapaMap" is the reader's): no shape
@@ -1392,7 +1400,8 @@
 > country. A country row carries **`areas`**, the sweep area names behind
 > it (Germany: the 16 Länder; Denmark: `["Danmark"]`); a chunk row — Land,
 > région, state, prefecture — carries **`area`**, its one sweep area, and
-> **`parent`**, the `href` of its country row. The frontend
+> **`parent`**, the `href` of its country row. Every row carries **`cc`**, its
+> country's lowercase ISO 3166-1 code (v61). The frontend
 > (`pickArea`/`areaLink` in `web/datasource.js`) lets the seven pins nearest
 > the map centre vote with their `area`, weighted by nearness (none within
 > 250 km: no answer),

@@ -804,7 +804,9 @@ def area_index(plan: dict, base_path: str = PAGES_BASE_PATH) -> list:
     reader whose UI language is another one — the twin for a country, the
     country's twin for a chunk (those have no twin of their own), absent
     where the page is English already. Labels are the pages' own h1, so the
-    link says exactly where it leads ("Wickeltische in Hamburg")."""
+    link says exactly where it leads ("Wickeltische in Hamburg"). `cc` is the
+    country's ISO 3166-1 code, so a reader sent to an English twin can still
+    read the country's name in their own language (Intl.DisplayNames)."""
     rows = []
     rel = base_path.lstrip("/")
 
@@ -821,11 +823,11 @@ def area_index(plan: dict, base_path: str = PAGES_BASE_PATH) -> list:
         de_en = ("deutschland-en.html", COUNTRY_FORMS_EN["de"][1])
         rows.append(row("", "de", _union(s["bbox"] for s in plan["land_summaries"]),
                         "in Deutschland", de_en,
-                        areas=[s["name"] for s in plan["land_summaries"]]))
+                        areas=[s["name"] for s in plan["land_summaries"]], cc="de"))
         for s in plan["land_summaries"]:
             rows.append(row(f"{s['slug']}.html", "de", s["bbox"],
                             f"in {s['name']}", de_en,
-                            area=s["name"], parent=rel))
+                            area=s["name"], parent=rel, cc="de"))
 
     for e in plan["country_entries"]:
         cc, lang, s = e["cc"], e["lang"], e["summary"]
@@ -836,11 +838,11 @@ def area_index(plan: dict, base_path: str = PAGES_BASE_PATH) -> list:
         bbox = _union(x["summary"]["bbox"] for x in chunks) if chunks else s["bbox"]
         own = f"{s['slug']}.html"
         rows.append(row(own, lang, bbox, e["name_in"], en,
-                        areas=[a for a, _ in COUNTRY_AREAS[cc]]))
+                        areas=[a for a, _ in COUNTRY_AREAS[cc]], cc=cc))
         for x in chunks or ():
             rows.append(row(f"{x['summary']['slug']}.html", lang,
                             x["summary"]["bbox"], x["name_in"], en,
-                            area=x["summary"]["name"], parent=rel + own))
+                            area=x["summary"]["name"], parent=rel + own, cc=cc))
     return rows
 
 
