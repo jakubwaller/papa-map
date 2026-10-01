@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { NUMBER_LOCALE, DEFAULT_LANG } from "./i18n.js";
+import { NUMBER_LOCALE, DEFAULT_LANG, LANGS } from "./i18n.js";
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const PAGES = fs.readdirSync(DIR)
@@ -110,5 +110,64 @@ test("static decimals use the page's own decimal separator", () => {
     const found = [...bodyOf(src).matchAll(/\b\d{1,2}[.,]\d\s?%/g)].map((m) => m[0]);
     const wrong = [...new Set(found.filter((n) => !n.includes(want)))];
     assert.deepEqual(wrong, [], `${f} (${localeOf(src)}) wants "${want}" as decimal separator`);
+  }
+});
+
+// Each language's words for "nightly" / "overnight", as the methods pages write
+// them. Kept by hand next to the pages, so a new language needs an entry here.
+const NIGHTLY = {
+  de: /nächtlich|über Nacht/i,
+  en: /nightly|overnight/i,
+  be: /начн|уначы/i,
+  bg: /нощн|през нощта/i,
+  bs: /noćn|preko noći/i,
+  ca: /nocturn|de nit/i,
+  cs: /nočn|přes noc/i,
+  da: /natlig|om natten/i,
+  el: /νυχτερ|τη νύχτα/i,
+  es: /nocturn|por la noche/i,
+  et: /(^|[^\p{L}])öi[ns]|öösel/iu,
+  fi: /yöllis|yöllä|öisin/i,
+  fr: /nocturne|la nuit/i,
+  hr: /noćn|preko noći/i,
+  hu: /éjszaka|éjjel/i,
+  is: /nætur/i,
+  it: /notturn|di notte/i,
+  ja: /夜/,
+  lt: /nakt/i,
+  lv: /nakt/i,
+  mk: /ноќ/i,
+  nl: /nachtelijk|'s nachts/i,
+  no: /nattlig|om natten/i,
+  pl: /nocn|w nocy/i,
+  pt: /noturn|durante a noite/i,
+  ro: /noapte|nocturn/i,
+  sk: /nočn|cez noc/i,
+  sl: /nočn|čez noč/i,
+  sq: /natës|natën/i,
+  sr: /ноћн|преко ноћи/i,
+  sv: /nattlig|på natten/i,
+  uk: /нічн|вночі/i,
+};
+
+test("answers, new places and the play ring are not promised for the nightly build", () => {
+  // Since the delta follower (CONTRACT v48) an answer, a new place and the play
+  // ring show up within minutes. The stats and region pages are still rebuilt
+  // nightly, so the word itself stays on the page — just not from the play
+  // paragraph (the one with kids_area=no) through the add-a-place section (up to
+  // the <h2> after id="contribute"), which covers the play-only rings, the
+  // grey-pin how-to and the iD walkthrough.
+  assert.deepEqual(Object.keys(NIGHTLY).sort(), [...LANGS].sort());
+  for (const f of PAGES) {
+    const src = read(f);
+    const re = NIGHTLY[langOf(f)];
+    // Guard against a regex that matches nothing: the stats sentence keeps it.
+    assert.match(bodyOf(src), re, `${f}: ${re} never matches, so it guards nothing`);
+    const k = src.indexOf("<code>kids_area=no</code>");
+    const c = src.indexOf('<h2 id="contribute"');
+    assert.ok(k > 0 && c > k, `${f} lacks the play paragraph or the contribute section`);
+    const text = src.slice(src.lastIndexOf("<p", k), src.indexOf("<h2", c + 1));
+    const m = text.match(re);
+    assert.equal(m, null, `${f} still says "${m && text.slice(Math.max(0, m.index - 40), m.index + 30)}"`);
   }
 });
