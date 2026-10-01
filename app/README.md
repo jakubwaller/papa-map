@@ -181,6 +181,32 @@ which the files in `ios/testflight/` can be compared. `pull` never writes anythi
 Apple's `whatsNew` limit is 4000 characters per locale; `push` checks every file against it
 before making any request. See `ios/asc.mjs` for the App Store Connect API docs consulted.
 
+### Store listing texts, no browser needed
+
+`listings/<lang>.json` holds the App Store and Play listing for one language of the map
+(`web/i18n.js`'s codes): `name`, `subtitle`, `keywords`, `promotionalText` and `description`
+for the App Store, `shortDescription` and `playDescription` for Play, `whatsNew` optionally
+(it belongs to a version, so a file without it leaves the store's text alone). `listings.mjs`
+maps each language to the store's own locale — 22 of the 32 exist on the App Store, 30 on
+Play; a language a store lacks is skipped and named in the log — and checks every file against
+the stores' limits before a single request.
+
+Task `listings-pull` (Actions tab) prints what both stores hold in every locale and writes
+nothing. Task `listings-push` creates or updates one localization per file: on the App Store
+only the version being prepared takes new locales (a live version is sealed), so with none in
+preparation the push first creates the next version page under the Xcode project's
+`MARKETING_VERSION` — the page the next release would have made by hand; a version of that
+string that already exists means the project needs a bump, and the push says so instead. On
+Play all listings go in one edit that is committed only if something changed and deleted on any
+error. Both are idempotent — an unchanged locale is logged, not rewritten. Screenshots are not
+part of this: both stores show the primary language's screenshots to a locale without its own.
+A version's "What's New" is per locale too (`whatsNew` in the file, optional): before a version
+with the new locales is submitted, every one of them needs it, or Apple refuses the submission.
+
+The app itself speaks all 32 languages in any case (it is the website's shell); what the plist's
+`CFBundleLocalizations` and the listings add is the store page and the Settings → PapaMap →
+Language picker saying so.
+
 ### The OSM login
 
 The app uses the same OAuth client as the website (`web/osm.js`, `LIVE.clientId`), coming back
