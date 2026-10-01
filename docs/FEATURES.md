@@ -1087,6 +1087,18 @@ layout, the build and the signing):
   One ask per device, ever; whether the sheet appears is Apple's or Google's call (both rate-limit
   it) and nothing comes back to the page. The website neither counts nor asks (CONTRACT.md v52).
 
+- **Every language of the map, on the store page too.** The shell speaks all 32 languages the
+  website does, chosen from the phone's language list and switchable in the intro — but the
+  iOS bundle declared only `en` and `de` in `CFBundleLocalizations`, so the App Store's
+  "Languages" row and Settings → PapaMap → Language said two, and both store listings existed
+  in those two alone. The plist now declares all 32 (Apple's own codes where they differ:
+  `nb`, `pt-PT`, Cyrillic `sr`), and `app/listings/<lang>.json` holds the listing per map
+  language, pushed to both stores by the `listings-push` task (`app/README.md`): 22 of the 32
+  exist as App Store locales, 30 on Google Play, and a language a store lacks is skipped by
+  name rather than mapped to a neighbour. What stays English and German: the location
+  prompts, the Siri phrases and the Android widget-picker strings — native resources, one file
+  per language each, not worth 30 files for a sentence apiece.
+
 **On Android** there is a home-screen widget and a launcher shortcut, and no Siri or Control
 Center. The widget is the iOS one's twin in Java (`NearestWidget`, over the same compact rows,
 written by a `PapaMapShare` plugin of the same name and methods, and the same rule in `Tables`,
