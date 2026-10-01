@@ -99,10 +99,10 @@ test("readListings reads <lang>.json files, sorted, validated, and only for map 
   }
 });
 
-test("the repository's own listings all validate and are map languages", () => {
+test("the repository holds one valid listing for every language the map speaks, and none else", () => {
   const got = readListings(listingsDir, LANGS);
-  assert.ok(got.length >= 2, "at least the German and English listings exist");
-  assert.ok(got.some((l) => l.lang === "de") && got.some((l) => l.lang === "en"));
+  assert.deepEqual(got.map((l) => l.lang), [...LANGS].sort());
+  for (const l of got) assert.equal(l.name, "PapaMap", `${l.file}: the name is the brand, untranslated`);
 });
 
 test("the record bodies carry exactly the store's fields", () => {
