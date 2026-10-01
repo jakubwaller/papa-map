@@ -196,7 +196,9 @@ nothing. Task `listings-push` creates or updates one localization per file: on t
 only the version being prepared takes new locales (a live version is sealed), so with none in
 preparation the push first creates the next version page under the Xcode project's
 `MARKETING_VERSION` — the page the next release would have made by hand; a version of that
-string that already exists means the project needs a bump, and the push says so instead. On
+string that already exists means the project needs a bump, and the push says so instead. The
+app info (name, subtitle) is written for every language before the version's texts, because
+a locale added to the app info is added to the version by App Store Connect on its own. On
 Play all listings go in one edit that is committed only if something changed and deleted on any
 error. Both are idempotent — an unchanged locale is logged, not rewritten. Screenshots are not
 part of this: both stores show the primary language's screenshots to a locale without its own.
