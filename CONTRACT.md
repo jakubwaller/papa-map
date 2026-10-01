@@ -1,5 +1,27 @@
 # papa-map — build contract (v0)
 
+> **v60 amendment (1 Oct 2026, report a problem): shape change — one addition
+> to both datasets, nothing removed.** A reader standing at a table that is
+> broken, missing or in another room than the pin says has had nowhere to tell
+> the place. Both `changing_tables.geojson` and `play_places.geojson` features
+> gain `email` (`pipeline/export.py::contact_email`): the first valid address
+> in `contact:email`, else `email`, else `operator:email` — the place's own
+> inbox before its operator's, which is the rarest tag and often a city office
+> or a chain's head office. Each value is split on `;` and `,`, trimmed, and
+> stripped of a leading `mailto:` (any case); a key with no valid token falls
+> through to the next. Valid means at most 254 characters, one `@`, a dot in
+> the domain, a TLD of two or more, and none of whitespace, `;`, `,`, `<`,
+> `>`, quotes, parentheses, brackets or a backslash; case is kept verbatim.
+> `null` when nothing passes. The delta follower carries it through the shared
+> builders, as every other property. Where `email` passes the same check in
+> the frontend (`web/datasource.js::isContactEmail`, kept in lockstep with the
+> Python), the table popup and the place popup add a "Report a problem" link
+> after "View on OSM": a `mailto:` with the subject "Changing table at
+> {name}" and the pin's share link in the body (`popupReport`,
+> `reportSubject` (`{name}`), `reportBody` (`{url}`), new in all 32
+> languages). Nothing passes through PapaMap: the mail leaves from the
+> reader's own mail app. Shell pin `app61` → `app62`.
+
 > **v59 amendment (30 Sep 2026, the add-place dialog's wording): no shape
 > change.** A tester read "+ Add a place" as not implemented because the
 > dialog sends him to MapComplete in the browser sheet. The hand-off stays (an
@@ -2220,6 +2242,7 @@ Overpass `out center`). Feature `properties`:
   "key": "string or null — the centralkey value when the key locks the table (v5 rule); such a feature is not a pin (v26)",
   "fee": "string or null",
   "opening_hours": "string or null",
+  "email": "string or null — the place's contact address: contact:email, else email, else operator:email, first valid address (v60)",
   "osm_url": "https://www.openstreetmap.org/<type>/<id>",
   "mapcomplete_url": "string or null"
 }
@@ -2240,6 +2263,7 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "toilets_wheelchair": "yes|limited|no|null — as on the tables (v28)",
   "wheelchair_description": "string or null — as on the tables (v28)",
   "opening_hours": "string or null",
+  "email": "string or null — the place's contact address: contact:email, else email, else operator:email, first valid address (v60)",
   "osm_url": "https://www.openstreetmap.org/<type>/<id>",
   "mapcomplete_url": "string or null"
 }

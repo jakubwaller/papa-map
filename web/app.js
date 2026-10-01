@@ -12,13 +12,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app61";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, reportMailto } from "./datasource.js?v=app62";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app61";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app62";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app61";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app62";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -26,7 +26,7 @@ import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, INTRO_KEY, introKind, introTips } from "./me.js?v=app61";
+         appTips, INTRO_KEY, introKind, introTips } from "./me.js?v=app62";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -36,23 +36,23 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app61";
+         reviewTracker } from "./native.js?v=app62";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app61";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app62";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app61";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app62";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app61";
-// The bundled shell's pin (`?v=app61`), what the intro key records.
+import { isOpenNow } from "./opening-hours.js?v=app62";
+// The bundled shell's pin (`?v=app62`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -713,6 +713,18 @@ const SHARE_PATH = "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-
 const shareButtonHTML = () =>
   `<button type="button" class="btn icon-btn" data-share aria-label="${esc(t("popupShare"))}" title="${esc(t("popupShare"))}">${svgIcon(SHARE_PATH, "share-icon")}</button>`;
 
+// "Report a problem" (CONTRACT v60): a reader at a broken, missing or
+// misplaced table mails the place itself, from their own mail app, with the
+// pin's share link in the body so the place knows which entry is meant. No
+// data-edit-check: that attribute arms the return-from-editor check, and a
+// mail is not an OSM edit. No target: a mailto opens no page. Empty when the
+// place has no usable address, so the caller can spread it unconditionally.
+function reportLink(obj, title) {
+  const url = reportMailto(obj.email, t("reportSubject", { name: title }),
+                           t("reportBody", { url: shareUrl(obj.osm_url) }));
+  return url ? [`<a class="btn" href="${esc(url)}">${esc(t("popupReport"))}</a>`] : [];
+}
+
 function popupHTML(f) {
   const s = viewOf(f, mode);
   // The two-tap answer, on the pins nobody has answered for. Not on a pin that
@@ -761,6 +773,8 @@ function popupHTML(f) {
   // question is not above it, it says itself whose name the answer goes under.
   if (!f.play_recorded)
     rows.push(askPlayHTML(inFlight.has(f.osm_url), !asks));
+  // Computed before the links: the report mail's subject names the place.
+  const title = f.name || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
@@ -776,8 +790,8 @@ function popupHTML(f) {
   links.push(shareButtonHTML());
   if (osmUrl)
     links.push(`<a class="btn" data-edit-check href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
+  links.push(...reportLink(f, title));
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
-  const title = f.name || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
   const sub = f.amenity ? `<div class="sub">${esc(f.amenity.replace(/_/g, " "))}</div>` : "";
   return `<div class="popup"><h3>${esc(title)}${starHTML(f.osm_url, title)}</h3>${sub}${rows.join("")}</div>`;
 }
@@ -885,6 +899,7 @@ function placeHTML(p) {
   rows.push(...wheelchairRows(p));
   if (!p.changing_table) rows.push(askHTML("askTable", inFlight.has(p.osm_url)));
   if (p.opening_hours) rows.push(hoursRowHTML(p.opening_hours, { lat: p.lat, lon: p.lon }));
+  const title = p.name || t("popupUnnamed");
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(p.mapcomplete_url, lang)),
         osmUrl = safeUrl(p.osm_url);
@@ -894,8 +909,8 @@ function placeHTML(p) {
   links.push(shareButtonHTML());
   if (osmUrl)
     links.push(`<a class="btn" data-edit-check href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
+  links.push(...reportLink(p, title));
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
-  const title = p.name || t("popupUnnamed");
   const sub = p.kind ? `<div class="sub">${esc(p.kind.replace(/_/g, " "))}</div>` : "";
   return `<div class="popup"><h3>${esc(title)}${starHTML(p.osm_url, title)}</h3>${sub}${rows.join("")}</div>`;
 }

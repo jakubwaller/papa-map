@@ -65,6 +65,11 @@ export function loadFeatures(fc) {
       key: typeof p.key === "string" && p.key ? p.key : null,
       fee: p.fee ?? null,
       opening_hours: p.opening_hours ?? null,
+      // The place's contact address (v60), for the popup's report link. Read
+      // through the same check that builds the link, so a dataset from before
+      // the property, or a value the pipeline should not have let through,
+      // reads as "no address".
+      email: isContactEmail(p.email) ? p.email : null,
       osm_url: p.osm_url ?? null,
       mapcomplete_url: p.mapcomplete_url ?? null,
       // The sweep area that found the object (v32): a Land, a région, a
@@ -106,6 +111,11 @@ export function loadPlaces(fc) {
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
       opening_hours: p.opening_hours ?? null,
+      // The place's contact address (v60), for the popup's report link. Read
+      // through the same check that builds the link, so a dataset from before
+      // the property, or a value the pipeline should not have let through,
+      // reads as "no address".
+      email: isContactEmail(p.email) ? p.email : null,
       osm_url: p.osm_url ?? null,
       mapcomplete_url: p.mapcomplete_url ?? null,
     });
@@ -649,6 +659,28 @@ const SHARE_ORIGIN = "https://papamap.de/";
 
 export function shareUrl(osmUrl) {
   return `${SHARE_ORIGIN}?osm=${encodeURIComponent(osmUrl)}`;
+}
+
+// ---- Report a problem (CONTRACT v60) ----
+// The same rule as pipeline/export.py's EMAIL_RE and EMAIL_MAX_LEN — keep the
+// two in lockstep; datasource.test.js and tests/test_export.py check one list
+// of cases. One @, a dot in the domain, a TLD of two or more, and none of the
+// characters that would break out of an href or a mailto URL.
+const CONTACT_EMAIL_RE =
+  /^[^\s@;,<>"'()\[\]\\]+@[^\s@;,<>"'()\[\]\\]+\.[^\s@;,<>"'()\[\]\\.]{2,}$/;
+const CONTACT_EMAIL_MAX_LEN = 254;
+
+export function isContactEmail(s) {
+  return typeof s === "string" && s.length <= CONTACT_EMAIL_MAX_LEN && CONTACT_EMAIL_RE.test(s);
+}
+
+// The popup's "Report a problem" link: a mailto the reader's own mail app
+// opens, so nothing passes through PapaMap. The address goes in unencoded (it
+// has already passed the check above, which admits nothing a mailto would
+// misread); subject and body are free text and are encoded.
+export function reportMailto(email, subject, body) {
+  if (!isContactEmail(email)) return null;
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 // The other half of the round trip: what app.js reads out of its own

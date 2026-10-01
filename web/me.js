@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app61";
-import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app61";
+import { CREATED_BY } from "./osm.js?v=app62";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app62";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -386,12 +386,12 @@ export function appTips(platform, lang) {
 }
 
 // ---- The first-launch intro and what's new (store app only) ----
-// The one device key holds the shell pin (`app61`) the reader last saw the
+// The one device key holds the shell pin (`app62`) the reader last saw the
 // start screen for. Nothing stored: the intro. An older pin: the notes of the
 // releases in between, if any release had something to say, else nothing.
 export const INTRO_KEY = "papamap-intro";
 
-// "app61" -> 61; anything else -> null.
+// "app62" -> 62; anything else -> null.
 export function pinNumber(pin) {
   const m = typeof pin === "string" ? /^app(\d+)$/.exec(pin) : null;
   return m ? Number(m[1]) : null;

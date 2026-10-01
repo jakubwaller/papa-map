@@ -16,7 +16,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          nearestUnknownRoom, isFixFresh, popupPan, isAppleTouch,
          shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
          applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl,
-         isNewlyCreated, selectAddedPlace } from "./datasource.js";
+         isNewlyCreated, selectAddedPlace, isContactEmail, reportMailto } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -31,7 +31,7 @@ const FC = {
     feat(9.99, 53.55, {
       osm_type: "node", osm_id: 1, name: "Rathaus WC", amenity: "toilets",
       changing_table: "yes", location_raw: "unisex_toilet", status: "accessible",
-      fee: "no", opening_hours: "24/7",
+      fee: "no", opening_hours: "24/7", email: "info@example.com",
       osm_url: "https://www.openstreetmap.org/node/1",
       mapcomplete_url: "https://mapcomplete.org/toilets?z=18&lat=53.55&lon=9.99#node/1",
     }),
@@ -56,7 +56,7 @@ const PLACES_FC = {
   features: [
     feat(9.98, 53.54, {
       osm_type: "node", osm_id: 9001, name: "Café Bauklotz", kind: "cafe",
-      opening_hours: "Mo-Fr 09:00-18:00",
+      opening_hours: "Mo-Fr 09:00-18:00", email: "hallo@example.org",
       osm_url: "https://www.openstreetmap.org/node/9001",
       mapcomplete_url: "https://mapcomplete.org/theme.html#node/9001",
     }),
@@ -80,7 +80,7 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   assert.deepEqual(places[0], {
     idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe", changing_table: null,
     wheelchair: null, toilets_wheelchair: null, wheelchair_description: null,
-    opening_hours: "Mo-Fr 09:00-18:00",
+    opening_hours: "Mo-Fr 09:00-18:00", email: "hallo@example.org",
     osm_url: "https://www.openstreetmap.org/node/9001",
     mapcomplete_url: "https://mapcomplete.org/theme.html#node/9001",
   });
@@ -89,6 +89,7 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   assert.equal(places[1].idx, 1);
   assert.equal(places[1].name, null);
   assert.equal(places[1].mapcomplete_url, null);
+  assert.equal(places[1].email, null);
 });
 
 test("loadPlaces reads changing_table=no and nothing else as an answer", () => {
@@ -1668,4 +1669,76 @@ test("an unrecorded room has one label in both readings; the meta keeps the moth
   assert.equal(mama.labelKey, "stUnknown");
   assert.notEqual(papa.metaKey, mama.metaKey);
   assert.equal(mama.bucket, "maybe");
+});
+
+
+// ---- Report a problem (CONTRACT v60) ----
+
+test("loadFeatures carries a valid contact address and nothing else", () => {
+  const fs = loadFeatures(FC);
+  assert.equal(fs[0].email, "info@example.com");
+  assert.equal(fs[1].email, null);   // a dataset from before v60
+  for (const v of ["not an email", "<a>@example.com", 42, ""]) {
+    const [f] = loadFeatures({ features: [feat(1, 2, { email: v })] });
+    assert.equal(f.email, null);
+  }
+});
+
+test("reportMailto builds the mailto with subject and body encoded", () => {
+  assert.equal(
+    reportMailto("info@example.com", "Changing table at Café", "Found via PapaMap: https://papamap.de/?osm=x"),
+    "mailto:info@example.com?subject=Changing%20table%20at%20Caf%C3%A9" +
+    "&body=Found%20via%20PapaMap%3A%20https%3A%2F%2Fpapamap.de%2F%3Fosm%3Dx");
+});
+
+test("reportMailto round-trips a subject full of URL syntax", () => {
+  const subject = "A & B #1? 100% \nmüde";
+  const body = "x&y=z#frag";
+  const url = reportMailto("a@example.com", subject, body);
+  const m = url.match(/^mailto:a@example\.com\?subject=([^&]*)&body=([^&]*)$/);
+  assert.ok(m, url);
+  assert.equal(decodeURIComponent(m[1]), subject);
+  assert.equal(decodeURIComponent(m[2]), body);
+});
+
+test("reportMailto refuses an address the check does not pass", () => {
+  assert.equal(reportMailto("not an email", "s", "b"), null);
+  assert.equal(reportMailto('a"@example.com', "s", "b"), null);
+  assert.equal(reportMailto("a<b@example.com", "s", "b"), null);
+  assert.equal(reportMailto(null, "s", "b"), null);
+  assert.equal(reportMailto(undefined, "s", "b"), null);
+});
+
+// The address cases of tests/test_export.py::test_contact_email, as plain
+// strings (the key precedence and the splitting are the pipeline's alone):
+// the two implementations of the rule must agree on the same list.
+const LONG = "a".repeat(255 - "@example.com".length) + "@example.com";
+const EMAIL_CASES = [
+  ["info@example.com", true],
+  ["a@example.org", true],
+  ["ops@example.net", true],
+  ["x@example.com", true],
+  // A colon is legal in a local part, so the bare check passes this; the
+  // pipeline strips the prefix before it ever checks.
+  ["mailto:x@example.com", true],
+  ["a@example.com;b@example.com", false],   // ... and splits on ; and ,
+  ["a@example.com, b@example.com", false],
+  ["  a@example.com  ", false],   // ... and trims
+  ["not an email", false],
+  ["", false],
+  ["www.example.com", false],
+  ["a@b", false],
+  ["a@example.c", false],
+  ["<script>@example.com", false],
+  ['"a@example.com"', false],
+  ["a@example.com;", false],
+  [LONG, false],
+  ["a".repeat(254 - "@example.com".length) + "@example.com", true],
+  ["müller@example.de", true],
+  ["Info@Example.COM", true],
+];
+
+test("isContactEmail agrees with the pipeline's EMAIL_RE on the shared cases", () => {
+  assert.equal(LONG.length, 255);
+  for (const [s, ok] of EMAIL_CASES) assert.equal(isContactEmail(s), ok, JSON.stringify(s));
 });

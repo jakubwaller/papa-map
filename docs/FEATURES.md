@@ -631,6 +631,34 @@ place says so only once the reader has answered "yes" to it this session —
 otherwise OSM records no table there at all, and the text says "a play area"
 instead, the same word the play-corner card itself uses.
 
+### Report a problem
+
+A reader standing at a table that is broken, gone, or in another room than
+the pin says has had nowhere to say so: OSM is the only fix, and that is a
+job for an editor, not for a father with a child on his arm. The place itself
+can fix the table, and OSM often carries its address. So where it does, both
+popups end with a "Report a problem" link, after "View on OSM" (CONTRACT
+v60). The model is the Knudli playground app, whose problem report goes to
+the playground operator's `operator:email`.
+
+The pipeline picks the address (`pipeline/export.py::contact_email`):
+`contact:email`, else `email`, else `operator:email` — the place's own inbox
+before its operator's, since `operator:email` is the rarest of the three and
+often a city office or a chain's head office that never sees the table. Each
+value is split on `;` and `,`, trimmed, stripped of a `mailto:` prefix, and
+the first token that passes the check wins; a key with nothing valid falls
+through to the next. The check is deliberately narrow: at most 254
+characters, one `@`, a dot in the domain, a TLD of two or more, and none of
+the characters that would break an `href` or a mailto URL. The frontend
+reads the property through the same check (`isContactEmail`,
+`web/datasource.js`, kept in lockstep with the Python and tested against the
+same list), so a stale or odd value never becomes a link.
+
+The link is a plain `mailto:` with the subject "Changing table at {name}" and
+the pin's share link in the body, so the place knows which entry the reader
+means. It opens the reader's own mail app, which sends the mail: nothing
+passes through PapaMap, and PapaMap never learns that a mail was written.
+
 ## Play corners
 
 Every feature carries a tri-state `play`: true when the object also records an

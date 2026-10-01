@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 from pathlib import Path
 
@@ -31,6 +32,33 @@ def _mapcomplete_url(osm_type, osm_id, lat, lon):
     user)."""
     return (f"https://mapcomplete.org/theme.html?userlayout={PAPAMAP_THEME_URL}"
             f"&z=18&lat={lat}&lon={lon}#{osm_type}/{osm_id}")
+
+
+# Where a reader's "Report a problem" mail goes (v60): the place's own inbox
+# before its operator's, because operator:email is the rarest of the three and
+# often a city office or a chain's head office that never sees the table.
+EMAIL_KEYS = ("contact:email", "email", "operator:email")
+# One @, a dot in the domain, a TLD of two or more, and none of the characters
+# that would break out of an href or a mailto URL. Kept in lockstep with
+# web/datasource.js::isContactEmail, which checks the same list of cases.
+EMAIL_RE = re.compile(r"""^[^\s@;,<>"'()\[\]\\]+@[^\s@;,<>"'()\[\]\\]+\.[^\s@;,<>"'()\[\]\\.]{2,}$""")
+EMAIL_MAX_LEN = 254
+_MAILTO = re.compile(r"^mailto:", re.IGNORECASE)
+
+
+def contact_email(tags: dict) -> str | None:
+    """The first valid address among EMAIL_KEYS, in that order, or None.
+
+    OSM values are free text: several addresses separated by `;` (the OSM
+    convention) or `,`, sometimes a `mailto:` prefix, sometimes a website.
+    A key whose value holds no valid address falls through to the next one
+    rather than hiding a good address further down. Case is kept as tagged."""
+    for key in EMAIL_KEYS:
+        for token in re.split(r"[;,]", tags.get(key) or ""):
+            token = _MAILTO.sub("", token.strip())
+            if len(token) <= EMAIL_MAX_LEN and EMAIL_RE.match(token):
+                return token
+    return None
 
 
 def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]:
@@ -92,6 +120,8 @@ def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]
                 # the table-specific fee wins over the venue-level fee tag
                 "fee": tags.get("changing_table:fee") or tags.get("fee"),
                 "opening_hours": tags.get("opening_hours"),
+                # The popup's "Report a problem" mail link (v60).
+                "email": contact_email(tags),
                 "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
                 "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),
                 "area": area_by_key.get((osm_type, osm_id)),
@@ -156,6 +186,8 @@ def build_play_features(play_data: dict, ct_data: dict | None = None) -> list[di
                 "toilets_wheelchair": wheelchair_state(tags, "toilets:wheelchair"),
                 "wheelchair_description": tags.get("wheelchair:description"),
                 "opening_hours": tags.get("opening_hours"),
+                # The popup's "Report a problem" mail link (v60).
+                "email": contact_email(tags),
                 "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
                 "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),
             },

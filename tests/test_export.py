@@ -3,7 +3,7 @@ import json
 import pytest
 
 from pipeline import export
-from pipeline.export import (build_features, build_play_features,
+from pipeline.export import (build_features, build_play_features, contact_email,
                              export_geojson, write_json_atomic)
 
 
@@ -60,6 +60,7 @@ def test_feature_properties_match_data_contract(load_fixture):
         "wheelchair": None, "toilets_wheelchair": None,
         "wheelchair_description": None, "key": None,
         "fee": "yes", "opening_hours": "24/7",
+        "email": "wc@example.com",
         "osm_url": "https://www.openstreetmap.org/node/1",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
                             "https://raw.githubusercontent.com/jakubwaller/papa-map/"
@@ -76,6 +77,7 @@ def test_feature_properties_match_data_contract(load_fixture):
     assert feats[8]["men_only"] is False  # female_toilet;male_toilet
     assert feats[2]["men_only"] is False  # female_toilet
     assert feats[3]["men_only"] is False  # no location
+    assert feats[2]["email"] is None
 
 
 def test_wheelchair_is_a_tri_state_never_a_status():
@@ -180,6 +182,7 @@ def test_play_features_are_their_own_dataset(load_fixture):
         "kind": "cafe", "changing_table": None,
         "wheelchair": None, "toilets_wheelchair": None, "wheelchair_description": None,
         "opening_hours": "Mo-Fr 09:00-18:00",
+        "email": "hallo@example.org",
         "osm_url": "https://www.openstreetmap.org/node/9001",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
                             "https://raw.githubusercontent.com/jakubwaller/papa-map/"
@@ -189,6 +192,7 @@ def test_play_features_are_their_own_dataset(load_fixture):
     for f in feats:
         assert "status" not in f["properties"]
         assert f["properties"]["changing_table"] is None
+    assert feats[1]["properties"]["email"] is None
 
 
 def test_play_features_carry_the_wheelchair_tags(load_fixture):
@@ -305,3 +309,44 @@ def test_features_carry_the_sweep_area_that_found_them(load_fixture):
     assert feats[1]["area"] == "Hamburg"
     assert feats[2]["area"] == "Danmark"
     assert feats[3]["area"] is None
+
+
+# v60: the popup's "Report a problem" address. The same strings are checked
+# against web/datasource.js::isContactEmail in web/datasource.test.js.
+_LONG = "a" * (255 - len("@example.com")) + "@example.com"
+
+
+@pytest.mark.parametrize("tags, expected", [
+    ({"contact:email": "info@example.com"}, "info@example.com"),
+    ({"email": "a@example.org"}, "a@example.org"),
+    ({"operator:email": "ops@example.net"}, "ops@example.net"),
+    ({"contact:email": "c@example.com", "email": "e@example.com",
+      "operator:email": "o@example.com"}, "c@example.com"),
+    ({"email": "e@example.com", "operator:email": "o@example.com"}, "e@example.com"),
+    ({"contact:email": "mailto:x@example.com"}, "x@example.com"),
+    ({"contact:email": "MAILTO:x@example.com"}, "x@example.com"),
+    ({"contact:email": "a@example.com;b@example.com"}, "a@example.com"),
+    ({"contact:email": "a@example.com, b@example.com"}, "a@example.com"),
+    ({"contact:email": "  a@example.com  "}, "a@example.com"),
+    # a key with nothing valid in it falls through to the next one
+    ({"contact:email": "not an email", "email": "ok@example.com"}, "ok@example.com"),
+    ({"contact:email": "", "email": "ok@example.com"}, "ok@example.com"),
+    ({"contact:email": "www.example.com"}, None),
+    ({"contact:email": "a@b"}, None),
+    ({"contact:email": "a@example.c"}, None),  # TLD too short
+    ({"email": "<script>@example.com"}, None),
+    ({"contact:email": '"a@example.com"'}, None),
+    ({"contact:email": "a@example.com;"}, "a@example.com"),
+    ({}, None),
+    ({"contact:email": _LONG}, None),  # 255 characters, one over the limit
+    ({"contact:email": "müller@example.de"}, "müller@example.de"),
+    ({"contact:email": "Info@Example.COM"}, "Info@Example.COM"),
+])
+def test_contact_email(tags, expected):
+    assert contact_email(tags) == expected
+
+
+def test_contact_email_limit_is_inclusive_at_254():
+    ok = "a" * (254 - len("@example.com")) + "@example.com"
+    assert len(ok) == 254 and len(_LONG) == 255
+    assert contact_email({"email": ok}) == ok
