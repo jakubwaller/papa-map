@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, verify } from "node:crypto";
-import { assertion, trackBody, parseArgs } from "./play.mjs";
+import { assertion, trackBody, parseArgs, retryable, withRetry } from "./play.mjs";
 
 test("the assertion is an RS256 JWT Google's token endpoint accepts", () => {
   const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -33,4 +33,31 @@ test("closed testing and draft unless told otherwise; a typo'd status is refused
   assert.deepEqual(parseArgs(["app.aab", "--track", "internal", "--status", "completed"]),
                    { track: "internal", status: "completed", files: ["app.aab"] });
   assert.throws(() => parseArgs(["app.aab", "--status", "complete"]));
+});
+
+test("429 and 5xx are worth another try, other failures are not", () => {
+  for (const s of [429, 500, 502, 503]) assert.equal(retryable(s), true, s);
+  for (const s of [200, 400, 401, 403, 404, 409]) assert.equal(retryable(s), false, s);
+});
+
+test("a transient 503 is retried with a doubling pause until Play answers", async () => {
+  const replies = [503, 503, 200];
+  const slept = [];
+  const res = await withRetry(async () => ({ status: replies.shift() }), { sleep: async (ms) => slept.push(ms) });
+  assert.equal(res.status, 200);
+  assert.deepEqual(slept, [2000, 4000]);
+});
+
+test("retries stop after the last try and hand back the failure", async () => {
+  let sent = 0;
+  const res = await withRetry(async () => (sent++, { status: 503 }), { tries: 3, sleep: async () => {} });
+  assert.equal(res.status, 503);
+  assert.equal(sent, 3);
+});
+
+test("a 403 fails at once, without a retry", async () => {
+  let sent = 0;
+  const res = await withRetry(async () => (sent++, { status: 403 }), { sleep: async () => {} });
+  assert.equal(res.status, 403);
+  assert.equal(sent, 1);
 });

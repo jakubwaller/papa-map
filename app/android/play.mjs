@@ -45,22 +45,37 @@ function serviceAccount() {
   return key;
 }
 
+// Play answers a transient 503 now and then mid-edit (run 255, 1 Oct 2026),
+// and one of those used to fail the whole upload. 429 and 5xx are retried with
+// a doubling pause, the token request included; anything else is the
+// request's fault and fails at once.
+export const retryable = (status) => status === 429 || status >= 500;
+
+export async function withRetry(send, { tries = 4, pause = 2000, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+  for (let i = 1; ; i++) {
+    const res = await send();
+    if (!retryable(res.status) || i === tries) return res;
+    console.log(`${res.status}, retrying in ${pause * 2 ** (i - 1) / 1000} s`);
+    await sleep(pause * 2 ** (i - 1));
+  }
+}
+
 async function accessToken(key) {
-  const res = await fetch(key.token_uri, {
+  const res = await withRetry(() => fetch(key.token_uri, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
       assertion: assertion(key),
     }),
-  });
+  }));
   const json = await res.json();
   if (!res.ok) throw new Error(`token: ${res.status} ${JSON.stringify(json)}`);
   return json.access_token;
 }
 
 async function call(bearer, method, url, { json, body, type } = {}) {
-  const res = await fetch(url, {
+  const res = await withRetry(() => fetch(url, {
     method,
     headers: {
       Authorization: `Bearer ${bearer}`,
@@ -68,7 +83,7 @@ async function call(bearer, method, url, { json, body, type } = {}) {
       ...(type ? { "Content-Type": type } : {}),
     },
     body: json ? JSON.stringify(json) : body,
-  });
+  }));
   const text = await res.text();
   if (!res.ok) throw new Error(`${method} ${url.replace(/\?.*/, "")}: ${res.status} ${text}`);
   return text ? JSON.parse(text) : {};
