@@ -562,9 +562,10 @@ in either reading.
 What OSM holds afterwards is shown in the popup in the reader's own language —
 `roomLabelKeys` (`web/osm.js`) reuses the answer buttons' own labels, token by
 token, and a token the vocabulary does not know is shown verbatim rather than
-swallowed — and that is all that changes: the pin keeps its colour until the
-nightly build, because classification lives in the pipeline and nowhere else
-(`CONTRACT.md` v26). A pin that already carries a room in words the classifier
+swallowed. The pin takes its new colour the moment OSM confirms the write, from
+`stats.json`'s `answer_status` — a table the pipeline computed, looked up rather
+than re-derived, because classification lives in the pipeline and nowhere else
+(`CONTRACT.md` v26, v48). A pin that already carries a room in words the classifier
 does not read is not asked — that is somebody's tag, and MapComplete shows it
 before letting anyone write over it. "Changing table: yes" is never printed on
 this line: every pin here has one, and the word would say nothing beyond the
