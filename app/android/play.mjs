@@ -4,6 +4,8 @@
 // task in .github/workflows/app-build.yml.
 //
 //   node android/play.mjs upload <app.aab> [--track alpha] [--status draft]
+//   node android/play.mjs listings pull      print the store listing texts, every language
+//   node android/play.mjs listings push      listings/*.json → the listings, in one committed edit
 //
 // Reads PLAY_SERVICE_ACCOUNT_JSON (the key file's text) from the environment —
 // the repository secret of that name.
@@ -19,6 +21,7 @@
 import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { PLAY_LOCALES, listingsDir, readListings, playListingBody, same } from "../listings.mjs";
 
 export const PACKAGE = "de.papamap.app";
 const API = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE}`;
@@ -120,14 +123,75 @@ async function upload(file, { track, status }) {
   console.log(`${track}: version code ${bundle.versionCode} as ${status}`);
 }
 
+// --- Store listing texts -------------------------------------------------------
+//
+// Docs: https://developers.google.com/android-publisher/api-ref/rest/v3/edits.listings
+// A listing is one language's title, short and full description (and a promo
+// video, if any). Like everything else they live inside an edit: open it,
+// change, commit — or delete it, which is how `pull` leaves no trace.
+
+export async function listingsPull() {
+  const bearer = await accessToken(serviceAccount());
+  const edit = await call(bearer, "POST", `${API}/edits`, { json: {} });
+  try {
+    const details = await call(bearer, "GET", `${API}/edits/${edit.id}/details`);
+    console.log(`default language ${details.defaultLanguage}`);
+    const { listings = [] } = await call(bearer, "GET", `${API}/edits/${edit.id}/listings`);
+    for (const l of listings) console.log(`${l.language}: ${JSON.stringify(l)}`);
+  } finally {
+    await call(bearer, "DELETE", `${API}/edits/${edit.id}`);
+  }
+}
+
+// PUT replaces a language's listing whole, so an unchanged one is skipped
+// rather than rewritten, and an edit with nothing in it is deleted, not
+// committed. A failure half-way deletes the edit too: Play is left as it was.
+export async function listingsPush({ dir = listingsDir } = {}) {
+  const listings = readListings(dir);   // every file validated before the first request
+  const bearer = await accessToken(serviceAccount());
+  const edit = await call(bearer, "POST", `${API}/edits`, { json: {} });
+  const skipped = [];
+  let changed = 0;
+  try {
+    const { listings: have = [] } = await call(bearer, "GET", `${API}/edits/${edit.id}/listings`);
+    for (const l of listings) {
+      const language = PLAY_LOCALES[l.lang];
+      if (!language) { skipped.push(l.lang); continue; }
+      const existing = have.find((h) => h.language === language) ?? null;
+      const body = playListingBody(l, existing);
+      if (existing && same(existing, body)) { console.log(`${language}: unchanged`); continue; }
+      await call(bearer, "PUT", `${API}/edits/${edit.id}/listings/${language}`, { json: body });
+      console.log(`${language}: ${existing ? "updated" : "created"}`);
+      changed++;
+    }
+    if (changed) {
+      await call(bearer, "POST", `${API}/edits/${edit.id}:commit`);
+      console.log(`committed: ${changed} listing(s) changed`);
+    } else {
+      await call(bearer, "DELETE", `${API}/edits/${edit.id}`);
+      console.log("nothing to change");
+    }
+  } catch (e) {
+    await call(bearer, "DELETE", `${API}/edits/${edit.id}`).catch(() => {});
+    throw e;
+  }
+  if (skipped.length) console.log(`no Google Play language for: ${skipped.join(", ")}`);
+}
+
+const USAGE = "usage: play.mjs upload <app.aab> [--track alpha] [--status draft] | listings pull | listings push";
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [cmd, ...rest] = process.argv.slice(2);
   const run = async () => {
     if (cmd === "upload") {
       const args = parseArgs(rest);
-      if (args.files.length !== 1) throw new Error("usage: play.mjs upload <app.aab> [--track alpha] [--status draft]");
+      if (args.files.length !== 1) throw new Error(USAGE);
       await upload(args.files[0], args);
-    } else throw new Error("usage: play.mjs upload <app.aab> [--track alpha] [--status draft]");
+    } else if (cmd === "listings" && rest.length === 1 && rest[0] === "pull") {
+      await listingsPull();
+    } else if (cmd === "listings" && rest.length === 1 && rest[0] === "push") {
+      await listingsPush();
+    } else throw new Error(USAGE);
   };
   run().catch((e) => { console.error(e.message); process.exit(1); });
 }

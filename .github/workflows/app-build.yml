@@ -46,7 +46,7 @@ on:
         description: "What to run"
         type: choice
         default: build
-        options: [build, testflight, apple-setup, beta-text-pull, play]
+        options: [build, testflight, apple-setup, beta-text-pull, play, listings-pull, listings-push]
       distribute:
         description: "testflight only: also add the build to the ASC_BETA_GROUP beta group and submit it for Beta App Review"
         type: boolean
@@ -233,6 +233,55 @@ jobs:
         with:
           node-version: "22"
       - run: node ios/asc.mjs beta-text pull
+
+  # The store listing texts (app/listings/*.json) against both stores: `pull`
+  # prints what App Store Connect and the Play Console hold in every locale and
+  # writes nothing; `push` creates or updates one localization per file. Each
+  # store is its own step and the second runs even when the first fails, so
+  # one store's refusal never hides the other's state.
+  listings-pull:
+    if: inputs.task == 'listings-pull'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: App Store Connect
+        run: node ios/asc.mjs listings pull
+      - name: Google Play
+        if: ${{ !cancelled() }}
+        run: node android/play.mjs listings pull
+
+  listings-push:
+    if: inputs.task == 'listings-push'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: App Store Connect
+        run: node ios/asc.mjs listings push
+      - name: Google Play
+        if: ${{ !cancelled() }}
+        run: node android/play.mjs listings push
 
   testflight:
     if: inputs.task == 'testflight' || (github.event.action == 'labeled' && github.event.label.name == 'testflight')

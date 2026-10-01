@@ -8,6 +8,8 @@
 //   node ios/asc.mjs beta-text pull                                   print what's live in TestFlight
 //   node ios/asc.mjs beta-text push --build <n>                      testflight/what-to-test.*.txt → that build
 //   node ios/asc.mjs beta-text distribute --build <n> --group <name> add to a beta group, submit for review
+//   node ios/asc.mjs listings pull                                    print the App Store listing texts, every locale
+//   node ios/asc.mjs listings push                                    listings/*.json → the version being prepared
 //
 // Reads ASC_ISSUER_ID, ASC_KEY_ID and ASC_API_KEY_P8 (the key's text) from the
 // environment — the repository secrets of the same names.
@@ -20,6 +22,7 @@ import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ASC_LOCALES, listingsDir, readListings, ascAppInfoAttributes, ascVersionAttributes, same } from "../listings.mjs";
 
 const API = "https://api.appstoreconnect.apple.com/v1";
 
@@ -393,13 +396,121 @@ async function betaText(sub, ...args) {
   throw new Error(`beta-text: unknown subcommand "${sub}" (pull | push | distribute)`);
 }
 
+// --- App Store listing texts --------------------------------------------------
+//
+// Docs consulted (2026-10-01):
+//   https://developer.apple.com/documentation/appstoreconnectapi/app_metadata/app_info_localizations
+//   https://developer.apple.com/documentation/appstoreconnectapi/app_store/app_store_version_localizations
+//   https://developer.apple.com/documentation/appstoreconnectapi/appinfo          (attributes.state)
+//   https://developer.apple.com/documentation/appstoreconnectapi/appstoreversion  (attributes.appVersionState)
+//
+// Name, subtitle and the privacy URL hang off an app info; description,
+// keywords, promotional text, the two other URLs and What's New off a version.
+// Each exists once per locale, and only the app info / version still being
+// prepared takes edits or new locales — a live one is sealed. Which records
+// those are is read off their state, the same way fastlane's deliver picks
+// its "edit" version; nothing is created here but localizations, so a push
+// with no version in preparation stops and says so.
+export const EDITABLE_STATES = new Set([
+  "PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY",
+]);
+
+const infoState = (i) => i.attributes.state ?? i.attributes.appStoreState;
+const versionState = (v) => v.attributes.appVersionState ?? v.attributes.appStoreState;
+
+// The one record in an editable state, or null. Two would mean the API's
+// idea of "being prepared" has changed under this code — refuse, don't guess.
+export function pickEditable(records, state) {
+  const hits = records.filter((r) => EDITABLE_STATES.has(state(r)));
+  if (hits.length > 1) throw new Error(`${hits.length} records are being prepared at once: ${hits.map((r) => r.id).join(", ")}`);
+  return hits[0] ?? null;
+}
+
+const appInfos = async (app) => (await api("GET", `/apps/${app}/appInfos?limit=200`)).data;
+const appInfoLocalizations = async (info) => (await api("GET", `/appInfos/${info}/appInfoLocalizations?limit=200`)).data;
+const appStoreVersions = async (app) =>
+  (await api("GET", `/apps/${app}/appStoreVersions?filter[platform]=IOS&limit=200`)).data;
+const versionLocalizations = async (version) =>
+  (await api("GET", `/appStoreVersions/${version}/appStoreVersionLocalizations?limit=200`)).data;
+
+export async function listingsPull() {
+  const app = await appId();
+  const a = await api("GET", `/apps/${app}`);
+  console.log(`app ${BUNDLE_IDS[0].identifier} → ${app}, primary locale ${a.data.attributes.primaryLocale}`);
+  for (const info of await appInfos(app)) {
+    console.log(`appInfo ${info.id} (${infoState(info)}):`);
+    for (const l of await appInfoLocalizations(info.id)) {
+      const { locale, name, subtitle, privacyPolicyUrl } = l.attributes;
+      console.log(`  ${locale}: ${JSON.stringify({ name, subtitle, privacyPolicyUrl })}`);
+    }
+  }
+  for (const v of await appStoreVersions(app)) {
+    console.log(`version ${v.attributes.versionString} (${versionState(v)}, ${v.id}):`);
+    for (const l of await versionLocalizations(v.id)) {
+      const { locale, ...rest } = l.attributes;
+      console.log(`  ${locale}: ${JSON.stringify(rest)}`);
+    }
+  }
+}
+
+// PATCH when the locale exists and differs, POST when it is missing, nothing
+// when it already reads the same — so a rerun is free and the log says what
+// moved. `have` is the store's list for this parent, fetched once.
+async function upsertLocalization(type, have, locale, attributes, relationships) {
+  const existing = have.find((r) => r.attributes.locale === locale);
+  if (!existing) {
+    const made = await api("POST", `/${type}`, { data: { type, attributes: { locale, ...attributes }, relationships } });
+    console.log(`${type} ${locale}: created (${made.data.id})`);
+  } else if (same(existing.attributes, attributes)) {
+    console.log(`${type} ${locale}: unchanged`);
+  } else {
+    await api("PATCH", `/${type}/${existing.id}`, { data: { type, id: existing.id, attributes } });
+    console.log(`${type} ${locale}: updated`);
+  }
+}
+
+export async function listingsPush({ dir = listingsDir } = {}) {
+  const listings = readListings(dir);   // every file validated before the first request
+  const app = await appId();
+  const version = pickEditable(await appStoreVersions(app), versionState);
+  if (!version) {
+    throw new Error("no App Store version is being prepared — a live version cannot take new locales; " +
+                    "create the next version in App Store Connect (or let the version PR's build do it) and push again");
+  }
+  const info = pickEditable(await appInfos(app), infoState);
+  console.log(`version ${version.attributes.versionString} (${versionState(version)}, ${version.id})` +
+              (info ? `, app info ${info.id} (${infoState(info)})` : ", no app info being prepared"));
+  const infoHave = info ? await appInfoLocalizations(info.id) : [];
+  const versionHave = await versionLocalizations(version.id);
+  const skipped = [];
+  for (const l of listings) {
+    const locale = ASC_LOCALES[l.lang];
+    if (!locale) { skipped.push(l.lang); continue; }
+    if (info) {
+      await upsertLocalization("appInfoLocalizations", infoHave, locale, ascAppInfoAttributes(l),
+                               { appInfo: { data: { type: "appInfos", id: info.id } } });
+    }
+    await upsertLocalization("appStoreVersionLocalizations", versionHave, locale, ascVersionAttributes(l),
+                             { appStoreVersion: { data: { type: "appStoreVersions", id: version.id } } });
+  }
+  if (!info) console.log("name, subtitle and privacy URL left as they are (no app info being prepared)");
+  if (skipped.length) console.log(`no App Store locale for: ${skipped.join(", ")}`);
+}
+
+async function listings(sub) {
+  if (sub === "pull") return listingsPull();
+  if (sub === "push") return listingsPush();
+  throw new Error(`listings: unknown subcommand "${sub}" (pull | push)`);
+}
+
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) {
   const [cmd, ...args] = process.argv.slice(2);
-  const run = { ids, cert, profiles, "beta-text": betaText }[cmd];
+  const run = { ids, cert, profiles, "beta-text": betaText, listings }[cmd];
   if (!run || (cmd === "cert" && args.length !== 2) || (cmd === "profiles" && args.length !== 1) ||
-      (cmd === "beta-text" && args.length < 1)) {
+      (cmd === "beta-text" && args.length < 1) || (cmd === "listings" && args.length !== 1)) {
     console.error("usage: asc.mjs ids | cert <csr> <out.cer> | profiles <dir> | beta-text pull | " +
-                  "beta-text push --build <n> | beta-text distribute --build <n> --group <name>");
+                  "beta-text push --build <n> | beta-text distribute --build <n> --group <name> | " +
+                  "listings pull | listings push");
     process.exit(2);
   }
   run(...args).catch((e) => { console.error(String(e.message ?? e)); process.exit(1); });
