@@ -6,27 +6,27 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, BUCKET_COLOR,
-         pinColorExpression, viewOf, momCounts, nearestUsable, formatDistance, localAnswered,
+         pinColorExpression, viewOf, nearestUsable, formatDistance, localAnswered,
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app61";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app62";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app61";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app62";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app61";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app62";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
-import { answeredPercent, areaPercent, sentenceParts, greyNearby, circleBounds,
+import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         appTips, INTRO_KEY, introKind, introTips } from "./me.js?v=app61";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app62";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -36,23 +36,23 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app61";
+         reviewTracker } from "./native.js?v=app62";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app61";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app62";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app61";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app62";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app61";
-// The bundled shell's pin (`?v=app61`), what the intro key records.
+import { isOpenNow } from "./opening-hours.js?v=app62";
+// The bundled shell's pin (`?v=app62`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -1253,13 +1253,16 @@ function renderStats(stats) {
     globalPart = `<span class="stat">${t("statsGlobalMissing")}</span>`;
   }
   // Not the wordmark's `area`: a counted label declines inside the sentence.
+  // One sentence for both readings (CONTRACT.md v60) — the Mama reading's old
+  // "you can probably use N" counted the recorded rooms minus the men's-room-
+  // only ones and left the unrecorded majority, which a mother can nearly
+  // always use, sounding doubtful. The share with a recorded room is the same
+  // task whoever is looking; only the pins' colour word differs.
   const areaInSentence = areaLabel(stats, true);
-  const m = momCounts(l);
-  const localSentence = mode === "mama"
-    ? t("statsLocalMama", { good: num(m.good), maybe: num(m.maybe),
-                            area: esc(areaInSentence || "—") })
-    : t("statsLocal", { tables: num(tables), area: esc(areaInSentence || "—"),
-                        unknown: num(l.unknown) });
+  const { known } = localAnswered(l);
+  const localSentence = t(mode === "mama" ? "statsLocalMama" : "statsLocal", {
+    tables: num(tables), area: esc(areaInSentence || "—"), known: num(known),
+    percent: num(answeredPercent(l) ?? 0) });
   statsEl.innerHTML =
     `<span class="stat">${localSentence}</span>` +
     globalPart +
@@ -3187,12 +3190,16 @@ function bootNative() {
   // header is a website's: four links, a language picker, a tagline for search
   // engines and a stats strip, 218 of a 667px phone before the notch — "too
   // much on the screen" was the first thing the first testers said
-  // (2026-09-21). The links, the picker and the strip move into Mein PapaMap,
-  // the same nodes with the same listeners, so nothing about them changes but
-  // where they stand; the tagline is hidden by .native in style.css.
+  // (2026-09-21). The links and the picker move into Mein PapaMap, the same
+  // nodes with the same listeners, so nothing about them changes but where
+  // they stand; the tagline and the stats strip are hidden by .native in
+  // style.css. The strip rode along into the dialog until CONTRACT v60: it is
+  // the site's copy (the sweep, the worldwide one-sidedness, the data date),
+  // not the reader's, and the area pages, the leaderboard and the methods page
+  // behind these links carry every one of its numbers in more depth.
   document.documentElement.classList.add("native");
   const about = document.getElementById("me-about");
-  about.append(document.querySelector(".stats-wrap"), document.querySelector(".header-actions"));
+  about.append(document.querySelector(".header-actions"));
   about.hidden = false;
   // The count stands in the header, off the scrolling chip row.
   document.querySelector("header").append(countEl);
@@ -3836,29 +3843,26 @@ function meAreaNumbers() {
     // 131 tables under "Changing tables in Germany". `areaIndex` is the full
     // areas.json list, needed to look the parent row up when that happens.
     const { label: area, keys } = areaForLabel(currentArea, lang, areaIndex);
-    return { area, percent: areaPercent(allFeatures, keys), keys };
+    const { tables, known } = areaAnswered(allFeatures, keys);
+    return { area, percent: areaPercent(allFeatures, keys), tables, known, keys };
   }
   const l = lastStats?.local;
-  return { area: l ? areaLabel(lastStats) : null, percent: l ? answeredPercent(l) : null, keys: null };
+  if (!l) return { area: null, percent: null, tables: 0, known: 0, keys: null };
+  const { tables, known } = localAnswered(l);
+  return { area: areaLabel(lastStats), percent: answeredPercent(l), tables, known, keys: null };
 }
 
 function renderMeSentence() {
-  const { area, percent, keys } = meAreaNumbers();
-  const user = getUser();
-  const answers = user ? ensureMyAnswers(user).answers : null;
-  const yours = !user ? null
-    : keys ? answersInArea(answers, myFeatureGrid, keys) : totalAnswers(answers);
+  const { area, percent, tables, known } = meAreaNumbers();
   const greyCount = lastFix ? greyNearby(allFeatures, lastFix.lat, lastFix.lon).length : 0;
-  const parts = sentenceParts({ area, percent, yours, greyCount, hasFix: !!lastFix, mama: mode === "mama" });
+  const parts = sentenceParts({ area, percent, tables, known, greyCount, hasFix: !!lastFix, mama: mode === "mama" });
   const bits = [];
   bits.push(parts.area
-    ? `<span>${t(parts.area.key, { area: esc(area), percent: num(percent) })}</span>`
+    ? `<span>${t(parts.area.key, { area: esc(area), tables: num(tables), known: num(known), percent: num(percent) })}</span>`
     // No area (stats.json missing entirely) is the one case renderStats
     // itself falls back to statsMissing rather than naming an area; the
     // dialog says the same rather than guessing at one from the map view.
     : `<span>${esc(t("statsMissing", { href: t("methodsHref") }))}</span>`);
-  if (parts.yours)
-    bits.push(`<span>${t(parts.yours.key, parts.yours.vars ? { n: num(parts.yours.vars.n) } : {})}</span>`);
   if (parts.grey.locate) {
     bits.push(`<button type="button" id="me-locate" class="linkish">${esc(t("meLocate"))}</button>`);
   } else if (parts.grey.vars) {
@@ -3902,8 +3906,13 @@ function renderMeStats() {
   // the theme's own questions answered at once, and every one of those is
   // counted, not one per changeset (CONTRACT.md v39).
   const total = totalAnswers(answers);
+  // In the area the sentence above names, by the same area pick, so the two
+  // lines can never count different places (meAreaNumbers).
+  const { keys } = meAreaNumbers();
+  const inArea = keys ? answersInArea(answers, myFeatureGrid, keys) : null;
+  const yours = yoursParts({ inArea, total });
   const first = answers.length ? answers.reduce((a, b) => ((a.closed_at ?? "") < (b.closed_at ?? "") ? a : b)) : null;
-  const lines = [`<p>${esc(total > 0 ? t("meStatsTotal", { n: num(total) }) : t("meStatsTotalZero"))}</p>`];
+  const lines = [`<p>${esc(t(yours.key, yours.vars ? { n: num(yours.vars.n), total: num(yours.vars.total) } : {}))}</p>`];
   if (first?.closed_at) {
     // The full month, not the abbreviated one: German abbreviates with a
     // trailing period of its own ("1. Aug."), which collided with the
@@ -3923,20 +3932,16 @@ function renderMeStats() {
   meStatsEl.innerHTML = lines.join("");
 }
 
-// "Mehr aus der App": the three things iOS keeps on its own screens (me.js,
-// appTips). Plain text — nothing here is a link, the reader has to leave the
-// app to do any of it. Hidden wherever appTips has nothing to say.
-const meTipsEl = document.getElementById("me-tips");
-const meTipsListEl = document.getElementById("me-tips-list");
-function renderMeTips() {
-  const tips = appTips(platform(), lang);
-  meTipsEl.hidden = tips.length === 0;
-  meTipsListEl.replaceChildren(...tips.map((key) => {
-    const li = document.createElement("li");
-    li.textContent = t(key);
-    return li;
-  }));
-}
+// Feedback: the app's own way to reach the person behind it (App Store Review
+// Guideline 1.5 asks for one; the practical payoff is a mail instead of a
+// one-star review). The address is the link's visible text — a device with
+// no mail app does nothing on a mailto: link, and a reader can still copy it.
+// The body carries the shell pin and the platform so a report can be placed;
+// nothing about the reader. The address is the Impressum's, already public.
+const FEEDBACK_ADDRESS = "papamap@jakubwaller.eu";
+const meFeedbackLink = document.getElementById("me-feedback-link");
+meFeedbackLink.href = `mailto:${FEEDBACK_ADDRESS}?subject=${encodeURIComponent("PapaMap")}` +
+  `&body=${encodeURIComponent(`\n\n—\nPapaMap ${SHELL_PIN ?? "?"} · ${platform()}`)}`;
 
 // ---- The first-launch intro and what's new (store app only, CONTRACT v58) ----
 // One screen the first time the app opens: what it is, then the features
@@ -4011,7 +4016,6 @@ function renderMeDialog() {
   renderMeSentence();
   renderMeStats();
   renderSavedList();
-  renderMeTips();
 }
 
 meBtn.addEventListener("click", () => {

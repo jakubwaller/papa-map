@@ -898,8 +898,8 @@ the reader's own answer count, and a list of starred places. All three read
 data that already exists somewhere; none of it is a new thing PapaMap keeps
 about anyone.
 
-The headline is a game: "Wickeltische in Hamburg: 31 % beantwortet, 2
-davon sind von dir, 8 graue Pins im Umkreis von 1 km" — and the area is
+The headline is a game: "Wickeltische in Hamburg: 133, bei 44 ist der Raum
+erfasst (33 %). Graue Pins im Umkreis von 1 km: 12." — and the area is
 whichever one the footer link already shows: the same `pickArea` pick the
 "Wickeltische in Hamburg" link makes from the pins nearest the map centre
 (CONTRACT.md v32). `web/app.js` keeps that exact pick (`currentArea`)
@@ -922,15 +922,35 @@ zoomed out past any area's reach) does the sentence fall back to the site's
 own whole-sweep numbers, the same ones the stats strip renders
 (`localAnswered`, `web/datasource.js` — one place "how many tables are
 answered" comes from `stats.json`'s `local` block, so the strip and that
-one fallback sentence cannot drift apart either). A second clause says
-how many of the reader's own OSM changesets land in that same area — each
+one fallback sentence cannot drift apart either). The sentence reads the
+same in both readings since CONTRACT v60: the share with a recorded room is
+the same task whoever is looking, and the Mama reading's old "wahrscheinlich
+… für dich nutzbar" had put that very percentage under a claim it never
+measured. Its second clause names how many grey pins (amber, reading as a
+mother) sit within a kilometre of wherever the reader last used *locate* or
+*nearest* — **never a fresh location prompt of its own** — and tapping it
+closes the dialog and frames the map on that circle instead. Read
+`sentenceParts` in `web/me.js` for exactly which clause is chosen when.
+
+Under it, a line of the reader's own: "Deine Antworten: 4 in diesem Gebiet, 7
+insgesamt" — how many of their OSM changesets land in that same area (each
 attributed by the nearest loaded feature within the changeset's own search
-radius (below) — worded as an invitation rather than a zero when there are
-none yet. A third names how many grey pins (amber, reading as a mother) sit
-within a kilometre of wherever the reader last used *locate* or *nearest*
-— **never a fresh location prompt of its own** — and tapping it closes the
-dialog and frames the map on that circle instead. Read `sentenceParts` in
-`web/me.js` for exactly which clause is chosen when.
+radius, below), and how many everywhere. Both are changeset counts, never
+places — one table answered twice is two — which is why the line relates
+answers to answers and never claims a share of the area's recorded rooms,
+and why it says "in diesem Gebiet" rather than naming the area: the label is
+"Wickeltische in Hamburg", and half the languages decline a name they put in
+a sentence (`yoursParts`, `web/me.js`). An invitation rather than a zero when
+there are none yet. Every counted fragment in the dialog puts its number
+last, so none of them is wrong at one — "1 davon sind von dir" was.
+
+A "Feedback" line closes the dialog: the Impressum's address as a `mailto:`
+link whose visible text is the address itself, because a device with no
+mail app does nothing on such a link and the reader can still copy it. The
+mail's body names the shell pin and the platform, nothing about the reader.
+It is the app's own way to reach the person behind it (App Store Review
+Guideline 1.5), and the practical payoff is a mail instead of a one-star
+review.
 
 "Your stats" reads the reader's own **public** OSM changesets live, on the
 device: `GET {api}/changesets.json?display_name=<name>`, no login-privileged
@@ -981,7 +1001,7 @@ dialog lists them newest first, with tonight's pin colour when the place is
 still on the map and a plain dot when it is not, and the distance from
 wherever the reader last stood.
 
-### The first-launch intro, what's new, and "Mehr aus der App"
+### The first-launch intro, what's new, and the phone's own tips
 
 The Control Center control, the home-screen widget and the Siri phrase (iOS),
 the widget and the launcher shortcut (Android) are all reached from the phone's
@@ -1010,12 +1030,14 @@ language switch.
   and translates its keys in all 32 languages; a release without one shows
   nothing, and the key is caught up silently so the next release's notes are
   measured from here. A downgrade or a seeded key shows nothing.
-- **A block at the foot of "Mein PapaMap", both apps** (`appTips`): plain
-  lines. German and English name the phone's own buttons; the other 30
-  languages stay general and quote them by the English name they carry there.
-  The Siri line shows in German and English alone: Siri answers in the phone's
-  language, and the app ships phrases in those two (`SIRI_LANGS`, tied by a
-  test to the `.lproj` folders).
+- **The tips themselves** (`appTips`): plain lines, shown by the intro.
+  German and English name the phone's own buttons; the other 30 languages stay
+  general and quote them by the English name they carry there. The Siri line
+  shows in German and English alone: Siri answers in the phone's language, and
+  the app ships phrases in those two (`SIRI_LANGS`, tied by a test to the
+  `.lproj` folders). Until CONTRACT v60 the same lines also stood at the foot
+  of "Mein PapaMap" ("Mehr aus der App"); they left when that dialog became
+  the reader's own, and the intro is where a phone's features belong.
 - **The store screenshots carry the rest**: one feature per picture.
 
 ## The store app
@@ -1028,10 +1050,13 @@ layout, the build and the signing):
 - **A first screen that is a map.** The website's header is a website's: four links, a
   language picker, a tagline that is the page's `<h1>`, a stats strip — 218 of a 667px phone
   before the notch, and "too much on the screen" was the first thing the first testers said
-  (2026-09-21). `bootNative` moves the links, the picker and the strip into the foot of "Mein
-  PapaMap" (`#me-about`; the same nodes, so every listener and the area link's relabelling come
-  along) and `.native` hides the tagline. What is left is the brand, "+ Ort hinzufügen" and the
-  chip row: 96px. The website is unchanged.
+  (2026-09-21). `bootNative` moves the links and the picker into the foot of "Mein PapaMap"
+  (`#me-about`; the same nodes, so every listener and the area link's relabelling come along)
+  and `.native` hides the tagline and the stats strip. The strip rode into the dialog too until
+  CONTRACT v60: it is the site's copy — the sweep, the worldwide one-sidedness, the data date —
+  not the reader's, and the area pages, the leaderboard and the methods page behind those links
+  carry every one of its numbers in more depth. What is left is the brand, "+ Ort hinzufügen"
+  and the chip row: 96px. The website is unchanged.
 - **A city offline.** The website may not keep a basemap (see *Offline* above: the OSMF tile
   policy), so the app brings its own: a PMTiles extract of the Protomaps daily build per
   leaderboard city, cut weekly by `pipeline/tiles.py` and listed in `tiles/index.json`

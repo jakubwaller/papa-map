@@ -437,14 +437,6 @@ export function pinColorExpression(mode) {
     menOnly, byStatus];
 }
 
-// The mama reading of the local stats sentence: the two rooms add up, less the
-// tables in the men's room alone (`men_only`, a subset of `accessible` the
-// pipeline counts since v50 — 0 in an older stats.json), and the unrecorded
-// ones stay their own number.
-export function momCounts({ accessible = 0, female_only = 0, unknown = 0, men_only = 0 } = {}) {
-  return { good: accessible - men_only + female_only, maybe: unknown };
-}
-
 // ---- Nearest usable table ----
 // "Usable" is the reading's own verdict, not a second classification: a status
 // counts when the view already buckets it "good". So a father searches the
