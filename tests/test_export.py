@@ -335,6 +335,8 @@ _LONG = "a" * (255 - len("@example.com")) + "@example.com"
     ({"contact:email": "a@b"}, None),
     ({"contact:email": "a@example.c"}, None),  # TLD too short
     ({"email": "<script>@example.com"}, None),
+    ({"contact:email": "a@example.com?subject=hi"}, None),  # no smuggled mailto headers
+    ({"email": "a@example.com#x"}, None),
     ({"contact:email": '"a@example.com"'}, None),
     ({"contact:email": "a@example.com;"}, "a@example.com"),
     ({}, None),

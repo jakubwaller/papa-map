@@ -39,9 +39,10 @@ def _mapcomplete_url(osm_type, osm_id, lat, lon):
 # often a city office or a chain's head office that never sees the table.
 EMAIL_KEYS = ("contact:email", "email", "operator:email")
 # One @, a dot in the domain, a TLD of two or more, and none of the characters
-# that would break out of an href or a mailto URL. Kept in lockstep with
+# that would break out of an href or a mailto URL — including ?, &, =, # and %,
+# so a tag cannot smuggle a second mailto header past the subject. Kept in lockstep with
 # web/datasource.js::isContactEmail, which checks the same list of cases.
-EMAIL_RE = re.compile(r"""^[^\s@;,<>"'()\[\]\\]+@[^\s@;,<>"'()\[\]\\]+\.[^\s@;,<>"'()\[\]\\.]{2,}$""")
+EMAIL_RE = re.compile(r"""^[^\s@;,<>"'()\[\]\\?&=#%/:]+@[^\s@;,<>"'()\[\]\\?&=#%/:]+\.[^\s@;,<>"'()\[\]\\.?&=#%/:]{2,}$""")
 EMAIL_MAX_LEN = 254
 _MAILTO = re.compile(r"^mailto:", re.IGNORECASE)
 

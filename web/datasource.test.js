@@ -1718,9 +1718,9 @@ const EMAIL_CASES = [
   ["a@example.org", true],
   ["ops@example.net", true],
   ["x@example.com", true],
-  // A colon is legal in a local part, so the bare check passes this; the
-  // pipeline strips the prefix before it ever checks.
-  ["mailto:x@example.com", true],
+  // The bare check rejects the prefix (a colon is out); the pipeline strips
+  // it before it ever checks, so the tag still yields x@example.com.
+  ["mailto:x@example.com", false],
   ["a@example.com;b@example.com", false],   // ... and splits on ; and ,
   ["a@example.com, b@example.com", false],
   ["  a@example.com  ", false],   // ... and trims
@@ -1730,6 +1730,8 @@ const EMAIL_CASES = [
   ["a@b", false],
   ["a@example.c", false],
   ["<script>@example.com", false],
+  ["a@example.com?subject=hi", false],   // no smuggled mailto headers
+  ["a@example.com#x", false],
   ['"a@example.com"', false],
   ["a@example.com;", false],
   [LONG, false],

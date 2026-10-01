@@ -665,9 +665,10 @@ export function shareUrl(osmUrl) {
 // The same rule as pipeline/export.py's EMAIL_RE and EMAIL_MAX_LEN — keep the
 // two in lockstep; datasource.test.js and tests/test_export.py check one list
 // of cases. One @, a dot in the domain, a TLD of two or more, and none of the
-// characters that would break out of an href or a mailto URL.
+// characters that would break out of an href or a mailto URL — including ?, &, =, # and %,
+// so a tag cannot smuggle a second mailto header past the subject.
 const CONTACT_EMAIL_RE =
-  /^[^\s@;,<>"'()\[\]\\]+@[^\s@;,<>"'()\[\]\\]+\.[^\s@;,<>"'()\[\]\\.]{2,}$/;
+  /^[^\s@;,<>"'()\[\]\\?&=#%/:]+@[^\s@;,<>"'()\[\]\\?&=#%/:]+\.[^\s@;,<>"'()\[\]\\.?&=#%/:]{2,}$/;
 const CONTACT_EMAIL_MAX_LEN = 254;
 
 export function isContactEmail(s) {
