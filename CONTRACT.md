@@ -1,5 +1,12 @@
 # papa-map — build contract (v0)
 
+> **v61 amendment (1 Oct 2026, the area line's two numbers): no shape change.**
+> English read "Changing tables in Germany: 6,277, 1,283 with the room recorded":
+> two comma-grouped numbers separated by a comma. `meAreaSentence` now says "of
+> which" between them in English, and the same in the three languages that also
+> put the second number straight after the comma (Catalan, Spanish, Portuguese).
+> Shell pin `app62` → `app63`.
+
 > **v60 amendment (1 Oct 2026, "Mein PapaMap" is the reader's): no shape
 > change.** A Czech tester read the dialog as machine translation; the cause was
 > the German template. "{percent} % beantwortet. {n} davon sind von dir." gave
