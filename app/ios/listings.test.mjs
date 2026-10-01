@@ -111,13 +111,14 @@ test("push PATCHes a changed locale, POSTs a missing one, leaves an unchanged on
   }
   const writes = calls.filter((c) => c.method !== "GET");
   assert.deepEqual(writes.map((c) => `${c.method} ${c.path}`), [
-    // files are read in language order: cs, de, en, et
+    // files are read in language order (cs, de, en, et); the app info is
+    // written for all of them first, the version after
     "POST /v1/appInfoLocalizations",
-    "POST /v1/appStoreVersionLocalizations",
     "PATCH /v1/appInfoLocalizations/AI-de",
+    "POST /v1/appStoreVersionLocalizations",
     "PATCH /v1/appStoreVersionLocalizations/VL-de",
   ]);
-  const [csInfo, csVersion, deInfo, deVersion] = writes.map((c) => c.body.data);
+  const [csInfo, deInfo, csVersion, deVersion] = writes.map((c) => c.body.data);
   assert.deepEqual(csInfo, {
     type: "appInfoLocalizations",
     attributes: { locale: "cs", name: "PapaMap", subtitle: "Přebalovací pulty pro táty", privacyPolicyUrl: privacyUrl("cs") },
@@ -136,6 +137,41 @@ test("push PATCHes a changed locale, POSTs a missing one, leaves an unchanged on
   assert.ok(!JSON.stringify(calls).includes('"et"'), "Estonian has no App Store locale and is never sent");
   // The live version and the live app info are never touched.
   assert.ok(!calls.some((c) => /V11|I1\b/.test(c.path)));
+});
+
+test("the version's locales are listed only after the app info has them: the store adds a new locale to the version by itself", async (t) => {
+  const enVersion = ascVersionAttributes({ lang: "en", ...LISTING });
+  const blank = Object.fromEntries(Object.keys(enVersion).map((k) => [k, null]));
+  const calls = withFetch(t, [
+    appRoute,
+    { method: "GET", pattern: /^\/v1\/apps\/APP\/appStoreVersions/,
+      body: { data: [{ id: "V12", attributes: { versionString: "1.2", appVersionState: "PREPARE_FOR_SUBMISSION" } }] } },
+    { method: "GET", pattern: /^\/v1\/apps\/APP\/appInfos/,
+      body: { data: [{ id: "I2", attributes: { state: "PREPARE_FOR_SUBMISSION" } }] } },
+    { method: "GET", pattern: /^\/v1\/appInfos\/I2\/appInfoLocalizations/,
+      body: { data: [loc("AI-en", "en-US", { name: "PapaMap", subtitle: LISTING.subtitle, privacyPolicyUrl: privacyUrl("en") })] } },
+    // what the store answers once the app info has cs: the version's record exists, empty
+    { method: "GET", pattern: /^\/v1\/appStoreVersions\/V12\/appStoreVersionLocalizations/,
+      body: { data: [loc("VL-en", "en-US", enVersion), loc("VL-cs", "cs", blank)] } },
+    { method: "POST", pattern: /^\/v1\/appInfoLocalizations$/, body: { data: { id: "AI-cs" } } },
+    { method: "PATCH", pattern: /^\/v1\/appStoreVersionLocalizations\/VL-cs$/, body: { data: { id: "VL-cs" } } },
+  ]);
+  const dir = tmpListings({ en: LISTING, cs: { ...LISTING, subtitle: "Přebalovací pulty pro táty" } });
+  try {
+    await pushFrom(dir);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  const order = calls.map((c) => `${c.method} ${c.path.replace(/\?.*/, "")}`);
+  assert.ok(order.indexOf("GET /v1/appStoreVersions/V12/appStoreVersionLocalizations") > order.indexOf("POST /v1/appInfoLocalizations"),
+            "the version's records are listed after the last app info write, never before");
+  assert.deepEqual(calls.filter((c) => c.method !== "GET").map((c) => `${c.method} ${c.path}`), [
+    "POST /v1/appInfoLocalizations",
+    "PATCH /v1/appStoreVersionLocalizations/VL-cs",
+  ]);
+  const patch = calls.at(-1).body.data;
+  assert.equal(patch.id, "VL-cs");
+  assert.equal(patch.attributes.description, LISTING.description);
 });
 
 test("with no version in preparation, push creates the project's MARKETING_VERSION first and fills that", async (t) => {

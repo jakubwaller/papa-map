@@ -518,17 +518,22 @@ export async function listingsPush({ dir = listingsDir, pbxproj = defaultPbxproj
   const info = pickEditable(await appInfos(app), infoState);
   console.log(`version ${version.attributes.versionString} (${versionState(version)}, ${version.id})` +
               (info ? `, app info ${info.id} (${infoState(info)})` : ", no app info being prepared"));
-  const infoHave = info ? await appInfoLocalizations(info.id) : [];
-  const versionHave = await versionLocalizations(version.id);
-  const skipped = [];
-  for (const l of listings) {
-    const locale = ASC_LOCALES[l.lang];
-    if (!locale) { skipped.push(l.lang); continue; }
-    if (info) {
-      await upsertLocalization("appInfoLocalizations", infoHave, locale, ascAppInfoAttributes(l),
+  const skipped = listings.filter((l) => !ASC_LOCALES[l.lang]).map((l) => l.lang);
+  const pushable = listings.filter((l) => ASC_LOCALES[l.lang]);
+  // The app info goes first, for every language, and the version's records
+  // are listed only after that: a locale added to the app info is added to
+  // the version in preparation by App Store Connect itself (empty), so a list
+  // taken earlier makes the version's POST a 409 DUPLICATE (run 36842271431).
+  if (info) {
+    const infoHave = await appInfoLocalizations(info.id);
+    for (const l of pushable) {
+      await upsertLocalization("appInfoLocalizations", infoHave, ASC_LOCALES[l.lang], ascAppInfoAttributes(l),
                                { appInfo: { data: { type: "appInfos", id: info.id } } });
     }
-    await upsertLocalization("appStoreVersionLocalizations", versionHave, locale, ascVersionAttributes(l),
+  }
+  const versionHave = await versionLocalizations(version.id);
+  for (const l of pushable) {
+    await upsertLocalization("appStoreVersionLocalizations", versionHave, ASC_LOCALES[l.lang], ascVersionAttributes(l),
                              { appStoreVersion: { data: { type: "appStoreVersions", id: version.id } } });
   }
   if (!info) console.log("name, subtitle and privacy URL left as they are (no app info being prepared)");
