@@ -5,5 +5,6 @@
 – Neu: Stadt offline laden — der Fortschritt bleibt sichtbar, wenn du das Fenster schließt und wieder öffnest; lädt die Stadtliste nicht, gibt es „Noch einmal versuchen“.
 – Neu: Im Widget steht „eingeschränkt barrierefrei“ (auf dem Sperrbildschirm „eingeschränkt“), wenn der Rollstuhl-Filter an ist und der nächste Wickeltisch nur eingeschränkt erreichbar ist.
 – Neu: „+ Ort hinzufügen“ erklärt jetzt gleich oben, dass es in MapComplete weitergeht und der Ort nach Minuten erscheint. Liest sich das klar?
+– Neu: „Mein PapaMap“ ist kürzer und gehört dir: eine Zeile zum Gebiet mit den Zahlen, deine Antworten hier und insgesamt, deine gespeicherten Orte und eine Zeile „Feedback“, die eine E-Mail öffnet. Liest sich das natürlich?
 – Wie immer: „Nächster Wickeltisch“, Farben bei Orten, die du kennst, Siri, Widget.
 Alles, was unklar ist oder hakt: Screenshot machen und über TestFlight schicken.
