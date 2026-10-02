@@ -148,12 +148,11 @@ const DEVICES = {
     isMobile: false,
     hasTouch: true,
   },
-  // Google Play's phone screenshots: any size with the long side at most
-  // twice the short one, so the shell is shot at a common Android phone
-  // viewport and only the `play` canvas below has to fit Play's rule.
+  // Google Play's phone screenshots. Shorter than a modern phone so that
+  // most of the screen still fits in the 9:16 `play` canvas's frame.
   android: {
-    viewport: { width: 412, height: 915 },
-    deviceScaleFactor: 3,        // -> 1236x2745
+    viewport: { width: 412, height: 800 },
+    deviceScaleFactor: 3,        // -> 1236x2400
     isMobile: true,
     hasTouch: true,
     platform: "android",
@@ -178,10 +177,11 @@ const DEVICE_CANVAS = {
   iphone69: { width: 1320, height: 2868, frameWidth: 1140, margin: 90, headlineSize: 88, sublineSize: 44, radius: 72, gap: 26 },
   iphone65: { width: 1284, height: 2778, frameWidth: 1110, margin: 87, headlineSize: 86, sublineSize: 43, radius: 70, gap: 26, rawDevice: "iphone69" },
   ipad13: { width: 2064, height: 2752, frameWidth: 1560, margin: 252, headlineSize: 96, sublineSize: 48, radius: 60, gap: 30 },
-  // Google Play phone: 1080x2160 is exactly the 2:1 limit, the tallest
-  // canvas Play accepts. `texts: "android"` swaps in the sublines that name
-  // Android features instead of Siri, Control Center and Apple Maps.
-  play: { width: 1080, height: 2160, frameWidth: 934, margin: 73, headlineSize: 72, sublineSize: 36, radius: 58, gap: 22, rawDevice: "android", texts: "android" },
+  // Google Play phone: 9:16, or Play's asset library marks the image
+  // "needs cropping" (seen 2026-10-02 on a 1:2 set). `texts: "android"` swaps
+  // in the sublines that name Android features instead of Siri, Control
+  // Center and Apple Maps.
+  play: { width: 1440, height: 2560, frameWidth: 1152, margin: 144, headlineSize: 92, sublineSize: 46, radius: 72, gap: 28, rawDevice: "android", texts: "android" },
 };
 
 const LANGS = {
