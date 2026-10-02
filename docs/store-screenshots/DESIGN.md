@@ -97,9 +97,9 @@ no new raw shots needed, only a wider frame math. `final/` now also holds
 `iphone65-{de,en}-01..08`; upload those to the iPhone slot, not `iphone69-*` (kept in the folder
 as the 6.9" source rendering, not for upload — useful if a future device slot wants it).
 
-**Update 2026-10-02: a Google Play set.** Play wants phone screenshots whose long side is at most
-twice the short one, which the iPhone canvases (2.17:1) break. `--canvas play` shoots the shell
+**Update 2026-10-02: a Google Play set.** Play's asset library takes phone screenshots at 9:16 and
+marks anything else "needs cropping" (a 1:2 set was, 2026-10-02). `--canvas play` shoots the shell
 as Android (`getPlatform() === "android"`: crosshair locate button, Android tips in My PapaMap) at
-412 × 915 and composes it at 1080 × 2160, exactly 2:1, same shots and order. Shots 2 and 4 take
+412 × 800 and composes it at 1440 × 2560, same shots and order. Shots 2 and 4 take
 their sublines from `texts.json`'s `android` block (widget and app icon instead of Siri and
 Control Center; "your maps app" instead of Apple Maps). Upload `final/play-{de,en}-01..08`.
