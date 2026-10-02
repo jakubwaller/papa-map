@@ -602,7 +602,7 @@ its room*, and the one tap writes both `changing_table=yes` and the room —
 the table is news to OSM there, and the yes without the room would only make
 a grey pin tonight. One more button on a row of its own, *no changing table*,
 writes `changing_table=no` alone; everything else stays with the MapComplete
-link under it. Nothing is written to an object that is not already on the map: a café with no tags at all is still MapComplete's `dad_venue` layer.
+link under it. A café OSM knows with no table on record at all has no pin to tap; the add dialog asks it the same question (below).
 
 Any host that is not `papamap.de` talks to the **sandbox** API
 (`master.apis.dev.openstreetmap.org`), whose database is separate and wiped
@@ -611,6 +611,37 @@ periodically. Its client is registered for `http://127.0.0.1:8000/` and
 is refused. The token is kept in `localStorage` (`papamap-osm-token`,
 `papamap-osm-user`) and named in the Datenschutz; "Abmelden" in the popup
 forgets it here and revokes it at OSM.
+
+### Add a place: the café OSM already has
+
+"+ Add a place" lists the places around the map centre that OSM already knows and
+records no changing table for — the café a parent is sitting in — and asks the
+play-place question about the one picked: *is there a changing table? then tap
+its room*, or *no changing table*. The answer goes through the same `writeTags`,
+under the same login, with the same changeset comments as a play place's
+(CONTRACT.md v62). Places OSM does not have at all, and public toilets, stay with
+the two MapComplete links under the list: creating an object is a different job
+from tagging one.
+
+The list is Photon's `/reverse`, 300 m around the map centre, filtered to the
+`dad_venue` layer's own tag list (`web/venues.js`; a test fails if the two
+drift). Photon cannot filter on `changing_table`, so the rows drop whatever the
+map already has a table pin for, and `writeTags` re-reads the object before
+writing anything — somebody else's answer since is reported, never overwritten.
+Chosen over Overpass and the OSM API by measurement (Eimsbüttel, 2 Oct 2026,
+midday): Photon answered 10 of 10 tries in 2–3.5 s and listed 47 of the 49
+untagged venues Overpass found; Overpass answered 4 of 10 (504 "too busy");
+the OSM API's `/map` for a 600 m box is 2.6 MB, too heavy for a phone.
+
+Photon is asked when the dialog opens (not below zoom 14, where the map centre
+is a district and the list would be strangers), once per ~100 m of centre per
+session, and while the reader types in the dialog's own search box (a box about
+a kilometre around the centre, same three-character and debounce rules as the
+map's search). The centre leaves the browser rounded to three decimals — street
+level, which the Datenschutz says, unlike the search field's 10 km. Photon
+failing or throttling leaves one line and the MapComplete links. A "yes" is
+then watched for in the delta by its own `osm_url` (`selectAddedPlace`), and
+the map flies to the new pin when it lands; there is no optimistic pin.
 
 ### Share a pin
 

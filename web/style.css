@@ -633,7 +633,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #add-dialog::backdrop, #offline-dialog::backdrop, #route-dialog::backdrop, #me-dialog::backdrop, #intro-dialog::backdrop { background: rgba(15, 25, 20, .45); }
 #add-dialog h3, #offline-dialog h3, #route-dialog h3, #me-dialog h3, #intro-dialog h3 { margin: 0 0 6px; font-size: 17px; padding-right: 22px; }
 #add-dialog p, #offline-dialog p, #route-dialog p, #me-dialog p, #intro-dialog p { margin: 0 0 12px; font-size: 13px; color: var(--muted-2); line-height: 1.5; }
-#add-dialog .btn {
+#add-dialog a.btn {
   display: block;
   padding: 11px 14px;
   margin-bottom: 9px;
@@ -644,10 +644,10 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   text-decoration: none;
   color: var(--ink);
 }
-#add-dialog .btn:hover { border-color: var(--green); }
-#add-dialog .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
-#add-dialog .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
-#add-dialog .btn .hint {
+#add-dialog a.btn:hover { border-color: var(--green); }
+#add-dialog a.btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+#add-dialog a.btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
+#add-dialog a.btn .hint {
   display: block;
   margin-top: 3px;
   font-size: 11.5px;
@@ -655,8 +655,44 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   line-height: 1.45;
   opacity: .85;
 }
-#add-dialog .btn code { font-size: 11px; }
+#add-dialog a.btn code { font-size: 11px; }
 #add-dialog .dialog-foot { margin: 4px 0 0; font-size: 12.5px; }
+/* The place list (CONTRACT.md v62): a search box, then one row per place —
+   name over street and distance — in a box that scrolls on its own, so the
+   MapComplete links below stay on screen on a phone. */
+#venue-search {
+  width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 9px 11px;
+  border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 14px;
+}
+#venue-search:disabled { background: #f1f4f2; }
+#add-dialog .venue-status { margin: 0 0 10px; }
+.venue-list {
+  list-style: none; margin: 0 0 12px; padding: 0;
+  max-height: min(40vh, 300px); overflow-y: auto;
+  border-top: 1px solid var(--line-soft);
+}
+.venue-list:empty { display: none; }
+.venue-row {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  padding: 9px 4px; border: none; border-bottom: 1px solid var(--line-soft);
+  background: none; font: inherit; color: var(--ink);
+}
+.venue-row:hover, .venue-row:focus-visible { background: #f1f4f2; }
+.venue-name { display: block; font-size: 14px; font-weight: 600; }
+.venue-meta { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+#venue-ask { margin-bottom: 12px; }
+#venue-ask .linkish { font-size: 12.5px; }
+#add-dialog h3:focus { outline: none; }
+#venue-ask h4 { margin: 8px 0 2px; font-size: 15px; }
+.venue-context { font-size: 12px; color: var(--muted); }
+#venue-ask .ask { border-top: none; padding-top: 0; }
+#add-dialog .venue-note {
+  margin: 10px 0 0; padding: 6px 9px; border-radius: 8px; font-size: 12.5px;
+  background: #f1f4f2;
+}
+#add-dialog .venue-note.found { color: var(--ink); font-weight: 600; }
+#add-dialog .venue-note.none { color: #6b4a00; background: #fff3d6; }
+#add-dialog .venue-elsewhere { margin: 4px 0 8px; font-size: 12.5px; }
 
 #add-dialog .close, #offline-dialog .close, #route-dialog .close, #me-dialog .close {
   position: absolute;
@@ -854,7 +890,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   vertical-align: baseline;
 }
 .popup .links { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
-.popup .btn {
+:is(.popup, #venue-ask) .btn {
   display: inline-block;
   padding: 7px 12px;
   border-radius: 999px;
@@ -864,7 +900,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   text-decoration: none;
   color: var(--muted-2);
 }
-.popup .btn:hover { border-color: var(--green); color: var(--green-strong); }
+:is(.popup, #venue-ask) .btn:hover { border-color: var(--green); color: var(--green-strong); }
 .popup .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
 .popup .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
 /* The share button: icon only, in the same row as Route and the OSM link —
@@ -897,29 +933,29 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    saying whose name the answer goes under. The pills are .btn so they sit
    level with the links below; buttons need the font and ground set, which
    anchors get for free. */
-.popup .ask { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
-.popup .ask-q { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+:is(.popup, #venue-ask) .ask { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+:is(.popup, #venue-ask) .ask-q { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
 /* Two columns, not a wrapped row: six short labels make three rows where
    five long pills made four, and on a 12 mini the card has to be clearly
    shorter than the map for panPopupIntoView to have anywhere to put it. A
    label a language cannot fit in half a card wraps rather than clips. */
-.popup .ask-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.popup .ask-btns[hidden] { display: none; }
-.popup .ask-btn {
+:is(.popup, #venue-ask) .ask-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+:is(.popup, #venue-ask) .ask-btns[hidden] { display: none; }
+:is(.popup, #venue-ask) .ask-btn {
   font: inherit; font-size: 12.5px; font-weight: 600; line-height: 1.25;
   padding: 7px 8px; text-align: center; background: #fff; cursor: pointer;
 }
 /* The rare rooms unfold under this link, in place; the "no table" answer of
    a play place keeps a full-width row of its own below both. */
-.popup .ask-more { display: block; margin-top: 6px; font-size: 11.5px; }
-.popup .ask-btns-more, .popup .ask-btns-none { margin-top: 6px; }
-.popup .ask-btns-none { grid-template-columns: 1fr; }
+:is(.popup, #venue-ask) .ask-more { display: block; margin-top: 6px; font-size: 11.5px; }
+:is(.popup, #venue-ask) .ask-btns-more, :is(.popup, #venue-ask) .ask-btns-none { margin-top: 6px; }
+:is(.popup, #venue-ask) .ask-btns-none { grid-template-columns: 1fr; }
 /* "Kein Wickeltisch" is the secondary answer: same pill as a room, but a
    lighter ink so the rooms still read as the expected tap. No new colour —
    --muted is the token the rest of the popup already uses for text that
    should recede (the amenity subtitle, the "away" caption). */
-.popup .ask-btn-none { color: var(--muted); }
-.popup .ask-btn-none:hover { border-color: var(--line); color: var(--muted-2); }
+:is(.popup, #venue-ask) .ask-btn-none { color: var(--muted); }
+:is(.popup, #venue-ask) .ask-btn-none:hover { border-color: var(--line); color: var(--muted-2); }
 /* The play-corner question: one line, the words then the three answers. Under
    the room question it has no login line of its own — the row above already
    says whose name the answer goes under, and the card's height budget (~470 px
@@ -939,8 +975,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .ask-play .ask-play-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
 .popup .ask-play .ask-btn { flex: 0 0 auto; padding: 6px 12px; }
 .popup .ask-play .ask-who { flex: 1 1 100%; margin-top: 0; }
-.popup .ask-who { margin-top: 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted-2); }
-.popup .linkish {
+:is(.popup, #venue-ask) .ask-who { margin-top: 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted-2); }
+:is(.popup, #venue-ask) .linkish {
   border: 0; background: none; padding: 0; font: inherit;
   color: var(--green-strong); text-decoration: underline; cursor: pointer;
 }

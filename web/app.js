@@ -12,13 +12,13 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app63";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app64";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app63";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app64";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app63";
+         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app64";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -26,7 +26,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app63";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app64";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -36,23 +36,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app63";
+         reviewTracker } from "./native.js?v=app64";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app63";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app64";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app63";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app64";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app63";
-// The bundled shell's pin (`?v=app63`), what the intro key records.
+import { isOpenNow } from "./opening-hours.js?v=app64";
+// The add dialog's place list (CONTRACT.md v62): Photon's places around the
+// map centre, as rows, minus what the map already has a pin for.
+import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
+         VENUE_MIN_ZOOM } from "./venues.js?v=app64";
+// The bundled shell's pin (`?v=app64`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -2255,12 +2259,14 @@ document.addEventListener("click", (e) => {
   if (popupObj && e.target.closest?.("button[data-share]"))
     sharePin(popupObj.kind, popupObj.obj);
   const room = e.target.closest?.("button.ask-btn");
-  if (room && popupObj) answer(popupObj.kind, popupObj.obj, room.dataset.room);
+  // The add dialog renders the same pills for a place that has no popup; a
+  // popup left open behind it must not take that answer as its own.
+  if (room && popupObj && !room.closest("#add-dialog")) answer(popupObj.kind, popupObj.obj, room.dataset.room);
   const more = e.target.closest?.("button.ask-more");
   if (more) {
     more.nextElementSibling?.removeAttribute("hidden");
     more.remove();
-    panPopupIntoView();   // three more pills: the card just grew a row
+    if (!more.closest("#add-dialog")) panPopupIntoView();   // three more pills: the card just grew a row
   }
   if (e.target.closest?.("button[data-logout]")) { logout(); if (meDialog.open) renderMeDialog(); }
   const star = e.target.closest?.("button.star-btn");
@@ -2486,9 +2492,180 @@ document.getElementById("add-place").addEventListener("click", () => {
   const c = map.getCenter().wrap(), z = map.getZoom();
   document.getElementById("add-toilet-link").href = mapCompleteAddUrl(c.lng, c.lat, z, lang);
   document.getElementById("add-venue-link").href = mapCompleteVenueUrl(c.lng, c.lat, z, lang);
+  openVenuePicker(c, z);
   addDialog.showModal();
 });
 document.getElementById("add-close").addEventListener("click", () => addDialog.close());
+
+// ---- Add a place, in the dialog itself (CONTRACT.md v62) -------------------
+// Step one lists the places OSM already has around the map centre with no
+// changing table on record; step two asks the play-place question about the
+// one picked — is there a table, and in which room — and writes the answer
+// under the reader's own login, the same writeTags every pin answer uses.
+// A place OSM does not have at all, and a public toilet, stay with the two
+// MapComplete links under the list: creating an object is a different job
+// from tagging one, and MapComplete does it well.
+//
+// Photon is asked only when the dialog opens, once per ~100 m of map centre
+// per session (venueCache), and while the reader types in the dialog's own
+// search box — never in the background. A Photon that fails or throttles
+// leaves the list with one line and the MapComplete links intact: the flow
+// this replaces is still right there.
+const venuePick = document.getElementById("venue-pick");
+const venueAskEl = document.getElementById("venue-ask");
+const venueList = document.getElementById("venue-list");
+const venueStatus = document.getElementById("venue-status");
+const venueSearch = document.getElementById("venue-search");
+const venueCache = new Map();
+let venueCentre = null;        // { lat, lon } of the open dialog
+let venueShown = [];           // the rows on screen, by index
+let venuePicked = null;        // the row being asked about
+let venueAbort = null;
+let venueTimer = null;
+
+const venueKnown = (url) => featuresByOsmUrl.has(url);
+
+function setVenueStatus(key) {
+  venueStatus.textContent = key ? t(key) : "";
+  venueStatus.hidden = !key;
+}
+
+function renderVenueRows(rows) {
+  venueShown = rows;
+  venueList.innerHTML = rows.map((r, i) =>
+    `<li><button type="button" class="venue-row" data-venue="${i}">` +
+    `<span class="venue-name">${esc(r.name)}</span>` +
+    `<span class="venue-meta">${esc([r.context, venueDistance(r.km)].filter(Boolean).join(" · "))}</span>` +
+    `</button></li>`).join("");
+}
+
+function showVenueStep(step) {
+  venuePick.hidden = step !== "pick";
+  venueAskEl.hidden = step !== "ask";
+}
+
+function openVenuePicker(c, z) {
+  venueCentre = { lat: c.lat, lon: c.lng };
+  venuePicked = null;
+  venueSearch.value = "";
+  showVenueStep("pick");
+  venueSearch.disabled = z < VENUE_MIN_ZOOM;
+  if (z < VENUE_MIN_ZOOM) { renderVenueRows([]); setVenueStatus("venueZoom"); return; }
+  loadVenues(venueReverseUrl(venueCentre.lat, venueCentre.lon, { lang }),
+             venueCentreKey(venueCentre.lat, venueCentre.lon));
+}
+
+// One request at a time: a newer one (the reader typed on) aborts the last.
+// `cacheKey` only for the reverse list — a typed query is not worth keeping.
+async function loadVenues(url, cacheKey = null) {
+  venueAbort?.abort();
+  const cached = cacheKey && venueCache.get(cacheKey);
+  if (cached) { showVenues(cached); return; }
+  const ctl = venueAbort = new AbortController();
+  renderVenueRows([]);
+  setVenueStatus("venueLoading");
+  try {
+    const res = await fetch(url, { signal: ctl.signal });
+    if (!res.ok) throw new Error(`photon ${res.status}`);
+    const json = await res.json();
+    if (ctl !== venueAbort) return;
+    if (cacheKey) venueCache.set(cacheKey, json);
+    showVenues(json);
+  } catch (err) {
+    if (err?.name === "AbortError" || ctl !== venueAbort) return;
+    setVenueStatus("venueFailed");
+  }
+}
+
+function showVenues(json) {
+  const rows = venueRows(json, { lat: venueCentre.lat, lon: venueCentre.lon, known: venueKnown });
+  renderVenueRows(rows);
+  setVenueStatus(rows.length ? null : "venueEmpty");
+}
+
+venueSearch.addEventListener("input", () => {
+  clearTimeout(venueTimer);
+  const q = venueSearch.value.trim();
+  venueTimer = setTimeout(() => {
+    if (!venueCentre) return;
+    if (q.length < PHOTON_MIN_CHARS)
+      loadVenues(venueReverseUrl(venueCentre.lat, venueCentre.lon, { lang }),
+                 venueCentreKey(venueCentre.lat, venueCentre.lon));
+    else loadVenues(venueSearchUrl(q, venueCentre.lat, venueCentre.lon, { lang }));
+  }, PHOTON_DEBOUNCE_MS);
+});
+
+venueList.addEventListener("click", (e) => {
+  const row = venueShown[e.target.closest?.("button.venue-row")?.dataset.venue];
+  if (row) askVenue(row);
+});
+
+function askVenue(row, busy = false) {
+  venuePicked = row;
+  document.getElementById("venue-name").textContent = row.name;
+  document.getElementById("venue-context").textContent = row.context || "";
+  document.getElementById("venue-q").innerHTML = askHTML("askTable", busy);
+  setVenueNote(null);
+  showVenueStep("ask");
+}
+
+function setVenueNote(key, cls = "", vars = null) {
+  const el = document.getElementById("venue-note");
+  el.className = `venue-note ${cls}`;
+  el.textContent = key ? t(key, vars) : "";
+  el.hidden = !key;
+}
+
+document.getElementById("venue-back").addEventListener("click", () => {
+  venuePicked = null;
+  showVenueStep("pick");
+});
+
+document.getElementById("venue-q").addEventListener("click", (e) => {
+  const btn = e.target.closest?.("button.ask-btn");
+  if (btn && venuePicked) answerVenue(venuePicked, btn.dataset.room);
+});
+
+// The pin answer's sibling for a place with no pin (answer(), above, needs
+// one: its popup, its dataset entry, its overrides). Same write, same login
+// round trip with the answer in hand, same "Mein PapaMap" count; the result
+// is said in the dialog, and a table — not a "none" — is then watched for
+// in the delta by its own osm_url, so the new pin is flown to when it lands.
+async function answerVenue(venue, choice, freshToken = null) {
+  const token = freshToken ?? getToken();
+  const intent = { kind: "venue", osm_url: venue.osm_url, choice,
+                   name: venue.name, context: venue.context, lon: venue.lon, lat: venue.lat };
+  if (!token) { rememberView(); goLogin(intent); return; }
+  if (inFlight.has(venue.osm_url)) return;
+  inFlight.add(venue.osm_url);
+  const btns = [...venueAskEl.querySelectorAll("button.ask-btn, button.ask-more, #venue-back")];
+  btns.forEach((b) => { b.disabled = true; });
+  setVenueNote("askSaving", "looking");
+  // Taken before the write: OSM's edited_at on the delta's upsert is the
+  // server's time DURING the write, and the watch must be older than that.
+  const since = new Date().toISOString();
+  try {
+    const ref = osmRef(venue.osm_url);
+    if (!ref) throw Object.assign(new Error("bad osm_url"), { status: "network" });
+    const comment = CHANGESET_COMMENT[choice === "none" ? "place_none" : "place"];
+    const out = await writeTags(osm, token, ref, tablePatch(choice), comment);
+    recordMyAnswer(out.changeset, venue.lon, venue.lat);
+    venueCache.clear();   // the place is answered; a reopen must not list it
+    venueAskEl.querySelector(".ask")?.remove();
+    setVenueNote(choice === "none" ? "venueSavedNone" : "venueSaved", "found");
+    if (choice !== "none") {
+      writeAddWatch({ t: since, osm_url: venue.osm_url, zoom: Math.max(map.getZoom(), VENUE_MIN_ZOOM),
+        bbox: [venue.lon, venue.lat, venue.lon, venue.lat] });
+    }
+    review?.answered();
+  } catch (err) {
+    if (err.status === 401) { clearLogin(); rememberView(); goLogin(intent); return; }
+    setVenueNote(err.status === 409 ? "askConflict" : "askFailed", "none", { status: err.status || "network" });
+  } finally {
+    inFlight.delete(venue.osm_url);
+    btns.forEach((b) => { if (b.isConnected) b.disabled = false; });
+  }
+}
 
 // ---- Add a place: watching the delta for the new object to arrive --------
 // Tapping either link leaves for MapComplete; there is no osm_url to check
@@ -2554,7 +2731,9 @@ function maybeNotifyAddedPlace(deltaJson) {
   if (!result) {
     if (watch && Date.now() - Date.parse(watch.t) > ADD_WATCH_TIMEOUT_MS) {
       clearAddWatch();
-      toast(t("editNone"));   // "nothing new on OSM yet / log in to MapComplete and upload"
+      // The dialog's own answer is on OSM already (writeTags said so); the
+      // MapComplete nudge below would be advice about an upload never needed.
+      if (!watch.osm_url) toast(t("editNone"));   // "nothing new on OSM yet / log in to MapComplete and upload"
     }
     return;
   }
@@ -2803,8 +2982,23 @@ async function completeLogin(href) {
   // Taken whether or not the login went through: a refused consent must not
   // leave an answer waiting to be filed under the next login.
   const intent = takeIntent();
+  // An answer from the add dialog: the place has no pin to land on, so the
+  // dialog reopens on its question and files the answer there — the write
+  // itself re-reads the object, so a table somebody recorded in between is
+  // reported, not overwritten.
+  if (intent?.kind === "venue" && login?.token && osmRef(intent.osm_url)) {
+    const venue = { osm_url: intent.osm_url, name: String(intent.name ?? ""), context: String(intent.context ?? ""),
+                    lon: Number(intent.lon), lat: Number(intent.lat) };
+    if (Number.isFinite(venue.lon) && Number.isFinite(venue.lat)) {
+      map.jumpTo({ center: [venue.lon, venue.lat], zoom: Math.max(map.getZoom(), 16) });
+      venueCentre = { lat: venue.lat, lon: venue.lon };
+      askVenue(venue, true);
+      addDialog.showModal();
+      answerVenue(venue, intent.choice, login.token);
+    }
+  }
   // The answer given before the login round trip: land on its pin and file it.
-  if (intent && login?.token) {
+  else if (intent && login?.token) {
     const kind = intent.kind === "place" ? "place" : "table";
     const obj = (kind === "place" ? placesByOsmUrl : featuresByOsmUrl).get(intent.osm_url);
     if (obj) {

@@ -1107,9 +1107,22 @@ export function isNewlyCreated(properties) {
 // new_toilets_no_table entry whose url also has an upsert this same tick is
 // ignored outright — the upsert branch above already claims it (the
 // ordinary MapComplete flow landing both halves of an answer in one delta).
+//
+// A watch with an `osm_url` is the add dialog's own answer (CONTRACT.md
+// v62): the reader picked a place OSM already had and wrote its table from
+// this page, so the object is not new and isNewlyCreated would never pass.
+// That watch knows exactly which object it is waiting for, and an upsert of
+// that one, edited after the tap, is the answer — wherever it sits.
 export function selectAddedPlace(deltaJson, watch) {
   if (!watch || !deltaJson) return null;
   const since = watch.t;
+  if (watch.osm_url) {
+    for (const [kind, list] of [["table", deltaJson.tables?.upsert], ["place", deltaJson.places?.upsert]])
+      for (const f of list || [])
+        if (f.properties?.osm_url === watch.osm_url && f.properties.edited_at > since)
+          return { type: kind, feature: f };
+    return null;
+  }
   const center = [(watch.bbox[0] + watch.bbox[2]) / 2, (watch.bbox[1] + watch.bbox[3]) / 2];
   const upserts = [...(deltaJson.tables?.upsert || []).map((f) => ["table", f]),
                    ...(deltaJson.places?.upsert || []).map((f) => ["place", f])];

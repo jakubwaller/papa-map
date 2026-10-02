@@ -191,14 +191,14 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app63" />
+  <link rel="stylesheet" href="style.css?v=app64" />
 
   <!-- Classic and blocking, in the head on purpose: it puts the .in-app class
        on <html> before the first paint when the store app opened this page in
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app63"></script>
+  <script src="in-app.js?v=app64"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -385,11 +385,29 @@
   </button>
   <!-- Add-a-place dialog: everything lands in OpenStreetMap, not here -->
   <dialog id="add-dialog">
-    <h3 data-i18n="dlgTitle">Fehlenden Ort hinzufügen</h3>
-    <p data-i18n="dlgIntro">Neue Orte trägst du in MapComplete ein, dem Editor von OpenStreetMap;
-    PapaMap hat keine eigenen Daten. Er öffnet sich am aktuellen Kartenausschnitt — dort die
-    Wickeltisch-Fragen beantworten und zurückkommen, der Ort erscheint hier nach wenigen Minuten.</p>
-    <a id="add-toilet-link" class="btn primary" href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json" target="_blank" rel="noopener">
+    <!-- Focus lands on the title, not on the search box below it: a focused
+         field opens a phone's keyboard over the very list it is there to show. -->
+    <h3 data-i18n="dlgTitle" tabindex="-1" autofocus>Fehlenden Ort hinzufügen</h3>
+    <p data-i18n="dlgIntro">Such den Ort in der Liste und antworte gleich hier — die Antwort geht unter deinem eigenen Login an OpenStreetMap, der Pin erscheint nach wenigen Minuten. PapaMap hat keine eigenen Daten.</p>
+    <!-- Step one: places around the map centre with no changing table on
+         record, from Photon (app.js, CONTRACT.md v62). -->
+    <div id="venue-pick">
+      <input id="venue-search" type="search" autocomplete="off" enterkeyhint="search"
+             placeholder="Ort in der Nähe suchen" data-i18n-placeholder="venueSearch"
+             aria-label="Ort in der Nähe suchen" data-i18n-aria="venueSearch">
+      <p id="venue-status" class="venue-status" role="status" hidden></p>
+      <ul id="venue-list" class="venue-list"></ul>
+    </div>
+    <!-- Step two: the play-place question about the place picked. -->
+    <div id="venue-ask" hidden>
+      <button id="venue-back" type="button" class="linkish" data-i18n="venueBack">← Zurück zur Liste</button>
+      <h4 id="venue-name"></h4>
+      <div id="venue-context" class="venue-context"></div>
+      <div id="venue-q"></div>
+      <p id="venue-note" class="venue-note" role="status" hidden></p>
+    </div>
+    <p class="venue-elsewhere" data-i18n="dlgElsewhere">Nicht in der Liste, oder fehlt eine öffentliche Toilette? Dann in MapComplete, dem Editor von OpenStreetMap:</p>
+    <a id="add-toilet-link" class="btn" href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json" target="_blank" rel="noopener">
       <span data-i18n="dlgToilet">Eine öffentliche Toilette fehlt</span>
       <span class="hint" data-i18n="dlgToiletHint">Öffnet MapComplete am aktuellen Kartenausschnitt — Toilette hinzufügen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OSM-Login.</span>
     </a>
@@ -475,6 +493,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app63"></script>
+  <script type="module" src="app.js?v=app64"></script>
 </body>
 </html>

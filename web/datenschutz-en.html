@@ -79,6 +79,24 @@
      transmitted, simply do not use the field: the map is fully usable without the search, and
      your device finds the matches among the map's own changing tables and places by itself
      anyway.</p>
+  <h2>Add a place (list of places)</h2>
+  <p>When you open “Add a place”, the site lists cafés, shops and similar places around the
+     centre of the map for which OpenStreetMap records no changing table yet. The list comes from
+     the same Photon place-search service of komoot GmbH as the search above. What is
+     transmitted: the centre of the map section currently on screen, <strong>rounded to three
+     decimal places, that is to about 100 m</strong> — as precise as a list of the places in your
+     street needs; the language of the interface, but only for German, English and French; the
+     kinds of places asked for; and, as with every request, your IP address. If you type in the
+     dialog's search field, from the third character on the text you typed and a section of about
+     one kilometre around the same centre are sent as well.</p>
+  <p>This happens only when you open the dialog (and not while the map is zoomed out further than
+     a district), at most once per map centre and visit, and while you type in the dialog's search
+     field. Here too the position from the locate function is never sent. If the map is showing
+     your surroundings, though, for instance because it opened at your location, the map centre is
+     near you, and the service then learns your area to about 100 m. If you pick a place and
+     answer, the answer goes to OpenStreetMap under your own account like any other answer (see
+     below). Legal basis: Art. 6(1)(f) GDPR. If you do not want anything transmitted, move the map
+     before opening the dialog, or use the two MapComplete links in it.</p>
   <h2>Language setting (local storage)</h2>
   <p>If you choose a language via the language switcher, that choice is stored in your browser's
      local storage (key <code>papamap-lang</code>); the same applies to whether you read the map
@@ -144,7 +162,8 @@
      analytics, tracking or advertising components, no crash-reporting system of our own, no push
      notifications. The app itself talks to three servers — papamap.de for the changing-table data
      and the offline cities, openstreetmap.org for map tiles and for your answers, and, only while
-     you are typing in the search field, photon.komoot.io for the worldwide place search. On Android
+     you are typing in the search field or open “Add a place”, photon.komoot.io for the worldwide
+     place search and the list of places. On Android
      the map runs in the system's WebView; its built-in protection against dangerous websites
      (Google Safe Browsing) checks the addresses the app loads against lists from Google and may
      connect to Google for that. On top of that
@@ -304,6 +323,6 @@
      <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a>.</p>
   <p>You also have the right to lodge a complaint with a data protection supervisory authority
      (Art. 77 GDPR), for example the one where you live.</p>
-  <p style="margin-top:30px">Last updated: 29 September 2026</p>
+  <p style="margin-top:30px">Last updated: 2 October 2026</p>
   <p><a href="./?lang=en">← Back to the map</a></p>
 </body></html>
