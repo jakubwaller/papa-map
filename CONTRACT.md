@@ -2,16 +2,17 @@
 
 > **v65 amendment (2 Oct 2026, high chairs): one property on both datasets,
 > one stats counter.** Every table feature and every play place carries
-> `highchair`: `true` / `false` / `null` from `highchair=*`
+> `highchair`: `true` / `false` / `null` / `"unreadable"` from `highchair=*`
 > (`pipeline/classify.py` `highchair_state`): `yes` or a count above zero is
-> true, `no` or `0` false, absent or anything else (`limited`, `ja`, `1+`,
-> blank) null — junk reads as unrecorded, as `wheelchair` does. No new
+> true, `no` or `0` false, null the key absent, `"unreadable"` a present value
+> the pipeline cannot read (`limited`, `ja`, `1+`, blank) — shown as nothing,
+> never asked, not a chip hit, because the write would be refused as taken. No new
 > Overpass clause: the sweep already returns every tag. A badge, never a
 > status, and nothing drawn on the pin. `local.highchair_tables` counts the
 > exported pins with `true` (places not counted, like `play_tables`).
 > `pipeline/delta.py` treats `highchair` as a relevant key. The frontend reads
-> it strictly (`highchair: p.highchair === true`, `highchair_recorded` for true
-> or false), adds a "High chair" chip between the blue chips and the
+> it as true / false / null (`highchair_recorded` for true, false or
+> `"unreadable"`, which gates the question), adds a "High chair" chip between the blue chips and the
 > wheelchair chip — off by default, not stored on the device, narrowing the
 > pins and the play-place rings (`filterFeatures`' and `placeFeatures`'
 > trailing `highchairOnly`) — a popup line on both popups, and on table pins
@@ -2312,7 +2313,7 @@ Overpass `out center`). Feature `properties`:
   "wheelchair": "yes|limited|no|null — the place's wheelchair tag verbatim (v26); null also means unrecorded",
   "toilets_wheelchair": "yes|limited|no|null — toilets:wheelchair verbatim (v26)",
   "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",
-  "highchair": "true|false|null — highchair=yes or a count > 0 is true, no or 0 is false, absent or junk is null (v65)",
+  "highchair": "true|false|null|\"unreadable\" — highchair=yes or a count > 0 is true, no or 0 is false, null is the key absent, \"unreadable\" a present value the pipeline cannot read (shown as nothing, never asked, not a chip hit: the write would be refused as taken) (v65)",
   "key": "string or null — the centralkey value when the key locks the table (v5 rule); such a feature is not a pin (v26)",
   "fee": "string or null",
   "opening_hours": "string or null",
@@ -2335,7 +2336,7 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "wheelchair": "yes|limited|no|null — as on the tables (v28)",
   "toilets_wheelchair": "yes|limited|no|null — as on the tables (v28)",
   "wheelchair_description": "string or null — as on the tables (v28)",
-  "highchair": "true|false|null — as on the tables (v65)",
+  "highchair": "true|false|null|\"unreadable\" — as on the tables (v65)",
   "opening_hours": "string or null",
   "osm_url": "https://www.openstreetmap.org/<type>/<id>",
   "mapcomplete_url": "string or null"

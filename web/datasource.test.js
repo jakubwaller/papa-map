@@ -81,7 +81,7 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   assert.deepEqual(places[0], {
     idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe", changing_table: null,
     wheelchair: null, toilets_wheelchair: null, wheelchair_description: null,
-    highchair: false, highchair_recorded: false,
+    highchair: null, highchair_recorded: false,
     opening_hours: "Mo-Fr 09:00-18:00",
     osm_url: "https://www.openstreetmap.org/node/9001",
     mapcomplete_url: "https://mapcomplete.org/theme.html#node/9001",
@@ -318,15 +318,25 @@ test("filterFeatures under the chip and the play filter keeps a limited table wi
   assert.deepEqual(filterFeatures(fs, new Set(STATUSES), true, true).map((f) => f.idx), [0]);
 });
 
-test("highchair is strictly boolean — a dataset without the property has none", () => {
+test("highchair is true / false / null — a dataset without the property reads null", () => {
   // v65: a dataset from before the property reads as no high chair AND as
   // nobody having said, so the chip counts none and the popup may ask.
   const v = loadFeatures(FC);
-  assert.deepEqual(v.map((f) => f.highchair), [false, false, false]);
+  assert.deepEqual(v.map((f) => f.highchair), [null, null, null]);
   assert.deepEqual(v.map((f) => f.highchair_recorded), [false, false, false]);
   for (const h of [undefined, null, "yes", 1, "true", 0, ""])
     assert.equal(loadFeatures({ type: "FeatureCollection",
-      features: [feat(9.9, 53.5, { status: "unknown", highchair: h })] })[0].highchair, false);
+      features: [feat(9.9, 53.5, { status: "unknown", highchair: h })] })[0].highchair, null);
+});
+
+test("highchair \"unreadable\" is shown as nothing, never asked, never a chip hit", () => {
+  const fc = { type: "FeatureCollection",
+    features: [feat(9.9, 53.5, { status: "unknown", highchair: "unreadable" })] };
+  const f = loadFeatures(fc);
+  assert.equal(f[0].highchair, null);
+  assert.equal(f[0].highchair_recorded, true);
+  assert.equal(countHighchair(f), 0);
+  assert.deepEqual(filterFeatures(f, new Set(STATUSES), false, false, "papa", true), []);
 });
 
 test("highchair_recorded is true for an answered yes and no, false where OSM is silent", () => {
@@ -337,6 +347,7 @@ test("highchair_recorded is true for an answered yes and no, false where OSM is 
   assert.equal(one(false).highchair, false);
   assert.equal(one(false).highchair_recorded, true);
   assert.equal(one(null).highchair_recorded, false);
+  assert.equal(one("unreadable").highchair_recorded, true);
   assert.equal(one(undefined).highchair_recorded, false);
   for (const h of ["no", "yes", 0, 1]) assert.equal(one(h).highchair_recorded, false, String(h));
 });
@@ -349,7 +360,7 @@ test("loadPlaces reads highchair and highchair_recorded the same way", () => {
     feat(4, 4, {}),
     feat(5, 5, { highchair: "yes" }),
   ] });
-  assert.deepEqual(places.map((p) => p.highchair), [true, false, false, false, false]);
+  assert.deepEqual(places.map((p) => p.highchair), [true, false, null, null, null]);
   assert.deepEqual(places.map((p) => p.highchair_recorded), [true, true, false, false, false]);
 });
 

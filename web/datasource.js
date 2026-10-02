@@ -59,12 +59,14 @@ export function loadFeatures(fc) {
         ? p.toilets_wheelchair : null,
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
-      // A recorded high chair (v65). Strict like play: a dataset from before
-      // v65 leaves it undefined, and "no high chair recorded" never renders
-      // as one. `highchair_recorded` is true for an answered yes AND no —
-      // false only where OSM is silent, the one case the popup asks about.
-      highchair: p.highchair === true,
-      highchair_recorded: p.highchair === true || p.highchair === false,
+      // A recorded high chair (v65). `highchair` is true / false / null for
+      // display; a dataset from before v65 leaves it undefined, read as null.
+      // `highchair_recorded` gates the question: true for an answered yes AND
+      // no, and also for a value the pipeline could not read ("unreadable",
+      // somebody's tag the write would be refused on) — false only where OSM
+      // is silent, the one case the popup asks about.
+      highchair: p.highchair === true ? true : p.highchair === false ? false : null,
+      highchair_recorded: p.highchair === true || p.highchair === false || p.highchair === "unreadable",
       // The central key system that locks the door ("eurokey", "nks", …) or
       // null. A keyed table is not a pin: it is hidden by default and comes
       // back only under the wheelchair chip, whose audience holds the key.
@@ -111,9 +113,10 @@ export function loadPlaces(fc) {
         ? p.toilets_wheelchair : null,
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
-      // As on the pins (v65), read with the same strictness.
-      highchair: p.highchair === true,
-      highchair_recorded: p.highchair === true || p.highchair === false,
+      // As on the pins (v65): true / false / null, and `highchair_recorded`
+      // also true for an "unreadable" value.
+      highchair: p.highchair === true ? true : p.highchair === false ? false : null,
+      highchair_recorded: p.highchair === true || p.highchair === false || p.highchair === "unreadable",
       opening_hours: p.opening_hours ?? null,
       osm_url: p.osm_url ?? null,
       mapcomplete_url: p.mapcomplete_url ?? null,

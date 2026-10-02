@@ -756,9 +756,10 @@ them behind a Euro key.
 
 Every table feature and every play place carries `highchair` (v65): true when
 OSM records `highchair=yes` or a count above zero (`highchair=2` is two chairs),
-false for `no` or `0`, null when the key is absent or holds anything else
-(`limited`, `ja`, `1+`, blank) — junk is unrecorded, the same reading
-`wheelchair` gives it. Costs no extra Overpass query: the sweep already returns
+false for `no` or `0`, null when the key is absent, and the string `"unreadable"` when it holds
+a value the pipeline cannot read (`limited`, `ja`, `1+`, blank): shown as
+nothing, never asked, not a chip hit, because the write would be refused as
+taken. Costs no extra Overpass query: the sweep already returns
 every tag on these objects. `stats.local.highchair_tables` counts the pins with
 true; places are not counted.
 

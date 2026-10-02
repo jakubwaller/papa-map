@@ -160,13 +160,15 @@ def wheelchair_state(tags: dict, key: str = "wheelchair") -> str | None:
     return value if value in WHEELCHAIR_VALUES else None
 
 
-def highchair_state(tags: dict) -> bool | None:
-    """True / False / None for a high chair, from `highchair=*` (v65).
+def highchair_state(tags: dict) -> bool | str | None:
+    """True / False / "unreadable" / None for a high chair, from `highchair=*` (v65).
 
     `yes` is True and `no` is False; a bare number counts chairs, so
-    `highchair=2` is True and `0` is False. Anything else — blank, `limited`,
-    `ja`, `1+`, free text — is None, the same reading `wheelchair_state` gives
-    junk: unrecorded, so the popup may ask. A badge, never a status."""
+    `highchair=2` is True and `0` is False. The key absent is None. Anything
+    else present — blank, `limited`, `ja`, `1+`, free text — is the string
+    "unreadable": somebody's tag, so the popup must neither claim anything nor
+    ask (the write would be refused as taken), and it is not a chip hit. A
+    badge, never a status."""
     if HIGHCHAIR_KEY not in tags:
         return None
     value = _v(tags, HIGHCHAIR_KEY)
@@ -176,7 +178,7 @@ def highchair_state(tags: dict) -> bool | None:
         return False
     if value.isascii() and value.isdigit():
         return int(value) > 0
-    return None
+    return "unreadable"
 
 
 def central_key(tags: dict, location: str | None = None) -> str | None:

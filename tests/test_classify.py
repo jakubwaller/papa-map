@@ -126,9 +126,11 @@ def test_highchair_state_counts_chairs():
 
 
 @pytest.mark.parametrize("value", ["limited", "ja", "available", "1+", ""])
-def test_highchair_state_reads_junk_as_unrecorded(value):
-    # Same reading wheelchair_state gives junk: nobody has said, so the popup may ask.
-    assert highchair_state({"highchair": value}) is None
+def test_highchair_state_reads_junk_as_unreadable(value):
+    # Somebody's tag we cannot read: not None (the popup would ask and the
+    # write would be refused as taken), not a chip hit.
+    assert highchair_state({"highchair": value}) == "unreadable"
+    assert highchair_state({}) is None
 
 
 def test_central_key_names_the_system_only_when_it_locks_the_table():

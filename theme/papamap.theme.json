@@ -897,6 +897,15 @@
                 "de": "Nein, es gibt keinen Hochstuhl",
                 "da": "Nej, der er ingen højstol"
               }
+            },
+            {
+              "if": "highchair~^[1-9][0-9]*$",
+              "hideInAnswer": true,
+              "then": {
+                "en": "Yes, there are high chairs (a number is recorded)",
+                "de": "Ja, es gibt Hochstühle (eine Anzahl ist erfasst)",
+                "da": "Ja, der er højstole (et antal er registreret)"
+              }
             }
           ],
           "condition": {
@@ -1348,6 +1357,15 @@
                 "de": "Nein, es gibt keinen Hochstuhl",
                 "da": "Nej, der er ingen højstol"
               }
+            },
+            {
+              "if": "highchair~^[1-9][0-9]*$",
+              "hideInAnswer": true,
+              "then": {
+                "en": "Yes, there are high chairs (a number is recorded)",
+                "de": "Ja, es gibt Hochstühle (eine Anzahl ist erfasst)",
+                "da": "Ja, der er højstole (et antal er registreret)"
+              }
             }
           ],
           "condition": {
@@ -1729,6 +1747,15 @@
                 "en": "No, there is no high chair",
                 "de": "Nein, es gibt keinen Hochstuhl",
                 "da": "Nej, der er ingen højstol"
+              }
+            },
+            {
+              "if": "highchair~^[1-9][0-9]*$",
+              "hideInAnswer": true,
+              "then": {
+                "en": "Yes, there are high chairs (a number is recorded)",
+                "de": "Ja, es gibt Hochstühle (eine Anzahl ist erfasst)",
+                "da": "Ja, der er højstole (et antal er registreret)"
               }
             }
           ],

@@ -109,7 +109,7 @@ def test_every_table_feature_carries_the_highchair_state():
     assert props({"highchair": "yes"})["highchair"] is True
     assert props({"highchair": "3"})["highchair"] is True
     assert props({"highchair": "no"})["highchair"] is False
-    assert props({"highchair": "limited"})["highchair"] is None
+    assert props({"highchair": "limited"})["highchair"] == "unreadable"
     assert props({})["highchair"] is None
     assert props({"highchair": "yes"})["status"] == "unknown"
 

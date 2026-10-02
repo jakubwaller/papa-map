@@ -875,8 +875,8 @@ function askPlayHTML(busy = false, who = false) {
 // The high-chair line (v65): said when OSM records an answer either way,
 // nothing when it is silent. Shared by the pin and the play-place popup.
 function highchairRows(o) {
-  if (o.highchair) return [`<div class="row hc">${esc(t("popupHighchairYes"))}</div>`];
-  if (o.highchair_recorded) return [`<div class="row hc no">${esc(t("popupHighchairNo"))}</div>`];
+  if (o.highchair === true) return [`<div class="row hc">${esc(t("popupHighchairYes"))}</div>`];
+  if (o.highchair === false) return [`<div class="row hc no">${esc(t("popupHighchairNo"))}</div>`];
   return [];
 }
 

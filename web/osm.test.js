@@ -397,7 +397,12 @@ test("the theme asks the same high-chair question, on the same venues, on the ve
     const tr = (layer.tagRenderings || []).find((r) => r && r.id === "highchair");
     if (!tr) continue;
     withIt.push(layer.id);
-    assert.deepEqual(tr.mappings.map((m) => m.if), ["highchair=yes", "highchair=no"], layer.id);
+    // The two answerable mappings are exactly yes and no; a count is a third,
+    // hidden-in-answer mapping so MapComplete shows it as answered.
+    assert.deepEqual(tr.mappings.filter((m) => !m.hideInAnswer).map((m) => m.if),
+                     ["highchair=yes", "highchair=no"], layer.id);
+    assert.deepEqual(tr.mappings.filter((m) => m.hideInAnswer).map((m) => m.if),
+                     ["highchair~^[1-9][0-9]*$"], layer.id);
     const amenities = tr.condition.or.map((c) => c.replace(/^amenity=/, ""));
     assert.ok(tr.condition.or.every((c) => c.startsWith("amenity=")), layer.id);
     assert.deepEqual(new Set(amenities), new Set(HIGHCHAIR_VENUES), layer.id);
