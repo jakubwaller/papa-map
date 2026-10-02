@@ -4,7 +4,7 @@
 – Novinka: „Neznámá místnost“ se teď jmenuje stejně v zobrazení pro táty i pro mámy.
 – Novinka: při stahování města offline zůstane vidět průběh, i když okno zavřeš a znovu otevřeš; když se nenačte seznam měst, je tu tlačítko „Zkusit znovu“.
 – Novinka: widget ukáže „limited wheelchair access“ (na zamčené obrazovce „limited access“; zatím jen anglicky nebo německy), když je zapnutý filtr pro vozíčkáře a nejbližší pult je přístupný jen omezeně.
-– Novinka: „+ Přidat místo“ teď hned nahoře vysvětlí, že pokračuješ v MapComplete a místo se objeví během pár minut. Je to jasné?
+– Novinka: „+ Přidat místo“ teď ukáže místa kolem středu mapy (nejdřív přibliž svou ulici), která ještě nemají na mapě přebalovací pult. Vyber místo, klepni na místnost, kde pult je, a odpověď jde do OpenStreetMap pod tvým vlastním přihlášením; špendlík se objeví během pár minut. Ukazuje seznam místa, která čekáš? Pozor: tohle mění skutečnou OpenStreetMap, takže odpovídej jen u míst, která znáš. Místa, která v seznamu chybí, a veřejné záchody se dál přidávají přes MapComplete.
 – Novinka: „Můj PapaMap“ je kratší a patří tobě: jeden řádek o oblasti s čísly, tvoje odpovědi tady a celkem, tvoje uložená místa a řádek „Zpětná vazba“, který otevře e-mail. Čte se to přirozeně?
 – Jako vždy: „Nejbližší přebalovací pult“, barvy u míst, která znáš, Siri, widget.
 Cokoli je nejasné nebo nefunguje: udělej snímek obrazovky a pošli ho přes TestFlight.
