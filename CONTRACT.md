@@ -1,5 +1,11 @@
 # papa-map — build contract (v0)
 
+> **v64 amendment (2 Oct 2026, a dialog's × is easy to hit): no data shape
+> change.** The four dialogs' close button is a 44 px target instead of a
+> 20 px glyph, and a dialog's height stops short of the phone's safe areas,
+> so a long one (the place list) no longer reaches under the iPhone's status
+> bar with its × in the corner. Shell pin `app65` → `app66`.
+
 > **v63 amendment (2 Oct 2026, the place list's wait is visible): no data
 > shape change.** Photon answers the `/reverse` list in 2.5–4 s, all of it
 > before the first byte, and a one-line status above an empty box was easy to
