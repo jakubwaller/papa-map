@@ -253,20 +253,24 @@ tämän sivuston jälkeenkin ja auttavat jokaista sovellusta, joka lukee OpenStr
 
 <h2 id="contribute">Näin lisäät puuttuvan paikan</h2>
 <p>PapaMap ei tallenna itse mitään. Paikan lisääminen tarkoittaa siis aina: OpenStreetMapin
-muokkaamista. Kartan <em>+ Lisää paikka</em> -painike avaa oikean editorin nykyiseen näkymääsi.</p>
+muokkaamista. Kartan <em>+ Lisää paikka</em> -painike avaa ensin listan lähellä olevista paikoista
+ja kaikkea muuta varten oikean editorin (MapComplete) nykyiseen näkymääsi.</p>
 
 <h3>Julkinen WC puuttuu kokonaan</h3>
 <p>Ota käyttöön <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMapin
-MapComplete-teema</a> (ensimmäinen linkki ikkunassa). Kirjaudu sisään, napauta kartalta kohtaa,
+MapComplete-teema</a> (ikkunan alalaidan linkki <em>Julkinen WC puuttuu</em>). Kirjaudu sisään, napauta kartalta kohtaa,
 jossa WC on, valitse &ldquo;julkinen WC&rdquo;, vastaa kysymyksiin. Myös niihin, jotka koskevat
 hoitopöytää ja tilaa.</p>
 
 <h3>Kahvilassa, kaupassa tai ravintolassa on pöytä, jota kukaan ei ole merkinnyt</h3>
-<p>Nopeinta on PapaMapin MapComplete-teema, jonka myös ikkunan toinen painike avaa: zoomista 16
-alkaen se näyttää myös kahvilat, ravintolat, kaupat, kirjastot, museot, uimahallit ja asemat,
-joilla ei vielä ole hoitopöytätagia. Napauta paikkaa, vastaa hoitopöytäkysymykseen ja sitten
-huonekysymykseen. Jos paikkaa ei näy tai käytät mieluummin OSM:n omaa editoria, alla olevat
-vaiheet toimivat edelleen.</p>
+<p>Helpointa on tehdä se suoraan sovelluksessa: zoomaa omalle kadullesi, napauta <em>+ Lisää
+paikka</em> ja napauta paikkaa listalta. Lista näyttää OpenStreetMapin nimetyt paikat kartan
+keskipisteen ympärillä (kahvilat, ravintolat, kaupat, museot, uimahallit, asemat &hellip;), joille
+kartalla ei vielä ole nastaa; hakukenttä rajaa listaa. Sitten vastaat, onko siellä hoitopöytä ja
+missä tilassa, vai ettei ole. Ensimmäisellä kerralla kirjaudut ilmaisella OSM-tunnuksellasi;
+vastaus tallentuu OpenStreetMapiin sinun tunnuksellasi ja nasta ilmestyy muutaman minuutin päästä
+(kartta lentää sen luo). Jos paikkaa ei ole listalla, käytä <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMapin MapComplete-teemaa</a>
+(ikkunan alalaidan linkki). Tai OSM:n omaa editoria, alla olevat vaiheet toimivat edelleen.</p>
 <p>Paikka on lähes varmasti jo OSM:ssä. Vain <code>changing_table</code>-tagi puuttuu. OSM:n
 omassa editorissa (iD) se vie noin kaksi minuuttia:</p>
 <ol>

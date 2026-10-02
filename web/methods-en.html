@@ -236,20 +236,24 @@ OpenStreetMap, not just this one.</p>
 
 <h2 id="contribute">How to add a missing place</h2>
 <p>PapaMap stores nothing itself, so adding a place means editing OpenStreetMap. The
-<em>+ Add a place</em> button on the map opens the right editor at your current view.</p>
+<em>+ Add a place</em> button on the map first opens a list of places nearby, and for everything
+else the right editor (MapComplete) at your current view.</p>
 
 <h3>A public toilet is missing entirely</h3>
 <p>Take <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMap's
-MapComplete theme</a> (the first link in the dialog). Log in, tap the map where the toilet is,
+MapComplete theme</a> (the <em>A public toilet is missing</em> link at the bottom of the dialog). Log in, tap the map where the toilet is,
 pick &ldquo;a public toilet&rdquo; and answer the questions, including the ones about the
 changing table and the room.</p>
 
 <h3>A café, shop or restaurant has a table nobody mapped</h3>
-<p>The quickest way is PapaMap's MapComplete theme, the one the dialog's second button opens too:
-from zoom 16 it also shows cafés, restaurants, shops, libraries, museums, pools and stations
-that carry no changing-table tag yet. Tap the place, answer the changing-table question and then
-the room question. If the place isn't shown, or you'd rather use OSM's own editor, the steps
-below still work.</p>
+<p>The easiest way is right in the app: zoom to your street, tap <em>+ Add a place</em> and tap the
+place in the list. It shows named places from OpenStreetMap around the map centre (cafés,
+restaurants, shops, museums, pools, stations &hellip;) that the map has no pin for yet, and the
+search field narrows it down. Then you answer whether there is a changing table and in which
+room, or that there is none. The first time, you log in with your free OSM account; the answer
+is saved to OpenStreetMap under your account and the pin shows up a few minutes later (the map
+flies to it). If the place isn't in the list, use <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMap's MapComplete theme</a> (the link at the
+bottom of the dialog). Or use OSM's own editor, the steps below still work.</p>
 <p>The place is almost certainly in OSM already, only the <code>changing_table</code> tag is
 missing. In OSM's own editor (iD) that takes about two minutes:</p>
 <ol>

@@ -253,20 +253,23 @@ nettstedet, og kan bli til nytte for alle andre apper som bruker OpenStreetMap-d
 
 <h2 id="contribute">Slik legger du til et sted som mangler</h2>
 <p>PapaMap lagrer ingenting selv. Å legge til et sted betyr derfor alltid: å redigere
-OpenStreetMap. Knappen <em>+ Legg til et sted</em> på kartet åpner riktig editor på ditt nåværende
-kartutsnitt.</p>
+OpenStreetMap. Knappen <em>+ Legg til et sted</em> på kartet åpner først en liste over steder i
+nærheten, og for alt annet riktig editor (MapComplete) på ditt nåværende kartutsnitt.</p>
 
 <h3>Et offentlig toalett mangler helt</h3>
 <p>Bruk <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMaps
-MapComplete-tema</a> (den første lenken i dialogen). Logg inn, trykk på kartet der toalettet er,
+MapComplete-tema</a> (lenken <em>Et offentlig toalett mangler</em> nederst i dialogen). Logg inn, trykk på kartet der toalettet er,
 velg «et offentlig toalett», svar på spørsmålene. Inkludert de om stellebord og rommet ellers.</p>
 
 <h3>En kafé, butikk eller restaurant har et bord ingen har kartlagt</h3>
-<p>Raskest går det med PapaMaps MapComplete-tema, det som dialogens andre knapp også åpner: fra
-zoom 16 viser det også kafeer, restauranter, butikker, biblioteker, museer, svømmehaller og
-stasjoner som ennå ikke har stellebord-tagg. Trykk på stedet, svar på spørsmålet om stellebordet
-og deretter på spørsmålet om rommet. Vises ikke stedet, eller vil du heller bruke OSMs egen
-editor, fungerer stegene nedenfor fortsatt.</p>
+<p>Enklest går det rett i appen: zoom inn på gaten din, trykk på <em>+ Legg til et sted</em> og trykk
+på stedet i listen. Den viser steder med navn fra OpenStreetMap rundt kartets midtpunkt (kafeer,
+restauranter, butikker, museer, svømmehaller, stasjoner &hellip;) som kartet ennå ikke har en nål
+for; søkefeltet snevrer inn listen. Så svarer du om det finnes et stellebord og i hvilket rom, eller
+at det ikke gjør det. Første gang logger du inn med din gratis OSM-bruker; svaret lagres i
+OpenStreetMap under brukeren din, og nålen dukker opp noen minutter senere (kartet flyr dit). Står
+ikke stedet i listen, bruk <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMaps MapComplete-tema</a> (lenken nederst i dialogen). Eller OSMs egen
+editor, stegene nedenfor fungerer fortsatt.</p>
 <p>Stedet finnes nesten helt sikkert allerede i OSM. Det er bare <code>changing_table</code>-tagget
 som mangler. I OSMs egen editor (iD) tar det omtrent to minutter:</p>
 <ol>
