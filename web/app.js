@@ -2522,8 +2522,13 @@ let venueShown = [];           // the rows on screen, by index
 let venuePicked = null;        // the row being asked about
 let venueAbort = null;
 let venueTimer = null;
+// Answered from this dialog: no pin until the delta brings one, so a second
+// tap would be refused as somebody else's edit (askConflict). Not listed.
+const venueAnswered = new Set();
 
-const venueKnown = (url) => featuresByOsmUrl.has(url);
+const venueKnown = (url) => featuresByOsmUrl.has(url) || venueAnswered.has(url);
+// Photon's context rows come in the reader's language, so the cache is per language too.
+const venueKey = (c) => `${lang}:${venueCentreKey(c.lat, c.lon)}`;
 
 function setVenueStatus(key) {
   venueStatus.textContent = key ? t(key) : "";
@@ -2547,18 +2552,19 @@ function showVenueStep(step) {
 function openVenuePicker(c, z) {
   venueCentre = { lat: c.lat, lon: c.lng };
   venuePicked = null;
+  clearTimeout(venueTimer);   // a query typed just before the last close
   venueSearch.value = "";
   showVenueStep("pick");
   venueSearch.disabled = z < VENUE_MIN_ZOOM;
   if (z < VENUE_MIN_ZOOM) { renderVenueRows([]); setVenueStatus("venueZoom"); return; }
-  loadVenues(venueReverseUrl(venueCentre.lat, venueCentre.lon, { lang }),
-             venueCentreKey(venueCentre.lat, venueCentre.lon));
+  loadVenues(venueReverseUrl(venueCentre.lat, venueCentre.lon, { lang }), venueKey(venueCentre));
 }
 
 // One request at a time: a newer one (the reader typed on) aborts the last.
 // `cacheKey` only for the reverse list — a typed query is not worth keeping.
 async function loadVenues(url, cacheKey = null) {
   venueAbort?.abort();
+  venueAbort = null;
   const cached = cacheKey && venueCache.get(cacheKey);
   if (cached) { showVenues(cached); return; }
   const ctl = venueAbort = new AbortController();
@@ -2568,13 +2574,19 @@ async function loadVenues(url, cacheKey = null) {
     const res = await fetch(url, { signal: ctl.signal });
     if (!res.ok) throw new Error(`photon ${res.status}`);
     const json = await res.json();
-    if (ctl !== venueAbort) return;
+    if (ctl.signal.aborted) return;
     if (cacheKey) venueCache.set(cacheKey, json);
     showVenues(json);
   } catch (err) {
-    if (err?.name === "AbortError" || ctl !== venueAbort) return;
+    if (ctl.signal.aborted) return;
     setVenueStatus("venueFailed");
   }
+}
+
+function showVenueRowsWithout(osmUrl) {
+  const rows = venueShown.filter((r) => r.osm_url !== osmUrl);
+  renderVenueRows(rows);
+  setVenueStatus(rows.length ? null : "venueEmpty");
 }
 
 function showVenues(json) {
@@ -2589,8 +2601,7 @@ venueSearch.addEventListener("input", () => {
   venueTimer = setTimeout(() => {
     if (!venueCentre) return;
     if (q.length < PHOTON_MIN_CHARS)
-      loadVenues(venueReverseUrl(venueCentre.lat, venueCentre.lon, { lang }),
-                 venueCentreKey(venueCentre.lat, venueCentre.lon));
+      loadVenues(venueReverseUrl(venueCentre.lat, venueCentre.lon, { lang }), venueKey(venueCentre));
     else loadVenues(venueSearchUrl(q, venueCentre.lat, venueCentre.lon, { lang }));
   }, PHOTON_DEBOUNCE_MS);
 });
@@ -2651,6 +2662,8 @@ async function answerVenue(venue, choice, freshToken = null) {
     const out = await writeTags(osm, token, ref, tablePatch(choice), comment);
     recordMyAnswer(out.changeset, venue.lon, venue.lat);
     venueCache.clear();   // the place is answered; a reopen must not list it
+    venueAnswered.add(venue.osm_url);
+    showVenueRowsWithout(venue.osm_url);
     venueAskEl.querySelector(".ask")?.remove();
     setVenueNote(choice === "none" ? "venueSavedNone" : "venueSaved", "found");
     if (choice !== "none") {
