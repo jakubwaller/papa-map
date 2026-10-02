@@ -59,6 +59,14 @@ export function loadFeatures(fc) {
         ? p.toilets_wheelchair : null,
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
+      // A recorded high chair (v65). `highchair` is true / false / null for
+      // display; a dataset from before v65 leaves it undefined, read as null.
+      // `highchair_recorded` gates the question: true for an answered yes AND
+      // no, and also for a value the pipeline could not read ("unreadable",
+      // somebody's tag the write would be refused on) — false only where OSM
+      // is silent, the one case the popup asks about.
+      highchair: p.highchair === true ? true : p.highchair === false ? false : null,
+      highchair_recorded: p.highchair === true || p.highchair === false || p.highchair === "unreadable",
       // The central key system that locks the door ("eurokey", "nks", …) or
       // null. A keyed table is not a pin: it is hidden by default and comes
       // back only under the wheelchair chip, whose audience holds the key.
@@ -105,6 +113,10 @@ export function loadPlaces(fc) {
         ? p.toilets_wheelchair : null,
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
+      // As on the pins (v65): true / false / null, and `highchair_recorded`
+      // also true for an "unreadable" value.
+      highchair: p.highchair === true ? true : p.highchair === false ? false : null,
+      highchair_recorded: p.highchair === true || p.highchair === false || p.highchair === "unreadable",
       opening_hours: p.opening_hours ?? null,
       osm_url: p.osm_url ?? null,
       mapcomplete_url: p.mapcomplete_url ?? null,
@@ -179,6 +191,17 @@ export function countWheelchair(features) {
   return features.reduce((n, f) => n + (isWheelchairOk(f) ? 1 : 0), 0);
 }
 
+// The high-chair chip's rule (v65): a recorded `highchair=yes` (or a count
+// above zero, which the pipeline already folded into true). Like play, a
+// badge orthogonal to status, so it is counted on its own.
+export function isHighchair(f) {
+  return f.highchair === true;
+}
+
+export function countHighchair(features) {
+  return features.reduce((n, f) => n + (isHighchair(f) ? 1 : 0), 0);
+}
+
 // The universe the chips, the counts and the nearest search work over. By
 // default it is every pin — the features with no central key on the door
 // (CONTRACT v5: a Euro key is issued only against proof of disability, so a
@@ -193,21 +216,25 @@ export function pinFeatures(features, wheelchairOnly = false) {
 }
 
 // What the map actually draws: the pin universe, the status toggles, then
-// the play filter narrowing on top. The play and wheelchair filters subtract
-// and never add — an untagged object is unrecorded, not known to lack a play
-// corner or a level entrance, so switching one on promises "these definitely
-// have it", not "the rest definitely don't".
+// the play and high-chair filters narrowing on top. The play, high-chair and
+// wheelchair filters subtract and never add — an untagged object is
+// unrecorded, not known to lack a play corner, a high chair or a level
+// entrance, so switching one on promises "these definitely have it", not
+// "the rest definitely don't".
 export function filterFeatures(features, visible, playOnly = false, wheelchairOnly = false,
-                               mode = "papa") {
+                               mode = "papa", highchairOnly = false) {
   const byStatus = filterByStatus(pinFeatures(features, wheelchairOnly), visible, mode);
-  return playOnly ? byStatus.filter((f) => f.play) : byStatus;
+  const byPlay = playOnly ? byStatus.filter((f) => f.play) : byStatus;
+  return highchairOnly ? byPlay.filter(isHighchair) : byPlay;
 }
 
 // The play places the map draws (v28). Under the wheelchair chip they follow
 // the tables' rule: a ring left standing there reads as "you get in here" as
 // much as a pin does, and one with a step at the door would break that.
-export function placeFeatures(places, wheelchairOnly = false) {
-  return wheelchairOnly ? places.filter(isWheelchairOk) : places;
+// The high-chair chip (v65) narrows them the same way, on top.
+export function placeFeatures(places, wheelchairOnly = false, highchairOnly = false) {
+  const byWheelchair = wheelchairOnly ? places.filter(isWheelchairOk) : places;
+  return highchairOnly ? byWheelchair.filter(isHighchair) : byWheelchair;
 }
 
 // ?bbox=minLon,minLat,maxLon,maxLat — how the Bundesland pages link into the

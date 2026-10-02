@@ -5,8 +5,8 @@ import os
 import tempfile
 from pathlib import Path
 
-from .classify import (central_key, classify, has_play_area, men_only, play_state,
-                       wheelchair_state)
+from .classify import (central_key, classify, has_play_area, highchair_state, men_only,
+                       play_state, wheelchair_state)
 from .osm import element_coords
 
 
@@ -88,6 +88,9 @@ def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]
                 "wheelchair": wheelchair_state(tags),
                 "toilets_wheelchair": wheelchair_state(tags, "toilets:wheelchair"),
                 "wheelchair_description": tags.get("wheelchair:description"),
+                # Free as well (v65): true / false / null, a badge and a chip,
+                # never a status. Only the null gets the popup's question.
+                "highchair": highchair_state(tags),
                 "key": key,
                 # the table-specific fee wins over the venue-level fee tag
                 "fee": tags.get("changing_table:fee") or tags.get("fee"),
@@ -155,6 +158,9 @@ def build_play_features(play_data: dict, ct_data: dict | None = None) -> list[di
                 "wheelchair": wheelchair_state(tags),
                 "toilets_wheelchair": wheelchair_state(tags, "toilets:wheelchair"),
                 "wheelchair_description": tags.get("wheelchair:description"),
+                # As on the pins (v65), so the high-chair chip narrows the
+                # rings by the same rule.
+                "highchair": highchair_state(tags),
                 "opening_hours": tags.get("opening_hours"),
                 "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
                 "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),

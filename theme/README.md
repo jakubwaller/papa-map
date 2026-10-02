@@ -65,6 +65,19 @@ No `condition` limits which venues get asked. An allowlist of plausible amenity 
 would rot, and "no" is an informative answer anywhere — the Hamburg sample turned up
 doctors' surgeries with a play corner.
 
+### The `highchair` question (v65)
+
+Asked directly after `kids-area` on `dad_changing_table_amenity`, `dad_play_place` and
+`dad_venue` — never on `dad_toilet` — writing the one key the site's popup writes:
+
+- `highchair=yes` → *"Yes, there is a high chair"*
+- `highchair=no` → *"No, there is no high chair"*
+
+Unlike `kids-area` it has a `condition`: an `or` over `amenity=cafe|restaurant|fast_food|
+food_court|ice_cream|pub|biergarten|canteen`. A high chair is something a place brings to
+the table you eat at, so outside eating places the question is noise. The list is the
+site's `HIGHCHAIR_VENUES` (`web/osm.js`), and `web/osm.test.js` fails when the two differ.
+
 ### Classification → tagRendering conditions
 
 The contract rule (split `changing_table:location` on `;`, trim, lowercase, EXACT token

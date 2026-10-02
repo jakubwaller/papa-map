@@ -13,7 +13,7 @@ from pathlib import Path
 import requests
 
 from . import export
-from .classify import PLAY_KEYS
+from .classify import HIGHCHAIR_KEY, PLAY_KEYS
 from .config import GEOJSON_PATH, PLAY_GEOJSON_PATH, STATS_PATH
 
 # A long-running follower, not the nightly sweep: it reads OSM's minutely
@@ -48,7 +48,7 @@ MAX_GAP_H = float(os.environ.get("PAPAMAP_DELTA_MAX_GAP_H", "48"))
 # The keys build_features/build_play_features care about, mirrored here only
 # to decide whether a diff object is worth acting on at all — the same
 # vocabulary classify.py reads (changing_table*, the play keys, the
-# wheelchair keys) plus amenity=toilets, whose count feeds new_toilets_no_table.
+# wheelchair keys, highchair) plus amenity=toilets, whose count feeds new_toilets_no_table.
 WHEELCHAIR_KEYS = ("wheelchair", "toilets:wheelchair")
 
 
@@ -64,6 +64,8 @@ def is_relevant_tags(tags: dict) -> bool:
     if tags.get("leisure") in ("indoor_play", "playground"):
         return True
     if tags.get("amenity") == "toilets":
+        return True
+    if HIGHCHAIR_KEY in tags:
         return True
     return any(k in tags for k in WHEELCHAIR_KEYS)
 

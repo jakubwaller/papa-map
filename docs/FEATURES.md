@@ -752,6 +752,47 @@ locked. Costs no extra Overpass query. Measured on Germany, 13 Sep 2026:
 `limited`, 495 `no`, 742 untagged; 390 tables in a wheelchair toilet, 7 of
 them behind a Euro key.
 
+## High chairs
+
+Every table feature and every play place carries `highchair` (v65): true when
+OSM records `highchair=yes` or a count above zero (`highchair=2` is two chairs),
+false for `no` or `0`, null when the key is absent, and the string `"unreadable"` when it holds
+a value the pipeline cannot read (`limited`, `ja`, `1+`, blank): shown as
+nothing, never asked, not a chip hit, because the write would be refused as
+taken. Costs no extra Overpass query: the sweep already returns
+every tag on these objects. `stats.local.highchair_tables` counts the pins with
+true; places are not counted.
+
+The chip bar gains a "High chair" chip, in ink, between the blue chips and the
+wheelchair chip. It starts off, is not remembered on the device (unlike the
+wheelchair chip, so there is no new device key), and subtracts: switched on it
+narrows the table pins to those with a recorded high chair, and the play-place
+rings the same way, on top of every other chip. Its badge counts the pins in
+the current universe (the wheelchair chip's, when that is on). The popup says
+"High chair available" or "No high chair" when OSM has an answer, and nothing
+when it is silent.
+
+Where it is silent and the venue is an eating place (`HIGHCHAIR_VENUES` in
+`web/osm.js`: cafe, restaurant, fast_food, food_court, ice_cream, pub,
+biergarten, canteen), a table pin's popup asks "Is there a high chair?" with
+two pills that write `highchair=yes` or `highchair=no` under the reader's own
+OSM login, through the same `writeTags` path and 409 re-read as the other
+answers. It sits outside the room question's block, like the play question,
+so answering the room leaves it standing, and it carries the login line only
+when neither question above it does. It is never asked on a play place (that
+popup already leads with the table question) or on `amenity=toilets`. The
+answer shows in the popup at once; the chip's count moves with the delta
+follower or the next build. The MapComplete theme asks the same question with
+the same two tags on its three venue layers (not on toilets), so both paths
+write the same thing.
+
+Taginfo, 2 Oct 2026: 9,311 objects carry `highchair` worldwide (yes 6,575,
+no 2,377, numbers about 400, junk a few dozen), 2,622 of them also
+`changing_table` — about 3 % of the pins. Germany: 1,543 and 472. With so few
+answered, a glyph on the pin would mark almost nothing and add a fourth
+overlay to the halo, the key and the exclamation mark; the high chair is a
+badge in the chip and a line in the popup, nothing drawn on the pin.
+
 ## Open now
 
 Wherever a popup already prints the raw `opening_hours` tag, it gets a same-line

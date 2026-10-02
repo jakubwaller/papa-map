@@ -27,6 +27,9 @@ PLAY_AREA_VALUES = {"yes", "indoor", "designated"}
 # over it would send a wheelchair user to a step.
 WHEELCHAIR_VALUES = {"yes", "limited", "no"}
 
+# The one key a reader answers the high-chair question with (CONTRACT v65).
+HIGHCHAIR_KEY = "highchair"
+
 
 def centralkey_locked(tags: dict, location: str | None = None) -> bool:
     """True when a central key system (`centralkey` tag present and not `no`)
@@ -155,6 +158,27 @@ def wheelchair_state(tags: dict, key: str = "wheelchair") -> str | None:
     table is, which stays `changing_table:location`'s job."""
     value = _v(tags, key)
     return value if value in WHEELCHAIR_VALUES else None
+
+
+def highchair_state(tags: dict) -> bool | str | None:
+    """True / False / "unreadable" / None for a high chair, from `highchair=*` (v65).
+
+    `yes` is True and `no` is False; a bare number counts chairs, so
+    `highchair=2` is True and `0` is False. The key absent is None. Anything
+    else present — blank, `limited`, `ja`, `1+`, free text — is the string
+    "unreadable": somebody's tag, so the popup must neither claim anything nor
+    ask (the write would be refused as taken), and it is not a chip hit. A
+    badge, never a status."""
+    if HIGHCHAIR_KEY not in tags:
+        return None
+    value = _v(tags, HIGHCHAIR_KEY)
+    if value == "yes":
+        return True
+    if value == "no":
+        return False
+    if value.isascii() and value.isdigit():
+        return int(value) > 0
+    return "unreadable"
 
 
 def central_key(tags: dict, location: str | None = None) -> str | None:

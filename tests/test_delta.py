@@ -69,6 +69,7 @@ def test_parse_osc_way_has_no_coordinates():
     {"amenity": "toilets"},
     {"wheelchair": "yes"},
     {"toilets:wheelchair": "yes"},
+    {"highchair": "yes"},
 ])
 def test_relevant_tags(tags):
     assert delta.is_relevant_tags(tags)
