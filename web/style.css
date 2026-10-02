@@ -771,7 +771,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #me-dialog .btn.primary:hover, #intro-dialog .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
 .intro-lang { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: 13px; color: var(--muted-2); }
 #intro-dialog h4 { margin: 0 0 6px; font-size: 13.5px; }
-#intro-dialog { max-height: 88vh; }
+#intro-dialog { max-height: min(88vh, calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px)); }
 #intro-dialog[open] { display: flex; flex-direction: column; }
 #intro-dialog .tips-list { font-size: 13px; color: var(--ink); flex: 1 1 auto; min-height: 0; overflow: auto; }
 #intro-dialog .btn.primary { width: 100%; margin-top: 4px; }

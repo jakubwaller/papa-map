@@ -408,7 +408,7 @@ export function appTips(platform, lang) {
 // releases in between, if any release had something to say, else nothing.
 export const INTRO_KEY = "papamap-intro";
 
-// "app66" -> 65; anything else -> null.
+// "app66" -> 66; anything else -> null.
 export function pinNumber(pin) {
   const m = typeof pin === "string" ? /^app(\d+)$/.exec(pin) : null;
   return m ? Number(m[1]) : null;
