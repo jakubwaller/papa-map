@@ -82,5 +82,27 @@
       "headline": "*Siri* and Control Center",
       "subline": "\"Nearest changing table\", without opening the app."
     }
+  },
+  "android": {
+    "de": {
+      "02": {
+        "headline": "Der *nächste* Wickeltisch, den du auch erreichst",
+        "subline": "Mit Entfernung. Auch als Widget und über das App-Symbol."
+      },
+      "04": {
+        "headline": "*Route* zum Wickeltisch",
+        "subline": "Öffnet deine Karten-App, zum Beispiel Google Maps oder Organic Maps."
+      }
+    },
+    "en": {
+      "02": {
+        "headline": "The *nearest* table you can actually reach",
+        "subline": "With the distance. Also as a widget and from the app icon."
+      },
+      "04": {
+        "headline": "*Route* to the table",
+        "subline": "Opens your maps app, for example Google Maps or Organic Maps."
+      }
+    }
   }
 }
