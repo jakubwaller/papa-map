@@ -629,9 +629,13 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   box-shadow: 0 12px 40px rgba(15, 25, 20, .35);
   font-family: var(--ui);
   color: var(--ink);
+  /* The browser's own cap (100% - 2em) ignores the notch: a long dialog in
+     the store app reached under the iPhone's status bar, and its × with it. */
+  max-height: calc(100vh - var(--safe-top) - var(--safe-bottom) - 32px);
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px);
 }
 #add-dialog::backdrop, #offline-dialog::backdrop, #route-dialog::backdrop, #me-dialog::backdrop, #intro-dialog::backdrop { background: rgba(15, 25, 20, .45); }
-#add-dialog h3, #offline-dialog h3, #route-dialog h3, #me-dialog h3, #intro-dialog h3 { margin: 0 0 6px; font-size: 17px; padding-right: 22px; }
+#add-dialog h3, #offline-dialog h3, #route-dialog h3, #me-dialog h3, #intro-dialog h3 { margin: 0 0 6px; font-size: 17px; padding-right: 30px; }
 #add-dialog p, #offline-dialog p, #route-dialog p, #me-dialog p, #intro-dialog p { margin: 0 0 12px; font-size: 13px; color: var(--muted-2); line-height: 1.5; }
 #add-dialog a.btn {
   display: block;
@@ -716,16 +720,24 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #add-dialog .venue-note.none { color: #6b4a00; background: #fff3d6; }
 #add-dialog .venue-elsewhere { margin: 4px 0 8px; font-size: 12.5px; }
 
+/* A 44 px target (Apple's minimum) with the glyph near the corner: the
+   old 20 px glyph in 4×8 padding was hard to hit with a thumb. */
 #add-dialog .close, #offline-dialog .close, #route-dialog .close, #me-dialog .close {
   position: absolute;
-  top: 8px;
-  right: 10px;
+  top: 2px;
+  right: 2px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
   border: none;
+  border-radius: 50%;
   background: none;
-  font-size: 20px;
+  font-size: 26px;
+  line-height: 1;
   color: var(--muted);
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 0;
 }
 #add-dialog .close:hover, #offline-dialog .close:hover, #route-dialog .close:hover, #me-dialog .close:hover { color: var(--ink); }
 
@@ -759,7 +771,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #me-dialog .btn.primary:hover, #intro-dialog .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
 .intro-lang { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: 13px; color: var(--muted-2); }
 #intro-dialog h4 { margin: 0 0 6px; font-size: 13.5px; }
-#intro-dialog { max-height: 88vh; }
+#intro-dialog { max-height: 88vh; max-height: min(88vh, calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px)); }
 #intro-dialog[open] { display: flex; flex-direction: column; }
 #intro-dialog .tips-list { font-size: 13px; color: var(--ink); flex: 1 1 auto; min-height: 0; overflow: auto; }
 #intro-dialog .btn.primary { width: 100%; margin-top: 4px; }
