@@ -1469,6 +1469,23 @@ test("isNewlyCreated reads properties.created, never osm_version", () => {
 
 const WATCH = { t: "2026-09-23T10:00:00Z", bbox: [9.9, 53.5, 10.1, 53.6], zoom: 16 };
 
+test("selectAddedPlace: an osm_url watch takes that object's upsert, created or not", () => {
+  const url = "https://www.openstreetmap.org/node/42";
+  const watch = { ...WATCH, osm_url: url };
+  const up = (osm_url, edited_at, created = false) => ({
+    type: "Feature", geometry: { type: "Point", coordinates: [20, 40] },   // outside the bbox
+    properties: { osm_url, edited_at, created } });
+  const delta = { tables: { upsert: [up("https://www.openstreetmap.org/node/7", "2026-09-23T10:05:00Z", true),
+                                     up(url, "2026-09-23T10:04:00Z")] } };
+  const r = selectAddedPlace(delta, watch);
+  assert.equal(r.type, "table");
+  assert.equal(r.feature.properties.osm_url, url);
+  // An edit of the same object from before the tap is not the answer.
+  assert.equal(selectAddedPlace({ tables: { upsert: [up(url, "2026-09-23T09:59:00Z")] } }, watch), null);
+  // And other objects never answer an osm_url watch, however new.
+  assert.equal(selectAddedPlace({ tables: { upsert: [delta.tables.upsert[0]] } }, watch), null);
+});
+
 test("selectAddedPlace returns null with no watch or no delta", () => {
   assert.equal(selectAddedPlace({ tables: {}, places: {} }, null), null);
   assert.equal(selectAddedPlace(null, WATCH), null);

@@ -1,5 +1,22 @@
 # papa-map — build contract (v0)
 
+> **v62 amendment (2 Oct 2026, add a place in the dialog): no data shape
+> change.** "+ Add a place" lists, from Photon's `/reverse` (300 m around the
+> map centre, rounded to three decimals, the theme's `dad_venue` tag list —
+> `web/venues.js`), the places OSM already has that this map has no table pin
+> for, and asks the play-place question about the one picked: `tablePatch`
+> through `writeTags`, the `place` / `place_none` changeset comments. This is
+> the first write to an object the dataset does not carry; the guard is the
+> same `writeTags` re-read (v25), and nothing is derived from the write — a
+> "yes" reaches the map through the delta like any edit. The login intent gains
+> `kind: "venue"` with `name`, `context`, `lon`, `lat`, since there is no
+> dataset entry to look the object up in on the return leg. The add-watch
+> (sessionStorage `papamap-add-watch`) may carry an `osm_url`; then
+> `selectAddedPlace` takes that object's upsert edited after `t`, created or
+> not, and a timeout clears it silently. Places OSM lacks, and toilets, stay
+> with the MapComplete links. New module `venues.js` in the precache.
+> Shell pin `app63` → `app64`.
+
 > **v61 amendment (1 Oct 2026, the area line in the reader's language): `cc` added.**
 > English read "Changing tables in Germany: 6,277, 1,283 with the room recorded":
 > two comma-grouped numbers separated by a comma. `meAreaSentence` now says "of
