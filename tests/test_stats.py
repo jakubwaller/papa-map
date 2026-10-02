@@ -21,6 +21,7 @@ def test_local_stats_counts_every_bucket(load_fixture):
         # One fixture pin carries kids_area=yes; no play half was passed in,
         # which is the single-argument caller's honest zero.
         "play_tables": 1, "play_places": 0, "play_places_no": 0,
+        "highchair_tables": 0,
         "capacity_tagged_toilets": 1,
     }
 
@@ -59,6 +60,20 @@ def test_local_stats_counts_the_answered_no_play_places():
     assert local["ct_no"] == 3
     assert local["play_places"] == 0
     assert local["play_tables"] == 1
+
+
+def test_local_stats_counts_high_chairs_on_pins_only():
+    # v65: pins with highchair true; not false, not unrecorded, not places.
+    def el(id_, tags):
+        return {"type": "node", "id": id_, "lat": 53.5, "lon": 9.9, "tags": tags}
+    local = stats.local_stats({"elements": [
+        el(1, {"changing_table": "yes", "highchair": "yes"}),
+        el(2, {"changing_table": "limited", "highchair": "2"}),
+        el(3, {"changing_table": "yes", "highchair": "no"}),
+        el(4, {"changing_table": "yes"}),
+        el(5, {"changing_table": "no", "highchair": "yes", "kids_area": "yes"}),
+    ]}, {}, {"elements": [el(6, {"kids_area": "yes", "highchair": "yes"})]})
+    assert local["highchair_tables"] == 2
 
 
 def test_local_stats_empty_responses():

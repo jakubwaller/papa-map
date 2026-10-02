@@ -6,7 +6,8 @@ from pathlib import Path
 
 import requests
 
-from .classify import centralkey_locked, classify, has_play_area, men_only, tokens
+from .classify import (centralkey_locked, classify, has_play_area, highchair_state, men_only,
+                       tokens)
 from .config import TAGINFO_STATS_URL, TAGINFO_VALUES_URL, USER_AGENT
 from .osm import element_coords
 
@@ -36,7 +37,7 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
     downloading ~74k of them for two counters was about 12 MB of the nightly
     ~28 MB."""
     ct_yes = ct_no = ct_limited = yes_location_known = locked = play_tables = 0
-    play_places_no = men_only_count = 0
+    play_places_no = men_only_count = highchair_tables = 0
     status_counts = {"accessible": 0, "female_only": 0, "unknown": 0}
     elements = ct_data.get("elements", [])
     for el in elements:
@@ -67,6 +68,8 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
                 men_only_count += 1  # a subset of accessible, never added to it
             if has_play_area(tags):
                 play_tables += 1  # counted over pins only, like the statuses
+            if highchair_state(tags) is True:
+                highchair_tables += 1  # pins only, like play_tables (v65)
     toilets = toilets_counts or {}
     return {
         "toilets_total": int(toilets.get("total", 0)),
@@ -92,6 +95,8 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
         # as a dashed ring, so it is in play_places.geojson — but it is not an
         # open question, so it is not in play_places.
         "play_places_no": play_places_no,
+        # Pins with a recorded high chair (v65). Places are not counted.
+        "highchair_tables": highchair_tables,
         "capacity_tagged_toilets": int(toilets.get("capacity_tagged", 0)),
     }
 

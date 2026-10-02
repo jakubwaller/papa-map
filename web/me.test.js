@@ -3,11 +3,12 @@ import assert from "node:assert/strict";
 import { readdirSync, existsSync } from "node:fs";
 import { CREATED_BY } from "./osm.js";
 import { haversineKm } from "./datasource.js";
+import { STRINGS, LANGS } from "./i18n.js";
 import {
   answeredPercent, areaAnswered, areaPercent,
   buildFeatureGrid, answerArea, answersInArea, totalAnswers,
   sentenceParts, yoursParts, greyNearby, circleBounds,
-  MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, appTips, SIRI_LANGS, pinNumber, introKind, introTips, INTRO_FEATURES, changesetAnswer, extractAnswers,
+  MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, appTips, SIRI_LANGS, pinNumber, introKind, introTips, INTRO_FEATURES, WHATS_NEW, changesetAnswer, extractAnswers,
   mergeAnswers, newestClosedAt, oldestClosedAt,
   EPOCH, changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap,
   SAVED_MAX, isSaved, addSaved, removeSaved, refreshApplies,
@@ -503,6 +504,16 @@ test("introKind: the intro when nothing usable is stored, notes only for release
   assert.equal(introKind("app99999", "app60", notes), null);   // downgrade or seeded flag
   assert.equal(introKind("app57", "garbage", notes), null);
   assert.equal(introKind(null, null), null);
+});
+
+test("introKind: the app67 release says what is new — the high-chair chip", () => {
+  assert.deepEqual(introKind("app66", "app67"), { kind: "news", keys: ["newsHighchair"] });
+  assert.equal(introKind("app67", "app67"), null);
+  assert.deepEqual(introKind(null, "app67"), { kind: "intro" });
+  // every note key is translated in every language
+  for (const { keys } of WHATS_NEW)
+    for (const k of keys)
+      for (const l of LANGS) assert.ok(STRINGS[l][k], `${l}.${k}`);
 });
 
 test("introTips: the features, then whatever the phone has", () => {

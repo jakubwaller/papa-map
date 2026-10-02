@@ -1,7 +1,7 @@
 import pytest
 
-from pipeline.classify import (ACCESSIBLE_TOKENS, central_key, classify, men_only, play_state,
-                               tokens, wheelchair_state)
+from pipeline.classify import (ACCESSIBLE_TOKENS, central_key, classify, highchair_state,
+                               men_only, play_state, tokens, wheelchair_state)
 
 
 @pytest.mark.parametrize("token", sorted(ACCESSIBLE_TOKENS))
@@ -102,6 +102,33 @@ def test_wheelchair_state_reads_only_the_three_wiki_values():
     assert wheelchair_state({}) is None
     assert wheelchair_state({"wheelchair": "no", "toilets:wheelchair": "yes"},
                             "toilets:wheelchair") == "yes"
+
+
+def test_highchair_state_is_none_when_the_key_is_absent():
+    assert highchair_state({}) is None
+    assert highchair_state({"amenity": "cafe"}) is None
+
+
+@pytest.mark.parametrize("value", ["yes", "Yes", " yes "])
+def test_highchair_state_reads_yes_as_true(value):
+    assert highchair_state({"highchair": value}) is True
+
+
+def test_highchair_state_reads_no_as_false():
+    assert highchair_state({"highchair": "no"}) is False
+
+
+def test_highchair_state_counts_chairs():
+    # highchair=2 is two chairs; 0 is none.
+    assert highchair_state({"highchair": "2"}) is True
+    assert highchair_state({"highchair": "1"}) is True
+    assert highchair_state({"highchair": "0"}) is False
+
+
+@pytest.mark.parametrize("value", ["limited", "ja", "available", "1+", ""])
+def test_highchair_state_reads_junk_as_unrecorded(value):
+    # Same reading wheelchair_state gives junk: nobody has said, so the popup may ask.
+    assert highchair_state({"highchair": value}) is None
 
 
 def test_central_key_names_the_system_only_when_it_locks_the_table():

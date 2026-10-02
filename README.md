@@ -28,6 +28,7 @@ Live at [papamap.de](https://papamap.de).
 - A `Papa` / `Mama` switch. Same data, read from the other side: red becomes green for a mother.
 - A "nearest usable table" button. Works in the browser, sends your position nowhere.
 - Play corners and places to play, as blue rings. A café with a ball pit is worth a visit anyway.
+- A high-chair filter, and a yes/no question about it on cafés and restaurants where OSM does not know yet.
 - A wheelchair filter, which also brings back the Euro-key toilets hidden by default.
 - One static page per Bundesland, country and région, in the language people search in.
 - A leaderboard that ranks regions by how much their share of answered pins grew in the last week.

@@ -58,7 +58,7 @@ def test_feature_properties_match_data_contract(load_fixture):
         "men_only": True,
         "play": None,
         "wheelchair": None, "toilets_wheelchair": None,
-        "wheelchair_description": None, "key": None,
+        "wheelchair_description": None, "highchair": None, "key": None,
         "fee": "yes", "opening_hours": "24/7",
         "osm_url": "https://www.openstreetmap.org/node/1",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
@@ -97,6 +97,32 @@ def test_wheelchair_is_a_tri_state_never_a_status():
     # the status is untouched by any of it
     assert props({"wheelchair": "yes"})["status"] == "unknown"
     assert props({"wheelchair": "no", "changing_table:location": "male_toilet"})["status"] == "accessible"
+
+
+def test_every_table_feature_carries_the_highchair_state():
+    # v65: true / false / null from the tags, never a status.
+    def props(tags):
+        el = {"type": "node", "id": 1, "lat": 53.5, "lon": 10.0,
+              "tags": {"changing_table": "yes", **tags}}
+        return build_features({"elements": [el]})[0]["properties"]
+
+    assert props({"highchair": "yes"})["highchair"] is True
+    assert props({"highchair": "3"})["highchair"] is True
+    assert props({"highchair": "no"})["highchair"] is False
+    assert props({"highchair": "limited"})["highchair"] is None
+    assert props({})["highchair"] is None
+    assert props({"highchair": "yes"})["status"] == "unknown"
+
+
+def test_every_play_feature_carries_the_highchair_state():
+    def props(tags):
+        el = {"type": "node", "id": 1, "lat": 53.5, "lon": 10.0,
+              "tags": {"kids_area": "yes", **tags}}
+        return build_play_features({"elements": [el]})[0]["properties"]
+
+    assert props({"highchair": "yes"})["highchair"] is True
+    assert props({"highchair": "0"})["highchair"] is False
+    assert props({})["highchair"] is None
 
 
 def test_play_area_is_a_property_not_a_status(load_fixture):
@@ -179,6 +205,7 @@ def test_play_features_are_their_own_dataset(load_fixture):
         "osm_type": "node", "osm_id": 9001, "name": "Café Bauklotz",
         "kind": "cafe", "changing_table": None,
         "wheelchair": None, "toilets_wheelchair": None, "wheelchair_description": None,
+        "highchair": None,
         "opening_hours": "Mo-Fr 09:00-18:00",
         "osm_url": "https://www.openstreetmap.org/node/9001",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="

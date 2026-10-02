@@ -868,6 +868,49 @@
               }
             }
           ]
+        },
+        {
+          "id": "highchair",
+          "question": {
+            "en": "Is there a high chair?",
+            "de": "Gibt es einen Hochstuhl?",
+            "da": "Er der en højstol?"
+          },
+          "questionHint": {
+            "en": "A high chair the staff can bring to the table. On PapaMap this shows as “High chair available” and counts for the high-chair chip.",
+            "de": "Ein Hochstuhl, den das Personal an den Tisch bringen kann. Auf PapaMap steht dann „Hochstuhl vorhanden“, und der Ort zählt für den Chip „Hochstuhl“.",
+            "da": "En højstol, som personalet kan stille ved bordet. På PapaMap vises det som „Højstol findes“ og tæller med i højstol-filteret."
+          },
+          "mappings": [
+            {
+              "if": "highchair=yes",
+              "then": {
+                "en": "Yes, there is a high chair",
+                "de": "Ja, es gibt einen Hochstuhl",
+                "da": "Ja, der er en højstol"
+              }
+            },
+            {
+              "if": "highchair=no",
+              "then": {
+                "en": "No, there is no high chair",
+                "de": "Nein, es gibt keinen Hochstuhl",
+                "da": "Nej, der er ingen højstol"
+              }
+            }
+          ],
+          "condition": {
+            "or": [
+              "amenity=cafe",
+              "amenity=restaurant",
+              "amenity=fast_food",
+              "amenity=food_court",
+              "amenity=ice_cream",
+              "amenity=pub",
+              "amenity=biergarten",
+              "amenity=canteen"
+            ]
+          }
         }
       ],
       "filter": [
@@ -1276,6 +1319,49 @@
               }
             }
           ]
+        },
+        {
+          "id": "highchair",
+          "question": {
+            "en": "Is there a high chair?",
+            "de": "Gibt es einen Hochstuhl?",
+            "da": "Er der en højstol?"
+          },
+          "questionHint": {
+            "en": "A high chair the staff can bring to the table. On PapaMap this shows as “High chair available” and counts for the high-chair chip.",
+            "de": "Ein Hochstuhl, den das Personal an den Tisch bringen kann. Auf PapaMap steht dann „Hochstuhl vorhanden“, und der Ort zählt für den Chip „Hochstuhl“.",
+            "da": "En højstol, som personalet kan stille ved bordet. På PapaMap vises det som „Højstol findes“ og tæller med i højstol-filteret."
+          },
+          "mappings": [
+            {
+              "if": "highchair=yes",
+              "then": {
+                "en": "Yes, there is a high chair",
+                "de": "Ja, es gibt einen Hochstuhl",
+                "da": "Ja, der er en højstol"
+              }
+            },
+            {
+              "if": "highchair=no",
+              "then": {
+                "en": "No, there is no high chair",
+                "de": "Nein, es gibt keinen Hochstuhl",
+                "da": "Nej, der er ingen højstol"
+              }
+            }
+          ],
+          "condition": {
+            "or": [
+              "amenity=cafe",
+              "amenity=restaurant",
+              "amenity=fast_food",
+              "amenity=food_court",
+              "amenity=ice_cream",
+              "amenity=pub",
+              "amenity=biergarten",
+              "amenity=canteen"
+            ]
+          }
         }
       ]
     },
@@ -1615,6 +1701,49 @@
               }
             }
           ]
+        },
+        {
+          "id": "highchair",
+          "question": {
+            "en": "Is there a high chair?",
+            "de": "Gibt es einen Hochstuhl?",
+            "da": "Er der en højstol?"
+          },
+          "questionHint": {
+            "en": "A high chair the staff can bring to the table. On PapaMap this shows as “High chair available” and counts for the high-chair chip.",
+            "de": "Ein Hochstuhl, den das Personal an den Tisch bringen kann. Auf PapaMap steht dann „Hochstuhl vorhanden“, und der Ort zählt für den Chip „Hochstuhl“.",
+            "da": "En højstol, som personalet kan stille ved bordet. På PapaMap vises det som „Højstol findes“ og tæller med i højstol-filteret."
+          },
+          "mappings": [
+            {
+              "if": "highchair=yes",
+              "then": {
+                "en": "Yes, there is a high chair",
+                "de": "Ja, es gibt einen Hochstuhl",
+                "da": "Ja, der er en højstol"
+              }
+            },
+            {
+              "if": "highchair=no",
+              "then": {
+                "en": "No, there is no high chair",
+                "de": "Nein, es gibt keinen Hochstuhl",
+                "da": "Nej, der er ingen højstol"
+              }
+            }
+          ],
+          "condition": {
+            "or": [
+              "amenity=cafe",
+              "amenity=restaurant",
+              "amenity=fast_food",
+              "amenity=food_court",
+              "amenity=ice_cream",
+              "amenity=pub",
+              "amenity=biergarten",
+              "amenity=canteen"
+            ]
+          }
         }
       ]
     }

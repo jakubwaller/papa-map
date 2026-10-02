@@ -1,5 +1,27 @@
 # papa-map — build contract (v0)
 
+> **v65 amendment (2 Oct 2026, high chairs): one property on both datasets,
+> one stats counter.** Every table feature and every play place carries
+> `highchair`: `true` / `false` / `null` from `highchair=*`
+> (`pipeline/classify.py` `highchair_state`): `yes` or a count above zero is
+> true, `no` or `0` false, absent or anything else (`limited`, `ja`, `1+`,
+> blank) null — junk reads as unrecorded, as `wheelchair` does. No new
+> Overpass clause: the sweep already returns every tag. A badge, never a
+> status, and nothing drawn on the pin. `local.highchair_tables` counts the
+> exported pins with `true` (places not counted, like `play_tables`).
+> `pipeline/delta.py` treats `highchair` as a relevant key. The frontend reads
+> it strictly (`highchair: p.highchair === true`, `highchair_recorded` for true
+> or false), adds a "High chair" chip between the blue chips and the
+> wheelchair chip — off by default, not stored on the device, narrowing the
+> pins and the play-place rings (`filterFeatures`' and `placeFeatures`'
+> trailing `highchairOnly`) — a popup line on both popups, and on table pins
+> at eating places (`HIGHCHAIR_VENUES` in `web/osm.js`) where OSM is silent a
+> yes / no question that writes `highchair=yes|no` through `writeTags`, with
+> changeset comments `High chair: yes|no (answered on papamap.de)`. The theme
+> asks the same question with the same two tags on `dad_changing_table_amenity`,
+> `dad_play_place` and `dad_venue`. Store-app what's-new note `newsHighchair`.
+> Shell pin `app66` → `app67`.
+
 > **v64 amendment (2 Oct 2026, a dialog's × is easy to hit): no data shape
 > change.** The four dialogs' close button is a 44 px target instead of a
 > 20 px glyph, and a dialog's height stops short of the phone's safe areas,
@@ -2290,6 +2312,7 @@ Overpass `out center`). Feature `properties`:
   "wheelchair": "yes|limited|no|null — the place's wheelchair tag verbatim (v26); null also means unrecorded",
   "toilets_wheelchair": "yes|limited|no|null — toilets:wheelchair verbatim (v26)",
   "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",
+  "highchair": "true|false|null — highchair=yes or a count > 0 is true, no or 0 is false, absent or junk is null (v65)",
   "key": "string or null — the centralkey value when the key locks the table (v5 rule); such a feature is not a pin (v26)",
   "fee": "string or null",
   "opening_hours": "string or null",
@@ -2312,6 +2335,7 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "wheelchair": "yes|limited|no|null — as on the tables (v28)",
   "toilets_wheelchair": "yes|limited|no|null — as on the tables (v28)",
   "wheelchair_description": "string or null — as on the tables (v28)",
+  "highchair": "true|false|null — as on the tables (v65)",
   "opening_hours": "string or null",
   "osm_url": "https://www.openstreetmap.org/<type>/<id>",
   "mapcomplete_url": "string or null"
@@ -2330,6 +2354,7 @@ of places with a play area and no changing-table answer — or, since v27, the a
     "yes_location_known": 17, "yes_location_unknown": 68,
     "accessible": 0, "female_only": 0, "unknown": 0,
     "play_tables": 0, "play_places": 0, "play_places_no": 0,
+    "highchair_tables": 0,
     "capacity_tagged_toilets": 2
   },
   "global": {

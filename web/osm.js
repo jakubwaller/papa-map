@@ -331,6 +331,25 @@ export function playPatch(choice) {
   throw new Error(`unknown play choice ${choice}`);
 }
 
+// The third question (v65): is there a high chair? Two answers, the theme's
+// own two mappings ("highchair"), so the page and MapComplete write the same
+// tag. Asked only on eating places — a high chair is a thing a café brings to
+// the table, and nobody asks it of a public toilet. pipeline/classify.py reads
+// both values (highchair_state); `yes` is the chip, `no` is an answer that
+// stops the question coming back.
+export const HIGHCHAIR_VENUES = ["cafe", "restaurant", "fast_food", "food_court", "ice_cream",
+  "pub", "biergarten", "canteen"];
+export const isHighchairVenue = (amenity) => HIGHCHAIR_VENUES.includes(amenity);
+
+export const HIGHCHAIR_CHOICES = ["hc_yes", "hc_no"];
+export const isHighchairChoice = (choice) => HIGHCHAIR_CHOICES.includes(choice);
+
+export function highchairPatch(choice) {
+  if (choice === "hc_yes") return { highchair: "yes" };
+  if (choice === "hc_no") return { highchair: "no" };
+  throw new Error(`unknown high-chair choice ${choice}`);
+}
+
 // What the "taken" check below has to find empty before it writes. The patch's
 // own keys, plus — for a play answer — the whole of PLAY_KEYS, because the two
 // keys are one statement: a `kids_area:indoor=yes` tagged since last night's

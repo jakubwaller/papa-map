@@ -1,9 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
          finishLogin, ROOMS, ROOM_LABEL, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          roomLabelKeys,
          PLAY_CHOICES, PLAY_KEYS, isPlayChoice, playPatch, guardKeys, changesetTags, changesetXml,
+         HIGHCHAIR_CHOICES, HIGHCHAIR_VENUES, isHighchairChoice, isHighchairVenue, highchairPatch,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY } from "./osm.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
@@ -360,6 +362,47 @@ test("a play answer claims both kids_area keys, not just the ones it writes", ()
   // The pair is the pipeline's PLAY_KEYS and datasource.js's PLAY_TAGS, in
   // the same order; three files, one list.
   assert.deepEqual(PLAY_KEYS, ["kids_area", "kids_area:indoor"]);
+});
+
+test("the high-chair answers write highchair=yes / no and nothing else", () => {
+  assert.deepEqual(highchairPatch("hc_yes"), { highchair: "yes" });
+  assert.deepEqual(highchairPatch("hc_no"), { highchair: "no" });
+  assert.throws(() => highchairPatch("yes"));
+  assert.throws(() => highchairPatch("play_yes"));
+  assert.throws(() => highchairPatch(undefined));
+  for (const c of HIGHCHAIR_CHOICES) assert.ok(isHighchairChoice(c), c);
+  // app.js routes on these: a high-chair choice is never a play choice or a room.
+  for (const c of [...PLAY_CHOICES, "both", "male", "none", "yes", null]) {
+    assert.ok(!isHighchairChoice(c), String(c));
+  }
+  for (const c of HIGHCHAIR_CHOICES) assert.ok(!isPlayChoice(c), c);
+});
+
+test("a high-chair answer guards its own single key", () => {
+  // The 409 "taken" re-read applies to `highchair` with no special case.
+  assert.deepEqual(guardKeys(highchairPatch("hc_yes")), ["highchair"]);
+  assert.deepEqual(guardKeys(highchairPatch("hc_no")), ["highchair"]);
+});
+
+test("the high-chair question is asked on eating places only", () => {
+  for (const a of HIGHCHAIR_VENUES) assert.ok(isHighchairVenue(a), a);
+  for (const a of ["toilets", "library", "", null, undefined]) assert.ok(!isHighchairVenue(a), String(a));
+});
+
+test("the theme asks the same high-chair question, on the same venues, on the venue layers", () => {
+  const theme = JSON.parse(readFileSync(new URL("../theme/papamap.theme.json", import.meta.url), "utf8"));
+  const withIt = [];
+  for (const layer of theme.layers) {
+    if (typeof layer !== "object") continue;
+    const tr = (layer.tagRenderings || []).find((r) => r && r.id === "highchair");
+    if (!tr) continue;
+    withIt.push(layer.id);
+    assert.deepEqual(tr.mappings.map((m) => m.if), ["highchair=yes", "highchair=no"], layer.id);
+    const amenities = tr.condition.or.map((c) => c.replace(/^amenity=/, ""));
+    assert.ok(tr.condition.or.every((c) => c.startsWith("amenity=")), layer.id);
+    assert.deepEqual(new Set(amenities), new Set(HIGHCHAIR_VENUES), layer.id);
+  }
+  assert.deepEqual(withIt.sort(), ["dad_changing_table_amenity", "dad_play_place", "dad_venue"]);
 });
 
 test("writeTags: a room somebody tagged since last night's build is theirs — 409, no changeset", async () => {

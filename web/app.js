@@ -2,7 +2,7 @@
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus, countPlay,
          chipKeys, chipKey, chipView, MEN_ONLY_CHIP,
-         countWheelchair, pinFeatures,
+         countWheelchair, countHighchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, BUCKET_COLOR,
@@ -12,13 +12,15 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app66";
+         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app67";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app66";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app67";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
-         PLAY_CHOICES, isPlayChoice, playPatch, writeTags } from "./osm.js?v=app66";
+         PLAY_CHOICES, isPlayChoice, playPatch,
+         HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
+         writeTags } from "./osm.js?v=app67";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -26,7 +28,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app66";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app67";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -36,27 +38,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app66";
+         reviewTracker } from "./native.js?v=app67";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app66";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app67";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app66";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app67";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app66";
+import { isOpenNow } from "./opening-hours.js?v=app67";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         VENUE_MIN_ZOOM } from "./venues.js?v=app66";
-// The bundled shell's pin (`?v=app66`), what the intro key records.
+         VENUE_MIN_ZOOM } from "./venues.js?v=app67";
+// The bundled shell's pin (`?v=app67`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -103,6 +105,8 @@ const CHANGESET_COMMENT = {
   play_yes: "Play area: indoors (answered on papamap.de)",
   play_outdoor: "Play area: outdoors only (answered on papamap.de)",
   play_no: "Play area: none (answered on papamap.de)",
+  hc_yes: "High chair: yes (answered on papamap.de)",
+  hc_no: "High chair: no (answered on papamap.de)",
 };
 
 // ---- Reading mode: the same three answers, read as a father or as a mother.
@@ -256,6 +260,9 @@ const ISA_PATH = "M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm7 11v-2c-1.5
 // the wheelchair chip (v53), white in a pin and ink in a ring.
 const LIMITED_INK = "#1c2b26";   // --ink, the chip's ISA icon
 const LIMITED_PATH = "M10 3h4v12h-4zM12 17a2 2 0 1 1 0 4 2 2 0 1 1 0-4z";
+// A high chair, drawn for the chip (v65): backrest, seat, tray, splayed legs
+// and a footrest bar. Ink like the ISA icon; never drawn on a pin.
+const HIGHCHAIR_PATH = "M7 2h2v11H7zM7 11h10v2H7zM12 7h7v2h-7zM16 9h1.5v2H16zM7 13h2l-2.4 9h-2zM15 13h2l2.4 9h-2zM5.8 18h12.4v1.5H5.8z";
 const KEY_PATH = "M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z";
 const svgIcon = (path, cls) =>
   `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>`;
@@ -393,6 +400,7 @@ let featuresByOsmUrl = new Map();
 let placesByOsmUrl = new Map();
 let visible = new Set(chipKeys("mama"));   // toggled-on chips, a superset of either reading
 let playOnly = false;                                     // narrow to play corners
+let highchairOnly = false;                                // narrow to high chairs (v65), not remembered
 // narrow to wheelchair=yes or limited (v26, v53), remembered on the device
 let wheelchairOnly = (() => {
   try { return pickWheelchair(localStorage.getItem(WHEELCHAIR_KEY)); } catch { return false; }
@@ -613,15 +621,16 @@ function addTableLayer() {
 
 function refreshPins() {
   if (!dataReady) return;
-  const shown = filterFeatures(allFeatures, visible, playOnly, wheelchairOnly, mode);
+  const shown = filterFeatures(allFeatures, visible, playOnly, wheelchairOnly, mode, highchairOnly);
   // The count stays a count of changing tables even with the prospects on —
   // they are not tables, and folding them in would inflate the one number the
   // whole map is about. They get their own clause instead. The total is the
   // same universe `shown` was drawn from: the pins, or with the wheelchair
   // chip on, its tables — keyed ones included, since it draws them.
   const total = pinFeatures(allFeatures, wheelchairOnly).length;
-  // The places narrow under the wheelchair chip like the tables (v28).
-  const places = placesOn ? placeFeatures(allPlaces, wheelchairOnly) : [];
+  // The places narrow under the wheelchair chip like the tables (v28), and
+  // under the high-chair chip the same way (v65).
+  const places = placesOn ? placeFeatures(allPlaces, wheelchairOnly, highchairOnly) : [];
   countEl.textContent = total
     ? t("countShown", { shown: shown.length, total })
       + (places.length ? t("countPlaces", { n: places.length }) : "")
@@ -752,6 +761,7 @@ function popupHTML(f) {
     rows.push(`<div class="row">${parts.join(" · ")}</div>`);
   }
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
+  rows.push(...highchairRows(f));
   rows.push(...wheelchairRows(f));
   // Only ever seen under the wheelchair chip: the door needs a central key.
   if (f.key)
@@ -769,6 +779,12 @@ function popupHTML(f) {
   // question is not above it, it says itself whose name the answer goes under.
   if (!f.play_recorded)
     rows.push(askPlayHTML(inFlight.has(f.osm_url), !asks));
+  // The third (v65), on eating places only and only where OSM is silent:
+  // outside .ask like the play question, so a room answer leaves it standing.
+  // It carries the login line only when neither question above it does.
+  const asksHc = !f.highchair_recorded && isHighchairVenue(f.amenity);
+  if (asksHc)
+    rows.push(askHighchairHTML(inFlight.has(f.osm_url), !asks && f.play_recorded));
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
@@ -779,7 +795,7 @@ function popupHTML(f) {
   // and the play line under it must not take that away.
   const mcOnly = f.status === "unknown" && !asks;
   if (mcUrl)
-    links.push(`<a class="btn${!mcOnly && (asks || !f.play_recorded) ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+    links.push(`<a class="btn${!mcOnly && (asks || !f.play_recorded || asksHc) ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   links.push(routeButton(f.lat, f.lon, f.name || ""));
   links.push(shareButtonHTML());
   if (osmUrl)
@@ -856,6 +872,28 @@ function askPlayHTML(busy = false, who = false) {
          `${who ? askWhoHTML() : ""}</div>`;
 }
 
+// The high-chair line (v65): said when OSM records an answer either way,
+// nothing when it is silent. Shared by the pin and the play-place popup.
+function highchairRows(o) {
+  if (o.highchair) return [`<div class="row hc">${esc(t("popupHighchairYes"))}</div>`];
+  if (o.highchair_recorded) return [`<div class="row hc no">${esc(t("popupHighchairNo"))}</div>`];
+  return [];
+}
+
+// The high-chair question (v65): one line, two pills, the play question's
+// shape. Asked on table pins at eating places only (isHighchairVenue) —
+// never on a play place, whose popup already leads with the table question,
+// and never on amenity=toilets. `who` as for the play question.
+const HIGHCHAIR_LABEL = { hc_yes: "askHighchairYes", hc_no: "askHighchairNo" };
+function askHighchairHTML(busy = false, who = false) {
+  const dis = busy ? " disabled" : "";
+  const pill = (choice) =>
+    `<button type="button" class="btn ask-btn" data-room="${choice}"${dis}>${esc(t(HIGHCHAIR_LABEL[choice]))}</button>`;
+  return `<div class="ask-hc"><span class="ask-q">${esc(t("askHighchair"))}</span>` +
+         `<span class="ask-hc-btns">${HIGHCHAIR_CHOICES.map(pill).join("")}</span>` +
+         `${who ? askWhoHTML() : ""}</div>`;
+}
+
 // A prospect's popup says one thing the pin popups never do: nobody has
 // answered the changing-table question here at all. So it leads with the one
 // fact OSM does record, then asks the question itself — a room tapped here
@@ -890,6 +928,8 @@ function placeHTML(p) {
     // the play-place card was the one that still did not fit.)
     rows.push(`<div class="status play ask-ctx">${esc(t("metaPlaces"))}</div>`);
   // Between the headline and the question, where a pin's popup has them.
+  // The high-chair line only — a place is never asked (v65).
+  rows.push(...highchairRows(p));
   rows.push(...wheelchairRows(p));
   if (!p.changing_table) rows.push(askHTML("askTable", inFlight.has(p.osm_url)));
   if (p.opening_hours) rows.push(hoursRowHTML(p.opening_hours, { lat: p.lat, lon: p.lon }));
@@ -1114,6 +1154,7 @@ function renderChips() {
   }
   frag.appendChild(playChip(countPlay(pinFeatures(allFeatures, wheelchairOnly))));
   frag.appendChild(placesChip(placeFeatures(allPlaces, wheelchairOnly).length));
+  frag.appendChild(highchairChip(countHighchair(pinFeatures(allFeatures, wheelchairOnly))));
   frag.appendChild(wheelchairChip(countWheelchair(allFeatures)));
   // Not firstChild: the mode toggle is static markup and holds that slot, so
   // the generated chips go in front of the spacer instead.
@@ -1164,6 +1205,29 @@ function placesChip(count) {
     label: "stPlaces", aria: "ariaPlaces", count, on: placesOn, hollow: true,
     toggle: () => (placesOn = !placesOn),
   });
+}
+
+// The high-chair chip (v65), between the blue chips and the wheelchair chip,
+// off by default and not remembered: switched on it narrows the table pins
+// and the play-place rings to those with a recorded high chair. It subtracts,
+// never adds — a silent OSM is unrecorded, not "no high chair". Ink, like the
+// wheelchair chip: a badge, nothing drawn on the pin.
+function highchairChip(count) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "chip hc" + (highchairOnly ? " on" : "");
+  b.setAttribute("aria-pressed", String(highchairOnly));
+  b.setAttribute("aria-label", t("ariaHighchair"));
+  b.title = t("ariaHighchair");
+  b.innerHTML = svgIcon(HIGHCHAIR_PATH, "hc-icon") +
+    `<span class="label">${esc(t("stHighchair"))}</span> <span class="cnt">${count}</span>`;
+  b.addEventListener("click", () => {
+    highchairOnly = !highchairOnly;
+    b.classList.toggle("on", highchairOnly);
+    b.setAttribute("aria-pressed", String(highchairOnly));
+    refreshPins();
+  });
+  return b;
 }
 
 // The wheelchair chip (v26), last in the strip and off by default: switched
@@ -1471,6 +1535,7 @@ function ensureVisible(f) {
   const key = chipKey(f, mode);
   if (!visible.has(key)) { visible.add(key); refilter = true; }
   if (playOnly && !f.play) { playOnly = false; refilter = true; }
+  if (highchairOnly && !f.highchair) { highchairOnly = false; refilter = true; }
   if (refilter) { renderChips(); refreshPins(); }
 }
 
@@ -2330,12 +2395,13 @@ async function answer(kind, obj, choice, freshToken = null) {
     // intent from storage) fails like any other answer, with a note, rather
     // than as an unhandled rejection the reader never sees.
     const play = isPlayChoice(choice);
-    const patch = play ? playPatch(choice)
+    const hc = isHighchairChoice(choice);
+    const patch = play ? playPatch(choice) : hc ? highchairPatch(choice)
       : kind === "place" ? tablePatch(choice) : roomPatch(choice);
     // "none" only ever arrives for a place, and it gets its own changeset
     // comment — the room comment would claim a room was named. A play answer
     // names itself.
-    const comment = play ? CHANGESET_COMMENT[choice]
+    const comment = play || hc ? CHANGESET_COMMENT[choice]
       : kind === "place" && choice === "none" ? CHANGESET_COMMENT.place_none : CHANGESET_COMMENT[kind];
     const out = await writeTags(osm, token, osmRef(obj.osm_url), patch, comment);
     // "Mein PapaMap"'s own count moves on this tap, not the next time the
@@ -2355,6 +2421,14 @@ async function answer(kind, obj, choice, freshToken = null) {
       // still waiting above it stays.
       obj.play_recorded = true;
       el?.querySelector(".ask-play")?.remove();
+    } else if (hc) {
+      // The same for the high chair (v65), except that its line shows at
+      // once: the question is replaced in place by the row it just recorded.
+      // The chip's count waits for the pipeline, like the play ring.
+      obj.highchair = choice === "hc_yes";
+      obj.highchair_recorded = true;
+      const q = el?.querySelector(".ask-hc");
+      if (q) q.outerHTML = highchairRows(obj).join("");
     } else {
       obj.changing_table = out.tags.changing_table;
       obj.location_raw = out.tags["changing_table:location"];
@@ -2397,7 +2471,7 @@ async function answer(kind, obj, choice, freshToken = null) {
       // and leave the buttons standing, sandbox test 13 Sep 2026) and the
       // context lines marked .ask-ctx: a pin's "room unknown" headline in
       // either reading, a play place's "OSM says nothing" and "been here?".
-      // .ask-play is neither, and stays.
+      // .ask-play and .ask-hc (v65) are neither, and stay.
       el?.querySelectorAll(".ask, .ask-ctx").forEach((x) => x.remove());
     }
     // Whatever survived the sweep is the other question, and it was quieted
@@ -2406,9 +2480,14 @@ async function answer(kind, obj, choice, freshToken = null) {
     // Quoted back: the group this answer wrote. A room answer names the table
     // and its room, a play answer the play corner — never the other question's
     // tags, which this tap did not touch.
-    const tags = {};
-    for (const k of (play ? PLAY_TAGS : TABLE_TAGS)) if (out.tags[k]) tags[k] = out.tags[k];
-    setEditNote(rec, "found", "editFound", tags);
+    // A high-chair answer has no tag line of its own in the confirmation: its
+    // row is already in the popup, so the plain "on OSM" note says the rest.
+    if (hc) setEditNote(rec, "found", "editFoundPlain");
+    else {
+      const tags = {};
+      for (const k of (play ? PLAY_TAGS : TABLE_TAGS)) if (out.tags[k]) tags[k] = out.tags[k];
+      setEditNote(rec, "found", "editFound", tags);
+    }
     review?.answered();
   } catch (err) {
     btns.forEach((b) => { b.disabled = false; });
@@ -3054,6 +3133,7 @@ async function completeLogin(href) {
       // over it.
       const open = isPlayChoice(intent.choice)
         ? !obj.play_recorded
+        : isHighchairChoice(intent.choice) ? !obj.highchair_recorded
         : kind === "place" ? !obj.changing_table
                            : obj.status === "unknown" && !obj.location_raw;
       if (open) answer(kind, obj, intent.choice, login.token);

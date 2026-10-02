@@ -5,6 +5,7 @@ import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
          chipKeys, chipView,
          isWheelchairOk, isWheelchairLimited, countWheelchair, pinFeatures, placeFeatures,
+         isHighchair, countHighchair,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
@@ -80,6 +81,7 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   assert.deepEqual(places[0], {
     idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe", changing_table: null,
     wheelchair: null, toilets_wheelchair: null, wheelchair_description: null,
+    highchair: false, highchair_recorded: false,
     opening_hours: "Mo-Fr 09:00-18:00",
     osm_url: "https://www.openstreetmap.org/node/9001",
     mapcomplete_url: "https://mapcomplete.org/theme.html#node/9001",
@@ -314,6 +316,81 @@ test("filterFeatures under the chip and the play filter keeps a limited table wi
     { idx: 1, status: "accessible", wheelchair: "limited", key: null, play: false },
   ];
   assert.deepEqual(filterFeatures(fs, new Set(STATUSES), true, true).map((f) => f.idx), [0]);
+});
+
+test("highchair is strictly boolean — a dataset without the property has none", () => {
+  // v65: a dataset from before the property reads as no high chair AND as
+  // nobody having said, so the chip counts none and the popup may ask.
+  const v = loadFeatures(FC);
+  assert.deepEqual(v.map((f) => f.highchair), [false, false, false]);
+  assert.deepEqual(v.map((f) => f.highchair_recorded), [false, false, false]);
+  for (const h of [undefined, null, "yes", 1, "true", 0, ""])
+    assert.equal(loadFeatures({ type: "FeatureCollection",
+      features: [feat(9.9, 53.5, { status: "unknown", highchair: h })] })[0].highchair, false);
+});
+
+test("highchair_recorded is true for an answered yes and no, false where OSM is silent", () => {
+  const one = (highchair) => loadFeatures({ type: "FeatureCollection",
+    features: [feat(9.9, 53.5, { status: "unknown", highchair })] })[0];
+  assert.equal(one(true).highchair, true);
+  assert.equal(one(true).highchair_recorded, true);
+  assert.equal(one(false).highchair, false);
+  assert.equal(one(false).highchair_recorded, true);
+  assert.equal(one(null).highchair_recorded, false);
+  assert.equal(one(undefined).highchair_recorded, false);
+  for (const h of ["no", "yes", 0, 1]) assert.equal(one(h).highchair_recorded, false, String(h));
+});
+
+test("loadPlaces reads highchair and highchair_recorded the same way", () => {
+  const places = loadPlaces({ features: [
+    feat(1, 1, { highchair: true }),
+    feat(2, 2, { highchair: false }),
+    feat(3, 3, { highchair: null }),
+    feat(4, 4, {}),
+    feat(5, 5, { highchair: "yes" }),
+  ] });
+  assert.deepEqual(places.map((p) => p.highchair), [true, false, false, false, false]);
+  assert.deepEqual(places.map((p) => p.highchair_recorded), [true, true, false, false, false]);
+});
+
+test("countHighchair counts only a recorded high chair", () => {
+  assert.equal(countHighchair([{ highchair: true }, { highchair: false }, {}, { highchair: "yes" },
+                               { highchair: true, status: "unknown" }]), 2);
+  assert.equal(countHighchair([]), 0);
+  assert.equal(isHighchair({ highchair: true }), true);
+  assert.equal(isHighchair({ highchair: false }), false);
+});
+
+test("filterFeatures narrows to high chairs on top of status, play and wheelchair", () => {
+  const fs = [
+    { idx: 0, status: "accessible", wheelchair: "limited", key: null, play: true, highchair: true },
+    { idx: 1, status: "accessible", wheelchair: "limited", key: null, play: true, highchair: false },
+    { idx: 2, status: "unknown", wheelchair: null, key: null, play: false, highchair: true },
+    { idx: 3, status: "female_only", wheelchair: null, key: null, play: false, highchair: false },
+  ];
+  const all = new Set(STATUSES);
+  // off: unchanged, and the default parameter is off
+  assert.deepEqual(filterFeatures(fs, all, false, false, "papa").map((f) => f.idx), [0, 1, 2, 3]);
+  assert.deepEqual(filterFeatures(fs, all, false, false, "papa", false).map((f) => f.idx), [0, 1, 2, 3]);
+  // on alone
+  assert.deepEqual(filterFeatures(fs, all, false, false, "papa", true).map((f) => f.idx), [0, 2]);
+  // all three chips on: a limited table with a play corner and a high chair survives
+  assert.deepEqual(filterFeatures(fs, all, true, true, "papa", true).map((f) => f.idx), [0]);
+  // it subtracts, never adds back a status switched off
+  assert.deepEqual(filterFeatures(fs, new Set(["female_only"]), false, false, "papa", true), []);
+});
+
+test("play places narrow under the high-chair chip, and with the wheelchair chip by both rules", () => {
+  const places = [
+    { idx: 0, wheelchair: "yes", highchair: true },
+    { idx: 1, wheelchair: null, highchair: true },
+    { idx: 2, wheelchair: "limited", highchair: false },
+    { idx: 3, wheelchair: null, highchair: false },
+  ];
+  assert.deepEqual(placeFeatures(places).map((p) => p.idx), [0, 1, 2, 3]);
+  assert.deepEqual(placeFeatures(places, false, true).map((p) => p.idx), [0, 1]);
+  assert.deepEqual(placeFeatures(places, true, false).map((p) => p.idx), [0, 2]);
+  assert.deepEqual(placeFeatures(places, true, true).map((p) => p.idx), [0]);
 });
 
 test("the map sources mark limited places only with the chip on", () => {
