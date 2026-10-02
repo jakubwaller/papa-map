@@ -2553,6 +2553,7 @@ function openVenuePicker(c, z) {
   venueCentre = { lat: c.lat, lon: c.lng };
   venuePicked = null;
   clearTimeout(venueTimer);   // a query typed just before the last close
+  addDialog.classList.remove("searching");
   venueSearch.value = "";
   showVenueStep("pick");
   venueSearch.disabled = z < VENUE_MIN_ZOOM;
@@ -2594,6 +2595,10 @@ function showVenues(json) {
   renderVenueRows(rows);
   setVenueStatus(rows.length ? null : "venueEmpty");
 }
+
+// Not put back on blur: the blur comes on the tap that picks a row, and the
+// list moving under the finger would hand the tap to the row below.
+venueSearch.addEventListener("focus", () => addDialog.classList.add("searching"));
 
 venueSearch.addEventListener("input", () => {
   clearTimeout(venueTimer);

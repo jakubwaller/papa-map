@@ -683,6 +683,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #venue-ask { margin-bottom: 12px; }
 #venue-ask .linkish { font-size: 12.5px; }
 #add-dialog h3:focus { outline: none; }
+/* Searching with the keyboard up: the intro would leave room for one row. */
+#add-dialog.searching .dlg-intro { display: none; }
 #venue-ask h4 { margin: 8px 0 2px; font-size: 15px; }
 .venue-context { font-size: 12px; color: var(--muted); }
 #venue-ask .ask { border-top: none; padding-top: 0; }
