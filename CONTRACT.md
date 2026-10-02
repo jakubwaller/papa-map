@@ -1,5 +1,12 @@
 # papa-map — build contract (v0)
 
+> **v63 amendment (2 Oct 2026, the place list's wait is visible): no data
+> shape change.** Photon answers the `/reverse` list in 2.5–4 s, all of it
+> before the first byte, and a one-line status above an empty box was easy to
+> miss. While it loads, the list shows four grey placeholder rows
+> (`aria-hidden`, the list `aria-busy`) and the status line a spinner; both
+> hold still under `prefers-reduced-motion`. Shell pin `app64` → `app65`.
+
 > **v62 amendment (2 Oct 2026, add a place in the dialog): no data shape
 > change.** "+ Add a place" lists, from Photon's `/reverse` (300 m around the
 > map centre, rounded to three decimals, the theme's `dad_venue` tag list —

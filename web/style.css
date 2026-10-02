@@ -680,6 +680,26 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .venue-row:hover, .venue-row:focus-visible { background: #f1f4f2; }
 .venue-name { display: block; font-size: 14px; font-weight: 600; }
 .venue-meta { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+/* While Photon answers: a spinner on the status line and placeholder rows
+   the size of real ones, so the wait is visible where the list will be. */
+#add-dialog .venue-status.loading { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+#add-dialog .venue-status.loading::before {
+  content: ""; flex: none; width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--line); border-top-color: var(--ink);
+  animation: venue-spin .8s linear infinite;
+}
+@keyframes venue-spin { to { transform: rotate(360deg); } }
+.venue-skeleton { padding: 11px 4px; border-bottom: 1px solid var(--line-soft); }
+.venue-skeleton span {
+  display: block; height: 12px; width: 55%; border-radius: 6px; background: #e4e9e6;
+  animation: venue-pulse 1s ease-in-out infinite alternate;
+}
+.venue-skeleton span + span { height: 9px; width: 35%; margin-top: 7px; }
+.venue-skeleton:nth-child(2n) span:first-child { width: 42%; }
+@keyframes venue-pulse { to { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) {
+  #add-dialog .venue-status.loading::before, .venue-skeleton span { animation: none; }
+}
 #venue-ask { margin-bottom: 12px; }
 #venue-ask .linkish { font-size: 12.5px; }
 #add-dialog h3:focus { outline: none; }
