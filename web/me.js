@@ -408,7 +408,8 @@ export function appTips(platform, lang) {
 // releases in between, if any release had something to say, else nothing.
 export const INTRO_KEY = "papamap-intro";
 
-// "app68" -> 67; anything else -> null.
+// "app12" -> 12; anything else -> null. (A pin-neutral example: the bulk
+// pin bump must not touch it.)
 export function pinNumber(pin) {
   const m = typeof pin === "string" ? /^app(\d+)$/.exec(pin) : null;
   return m ? Number(m[1]) : null;
