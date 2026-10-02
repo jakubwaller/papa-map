@@ -148,6 +148,16 @@ const DEVICES = {
     isMobile: false,
     hasTouch: true,
   },
+  // Google Play's phone screenshots: any size with the long side at most
+  // twice the short one, so the shell is shot at a common Android phone
+  // viewport and only the `play` canvas below has to fit Play's rule.
+  android: {
+    viewport: { width: 412, height: 915 },
+    deviceScaleFactor: 3,        // -> 1236x2745
+    isMobile: true,
+    hasTouch: true,
+    platform: "android",
+  },
 };
 
 // The composed canvas, per DESIGN.md's table: exact final pixel size, the
@@ -168,6 +178,10 @@ const DEVICE_CANVAS = {
   iphone69: { width: 1320, height: 2868, frameWidth: 1140, margin: 90, headlineSize: 88, sublineSize: 44, radius: 72, gap: 26 },
   iphone65: { width: 1284, height: 2778, frameWidth: 1110, margin: 87, headlineSize: 86, sublineSize: 43, radius: 70, gap: 26, rawDevice: "iphone69" },
   ipad13: { width: 2064, height: 2752, frameWidth: 1560, margin: 252, headlineSize: 96, sublineSize: 48, radius: 60, gap: 30 },
+  // Google Play phone: 1080x2160 is exactly the 2:1 limit, the tallest
+  // canvas Play accepts. `texts: "android"` swaps in the sublines that name
+  // Android features instead of Siri, Control Center and Apple Maps.
+  play: { width: 1080, height: 2160, frameWidth: 934, margin: 73, headlineSize: 72, sublineSize: 36, radius: 58, gap: 22, rawDevice: "android", texts: "android" },
 };
 
 const LANGS = {
@@ -273,8 +287,8 @@ async function installTilesProxy(page) {
 // .catch just leaves the anchor as a plain link — no dialog opens, which is
 // exactly what 04-route wants to show (see that shot's own comment for why
 // the chooser dialog was dropped).
-async function installNativeStub(context) {
-  await context.addInitScript(() => {
+async function installNativeStub(context, platform) {
+  await context.addInitScript((platform) => {
     // A pin far ahead of the shell's, so introKind shows neither the intro nor notes.
     try { localStorage.setItem("papamap-intro", "app99999"); } catch { /* storage blocked: the intro would show over the shots */ }
     const geolocationPlugin = {
@@ -299,10 +313,10 @@ async function installNativeStub(context) {
     };
     window.Capacitor = {
       isNativePlatform: () => true,
-      getPlatform: () => "ios",
+      getPlatform: () => platform,
       Plugins: { Geolocation: geolocationPlugin },
     };
-  });
+  }, platform);
 }
 
 // Hard gate: if the page did not actually take the native branch — wrong
@@ -316,6 +330,7 @@ async function verifyNativeShell(page, label) {
     const html = document.documentElement;
     const appLink = document.getElementById("app-link");
     return {
+      platform: window.Capacitor?.getPlatform?.(),
       classes: [...html.classList],
       appLinkHidden: !!appLink?.hidden,
       statsInTopbar: [...document.querySelectorAll("#topbar .stats-wrap")].some((el) => el.offsetParent !== null),
@@ -324,7 +339,9 @@ async function verifyNativeShell(page, label) {
   });
   const problems = [];
   if (!state.classes.includes("native")) problems.push("html is missing the 'native' class");
-  if (!state.classes.includes("ios")) problems.push("html is missing the 'ios' class");
+  // The arrow-shaped locate button: on the iPhone app only, never on Android.
+  if (state.platform === "ios" && !state.classes.includes("ios")) problems.push("html is missing the 'ios' class");
+  if (state.platform !== "ios" && state.classes.includes("ios")) problems.push(`html has the 'ios' class on ${state.platform}`);
   if (!state.appLinkHidden) problems.push("#app-link is not hidden (App button still visible)");
   if (state.statsInTopbar) problems.push(".stats-wrap is still showing in #topbar");
   if (state.headerActionsInTopbar) problems.push(".header-actions is still showing in #topbar");
@@ -456,13 +473,14 @@ async function shootDevice(deviceName, device, langName, lang, outDir) {
   const results = [];
   const browser = await chromium.launch({ channel: "chrome", args: ["--no-sandbox"] });
   try {
+    const { platform = "ios", ...contextOptions } = device;
     const context = await browser.newContext({
-      ...device,
+      ...contextOptions,
       geolocation: HAMBURG_RATHAUS,
       permissions: ["geolocation"],
       locale: lang.locale,
     });
-    if (NATIVE_STUB) await installNativeStub(context);
+    if (NATIVE_STUB) await installNativeStub(context, platform);
     const page = await context.newPage();
     if (!IS_LIVE) {
       await installDataProxy(page);
@@ -786,7 +804,7 @@ async function composeAll(outDir) {
             results.push({ ok: false, path: finalPath, reason: `missing raw shot ${rawPath}` });
             continue;
           }
-          const t = texts[langName]?.[nn];
+          const t = (canvas.texts && texts[canvas.texts]?.[langName]?.[nn]) || texts[langName]?.[nn];
           if (!t) {
             console.log(`[compose] SKIP ${finalPath}: no texts.json entry for ${langName}/${nn}`);
             results.push({ ok: false, path: finalPath, reason: `no texts.json entry for ${langName}/${nn}` });
@@ -840,7 +858,10 @@ function pixelSize(path) {
 async function main() {
   if (!COMPOSE_ONLY) {
     const summary = [];
+    // With --canvas, only the raw device that canvas is composed from.
+    const rawWanted = CANVAS_FILTER && (DEVICE_CANVAS[CANVAS_FILTER]?.rawDevice || CANVAS_FILTER);
     for (const [deviceName, device] of Object.entries(DEVICES)) {
+      if (rawWanted && deviceName !== rawWanted) continue;
       for (const [langName, lang] of Object.entries(LANGS)) {
         const results = await shootDevice(deviceName, device, langName, lang, OUT_DIR);
         summary.push(...results.map((r) => ({ device: deviceName, lang: langName, ...r })));
@@ -866,7 +887,7 @@ async function main() {
     console.log(`${actual === expected ? "OK  " : "BAD "} ${r.path}: ${actual}`);
   }
   if (mismatches.length) {
-    throw new Error(`final PNG size mismatch — Apple rejects anything off-spec:\n${mismatches.map((m) => `  - ${m}`).join("\n")}`);
+    throw new Error(`final PNG size mismatch — the stores reject anything off-spec:\n${mismatches.map((m) => `  - ${m}`).join("\n")}`);
   }
 }
 
