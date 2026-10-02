@@ -2552,6 +2552,8 @@ function showVenueStep(step) {
 function openVenuePicker(c, z) {
   venueCentre = { lat: c.lat, lon: c.lng };
   venuePicked = null;
+  venueAbort?.abort();        // a list still loading from the last open
+  venueAbort = null;
   clearTimeout(venueTimer);   // a query typed just before the last close
   addDialog.classList.remove("searching");
   venueSearch.value = "";
@@ -2678,6 +2680,15 @@ async function answerVenue(venue, choice, freshToken = null) {
     review?.answered();
   } catch (err) {
     if (err.status === 401) { clearLogin(); rememberView(); goLogin(intent); return; }
+    // "taken": OSM already holds an answer the map never shows (a
+    // changing_table=no, say), so Photon listed it. Say so, and stop listing it.
+    if (err.step === "taken") {
+      venueAnswered.add(venue.osm_url);
+      showVenueRowsWithout(venue.osm_url);
+      venueAskEl.querySelector(".ask")?.remove();
+      setVenueNote("venueTaken", "none");
+      return;
+    }
     setVenueNote(err.status === 409 ? "askConflict" : "askFailed", "none", { status: err.status || "network" });
   } finally {
     inFlight.delete(venue.osm_url);
