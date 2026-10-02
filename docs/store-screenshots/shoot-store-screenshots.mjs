@@ -307,7 +307,7 @@ async function installNativeStub(context) {
 
 // Hard gate: if the page did not actually take the native branch — wrong
 // classes, the App button still showing, the stats strip still sitting in
-// the header — every later shot would quietly screenshot the website
+// the header (moved out, or hidden by .native CSS) — every later shot would quietly screenshot the website
 // instead of the app, which is worse than the script simply refusing to
 // run. Throws, rather than returning a bool, so a failure here stops the
 // whole run instead of producing 20 mislabelled PNGs.
@@ -318,16 +318,16 @@ async function verifyNativeShell(page, label) {
     return {
       classes: [...html.classList],
       appLinkHidden: !!appLink?.hidden,
-      statsInTopbar: !!document.querySelector("#topbar .stats-wrap"),
-      headerActionsInTopbar: !!document.querySelector("#topbar .header-actions"),
+      statsInTopbar: [...document.querySelectorAll("#topbar .stats-wrap")].some((el) => el.offsetParent !== null),
+      headerActionsInTopbar: [...document.querySelectorAll("#topbar .header-actions")].some((el) => el.offsetParent !== null),
     };
   });
   const problems = [];
   if (!state.classes.includes("native")) problems.push("html is missing the 'native' class");
   if (!state.classes.includes("ios")) problems.push("html is missing the 'ios' class");
   if (!state.appLinkHidden) problems.push("#app-link is not hidden (App button still visible)");
-  if (state.statsInTopbar) problems.push(".stats-wrap is still inside #topbar (stats strip not moved out)");
-  if (state.headerActionsInTopbar) problems.push(".header-actions is still inside #topbar (nav links not moved out)");
+  if (state.statsInTopbar) problems.push(".stats-wrap is still showing in #topbar");
+  if (state.headerActionsInTopbar) problems.push(".header-actions is still showing in #topbar");
   if (problems.length) {
     throw new Error(
       `[${label}] native-mode verification failed — this would be a website screenshot, not an app one:\n` +
