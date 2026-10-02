@@ -722,7 +722,7 @@ derived from them: `wheelchair` (`yes|limited|no|null`), `toilets_wheelchair`
 mapper's free text) and `key` — the central-key system that locks the door
 (`eurokey`, `nks`, …) or null. On a shop or a café `wheelchair=*` describes the
 entrance, on a toilet block the toilet itself. The popup shows all of it; the
-chip bar gains a last chip that narrows to `wheelchair=yes` and
+chip bar gains a chip right after the three status chips (last in the strip until v66) that narrows to `wheelchair=yes` and
 `wheelchair=limited`. `limited` is one step of up to 7 cm or help needed (the
 wiki's definition, and what Wheelmap paints orange), so it is marked rather
 than left out: under the chip a `limited` pin carries a white exclamation mark
@@ -763,8 +763,8 @@ taken. Costs no extra Overpass query: the sweep already returns
 every tag on these objects. `stats.local.highchair_tables` counts the pins with
 true; places are not counted.
 
-The chip bar gains a "High chair" chip, in ink, between the blue chips and the
-wheelchair chip. It starts off, is not remembered on the device (unlike the
+The chip bar gains a "High chair" chip, in ink, last in the strip after the blue
+chips (between them and the wheelchair chip until v66). It starts off, is not remembered on the device (unlike the
 wheelchair chip, so there is no new device key), and subtracts: switched on it
 narrows the table pins to those with a recorded high chair, and the play-place
 rings the same way, on top of every other chip. Its badge counts the pins in

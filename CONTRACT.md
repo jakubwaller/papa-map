@@ -1,5 +1,11 @@
 # papa-map — build contract (v0)
 
+> **v66 amendment (2 Oct 2026, the wheelchair chip moves up): no data shape
+> change.** The wheelchair chip (v26) sits right after the three status chips
+> instead of last in the strip, so the order is status, wheelchair, play corner,
+> play places, high chair; the high-chair chip (v65) is now the last one. The
+> chips' rules, counts and storage are unchanged. Shell pin `app67` → `app68`.
+
 > **v65 amendment (2 Oct 2026, high chairs): one property on both datasets,
 > one stats counter.** Every table feature and every play place carries
 > `highchair`: `true` / `false` / `null` / `"unreadable"` from `highchair=*`
