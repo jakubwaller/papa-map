@@ -1,10 +1,4 @@
-– Neu: Beim ersten Start (und einmal nach diesem Update) begrüßt dich die App und erklärt, was sie kann — mit Sprachwahl. Verständlich? Fehlt etwas?
-– Neu: Alle Filter-Chips sprechen eine Sprache: gestrichelt = aus, farbig ausgefüllt = an. Die Leiste ist kürzer.
-– Neu: Ein Tipp aufs PapaMap-Logo bringt dich zu deinem Standort zurück.
-– Neu: „Raum unbekannt“ heißt in Papa- und Mama-Ansicht jetzt gleich.
-– Neu: Stadt offline laden — der Fortschritt bleibt sichtbar, wenn du das Fenster schließt und wieder öffnest; lädt die Stadtliste nicht, gibt es „Noch einmal versuchen“.
-– Neu: Im Widget steht „eingeschränkt barrierefrei“ (auf dem Sperrbildschirm „eingeschränkt“), wenn der Rollstuhl-Filter an ist und der nächste Wickeltisch nur eingeschränkt erreichbar ist.
-– Neu: „+ Ort hinzufügen“ listet jetzt die Orte rund um die Kartenmitte (erst auf deine Straße zoomen), die noch keinen Wickeltisch auf der Karte haben. Ort antippen, den Raum des Wickeltischs wählen, und die Antwort geht unter deinem eigenen Login an OpenStreetMap; der Pin erscheint nach wenigen Minuten. Zeigt die Liste die Orte, die du erwartest? Achtung: Das ändert das echte OpenStreetMap, also nur für Orte antworten, die du kennst. Orte, die in der Liste fehlen, und öffentliche Toiletten gehen weiter über MapComplete.
-– Neu: „Mein PapaMap“ ist kürzer und gehört dir: eine Zeile zum Gebiet mit den Zahlen, deine Antworten hier und insgesamt, deine gespeicherten Orte und eine Zeile „Feedback“, die eine E-Mail öffnet. Liest sich das natürlich?
-– Wie immer: „Nächster Wickeltisch“, Farben bei Orten, die du kennst, Siri, Widget.
-Alles, was unklar ist oder hakt: Screenshot machen und über TestFlight schicken.
+Das ist der letzte TestFlight-Build von PapaMap. Die App ist seit dem 25. September im App Store, und dort geht es weiter: https://apps.apple.com/de/app/papamap/id6813376985
+– So wechselst du: zuerst diese TestFlight-Version löschen, dann PapaMap aus dem App Store installieren. Auf diesem Handy gespeicherte Orte und offline geladene Städte kommen nicht mit; deine Antworten sind sicher, sie liegen in OpenStreetMap.
+– Seit deinem 1.0-Build hat die App viel gelernt: Deine Antworten erscheinen innerhalb von Minuten auf der Karte, Orte mit Öffnungszeiten zeigen „Jetzt geöffnet“, es gibt einen Chip „Barrierefrei“ und einen Chip „Hochstuhl“, „+ Ort hinzufügen“ listet die Cafés rund um die Kartenmitte, die noch keinen Wickeltisch auf der Karte haben, ein Willkommensbildschirm beim ersten Start und „Mein PapaMap“ mit deinem Gebiet, deinen Antworten, deinen gespeicherten Orten und einer Zeile „Feedback“.
+– Danke fürs Testen! Diese TestFlight-Gruppe bleibt noch eine Weile offen, damit ich sehe, dass diese Nachricht angekommen ist; wie jeder TestFlight-Build läuft auch dieser im Dezember ohnehin aus. Alles Weitere erreicht mich über „Feedback“ in „Mein PapaMap“.

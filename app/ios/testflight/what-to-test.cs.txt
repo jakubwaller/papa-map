@@ -1,10 +1,4 @@
-– Novinka: při prvním spuštění (a jednou po této aktualizaci) tě aplikace přivítá a vysvětlí, co umí — včetně volby jazyka. Je to srozumitelné? Chybí něco?
-– Novinka: všechny filtry vypadají stejně: čárkovaný = vypnutý, barevně vyplněný = zapnutý. Lišta je kratší.
-– Novinka: ťuknutí na logo PapaMap tě vrátí na tvou polohu.
-– Novinka: „Neznámá místnost“ se teď jmenuje stejně v zobrazení pro táty i pro mámy.
-– Novinka: při stahování města offline zůstane vidět průběh, i když okno zavřeš a znovu otevřeš; když se nenačte seznam měst, je tu tlačítko „Zkusit znovu“.
-– Novinka: widget ukáže „limited wheelchair access“ (na zamčené obrazovce „limited access“; zatím jen anglicky nebo německy), když je zapnutý filtr pro vozíčkáře a nejbližší pult je přístupný jen omezeně.
-– Novinka: „+ Přidat místo“ teď ukáže místa kolem středu mapy (nejdřív přibliž svou ulici), která ještě nemají na mapě přebalovací pult. Vyber místo, klepni na místnost, kde pult je, a odpověď jde do OpenStreetMap pod tvým vlastním přihlášením; špendlík se objeví během pár minut. Ukazuje seznam místa, která čekáš? Pozor: tohle mění skutečnou OpenStreetMap, takže odpovídej jen u míst, která znáš. Místa, která v seznamu chybí, a veřejné záchody se dál přidávají přes MapComplete.
-– Novinka: „Můj PapaMap“ je kratší a patří tobě: jeden řádek o oblasti s čísly, tvoje odpovědi tady a celkem, tvoje uložená místa a řádek „Zpětná vazba“, který otevře e-mail. Čte se to přirozeně?
-– Jako vždy: „Nejbližší přebalovací pult“, barvy u míst, která znáš, Siri, widget.
-Cokoli je nejasné nebo nefunguje: udělej snímek obrazovky a pošli ho přes TestFlight.
+Tohle je poslední TestFlight build PapaMap. Aplikace je od 25. září v App Storu a tam pokračuje: https://apps.apple.com/de/app/papamap/id6813376985
+– Jak přejít: nejdřív smaž tuhle TestFlight verzi, pak nainstaluj PapaMap z App Storu. Místa uložená v tomhle telefonu a offline stažená města se nepřenesou; tvoje odpovědi jsou v bezpečí, leží v OpenStreetMap.
+– Od tvého buildu 1.0 se aplikace hodně naučila: tvoje odpovědi se na mapě objeví během minut, místa s otevírací dobou ukazují „Nyní otevřeno“, přibyl filtr „Bezbariérové“ a filtr „Dětská židlička“, „+ Přidat místo“ ukáže kavárny kolem středu mapy, které ještě nemají na mapě přebalovací pult, uvítací obrazovka při prvním spuštění a „Můj PapaMap“ s tvou oblastí, odpověďmi, uloženými místy a řádkem „Zpětná vazba“.
+– Díky za testování! Tahle TestFlight skupina zůstane ještě chvíli otevřená, abych viděl, že tahle zpráva dorazila; jako každý TestFlight build i tenhle v prosinci stejně vyprší. Cokoli dalšího mi pošli přes „Zpětná vazba“ v „Můj PapaMap“.
