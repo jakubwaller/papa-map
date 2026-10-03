@@ -51,8 +51,11 @@ published, Play only accepts `draft` releases, so each one waits for a person's
 ## Version code
 
 `github.run_number`, the same as the iOS build number: Play refuses a code it
-has seen, and the run number only goes up. `versionName` stays `1.0` in
-`app/build.gradle` until there is a reason to change it on both platforms.
+has seen, and the run number only goes up. `versionName` in `app/build.gradle`
+follows `MARKETING_VERSION` in the Xcode project; bump both in the same PR, and
+always before the first build after an App Store release: once a version is
+approved there, App Store Connect refuses every further upload of it
+("the train version is closed for new build submissions"), test builds included.
 
 ## What differs from the iPhone app
 
