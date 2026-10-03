@@ -1,10 +1,4 @@
-– New: on first launch (and once after this update) the app welcomes you and explains what it can do, with a language picker. Clear? Anything missing?
-– New: every filter chip works the same way: dashed = off, filled in colour = on. The bar is shorter.
-– New: tap the PapaMap logo to get back to where you are.
-– New: "Room unknown" now reads the same in the dad and mum views.
-– New: downloading a city for offline use keeps showing its progress when you close and reopen the sheet; if the city list cannot load, there is a "Try again" button.
-– New: the widget says "limited wheelchair access" (on the lock screen "limited access") when the wheelchair filter is on and the nearest table is only partly accessible.
-– New: "+ Add a place" now lists the places around the map centre (zoom in to your street first) that have no changing table on the map yet. Pick one, tap the room the table is in, and the answer goes to OpenStreetMap under your own login; the pin appears within a few minutes. Does the list show the places you expect? Careful: this edits the real OpenStreetMap, so only answer for a place you know. Places missing from the list and public toilets still go via MapComplete.
-– New: "My PapaMap" is shorter and yours: one line for the area with its counts, your answers in this area and in total, your saved places, and a Feedback line that opens an email. Does it read naturally in your language?
-– As always: "Nearest changing table", colours for places you know, Siri, the widget.
-Anything unclear or broken: take a screenshot and send it through TestFlight.
+This is the last TestFlight build of PapaMap. The app has been on the App Store since 25 September, and that is where it continues: https://apps.apple.com/app/papamap/id6813376985
+– To switch: delete this TestFlight version first, then install PapaMap from the App Store. Places you saved and cities you downloaded on this phone do not come along; your answers are safe, they live in OpenStreetMap.
+– Since your 1.0 build the app has learned a lot: your answers show on the map within minutes, places with opening hours say "Open now", there is a "Wheelchair" chip and a "High chair" chip, "+ Add a place" lists the cafés around the map centre that have no changing table on the map yet, a welcome screen on first launch, and "My PapaMap" with your area, your answers, your saved places and a Feedback line.
+– Thank you for testing. This TestFlight group stays open for a while so I can see that this note arrived; like every TestFlight build, this one stops working after 90 days anyway. Anything after that reaches me through Feedback in "My PapaMap".
