@@ -238,7 +238,8 @@ boundary.
   would land at the closest zoom there is) and otherwise flies to a zoom chosen
   by the result's level — a house or a street 17, a city 12, a country 5. No
   marker is left behind and no popup opens: the reader asked to look
-  somewhere, not to select something.
+  somewhere, not to select something. Either way the camera lands in 1.2 s,
+  however far away the result is (see the nearest button).
 
 This is the first feature on the site that sends something a reader typed to a
 party that is not OpenStreetMap, so it is deliberately frugal about it. Three
@@ -317,7 +318,12 @@ a mapper's note on the step or the toilet is often the most useful line there
 is for a wheelchair user.
 
 The button asks the browser for a position, finds the nearest table the
-**current reading** calls usable, flies there and opens the popup.
+**current reading** calls usable, flies there and opens the popup. The flight
+lands in 1.2 s wherever it starts, as every flight on the map does — the locate
+button's, a search result's, a saved place's. MapLibre's own duration grows
+with the distance, and from a few hundred kilometres away that was five
+seconds of zooming out and back in; `fitBounds` flies the same way, so the
+search result's fit passes the same duration.
 
 A refused permission gets its own toast (`geoFailKey`, `web/datasource.js`). A
 browser remembers a dismissed prompt and never asks again, and a page cannot

@@ -12,15 +12,15 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app70";
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app71";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app70";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app71";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app70";
+         writeTags } from "./osm.js?v=app71";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -28,7 +28,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app70";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app71";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -38,27 +38,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app70";
+         reviewTracker } from "./native.js?v=app71";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app70";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app71";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app70";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app71";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app70";
+import { isOpenNow } from "./opening-hours.js?v=app71";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         VENUE_MIN_ZOOM } from "./venues.js?v=app70";
-// The bundled shell's pin (`?v=app70`), what the intro key records.
+         VENUE_MIN_ZOOM } from "./venues.js?v=app71";
+// The bundled shell's pin (`?v=app71`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -334,6 +334,18 @@ map.touchZoomRotate.disableRotation();
 // Debug/testing handle — MapLibre offers no global registry, and headless
 // verification (Playwright) needs to drive the view.
 window._papamap = map;
+
+// ---- Flights. Every camera flight on this map — the locate and nearest
+// buttons, a search result, a saved place, a late first fix — lands in FLY_MS
+// wherever it starts. MapLibre's own duration grows with the distance: pressed
+// a few hundred kilometres from the view, the locate button spent five seconds
+// and more zooming out and back in, and a search result reached by fitBounds
+// flew the same way, since fitBounds flies too (it is flyTo underneath unless
+// told `linear`). maxDuration is not the cap its name suggests — a flight that
+// would exceed it becomes a jump — so the duration is pinned instead. The two
+// animated fitBounds calls pass FLY_MS themselves.
+const FLY_MS = 1200;
+function flyTo(opts) { map.flyTo({ duration: FLY_MS, ...opts }); }
 
 // Whether the reader has done anything with the map before the boot fix's
 // own fix lands (openAtLocationFix, near locate() below) — a drag, a zoom, a
@@ -1525,10 +1537,9 @@ function locateFrom(btn) {
 // the home view, so jumpTo — no motion to notice, the map simply opened
 // there. Past it, the home view has actually been on screen long enough to
 // register, and snapping away from it would read as the view glitching
-// rather than something the map meant to do; flyTo, over LATE_FIX_FLY_MS,
+// rather than something the map meant to do; flyTo, over FLY_MS,
 // makes that same repositioning read as deliberate instead.
 const LATE_FIX_MS = 700;
-const LATE_FIX_FLY_MS = 1200;
 function locateCoarse() {
   if (isNative()) return locateNativeCoarse();
   return new Promise((ok, fail) => {
@@ -1586,7 +1597,7 @@ document.getElementById("locate").addEventListener("click", (e) => {
       showYou(at);
       noteFix(coords.latitude, coords.longitude);
       evaluateRoomCard();   // locate never opens a popup of its own
-      map.flyTo({ center: at, zoom: Math.max(map.getZoom(), 14) });
+      flyTo({ center: at, zoom: Math.max(map.getZoom(), 14) });
     },
     geoFailed,
   );
@@ -1626,7 +1637,7 @@ nearestBtn.addEventListener("click", (e) => {
       openPopup(f);
       // flyTo stops the pan openPopup just started; once the flight lands,
       // fit the card to the view it landed in.
-      map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+      flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
       map.once("moveend", panPopupIntoView);
       const d = formatDistance(hit.km);
       toast(t("toastNearestFound", {
@@ -1836,8 +1847,9 @@ function pickSearchRow(row) {
     // screen and is not guessed at from a zoom table. Capped, or a house whose
     // extent is a few metres across would land at the maximum zoom there is.
     if (row.target.bounds)
-      map.fitBounds(row.target.bounds, { maxZoom: SEARCH_FIT_MAX_ZOOM, padding: searchFitPadding() });
-    else map.flyTo({ center: row.target.center, zoom: row.target.zoom });
+      map.fitBounds(row.target.bounds,
+        { maxZoom: SEARCH_FIT_MAX_ZOOM, padding: searchFitPadding(), duration: FLY_MS });
+    else flyTo({ center: row.target.center, zoom: row.target.zoom });
     return;
   }
   const f = row.hit.obj;
@@ -1845,7 +1857,7 @@ function pickSearchRow(row) {
   else { ensurePlacesVisible(); openPlacePopup(f); }
   // Exactly what the nearest button does with its own answer: fly, and fit the
   // card to the view it lands in once the flight is over.
-  map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+  flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
   map.once("moveend", panPopupIntoView);
 }
 
@@ -2026,7 +2038,7 @@ document.getElementById("room-card-open").addEventListener("click", () => {
   if (!roomCardFeature) return;
   const f = roomCardFeature;
   ensureVisible(f);   // the "unknown" chip may since have been switched off
-  map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
+  flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
   openPopup(f);   // also hides the card
   map.once("moveend", panPopupIntoView);
 });
@@ -2096,7 +2108,7 @@ function homeView() {
     if (popup) { closePopupSilently(); continue; }
     if (!closeTopmost()) break;
   }
-  if (youMarker && youMarker.getLngLat()) map.flyTo({ center: youMarker.getLngLat(), zoom: 14 });
+  if (youMarker && youMarker.getLngLat()) flyTo({ center: youMarker.getLngLat(), zoom: 14 });
   else fitHome();
 }
 
@@ -2882,7 +2894,7 @@ for (const id of ["add-toilet-link", "add-venue-link"]) {
 // what happened.
 function pulseNewPin(kind, obj, watch) {
   if (watch.zoom < 14) return;
-  map.flyTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
+  flyTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
   reopen(kind, obj);
 }
 
@@ -3515,7 +3527,7 @@ async function boot() {
     // Early: the map simply opens there, no motion to notice. Late: the
     // reader has had time to actually look at the home view first, so the
     // camera travels to them on purpose instead of snapping.
-    if (Date.now() - fitHomeAt > LATE_FIX_MS) map.flyTo({ center: at, zoom, duration: LATE_FIX_FLY_MS });
+    if (Date.now() - fitHomeAt > LATE_FIX_MS) flyTo({ center: at, zoom });
     else map.jumpTo({ center: at, zoom });
   }).catch(() => {});
   // The store app's first-launch intro / what's-new, once the boot's fix has
@@ -3972,10 +3984,10 @@ function toggleStar(btn) {
 function openSavedPlace(row) {
   meDialog.close();
   const f = featuresByOsmUrl.get(row.osm);
-  if (f) { map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }); openPin(row.osm); return; }
+  if (f) { flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }); openPin(row.osm); return; }
   const p = placesByOsmUrl.get(row.osm);
-  if (p) { map.flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) }); openPlacePopup(p); return; }
-  map.flyTo({ center: [row.lon, row.lat], zoom: Math.max(map.getZoom(), 16) });
+  if (p) { flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) }); openPlacePopup(p); return; }
+  flyTo({ center: [row.lon, row.lat], zoom: Math.max(map.getZoom(), 16) });
 }
 
 // The dot beside a saved row's name: the pin's own colour when tonight's data
@@ -4261,7 +4273,7 @@ function renderMeSentence() {
   });
   meSentenceEl.querySelector("#me-grey")?.addEventListener("click", () => {
     meDialog.close();
-    map.fitBounds(circleBounds(lastFix.lat, lastFix.lon, 1), { padding: 40 });
+    map.fitBounds(circleBounds(lastFix.lat, lastFix.lon, 1), { padding: 40, duration: FLY_MS });
   });
 }
 
