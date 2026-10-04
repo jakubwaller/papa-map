@@ -384,9 +384,12 @@ test("a high-chair answer guards its own single key", () => {
   assert.deepEqual(guardKeys(highchairPatch("hc_no")), ["highchair"]);
 });
 
-test("the high-chair question is asked on eating places only", () => {
+test("the high-chair question is asked on eating and family places only", () => {
   for (const a of HIGHCHAIR_VENUES) assert.ok(isHighchairVenue(a), a);
-  for (const a of ["toilets", "library", "", null, undefined]) assert.ok(!isHighchairVenue(a), String(a));
+  for (const a of ["kindergarten", "childcare", "community_centre", "social_facility", "library"]) {
+    assert.ok(isHighchairVenue(a), a);
+  }
+  for (const a of ["toilets", "parking", "pharmacy", "shop", "", null, undefined]) assert.ok(!isHighchairVenue(a), String(a));
 });
 
 test("the theme asks the same high-chair question, on the same venues, on the venue layers", () => {

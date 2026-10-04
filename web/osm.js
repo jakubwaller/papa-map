@@ -333,12 +333,15 @@ export function playPatch(choice) {
 
 // The third question (v65): is there a high chair? Two answers, the theme's
 // own two mappings ("highchair"), so the page and MapComplete write the same
-// tag. Asked only on eating places — a high chair is a thing a café brings to
-// the table, and nobody asks it of a public toilet. pipeline/classify.py reads
+// tag. Asked on eating places — a high chair is a thing a café brings to the
+// table — and on the places built for families, which have one too (a Kita's
+// parents' café, a family centre, a library's children's corner). Never asked
+// of a public toilet. pipeline/classify.py reads
 // both values (highchair_state); `yes` is the chip, `no` is an answer that
 // stops the question coming back.
 export const HIGHCHAIR_VENUES = ["cafe", "restaurant", "fast_food", "food_court", "ice_cream",
-  "pub", "biergarten", "canteen"];
+  "pub", "biergarten", "canteen", "kindergarten", "childcare", "community_centre",
+  "social_facility", "library"];
 export const isHighchairVenue = (amenity) => HIGHCHAIR_VENUES.includes(amenity);
 
 export const HIGHCHAIR_CHOICES = ["hc_yes", "hc_no"];

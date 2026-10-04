@@ -772,9 +772,11 @@ the current universe (the wheelchair chip's, when that is on). The popup says
 "High chair available" or "No high chair" when OSM has an answer, and nothing
 when it is silent.
 
-Where it is silent and the venue is an eating place (`HIGHCHAIR_VENUES` in
+Where it is silent and the venue is an eating place or a place built for families (`HIGHCHAIR_VENUES` in
 `web/osm.js`: cafe, restaurant, fast_food, food_court, ice_cream, pub,
-biergarten, canteen), a table pin's popup asks "Is there a high chair?" with
+biergarten, canteen, kindergarten, childcare, community_centre,
+social_facility, library; a Kita's parents' café and a family centre have a
+high chair too), a table pin's popup asks "Is there a high chair?" with
 two pills that write `highchair=yes` or `highchair=no` under the reader's own
 OSM login, through the same `writeTags` path and 409 re-read as the other
 answers. It sits outside the room question's block, like the play question,

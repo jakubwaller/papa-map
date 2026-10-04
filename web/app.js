@@ -779,7 +779,7 @@ function popupHTML(f) {
   // question is not above it, it says itself whose name the answer goes under.
   if (!f.play_recorded)
     rows.push(askPlayHTML(inFlight.has(f.osm_url), !asks));
-  // The third (v65), on eating places only and only where OSM is silent:
+  // The third (v65), on eating and family places only (HIGHCHAIR_VENUES) and only where OSM is silent:
   // outside .ask like the play question, so a room answer leaves it standing.
   // It carries the login line only when neither question above it does.
   const asksHc = !f.highchair_recorded && isHighchairVenue(f.amenity);
@@ -881,7 +881,7 @@ function highchairRows(o) {
 }
 
 // The high-chair question (v65): one line, two pills, the play question's
-// shape. Asked on table pins at eating places only (isHighchairVenue) —
+// shape. Asked on table pins at eating and family places only (isHighchairVenue) —
 // never on a play place, whose popup already leads with the table question,
 // and never on amenity=toilets. `who` as for the play question.
 const HIGHCHAIR_LABEL = { hc_yes: "askHighchairYes", hc_no: "askHighchairNo" };
