@@ -1,5 +1,16 @@
 # papa-map — build contract (v0)
 
+> **v70 amendment (4 Oct 2026, every flight lands in 1.2 s): no data shape
+> change.** MapLibre's `flyTo` grows its duration with the distance, so the
+> locate button pressed a few hundred kilometres from the view, or a search
+> result that far away, zoomed out and back in for five seconds and more;
+> `fitBounds` flies the same way. Every camera flight in `web/app.js` now goes
+> through `flyTo()`, which pins `duration` to `FLY_MS` (1200 ms — the value the
+> late first fix already used as `LATE_FIX_FLY_MS`, now folded in), and the two
+> animated `fitBounds` calls (a search result with an extent, the grey circle in
+> Mein PapaMap) pass the same duration. `maxDuration` was not an option: a
+> flight that would exceed it becomes a jump. Shell pin `app70` → `app71`.
+
 > **v69 amendment (4 Oct 2026, a refused location says where to re-allow it):
 > no data shape change.** A reader who dismissed the browser's location prompt
 > once is never asked again, and the generic "couldn't get your location" toast
