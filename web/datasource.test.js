@@ -14,7 +14,7 @@ import { geoFailKey, STATUSES, loadFeatures, loadPlaces, filterByStatus, filterF
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
-         nearestUnknownRoom, isFixFresh, popupPan, isAppleTouch,
+         nearestUnknownRoom, isFixFresh, popupPan, popupMaxHeight, isAppleTouch,
          shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
          applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl,
          isNewlyCreated, selectAddedPlace } from "./datasource.js";
@@ -979,6 +979,25 @@ test("popupPan: the column is judged after the sign-pin has moved the card", () 
   const card = { left: 38, top: 240, right: 338, bottom: 400 };
   assert.deepEqual(popupPan(card, BOX, column), [21, 0]);
   assert.deepEqual(popupPan(card, BOX, column, { top: 181, bottom: 226 }), [0, -45]);
+});
+
+test("popupMaxHeight: the band less the tip", () => {
+  assert.equal(popupMaxHeight(120, 620), 490);
+});
+
+test("popupMaxHeight: a band shorter than the minimum gets the minimum", () => {
+  assert.equal(popupMaxHeight(200, 300), 160);
+});
+
+test("popupMaxHeight: an empty or inverted band gets the minimum", () => {
+  assert.equal(popupMaxHeight(400, 400), 160);
+  assert.equal(popupMaxHeight(500, 300), 160);
+});
+
+test("popupMaxHeight: a custom tip and minimum are honoured", () => {
+  assert.equal(popupMaxHeight(100, 600, 20), 480);
+  assert.equal(popupMaxHeight(100, 300, 10, 240), 240);
+  assert.equal(popupMaxHeight(100, 600, 0, 600), 600);
 });
 
 // ---- Edit confirmation ----

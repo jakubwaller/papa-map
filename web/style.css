@@ -868,7 +868,19 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   border-radius: 12px;
   padding: 14px 16px;
   box-shadow: 0 6px 24px rgba(15, 25, 20, .25);
+  /* Never taller than the free band between the search field and the
+     attribution (v68): fitPopup sets the cap, padding included, and a longer
+     card scrolls inside rather than hanging under either. The scrolling is one
+     level down, in .popup: MapLibre pins its × to this box, so a box that
+     scrolled would carry the × away with the card. */
+  max-height: var(--popup-max-h, none);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
+/* `contain` keeps the scroll from chaining out to the page at either end. */
+.maplibregl-popup-content > .popup { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .maplibregl-popup-close-button {
   font-size: 18px;
   padding: 2px 8px;
@@ -920,7 +932,18 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   width: 13px; height: 13px; margin-right: 5px; vertical-align: -2px; fill: currentColor;
 }
 .popup .row.wc.ok b { color: var(--green); }
-.popup .row.wc-desc { font-style: italic; }
+/* A mapper's note can run to a paragraph (v68): three lines, and fitPopup adds
+   a "more" link where the clamp cut something. The text stays — the methods
+   page promises it in the popup. */
+.popup .row.wc-desc {
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.popup .row.wc-desc.open { display: block; -webkit-line-clamp: none; }
+.popup .wc-more { display: block; margin-top: 2px; font-size: 12.5px; }
 .popup .row.key { color: var(--ink); font-weight: 600; }
 .popup .row.play::before {
   content: "";

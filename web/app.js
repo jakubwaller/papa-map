@@ -10,17 +10,17 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
-         isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
+         isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app69";
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app70";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app69";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app70";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app69";
+         writeTags } from "./osm.js?v=app70";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -28,7 +28,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app69";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app70";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -38,27 +38,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app69";
+         reviewTracker } from "./native.js?v=app70";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app69";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app70";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app69";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app70";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app69";
+import { isOpenNow } from "./opening-hours.js?v=app70";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         VENUE_MIN_ZOOM } from "./venues.js?v=app69";
-// The bundled shell's pin (`?v=app69`), what the intro key records.
+         VENUE_MIN_ZOOM } from "./venues.js?v=app70";
+// The bundled shell's pin (`?v=app70`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -1081,10 +1081,11 @@ function popupMaxWidth() {
   const col = w - zoomCtrl.getBoundingClientRect().left;   // the column and its right margin
   return Math.max(200, Math.min(POPUP_MAX_W, w - col - 2 * EDGE)) + "px";
 }
-function panPopupIntoView() {
-  const el = popup?.getElement();
-  if (!el) return;
-  const r = el.getBoundingClientRect(), c = map.getContainer().getBoundingClientRect();
+// The free band a card has to sit in, in viewport pixels: below what floats
+// over the head of the canvas, above the attribution at its foot. Shared by
+// the pan and the card's height cap, so the two can never disagree.
+function popupBand() {
+  const c = map.getContainer().getBoundingClientRect();
   // What floats over the head of the canvas: the topbar, and the search field
   // hanging below it (CONTRACT.md v46). Whichever reaches further down is what
   // the card has to clear — the field is the deeper of the two everywhere.
@@ -1097,6 +1098,33 @@ function panPopupIntoView() {
   // installed app it floats a safe-area inset above the foot.
   const attr = document.getElementById("attribution")?.getBoundingClientRect();
   const bottom = Math.min(c.bottom, attr?.top ?? c.bottom) - EDGE;
+  return { c, top, bottom };
+}
+// A card taller than the band scrolls inside itself instead of hanging off
+// both ends (CONTRACT.md v68): no pan could show its status line and its
+// buttons at once. The wheelchair note clamps to three lines in CSS; only one
+// the clamp actually cut gets the "more" link. Runs before every measure and
+// after every re-render, since setHTML drops the link with the old markup.
+function fitPopup() {
+  const el = popup?.getElement();
+  if (!el) return;
+  const { top, bottom } = popupBand();
+  el.style.setProperty("--popup-max-h", popupMaxHeight(top, bottom) + "px");
+  const desc = el.querySelector(".row.wc-desc:not(.open)");
+  if (desc && !el.querySelector("button.wc-more") && desc.scrollHeight > desc.clientHeight + 1) {
+    const more = document.createElement("button");
+    more.type = "button";
+    more.className = "linkish wc-more";
+    more.textContent = t("popupMore");
+    desc.after(more);
+  }
+}
+function panPopupIntoView() {
+  const el = popup?.getElement();
+  if (!el) return;
+  fitPopup();
+  const r = el.getBoundingClientRect();
+  const { c, top, bottom } = popupBand();
   const z = zoomCtrl.getBoundingClientRect();
   // The sign-pin comes out from behind the topbar too (popupPan), which moves
   // the pin down — and MapLibre re-picks the card's side on every move,
@@ -1170,6 +1198,9 @@ function updateBarFade() {
 }
 filterBar.addEventListener("scroll", updateBarFade, { passive: true });
 window.addEventListener("resize", updateBarFade);
+// A turned phone has a different band; the open card takes the new cap where
+// it stands, unpanned, as every other resize leaves the map.
+window.addEventListener("resize", fitPopup);
 
 // The two blue chips are deliberately not one. "Mit Spielecke" narrows the
 // table pins; "Nur Spielecke" adds a different dataset that has no table
@@ -2341,6 +2372,12 @@ document.addEventListener("click", (e) => {
     more.remove();
     if (!more.closest("#add-dialog")) panPopupIntoView();   // three more pills: the card just grew a row
   }
+  const wcMore = e.target.closest?.("button.wc-more");
+  if (wcMore) {
+    wcMore.previousElementSibling?.classList.add("open");
+    wcMore.remove();
+    panPopupIntoView();   // the whole note: a taller card, still inside the band
+  }
   if (e.target.closest?.("button[data-logout]")) { logout(); if (meDialog.open) renderMeDialog(); }
   const star = e.target.closest?.("button.star-btn");
   if (star) toggleStar(star);
@@ -3244,6 +3281,7 @@ function applyFeatureSets(fc, places) {
       if (popup) {
         popup.setHTML(popupObj.kind === "place" ? placeHTML(obj) : popupHTML(obj));
         attachEditNote();
+        fitPopup();
         updateSignMarker();   // tonight's build (or a delta, or this reader's own answer) may carry a new status for it
       }
     } else if (popup) {

@@ -10,6 +10,17 @@
 > `toastGeoFail`. `geoFailKey` in `web/datasource.js` picks the key. Two i18n
 > keys in all 32 languages. Shell pin `app68` → `app69`.
 
+> **v68 amendment (4 Oct 2026, the popup fits the screen): no data shape
+> change.** A popup's card is never taller than the free band between the
+> search field and the attribution: `fitPopup()` in `web/app.js` sets
+> `--popup-max-h` from the band `panPopupIntoView()` already used (now
+> `popupBand()`, both reading it), through `popupMaxHeight` in
+> `web/datasource.js` (band less the 10 px tip, never under 160 px), and a
+> longer card scrolls inside. The `wheelchair:description` row clamps to three
+> lines, with a "more …" link (`popupMore`, 32 languages) only where the clamp
+> cut text; it expands in place and the card is fitted again. Shell pin
+> `app69` → `app70`.
+
 > **v67 amendment (4 Oct 2026, the high-chair question on family places): no
 > data shape change.** `HIGHCHAIR_VENUES` (`web/osm.js`) and the theme's three
 > `highchair` conditions gain kindergarten, childcare, community_centre,
