@@ -309,7 +309,8 @@ The button asks the browser for a position, finds the nearest table the
 A refused permission gets its own toast (`geoFailKey`, `web/datasource.js`). A
 browser remembers a dismissed prompt and never asks again, and a page cannot
 re-prompt, so the words are the fix: on the page the toast says to allow the
-location in the browser's settings for the site, in the store app to turn it on
+location in the browser's or the phone's settings (a code-1 refusal also comes
+when the OS blocks the browser itself), in the store app to turn it on
 in the phone's settings (7 s instead of 4). Any other failure keeps the generic
 "couldn't get your location".
 
