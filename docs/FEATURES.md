@@ -303,6 +303,19 @@ app "froze" after that tap: the card's × had come to rest under the zoom-out
 button, so closing it zoomed the map instead, and the card covered most of the
 canvas.
 
+A popup is also never taller than that free band (v68). A pub with a long
+wheelchair note made a card taller than a phone's band, so a pan could keep
+its status line clear of the search field or its buttons clear of the
+attribution, never both. `fitPopup()` (`web/app.js`) sets the card's maximum
+height from the same band the pan uses (`popupMaxHeight`, never under 160 px
+for a landscape phone), and a longer card scrolls inside itself; the map's
+gestures listen on the canvas, which the card is not inside, so a swipe or
+wheel over the card scrolls the card and never the map. The wheelchair note
+clamps to three lines with a "more …" link where the clamp cut something. The
+text stays rather than going: the methods page promises it in the popup, and
+a mapper's note on the step or the toilet is often the most useful line there
+is for a wheelchair user.
+
 The button asks the browser for a position, finds the nearest table the
 **current reading** calls usable, flies there and opens the popup.
 

@@ -580,6 +580,16 @@ export function popupPan(card, box, avoid = null, marker = null) {
   return [dx, dy];
 }
 
+// The tallest the card's content may be: the free band popupPan works in,
+// less the tip MapLibre draws between card and pin (tester, Android, 3 Oct
+// 2026: a pub with a long wheelchair note had its status line under the
+// search field and its buttons under the attribution). Never under `min`:
+// a landscape phone's band can be a sliver, and a card squeezed into it
+// would be all scrollbar — there popupPan keeps the head, as it always did.
+export function popupMaxHeight(bandTop, bandBottom, tipHeight = 10, min = 160) {
+  return Math.max(min, bandBottom - bandTop - tipHeight);
+}
+
 // Metres below a kilometre, and rounded to the nearest ten: a good phone fix
 // is accurate to a handful of metres and a poor one to fifty, so "437 m" would
 // claim a precision the sensor cannot deliver. Returns the i18n key and the
