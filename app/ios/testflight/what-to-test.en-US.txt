@@ -1,4 +1,5 @@
-This is the last TestFlight build of PapaMap. The app has been on the App Store since 25 September, and that is where it continues: https://apps.apple.com/app/papamap/id6813376985
-– To switch: delete this TestFlight version first, then install PapaMap from the App Store. Places you saved and cities you downloaded on this phone do not come along; your answers are safe, they live in OpenStreetMap.
-– Since your 1.0 build the app has learned a lot: your answers show on the map within minutes, places with opening hours say "Open now", there is a "Wheelchair" chip and a "High chair" chip, "+ Add a place" lists the cafés around the map centre that have no changing table on the map yet, a welcome screen on first launch, and "My PapaMap" with your area, your answers, your saved places and a Feedback line.
-– Thank you for testing. This TestFlight group stays open for a while so I can see that this note arrived; like every TestFlight build, this one stops working after 90 days anyway. Anything after that reaches me through Feedback in "My PapaMap".
+– New: the high chair question now also appears at nurseries, childcare, community centres, social facilities and libraries, not only at cafés and restaurants. Try a nursery near you.
+– New: a pin's card is never taller than the free space between the search field and the bottom of the map. Longer content scrolls inside the card and the × stays put. A long wheelchair note shows three lines and "more …". Does anything still cover the answer buttons at the bottom?
+– New: when location is off for the app, the message now says where to turn it back on (in the phone's settings) instead of just "Couldn't get your location". To test: turn location off for PapaMap in Settings and tap the location button.
+– As always: "Nearest changing table", colours for places you know, Siri, the widget.
+Anything unclear or broken: take a screenshot and send it through TestFlight.

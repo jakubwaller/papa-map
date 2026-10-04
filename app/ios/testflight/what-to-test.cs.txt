@@ -1,4 +1,5 @@
-Tohle je poslední TestFlight build PapaMap. Aplikace je od 25. září v App Storu a tam pokračuje: https://apps.apple.com/app/papamap/id6813376985
-– Jak přejít: nejdřív smaž tuhle TestFlight verzi, pak nainstaluj PapaMap z App Storu. Místa uložená v tomhle telefonu a offline stažená města se nepřenesou; tvoje odpovědi jsou v bezpečí, leží v OpenStreetMap.
-– Od tvého buildu 1.0 se aplikace hodně naučila: tvoje odpovědi se na mapě objeví během minut, místa s otevírací dobou ukazují „Nyní otevřeno“, přibyl filtr „Bezbariérové“ a filtr „Dětská židlička“, „+ Přidat místo“ ukáže kavárny kolem středu mapy, které ještě nemají na mapě přebalovací pult, uvítací obrazovka při prvním spuštění a „Můj PapaMap“ s tvou oblastí, odpověďmi, uloženými místy a řádkem „Zpětná vazba“.
-– Díky za testování! Tahle TestFlight skupina zůstane ještě chvíli otevřená, abych viděl, že tahle zpráva dorazila; jako každý TestFlight build i tenhle po 90 dnech stejně vyprší. Cokoli dalšího mi pošli přes „Zpětná vazba“ v „Můj PapaMap“.
+– Novinka: otázka na dětskou židličku se teď objeví i u školek, dětských skupin, komunitních center, zařízení sociálních služeb a knihoven, nejen u kaváren a restaurací. Zkus školku ve svém okolí.
+– Novinka: karta špendlíku už není vyšší než volné místo mezi vyhledávacím polem a dolním okrajem mapy. Delší obsah se posouvá uvnitř karty a × zůstává na místě. Dlouhá poznámka k bezbariérovosti ukáže tři řádky a „více …“. Zakrývá ještě něco tlačítka s odpověďmi dole?
+– Novinka: když je poloha pro aplikaci vypnutá, hlášení teď říká, kde ji zase zapnout (v nastavení telefonu), místo jen „Polohu se nepodařilo zjistit“. Jak vyzkoušet: vypni polohu pro PapaMap v Nastavení a klepni na tlačítko polohy.
+– Jako vždy: „Nejbližší přebalovací pult“, barvy u míst, která znáš, Siri, widget.
+Cokoli je nejasné nebo nefunguje: udělej snímek obrazovky a pošli ho přes TestFlight.
