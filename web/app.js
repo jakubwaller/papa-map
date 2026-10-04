@@ -12,7 +12,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app68";
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app68";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          canonicalUrl, isCrawler } from "./i18n.js?v=app68";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
@@ -1454,6 +1454,13 @@ function toast(msg, { ms = 4000, onTap = null } = {}) {
   toastTimer = setTimeout(hide, ms);
 }
 
+// A refusal is told apart from "no fix": it stays until the reader changes a
+// setting, so it gets the longer read.
+function geoFailed(err) {
+  const key = geoFailKey(err, isNative());
+  toast(t(key), { ms: key === "toastGeoFail" || key === "toastNoGeo" ? 4000 : 7000 });
+}
+
 // One position, as a promise: the browser's API on the page, the
 // Geolocation plugin in the app (it asks the OS permission itself). Either
 // way the fix stays in memory and is used for one view or one search.
@@ -1550,7 +1557,7 @@ document.getElementById("locate").addEventListener("click", (e) => {
       evaluateRoomCard();   // locate never opens a popup of its own
       map.flyTo({ center: at, zoom: Math.max(map.getZoom(), 14) });
     },
-    () => toast(t("toastGeoFail")),
+    geoFailed,
   );
 });
 
@@ -1602,7 +1609,7 @@ nearestBtn.addEventListener("click", (e) => {
       // another pin, or the reader taps away) re-evaluates it while the fix
       // is still fresh (evaluateRoomCard, via onPopupClosed below).
     },
-    () => toast(t("toastGeoFail")),
+    geoFailed,
   );
 });
 
@@ -4212,7 +4219,7 @@ function renderMeSentence() {
       showYou([coords.longitude, coords.latitude]);
       noteFix(coords.latitude, coords.longitude);
       renderMeSentence();
-    }, () => toast(t("toastGeoFail")));
+    }, geoFailed);
   });
   meSentenceEl.querySelector("#me-grey")?.addEventListener("click", () => {
     meDialog.close();

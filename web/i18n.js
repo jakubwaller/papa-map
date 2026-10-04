@@ -310,6 +310,8 @@ export const STRINGS = {
 
     toastNoGeo: "Standortbestimmung ist in diesem Browser nicht verfügbar.",
     toastGeoFail: "Standort nicht gefunden — Browser-Berechtigung prüfen.",
+    toastGeoDenied: "Standort für papamap.de ist blockiert. In den Browser-Einstellungen für diese Seite erlauben, dann noch einmal tippen.",
+    toastGeoDeniedApp: "Standort für PapaMap ist aus. In den Einstellungen des Telefons einschalten, dann noch einmal tippen.",
     toastNearestNone: "Kein nutzbarer Wickeltisch in den Daten.",
     toastOffline: "Offline — die Karte zeigt gespeicherte Daten.",
     toastNearestFound: "{dist} Luftlinie: {name}",
@@ -550,6 +552,8 @@ export const STRINGS = {
 
     toastNoGeo: "Geolocation is not available in this browser.",
     toastGeoFail: "Couldn't get your location — check the browser's permission.",
+    toastGeoDenied: "Location is blocked for papamap.de. Allow it in the browser's settings for this site, then tap again.",
+    toastGeoDeniedApp: "Location is off for PapaMap. Turn it on in the phone's settings, then tap again.",
     toastNearestNone: "No usable changing table in the data.",
     toastOffline: "Offline — the map is showing stored data.",
     toastNearestFound: "{dist} as the crow flies: {name}",
@@ -787,6 +791,8 @@ export const STRINGS = {
 
     toastNoGeo: "Placering er ikke tilgængelig i denne browser.",
     toastGeoFail: "Kunne ikke finde din placering — tjek browserens tilladelse.",
+    toastGeoDenied: "Placering er blokeret for papamap.de. Tillad den i browserens indstillinger for dette websted, og tryk igen.",
+    toastGeoDeniedApp: "Placering er slået fra for PapaMap. Slå den til i telefonens indstillinger, og tryk igen.",
     toastNearestNone: "Intet brugbart puslebord i dataene.",
     toastOffline: "Offline — kortet viser gemte data.",
     toastNearestFound: "{dist} i luftlinje: {name}",
@@ -1022,6 +1028,8 @@ export const STRINGS = {
 
     toastNoGeo: "Locatiebepaling is niet beschikbaar in deze browser.",
     toastGeoFail: "Locatie niet gevonden — controleer de toestemming in de browser.",
+    toastGeoDenied: "Locatie is geblokkeerd voor papamap.de. Sta haar toe in de browserinstellingen voor deze site en tik opnieuw.",
+    toastGeoDeniedApp: "Locatie staat uit voor PapaMap. Zet haar aan in de instellingen van je telefoon en tik opnieuw.",
     toastNearestNone: "Geen bruikbare verschoontafel in de gegevens.",
     toastOffline: "Offline — de kaart toont opgeslagen gegevens.",
     toastNearestFound: "{dist} hemelsbreed: {name}",
@@ -1255,6 +1263,8 @@ export const STRINGS = {
 
     toastNoGeo: "La géolocalisation n'est pas disponible dans ce navigateur.",
     toastGeoFail: "Position introuvable — vérifie l'autorisation du navigateur.",
+    toastGeoDenied: "La position est bloquée pour papamap.de. Autorise-la dans les réglages du navigateur pour ce site, puis touche à nouveau.",
+    toastGeoDeniedApp: "La position est désactivée pour PapaMap. Active-la dans les réglages du téléphone, puis touche à nouveau.",
     toastNearestNone: "Aucune table à langer accessible dans les données.",
     toastOffline: "Offline — la carte affiche des données enregistrées.",
     toastNearestFound: "{dist} à vol d'oiseau : {name}",
@@ -1488,6 +1498,8 @@ export const STRINGS = {
 
     toastNoGeo: "La geolocalizzazione non è disponibile in questo browser.",
     toastGeoFail: "Non riesco a trovare la tua posizione — controlla i permessi del browser.",
+    toastGeoDenied: "La posizione è bloccata per papamap.de. Consentila nelle impostazioni del browser per questo sito, poi tocca di nuovo.",
+    toastGeoDeniedApp: "La posizione è disattivata per PapaMap. Attivala nelle impostazioni del telefono, poi tocca di nuovo.",
     toastNearestNone: "Nessun fasciatoio raggiungibile nei dati.",
     toastOffline: "Offline — la mappa mostra i dati salvati.",
     toastNearestFound: "{dist} in linea d'aria: {name}",
@@ -1721,6 +1733,8 @@ export const STRINGS = {
 
     toastNoGeo: "Určování polohy není v tomto prohlížeči k dispozici.",
     toastGeoFail: "Polohu se nepodařilo zjistit — zkontroluj oprávnění prohlížeče.",
+    toastGeoDenied: "Poloha je pro papamap.de zablokovaná. Povolte ji v nastavení prohlížeče pro tento web a klepněte znovu.",
+    toastGeoDeniedApp: "Poloha pro PapaMap je vypnutá. Zapněte ji v nastavení telefonu a klepněte znovu.",
     toastNearestNone: "Žádný použitelný přebalovací pult v datech.",
     toastOffline: "Offline — mapa zobrazuje uložená data.",
     toastNearestFound: "{dist} vzdušnou čarou: {name}",
@@ -1954,6 +1968,8 @@ export const STRINGS = {
 
     toastNoGeo: "Geolokalizacja nie jest dostępna w tej przeglądarce.",
     toastGeoFail: "Nie udało się ustalić lokalizacji — sprawdź uprawnienia przeglądarki.",
+    toastGeoDenied: "Lokalizacja jest zablokowana dla papamap.de. Zezwól na nią w ustawieniach przeglądarki dla tej strony, potem dotknij ponownie.",
+    toastGeoDeniedApp: "Lokalizacja jest wyłączona dla PapaMap. Włącz ją w ustawieniach telefonu, potem dotknij ponownie.",
     toastNearestNone: "Brak dostępnego przewijaka w danych.",
     toastOffline: "Offline — mapa wyświetla zapisane dane.",
     toastNearestFound: "{dist} w linii powietrznej: {name}",
@@ -2187,6 +2203,8 @@ export const STRINGS = {
 
     toastNoGeo: "Positionering är inte tillgänglig i den här webbläsaren.",
     toastGeoFail: "Hittade inte din position — kontrollera webbläsarens behörighet.",
+    toastGeoDenied: "Positionen är blockerad för papamap.de. Tillåt den i webbläsarens inställningar för den här webbplatsen och tryck igen.",
+    toastGeoDeniedApp: "Positionen är avstängd för PapaMap. Slå på den i telefonens inställningar och tryck igen.",
     toastNearestNone: "Inget användbart skötbord i data.",
     toastOffline: "Offline — kartan visar sparade data.",
     toastNearestFound: "{dist} fågelvägen: {name}",
@@ -2419,6 +2437,8 @@ export const STRINGS = {
 
     toastNoGeo: "Geolokacija nije dostupna u ovom pregledniku.",
     toastGeoFail: "Nije moguće utvrditi tvoju lokaciju — provjeri dozvole preglednika.",
+    toastGeoDenied: "Lokacija je blokirana za papamap.de. Dopusti je u postavkama preglednika za ovu stranicu, pa dodirni ponovno.",
+    toastGeoDeniedApp: "Lokacija je isključena za PapaMap. Uključi je u postavkama telefona, pa dodirni ponovno.",
     toastNearestNone: "Nema dostupnog stola za previjanje u podacima.",
     toastOffline: "Offline — karta prikazuje sačuvane podatke.",
     toastNearestFound: "{dist} zračnom linijom: {name}",
@@ -2651,6 +2671,8 @@ export const STRINGS = {
 
     toastNoGeo: "La geolocalització no està disponible en aquest navegador.",
     toastGeoFail: "No s'ha pogut trobar la teva ubicació — comprova els permisos del navegador.",
+    toastGeoDenied: "La ubicació està bloquejada per a papamap.de. Permet-la a la configuració del navegador per a aquest lloc i torna a tocar.",
+    toastGeoDeniedApp: "La ubicació està desactivada per a PapaMap. Activa-la a la configuració del telèfon i torna a tocar.",
     toastNearestNone: "Cap canviador accessible a les dades.",
     toastOffline: "Offline — el mapa mostra dades desades.",
     toastNearestFound: "{dist} a vol d'ocell: {name}",
@@ -2883,6 +2905,8 @@ export const STRINGS = {
 
     toastNoGeo: "Asukoha määramine ei ole selles brauseris saadaval.",
     toastGeoFail: "Asukohta ei õnnestunud leida — kontrolli brauseri luba.",
+    toastGeoDenied: "Asukoht on papamap.de jaoks blokeeritud. Luba see brauseri sätetes selle saidi jaoks ja puuduta uuesti.",
+    toastGeoDeniedApp: "Asukoht on PapaMapi jaoks välja lülitatud. Lülita see telefoni seadetes sisse ja puuduta uuesti.",
     toastNearestNone: "Kasutatavat mähkimislauda andmetes ei ole.",
     toastOffline: "Offline — kaart näitab salvestatud andmeid.",
     toastNearestFound: "{dist} linnulennult: {name}",
@@ -3115,6 +3139,8 @@ export const STRINGS = {
 
     toastNoGeo: "La geolocalización no está disponible en este navegador.",
     toastGeoFail: "No se ha podido encontrar tu ubicación — comprueba el permiso del navegador.",
+    toastGeoDenied: "La ubicación está bloqueada para papamap.de. Permítela en los ajustes del navegador para este sitio y vuelve a tocar.",
+    toastGeoDeniedApp: "La ubicación está desactivada para PapaMap. Actívala en los ajustes del teléfono y vuelve a tocar.",
     toastNearestNone: "No hay ningún cambiador utilizable en los datos.",
     toastOffline: "Offline — el mapa muestra datos guardados.",
     toastNearestFound: "{dist} en línea recta: {name}",
@@ -3347,6 +3373,8 @@ export const STRINGS = {
 
     toastNoGeo: "Određivanje lokacije nije dostupno u ovom pregledniku.",
     toastGeoFail: "Nije moguće dohvatiti tvoju lokaciju — provjeri dopuštenje u pregledniku.",
+    toastGeoDenied: "Lokacija je blokirana za papamap.de. Dozvoli je u postavkama preglednika za ovu stranicu, pa dodirni ponovo.",
+    toastGeoDeniedApp: "Lokacija je isključena za PapaMap. Uključi je u postavkama telefona, pa dodirni ponovo.",
     toastNearestNone: "Nema upotrebljivog stola za previjanje u podacima.",
     toastOffline: "Offline — karta prikazuje spremljene podatke.",
     toastNearestFound: "{dist} zračnom linijom: {name}",
@@ -3579,6 +3607,8 @@ export const STRINGS = {
 
     toastNoGeo: "Staðsetning er ekki tiltæk í þessum vafra.",
     toastGeoFail: "Tókst ekki að finna staðsetningu þína — athugaðu heimildir vafrans.",
+    toastGeoDenied: "Staðsetning er læst fyrir papamap.de. Leyfðu hana í stillingum vafrans fyrir þessa síðu og ýttu aftur.",
+    toastGeoDeniedApp: "Staðsetning er slökkt fyrir PapaMap. Kveiktu á henni í stillingum símans og ýttu aftur.",
     toastNearestNone: "Ekkert nothæft skiptiborð er í gögnunum.",
     toastOffline: "Offline — kortið sýnir vistuð gögn.",
     toastNearestFound: "{dist} í loftlínu: {name}",
@@ -3811,6 +3841,8 @@ export const STRINGS = {
 
     toastNoGeo: "Šajā pārlūkprogrammā ģeolokācija nav pieejama.",
     toastGeoFail: "Neizdevās noteikt tavu atrašanās vietu — pārbaudi pārlūkprogrammas atļauju.",
+    toastGeoDenied: "Atrašanās vieta papamap.de ir bloķēta. Atļauj to pārlūkprogrammas iestatījumos šai vietnei un pieskaries vēlreiz.",
+    toastGeoDeniedApp: "Atrašanās vieta PapaMap ir izslēgta. Ieslēdz to tālruņa iestatījumos un pieskaries vēlreiz.",
     toastNearestNone: "Datos nav lietojama pārtinamā galdiņa.",
     toastOffline: "Offline — karte rāda saglabātos datus.",
     toastNearestFound: "{dist} taisnā līnijā: {name}",
@@ -4043,6 +4075,8 @@ export const STRINGS = {
 
     toastNoGeo: "Vietos nustatymas šioje naršyklėje nepasiekiamas.",
     toastGeoFail: "Nepavyko nustatyti tavo vietos — patikrink naršyklės leidimą.",
+    toastGeoDenied: "Vieta papamap.de užblokuota. Leisk ją naršyklės nustatymuose šiai svetainei ir paliesk dar kartą.",
+    toastGeoDeniedApp: "Vieta PapaMap išjungta. Įjunk ją telefono nustatymuose ir paliesk dar kartą.",
     toastNearestNone: "Duomenyse nėra tinkamo naudoti pervystymo stalo.",
     toastOffline: "Offline — žemėlapis rodo išsaugotus duomenis.",
     toastNearestFound: "{dist} tiesia linija: {name}",
@@ -4275,6 +4309,8 @@ export const STRINGS = {
 
     toastNoGeo: "A helymeghatározás nem elérhető ebben a böngészőben.",
     toastGeoFail: "Nem sikerült megállapítani a helyzeted — ellenőrizd a böngésző engedélyét.",
+    toastGeoDenied: "A helymeghatározás le van tiltva a papamap.de számára. Engedélyezd a böngésző beállításaiban ennél az oldalnál, majd koppints újra.",
+    toastGeoDeniedApp: "A helymeghatározás ki van kapcsolva a PapaMap számára. Kapcsold be a telefon beállításaiban, majd koppints újra.",
     toastNearestNone: "Nincs használható pelenkázóasztal az adatokban.",
     toastOffline: "Nincs internetkapcsolat — a térkép a mentett adatokat jeleníti meg.",
     toastNearestFound: "{dist} légvonalban: {name}",
@@ -4507,6 +4543,8 @@ export const STRINGS = {
 
     toastNoGeo: "Posisjonering er ikke tilgjengelig i denne nettleseren.",
     toastGeoFail: "Fant ikke posisjonen din — sjekk nettleserens tillatelse.",
+    toastGeoDenied: "Posisjon er blokkert for papamap.de. Tillat den i nettleserens innstillinger for dette nettstedet, og trykk igjen.",
+    toastGeoDeniedApp: "Posisjon er slått av for PapaMap. Slå den på i telefonens innstillinger, og trykk igjen.",
     toastNearestNone: "Ingen brukbare stellebord i dataene.",
     toastOffline: "Ingen nettforbindelse — kartet viser lagrede data.",
     toastNearestFound: "{dist} i luftlinje: {name}",
@@ -4739,6 +4777,8 @@ export const STRINGS = {
 
     toastNoGeo: "A geolocalização não está disponível neste navegador.",
     toastGeoFail: "Não foi possível obter a tua localização — verifica a autorização do navegador.",
+    toastGeoDenied: "A localização está bloqueada para papamap.de. Permite-a nas definições do navegador para este site e toca novamente.",
+    toastGeoDeniedApp: "A localização está desativada para o PapaMap. Ativa-a nas definições do telemóvel e toca novamente.",
     toastNearestNone: "Não há nenhum fraldário utilizável nos dados.",
     toastOffline: "Sem ligação — o mapa está a mostrar dados guardados.",
     toastNearestFound: "{dist} em linha reta: {name}",
@@ -4971,6 +5011,8 @@ export const STRINGS = {
 
     toastNoGeo: "Geolocalizarea nu este disponibilă în acest browser.",
     toastGeoFail: "Nu am putut afla locația ta — verifică permisiunea browserului.",
+    toastGeoDenied: "Locația este blocată pentru papamap.de. Permite-o în setările browserului pentru acest site, apoi atinge din nou.",
+    toastGeoDeniedApp: "Locația este dezactivată pentru PapaMap. Activeaz-o în setările telefonului, apoi atinge din nou.",
     toastNearestNone: "Nu există nicio masă de înfășat utilizabilă în date.",
     toastOffline: "Fără conexiune la internet — harta arată date salvate.",
     toastNearestFound: "{dist} în linie dreaptă: {name}",
@@ -5203,6 +5245,8 @@ export const STRINGS = {
 
     toastNoGeo: "Gjeolokalizimi nuk është i disponueshëm në këtë shfletues.",
     toastGeoFail: "Nuk u gjet vendndodhja jote — kontrollo lejen e shfletuesit.",
+    toastGeoDenied: "Vendndodhja është e bllokuar për papamap.de. Lejoje te cilësimet e shfletuesit për këtë faqe, pastaj prek përsëri.",
+    toastGeoDeniedApp: "Vendndodhja është e fikur për PapaMap. Ndize te cilësimet e telefonit, pastaj prek përsëri.",
     toastNearestNone: "Nuk ka asnjë tavolinë ndërrimi të përdorshme në të dhënat.",
     toastOffline: "Jashtë linje — harta po shfaq të dhëna të ruajtura.",
     toastNearestFound: "{dist} në vijë ajrore: {name}",
@@ -5435,6 +5479,8 @@ export const STRINGS = {
 
     toastNoGeo: "Určovanie polohy nie je v tomto prehliadači k dispozícii.",
     toastGeoFail: "Polohu sa nepodarilo zistiť — skontroluj povolenie prehliadača.",
+    toastGeoDenied: "Poloha je pre papamap.de zablokovaná. Povoľ ju v nastaveniach prehliadača pre tento web a klepni znova.",
+    toastGeoDeniedApp: "Poloha pre PapaMap je vypnutá. Zapni ju v nastaveniach telefónu a klepni znova.",
     toastNearestNone: "V dátach nie je žiadny dostupný prebaľovací pult.",
     toastOffline: "Bez pripojenia — mapa zobrazuje uložené údaje.",
     toastNearestFound: "{dist} vzdušnou čiarou: {name}",
@@ -5667,6 +5713,8 @@ export const STRINGS = {
 
     toastNoGeo: "Geolokacija v tem brskalniku ni na voljo.",
     toastGeoFail: "Lokacije ni bilo mogoče ugotoviti — preveri dovoljenje brskalnika.",
+    toastGeoDenied: "Lokacija je za papamap.de blokirana. Dovoli jo v nastavitvah brskalnika za to spletno mesto, nato se znova dotakni.",
+    toastGeoDeniedApp: "Lokacija je za PapaMap izklopljena. Vklopi jo v nastavitvah telefona, nato se znova dotakni.",
     toastNearestNone: "V podatkih ni nobene dostopne previjalne mize.",
     toastOffline: "Brez povezave — zemljevid prikazuje shranjene podatke.",
     toastNearestFound: "{dist} po zračni črti: {name}",
@@ -5899,6 +5947,8 @@ export const STRINGS = {
 
     toastNoGeo: "Sijainninmääritys ei ole käytettävissä tässä selaimessa.",
     toastGeoFail: "Sijaintia ei löytynyt — tarkista selaimen käyttöoikeus.",
+    toastGeoDenied: "Sijainti on estetty papamap.de:lle. Salli se selaimen asetuksissa tälle sivustolle ja napauta uudelleen.",
+    toastGeoDeniedApp: "Sijainti on pois päältä PapaMapille. Laita se päälle puhelimen asetuksista ja napauta uudelleen.",
     toastNearestNone: "Käytettävää hoitopöytää ei löydy tiedoista.",
     toastOffline: "Ei verkkoyhteyttä — kartta näyttää tallennettuja tietoja.",
     toastNearestFound: "{dist} linnuntietä: {name}",
@@ -6131,6 +6181,8 @@ export const STRINGS = {
 
     toastNoGeo: "Ο εντοπισμός τοποθεσίας δεν είναι διαθέσιμος σε αυτό το πρόγραμμα περιήγησης.",
     toastGeoFail: "Δεν ήταν δυνατός ο εντοπισμός της τοποθεσίας σου — έλεγξε τα δικαιώματα του προγράμματος περιήγησης.",
+    toastGeoDenied: "Η τοποθεσία είναι αποκλεισμένη για το papamap.de. Επίτρεψέ την στις ρυθμίσεις του προγράμματος περιήγησης για αυτόν τον ιστότοπο και πάτα ξανά.",
+    toastGeoDeniedApp: "Η τοποθεσία είναι απενεργοποιημένη για το PapaMap. Ενεργοποίησέ την στις ρυθμίσεις του τηλεφώνου και πάτα ξανά.",
     toastNearestNone: "Δεν υπάρχει διαθέσιμη αλλαξιέρα στα δεδομένα.",
     toastOffline: "Χωρίς σύνδεση — ο χάρτης εμφανίζει αποθηκευμένα δεδομένα.",
     toastNearestFound: "{dist} σε ευθεία γραμμή: {name}",
@@ -6363,6 +6415,8 @@ export const STRINGS = {
 
     toastNoGeo: "Вызначэнне месцазнаходжання недаступнае ў гэтым браўзеры.",
     toastGeoFail: "Не ўдалося вызначыць тваё месцазнаходжанне — правер дазвол браўзера.",
+    toastGeoDenied: "Месцазнаходжанне заблакіравана для papamap.de. Дазволь яго ў наладах браўзера для гэтага сайта і націсні яшчэ раз.",
+    toastGeoDeniedApp: "Месцазнаходжанне для PapaMap выключана. Уключы яго ў наладах тэлефона і націсні яшчэ раз.",
     toastNearestNone: "У дадзеных няма даступнага стала для спавівання.",
     toastOffline: "Няма інтэрнэту — карта паказвае захаваныя дадзеныя.",
     toastNearestFound: "{dist} па прамой: {name}",
@@ -6595,6 +6649,8 @@ export const STRINGS = {
 
     toastNoGeo: "Определянето на местоположение не е достъпно в този браузър.",
     toastGeoFail: "Местоположението не бе намерено — провери разрешенията на браузъра.",
+    toastGeoDenied: "Местоположението е блокирано за papamap.de. Разреши го в настройките на браузъра за този сайт и докосни отново.",
+    toastGeoDeniedApp: "Местоположението е изключено за PapaMap. Включи го в настройките на телефона и докосни отново.",
     toastNearestNone: "В данните няма достъпна маса за повиване.",
     toastOffline: "Няма връзка с интернет — картата показва запазени данни.",
     toastNearestFound: "{dist} по права линия: {name}",
@@ -6827,6 +6883,8 @@ export const STRINGS = {
 
     toastNoGeo: "Геолокацијата не е достапна во овој прелистувач.",
     toastGeoFail: "Не успеавме да ја одредиме твојата локација — провери ја дозволата на прелистувачот.",
+    toastGeoDenied: "Локацијата е блокирана за papamap.de. Дозволи ја во поставките на прелистувачот за оваа страница и допри повторно.",
+    toastGeoDeniedApp: "Локацијата е исклучена за PapaMap. Вклучи ја во поставките на телефонот и допри повторно.",
     toastNearestNone: "Во податоците нема достапна маса за пеленање.",
     toastOffline: "Нема интернет врска — картата ги прикажува зачуваните податоци.",
     toastNearestFound: "{dist} во права линија: {name}",
@@ -7059,6 +7117,8 @@ export const STRINGS = {
 
     toastNoGeo: "Одређивање локације није доступно у овом прегледачу.",
     toastGeoFail: "Није могуће утврдити твоју локацију — провери дозволу прегледача.",
+    toastGeoDenied: "Локација је блокирана за papamap.de. Дозволи је у подешавањима прегледача за овај сајт, па додирни поново.",
+    toastGeoDeniedApp: "Локација је искључена за PapaMap. Укључи је у подешавањима телефона, па додирни поново.",
     toastNearestNone: "У подацима нема доступног стола за превијање.",
     toastOffline: "Нема интернет везе — мапа приказује сачуване податке.",
     toastNearestFound: "{dist} ваздушном линијом: {name}",
@@ -7291,6 +7351,8 @@ export const STRINGS = {
 
     toastNoGeo: "Визначення місцезнаходження недоступне в цьому браузері.",
     toastGeoFail: "Не вдалося визначити місцезнаходження — перевір дозвіл браузера.",
+    toastGeoDenied: "Місцезнаходження заблоковано для papamap.de. Дозволь його в налаштуваннях браузера для цього сайту й торкнися ще раз.",
+    toastGeoDeniedApp: "Місцезнаходження для PapaMap вимкнено. Увімкни його в налаштуваннях телефона й торкнися ще раз.",
     toastNearestNone: "У даних немає доступного пеленального столика.",
     toastOffline: "Немає інтернету — карта показує збережені дані.",
     toastNearestFound: "{dist} навпростець: {name}",
@@ -7527,6 +7589,8 @@ export const STRINGS = {
 
     toastNoGeo: "このブラウザでは位置情報を利用できません。",
     toastGeoFail: "現在地を取得できませんでした — ブラウザの位置情報の許可を確認してください。",
+    toastGeoDenied: "papamap.de の位置情報がブロックされています。ブラウザのこのサイトの設定で許可してから、もう一度タップしてください。",
+    toastGeoDeniedApp: "PapaMap の位置情報がオフです。スマートフォンの設定でオンにしてから、もう一度タップしてください。",
     toastNearestNone: "データに使えるおむつ交換台がありません。",
     toastOffline: "オフラインです — 地図は保存されたデータを表示しています。",
     toastNearestFound: "直線距離で{dist}: {name}",

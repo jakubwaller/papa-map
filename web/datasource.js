@@ -1176,3 +1176,14 @@ export function selectAddedPlace(deltaJson, watch) {
   }
   return null;
 }
+
+// Which toast a failed position gets. A denial has its own words because the
+// browser never asks twice: the reader has to know where the switch is, and it
+// is in a different place on the page than in the store app.
+export function geoFailKey(err, native) {
+  if (err?.code === 1 || err?.message === "denied") {
+    return native ? "toastGeoDeniedApp" : "toastGeoDenied";
+  }
+  if (err?.message === "nogeo") return "toastNoGeo";
+  return "toastGeoFail";
+}

@@ -1,5 +1,15 @@
 # papa-map — build contract (v0)
 
+> **v69 amendment (4 Oct 2026, a refused location says where to re-allow it):
+> no data shape change.** A reader who dismissed the browser's location prompt
+> once is never asked again, and the generic "couldn't get your location" toast
+> did not say what to do. A refusal (`GeolocationPositionError` code 1, or the
+> native `denied`) now shows `toastGeoDenied` on the page (allow it in the
+> browser's settings for the site) or `toastGeoDeniedApp` in the store app (turn
+> it on in the phone's settings), for 7 s; every other failure keeps
+> `toastGeoFail`. `geoFailKey` in `web/datasource.js` picks the key. Two i18n
+> keys in all 32 languages. Shell pin: bumped in the release PR that follows.
+
 > **v67 amendment (4 Oct 2026, the high-chair question on family places): no
 > data shape change.** `HIGHCHAIR_VENUES` (`web/osm.js`) and the theme's three
 > `highchair` conditions gain kindergarten, childcare, community_centre,

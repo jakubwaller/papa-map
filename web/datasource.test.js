@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
+import { geoFailKey, STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
          chipKeys, chipView,
          isWheelchairOk, isWheelchairLimited, countWheelchair, pinFeatures, placeFeatures,
@@ -1778,4 +1778,16 @@ test("an unrecorded room has one label in both readings; the meta keeps the moth
   assert.equal(mama.labelKey, "stUnknown");
   assert.notEqual(papa.metaKey, mama.metaKey);
   assert.equal(mama.bucket, "maybe");
+});
+
+test("geoFailKey: a refusal names where to re-allow, other failures stay generic", () => {
+  assert.equal(geoFailKey({ code: 1 }, false), "toastGeoDenied");
+  assert.equal(geoFailKey({ code: 1 }, true), "toastGeoDeniedApp");
+  assert.equal(geoFailKey(new Error("denied"), true), "toastGeoDeniedApp");
+  assert.equal(geoFailKey(new Error("denied"), false), "toastGeoDenied");
+  assert.equal(geoFailKey({ code: 2 }, false), "toastGeoFail");
+  assert.equal(geoFailKey({ code: 3 }, true), "toastGeoFail");
+  assert.equal(geoFailKey(new Error("nogeo"), false), "toastNoGeo");
+  assert.equal(geoFailKey(undefined, false), "toastGeoFail");
+  assert.equal(geoFailKey(null, true), "toastGeoFail");
 });
