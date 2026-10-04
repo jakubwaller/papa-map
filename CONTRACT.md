@@ -1,5 +1,11 @@
 # papa-map — build contract (v0)
 
+> **v67 amendment (4 Oct 2026, the high-chair question on family places): no
+> data shape change.** `HIGHCHAIR_VENUES` (`web/osm.js`) and the theme's three
+> `highchair` conditions gain kindergarten, childcare, community_centre,
+> social_facility and library, so the question is asked on family places too.
+> Shell pin: bumped in the release PR that follows.
+
 > **v66 amendment (2 Oct 2026, the wheelchair chip moves up): no data shape
 > change.** The wheelchair chip (v26) sits right after the three status chips
 > instead of last in the strip, so the order is status, wheelchair, play corner,

@@ -917,7 +917,12 @@
               "amenity=ice_cream",
               "amenity=pub",
               "amenity=biergarten",
-              "amenity=canteen"
+              "amenity=canteen",
+              "amenity=kindergarten",
+              "amenity=childcare",
+              "amenity=community_centre",
+              "amenity=social_facility",
+              "amenity=library"
             ]
           }
         }
@@ -1377,7 +1382,12 @@
               "amenity=ice_cream",
               "amenity=pub",
               "amenity=biergarten",
-              "amenity=canteen"
+              "amenity=canteen",
+              "amenity=kindergarten",
+              "amenity=childcare",
+              "amenity=community_centre",
+              "amenity=social_facility",
+              "amenity=library"
             ]
           }
         }
@@ -1768,7 +1778,12 @@
               "amenity=ice_cream",
               "amenity=pub",
               "amenity=biergarten",
-              "amenity=canteen"
+              "amenity=canteen",
+              "amenity=kindergarten",
+              "amenity=childcare",
+              "amenity=community_centre",
+              "amenity=social_facility",
+              "amenity=library"
             ]
           }
         }
