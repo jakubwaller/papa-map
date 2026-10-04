@@ -1,5 +1,5 @@
-– Novinka: otázka na dětskou židličku se teď objeví i u školek, dětských skupin, komunitních center, sociálních zařízení a knihoven, nejen u kaváren a restaurací. Zkus školku ve svém okolí.
+– Novinka: otázka na dětskou židličku se teď objeví i u školek, dětských skupin, komunitních center, zařízení sociálních služeb a knihoven, nejen u kaváren a restaurací. Zkus školku ve svém okolí.
 – Novinka: karta špendlíku už není vyšší než volné místo mezi vyhledávacím polem a dolním okrajem mapy. Delší obsah se posouvá uvnitř karty a × zůstává na místě. Dlouhá poznámka k bezbariérovosti ukáže tři řádky a „více …“. Zakrývá ještě něco tlačítka s odpověďmi dole?
-– Novinka: když je poloha pro aplikaci vypnutá, hlášení teď říká, kde ji zase zapnout (v nastavení telefonu), místo jen „Polohu se nepodařilo zjistit“. Jak vyzkoušet: vypni polohu pro PapaMap v Nastavení a ťukni na tlačítko polohy.
+– Novinka: když je poloha pro aplikaci vypnutá, hlášení teď říká, kde ji zase zapnout (v nastavení telefonu), místo jen „Polohu se nepodařilo zjistit“. Jak vyzkoušet: vypni polohu pro PapaMap v Nastavení a klepni na tlačítko polohy.
 – Jako vždy: „Nejbližší přebalovací pult“, barvy u míst, která znáš, Siri, widget.
 Cokoli je nejasné nebo nefunguje: udělej snímek obrazovky a pošli ho přes TestFlight.
