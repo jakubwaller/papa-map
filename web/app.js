@@ -350,9 +350,14 @@ window._papamap = map;
 // just opened to the view it landed in. It is not a moveend listener the
 // caller hangs itself: a jump's moveend fires synchronously, before the
 // caller could, and the popup's own pan, which both flyTo and jumpTo stop,
-// fires one of its own first, with the camera still where it was.
+// fires one of its own first, with the camera still where it was. Under
+// prefers-reduced-motion MapLibre turns the flight into a jump of its own,
+// synchronously, so the landing is checked for rather than assumed.
 function flyTo(opts, onLand) {
-  const land = () => { if (onLand) map.once("moveend", onLand); };
+  const land = () => {
+    if (!onLand) return;
+    if (map.isMoving()) map.once("moveend", onLand); else onLand();
+  };
   if (opts.duration != null) { map.flyTo(opts); land(); return; }
   const el = map.getContainer();
   const from = map.project(map.getCenter()), to = map.project(opts.center);
