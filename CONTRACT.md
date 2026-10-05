@@ -8,9 +8,11 @@
 > (ρ = 1.42), and `flightMs` turns it into ms at `FLIGHT.msPerUnit` (480),
 > floored at 300 ms and capped at 4000 ms — a hop across town takes under a
 > second, Berlin–Munich from street zoom on a phone the full 4 s — or returns
-> null above 5000 ms (intercontinental from street zoom), where `flyTo()` in
-> `web/app.js` defers a `jumpTo` by one frame so the callers' moveend listeners
-> still fire. The two animated `fitBounds` calls go through `flyToBounds()`, the
+> null above 5500 ms (from a phone's street zoom, beyond ~1100 km at z16 and
+> ~4400 km at z14), where `flyTo()` in `web/app.js` jumps and runs the caller's
+> landing hook (`onLand`, the popup's fit to the view) itself: a jump's moveend
+> fires before a caller could listen for it, and the popup's own pan, which the
+> jump stops, fires one first with the camera still where it was. The two animated `fitBounds` calls go through `flyToBounds()`, the
 > same rule applied to `cameraForBounds`. The late first fix keeps its own
 > `LATE_FIX_FLY_MS` (1.2 s): the reader did not ask for that flight. Shell pin
 > `app71` → `app72`.

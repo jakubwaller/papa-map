@@ -1222,9 +1222,11 @@ export function flightLength(w0, u1, dz, rho = 1.42) {
 // How long a flight of that length gets, in ms — or null: jump, do not fly.
 // Jakub, 2026-10-05: Berlin–Munich from street zoom on a phone should take
 // 4 s, shorter hops less, and a very long flight should jump. msPerUnit is
-// set so that hop lands on the cap (it measures ≈8.4 on a 844 px phone);
-// above jumpAboveMs there is nothing legible left in the flight.
-export const FLIGHT = { msPerUnit: 480, minMs: 300, maxMs: 4000, jumpAboveMs: 5000 };
+// set so that hop lands on the cap (it measures ≈8.4 on a 844 px phone).
+// Above jumpAboveMs there is nothing legible left in the flight: from a
+// phone's street zoom that is beyond ~1100 km at z16 and ~4400 km at z14,
+// so Germany flies even from a street and intercontinental jumps.
+export const FLIGHT = { msPerUnit: 480, minMs: 300, maxMs: 4000, jumpAboveMs: 5500 };
 export function flightMs(length, p = FLIGHT) {
   const ms = length * p.msPerUnit;
   if (ms > p.jumpAboveMs) return null;

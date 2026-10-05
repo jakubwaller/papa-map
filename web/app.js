@@ -340,23 +340,28 @@ window._papamap = map;
 // (flightLength in web/datasource.js, the path length its flyTo derives its
 // duration from). A hop across town takes under a second, Berlin–Munich
 // from street zoom on a phone the 4 s cap, and a flight that would need more
-// than 5 s at that rate — intercontinental from street zoom — jumps instead:
-// there is nothing legible in it, only tiles rushing past. MapLibre's own
-// scaling gave the Berlin–Munich hop 7 s; the 1.2 s pin that replaced it on
-// 2026-10-04 was fast but dizzying from 500 km. A caller that names its own
-// duration gets exactly that. The jump is deferred a frame so that it, too,
-// lands asynchronously: callers hang a moveend listener right after the
-// call, and a synchronous jump would fire the event before the listener
-// exists.
-function flyTo(opts) {
-  if (opts.duration != null) { map.flyTo(opts); return; }
+// than 5.5 s at that rate — from a phone's street zoom, beyond ~1100 km at
+// z16 and ~4400 km at z14 — jumps instead: there is nothing legible in it,
+// only tiles rushing past. MapLibre's own scaling gave the Berlin–Munich hop
+// 7 s; the 1.2 s pin that replaced it on 2026-10-04 was fast but dizzying
+// from 500 km. A caller that names its own duration gets exactly that.
+// onLand runs once the camera is there — after the flight's own moveend, or
+// straight after the jump — which is where a caller fits the card it has
+// just opened to the view it landed in. It is not a moveend listener the
+// caller hangs itself: a jump's moveend fires synchronously, before the
+// caller could, and the popup's own pan, which both flyTo and jumpTo stop,
+// fires one of its own first, with the camera still where it was.
+function flyTo(opts, onLand) {
+  const land = () => { if (onLand) map.once("moveend", onLand); };
+  if (opts.duration != null) { map.flyTo(opts); land(); return; }
   const el = map.getContainer();
   const from = map.project(map.getCenter()), to = map.project(opts.center);
   const zoom = opts.zoom ?? map.getZoom();
   const ms = flightMs(flightLength(Math.max(el.clientWidth, el.clientHeight),
                                    Math.hypot(to.x - from.x, to.y - from.y), zoom - map.getZoom()));
-  if (ms == null) requestAnimationFrame(() => map.jumpTo(opts));
-  else map.flyTo({ ...opts, duration: ms });
+  if (ms == null) { map.jumpTo(opts); if (onLand) onLand(); return; }
+  map.flyTo({ ...opts, duration: ms });
+  land();
 }
 // fitBounds is flyTo underneath, so an animated fit goes through the same
 // rule, via the camera fitBounds would have computed.
@@ -1658,8 +1663,7 @@ nearestBtn.addEventListener("click", (e) => {
       openPopup(f);
       // flyTo stops the pan openPopup just started; once the flight lands,
       // fit the card to the view it landed in.
-      flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
-      map.once("moveend", panPopupIntoView);
+      flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }, panPopupIntoView);
       const d = formatDistance(hit.km);
       toast(t("toastNearestFound", {
         dist: t(d.key, { n: num(d.n) }),
@@ -1877,8 +1881,7 @@ function pickSearchRow(row) {
   else { ensurePlacesVisible(); openPlacePopup(f); }
   // Exactly what the nearest button does with its own answer: fly, and fit the
   // card to the view it lands in once the flight is over.
-  flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
-  map.once("moveend", panPopupIntoView);
+  flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }, panPopupIntoView);
 }
 
 function queryPhoton(q) {
@@ -2058,9 +2061,10 @@ document.getElementById("room-card-open").addEventListener("click", () => {
   if (!roomCardFeature) return;
   const f = roomCardFeature;
   ensureVisible(f);   // the "unknown" chip may since have been switched off
-  flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
   openPopup(f);   // also hides the card
-  map.once("moveend", panPopupIntoView);
+  // Popup first, flight second, as at the nearest button: the flight stops
+  // the pan openPopup just started, and the card is fitted once it lands.
+  flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }, panPopupIntoView);
 });
 document.getElementById("room-card-close").addEventListener("click", () => {
   if (roomCardFeature) rememberCardDismissed(roomCardFeature.osm_url);

@@ -1835,8 +1835,12 @@ test("flightMs: a hop across town is quick, Berlin–Munich on a phone lands on 
 
 test("flightMs: the floor, the cap, and the jump line", () => {
   assert.equal(flightMs(0), 300);
-  assert.equal(flightMs(10), 4000);        // 4.8 s wanted, capped
-  assert.equal(flightMs(10.5), null);      // 5.04 s wanted: jump
-  assert.equal(flightMs(flightLength(844, 1e6, 0)), null);   // intercontinental from street zoom
-  assert.ok(flightMs(flightLength(844, 300, 15)) <= 4000);   // world view to a street still flies
+  assert.equal(flightMs(11), 4000);        // 5.3 s wanted, capped
+  assert.equal(flightMs(11.5), null);      // 5.5 s wanted: jump
+  // Hamburg–New York from z14 on a phone is ≈2.2 million px of pan: a jump.
+  assert.equal(flightMs(flightLength(844, 2.2e6, 0)), null);
+  // The world view down to a street still flies (null <= 4000 is true in JS,
+  // so the null case is ruled out by name).
+  const zoomIn = flightMs(flightLength(844, 300, 15));
+  assert.ok(zoomIn !== null && zoomIn <= 4000, String(zoomIn));
 });

@@ -326,8 +326,9 @@ the measure MapLibre's own `flyTo` uses (`flightLength` in
 `web/datasource.js` replicates its path length): 480 ms per unit, never under
 300 ms and never over 4 s, so a hop across town takes under a second and
 Berlin–Munich from street zoom on a phone the full 4 s. A flight that would
-need more than 5 s at that rate — intercontinental from street zoom — jumps
-instead; there is nothing legible in it, only tiles rushing past. MapLibre's
+need more than 5.5 s at that rate — from a phone's street zoom, beyond
+~1100 km at z16 and ~4400 km at z14 — jumps instead; there is nothing legible
+in it, only tiles rushing past. MapLibre's
 own scaling gave the Berlin–Munich hop 7 s; a flat 1.2 s, tried for a day in
 October 2026, was fast but dizzying from 500 km. `fitBounds` flies the same
 way, so the search result's fit goes through the same rule.
