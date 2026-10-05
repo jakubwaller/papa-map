@@ -1,5 +1,20 @@
 # papa-map — build contract (v0)
 
+> **v71 amendment (5 Oct 2026, a flight's length sets its duration): no data
+> shape change.** The 1.2 s pin of v70 was fast but dizzying from 500 km.
+> Every camera flight now gets its duration from how far the camera travels,
+> pan and zoom together, in the measure MapLibre's own `flyTo` uses:
+> `flightLength` in `web/datasource.js` replicates its van Wijk–Nuij path length
+> (ρ = 1.42), and `flightMs` turns it into ms at `FLIGHT.msPerUnit` (480),
+> floored at 300 ms and capped at 4000 ms — a hop across town takes under a
+> second, Berlin–Munich from street zoom on a phone the full 4 s — or returns
+> null above 5000 ms (intercontinental from street zoom), where `flyTo()` in
+> `web/app.js` defers a `jumpTo` by one frame so the callers' moveend listeners
+> still fire. The two animated `fitBounds` calls go through `flyToBounds()`, the
+> same rule applied to `cameraForBounds`. The late first fix keeps its own
+> `LATE_FIX_FLY_MS` (1.2 s): the reader did not ask for that flight. Shell pin
+> `app71` → `app72`.
+
 > **v70 amendment (4 Oct 2026, every flight lands in 1.2 s): no data shape
 > change.** MapLibre's `flyTo` grows its duration with the distance, so the
 > locate button pressed a few hundred kilometres from the view, or a search

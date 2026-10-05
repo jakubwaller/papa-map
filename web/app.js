@@ -12,15 +12,15 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace } from "./datasource.js?v=app71";
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app72";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app71";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app72";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app71";
+         writeTags } from "./osm.js?v=app72";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -28,7 +28,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app71";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app72";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -38,27 +38,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app71";
+         reviewTracker } from "./native.js?v=app72";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app71";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app72";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app71";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app72";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app71";
+import { isOpenNow } from "./opening-hours.js?v=app72";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         VENUE_MIN_ZOOM } from "./venues.js?v=app71";
-// The bundled shell's pin (`?v=app71`), what the intro key records.
+         VENUE_MIN_ZOOM } from "./venues.js?v=app72";
+// The bundled shell's pin (`?v=app72`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -335,17 +335,35 @@ map.touchZoomRotate.disableRotation();
 // verification (Playwright) needs to drive the view.
 window._papamap = map;
 
-// ---- Flights. Every camera flight on this map — the locate and nearest
-// buttons, a search result, a saved place, a late first fix — lands in FLY_MS
-// wherever it starts. MapLibre's own duration grows with the distance: pressed
-// a few hundred kilometres from the view, the locate button spent five seconds
-// and more zooming out and back in, and a search result reached by fitBounds
-// flew the same way, since fitBounds flies too (it is flyTo underneath unless
-// told `linear`). maxDuration is not the cap its name suggests — a flight that
-// would exceed it becomes a jump — so the duration is pinned instead. The two
-// animated fitBounds calls pass FLY_MS themselves.
-const FLY_MS = 1200;
-function flyTo(opts) { map.flyTo({ duration: FLY_MS, ...opts }); }
+// ---- Flights. How long a camera flight takes depends on how far the camera
+// travels — pan and zoom together, in MapLibre's own measure of it
+// (flightLength in web/datasource.js, the path length its flyTo derives its
+// duration from). A hop across town takes under a second, Berlin–Munich
+// from street zoom on a phone the 4 s cap, and a flight that would need more
+// than 5 s at that rate — intercontinental from street zoom — jumps instead:
+// there is nothing legible in it, only tiles rushing past. MapLibre's own
+// scaling gave the Berlin–Munich hop 7 s; the 1.2 s pin that replaced it on
+// 2026-10-04 was fast but dizzying from 500 km. A caller that names its own
+// duration gets exactly that. The jump is deferred a frame so that it, too,
+// lands asynchronously: callers hang a moveend listener right after the
+// call, and a synchronous jump would fire the event before the listener
+// exists.
+function flyTo(opts) {
+  if (opts.duration != null) { map.flyTo(opts); return; }
+  const el = map.getContainer();
+  const from = map.project(map.getCenter()), to = map.project(opts.center);
+  const zoom = opts.zoom ?? map.getZoom();
+  const ms = flightMs(flightLength(Math.max(el.clientWidth, el.clientHeight),
+                                   Math.hypot(to.x - from.x, to.y - from.y), zoom - map.getZoom()));
+  if (ms == null) requestAnimationFrame(() => map.jumpTo(opts));
+  else map.flyTo({ ...opts, duration: ms });
+}
+// fitBounds is flyTo underneath, so an animated fit goes through the same
+// rule, via the camera fitBounds would have computed.
+function flyToBounds(bounds, opts) {
+  const cam = map.cameraForBounds(bounds, opts);
+  if (cam) flyTo(cam);
+}
 
 // Whether the reader has done anything with the map before the boot fix's
 // own fix lands (openAtLocationFix, near locate() below) — a drag, a zoom, a
@@ -1537,9 +1555,12 @@ function locateFrom(btn) {
 // the home view, so jumpTo — no motion to notice, the map simply opened
 // there. Past it, the home view has actually been on screen long enough to
 // register, and snapping away from it would read as the view glitching
-// rather than something the map meant to do; flyTo, over FLY_MS,
+// rather than something the map meant to do; flyTo, over LATE_FIX_FLY_MS,
 // makes that same repositioning read as deliberate instead.
 const LATE_FIX_MS = 700;
+// Its own duration, not flyTo()'s distance rule: the reader did not ask for
+// this flight, and from the world view the rule would make it a 3 s one.
+const LATE_FIX_FLY_MS = 1200;
 function locateCoarse() {
   if (isNative()) return locateNativeCoarse();
   return new Promise((ok, fail) => {
@@ -1847,8 +1868,7 @@ function pickSearchRow(row) {
     // screen and is not guessed at from a zoom table. Capped, or a house whose
     // extent is a few metres across would land at the maximum zoom there is.
     if (row.target.bounds)
-      map.fitBounds(row.target.bounds,
-        { maxZoom: SEARCH_FIT_MAX_ZOOM, padding: searchFitPadding(), duration: FLY_MS });
+      flyToBounds(row.target.bounds, { maxZoom: SEARCH_FIT_MAX_ZOOM, padding: searchFitPadding() });
     else flyTo({ center: row.target.center, zoom: row.target.zoom });
     return;
   }
@@ -3527,7 +3547,7 @@ async function boot() {
     // Early: the map simply opens there, no motion to notice. Late: the
     // reader has had time to actually look at the home view first, so the
     // camera travels to them on purpose instead of snapping.
-    if (Date.now() - fitHomeAt > LATE_FIX_MS) flyTo({ center: at, zoom });
+    if (Date.now() - fitHomeAt > LATE_FIX_MS) flyTo({ center: at, zoom, duration: LATE_FIX_FLY_MS });
     else map.jumpTo({ center: at, zoom });
   }).catch(() => {});
   // The store app's first-launch intro / what's-new, once the boot's fix has
@@ -4273,7 +4293,7 @@ function renderMeSentence() {
   });
   meSentenceEl.querySelector("#me-grey")?.addEventListener("click", () => {
     meDialog.close();
-    map.fitBounds(circleBounds(lastFix.lat, lastFix.lon, 1), { padding: 40, duration: FLY_MS });
+    flyToBounds(circleBounds(lastFix.lat, lastFix.lon, 1), { padding: 40 });
   });
 }
 
