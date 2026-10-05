@@ -21,6 +21,7 @@ import math
 import re
 from datetime import date, datetime, timedelta, timezone
 
+from .appstats import APP_STORE_LIVE_SINCE
 from .export import THEME_LIVE_SINCE
 from .pages import ICON, STYLE, esc
 
@@ -570,6 +571,146 @@ def _visitors(visits: dict | None) -> str:
     return "".join(parts)
 
 
+def _apps_section(apps: dict | None, app_days: dict | None,
+                  ratings: dict | None, now: datetime) -> str:
+    """The private page's Apps section: App Store downloads per day (App
+    Store Connect's daily Sales report), Google Play installs per day (the
+    Play Console's statistics CSVs) and App Store ratings per storefront
+    (the public lookup API) — what the stores show their developer, nothing
+    about any one reader. Each source stands alone, and unset, failed and
+    not-yet-published are each said in words, never shown as a zero. `apps`
+    is this run's fetch (None when no store id is configured), `app_days`
+    the state's per-day history, `ratings` the last snapshot."""
+    p = ["<h2>Apps</h2>\n"]
+    if apps is None and not app_days and not ratings:
+        p.append('<p class="muted">No store figures — PAPAMAP_APP_STORE_ID / '
+                 "PAPAMAP_ANDROID_PACKAGE unset, or the first fetch is still "
+                 "to come.</p>\n")
+        return "".join(p)
+    p.append('<p class="muted">What the stores show their developer, per '
+             "complete day: App Store downloads from the daily Sales report, "
+             "Google Play installs from the Console's statistics, ratings from "
+             "the public store pages. Days are the stores' own; Apple "
+             "publishes a day the afternoon after, so yesterday arrives "
+             "tomorrow.</p>\n")
+    days = sorted((app_days or {}).items())
+    ios = {d: v["ios_downloads"] for d, v in days if "ios_downloads" in v}
+    android = {d: v["android_installs"] for d, v in days
+               if "android_installs" in v}
+    ios_fetch = (apps or {}).get("ios") if apps else "skipped"
+    android_fetch = (apps or {}).get("android") if apps else "skipped"
+
+    # ---- App Store
+    p.append("<h3>App Store</h3>\n")
+    if ratings:
+        stores = ", ".join(f"{esc(cc)} {_n(s['count'])} ({s['avg']})"
+                           for cc, s in sorted(ratings.get("stores", {}).items(),
+                                               key=lambda kv: -kv[1]["count"]))
+        p.append(f'<p>Ratings: <b>{_n(ratings.get("total", 0))}</b>'
+                 + (f", average {ratings['avg']}" if ratings.get("avg") else "")
+                 + (f" — {stores}" if stores else "")
+                 + (f" · version {esc(str(ratings['version']))}"
+                    if ratings.get("version") else "")
+                 + (f" since {esc(str(ratings['released']))}"
+                    if ratings.get("released") else "")
+                 + (f' <span class="muted">(as of {esc(str(ratings["as_of"]))})</span>'
+                    if ratings.get("as_of") else "")
+                 + "</p>\n")
+        if ratings.get("failed"):
+            p.append('<p class="muted">Storefronts that did not answer this '
+                     f"run, their last counts kept: "
+                     f"{esc(', '.join(ratings['failed']))}.</p>\n")
+    if ios_fetch is None:
+        p.append('<p class="muted">Downloads not fetched — ASC_ISSUER_ID, '
+                 "ASC_KEY_ID, ASC_API_KEY_P8_B64 and ASC_VENDOR_NUMBER unset "
+                 "(DEPLOY.md).</p>\n")
+    elif isinstance(ios_fetch, dict) and ios_fetch.get("error"):
+        p.append(f'<p class="warn">App Store report: failed '
+                 f'({esc(ios_fetch["error"])}). Not zero.</p>\n')
+    elif isinstance(ios_fetch, dict) and ios_fetch.get("pending"):
+        pend = sorted(ios_fetch["pending"])
+        p.append(f'<p class="muted">Apple has not published '
+                 f"{', '.join(esc(d) for d in pend)} yet.</p>\n")
+    tiles = edit_totals(ios, APP_STORE_LIVE_SINCE)
+    if tiles:
+        p.append('<div class="kpis">\n')
+        for t in tiles:
+            when = (f"all time, in the App Store since {APP_STORE_LIVE_SINCE}"
+                    if t.get("all_time")
+                    else f"{t['label']}, {esc(t['first'])} → {esc(t['last'])}")
+            if t["days"] < t["span"]:
+                when += f" ({t['days']} of {t['span']} days published)"
+            p.append(f'<div class="kpi"><b>{_n(t["changesets"])}</b>'
+                     f"<span>downloads, {when}</span></div>\n")
+        p.append("</div>\n")
+        redl = sum(v.get("ios_redownloads", 0) for _, v in days)
+        upd = sum(v.get("ios_updates", 0) for _, v in days)
+        p.append(f'<p class="muted">First-time downloads; the same days also '
+                 f"saw {_n(redl)} re-downloads and {_n(upd)} updates.</p>\n")
+        chart = _day_bars(edits_rows({d: max(0, n) for d, n in ios.items()},
+                                     "download"), "--accent", labels=True)
+        if chart:
+            p.append('<p class="muted">App Store downloads per day.</p>\n')
+            p.append(chart)
+    elif ios_fetch not in (None, "skipped") and not (isinstance(ios_fetch, dict)
+                                                     and ios_fetch.get("error")):
+        p.append('<p class="muted">No published day yet.</p>\n')
+
+    # ---- Google Play
+    p.append("<h3>Google Play</h3>\n")
+    if android_fetch is None:
+        p.append('<p class="muted">Installs not fetched — '
+                 "PLAY_SERVICE_ACCOUNT_JSON_B64 and PLAY_STATS_BUCKET unset "
+                 "(DEPLOY.md).</p>\n")
+    elif isinstance(android_fetch, dict) and android_fetch.get("error"):
+        p.append(f'<p class="warn">Play statistics: failed '
+                 f'({esc(android_fetch["error"])}). Not zero.</p>\n')
+    # No fixed launch day for Play (closed testing first), so a live_since
+    # before every date keeps the last tile "all N recorded days".
+    tiles = edit_totals(android, "0000-01-01")
+    if tiles:
+        p.append('<div class="kpis">\n')
+        for t in tiles:
+            when = f"{t['label']}, {esc(t['first'])} → {esc(t['last'])}"
+            if t["days"] < t["span"]:
+                when += f" ({t['days']} of {t['span']} days reported)"
+            p.append(f'<div class="kpi"><b>{_n(t["changesets"])}</b>'
+                     f"<span>installs, {when}</span></div>\n")
+        active = [(d, v["android_active"]) for d, v in days if "android_active" in v]
+        if active:
+            p.append(f'<div class="kpi"><b>{_n(active[-1][1])}</b>'
+                     f"<span>active devices, {esc(active[-1][0])}</span></div>\n")
+        p.append("</div>\n")
+        chart = _day_bars(edits_rows({d: max(0, n) for d, n in android.items()},
+                                     "install"), "--green", labels=True)
+        if chart:
+            p.append('<p class="muted">Google Play installs per day.</p>\n')
+            p.append(chart)
+    elif android_fetch not in (None, "skipped") and not (
+            isinstance(android_fetch, dict) and android_fetch.get("error")):
+        p.append('<p class="muted">No reported day yet.</p>\n')
+
+    # ---- every day, both stores side by side
+    if days:
+        rows = list(reversed(days))
+        cell = lambda v, k: _n(v[k]) if k in v else "–"  # noqa: E731
+        p.append(f"<details>\n<summary>all {len(rows)} days</summary>\n"
+                 '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
+                 "<th>downloads</th><th>re-downloads</th><th>updates</th>"
+                 "<th>installs</th><th>uninstalls</th><th>active</th>"
+                 "</tr></thead>\n<tbody>\n")
+        for d, v in rows:
+            p.append(f'<tr><td class="l">{esc(d)}</td>'
+                     f'<td>{cell(v, "ios_downloads")}</td>'
+                     f'<td>{cell(v, "ios_redownloads")}</td>'
+                     f'<td>{cell(v, "ios_updates")}</td>'
+                     f'<td>{cell(v, "android_installs")}</td>'
+                     f'<td>{cell(v, "android_uninstalls")}</td>'
+                     f'<td>{cell(v, "android_active")}</td></tr>\n')
+        p.append("</tbody>\n</table>\n</div>\n</details>\n")
+    return "".join(p)
+
+
 def _edits_section(edits: dict | None, edits_days: dict | None,
                    now: datetime) -> str:
     """Changesets through the site's own theme: totals over 7/30/all days
@@ -822,14 +963,18 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                 regions: dict | None = None, build: dict | None = None,
                 site_url: str = "https://papamap.de",
                 private: bool = False, visits: dict | None = None,
+                apps: dict | None = None, app_days: dict | None = None,
+                app_ratings: dict | None = None,
                 delta: dict | None = None, delta_expected: bool = False) -> str:
     """The whole page. `history` is the ops state's daily list (oldest first,
     the entry for today already appended); `regions` is region_rows()'s
     output; `build` is parse_build_log()'s; `edits` the cached OSMCha line,
     `edits_days` its per-day history ({date: changesets}), `web_edits_days`
     the same for the answers given on the map itself. `private` adds the
-    Visitors section from `visits` ({date: {requests, uniques}}); the public
-    page ignores `visits` entirely, by design."""
+    Visitors section from `visits` ({date: {requests, uniques}}) and the
+    Apps section from `apps` (this run's store fetches), `app_days` (the
+    per-day store history) and `app_ratings` (the last ratings snapshot);
+    the public page ignores all four entirely, by design."""
     now = now.astimezone(timezone.utc)
     age = _age_hours(stats, now)
     local = (stats or {}).get("local") or {}
@@ -963,6 +1108,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
 
     if private:
         p.append(_visitors(visits))
+        p.append(_apps_section(apps, app_days, app_ratings, now))
 
     # Last build. Collapsed when it finished — per-area counts and mirror
     # warnings are for whoever runs the pipeline, not for a reader checking

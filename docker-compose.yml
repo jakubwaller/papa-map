@@ -139,6 +139,11 @@ services:
       - PAPAMAP_OPS_PRIVATE_HTML_PATH=/out/private/ops.html
       - PAPAMAP_OPS_STATE_PATH=/ops-data/ops-state.json
       - PAPAMAP_BUILD_LOG_PATH=/logs/pipeline.log
+      # The store apps' public ids, for the private page's Apps section
+      # (pipeline/appstats.py): ratings need nothing else; downloads and
+      # installs need the ASC_* / PLAY_* credentials from ops.env.
+      - PAPAMAP_APP_STORE_ID=6813376985
+      - PAPAMAP_ANDROID_PACKAGE=de.papamap.app
     # The host user (uid 1000 on the live server), so the state and the two
     # pages it writes stay owned by whoever runs the cron and the one-off
     # commands, not by root.
