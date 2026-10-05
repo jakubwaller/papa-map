@@ -12,15 +12,15 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app72";
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app73";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app72";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app73";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app72";
+         writeTags } from "./osm.js?v=app73";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -28,7 +28,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app72";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app73";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -38,27 +38,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app72";
+         reviewTracker } from "./native.js?v=app73";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app72";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app73";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app72";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app73";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app72";
+import { isOpenNow } from "./opening-hours.js?v=app73";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         VENUE_MIN_ZOOM } from "./venues.js?v=app72";
-// The bundled shell's pin (`?v=app72`), what the intro key records.
+         VENUE_MIN_ZOOM } from "./venues.js?v=app73";
+// The bundled shell's pin (`?v=app73`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -2923,8 +2923,13 @@ for (const id of ["add-toilet-link", "add-venue-link"]) {
 // what happened.
 function pulseNewPin(kind, obj, watch) {
   if (watch.zoom < 14) return;
-  flyTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
+  // Popup first, flight second, as at the nearest button: the flight stops
+  // the pan the popup just started, and the card is fitted once it lands.
+  // The other way round (until 5 Oct 2026) the popup's pan stopped the
+  // flight: the zoom to 16 never happened, and a reader who had drifted a
+  // few kilometres since tapping "add" was left there, the card off-screen.
   reopen(kind, obj);
+  flyTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) }, panPopupIntoView);
 }
 
 // Checked on every delta poll (applyDelta, below) while a watch is pending.
@@ -4005,18 +4010,22 @@ function toggleStar(btn) {
   if (meDialog.open) renderSavedList();
 }
 
-// Fly to a saved place and reopen it — via the same openPin the widget and
-// the Siri shortcut use, when it is still a table pin tonight; a play place
-// or a place that has since fallen out of the sweep still gets the fly, just
-// not the popup (its own lon/lat came along in the saved record for exactly
-// this case).
+// Fly to a saved place and reopen it — a table pin tonight gets its popup, a
+// play place its card; a place that has since fallen out of the sweep still
+// gets the fly, just not the popup (its own lon/lat came along in the saved
+// record for exactly this case). Popup first, flight second, as at the
+// nearest button: the flight stops the pan the popup just started, and the
+// card is fitted once it lands. Not openPin, which the widget and the Siri
+// shortcut use: that jumps (a share link opens before the first paint), and
+// until 5 Oct 2026 the jump stopped the flight started a line earlier, so a
+// saved table never flew at all — and a play place's own pan stopped the
+// flight instead, leaving a country view with a card open on it.
 function openSavedPlace(row) {
   meDialog.close();
-  const f = featuresByOsmUrl.get(row.osm);
-  if (f) { flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }); openPin(row.osm); return; }
-  const p = placesByOsmUrl.get(row.osm);
-  if (p) { flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) }); openPlacePopup(p); return; }
-  flyTo({ center: [row.lon, row.lat], zoom: Math.max(map.getZoom(), 16) });
+  const f = featuresByOsmUrl.get(row.osm), p = placesByOsmUrl.get(row.osm);
+  if (f || p) reopen(f ? "table" : "place", f || p);
+  const at = f || p || row;
+  flyTo({ center: [at.lon, at.lat], zoom: Math.max(map.getZoom(), 16) }, f || p ? panPopupIntoView : undefined);
 }
 
 // The dot beside a saved row's name: the pin's own colour when tonight's data

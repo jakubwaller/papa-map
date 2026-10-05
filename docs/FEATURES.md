@@ -676,7 +676,11 @@ map's search). The centre leaves the browser rounded to three decimals — stree
 level, which the Datenschutz says, unlike the search field's 10 km. Photon
 failing or throttling leaves one line and the MapComplete links. A "yes" is
 then watched for in the delta by its own `osm_url` (`selectAddedPlace`), and
-the map flies to the new pin when it lands; there is no optimistic pin.
+the map opens the new pin's popup and flies to it when it lands, the card
+fitted once the flight is over, the same way the nearest button does with its
+answer (until 5 Oct 2026 the flight came first and the popup's own pan stopped
+it: no zoom-in, and a reader who had wandered off since was left there with the
+card off-screen); there is no optimistic pin.
 
 ### Share a pin
 
@@ -1105,8 +1109,14 @@ in.
 Saved places are a star, next to a pin's or a play place's name rather than
 in the Route row, kept only on the device (`papamap-saved`, up to 200) —
 enough to show and fly back to a place even if tonight's build no longer
-carries it, because the star keeps its own `lon`/`lat`, not just an id. The
-dialog lists them newest first, with tonight's pin colour when the place is
+carries it, because the star keeps its own `lon`/`lat`, not just an id. A row
+opens the place's popup and flies there, the card fitted once the flight lands,
+as the nearest button does (until 5 Oct 2026 the rows flew first and opened
+second: a saved table was reopened through the share link's own `openPin`,
+whose jump stopped the flight dead, and a saved play place's popup pan stopped
+the flight where it stood, from a country view with the card open over it); a
+place no longer carried gets the flight alone. The dialog lists them newest
+first, with tonight's pin colour when the place is
 still on the map and a plain dot when it is not, and the distance from
 wherever the reader last stood.
 

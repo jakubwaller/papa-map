@@ -1,5 +1,18 @@
 # papa-map — build contract (v0)
 
+> **v72 amendment (5 Oct 2026, a saved place and a new pin open before they
+> fly): no data shape change.** Two sites started their flight first and opened
+> the popup second — the saved-place rows in Mein PapaMap (`openSavedPlace`) and
+> the "look here" after a place was added (`pulseNewPin`). The popup's own pan
+> (`panPopupIntoView`) stops a running flight, and `openPin` jumps: a saved
+> table never flew at all, a saved play place's pan stopped the flight where it
+> stood (from a country view, a card open over a z6 map), and the new pin's
+> zoom to 16 was lost — a reader who had drifted a few kilometres since tapping
+> "add" was left there with the card off-screen. Both now do what the nearest
+> button, a search row and the room card do since v71: popup first, then
+> `flyTo(..., panPopupIntoView)`, the card fitted once the flight lands. Shell
+> pin `app72` → `app73`.
+
 > **v71 amendment (5 Oct 2026, a flight's length sets its duration): no data
 > shape change.** The 1.2 s pin of v70 was fast but dizzying from 500 km.
 > Every camera flight now gets its duration from how far the camera travels,
