@@ -9,9 +9,9 @@ day's dataset changes: new/removed features and status transitions — a
 grey->green transition is somebody answering the room question on OSM.
 
 Everything in the report is aggregate: dataset counts derived from public ODbL
-OSM data, plus (optionally) Cloudflare's zone-level request totals and an
-OSMCha count of changesets made through the site's own MapComplete theme. No
-visitor-level data is read, stored or sent.
+OSM data, plus (optionally) Cloudflare's zone-level request totals and OSMCha
+counts of changesets made through the site's own MapComplete theme and of
+answers given on the map itself. No visitor-level data is read, stored or sent.
 
 Mail goes out over plain SMTP submission (STARTTLS) — any provider that hands
 out SMTP credentials works. Without PAPAMAP_SMTP_*/PAPAMAP_OPS_TO configured
@@ -441,24 +441,29 @@ def osmcha_edits(days=7, now=None, get=requests.get):
             out["by_day"] = by_day
         # The answers given on the map itself (web/osm.js) are the reader's
         # own changesets tagged created_by=PapaMap — a second slice, counted
-        # on its own line and never folded into the theme's number. A count
-        # only: the chart stays the theme's. The filter is OSMCha's `editor`
-        # parameter, never `metadata=created_by=…`: OSMCha stores created_by
-        # in its own `editor` column and drops it from the metadata JSON
-        # (osmcha's changeset.py, set_fields), so a metadata filter on that
-        # key matches nothing by construction — this line read 0 from the
-        # day it shipped (2026-09-13) to 2026-10-05 while the public OSM API
-        # listed PapaMap changesets in the same week. `editor` is a
-        # case-insensitive substring match like the metadata filter. Its own
-        # try, because it is a second query on a day the first one already
-        # cost up to 150 s: a failure here drops this line and says so, and
-        # never the theme count fetched a moment ago.
+        # on its own line and never folded into the theme's number, with a
+        # per-day series of its own (web_by_day, the page's second chart;
+        # kept since 2026-10-05, a count alone before that). The filter is
+        # OSMCha's `editor` parameter, never `metadata=created_by=…`: OSMCha
+        # stores created_by in its own `editor` column and drops it from the
+        # metadata JSON (osmcha's changeset.py, set_fields), so a metadata
+        # filter on that key matches nothing by construction — this line
+        # read 0 from the day it shipped (2026-09-13) to 2026-10-05 while
+        # the public OSM API listed PapaMap changesets in the same week.
+        # `editor` is a case-insensitive substring match like the metadata
+        # filter. Its own try, because it is a second query on a day the
+        # first one already cost up to 150 s: a failure here drops this
+        # line and says so, and never the theme count fetched a moment ago.
         try:
             r = get(OSMCHA_URL, timeout=OSMCHA_TIMEOUT_S,
                     headers={"Authorization": f"Token {token}"},
                     params={"editor": WEB_CREATED_BY,
-                            "date__gte": since, "page_size": "1"})
-            out["web_changesets"] = int(r.json()["count"])
+                            "date__gte": since, "page_size": "100"})
+            web = r.json()
+            out["web_changesets"] = int(web["count"])
+            web_by_day = edits_by_day(web, since, now)
+            if web_by_day is not None:
+                out["web_by_day"] = web_by_day
         except Exception as exc:
             print(f"WARN: OSMCha created_by query failed: {exc}", file=sys.stderr)
         return out
@@ -498,13 +503,15 @@ def edits_by_day(data, since: str, now: datetime) -> dict | None:
     return counts
 
 
-def merge_edits(kept: dict, edits: dict | None) -> dict:
-    """merge_visits' sibling for the per-day theme-changeset counts: every
-    complete day today's fetch covered overwrites the stored one (the fetch
-    is OSMCha's fresher answer), capped and sorted. A fetch without by_day —
-    failed, truncated, or token unset — changes nothing."""
+def merge_edits(kept: dict, edits: dict | None, key: str = "by_day") -> dict:
+    """merge_visits' sibling for the per-day changeset counts: every complete
+    day today's fetch covered overwrites the stored one (the fetch is
+    OSMCha's fresher answer), capped and sorted. `key` names the series in
+    the fetch — by_day for the theme, web_by_day for the answers given on
+    the map itself. A fetch without it — failed, truncated, or token unset —
+    changes nothing."""
     merged = dict(kept)
-    for day, n in ((edits or {}).get("by_day") or {}).items():
+    for day, n in ((edits or {}).get(key) or {}).items():
         merged[day] = int(n)
     return dict(sorted(merged.items())[-EDITS_HISTORY_DAYS:])
 
@@ -535,20 +542,37 @@ def backfill_edits(days: int, state_path=None, now=None,
     state = load_json(state_path) or {"statuses": {}, "history": []}
     before = state.get("edits_days") or {}
     merged = merge_edits(before, edits)
-    added = sorted(set(merged) - set(before))
+    # The answers given on the map itself are a second series, filled the
+    # same way when the fetch carried their count (and left alone when the
+    # second query failed — that is not a window of zeros).
+    web_before = state.get("web_edits_days") or {}
+    web_merged = (merge_edits(web_before, edits, "web_by_day")
+                  if "web_changesets" in edits else web_before)
     if merged != before:
         state["edits_days"] = merged
+    if web_merged != web_before:
+        state["web_edits_days"] = web_merged
+    if merged != before or web_merged != web_before:
         save_state(state_path, state)
-    changed = sum(1 for d in before if d in merged and merged[d] != before[d])
-    print(f"{edits['changesets']} changesets in the {days} days to "
-          f"{(now or datetime.now(timezone.utc)).strftime('%Y-%m-%d')}; "
-          + (f"{len(added)} days added ({added[0]} → {added[-1]})" if added
-             else "no new days")
-          + (f", {changed} recorded day{'s' if changed != 1 else ''} changed"
-             if changed else "")
-          + (f", history now {len(merged)} days" if added or changed
-             else f", history unchanged at {len(merged)} days"))
+    when = (now or datetime.now(timezone.utc)).strftime("%Y-%m-%d")
+    print(f"{edits['changesets']} changesets in the {days} days to {when}; "
+          + _merge_summary(before, merged))
+    if "web_changesets" in edits:
+        print(f"{edits['web_changesets']} answers on the map itself in the "
+              "same window; " + _merge_summary(web_before, web_merged))
     return edits
+
+
+def _merge_summary(before: dict, merged: dict) -> str:
+    """What a backfill did to one series, in the words the log keeps."""
+    added = sorted(set(merged) - set(before))
+    changed = sum(1 for d in before if d in merged and merged[d] != before[d])
+    return ((f"{len(added)} days added ({added[0]} → {added[-1]})" if added
+             else "no new days")
+            + (f", {changed} recorded day{'s' if changed != 1 else ''} changed"
+               if changed else "")
+            + (f", history now {len(merged)} days" if added or changed
+               else f", history unchanged at {len(merged)} days"))
 
 
 def _short_exc(exc: Exception) -> str:
@@ -635,6 +659,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
                            delta=summary)
     visits_history = merge_visits(state.get("visits") or {}, visits, now)
     edits_days = merge_edits(state.get("edits_days") or {}, edits)
+    web_edits_days = merge_edits(state.get("web_edits_days") or {}, edits,
+                                 "web_by_day")
 
     if edits and not edits.get("error"):
         # by_day stays out of the cached line: the merged history above is
@@ -651,6 +677,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
             state["edits"] = cached_edits
         if edits_days:
             state["edits_days"] = edits_days
+        if web_edits_days:
+            state["web_edits_days"] = web_edits_days
         if visits_history:
             state["visits"] = visits_history
         save_state(state_path, state)
@@ -661,6 +689,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     ctx = dict(now=now, stats=stats, counts=counts, changes=changes,
                history=history[-HISTORY_DAYS:], anomalies=anomalies,
                edits=cached_edits, edits_days=edits_days,
+               web_edits_days=web_edits_days,
                delta=summary, delta_expected=bool(delta_path),
                history_path=history_path or OPS_HISTORY_PATH,
                build_log_path=build_log_path or BUILD_LOG_PATH)
