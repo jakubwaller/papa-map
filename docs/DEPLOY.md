@@ -346,6 +346,35 @@ and the state was a week deep for no reason. One request feeds both readers — 
 history and the mail's seven-day total — so nothing costs more. It also means a fresh state
 file backfills a month on its first run rather than growing a day at a time.
 
+**The Apps block** (private page only, `pipeline/appstats.py`): App Store downloads per day,
+Google Play installs per day and App Store ratings per storefront, each from its own source
+and each optional. The store ids are set by the `ops` service itself (`PAPAMAP_APP_STORE_ID`,
+`PAPAMAP_ANDROID_PACKAGE`); the ratings need nothing else — the public lookup API, asked for
+24 storefronts, because ratings are per storefront. The rest goes into `ops.env`:
+
+- **App Store downloads** — the App Store Connect API key the build runner already uses
+  (role Admin or Sales): `ASC_ISSUER_ID` (App Store Connect → Users and Access →
+  Integrations), `ASC_KEY_ID` (in the `.p8`'s filename), `ASC_API_KEY_P8_B64`
+  (`base64 < AuthKey_<id>.p8 | tr -d '\n'` — the key on one line, since an env file cannot
+  hold a multi-line PEM) and `ASC_VENDOR_NUMBER` (App Store Connect → Payments and Financial
+  Reports, top left). Apple publishes a day's report around 05:00 Pacific the day after,
+  i.e. after the 07:30 run, so each run asks for the last seven days and a day that is "not
+  available yet" fills in the next morning. A day with no downloads is a 404 too ("no sales")
+  and is read as the zero it is.
+- **Google Play installs** — a service account with *View app information and download bulk
+  reports (read-only)* on the app (Play Console → Users and permissions; the upload account
+  from `app/android/PLAY.md` can be given that permission too): `PLAY_SERVICE_ACCOUNT_JSON_B64`
+  (`base64 < key.json | tr -d '\n'`) and `PLAY_STATS_BUCKET` (Play Console → Download reports
+  → Statistics → *Copy Cloud Storage URI*, `gs://pubsite_prod_rev_…`; the `gs://` form or the
+  bare bucket name both work). The check reads this month's and last month's
+  `installs_<package>_<YYYYMM>_overview.csv` whole on every run, because Play restates a
+  month's file daily and lags a day or two.
+
+The history lives in the state file under `app_days` (capped at 400 days), the last ratings
+snapshot under `app_ratings`; the Monday mail gets one `apps:` line and one `App Store
+ratings:` line from them. A source that is unset, failing or not yet published is said in
+words on the page, never shown as a zero.
+
 It is served at `https://papamap.de/private/ops.html` **only once you add the auth snippet** —
 `deploy/papamap.Caddyfile` answers 404 under `/private/` until `deploy/private/*.caddy`
 exists, so a checkout without it never exposes the page. Access is a token in the URL, the

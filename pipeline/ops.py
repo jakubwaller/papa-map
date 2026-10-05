@@ -31,7 +31,7 @@ from pathlib import Path
 
 import requests
 
-from . import ops_page
+from . import appstats, ops_page
 from .config import GEOJSON_PATH, STATS_PATH
 from .export import PAPAMAP_THEME_URL, write_text_atomic
 
@@ -313,7 +313,7 @@ def _seq(v) -> str:
 
 
 def render_report(counts, changes, history, anomalies, visits=None,
-                  edits=None, delta=None) -> str:
+                  edits=None, delta=None, app_days=None, ratings=None) -> str:
     lines = []
     if anomalies:
         lines.append("ANOMALIES:")
@@ -368,6 +368,25 @@ def render_report(counts, changes, history, anomalies, visits=None,
         lines.append(
             f"visits (Cloudflare, {visits['days']}d): "
             f"{visits['requests']} requests, {visits['uniques']} uniques")
+    # The store apps, from the state's per-day history: the last seven
+    # recorded days of each store, each counted over the days it has.
+    if app_days:
+        week = sorted(app_days.items())[-7:]
+        ios = [v["ios_downloads"] for _, v in week if "ios_downloads" in v]
+        android = [v["android_installs"] for _, v in week
+                   if "android_installs" in v]
+        parts = []
+        if ios:
+            parts.append(f"{sum(ios)} App Store downloads ({len(ios)}d)")
+        if android:
+            parts.append(f"{sum(android)} Play installs ({len(android)}d)")
+        if parts:
+            lines.append("apps: " + ", ".join(parts))
+    if ratings and ratings.get("total") is not None:
+        lines.append(
+            f"App Store ratings: {ratings['total']}"
+            + (f", avg {ratings['avg']}" if ratings.get("avg") else "")
+            + (f" (as of {ratings['as_of']})" if ratings.get("as_of") else ""))
     return "\n".join(lines) or "no data at all — nothing to report on"
 
 
@@ -614,6 +633,7 @@ def send_mail(subject, body, smtp=smtplib.SMTP) -> bool:
 
 def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
               mail=send_mail, visits_fetch=cf_visits, edits_fetch=osmcha_edits,
+              apps_fetch=appstats.fetch_all,
               html_path=None, history_path=None, build_log_path=None,
               private_html_path=None, delta_path=None, delta_state_path=None):
     """Returns (anomalies, report). State is updated every run so the daily
@@ -654,9 +674,18 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     # asked for daily. The mail still carries both on digest days only.
     visits = visits_fetch(now=now)
     edits = edits_fetch(now=now)
+    # The store apps too (pipeline/appstats.py): downloads, installs and
+    # ratings into their own history; None when no store id is configured.
+    apps = apps_fetch(now=now, known_days=state.get("app_days") or {})
+    app_days = appstats.merge_app_days(state.get("app_days") or {}, apps, now)
+    app_ratings = state.get("app_ratings")
+    if apps and apps.get("ratings"):
+        app_ratings = dict(apps["ratings"], as_of=now.strftime("%Y-%m-%d"))
+    digest = anomalies or weekly
     report = render_report(counts, changes, history, anomalies,
-                           visits if (anomalies or weekly) else None, edits,
-                           delta=summary)
+                           visits if digest else None, edits, delta=summary,
+                           app_days=app_days if digest else None,
+                           ratings=app_ratings if digest else None)
     visits_history = merge_visits(state.get("visits") or {}, visits, now)
     edits_days = merge_edits(state.get("edits_days") or {}, edits)
     web_edits_days = merge_edits(state.get("web_edits_days") or {}, edits,
@@ -681,6 +710,10 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
             state["web_edits_days"] = web_edits_days
         if visits_history:
             state["visits"] = visits_history
+        if app_days:
+            state["app_days"] = app_days
+        if app_ratings:
+            state["app_ratings"] = app_ratings
         save_state(state_path, state)
 
     html_path = OPS_HTML_PATH if html_path is None else html_path
@@ -697,6 +730,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
         write_ops_page(html_path, **ctx)
     if private_path:
         write_ops_page(private_path, private=True, visits=visits_history,
+                       apps=apps, app_days=app_days, app_ratings=app_ratings,
                        **ctx)
 
     if anomalies:

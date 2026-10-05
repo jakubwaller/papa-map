@@ -1021,3 +1021,149 @@ def test_last_build_is_collapsed_unless_it_went_wrong():
         FINISHED_BUILD + "  Bayern: ct=1 play=1 toilets=1\n")
     html = render(build=running)
     assert "<details open>\n<summary>not finished" in html
+
+
+# ---- Apps (private page) -----------------------------------------------------
+
+APP_DAYS = {
+    "2026-10-01": {"ios_downloads": 4, "ios_redownloads": 1, "ios_updates": 10,
+                   "android_installs": 2, "android_uninstalls": 0,
+                   "android_active": 20},
+    "2026-10-02": {"ios_downloads": 6, "ios_redownloads": 0, "ios_updates": 12,
+                   "android_installs": 1, "android_uninstalls": 1,
+                   "android_active": 21},
+    "2026-10-03": {"android_installs": 3, "android_uninstalls": 0,
+                   "android_active": 24},
+}
+RATINGS = {"version": "1.2", "released": "2026-10-02", "total": 3, "avg": 5.0,
+           "stores": {"de": {"count": 2, "avg": 5.0},
+                      "cz": {"count": 1, "avg": 5.0}},
+           "as_of": "2026-10-04"}
+
+
+def test_apps_section_is_private_and_absent_from_the_public_page():
+    """Downloads, installs, ratings: tiles, charts and one table with both
+    stores side by side, on the private page only."""
+    now = datetime(2026, 10, 4, 5, 30, tzinfo=timezone.utc)
+    apps = {"ratings": RATINGS,
+            "ios": {"by_day": {}, "pending": ["2026-10-03"]},
+            "android": {"by_day": {}}}
+    html = render(now=now, private=True, apps=apps, app_days=APP_DAYS,
+                  app_ratings=RATINGS)
+    assert "<h2>Apps</h2>" in html
+    assert html.index("<h2>Visitors</h2>") < html.index("<h2>Apps</h2>") \
+        < html.index("<h2>Last build</h2>")
+    assert ("Ratings: <b>3</b>, average 5.0 — de 2 (5.0), cz 1 (5.0) · "
+            "version 1.2 since 2026-10-02") in html
+    assert "(as of 2026-10-04)" in html
+    assert "Apple has not published 2026-10-03 yet." in html
+    assert ("<b>10</b><span>downloads, all 2 recorded days, "
+            "2026-10-01 → 2026-10-02</span>") in html
+    assert "saw 1 re-downloads and 22 updates" in html
+    assert ("<b>6</b><span>installs, all 3 recorded days, "
+            "2026-10-01 → 2026-10-03</span>") in html
+    assert "<b>24</b><span>active devices, 2026-10-03</span>" in html
+    assert "App Store downloads per day" in html
+    assert "Google Play installs per day" in html
+    assert 'title="2026-10-02 · 6 downloads"' in html
+    assert 'title="2026-10-03 · 3 installs"' in html
+    assert "<summary>all 3 days</summary>" in html
+    assert ('<td class="l">2026-10-03</td><td>–</td><td>–</td><td>–</td>'
+            "<td>3</td><td>0</td><td>24</td>") in html
+    # the public page carries none of it, by design
+    public = render(now=now, apps=apps, app_days=APP_DAYS, app_ratings=RATINGS)
+    assert "<h2>Apps</h2>" not in public and "Ratings:" not in public
+    assert "2026-10-03</td>" not in public and "downloads" not in public
+
+
+def test_apps_section_says_unset_failed_and_no_day_yet_in_words():
+    now = datetime(2026, 10, 4, 5, 30, tzinfo=timezone.utc)
+    html = render(now=now, private=True)
+    assert ("No store figures — PAPAMAP_APP_STORE_ID / PAPAMAP_ANDROID_PACKAGE "
+            "unset") in html
+    # ids set, credentials not: each store names what is missing
+    html = render(now=now, private=True,
+                  apps={"ratings": None, "ios": None, "android": None})
+    assert ("Downloads not fetched — ASC_ISSUER_ID, ASC_KEY_ID, "
+            "ASC_API_KEY_P8_B64 and ASC_VENDOR_NUMBER unset") in html
+    assert ("Installs not fetched — PLAY_SERVICE_ACCOUNT_JSON_B64 and "
+            "PLAY_STATS_BUCKET unset") in html
+    assert "No published day yet" not in html
+    # failures are said and never shown as a zero
+    html = render(now=now, private=True, app_days={},
+                  apps={"ratings": None,
+                        "ios": {"error": "HTTP 401", "by_day": {}, "pending": []},
+                        "android": {"error": "invalid_grant", "by_day": {}}})
+    assert "App Store report: failed (HTTP 401). Not zero." in html
+    assert "Play statistics: failed (invalid_grant). Not zero." in html
+    assert "No published day yet" not in html and "No reported day yet" not in html
+    # configured and answering, no day yet
+    html = render(now=now, private=True,
+                  apps={"ratings": None, "ios": {"by_day": {}, "pending": []},
+                        "android": {"by_day": {}}})
+    assert "No published day yet." in html and "No reported day yet." in html
+    # the all-time tile once the history reaches the App Store launch
+    hist = {d: {"ios_downloads": 1} for d in
+            (f"2026-09-{n:02d}" for n in range(25, 31))}
+    html = render(now=now, private=True, app_days=hist,
+                  apps={"ratings": None, "ios": {"by_day": {}, "pending": []},
+                        "android": None})
+    assert "downloads, all time, in the App Store since 2026-09-25" in html
+
+
+def test_run_check_keeps_the_app_history_and_the_digest_says_it(tmp_path):
+    gj = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": None,
+         "properties": {"osm_type": "node", "osm_id": 1, "status": "accessible"}}]}
+    monday = datetime(2026, 10, 5, 5, 30, tzinfo=timezone.utc)
+    (tmp_path / "stats.json").write_text(json.dumps(
+        {"generated_at": monday.isoformat(timespec="seconds")}))
+    (tmp_path / "gj.json").write_text(json.dumps(gj))
+    state_path = tmp_path / "state.json"
+    private_path = tmp_path / "private" / "ops.html"
+    apps = {"ratings": {"version": "1.2", "released": "2026-10-02", "total": 3,
+                        "avg": 5.0, "stores": {"de": {"count": 2, "avg": 5.0},
+                                               "cz": {"count": 1, "avg": 5.0}}},
+            "ios": {"by_day": {"2026-10-03": {"downloads": 4, "redownloads": 0,
+                                              "updates": 9}},
+                    "pending": ["2026-10-04"]},
+            "android": {"by_day": {
+                "2026-10-03": {"installs": 2, "uninstalls": 0, "active": 20},
+                "2026-10-04": {"installs": 1, "uninstalls": 0, "active": 21}}}}
+
+    def run(now, fetch):
+        return ops.run_check(
+            now=now, state_path=str(state_path),
+            stats_path=str(tmp_path / "stats.json"),
+            geojson_path=str(tmp_path / "gj.json"),
+            mail=lambda *a: None, visits_fetch=lambda **kw: None,
+            edits_fetch=lambda **kw: None, apps_fetch=fetch,
+            html_path=str(tmp_path / "ops.html"),
+            history_path=str(tmp_path / "absent.json"),
+            build_log_path=str(tmp_path / "absent.log"),
+            private_html_path=str(private_path), delta_path="")
+
+    _, report = run(monday, lambda **kw: apps)
+    state = json.loads(state_path.read_text())
+    assert state["app_days"] == {
+        "2026-10-03": {"ios_downloads": 4, "ios_redownloads": 0, "ios_updates": 9,
+                       "android_installs": 2, "android_uninstalls": 0,
+                       "android_active": 20},
+        "2026-10-04": {"android_installs": 1, "android_uninstalls": 0,
+                       "android_active": 21}}
+    assert state["app_ratings"]["total"] == 3
+    assert state["app_ratings"]["as_of"] == "2026-10-05"
+    assert "apps: 4 App Store downloads (1d), 3 Play installs (2d)" in report
+    assert "App Store ratings: 3, avg 5.0 (as of 2026-10-05)" in report
+    private = private_path.read_text()
+    assert "<h2>Apps</h2>" in private
+    assert "Apple has not published 2026-10-04 yet." in private
+    assert "<h2>Apps</h2>" not in (tmp_path / "ops.html").read_text()
+    # a run with nothing configured keeps the history and the snapshot, and
+    # a Tuesday's report says nothing about the apps
+    _, report = run(datetime(2026, 10, 6, 5, 30, tzinfo=timezone.utc),
+                    lambda **kw: None)
+    state = json.loads(state_path.read_text())
+    assert state["app_days"]["2026-10-04"]["android_installs"] == 1
+    assert state["app_ratings"]["as_of"] == "2026-10-05"
+    assert "apps:" not in report and "ratings" not in report
