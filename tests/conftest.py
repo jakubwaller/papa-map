@@ -58,11 +58,10 @@ def _isolated_web_output(tmp_path, monkeypatch):
     play_places.geojson and every page under web/wickeltische/ (a browser check
     against that web/ then found three play places). run_pipeline resolves each
     default at call time, like the two above, so one temp directory covers them
-    all. The pages directory is created here: nothing in the pipeline creates
-    it (web/wickeltische/ is tracked as a .gitkeep)."""
+    all; every writer goes through export.py's atomic write, which creates the
+    parent directory itself."""
     from pipeline import run
     out = tmp_path / "web"
-    (out / "wickeltische").mkdir(parents=True)
     for name, filename in (("GEOJSON_PATH", "changing_tables.geojson"),
                            ("PLAY_GEOJSON_PATH", "play_places.geojson"),
                            ("STATS_PATH", "stats.json"),
