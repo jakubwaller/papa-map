@@ -55,27 +55,41 @@ STOREFRONTS = ("de", "at", "ch", "cz", "sk", "pl", "nl", "be", "lu", "fr",
 APP_STORE_LIVE_SINCE = "2026-09-25"
 # Apple's daily report lands around 05:00 Pacific for the day before — well
 # after the 07:30 CEST run — so the check asks for the last few days every
-# run and lets a day that is "not available yet" wait for tomorrow.
+# run and lets a day that is "not available yet" wait for tomorrow. A state
+# with no App Store days yet (the first run, a cleared state) looks back to
+# the launch instead, capped, so the launch week is not lost for good.
 SALES_LOOKBACK_DAYS = 7
+SALES_FIRST_LOOKBACK_DAYS = 60
+# Apple's lookup API allows about 20 calls a minute; 24 storefronts in a
+# row at this pace stay under it. A failed storefront is named, not dropped.
+LOOKUP_PAUSE_S = 3.5
 
 
 # ---- App Store ratings (public, no credentials) -------------------------------
 
-def itunes_ratings(app_id: str, storefronts=STOREFRONTS, get=requests.get) -> dict | None:
+def itunes_ratings(app_id: str, storefronts=STOREFRONTS, get=requests.get,
+                   sleep=time.sleep) -> dict | None:
     """{"version", "released", "total", "avg", "stores": {cc: {"count",
-    "avg"}}} over the storefronts that have any rating; None when every
-    lookup failed (the API is flaky, not the app gone). A storefront where
-    the app is not sold answers resultCount 0 and is skipped."""
-    stores, version, released, failed = {}, None, None, 0
-    for cc in storefronts:
+    "avg"}}, "answered": [cc…], "failed": [cc…]}: the storefronts that
+    have any rating, those that answered at all (a storefront where the app
+    is not sold answers resultCount 0 and counts as answered), and those
+    whose lookup failed — a rate limit, a non-JSON reply — so the caller
+    can keep their last counts rather than drop them. None when every
+    lookup failed (the API is flaky, not the app gone)."""
+    stores, version, released = {}, None, None
+    answered, failed = [], []
+    for i, cc in enumerate(storefronts):
+        if i:
+            sleep(LOOKUP_PAUSE_S)
         try:
             r = get(ITUNES_LOOKUP_URL, params={"id": app_id, "country": cc},
                     timeout=TIMEOUT_S)
             results = r.json().get("results") or []
         except Exception as exc:  # noqa: BLE001 — one store, not the block
-            failed += 1
+            failed.append(cc)
             print(f"WARN: iTunes lookup {cc} failed: {exc}", file=sys.stderr)
             continue
+        answered.append(cc)
         if not results:
             continue
         hit = results[0]
@@ -85,13 +99,34 @@ def itunes_ratings(app_id: str, storefronts=STOREFRONTS, get=requests.get) -> di
         if count:
             stores[cc] = {"count": count,
                           "avg": round(float(hit.get("averageUserRating") or 0), 2)}
-    if failed == len(storefronts):
+    if not answered:
         return None
+    return dict(_totals(stores), version=version, released=released or None,
+                stores=stores, answered=answered, failed=failed)
+
+
+def _totals(stores: dict) -> dict:
     total = sum(s["count"] for s in stores.values())
     avg = (round(sum(s["count"] * s["avg"] for s in stores.values()) / total, 2)
            if total else None)
-    return {"version": version, "released": released or None,
-            "total": total, "avg": avg, "stores": stores}
+    return {"total": total, "avg": avg}
+
+
+def merge_ratings(old: dict | None, new: dict | None, as_of: str) -> dict | None:
+    """The ratings snapshot the state keeps, updated with this run's
+    lookups: a storefront that answered replaces its old entry (or clears
+    it, when it now reports none), a storefront that failed keeps its last
+    count, and `failed` names it so the page can say the snapshot is partly
+    older than its date. No lookup at all leaves the old snapshot."""
+    if not new:
+        return old
+    stores = dict((old or {}).get("stores") or {})
+    for cc in new.get("answered") or []:
+        stores.pop(cc, None)
+    stores.update(new.get("stores") or {})
+    return dict(_totals(stores), version=new.get("version") or (old or {}).get("version"),
+                released=new.get("released") or (old or {}).get("released"),
+                stores=stores, as_of=as_of, failed=list(new.get("failed") or []))
 
 
 # ---- App Store downloads (App Store Connect, Sales report) -------------------
@@ -142,7 +177,7 @@ def asc_sales_day(day: str, vendor: str, token: str, app_id: str,
                      "Accept": "application/a-gzip"},
             params={"filter[frequency]": "DAILY", "filter[reportDate]": day,
                     "filter[reportSubType]": "SUMMARY",
-                    "filter[reportType]": "SALES",
+                    "filter[reportType]": "SALES", "filter[version]": "1_0",
                     "filter[vendorNumber]": vendor})
     if r.status_code == 404:
         detail = ""
@@ -179,14 +214,26 @@ def app_store_downloads(app_id: str, known_days: dict, now: datetime,
     [dates Apple has not published]} for the last SALES_LOOKBACK_DAYS
     complete days — every one of them asked for again, so a day first seen
     as "not available yet" fills in tomorrow and a report Apple restates
-    overwrites. None when the ASC_* variables are unset; {"error": …} when
-    the first request fails (the rest would fail the same way)."""
-    env = env or _asc_env()
-    if not env:
-        return None
-    token = asc_token(env["issuer"], env["key_id"], env["p8"], now.timestamp())
+    overwrites — or, while `known_days` holds no App Store day yet, back to
+    the launch (capped at SALES_FIRST_LOOKBACK_DAYS). None when the ASC_*
+    variables are unset; {"error": …} when the credentials are unusable or
+    a request fails (the rest would fail the same way)."""
+    # A pasted credential can be wrong in many ways (bad base64, not a PEM,
+    # PyJWT missing): all of them are this block's failure, never the check's.
+    try:
+        env = env or _asc_env()
+        if not env:
+            return None
+        token = asc_token(env["issuer"], env["key_id"], env["p8"], now.timestamp())
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARN: App Store credentials unusable: {exc}", file=sys.stderr)
+        return {"error": str(exc)[:80], "by_day": {}, "pending": []}
+    lookback = SALES_LOOKBACK_DAYS
+    if not any("ios_downloads" in v for v in (known_days or {}).values()):
+        since_launch = (now.date() - date.fromisoformat(APP_STORE_LIVE_SINCE)).days
+        lookback = max(lookback, min(SALES_FIRST_LOOKBACK_DAYS, since_launch))
     by_day, pending = {}, []
-    for back in range(1, SALES_LOOKBACK_DAYS + 1):
+    for back in range(1, lookback + 1):
         day = (now.date() - timedelta(days=back)).isoformat()
         try:
             units = asc_sales_day(day, env["vendor"], token, app_id, get)
@@ -240,14 +287,21 @@ def parse_installs_csv(raw: bytes) -> dict:
             continue
 
         def num(*names):
+            # The first column that carries a figure: Play has deprecated
+            # the user-based columns and may keep them, filled with 0, next
+            # to the event counts that replaced them.
+            found = 0
             for n in names:
                 v = row.get(n)
-                if v not in (None, ""):
-                    try:
-                        return int(float(v))
-                    except ValueError:
-                        return 0
-            return 0
+                if v in (None, ""):
+                    continue
+                try:
+                    found = int(float(v))
+                except ValueError:
+                    continue
+                if found:
+                    return found
+            return found
         out[day] = {"installs": num("Daily User Installs", "Install events"),
                     "uninstalls": num("Daily User Uninstalls", "Uninstall events"),
                     "active": num("Active Device Installs")}
@@ -264,23 +318,30 @@ def _play_env() -> dict | None:
 
 
 def play_installs(package: str, now: datetime, get=requests.get,
-                  post=requests.post, env: dict | None = None) -> dict | None:
+                  post=requests.post, env: dict | None = None,
+                  known_days: dict | None = None) -> dict | None:
     """{"by_day": {date: {installs, uninstalls, active}}} from this month's
     and last month's overview CSVs (Play restates a month's file daily, so
-    both are read whole every run). None when PLAY_* is unset; {"error": …}
-    when the token or a fetch fails. A month without a file (the app not yet
-    in the store) is skipped, not an error."""
-    env = env or _play_env()
-    if not env:
-        return None
+    both are read whole every run) — three months while `known_days` holds
+    no Play day yet. None when PLAY_* is unset; {"error": …} when the
+    credentials are unusable, the token or a fetch fails. A month without
+    a file (the app not yet in the store) is skipped, not an error."""
     try:
+        env = env or _play_env()
+        if not env:
+            return None
         token = google_token(env["sa"], post=post, now=now.timestamp())
     except Exception as exc:  # noqa: BLE001
-        print(f"WARN: Google token failed: {exc}", file=sys.stderr)
+        print(f"WARN: Google Play credentials or token failed: {exc}",
+              file=sys.stderr)
         return {"error": str(exc)[:80], "by_day": {}}
     by_day = {}
     first = now.date().replace(day=1)
-    months = [(first - timedelta(days=1)).strftime("%Y%m"), first.strftime("%Y%m")]
+    back = 2 if any("android_installs" in v for v in (known_days or {}).values()) else 3
+    months = []
+    for _ in range(back):
+        months.insert(0, first.strftime("%Y%m"))
+        first = (first - timedelta(days=1)).replace(day=1)
     for ym in months:
         obj = f"stats/installs/installs_{package}_{ym}_overview.csv"
         try:
@@ -315,7 +376,8 @@ def fetch_all(now: datetime | None = None, known_days: dict | None = None,
         out["ratings"] = itunes_ratings(app_id, get=get)
         out["ios"] = app_store_downloads(app_id, known_days or {}, now, get=get)
     if package:
-        out["android"] = play_installs(package, now, get=get, post=post)
+        out["android"] = play_installs(package, now, get=get, post=post,
+                                       known_days=known_days)
     return out
 
 

@@ -58,18 +58,48 @@ def test_itunes_ratings_sums_the_storefronts_that_have_any():
                           "averageUserRating": avg}
     get = lookup({"de": hit(2, 5.0), "cz": hit(1, 5.0), "at": hit(0, 0),
                   "us": hit(3, 4.0), "jp": "boom"})
-    out = appstats.itunes_ratings(APP, ("de", "cz", "at", "us", "jp", "fr"), get)
+    paused = []
+    out = appstats.itunes_ratings(APP, ("de", "cz", "at", "us", "jp", "fr"), get,
+                                  sleep=paused.append)
     assert out["version"] == "1.2" and out["released"] == "2026-10-02"
     assert out["stores"] == {"de": {"count": 2, "avg": 5.0},
                              "cz": {"count": 1, "avg": 5.0},
                              "us": {"count": 3, "avg": 4.0}}
     assert out["total"] == 6 and out["avg"] == 4.5   # weighted, not of averages
+    # fr: not sold there, answered with nothing; jp: the lookup failed
+    assert out["answered"] == ["de", "cz", "at", "us", "fr"]
+    assert out["failed"] == ["jp"]
+    # a pause between lookups, none before the first: Apple's ~20/min limit
+    assert paused == [appstats.LOOKUP_PAUSE_S] * 5
     # nothing anywhere: a real zero, with the version still known
     out = appstats.itunes_ratings(APP, ("de",), lookup({"de": hit(0, 0)}))
     assert out["total"] == 0 and out["avg"] is None and out["version"] == "1.2"
     # every lookup failing is None, not "no ratings"
     assert appstats.itunes_ratings(APP, ("de", "cz"),
-                                   lookup({"de": "boom", "cz": "boom"})) is None
+                                   lookup({"de": "boom", "cz": "boom"}),
+                                   sleep=lambda s: None) is None
+
+
+def test_merge_ratings_keeps_a_failed_storefronts_last_count():
+    old = {"version": "1.1", "released": "2026-09-25", "total": 3, "avg": 5.0,
+           "stores": {"de": {"count": 2, "avg": 5.0}, "cz": {"count": 1, "avg": 5.0}},
+           "as_of": "2026-10-04", "failed": []}
+    new = {"version": "1.2", "released": "2026-10-02", "total": 4, "avg": 4.75,
+           "stores": {"de": {"count": 4, "avg": 4.75}},
+           "answered": ["de", "at"], "failed": ["cz"]}
+    merged = appstats.merge_ratings(old, new, "2026-10-05")
+    assert merged == {"version": "1.2", "released": "2026-10-02", "total": 5,
+                      "avg": 4.8, "stores": {"de": {"count": 4, "avg": 4.75},
+                                             "cz": {"count": 1, "avg": 5.0}},
+                      "as_of": "2026-10-05", "failed": ["cz"]}
+    # a storefront that answered with nothing clears its old entry
+    gone = appstats.merge_ratings(merged, {"stores": {}, "answered": ["de", "cz"],
+                                           "failed": []}, "2026-10-06")
+    assert gone["stores"] == {} and gone["total"] == 0 and gone["avg"] is None
+    assert gone["version"] == "1.2" and gone["failed"] == []
+    # no lookup at all (unset, all failed) leaves the snapshot as it was
+    assert appstats.merge_ratings(old, None, "2026-10-05") is old
+    assert appstats.merge_ratings(None, None, "2026-10-05") is None
 
 
 # ---- App Store downloads -----------------------------------------------------
@@ -124,6 +154,7 @@ def test_asc_sales_day_tells_not_yet_from_no_sales_and_reads_gzip():
                               "filter[reportDate]": "2026-10-04",
                               "filter[reportSubType]": "SUMMARY",
                               "filter[reportType]": "SALES",
+                              "filter[version]": "1_0",
                               "filter[vendorNumber]": "88"}
     with pytest.raises(RuntimeError):
         appstats.asc_sales_day("2026-10-02", "88", "tok", APP, get)
@@ -152,12 +183,27 @@ def test_app_store_downloads_asks_the_lookback_and_keeps_pending_days(monkeypatc
             return R(404, payload={"errors": [{"detail": "Report is not available yet."}]})
         return R(200, body=SALES.encode())  # plain text is read too
 
-    out = appstats.app_store_downloads(APP, {}, NOW, get=get, env=env)
+    known = {"2026-09-28": {"ios_downloads": 1}}
+    out = appstats.app_store_downloads(APP, known, NOW, get=get, env=env)
     assert asked == [f"2026-10-0{d}" for d in (5, 4, 3, 2, 1)] + ["2026-09-30", "2026-09-29"]
     assert out["pending"] == ["2026-10-05", "2026-10-04"]
     assert set(out["by_day"]) == {"2026-10-03", "2026-10-02", "2026-10-01",
                                   "2026-09-30", "2026-09-29"}
     assert out["by_day"]["2026-10-01"]["downloads"] == 3
+    # no App Store day in the state yet: back to the launch, so the launch
+    # week is captured by the first run rather than lost for good
+    asked.clear()
+    appstats.app_store_downloads(APP, {}, NOW, get=get, env=env)
+    assert asked[0] == "2026-10-05" and asked[-1] == appstats.APP_STORE_LIVE_SINCE
+    assert len(asked) == 11
+    asked.clear()
+    appstats.app_store_downloads(APP, {"2026-10-01": {"android_installs": 2}},
+                                 NOW, get=get, env=env)
+    assert len(asked) == 11  # a Play-only day is not an App Store day
+    # unusable credentials are this block's error, never an exception
+    bad = dict(env, p8="not a key")
+    out = appstats.app_store_downloads(APP, known, NOW, get=get, env=bad)
+    assert "error" in out and out["by_day"] == {} and out["pending"] == []
     # unset credentials: None, nothing asked
     monkeypatch.delenv("ASC_ISSUER_ID", raising=False)
     assert appstats.app_store_downloads(APP, {}, NOW, get=get) is None
@@ -202,6 +248,12 @@ def test_parse_installs_csv_reads_utf16_and_the_user_columns():
     assert appstats.parse_installs_csv(newer.encode("utf-8")) == {
         "2026-10-03": {"installs": 7, "uninstalls": 2, "active": 35}}
     assert appstats.parse_installs_csv(b"") == {}
+    # the deprecated user columns kept but zero-filled next to the events
+    both = ("Date,Package Name,Daily User Installs,Daily User Uninstalls,"
+            "Active Device Installs,Install events,Uninstall events\n"
+            "2026-10-03,de.papamap.app,0,0,35,7,2\n")
+    assert appstats.parse_installs_csv(both.encode("utf-8")) == {
+        "2026-10-03": {"installs": 7, "uninstalls": 2, "active": 35}}
 
 
 def test_google_token_signs_rs256_and_exchanges_it():
@@ -239,7 +291,9 @@ def test_play_installs_reads_two_months_and_skips_a_missing_one(monkeypatch):
         return R(200, body=INSTALLS.encode("utf-16"))
 
     post = lambda url, timeout, data: R(200, payload={"access_token": "tok"})  # noqa: E731
-    out = appstats.play_installs("de.papamap.app", NOW, get=get, post=post, env=env)
+    known = {"2026-10-01": {"android_installs": 1}}
+    out = appstats.play_installs("de.papamap.app", NOW, get=get, post=post,
+                                 env=env, known_days=known)
     assert asked == [
         "https://storage.googleapis.com/storage/v1/b/pubsite_prod_rev_123/o/"
         "stats%2Finstalls%2Finstalls_de.papamap.app_202609_overview.csv",
@@ -254,6 +308,15 @@ def test_play_installs_reads_two_months_and_skips_a_missing_one(monkeypatch):
     assert out["error"] == "HTTP 401" and out["by_day"] == {}
     monkeypatch.delenv("PLAY_STATS_BUCKET", raising=False)
     assert appstats.play_installs("de.papamap.app", NOW, get=get, post=post) is None
+    # no Play day in the state yet: one month further back
+    asked.clear()
+    appstats.play_installs("de.papamap.app", NOW, get=get, post=post, env=env)
+    assert [u[-20:-13] for u in asked] == ["_202608", "_202609", "_202610"]
+    # an unusable key file is this block's error, never an exception
+    monkeypatch.setenv("PLAY_STATS_BUCKET", "b")
+    monkeypatch.setenv("PLAY_SERVICE_ACCOUNT_JSON_B64", "bm90IGpzb24=")  # "not json"
+    out = appstats.play_installs("de.papamap.app", NOW, get=get, post=post)
+    assert "error" in out and out["by_day"] == {}
 
 
 def test_play_env_accepts_a_gs_uri(monkeypatch):
@@ -270,6 +333,26 @@ def test_fetch_all_is_none_without_either_store_id(monkeypatch):
     monkeypatch.delenv("PAPAMAP_APP_STORE_ID", raising=False)
     monkeypatch.delenv("PAPAMAP_ANDROID_PACKAGE", raising=False)
     assert appstats.fetch_all(now=NOW, get=lambda *a, **k: 1 / 0) is None
+
+
+def test_fetch_all_survives_a_mistyped_credential(monkeypatch, capsys):
+    """One wrong paste in ops.env must cost its block, not the daily check."""
+    monkeypatch.setenv("PAPAMAP_APP_STORE_ID", APP)
+    monkeypatch.setenv("PAPAMAP_ANDROID_PACKAGE", "de.papamap.app")
+    monkeypatch.setenv("ASC_ISSUER_ID", "i")
+    monkeypatch.setenv("ASC_KEY_ID", "k")
+    monkeypatch.setenv("ASC_VENDOR_NUMBER", "88")
+    monkeypatch.setenv("ASC_API_KEY_P8_B64", "bm90YWtleQ==")      # "notakey"
+    monkeypatch.setenv("PLAY_STATS_BUCKET", "b")
+    monkeypatch.setenv("PLAY_SERVICE_ACCOUNT_JSON_B64", "%%%")   # not base64
+    monkeypatch.setattr(appstats, "LOOKUP_PAUSE_S", 0)
+    out = appstats.fetch_all(now=NOW, get=lookup({}),
+                             post=lambda *a, **k: 1 / 0)
+    assert "error" in out["ios"] and "error" in out["android"]
+    assert out["ratings"]["answered"] == list(appstats.STOREFRONTS)
+    err = capsys.readouterr().err
+    assert "App Store credentials unusable" in err
+    assert "Google Play credentials or token failed" in err
 
 
 def test_merge_app_days_writes_each_stores_columns_alone_and_never_today():

@@ -676,11 +676,15 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     edits = edits_fetch(now=now)
     # The store apps too (pipeline/appstats.py): downloads, installs and
     # ratings into their own history; None when no store id is configured.
-    apps = apps_fetch(now=now, known_days=state.get("app_days") or {})
+    try:
+        apps = apps_fetch(now=now, known_days=state.get("app_days") or {})
+    except Exception as exc:  # noqa: BLE001 — decoration, never the check
+        print(f"WARN: app stats failed: {exc}", file=sys.stderr)
+        apps = None
     app_days = appstats.merge_app_days(state.get("app_days") or {}, apps, now)
-    app_ratings = state.get("app_ratings")
-    if apps and apps.get("ratings"):
-        app_ratings = dict(apps["ratings"], as_of=now.strftime("%Y-%m-%d"))
+    app_ratings = appstats.merge_ratings(
+        state.get("app_ratings"), (apps or {}).get("ratings"),
+        now.strftime("%Y-%m-%d"))
     digest = anomalies or weekly
     report = render_report(counts, changes, history, anomalies,
                            visits if digest else None, edits, delta=summary,

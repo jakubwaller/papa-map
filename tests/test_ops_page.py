@@ -1167,3 +1167,31 @@ def test_run_check_keeps_the_app_history_and_the_digest_says_it(tmp_path):
     assert state["app_days"]["2026-10-04"]["android_installs"] == 1
     assert state["app_ratings"]["as_of"] == "2026-10-05"
     assert "apps:" not in report and "ratings" not in report
+
+
+def test_run_check_survives_an_app_fetch_that_raises(tmp_path, capsys):
+    """The store block is decoration: a fetch that blows up is reported and
+    the state, the pages and the mail still happen."""
+    (tmp_path / "stats.json").write_text(json.dumps(
+        {"generated_at": NOW.isoformat(timespec="seconds")}))
+    (tmp_path / "gj.json").write_text(json.dumps(
+        {"type": "FeatureCollection", "features": [
+            {"type": "Feature", "geometry": None,
+             "properties": {"osm_type": "node", "osm_id": 1, "status": "accessible"}}]}))
+    state_path = tmp_path / "state.json"
+
+    def boom(**kw):
+        raise ValueError("Unable to load PEM file")
+
+    ops.run_check(now=NOW, state_path=str(state_path),
+                  stats_path=str(tmp_path / "stats.json"),
+                  geojson_path=str(tmp_path / "gj.json"),
+                  mail=lambda *a: None, visits_fetch=lambda **kw: None,
+                  edits_fetch=lambda **kw: None, apps_fetch=boom,
+                  html_path=str(tmp_path / "ops.html"),
+                  history_path=str(tmp_path / "absent.json"),
+                  build_log_path=str(tmp_path / "absent.log"),
+                  private_html_path=str(tmp_path / "private.html"), delta_path="")
+    assert state_path.exists() and (tmp_path / "private.html").exists()
+    assert "WARN: app stats failed: Unable to load PEM file" in capsys.readouterr().err
+    assert "<h2>Apps</h2>" in (tmp_path / "private.html").read_text()

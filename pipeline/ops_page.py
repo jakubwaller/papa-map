@@ -616,6 +616,10 @@ def _apps_section(apps: dict | None, app_days: dict | None,
                  + (f' <span class="muted">(as of {esc(str(ratings["as_of"]))})</span>'
                     if ratings.get("as_of") else "")
                  + "</p>\n")
+        if ratings.get("failed"):
+            p.append('<p class="muted">Storefronts that did not answer this '
+                     f"run, their last counts kept: "
+                     f"{esc(', '.join(ratings['failed']))}.</p>\n")
     if ios_fetch is None:
         p.append('<p class="muted">Downloads not fetched — ASC_ISSUER_ID, '
                  "ASC_KEY_ID, ASC_API_KEY_P8_B64 and ASC_VENDOR_NUMBER unset "
@@ -643,7 +647,8 @@ def _apps_section(apps: dict | None, app_days: dict | None,
         upd = sum(v.get("ios_updates", 0) for _, v in days)
         p.append(f'<p class="muted">First-time downloads; the same days also '
                  f"saw {_n(redl)} re-downloads and {_n(upd)} updates.</p>\n")
-        chart = _day_bars(edits_rows(ios, "download"), "--accent", labels=True)
+        chart = _day_bars(edits_rows({d: max(0, n) for d, n in ios.items()},
+                                     "download"), "--accent", labels=True)
         if chart:
             p.append('<p class="muted">App Store downloads per day.</p>\n')
             p.append(chart)
@@ -676,7 +681,8 @@ def _apps_section(apps: dict | None, app_days: dict | None,
             p.append(f'<div class="kpi"><b>{_n(active[-1][1])}</b>'
                      f"<span>active devices, {esc(active[-1][0])}</span></div>\n")
         p.append("</div>\n")
-        chart = _day_bars(edits_rows(android, "install"), "--green", labels=True)
+        chart = _day_bars(edits_rows({d: max(0, n) for d, n in android.items()},
+                                     "install"), "--green", labels=True)
         if chart:
             p.append('<p class="muted">Google Play installs per day.</p>\n')
             p.append(chart)
