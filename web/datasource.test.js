@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { geoFailKey, STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
+import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
          chipKeys, chipView,
          isWheelchairOk, isWheelchairLimited, countWheelchair, pinFeatures, placeFeatures,
@@ -1809,4 +1809,38 @@ test("geoFailKey: a refusal names where to re-allow, other failures stay generic
   assert.equal(geoFailKey(new Error("nogeo"), false), "toastNoGeo");
   assert.equal(geoFailKey(undefined, false), "toastGeoFail");
   assert.equal(geoFailKey(null, true), "toastGeoFail");
+});
+
+test("flightLength: a pure zoom is the zoom change in log space over ρ", () => {
+  assert.ok(Math.abs(flightLength(844, 0, 12) - 12 * Math.LN2 / 1.42) < 1e-9);
+});
+
+test("flightLength: a flight and its reverse measure the same", () => {
+  // The pan is in px at the starting zoom, so the reverse pans 2^dz as many.
+  assert.ok(Math.abs(flightLength(844, 1000, 3) - flightLength(844, 8000, -3)) < 1e-9);
+});
+
+test("flightLength: grows with the pan, and a bigger screen shortens it", () => {
+  assert.ok(flightLength(844, 820, 0) < flightLength(844, 167000, 0));
+  assert.ok(flightLength(1280, 167000, 0) < flightLength(844, 167000, 0));
+});
+
+test("flightMs: a hop across town is quick, Berlin–Munich on a phone lands on the cap", () => {
+  // At street zoom on a phone, 2 km is ≈620 px of pan and 5 km ≈1560 px;
+  // Berlin–Munich is ≈167 000 px (measured: MapLibre's own number agrees to 0.4 %).
+  assert.ok(flightMs(flightLength(844, 620, 0)) < 600);
+  assert.ok(flightMs(flightLength(844, 1560, 0)) < 1000);
+  assert.equal(flightMs(flightLength(844, 167000, 0)), 4000);
+});
+
+test("flightMs: the floor, the cap, and the jump line", () => {
+  assert.equal(flightMs(0), 300);
+  assert.equal(flightMs(11), 4000);        // 5.3 s wanted, capped
+  assert.equal(flightMs(11.5), null);      // 5.5 s wanted: jump
+  // Hamburg–New York from z14 on a phone is ≈2.2 million px of pan: a jump.
+  assert.equal(flightMs(flightLength(844, 2.2e6, 0)), null);
+  // The world view down to a street still flies (null <= 4000 is true in JS,
+  // so the null case is ruled out by name).
+  const zoomIn = flightMs(flightLength(844, 300, 15));
+  assert.ok(zoomIn !== null && zoomIn <= 4000, String(zoomIn));
 });

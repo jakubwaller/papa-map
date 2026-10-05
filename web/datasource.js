@@ -1197,3 +1197,38 @@ export function geoFailKey(err, native) {
   if (err?.message === "nogeo") return "toastNoGeo";
   return "toastGeoFail";
 }
+
+// ---- Flights ---------------------------------------------------------------
+// How far a camera flight travels, pan and zoom together, in the measure
+// MapLibre's own flyTo derives its duration from: the van Wijk–Nuij path
+// length, with the same ρ = 1.42 as its default `curve`. Replicated because
+// MapLibre neither exposes the number nor caps the duration it makes of it
+// (`maxDuration` turns a long flight into a jump), and flightMs needs the
+// number. `w0` is the longer side of the viewport in CSS px, `u1` the pan in
+// px at the starting zoom, `dz` the zoom change. A flight and its reverse
+// measure the same.
+export function flightLength(w0, u1, dz, rho = 1.42) {
+  const w1 = w0 / 2 ** dz, rho2 = rho * rho;
+  const zoomOnly = Math.abs(Math.log(w1 / w0)) / rho;
+  if (u1 < 1e-6) return zoomOnly;
+  const r = (i) => {
+    const b = (w1 * w1 - w0 * w0 + (i ? -1 : 1) * rho2 * rho2 * u1 * u1) / (2 * (i ? w1 : w0) * rho2 * u1);
+    return Math.log(Math.sqrt(b * b + 1) - b);
+  };
+  const s = (r(1) - r(0)) / rho;
+  return Number.isFinite(s) ? s : zoomOnly;
+}
+
+// How long a flight of that length gets, in ms — or null: jump, do not fly.
+// Jakub, 2026-10-05: Berlin–Munich from street zoom on a phone should take
+// 4 s, shorter hops less, and a very long flight should jump. msPerUnit is
+// set so that hop lands on the cap (it measures ≈8.4 on a 844 px phone).
+// Above jumpAboveMs there is nothing legible left in the flight: from a
+// phone's street zoom that is beyond ~1100 km at z16 and ~4400 km at z14,
+// so Germany flies even from a street and intercontinental jumps.
+export const FLIGHT = { msPerUnit: 480, minMs: 300, maxMs: 4000, jumpAboveMs: 5500 };
+export function flightMs(length, p = FLIGHT) {
+  const ms = length * p.msPerUnit;
+  if (ms > p.jumpAboveMs) return null;
+  return Math.min(Math.max(Math.round(ms), p.minMs), p.maxMs);
+}

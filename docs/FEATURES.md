@@ -238,8 +238,9 @@ boundary.
   would land at the closest zoom there is) and otherwise flies to a zoom chosen
   by the result's level — a house or a street 17, a city 12, a country 5. No
   marker is left behind and no popup opens: the reader asked to look
-  somewhere, not to select something. Either way the camera lands in 1.2 s,
-  however far away the result is (see the nearest button).
+  somewhere, not to select something. Either way the camera takes the time
+  the flight's length earns it, or jumps if it is very long (see the nearest
+  button).
 
 This is the first feature on the site that sends something a reader typed to a
 party that is not OpenStreetMap, so it is deliberately frugal about it. Three
@@ -318,12 +319,19 @@ a mapper's note on the step or the toilet is often the most useful line there
 is for a wheelchair user.
 
 The button asks the browser for a position, finds the nearest table the
-**current reading** calls usable, flies there and opens the popup. The flight
-lands in 1.2 s wherever it starts, as every flight on the map does — the locate
-button's, a search result's, a saved place's. MapLibre's own duration grows
-with the distance, and from a few hundred kilometres away that was five
-seconds of zooming out and back in; `fitBounds` flies the same way, so the
-search result's fit passes the same duration.
+**current reading** calls usable, flies there and opens the popup. How long
+the flight takes — this one's, the locate button's, a search result's, a saved
+place's — depends on how far the camera travels, pan and zoom together, in
+the measure MapLibre's own `flyTo` uses (`flightLength` in
+`web/datasource.js` replicates its path length): 480 ms per unit, never under
+300 ms and never over 4 s, so a hop across town takes under a second and
+Berlin–Munich from street zoom on a phone the full 4 s. A flight that would
+need more than 5.5 s at that rate — from a phone's street zoom, beyond
+~1100 km at z16 and ~4400 km at z14 — jumps instead; there is nothing legible
+in it, only tiles rushing past. MapLibre's
+own scaling gave the Berlin–Munich hop 7 s; a flat 1.2 s, tried for a day in
+October 2026, was fast but dizzying from 500 km. `fitBounds` flies the same
+way, so the search result's fit goes through the same rule.
 
 A refused permission gets its own toast (`geoFailKey`, `web/datasource.js`). A
 browser remembers a dismissed prompt and never asks again, and a page cannot
