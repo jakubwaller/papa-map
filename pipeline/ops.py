@@ -442,14 +442,21 @@ def osmcha_edits(days=7, now=None, get=requests.get):
         # The answers given on the map itself (web/osm.js) are the reader's
         # own changesets tagged created_by=PapaMap — a second slice, counted
         # on its own line and never folded into the theme's number. A count
-        # only: the chart stays the theme's. Its own try, because this is a
-        # second metadata scan on a day the first one already cost up to
-        # 150 s: a failure here drops this line and says so, and never the
-        # theme count fetched a moment ago.
+        # only: the chart stays the theme's. The filter is OSMCha's `editor`
+        # parameter, never `metadata=created_by=…`: OSMCha stores created_by
+        # in its own `editor` column and drops it from the metadata JSON
+        # (osmcha's changeset.py, set_fields), so a metadata filter on that
+        # key matches nothing by construction — this line read 0 from the
+        # day it shipped (2026-09-13) to 2026-10-05 while the public OSM API
+        # listed PapaMap changesets in the same week. `editor` is a
+        # case-insensitive substring match like the metadata filter. Its own
+        # try, because it is a second query on a day the first one already
+        # cost up to 150 s: a failure here drops this line and says so, and
+        # never the theme count fetched a moment ago.
         try:
             r = get(OSMCHA_URL, timeout=OSMCHA_TIMEOUT_S,
                     headers={"Authorization": f"Token {token}"},
-                    params={"metadata": f"created_by={WEB_CREATED_BY}",
+                    params={"editor": WEB_CREATED_BY,
                             "date__gte": since, "page_size": "1"})
             out["web_changesets"] = int(r.json()["count"])
         except Exception as exc:

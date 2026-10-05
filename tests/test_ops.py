@@ -182,9 +182,13 @@ def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
     # the changeset theme tag is the theme URL, not the id (MapComplete
     # stamps remote themes with forcedId = link); the second query is the
     # in-page answers, which web/osm.js tags created_by=PapaMap, counted
-    # apart from the theme's and never added to it
-    assert [c["metadata"] for c in calls] == [
-        f"theme={ops.PAPAMAP_THEME_URL}", "created_by=PapaMap"]
+    # apart from the theme's and never added to it — through OSMCha's
+    # `editor` filter, because created_by lives in that column and never in
+    # the metadata JSON: `metadata=created_by=PapaMap` is a guaranteed 0
+    # (what the digest printed from 2026-09-13 to 2026-10-05).
+    assert calls[0]["metadata"] == f"theme={ops.PAPAMAP_THEME_URL}"
+    assert calls[1]["editor"] == "PapaMap"
+    assert "metadata" not in calls[1]
     assert calls[0]["date__gte"] == calls[1]["date__gte"] == "2026-07-27"  # NOW minus 7 days
     assert edits["web_changesets"] == 2
     report = ops.render_report(None, None, [], [], edits=edits)
@@ -194,7 +198,8 @@ def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
 
 def test_osmcha_second_query_failing_keeps_the_theme_count(monkeypatch):
     """The created_by slice is decoration on top of the theme count: when its
-    query dies (OSMCha's metadata scan has taken 150 s on a bad day) the
+    query dies (a second call on a day the theme query's metadata scan has
+    already taken 150 s) the
     theme count, its chart point and the cache all survive; only the
     'answers on the map itself' line is missing."""
     monkeypatch.setenv("OSMCHA_TOKEN", "token")
