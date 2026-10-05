@@ -15,15 +15,15 @@ from .config import (AREAS_PATH, BUNDESLAENDER, CITY_AREAS, GEOJSON_PATH, HISTOR
                      toilets_counts_ql)
 
 
-def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
+def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                  display_area=None, area_key=None, overpass_fetch=osm.fetch_overpass,
                  taginfo_fetch=stats.fetch_taginfo, now=None,
                  sweep_rounds=None, sweep_pause_s=None,
-                 sweep_deadline_s=None, pages_dir=PAGES_DIR,
-                 cities=None, history_path=HISTORY_PATH,
-                 play_geojson_path=PLAY_GEOJSON_PATH,
+                 sweep_deadline_s=None, pages_dir=None,
+                 cities=None, history_path=None,
+                 play_geojson_path=None,
                  counts_path=None, counts_period_days=None,
-                 areas_path=AREAS_PATH, areas_bbox_path=None):
+                 areas_path=None, areas_bbox_path=None):
     """One idempotent build: Overpass (per sweep area) -> classify -> GeoJSON +
     play_places.geojson + stats.json + the per-Bundesland pages, plus (on a
     full build) the per-region history and the leaderboard pages rendered from
@@ -52,8 +52,20 @@ def run_pipeline(geojson_path=GEOJSON_PATH, stats_path=STATS_PATH, areas=None,
     rounds = SWEEP_ROUNDS if sweep_rounds is None else sweep_rounds
     pause = SWEEP_PAUSE_S if sweep_pause_s is None else sweep_pause_s
     budget = SWEEP_DEADLINE_S if sweep_deadline_s is None else sweep_deadline_s
-    # Resolved at call time, not in the signature, so a test can point the
-    # module at a temp file and never touch the checkout's web/data.
+    # Every path this build writes is resolved at call time, not in the
+    # signature, so a test can point the module at a temp directory and never
+    # touch the checkout's web/ (tests/conftest.py, _isolated_web_output).
+    # Until 2026-10-05 only the two state files below were, and a test that
+    # left the others at their defaults wrote fixture output over the real
+    # web/data/areas.json and play_places.geojson and every page under
+    # web/wickeltische/ — a browser check against that web/ found three play
+    # places where the map has thousands.
+    geojson_path = GEOJSON_PATH if geojson_path is None else geojson_path
+    play_geojson_path = PLAY_GEOJSON_PATH if play_geojson_path is None else play_geojson_path
+    stats_path = STATS_PATH if stats_path is None else stats_path
+    areas_path = AREAS_PATH if areas_path is None else areas_path
+    history_path = HISTORY_PATH if history_path is None else history_path
+    pages_dir = PAGES_DIR if pages_dir is None else pages_dir
     counts_path = TOILETS_COUNTS_PATH if counts_path is None else counts_path
     areas_bbox_path = delta.AREAS_BBOX_PATH if areas_bbox_path is None else areas_bbox_path
     counts_period = (TOILETS_COUNTS_PERIOD_DAYS if counts_period_days is None

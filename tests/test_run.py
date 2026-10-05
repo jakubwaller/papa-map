@@ -1,6 +1,8 @@
 import json
 import re
+import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 import requests
@@ -132,6 +134,30 @@ def _fake_taginfo(load_fixture):
 
 def _taginfo_down(url):
     raise requests.ConnectionError("taginfo down")
+
+
+def test_run_default_paths_stay_out_of_the_checkout(tmp_path, load_fixture):
+    """A call that names no output path — what `python -m pipeline.run` does —
+    writes where the module's path constants point at CALL time, which the
+    suite's autouse fixture (tests/conftest.py, _isolated_web_output) aims at
+    a temp directory. Until 2026-10-05 the defaults were bound in the
+    signature at import, so such a call wrote fixture output over the
+    checkout's own web/data/areas.json, play_places.geojson and every page
+    under web/wickeltische/ — a browser check against that web/ then found
+    three play places where the map has thousands."""
+    repo_web = Path(__file__).resolve().parents[1] / "web"
+    started = time.time()
+    run_pipeline(overpass_fetch=_fake_overpass(load_fixture),
+                 taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+    out = tmp_path / "web"
+    for name in ("changing_tables.geojson", "play_places.geojson", "stats.json",
+                 "areas.json", "history.json"):
+        assert (out / name).is_file(), name
+    assert (out / "wickeltische" / "index.html").is_file()
+    touched = [str(p.relative_to(repo_web)) for sub in ("data", "wickeltische")
+               for p in (repo_web / sub).rglob("*")
+               if p.is_file() and p.stat().st_mtime >= started]
+    assert touched == []
 
 
 def test_run_writes_both_files(tmp_path, load_fixture):
