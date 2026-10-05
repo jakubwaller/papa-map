@@ -560,6 +560,21 @@ def test_answers_section_tiles_chart_and_table():
                   web_edits_days=hist, edits={"days": 7, "error": "timed out"})
     assert "Not counted this run" in html and html.count("Not zero.") == 1
     assert "answers query has not answered" not in html
+    # the count arrived but the split did not (a week beyond one page): the
+    # fresher number with its reason, not a claim that the query failed
+    html = render(now=datetime(2026, 10, 9, 5, 30, tzinfo=timezone.utc),
+                  web_edits_days=hist,
+                  edits={"days": 7, "changesets": 9, "as_of": "2026-10-09",
+                         "web_changesets": 130})
+    assert ("OSMCha's 7-day count of answers as of 2026-10-09 is <b>130</b>, "
+            "but the per-day split stops at 2026-10-05") in html
+    assert "answers query has not answered" not in html
+    # the theme answered today but the answers query did not: the stale note,
+    # since the cached line carries no count
+    html = render(now=datetime(2026, 10, 9, 5, 30, tzinfo=timezone.utc),
+                  web_edits_days=hist,
+                  edits={"days": 7, "changesets": 9, "as_of": "2026-10-09"})
+    assert "has not answered since 2026-10-05: 3 days missing" in html
 
 
 def test_young_answers_history_shows_the_count_or_says_none_yet():
@@ -575,6 +590,12 @@ def test_young_answers_history_shows_the_count_or_says_none_yet():
     assert "<h2>Answers on the map itself</h2>" in html
     assert "No count yet" in html and "<b>0</b> answers" not in html
     assert html.count('class="bars"') == 2  # no chart without a history
+    # a cached line dated today without the count: the theme query answered
+    # this run and the answers query did not — said, not "not yet"
+    html = render(edits={"days": 7, "changesets": 4, "as_of": "2026-08-23"})
+    assert ("Not counted this run — the OSMCha answers query failed while "
+            "the theme query above answered. Not zero.") in html
+    assert "No count yet" not in html
 
 
 # ---- run_check writes it -----------------------------------------------------

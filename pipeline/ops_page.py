@@ -697,6 +697,13 @@ def _answers_section(edits: dict | None, web_edits_days: dict | None,
                      f"<b>{_n(count)}</b> answers.</p>\n")
             p.append('<p class="muted">A per-day chart of these appears here '
                      "once a daily OSMCha fetch records the split.</p>\n")
+        elif not failed and (edits or {}).get("as_of") == now.strftime("%Y-%m-%d"):
+            # The cached line is rebuilt by every run whose theme query
+            # answered, so a line dated today without the count means the
+            # answers query failed this run — not that nobody asked yet.
+            p.append('<p class="muted">Not counted this run — the OSMCha '
+                     "answers query failed while the theme query above "
+                     "answered. Not zero.</p>\n")
         elif not failed:
             p.append('<p class="muted">No count yet — the next daily OSMCha '
                      "fetch brings it.</p>\n")
@@ -716,7 +723,22 @@ def _answers_section(edits: dict | None, web_edits_days: dict | None,
 
     last = tiles[-1]["last"]
     missing = _missing_days(last, now)
-    if missing > 0 and not failed:
+    # Like the theme's: a count fresher than the split is a window beyond one
+    # OSMCha page, counted whole — not a query that stopped answering.
+    count = (edits or {}).get("web_changesets") if not failed else None
+    as_of = (edits or {}).get("as_of") if count is not None else None
+    try:
+        count_through = ((date.fromisoformat(as_of) - timedelta(days=1)).isoformat()
+                         if as_of else None)
+    except ValueError:
+        count_through = None
+    if count_through and count_through > last:
+        p.append(f'<p class="warn">OSMCha\'s {edits.get("days", 7)}-day count of '
+                 f"answers as of {esc(as_of)} is <b>{_n(count)}</b>, but the "
+                 f"per-day split stops at {esc(last)}: a window beyond one "
+                 "OSMCha page (~100 changesets) is counted whole, never "
+                 "split.</p>\n")
+    elif missing > 0 and not failed:
         p.append(f'<p class="warn">The daily OSMCha answers query has not '
                  f"answered since {esc(last)}: {missing} day"
                  f"{'' if missing == 1 else 's'} missing from the totals "
