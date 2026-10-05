@@ -280,6 +280,10 @@ def _pct(part, whole) -> str:
 # One flex column per calendar day: at 60 the columns are still individually
 # hoverable on a phone, and the table/tooltips carry anything older.
 CHART_DAYS = 60
+# The day the room question could first be answered on the map itself
+# (web/osm.js, PR #92): no earlier changeset carries created_by=PapaMap, so
+# a history reaching back to it is all time, as the theme's is to its launch.
+WEB_ANSWERS_SINCE = "2026-09-13"
 
 
 def _day_range(first: str, last: str, cap: int = CHART_DAYS) -> list[str]:
@@ -318,10 +322,11 @@ def transition_rows(history: list[dict]) -> list[tuple]:
     return rows
 
 
-def edits_rows(edits_days: dict | None) -> list[tuple]:
-    """(day, tooltip, changesets, changesets) per calendar day for the
-    theme-edits chart. A day the state holds a 0 for is a real zero; a day it
-    never fetched (OSMCha down, token unset) is None, not a claimed quiet."""
+def edits_rows(edits_days: dict | None, noun: str = "changeset") -> list[tuple]:
+    """(day, tooltip, count, count) per calendar day for the theme-edits
+    chart and its sibling for the answers (`noun` is what the tooltip counts).
+    A day the state holds a 0 for is a real zero; a day it never fetched
+    (OSMCha down, token unset) is None, not a claimed quiet."""
     days = sorted(edits_days or {})
     rows = []
     for d in _day_range(days[0], days[-1]) if days else []:
@@ -329,20 +334,21 @@ def edits_rows(edits_days: dict | None) -> list[tuple]:
         if n is None:
             rows.append((d, f"{d} · not fetched", None, 0))
         else:
-            rows.append((d, f"{d} · {n} changeset{'' if n == 1 else 's'}",
-                         n, n))
+            rows.append((d, f"{d} · {n} {noun}{'' if n == 1 else 's'}", n, n))
     return rows
 
 
-def edit_totals(edits_days: dict | None) -> list[dict]:
-    """The tiles over the per-day theme-changeset history: the last 7 and
-    30 days and every recorded day. Windows are calendar days back from the
-    newest *recorded* day, so a run of failed fetches shows up as the tile's
-    dates standing still (and as `days` < `span`), never as the window
-    quietly widening. A window the history cannot fill is left out — the
-    all-days tile already says how much there is — and that tile is called
-    all time once the history reaches back to the theme's launch, because
-    no earlier changeset can carry the tag."""
+def edit_totals(edits_days: dict | None,
+                live_since: str = THEME_LIVE_SINCE) -> list[dict]:
+    """The tiles over a per-day changeset history: the last 7 and 30 days
+    and every recorded day. Windows are calendar days back from the newest
+    *recorded* day, so a run of failed fetches shows up as the tile's dates
+    standing still (and as `days` < `span`), never as the window quietly
+    widening. A window the history cannot fill is left out — the all-days
+    tile already says how much there is — and that tile is called all time
+    once the history reaches back to `live_since` (the theme's launch, or
+    the answers' first possible day), because no earlier changeset can
+    carry the tag."""
     days = sorted((edits_days or {}).items())
     if not days:
         return []
@@ -360,7 +366,7 @@ def edit_totals(edits_days: dict | None) -> list[dict]:
                       "changesets": sum(v for _, v in window),
                       "days": len(window), "first": window[0][0],
                       "last": window[-1][0]})
-    all_time = days[0][0] <= THEME_LIVE_SINCE
+    all_time = days[0][0] <= live_since
     tiles.append({"label": "all time" if all_time
                   else f"all {len(days)} recorded days",
                   "span": len(days), "changesets": sum(v for _, v in days),
@@ -614,11 +620,7 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
 
     last = tiles[-1]["last"]
     as_of = (edits or {}).get("as_of") if not (edits or {}).get("error") else None
-    yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
-    try:
-        missing = (date.fromisoformat(yesterday) - date.fromisoformat(last)).days
-    except ValueError:
-        missing = 0
+    missing = _missing_days(last, now)
     try:
         count_through = ((date.fromisoformat(as_of) - timedelta(days=1)).isoformat()
                          if as_of else None)
@@ -650,6 +652,91 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
     p.append(f"<details>\n<summary>all {len(rows)} days</summary>\n"
              '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
              "<th>changesets</th></tr></thead>\n<tbody>\n")
+    for d, n in rows:
+        p.append(f'<tr><td class="l">{esc(d)}</td><td>{_n(n)}</td></tr>\n')
+    p.append("</tbody>\n</table>\n</div>\n</details>\n")
+    return "".join(p)
+
+
+def _missing_days(last: str, now: datetime) -> int:
+    """How many complete days a per-day history stops short of yesterday —
+    0 when it is current or its last date is unreadable."""
+    yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+    try:
+        return (date.fromisoformat(yesterday) - date.fromisoformat(last)).days
+    except ValueError:
+        return 0
+
+
+def _answers_section(edits: dict | None, web_edits_days: dict | None,
+                     now: datetime) -> str:
+    """The other slice OSMCha counts: the room question answered on the map
+    itself (web/osm.js — the site and the app), one changeset per answer
+    under the reader's own account, tagged created_by=PapaMap. Same shape as
+    the theme section — tiles over 7/30/all days, the per-day chart, the
+    table — from its own per-day history, which the daily fetch has kept
+    since 2026-10-05; before that the check kept the 7-day count alone, and
+    that count is what shows while the history is too young for tiles. A
+    failed fetch is said in the theme section and only pointed at here."""
+    p = ["<h2>Answers on the map itself</h2>\n",
+         '<p class="muted">The room question answered on papamap.de or in the '
+         "app: one changeset per answer under the reader's own OSM account, "
+         "tagged <code>created_by=PapaMap</code>, counted by OSMCha. Apart "
+         "from the theme's changesets above, never added to them. Complete "
+         "UTC days only.</p>\n"]
+    failed = bool((edits or {}).get("error"))
+    if failed:
+        p.append('<p class="muted">Not counted this run — the OSMCha query '
+                 "failed (see above).</p>\n")
+    tiles = edit_totals(web_edits_days, WEB_ANSWERS_SINCE)
+    if not tiles:
+        count = (edits or {}).get("web_changesets")
+        if count is not None and not failed:
+            as_of = f' as of {esc(edits["as_of"])}' if edits.get("as_of") else ""
+            p.append(f'<p>OSMCha, {edits.get("days", 7)} d{as_of}: '
+                     f"<b>{_n(count)}</b> answers.</p>\n")
+            p.append('<p class="muted">A per-day chart of these appears here '
+                     "once a daily OSMCha fetch records the split.</p>\n")
+        elif not failed:
+            p.append('<p class="muted">No count yet — the next daily OSMCha '
+                     "fetch brings it.</p>\n")
+        return "".join(p)
+
+    p.append('<div class="kpis">\n')
+    for t in tiles:
+        if t.get("all_time"):
+            when = f"all time, answering on the map since {WEB_ANSWERS_SINCE}"
+        else:
+            when = f"{t['label']}, {esc(t['first'])} → {esc(t['last'])}"
+        if t["days"] < t["span"]:
+            when += f" ({t['days']} of {t['span']} days fetched)"
+        p.append(f'<div class="kpi"><b>{_n(t["changesets"])}</b>'
+                 f"<span>answers, {when}</span></div>\n")
+    p.append("</div>\n")
+
+    last = tiles[-1]["last"]
+    missing = _missing_days(last, now)
+    if missing > 0 and not failed:
+        p.append(f'<p class="warn">The daily OSMCha answers query has not '
+                 f"answered since {esc(last)}: {missing} day"
+                 f"{'' if missing == 1 else 's'} missing from the totals "
+                 f"above, which stop at {esc(last)}.</p>\n")
+
+    chart = _day_bars(edits_rows(web_edits_days, "answer"), "--green",
+                      labels=True)
+    if chart:
+        p.append('<p class="muted">Answers on the map itself per day, the '
+                 "number above each column that has any where the screen is "
+                 "wide enough; hover a column for its date.</p>\n")
+        p.append(chart)
+    else:
+        p.append(f'<p class="muted">No answers on the map itself in the '
+                 f"{len(web_edits_days)} recorded days.</p>\n")
+
+    rows = sorted(web_edits_days.items(), reverse=True)
+    p.append(f"<details>\n<summary>all {len(rows)} days</summary>\n"
+             '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
+             "<th>answers</th></tr></thead>\n<tbody>\n")
     for d, n in rows:
         p.append(f'<tr><td class="l">{esc(d)}</td><td>{_n(n)}</td></tr>\n')
     p.append("</tbody>\n</table>\n</div>\n</details>\n")
@@ -709,6 +796,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                 changes: dict | None, history: list[dict],
                 anomalies: list[str], edits: dict | None = None,
                 edits_days: dict | None = None,
+                web_edits_days: dict | None = None,
                 regions: dict | None = None, build: dict | None = None,
                 site_url: str = "https://papamap.de",
                 private: bool = False, visits: dict | None = None,
@@ -716,7 +804,8 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
     """The whole page. `history` is the ops state's daily list (oldest first,
     the entry for today already appended); `regions` is region_rows()'s
     output; `build` is parse_build_log()'s; `edits` the cached OSMCha line,
-    `edits_days` its per-day history ({date: changesets}). `private` adds the
+    `edits_days` its per-day history ({date: changesets}), `web_edits_days`
+    the same for the answers given on the map itself. `private` adds the
     Visitors section from `visits` ({date: {requests, uniques}}); the public
     page ignores `visits` entirely, by design."""
     now = now.astimezone(timezone.utc)
@@ -848,6 +937,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
         p.append(spark)
 
     p.append(_edits_section(edits, edits_days, now))
+    p.append(_answers_section(edits, web_edits_days, now))
 
     if private:
         p.append(_visitors(visits))

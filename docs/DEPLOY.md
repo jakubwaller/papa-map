@@ -263,7 +263,11 @@ cd ~/papa-map && docker compose run --build --rm ops python -m pipeline.ops --ba
 ```
 
 Same one-page limit as the daily fetch: a window beyond ~100 changesets returns its count
-but no split, and the command says the history is unchanged.
+but no split, and the command says the history is unchanged. The answers given on the map
+itself (`created_by=PapaMap`, kept per day since 2026-10-05) are a second series,
+`web_edits_days`, filled by the same run and summed into the page's "Answers on the map
+itself" tiles; that history is all time once it reaches 2026-09-13, the day the room
+question could first be answered on the map, so the one backfill above covers both.
 
 **The check runs in Docker, like the build** — the `ops` service in `docker-compose.yml`,
 the same image, run as the host user (uid 1000; edit `user:` if yours differs), with the

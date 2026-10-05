@@ -172,11 +172,23 @@ def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
 
         class R:
             def json(self):
-                return {"count": 3 if len(calls) == 1 else 2, "features": []}
+                if len(calls) == 1:
+                    return {"count": 3, "features": []}
+                return {"count": 2, "features": [
+                    {"properties": {"date": "2026-08-01T10:00:00Z"}},
+                    {"properties": {"date": "2026-08-02T23:59:00Z"}}]}
         return R()
 
     edits = ops.osmcha_edits(now=NOW, get=fake_get)
     assert edits["days"] == 7 and edits["changesets"] == 3
+    # the answers come back as a page too, grouped by complete day like the
+    # theme's — their own series, never merged into by_day
+    assert calls[1]["page_size"] == "100"
+    assert edits["web_by_day"] == {"2026-07-27": 0, "2026-07-28": 0,
+                                   "2026-07-29": 0, "2026-07-30": 0,
+                                   "2026-07-31": 0, "2026-08-01": 1,
+                                   "2026-08-02": 1}
+    assert set(edits["by_day"].values()) == {0}  # the theme page: no features
     assert seen["url"] == ops.OSMCHA_URL
     assert seen["headers"]["Authorization"] == "Token token"
     # the changeset theme tag is the theme URL, not the id (MapComplete
@@ -274,6 +286,10 @@ def test_merge_edits_overwrites_fetched_days_and_caps():
     assert ops.merge_edits(kept, None) == dict(sorted(kept.items()))
     assert ops.merge_edits(kept, {"days": 7, "error": "timed out"}) == \
         dict(sorted(kept.items()))
+    # the answers series is merged from its own key, and never from by_day
+    both = {"by_day": {"2026-08-01": 2}, "web_by_day": {"2026-08-01": 1}}
+    assert ops.merge_edits({}, both, "web_by_day") == {"2026-08-01": 1}
+    assert ops.merge_edits({}, both) == {"2026-08-01": 2}
     from datetime import date, timedelta
     many = {(date(2024, 1, 1) + timedelta(days=i)).isoformat(): 1
             for i in range(500)}
@@ -334,6 +350,43 @@ def test_backfill_edits_merges_the_days_and_touches_nothing_else(tmp_path,
     assert ops.backfill_edits(31, state_path=str(state_path), now=now,
                               fetch=lambda **kw: None) is None
     assert "OSMCHA_TOKEN unset" in capsys.readouterr().err
+
+
+def test_backfill_edits_fills_the_answers_series_too(tmp_path, capsys):
+    """The fetch carries both series; both are merged and each is said on
+    its own line. A fetch with the answers count but no split (beyond one
+    page) leaves that series alone and says so; a fetch without the count
+    at all (the second query failed) does not touch it either."""
+    state_path = tmp_path / "state.json"
+    write(state_path, {"statuses": {}, "history": [],
+                       "edits_days": {"2026-09-01": 1},
+                       "web_edits_days": {"2026-09-13": 1}})
+    now = datetime(2026, 10, 5, 8, 0, tzinfo=timezone.utc)
+    ops.backfill_edits(31, state_path=str(state_path), now=now,
+                       fetch=lambda **kw: {
+                           "days": 31, "changesets": 40,
+                           "by_day": {"2026-09-04": 2},
+                           "web_changesets": 9,
+                           "web_by_day": {"2026-09-13": 2, "2026-09-14": 3}})
+    saved = json.loads(state_path.read_text())
+    assert saved["edits_days"] == {"2026-09-01": 1, "2026-09-04": 2}
+    assert saved["web_edits_days"] == {"2026-09-13": 2, "2026-09-14": 3}
+    out = capsys.readouterr().out
+    assert "40 changesets in the 31 days to 2026-10-05; 1 days added" in out
+    assert ("9 answers on the map itself in the same window; 1 days added "
+            "(2026-09-14 → 2026-09-14), 1 recorded day changed, "
+            "history now 2 days") in out
+    before = state_path.read_text()
+    ops.backfill_edits(31, state_path=str(state_path), now=now,
+                       fetch=lambda **kw: {"days": 31, "changesets": 400,
+                                           "web_changesets": 120})
+    assert state_path.read_text() == before
+    assert ("120 answers on the map itself in the same window; no new days, "
+            "history unchanged at 2 days") in capsys.readouterr().out
+    ops.backfill_edits(31, state_path=str(state_path), now=now,
+                       fetch=lambda **kw: {"days": 31, "changesets": 400})
+    assert state_path.read_text() == before
+    assert "answers on the map itself" not in capsys.readouterr().out
 
 
 def test_osmcha_edits_failure_reports_itself_rather_than_reading_as_zero(

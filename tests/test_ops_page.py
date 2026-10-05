@@ -471,6 +471,10 @@ def test_edit_totals_are_calendar_windows_back_from_the_newest_day():
     assert tiles[0]["changesets"] == 5 and tiles[0]["days"] == 5
     assert tiles[0]["span"] == 7
     assert ops_page.edit_totals(None) == [] and ops_page.edit_totals({}) == []
+    # the answers series has its own first possible day
+    hist = days_from("2026-09-13", [1] * 23)
+    assert ops_page.edit_totals(hist, ops_page.WEB_ANSWERS_SINCE)[-1]["all_time"]
+    assert not ops_page.edit_totals(hist)[-1]["all_time"]  # theme is older
 
 
 def test_edits_section_tiles_chart_labels_and_table():
@@ -521,7 +525,102 @@ def test_edits_section_says_when_the_fetch_stopped_or_lost_its_split():
     assert "Not zero." in html and "has not answered" not in html
 
 
+def test_answers_section_tiles_chart_and_table():
+    """The answers given on the map itself get the theme section's shape —
+    tiles, labelled chart, table — from their own history, under the theme's
+    section, with their own launch day for the all-time tile."""
+    now = datetime(2026, 10, 6, 5, 30, tzinfo=timezone.utc)
+    hist = days_from("2026-09-13", [1] * 22 + [7])          # ends 2026-10-05
+    html = render(now=now, web_edits_days=hist,
+                  edits={"days": 7, "changesets": 9, "as_of": "2026-10-06",
+                         "web_changesets": 13})
+    assert "<h2>Answers on the map itself</h2>" in html
+    assert html.index("<h2>Edits through the PapaMap theme</h2>") \
+        < html.index("<h2>Answers on the map itself</h2>") \
+        < html.index("<h2>Last build</h2>")
+    assert "answers, last 7 days, 2026-09-29 → 2026-10-05" in html
+    assert "answers, all time, answering on the map since 2026-09-13" in html
+    assert "answers, last 30 days" not in html  # 23 days cannot fill it
+    assert "<b>13</b>" in html and "<b>29</b>" in html
+    assert "Answers on the map itself per day" in html
+    assert html.count('class="bars"') == 3   # transitions, theme, answers
+    assert 'title="2026-10-05 · 7 answers"' in html
+    assert 'title="2026-10-04 · 1 answer"' in html
+    assert "<th>answers</th>" in html and "<summary>all 23 days</summary>" in html
+    assert html.index('<td class="l">2026-10-05</td><td>7</td>') \
+        < html.index('<td class="l">2026-10-04</td><td>1</td>')
+    assert "answers query has not answered" not in html
+    # a history stopping short of yesterday is said, in this section's words
+    html = render(now=datetime(2026, 10, 9, 5, 30, tzinfo=timezone.utc),
+                  web_edits_days=hist)
+    assert ("The daily OSMCha answers query has not answered since "
+            "2026-10-05: 3 days missing from the totals above") in html
+    # a failed fetch: pointed at, not repeated, and no stale note on top
+    html = render(now=datetime(2026, 10, 9, 5, 30, tzinfo=timezone.utc),
+                  web_edits_days=hist, edits={"days": 7, "error": "timed out"})
+    assert "Not counted this run" in html and html.count("Not zero.") == 1
+    assert "answers query has not answered" not in html
+
+
+def test_young_answers_history_shows_the_count_or_says_none_yet():
+    """Before the per-day series exists the cached 7-day count is the whole
+    section; a state from before the count existed says so instead of
+    showing nothing (or, worse, a zero)."""
+    html = render(edits={"days": 7, "changesets": 4, "as_of": "2026-08-17",
+                         "web_changesets": 2})
+    assert "OSMCha, 7 d as of 2026-08-17: <b>2</b> answers." in html
+    assert ("A per-day chart of these appears here once a daily OSMCha "
+            "fetch records the split.") in html
+    html = render()
+    assert "<h2>Answers on the map itself</h2>" in html
+    assert "No count yet" in html and "<b>0</b> answers" not in html
+    assert html.count('class="bars"') == 2  # no chart without a history
+
+
 # ---- run_check writes it -----------------------------------------------------
+
+
+def test_run_check_keeps_the_answers_history(tmp_path):
+    """The answers series is merged and saved like the theme's, rendered on
+    the page, and a fetch that lost the second query keeps it as it was."""
+    gj = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": None,
+         "properties": {"osm_type": "node", "osm_id": 1, "status": "accessible"}}]}
+    (tmp_path / "stats.json").write_text(json.dumps(
+        {"generated_at": NOW.isoformat(timespec="seconds")}))
+    (tmp_path / "gj.json").write_text(json.dumps(gj))
+    state_path = tmp_path / "state.json"
+    html_path = tmp_path / "ops.html"
+
+    def run(edits):
+        return ops.run_check(
+            now=NOW, state_path=str(state_path),
+            stats_path=str(tmp_path / "stats.json"),
+            geojson_path=str(tmp_path / "gj.json"),
+            mail=lambda *a: None, visits_fetch=lambda **kw: None,
+            edits_fetch=lambda **kw: edits, html_path=str(html_path),
+            history_path=str(tmp_path / "absent.json"),
+            build_log_path=str(tmp_path / "absent.log"),
+            private_html_path="", delta_path="")
+
+    run({"days": 7, "changesets": 9, "by_day": {"2026-08-22": 8},
+         "web_changesets": 3,
+         "web_by_day": {"2026-08-21": 1, "2026-08-22": 2}})
+    state = json.loads(state_path.read_text())
+    assert state["web_edits_days"] == {"2026-08-21": 1, "2026-08-22": 2}
+    assert state["edits_days"] == {"2026-08-22": 8}
+    assert state["edits"]["web_changesets"] == 3
+    html = html_path.read_text()
+    assert "<h2>Answers on the map itself</h2>" in html
+    # the fixture's August days are older than the answers' first possible
+    # day, so the one tile is already "all time"
+    assert "answers, all time, answering on the map since 2026-09-13" in html
+    assert "<b>3</b>" in html and 'title="2026-08-22 · 2 answers"' in html
+    run({"days": 7, "changesets": 9, "by_day": {"2026-08-22": 8}})
+    state = json.loads(state_path.read_text())
+    assert state["web_edits_days"] == {"2026-08-21": 1, "2026-08-22": 2}
+    assert "web_changesets" not in state["edits"]
+    assert 'title="2026-08-22 · 2 answers"' in html_path.read_text()
 
 def test_page_and_history_default_next_to_stats(monkeypatch):
     # An ops.env that overrides only the stats path (the documented minimum)
