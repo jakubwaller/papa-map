@@ -47,3 +47,26 @@ def _isolated_areas_bbox(tmp_path, monkeypatch):
     call time from pipeline.delta.AREAS_BBOX_PATH."""
     from pipeline import delta
     monkeypatch.setattr(delta, "AREAS_BBOX_PATH", str(tmp_path / "areas-bbox.json"))
+
+
+@pytest.fixture(autouse=True)
+def _isolated_web_output(tmp_path, monkeypatch):
+    """Everything else run_pipeline writes by default — the two GeoJSON files,
+    stats.json, areas.json, history.json and the pages directory — lives under
+    the checkout's web/ as well. Until 2026-10-05 a test that left any of them
+    at its default wrote fixture output over the real web/data/areas.json and
+    play_places.geojson and every page under web/wickeltische/ (a browser check
+    against that web/ then found three play places). run_pipeline resolves each
+    default at call time, like the two above, so one temp directory covers them
+    all. The pages directory is created here: nothing in the pipeline creates
+    it (web/wickeltische/ is tracked as a .gitkeep)."""
+    from pipeline import run
+    out = tmp_path / "web"
+    (out / "wickeltische").mkdir(parents=True)
+    for name, filename in (("GEOJSON_PATH", "changing_tables.geojson"),
+                           ("PLAY_GEOJSON_PATH", "play_places.geojson"),
+                           ("STATS_PATH", "stats.json"),
+                           ("AREAS_PATH", "areas.json"),
+                           ("HISTORY_PATH", "history.json")):
+        monkeypatch.setattr(run, name, str(out / filename))
+    monkeypatch.setattr(run, "PAGES_DIR", str(out / "wickeltische"))
