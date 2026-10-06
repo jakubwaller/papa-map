@@ -4,8 +4,8 @@
 > shape change.** Picking a row before Photon answered let the answer land
 > afterwards and reopen the list over the card the reader went to (seen on
 > Android). `renderSearch` now opens the list only while the field has focus,
-> which also covers a language switch re-rendering it, and a pick aborts any
-> Photon request still out. Shell pin `app75` → `app76`; no `WHATS_NEW` entry.
+> which also covers a language switch re-rendering it. A request still out is
+> left to land: it fills the list in for the next press on the field. Shell pin `app75` → `app76`; no `WHATS_NEW` entry.
 
 > **v74 amendment (6 Oct 2026, the search list stays shut on a handed-back
 > focus): no data shape change.** Closing a dialog can return focus to the

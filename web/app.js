@@ -1876,10 +1876,6 @@ function searchFitPadding() {
 
 function pickSearchRow(row) {
   closeSearch();
-  // The question is answered: a geocoder request still out has nothing left to say.
-  clearTimeout(photonTimer);
-  photonRequest?.abort();
-  photonRequest = null;
   if (row.kind === "world") {
     // fitBounds where the result knows its own extent — a city then fills the
     // screen and is not guessed at from a zoom table. Capped, or a house whose
