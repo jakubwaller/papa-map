@@ -306,6 +306,7 @@ export const STRINGS = {
     whatsNewTitle: "Neu in PapaMap",
     whatsNewOk: "Alles klar",
     newsHighchair: "Neu: der Chip „Hochstuhl“ zeigt Cafés und Restaurants mit Hochstuhl — und das Popup fragt danach, wo OSM noch nichts weiß.",
+    newsAddPlace: "Neu: „+ Ort hinzufügen“ listet jetzt Orte in deiner Nähe auf, die OSM schon kennt — such einen aus und antworte gleich in der App.",
     statsUpdated: "Stand {date}.",
 
     toastNoGeo: "Standortbestimmung ist in diesem Browser nicht verfügbar.",
@@ -549,6 +550,7 @@ export const STRINGS = {
     whatsNewTitle: "What's new in PapaMap",
     whatsNewOk: "Got it",
     newsHighchair: "New: the “High chair” chip shows cafés and restaurants with a high chair — and the popup asks where OSM does not know yet.",
+    newsAddPlace: "New: “+ Add a place” now lists nearby places OSM already knows — pick one and answer right in the app.",
     statsUpdated: "Updated {date}.",
 
     toastNoGeo: "Geolocation is not available in this browser.",
@@ -789,6 +791,7 @@ export const STRINGS = {
     whatsNewTitle: "Nyt i PapaMap",
     whatsNewOk: "Forstået",
     newsHighchair: "Nyt: filteret „Højstol“ viser caféer og restauranter med højstol — og pop op-vinduet spørger, hvor OSM endnu ikke ved det.",
+    newsAddPlace: "Nyt: „+ Tilføj et sted“ viser nu steder i nærheden, som OSM allerede kender — vælg et, og svar direkte i appen.",
     statsUpdated: "Opdateret {date}.",
 
     toastNoGeo: "Placering er ikke tilgængelig i denne browser.",
@@ -1027,6 +1030,7 @@ export const STRINGS = {
     whatsNewTitle: "Nieuw in PapaMap",
     whatsNewOk: "Begrepen",
     newsHighchair: "Nieuw: het filter „Kinderstoel“ toont cafés en restaurants met een kinderstoel — en de pop-up vraagt ernaar waar OSM het nog niet weet.",
+    newsAddPlace: "Nieuw: „+ Plek toevoegen“ toont nu plekken in de buurt die OSM al kent — kies er een en antwoord meteen in de app.",
     statsUpdated: "Bijgewerkt {date}.",
 
     toastNoGeo: "Locatiebepaling is niet beschikbaar in deze browser.",
@@ -1263,6 +1267,7 @@ export const STRINGS = {
     whatsNewTitle: "Nouveautés de PapaMap",
     whatsNewOk: "Compris",
     newsHighchair: "Nouveau : le filtre « Chaise haute » montre les cafés et restaurants avec une chaise haute — et la fiche du lieu pose la question là où OSM ne le sait pas encore.",
+    newsAddPlace: "Nouveau : « + Ajouter un lieu » liste désormais les lieux proches que OSM connaît déjà — choisissez-en un et répondez directement dans l’app.",
     statsUpdated: "Mis à jour le {date}.",
 
     toastNoGeo: "La géolocalisation n'est pas disponible dans ce navigateur.",
@@ -1499,6 +1504,7 @@ export const STRINGS = {
     whatsNewTitle: "Novità di PapaMap",
     whatsNewOk: "Ho capito",
     newsHighchair: "Novità: il filtro «Seggiolone» mostra bar e ristoranti con il seggiolone — e il popup lo chiede dove OSM non lo sa ancora.",
+    newsAddPlace: "Novità: «+ Aggiungi luogo» elenca ora i luoghi vicini che OSM conosce già — scegline uno e rispondi direttamente nell’app.",
     statsUpdated: "Aggiornato il {date}.",
 
     toastNoGeo: "La geolocalizzazione non è disponibile in questo browser.",
@@ -1735,6 +1741,7 @@ export const STRINGS = {
     whatsNewTitle: "Novinky v PapaMap",
     whatsNewOk: "Rozumím",
     newsHighchair: "Novinka: filtr „Dětská židlička“ ukazuje kavárny a restaurace s dětskou židličkou — a okno místa se na ni zeptá tam, kde to OSM ještě neví.",
+    newsAddPlace: "Novinka: „+ Přidat místo“ teď nabízí místa v okolí, která OSM už zná — vyber jedno a odpověz rovnou v aplikaci.",
     statsUpdated: "Aktualizováno {date}.",
 
     toastNoGeo: "Určování polohy není v tomto prohlížeči k dispozici.",
@@ -1971,6 +1978,7 @@ export const STRINGS = {
     whatsNewTitle: "Nowości w PapaMap",
     whatsNewOk: "Jasne",
     newsHighchair: "Nowość: filtr „Krzesełko do karmienia” pokazuje kawiarnie i restauracje z krzesełkiem — a okienko miejsca pyta o nie tam, gdzie OSM jeszcze tego nie wie.",
+    newsAddPlace: "Nowość: „+ Dodaj miejsce” pokazuje teraz pobliskie miejsca, które OSM już zna — wybierz jedno i odpowiedz od razu w aplikacji.",
     statsUpdated: "Dane z {date}.",
 
     toastNoGeo: "Geolokalizacja nie jest dostępna w tej przeglądarce.",
@@ -2207,6 +2215,7 @@ export const STRINGS = {
     whatsNewTitle: "Nytt i PapaMap",
     whatsNewOk: "Uppfattat",
     newsHighchair: "Nytt: filtret ”Barnstol” visar kaféer och restauranger med barnstol — och popupen frågar där OSM ännu inte vet.",
+    newsAddPlace: "Nytt: ”+ Ny plats” listar nu platser i närheten som OSM redan känner till — välj en och svara direkt i appen.",
     statsUpdated: "Uppdaterad {date}.",
 
     toastNoGeo: "Positionering är inte tillgänglig i den här webbläsaren.",
@@ -2442,6 +2451,7 @@ export const STRINGS = {
     whatsNewTitle: "Novo u PapaMap",
     whatsNewOk: "Razumijem",
     newsHighchair: "Novo: filter „Hranilica“ prikazuje kafiće i restorane s hranilicom — a skočni prozor pita za nju tamo gdje OSM to još ne zna.",
+    newsAddPlace: "Novo: „+ Dodaj mjesto“ sada navodi obližnja mjesta koja OSM već zna — odaberi jedno i odgovori izravno u aplikaciji.",
     statsUpdated: "Ažurirano {date}.",
 
     toastNoGeo: "Geolokacija nije dostupna u ovom pregledniku.",
@@ -2677,6 +2687,7 @@ export const STRINGS = {
     whatsNewTitle: "Novetats de PapaMap",
     whatsNewOk: "Entès",
     newsHighchair: "Novetat: el filtre «Trona» mostra cafeteries i restaurants amb trona — i la finestra del lloc ho pregunta on OSM encara no ho sap.",
+    newsAddPlace: "Novetat: «+ Afegeix un lloc» ara llista els llocs propers que OSM ja coneix — tria’n un i respon directament a l’app.",
     statsUpdated: "Actualitzat el {date}.",
 
     toastNoGeo: "La geolocalització no està disponible en aquest navegador.",
@@ -2912,6 +2923,7 @@ export const STRINGS = {
     whatsNewTitle: "Uut PapaMapis",
     whatsNewOk: "Selge",
     newsHighchair: "Uus: filter „Lastetool“ näitab lastetooliga kohvikuid ja restorane — ja hüpikaken küsib selle kohta seal, kus OSM veel ei tea.",
+    newsAddPlace: "Uus: „+ Lisa koht“ näitab nüüd läheduses olevaid kohti, mida OSM juba tunneb — vali üks ja vasta otse rakenduses.",
     statsUpdated: "Uuendatud {date}.",
 
     toastNoGeo: "Asukoha määramine ei ole selles brauseris saadaval.",
@@ -3147,6 +3159,7 @@ export const STRINGS = {
     whatsNewTitle: "Novedades de PapaMap",
     whatsNewOk: "Entendido",
     newsHighchair: "Novedad: el filtro «Trona» muestra cafeterías y restaurantes con trona — y la ventana del lugar lo pregunta donde OSM aún no lo sabe.",
+    newsAddPlace: "Novedad: «+ Añadir un lugar» ahora lista los lugares cercanos que OSM ya conoce — elige uno y responde directamente en la app.",
     statsUpdated: "Actualizado el {date}.",
 
     toastNoGeo: "La geolocalización no está disponible en este navegador.",
@@ -3382,6 +3395,7 @@ export const STRINGS = {
     whatsNewTitle: "Novo u PapaMapu",
     whatsNewOk: "Razumijem",
     newsHighchair: "Novo: filtar „Hranilica“ prikazuje kafiće i restorane s hranilicom — a skočni prozor pita za nju ondje gdje OSM to još ne zna.",
+    newsAddPlace: "Novo: „+ Dodaj mjesto“ sada navodi obližnja mjesta koja OSM već zna — odaberi jedno i odgovori izravno u aplikaciji.",
     statsUpdated: "Ažurirano {date}.",
 
     toastNoGeo: "Određivanje lokacije nije dostupno u ovom pregledniku.",
@@ -3617,6 +3631,7 @@ export const STRINGS = {
     whatsNewTitle: "Nýtt í PapaMap",
     whatsNewOk: "Skil",
     newsHighchair: "Nýtt: sían „Barnastóll“ sýnir kaffihús og veitingastaði með barnastól — og sprettglugginn spyr um hann þar sem OSM veit það ekki enn.",
+    newsAddPlace: "Nýtt: „+ Bæta við stað“ sýnir nú nálæga staði sem OSM þekkir þegar — veldu einn og svaraðu beint í appinu.",
     statsUpdated: "Uppfært {date}.",
 
     toastNoGeo: "Staðsetning er ekki tiltæk í þessum vafra.",
@@ -3852,6 +3867,7 @@ export const STRINGS = {
     whatsNewTitle: "Jaunumi PapaMap",
     whatsNewOk: "Skaidrs",
     newsHighchair: "Jaunums: filtrs „Bērnu krēsliņš“ rāda kafejnīcas un restorānus ar bērnu krēsliņu — un uznirstošais logs par to jautā tur, kur OSM to vēl nezina.",
+    newsAddPlace: "Jaunums: „+ Pievienot vietu“ tagad parāda tuvumā esošas vietas, ko OSM jau pazīst — izvēlies vienu un atbildi tieši lietotnē.",
     statsUpdated: "Atjaunots {date}.",
 
     toastNoGeo: "Šajā pārlūkprogrammā ģeolokācija nav pieejama.",
@@ -4087,6 +4103,7 @@ export const STRINGS = {
     whatsNewTitle: "Kas nauja PapaMap",
     whatsNewOk: "Supratau",
     newsHighchair: "Nauja: filtras „Maitinimo kėdutė“ rodo kavines ir restoranus su maitinimo kėdute — o iškylantysis langas apie ją klausia ten, kur OSM to dar nežino.",
+    newsAddPlace: "Nauja: „+ Pridėti vietą“ dabar parodo netoliese esančias vietas, kurias OSM jau žino — pasirink vieną ir atsakyk tiesiai programėlėje.",
     statsUpdated: "Atnaujinta {date}.",
 
     toastNoGeo: "Vietos nustatymas šioje naršyklėje nepasiekiamas.",
@@ -4322,6 +4339,7 @@ export const STRINGS = {
     whatsNewTitle: "Újdonságok a PapaMapban",
     whatsNewOk: "Értem",
     newsHighchair: "Újdonság: az „Etetőszék” szűrő az etetőszékkel rendelkező kávézókat és éttermeket mutatja — a felugró ablak pedig rákérdez ott, ahol az OSM még nem tudja.",
+    newsAddPlace: "Újdonság: a „+ Hely hozzáadása” most felsorolja a közelben lévő, az OSM által már ismert helyeket — válassz egyet, és válaszolj rögtön az appban.",
     statsUpdated: "Frissítve: {date}.",
 
     toastNoGeo: "A helymeghatározás nem elérhető ebben a böngészőben.",
@@ -4557,6 +4575,7 @@ export const STRINGS = {
     whatsNewTitle: "Nytt i PapaMap",
     whatsNewOk: "Skjønner",
     newsHighchair: "Nytt: filteret «Barnestol» viser kafeer og restauranter med barnestol — og popup-vinduet spør der OSM ennå ikke vet.",
+    newsAddPlace: "Nytt: «+ Legg til et sted» viser nå steder i nærheten som OSM allerede kjenner — velg ett og svar rett i appen.",
     statsUpdated: "Oppdatert {date}.",
 
     toastNoGeo: "Posisjonering er ikke tilgjengelig i denne nettleseren.",
@@ -4792,6 +4811,7 @@ export const STRINGS = {
     whatsNewTitle: "Novidades do PapaMap",
     whatsNewOk: "Percebi",
     newsHighchair: "Novidade: o filtro «Cadeira de papa» mostra cafés e restaurantes com cadeira de papa — e a janela do local pergunta onde o OSM ainda não sabe.",
+    newsAddPlace: "Novidade: «+ Adicionar um local» lista agora os locais próximos que o OSM já conhece — escolha um e responda diretamente na app.",
     statsUpdated: "Atualizado a {date}.",
 
     toastNoGeo: "A geolocalização não está disponível neste navegador.",
@@ -5027,6 +5047,7 @@ export const STRINGS = {
     whatsNewTitle: "Noutăți în PapaMap",
     whatsNewOk: "Am înțeles",
     newsHighchair: "Nou: filtrul „Scaun înalt pentru copii” arată cafenelele și restaurantele cu scaun înalt pentru copii — iar fereastra locului întreabă acolo unde OSM încă nu știe.",
+    newsAddPlace: "Nou: „+ Adaugă un loc” afișează acum locurile din apropiere pe care OSM le cunoaște deja — alege unul și răspunde direct în aplicație.",
     statsUpdated: "Actualizat la {date}.",
 
     toastNoGeo: "Geolocalizarea nu este disponibilă în acest browser.",
@@ -5262,6 +5283,7 @@ export const STRINGS = {
     whatsNewTitle: "Të rejat në PapaMap",
     whatsNewOk: "E kuptova",
     newsHighchair: "E re: filtri „Karrige e lartë për fëmijë“ shfaq kafenetë dhe restorantet me karrige të lartë për fëmijë — dhe dritarja e vendit pyet aty ku OSM ende nuk e di.",
+    newsAddPlace: "E re: „+ Shto një vend“ tani liston vendet afër që OSM i njeh tashmë — zgjidh një dhe përgjigju drejtpërdrejt në aplikacion.",
     statsUpdated: "Përditësuar më {date}.",
 
     toastNoGeo: "Gjeolokalizimi nuk është i disponueshëm në këtë shfletues.",
@@ -5497,6 +5519,7 @@ export const STRINGS = {
     whatsNewTitle: "Novinky v PapaMap",
     whatsNewOk: "Rozumiem",
     newsHighchair: "Novinka: filter „Detská stolička“ ukazuje kaviarne a reštaurácie s detskou stoličkou — a okno miesta sa na ňu opýta tam, kde to OSM ešte nevie.",
+    newsAddPlace: "Novinka: „+ Pridať miesto“ teraz ponúka miesta v okolí, ktoré OSM už pozná — vyber jedno a odpovedz rovno v aplikácii.",
     statsUpdated: "Aktualizované {date}.",
 
     toastNoGeo: "Určovanie polohy nie je v tomto prehliadači k dispozícii.",
@@ -5732,6 +5755,7 @@ export const STRINGS = {
     whatsNewTitle: "Novo v PapaMap",
     whatsNewOk: "Razumem",
     newsHighchair: "Novo: filter „Otroški stolček“ prikaže kavarne in restavracije z otroškim stolčkom — pojavno okno pa vpraša tam, kjer OSM tega še ne ve.",
+    newsAddPlace: "Novo: „+ Dodaj kraj“ zdaj navede bližnje kraje, ki jih OSM že pozna — izberi enega in odgovori kar v aplikaciji.",
     statsUpdated: "Posodobljeno {date}.",
 
     toastNoGeo: "Geolokacija v tem brskalniku ni na voljo.",
@@ -5967,6 +5991,7 @@ export const STRINGS = {
     whatsNewTitle: "Uutta PapaMapissa",
     whatsNewOk: "Selvä",
     newsHighchair: "Uutta: ”Syöttötuoli”-suodatin näyttää kahvilat ja ravintolat, joissa on syöttötuoli — ja ponnahdusikkuna kysyy sitä siellä, missä OSM ei vielä tiedä.",
+    newsAddPlace: "Uutta: ”+ Lisää paikka” listaa nyt lähellä olevat paikat, jotka OSM jo tuntee — valitse yksi ja vastaa suoraan sovelluksessa.",
     statsUpdated: "Päivitetty {date}.",
 
     toastNoGeo: "Sijainninmääritys ei ole käytettävissä tässä selaimessa.",
@@ -6202,6 +6227,7 @@ export const STRINGS = {
     whatsNewTitle: "Τι νέο υπάρχει στο PapaMap",
     whatsNewOk: "Κατάλαβα",
     newsHighchair: "Νέο: το φίλτρο «Παιδικό καρεκλάκι» δείχνει καφέ και εστιατόρια με παιδικό καρεκλάκι — και το αναδυόμενο παράθυρο ρωτά όπου το OSM δεν το ξέρει ακόμη.",
+    newsAddPlace: "Νέο: το «+ Προσθήκη μέρους» εμφανίζει τώρα κοντινά μέρη που το OSM γνωρίζει ήδη — διάλεξε ένα και απάντησε κατευθείαν στην εφαρμογу.",
     statsUpdated: "Ενημερώθηκε στις {date}.",
 
     toastNoGeo: "Ο εντοπισμός τοποθεσίας δεν είναι διαθέσιμος σε αυτό το πρόγραμμα περιήγησης.",
@@ -6437,6 +6463,7 @@ export const STRINGS = {
     whatsNewTitle: "Што новага ў PapaMap",
     whatsNewOk: "Зразумела",
     newsHighchair: "Новае: фільтр «Дзіцячае крэсла» паказвае кавярні і рэстараны з дзіцячым крэслам — а ўсплывальнае акно пытаецца пра яго там, дзе OSM яшчэ не ведае.",
+    newsAddPlace: "Новае: «+ Дадаць месца» цяпер паказвае бліжэйшыя месцы, якія OSM ужо ведае — выберы адно і адкажы прама ў праграме.",
     statsUpdated: "Абноўлена {date}.",
 
     toastNoGeo: "Вызначэнне месцазнаходжання недаступнае ў гэтым браўзеры.",
@@ -6672,6 +6699,7 @@ export const STRINGS = {
     whatsNewTitle: "Ново в PapaMap",
     whatsNewOk: "Ясно",
     newsHighchair: "Ново: филтърът „Детско столче“ показва кафенета и ресторанти с детско столче — а изскачащият прозорец пита там, където OSM още не знае.",
+    newsAddPlace: "Ново: „+ Добави място“ вече показва близките места, които OSM вече познава — изберете едно и отговорете направо в приложението.",
     statsUpdated: "Обновено на {date}.",
 
     toastNoGeo: "Определянето на местоположение не е достъпно в този браузър.",
@@ -6907,6 +6935,7 @@ export const STRINGS = {
     whatsNewTitle: "Што е ново во PapaMap",
     whatsNewOk: "Јасно",
     newsHighchair: "Ново: филтерот „Детско столче“ прикажува кафулиња и ресторани со детско столче — а скокачкиот прозорец прашува таму каде што OSM сè уште не знае.",
+    newsAddPlace: "Ново: „+ Додади место“ сега ги прикажува блиските места што OSM веќе ги знае — изберете едно и одговорете директно во апликацијата.",
     statsUpdated: "Ажурирано {date}.",
 
     toastNoGeo: "Геолокацијата не е достапна во овој прелистувач.",
@@ -7142,6 +7171,7 @@ export const STRINGS = {
     whatsNewTitle: "Ново у PapaMap",
     whatsNewOk: "Разумем",
     newsHighchair: "Ново: филтер „Хранилица“ приказује кафиће и ресторане са хранилицом — а искачући прозор пита за њу тамо где OSM то још не зна.",
+    newsAddPlace: "Ново: „+ Додај место“ сада приказује оближња места која OSM већ зна — изабери једно и одговори директно у апликацији.",
     statsUpdated: "Ажурирано {date}.",
 
     toastNoGeo: "Одређивање локације није доступно у овом прегледачу.",
@@ -7377,6 +7407,7 @@ export const STRINGS = {
     whatsNewTitle: "Що нового в PapaMap",
     whatsNewOk: "Зрозуміло",
     newsHighchair: "Нове: фільтр «Дитячий стільчик» показує кав’ярні та ресторани з дитячим стільчиком — а спливне вікно питає про нього там, де OSM ще не знає.",
+    newsAddPlace: "Нове: «+ Додати місце» тепер показує найближчі місця, які OSM уже знає, — оберіть одне й відповідайте просто в застосунку.",
     statsUpdated: "Оновлено {date}.",
 
     toastNoGeo: "Визначення місцезнаходження недоступне в цьому браузері.",
@@ -7616,6 +7647,7 @@ export const STRINGS = {
     whatsNewTitle: "PapaMapの新機能",
     whatsNewOk: "OK",
     newsHighchair: "新機能：「ベビーチェア」チップで、ベビーチェアのあるカフェやレストランだけを表示できます。OSMにまだ情報がない場所では、ポップアップでたずねます。",
+    newsAddPlace: "新機能：「+ 場所を追加」で、OSMがすでに知っている近くの場所が一覧で表示されます。選んで、そのままアプリ内で回答できます。",
     statsUpdated: "{date}更新。",
 
     toastNoGeo: "このブラウザでは位置情報を利用できません。",

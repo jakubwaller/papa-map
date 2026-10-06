@@ -1,5 +1,13 @@
 # papa-map — build contract (v0)
 
+> **v73 amendment (6 Oct 2026, what's-new for the add-a-place flow): no data
+> shape change.** "+ Add a place" has listed the places OSM already knows
+> nearby since #214/#216, but no what's-new note told readers of the store app.
+> `WHATS_NEW` (`web/me.js`) gains `{ since: 74, keys: ["newsAddPlace"] }`, the
+> shell pin this change ships; `newsAddPlace` added in all 32 languages. A
+> reader updating from 1.2 (pin `app63`) sees both this note and
+> `newsHighchair`. Shell pin `app73` → `app74`.
+
 > **v72 amendment (5 Oct 2026, a saved place and a new pin open before they
 > fly): no data shape change.** Two sites started their flight first and opened
 > the popup second — the saved-place rows in Mein PapaMap (`openSavedPlace`) and

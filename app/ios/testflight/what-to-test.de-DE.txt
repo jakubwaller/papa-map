@@ -1,5 +1,5 @@
-– Neu: Die Hochstuhl-Frage erscheint jetzt auch bei Kitas, Kinderbetreuung, Gemeindezentren, sozialen Einrichtungen und Bibliotheken, nicht nur bei Cafés und Restaurants. Probier es bei einer Kita in deiner Nähe.
-– Neu: Die Pin-Karte wird nie höher als der freie Platz zwischen Suchfeld und unterem Kartenrand. Ist der Inhalt länger, scrollt er innerhalb der Karte, das × bleibt stehen. Ein langer Rollstuhl-Kommentar zeigt drei Zeilen und „mehr …“. Verdeckt noch etwas die Antwort-Buttons unten?
-– Neu: Ist der Standort für die App aus, sagt die Meldung jetzt, wo du ihn wieder einschaltest (in den Einstellungen des Telefons), statt nur „Standort nicht gefunden“. Zum Testen: Standort für PapaMap in den Einstellungen ausschalten und auf das Standort-Symbol tippen.
+– Neu: Die Karte bewegt sich schneller. Ein kurzer Sprung gleitet weiter, ein langer (etwa von der Länderansicht zu einem Pin) springt direkt hin, statt sekundenlang zu fliegen. Fühlt sich eine Bewegung zu abrupt oder zu langsam an?
+– Neu: Ein gemerkter Ort (Mein PapaMap) und ein frisch hinzugefügter Pin öffnen jetzt zuerst ihre Karte und bewegen dann die Karte. Zum Testen: einen weit entfernten Ort merken, ihn über Mein PapaMap öffnen, und einen Ort hinzufügen und schauen, wo die Pin-Karte landet. Ist sie je außerhalb des Bildschirms?
+– Neu: Die MapComplete-Fragen hinter einem grauen Pin („Auf MapComplete beantworten“) gibt es jetzt in allen 32 Sprachen. Sprache wechseln und eine öffnen.
 – Wie immer: „Nächster Wickeltisch“, Farben bei Orten, die du kennst, Siri, Widget.
 Alles, was unklar ist oder hakt: Screenshot machen und über TestFlight schicken.
