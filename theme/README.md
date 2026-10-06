@@ -11,7 +11,7 @@ dependencies beyond bundled icon paths):
 
 - **`dad_toilet`** — all `amenity=toilets`. Pin color mirrors the CONTRACT.md
   classification rule; toilets without a table (or untagged) stay white and get the
-  `changing_table` question on click. Questions (EN + DE + DA): `changing_table` yes/no,
+  `changing_table` question on click. Questions (every site language, see below): `changing_table` yes/no,
   `changing_table:location` (approved value list only, multi-answer),
   `changing_table:fee` yes/no — plus a **clearly separated draft question group** for
   `toilets:num_chambers:female` / `toilets:num_chambers:male` (positive-integer inputs,
@@ -221,3 +221,15 @@ this theme uses.
   (matching the bundled theme's conservatism).
 - Nothing in this repo writes to OSM. This theme only makes MapComplete — with a
   logged-in user pressing the buttons — do so.
+
+## Languages
+
+Every translated block carries all 32 site languages (`LANGS` in `web/i18n.js`), plus
+`nb_NO` next to `no`: MapComplete's Norwegian is `nb_NO`, the site's is `no`, so both
+keys hold the same text. `pt` is European Portuguese, which MapComplete's `pt` is too.
+MapComplete falls back to `en` for a language a block lacks, so a new block needs all
+of them; `tests/test_theme_languages.py` fails otherwise. MapComplete has no UI for 12 of
+the languages (bs, et, hr, is, lv, lt, sq, sk, be, bg, mk, sr), so their strings only show
+where MapComplete picks that language up from the reader's browser. The word for "changing
+table" follows MapComplete's own translation where it has one (nl *luiertafel*, ca
+*canviador*, cs *přebalovací pult*, uk *пеленальний столик*, ...), otherwise the site's.
