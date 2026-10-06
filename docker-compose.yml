@@ -139,6 +139,9 @@ services:
       - PAPAMAP_OPS_PRIVATE_HTML_PATH=/out/private/ops.html
       - PAPAMAP_OPS_STATE_PATH=/ops-data/ops-state.json
       - PAPAMAP_BUILD_LOG_PATH=/logs/pipeline.log
+      # The fleet collector's readers ledger, from the out/ directory mounted
+      # below: the private page's Readers section (pipeline/ops.py).
+      - PAPAMAP_READERS_LEDGER_PATH=/logs/fleet-ops/readers-history.json
       # The store apps' public ids, for the private page's Apps section
       # (pipeline/appstats.py): ratings need nothing else; downloads and
       # installs need the ASC_* / PLAY_* credentials from ops.env.
@@ -161,6 +164,13 @@ services:
       # a directory of that name and the build cron's `>>` would fail), and
       # never rotate it by rename — the mount follows the inode.
       - ./pipeline.log:/logs/pipeline.log:ro
+      # The fleet collector's output (pi-monitoring/fleet-ops, a sibling
+      # checkout on the live server), read-only, for readers per day. The
+      # directory, not the file: the collector replaces the ledger
+      # atomically, and a single-file mount would follow the old inode —
+      # or, on a host without the collector, be created as a directory in
+      # its way. Absent, the Readers section says so.
+      - ../pi-monitoring/fleet-ops/out:/logs/fleet-ops:ro
     # Like pipeline: outbound only (OSMCha, Cloudflare, SMTP), and IPv6.
     network_mode: host
 

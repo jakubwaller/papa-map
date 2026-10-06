@@ -307,14 +307,22 @@ cd ~/papa-map && cp ops-data/ops-state.json ops-data/preview.json && \
 until the next 07:30 run regenerates it from the real state.)
 
 The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
-the report as a page plus what the mail has no room for: per-area results and warnings from
-last night's `pipeline.log`, per-region counts with a week's delta from `history.json`, the
-daily run history, a Live updates section (the follower's last tick, replication sequence,
-base, pins since the base, pending coordinate lookups), theme changesets summed over 7/30/all
-days with a per-day chart and table, and two per-day movement charts — status
-transitions, and changesets through the site's theme. Everything on it is aggregate; the one number
-it deliberately omits is the Cloudflare request total, because `methods.html` promises
-"keine Analytics" and a traffic figure on a public page reads as exactly that.
+the report as a page in the order the numbers are read (redesigned 2026-10-06): a status
+header, a "This week" strip of tiles, then **Edits via PapaMap** (theme changesets and in-app
+answers, stacked per day with 7/30/all-time tiles and a cumulative line), **Movement on OSM**
+(recolours per night, "answered since launch" — the → accessible transitions added up, a line
+that does not jump when a country joins — beside the dataset's accessible total with every
+coverage step pinned and named, and tables added/removed per night), **Dataset** (the three
+counts as one proportion bar, the Live updates card — the follower's last tick, replication
+sequence, base, pins since the base, pending lookups — and the counts behind the counts) and
+**Pipeline** (last night's build from `pipeline.log`, regions and cities with a week's delta
+from `history.json`, the daily runs — all collapsed unless the night went wrong). The pins on
+the two lines come from `COVERAGE_EVENTS` in `pipeline/ops_page.py`: a night whose `new` jumps
+is a coverage step, labelled with the nearest entry — **append a row there when a country
+joins**, or the pin reads "sweep areas back after a failed night". Everything on it is
+aggregate; the one number it deliberately omits is the Cloudflare request total, because
+`methods.html` promises "keine Analytics" and a traffic figure on a public page reads as
+exactly that.
 
 It is written to `PAPAMAP_OPS_HTML_PATH`, default `ops.html` next to `stats.json` — under the
 Docker layout that is `web-data/ops.html`, served at `/data/ops.html` and rewritten to
@@ -332,10 +340,25 @@ render or write is a WARN in `ops.log`, never a failed check.
 
 ### The private ops page
 
-The same run also writes a **private copy** — the public page plus a Visitors block:
-Cloudflare's zone-level requests and uniques per complete UTC day, window sums, a curve, and a
-table of the whole history. The per-day figures are fetched on every run (the mail still quotes
-them on digest days only) and kept in the state file under `visits`, capped at 400 days.
+The same run also writes a **private copy** — the public page with two sections in front,
+**Readers** and **Apps**, and two more tiles in the "This week" strip. Readers are the fleet
+collector's count (pi-monitoring/fleet-ops, `out/readers-history.json`: distinct browser
+addresses on document paths per complete UTC day, crawlers, link previews and floods taken
+out — the number to quote, never Cloudflare's uniques, of which most are bots on an ordinary
+day). The check reads the ledger at `PAPAMAP_READERS_LEDGER_PATH` every run (the `ops`
+service mounts the collector's `out/` directory read-only from the sibling checkout
+`../pi-monitoring`; `PAPAMAP_READERS_ZONE` defaults to `papamap.de`) and copies the zone's
+final days into the state under `readers_days` (capped at 400), so the page's series is its
+own; the Monday mail gets a `readers (fleet ledger, 7d …)` line. Unset or unreadable before
+any day was copied, the section says so and shows Cloudflare's uniques instead; once a series
+exists, a ledger that stops answering shows as the dates standing still, with an amber note
+naming the gap (and a WARN in `ops.log`). **The sibling checkout must exist before the first
+`docker compose run … ops`**: Docker creates a missing bind-mount source as a root-owned
+directory, which a later `git clone` of pi-monitoring would then refuse to overwrite. Those —
+zone-level requests and
+uniques per complete UTC day — stay in the section's collapsed table for reference; they are
+fetched on every run (the mail still quotes them on digest days only) and kept in the state
+file under `visits`, capped at 400 days.
 `PAPAMAP_OPS_PRIVATE_HTML_PATH` (default `private/ops.html` next to `stats.json`, i.e.
 `web-data/private/ops.html`; empty disables).
 
