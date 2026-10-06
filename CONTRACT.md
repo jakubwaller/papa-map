@@ -1,5 +1,15 @@
 # papa-map — build contract (v0)
 
+> **v76 amendment (6 Oct 2026, the share icon centred in its bubble): no data
+> shape change.** The round share button in a pin's popup card showed its icon
+> a little right of centre (iPhone app, Android WebView). Cause: the
+> `#venue-ask` arm of `:is(.popup, #venue-ask) .btn` outranked
+> `.popup .btn.icon-btn`, so the pill's `7px 12px` padding won over the icon
+> button's and the 14 px icon overflowed a 4 px content box (about 5 px off).
+> The icon button now carries the same `:is()` selector, no padding and an
+> explicit 31 x 31 size, and the glyph's own half-unit bias is removed by
+> sliding its viewBox. Shell pin `app76` → `app77`; no `WHATS_NEW` entry.
+
 > **v75 amendment (6 Oct 2026, a late geocoder answer stays shut): no data
 > shape change.** Picking a row before Photon answered let the answer land
 > afterwards and reopen the list over the card the reader went to (seen on
