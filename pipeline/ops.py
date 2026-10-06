@@ -92,6 +92,19 @@ OPS_HISTORY_PATH = os.environ.get(
 # "last build" section, optional. Under Docker the ops service mounts it
 # read-only (docker-compose.yml).
 BUILD_LOG_PATH = os.environ.get("PAPAMAP_BUILD_LOG_PATH", "pipeline.log")
+# The fleet collector's readers ledger (pi-monitoring/fleet-ops, its
+# out/readers-history.json): distinct browser addresses on document paths
+# per complete UTC day, crawlers, link previews and floods taken out — the
+# number to quote for the site, never Cloudflare's uniques, of which most
+# are not people on an ordinary day. Optional: unset, or the file absent,
+# the private page's Readers section says so and shows the uniques instead.
+# Only the zone's *final* days are copied into the state (`readers_days`),
+# so the page's series outlives the ledger and never carries a provisional
+# "today so far". Under Docker the ops service mounts the collector's out/
+# directory read-only (docker-compose.yml).
+READERS_LEDGER_PATH = os.environ.get("PAPAMAP_READERS_LEDGER_PATH", "")
+READERS_ZONE = os.environ.get("PAPAMAP_READERS_ZONE", "papamap.de")
+READERS_HISTORY_DAYS = 400
 STALE_AFTER_H = float(os.environ.get("PAPAMAP_OPS_STALE_H", "48"))
 DROP_ALERT_PCT = float(os.environ.get("PAPAMAP_OPS_DROP_PCT", "20"))
 # The mirror image of DROP_ALERT_PCT, and it exists because the drop check on
@@ -103,7 +116,11 @@ DROP_ALERT_PCT = float(os.environ.get("PAPAMAP_OPS_DROP_PCT", "20"))
 # the drop threshold: real mapping never does this, but a Land coming back
 # after a failed night legitimately can.
 JUMP_ALERT_PCT = float(os.environ.get("PAPAMAP_OPS_JUMP_PCT", "25"))
-HISTORY_DAYS = 90
+# The daily entries (counts + the night's diff) the state keeps. 90 until
+# 2026-10-06; the page's "answered since launch" line adds the whole list
+# up, and a cap that silently turned it into "the last 90 nights" would
+# have made the mission metric shrink. ~150 bytes an entry.
+HISTORY_DAYS = 400
 WEEKLY_DIGEST_WEEKDAY = 0  # Monday
 
 CF_GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql"
@@ -313,7 +330,8 @@ def _seq(v) -> str:
 
 
 def render_report(counts, changes, history, anomalies, visits=None,
-                  edits=None, delta=None, app_days=None, ratings=None) -> str:
+                  edits=None, delta=None, app_days=None, ratings=None,
+                  readers=None) -> str:
     lines = []
     if anomalies:
         lines.append("ANOMALIES:")
@@ -364,6 +382,14 @@ def render_report(counts, changes, history, anomalies, visits=None,
                if isinstance(pending, int) and pending > 0 else "")
             + (" — base BEHIND the dataset" if delta["base_ok"] is False
                else ""))
+    if readers:
+        # The fleet collector's count, the number to quote — the Cloudflare
+        # line under it is kept for the trend, bots and all.
+        week = sorted(readers.items())[-7:]
+        lines.append(
+            f"readers (fleet ledger, {len(week)}d to {week[-1][0]}): "
+            f"{sum(v for _, v in week)} total, "
+            f"{round(sum(v for _, v in week) / len(week))}/day")
     if visits and visits["days"]:
         lines.append(
             f"visits (Cloudflare, {visits['days']}d): "
@@ -635,7 +661,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
               mail=send_mail, visits_fetch=cf_visits, edits_fetch=osmcha_edits,
               apps_fetch=appstats.fetch_all,
               html_path=None, history_path=None, build_log_path=None,
-              private_html_path=None, delta_path=None, delta_state_path=None):
+              private_html_path=None, delta_path=None, delta_state_path=None,
+              readers_ledger_path=None):
     """Returns (anomalies, report). State is updated every run so the daily
     diff stays daily even when no mail goes out, and the ops page is
     rewritten every run from the same numbers. html_path="" skips the page;
@@ -685,11 +712,18 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     app_ratings = appstats.merge_ratings(
         state.get("app_ratings"), (apps or {}).get("ratings"),
         now.strftime("%Y-%m-%d"))
+    # Readers from the fleet collector's ledger, copied into the state the
+    # way the visits are, so the page's series is its own.
+    readers_ledger_path = (READERS_LEDGER_PATH if readers_ledger_path is None
+                           else readers_ledger_path)
+    readers_days = merge_readers(state.get("readers_days") or {},
+                                 read_readers_ledger(readers_ledger_path))
     digest = anomalies or weekly
     report = render_report(counts, changes, history, anomalies,
                            visits if digest else None, edits, delta=summary,
                            app_days=app_days if digest else None,
-                           ratings=app_ratings if digest else None)
+                           ratings=app_ratings if digest else None,
+                           readers=readers_days if digest else None)
     visits_history = merge_visits(state.get("visits") or {}, visits, now)
     edits_days = merge_edits(state.get("edits_days") or {}, edits)
     web_edits_days = merge_edits(state.get("web_edits_days") or {}, edits,
@@ -714,6 +748,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
             state["web_edits_days"] = web_edits_days
         if visits_history:
             state["visits"] = visits_history
+        if readers_days:
+            state["readers_days"] = readers_days
         if app_days:
             state["app_days"] = app_days
         if app_ratings:
@@ -734,14 +770,50 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
         write_ops_page(html_path, **ctx)
     if private_path:
         write_ops_page(private_path, private=True, visits=visits_history,
-                       apps=apps, app_days=app_days, app_ratings=app_ratings,
-                       **ctx)
+                       readers=readers_days, apps=apps, app_days=app_days,
+                       app_ratings=app_ratings, **ctx)
 
     if anomalies:
         mail("[papamap] ALERT: " + "; ".join(anomalies)[:120], report)
     elif weekly:
         mail("[papamap] weekly: all clear", report)
     return anomalies, report
+
+
+def read_readers_ledger(path, zone: str | None = None) -> dict | None:
+    """{day: readers} for one zone's *final* days in the fleet collector's
+    ledger ({"zones": {zone: {day: {"count", "limited", "final"}}}}). None
+    when no path is set, the file is unreadable or the zone is not in it —
+    said on stderr, because a missing ledger and a quiet site must never
+    look alike. A provisional day (today so far) is left out: the next run
+    gets it whole."""
+    if not path:
+        return None
+    zone = zone or READERS_ZONE
+    try:
+        zones = json.loads(Path(path).read_text())["zones"]
+        entries = zones[zone]
+        if not isinstance(entries, dict):
+            raise ValueError(f"{zone}: not an object")
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        print(f"WARN: readers ledger not read ({_short_exc(exc)})", file=sys.stderr)
+        return None
+    out = {}
+    for day, e in entries.items():
+        if (isinstance(e, dict) and e.get("final") and isinstance(day, str)
+                and isinstance(e.get("count"), int) and not isinstance(e["count"], bool)):
+            out[day] = e["count"]
+    return out
+
+
+def merge_readers(kept: dict, fetched: dict | None) -> dict:
+    """merge_visits' sibling for the readers series: every final day in the
+    ledger overwrites the stored one (a day finalised late is the ledger's
+    better answer), capped and sorted; an unreadable ledger changes nothing."""
+    merged = dict(kept)
+    for day, n in (fetched or {}).items():
+        merged[day] = int(n)
+    return dict(sorted(merged.items())[-READERS_HISTORY_DAYS:])
 
 
 def merge_visits(kept: dict, visits: dict | None, now: datetime) -> dict:

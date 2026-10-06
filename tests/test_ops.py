@@ -134,7 +134,7 @@ def test_history_capped(tmp_path):
              "counts": {"total": 1, "accessible": 0, "female_only": 0,
                         "unknown": 1},
              "changes": ops.diff_statuses({}, {})}
-    state = {"statuses": {}, "history": [dict(entry) for _ in range(120)]}
+    state = {"statuses": {}, "history": [dict(entry) for _ in range(ops.HISTORY_DAYS + 20)]}
     _, _, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY),
                               now=TUESDAY, state=state,
                               gj=geojson([("node", 1, "unknown")]))
