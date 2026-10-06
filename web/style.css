@@ -971,12 +971,14 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
 /* The share button: icon only, in the same row as Route and the OSM link —
    at 375 px in German that row has no room left for one more word. */
-.popup .btn.icon-btn {
+.popup .btn.icon-btn,
+:is(.popup, #venue-ask) .btn.icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  padding: 7px;
+  width: 31px;
+  height: 31px;
+  padding: 0;
 }
 .popup .btn .share-icon { width: 14px; height: 14px; fill: currentColor; display: block; }
 /* Edit confirmation: what OSM holds after a MapComplete answer. Found is

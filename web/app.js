@@ -12,15 +12,15 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app76";
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app77";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app76";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app77";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app76";
+         writeTags } from "./osm.js?v=app77";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -28,7 +28,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app76";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app77";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -38,27 +38,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app76";
+         reviewTracker } from "./native.js?v=app77";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app76";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app77";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app76";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app77";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app76";
+import { isOpenNow } from "./opening-hours.js?v=app77";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         VENUE_MIN_ZOOM } from "./venues.js?v=app76";
-// The bundled shell's pin (`?v=app76`), what the intro key records.
+         VENUE_MIN_ZOOM } from "./venues.js?v=app77";
+// The bundled shell's pin (`?v=app77`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -264,8 +264,8 @@ const LIMITED_PATH = "M10 3h4v12h-4zM12 17a2 2 0 1 1 0 4 2 2 0 1 1 0-4z";
 // and a footrest bar. Ink like the ISA icon; never drawn on a pin.
 const HIGHCHAIR_PATH = "M7 2h2v11H7zM7 11h10v2H7zM12 7h7v2h-7zM16 9h1.5v2H16zM7 13h2l-2.4 9h-2zM15 13h2l2.4 9h-2zM5.8 18h12.4v1.5H5.8z";
 const KEY_PATH = "M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z";
-const svgIcon = (path, cls) =>
-  `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>`;
+const svgIcon = (path, cls, viewBox = "0 0 24 24") =>
+  `<svg class="${cls}" viewBox="${viewBox}" aria-hidden="true"><path d="${path}"/></svg>`;
 
 // The saved-places star (v39): one path, outline when unsaved (stroke only)
 // and filled when saved — a colour change, not a shape change, the same way
@@ -766,9 +766,12 @@ function routeButton(lat, lon, name) {
 // on OSM) is already tight at 375 px, and one more short word would wrap it
 // badly on a 12 mini. The click is delegated (the popup markup is rebuilt on
 // every open); the button itself only needs to say which popup it belongs to.
+// The glyph spans x 2..21 of its 24-unit box, so its centre sits half a unit
+// left of the bubble's: the viewBox is slid to put the glyph, not the box, in the middle.
+const SHARE_VIEWBOX = "-0.5 0 24 24";
 const SHARE_PATH = "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.03-.47-.09-.7l7.05-4.11c.53.49 1.23.79 2.01.79 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L7.04 9.81C6.5 9.31 5.79 9 5 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z";
 const shareButtonHTML = () =>
-  `<button type="button" class="btn icon-btn" data-share aria-label="${esc(t("popupShare"))}" title="${esc(t("popupShare"))}">${svgIcon(SHARE_PATH, "share-icon")}</button>`;
+  `<button type="button" class="btn icon-btn" data-share aria-label="${esc(t("popupShare"))}" title="${esc(t("popupShare"))}">${svgIcon(SHARE_PATH, "share-icon", SHARE_VIEWBOX)}</button>`;
 
 function popupHTML(f) {
   const s = viewOf(f, mode);
