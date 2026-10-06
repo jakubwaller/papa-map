@@ -800,9 +800,14 @@ def read_readers_ledger(path, zone: str | None = None) -> dict | None:
         return None
     out = {}
     for day, e in entries.items():
-        if (isinstance(e, dict) and e.get("final") and isinstance(day, str)
+        if not (isinstance(e, dict) and e.get("final")
                 and isinstance(e.get("count"), int) and not isinstance(e["count"], bool)):
-            out[day] = e["count"]
+            continue
+        try:
+            date.fromisoformat(str(day))
+        except ValueError:
+            continue  # a key that is not a day would break the page's axis for good
+        out[str(day)] = e["count"]
     return out
 
 

@@ -834,6 +834,11 @@ def _readers_section(readers: dict | None, visits: dict | None,
                          "readers summed, a daily reader counted daily")
                  + _tile("Best day", _n(st["best"]), esc(st["best_day"]))
                  + "</div>\n")
+        missing = _missing_days(st["last_day"], now)
+        if missing > 0:
+            p.append(f'<p class="warn">The readers ledger has no complete day after '
+                     f"{esc(st['last_day'])}: {missing} day{'' if missing == 1 else 's'} "
+                     "missing from the tiles and the chart, which stop there.</p>\n")
         days = sorted(readers.items())
         span = _day_range(days[0][0], days[-1][0])
         rows = [(d, f"{d} · {readers[d]:,} readers" if d in readers else f"{d} · no count",

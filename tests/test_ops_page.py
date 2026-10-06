@@ -1261,6 +1261,11 @@ def test_readers_series_with_a_gap_and_an_old_newest_day():
             '<span class="s">the ledger stops here</span>') in sec
     assert '<div class="col" title="2026-08-11 · no count"></div>' in sec
     assert "Readers, 2026-08-12" in html  # the week strip says which day
+    # and a ledger that stopped answering is said, not left to the dates
+    assert ("The readers ledger has no complete day after 2026-08-12: 10 days "
+            "missing from the tiles and the chart, which stop there.") in sec
+    fresh = render(private=True, readers={"2026-08-22": 74})
+    assert "readers ledger has no complete day" not in fresh
 
 
 def test_readers_stats_windows():
@@ -1298,6 +1303,7 @@ def test_readers_ledger_is_read_final_days_only(tmp_path, capsys):
         "papamap.de": {"2026-08-21": {"count": 64, "limited": False, "final": True},
                        "2026-08-22": {"count": 74, "limited": True, "final": True},
                        "2026-08-23": {"count": 9, "limited": False, "final": False},
+                       "total": {"count": 138, "limited": False, "final": True},
                        "bad": "not an entry"},
         "other.example": {"2026-08-22": {"count": 1, "final": True}}}}))
     assert ops.read_readers_ledger(str(ledger)) == {"2026-08-21": 64, "2026-08-22": 74}

@@ -349,8 +349,13 @@ day). The check reads the ledger at `PAPAMAP_READERS_LEDGER_PATH` every run (the
 service mounts the collector's `out/` directory read-only from the sibling checkout
 `../pi-monitoring`; `PAPAMAP_READERS_ZONE` defaults to `papamap.de`) and copies the zone's
 final days into the state under `readers_days` (capped at 400), so the page's series is its
-own; the Monday mail gets a `readers (fleet ledger, 7d …)` line. Unset or unreadable, the
-section says so and shows Cloudflare's uniques instead. Those — zone-level requests and
+own; the Monday mail gets a `readers (fleet ledger, 7d …)` line. Unset or unreadable before
+any day was copied, the section says so and shows Cloudflare's uniques instead; once a series
+exists, a ledger that stops answering shows as the dates standing still, with an amber note
+naming the gap (and a WARN in `ops.log`). **The sibling checkout must exist before the first
+`docker compose run … ops`**: Docker creates a missing bind-mount source as a root-owned
+directory, which a later `git clone` of pi-monitoring would then refuse to overwrite. Those —
+zone-level requests and
 uniques per complete UTC day — stay in the section's collapsed table for reference; they are
 fetched on every run (the mail still quotes them on digest days only) and kept in the state
 file under `visits`, capped at 400 days.
