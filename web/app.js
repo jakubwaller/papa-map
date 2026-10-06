@@ -12,15 +12,15 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app74";
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app75";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app74";
+         canonicalUrl, isCrawler } from "./i18n.js?v=app75";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app74";
+         writeTags } from "./osm.js?v=app75";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -28,7 +28,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app74";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app75";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -38,27 +38,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app74";
+         reviewTracker } from "./native.js?v=app75";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app74";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app75";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app74";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app75";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app74";
+import { isOpenNow } from "./opening-hours.js?v=app75";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         VENUE_MIN_ZOOM } from "./venues.js?v=app74";
-// The bundled shell's pin (`?v=app74`), what the intro key records.
+         VENUE_MIN_ZOOM } from "./venues.js?v=app75";
+// The bundled shell's pin (`?v=app75`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -1971,7 +1971,18 @@ searchInput.addEventListener("keydown", (e) => {
 // The field must not lose focus before a row's own click handler runs, and a
 // drag on the list's scrollbar must not close it either.
 searchList.addEventListener("mousedown", (e) => e.preventDefault());
-searchInput.addEventListener("focus", () => { if (searchRows.length) setSearchOpen(true); });
+// Focus alone is not the reader asking for the list again. Closing a dialog
+// hands focus back to wherever the browser thinks it was, and on the iPhone
+// that can be this field: a saved place picked in My PapaMap (6 Oct 2026)
+// flew there with the previous search's results open over its card. With a
+// card up, only a press on the field itself brings the list back.
+let searchPressed = false;
+searchInput.addEventListener("pointerdown", () => { searchPressed = true; });
+searchInput.addEventListener("focus", () => {
+  const asked = searchPressed || !popup;
+  searchPressed = false;
+  if (searchRows.length && asked) setSearchOpen(true);
+});
 searchInput.addEventListener("blur", () => setSearchOpen(false));
 searchClear.addEventListener("click", () => { clearSearch(); searchInput.focus(); });
 
@@ -4022,6 +4033,7 @@ function toggleStar(btn) {
 // flight instead, leaving a country view with a card open on it.
 function openSavedPlace(row) {
   meDialog.close();
+  closeSearch();   // a list from an earlier search is not the answer to this pick
   const f = featuresByOsmUrl.get(row.osm), p = placesByOsmUrl.get(row.osm);
   if (f || p) reopen(f ? "table" : "place", f || p);
   const at = f || p || row;
@@ -4311,6 +4323,7 @@ function renderMeSentence() {
   });
   meSentenceEl.querySelector("#me-grey")?.addEventListener("click", () => {
     meDialog.close();
+    closeSearch();
     flyToBounds(circleBounds(lastFix.lat, lastFix.lon, 1), { padding: 40 });
   });
 }
