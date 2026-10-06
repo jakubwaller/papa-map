@@ -516,6 +516,12 @@ test("introKind: the app67 release says what is new — the high-chair chip", ()
       for (const l of LANGS) assert.ok(STRINGS[l][k], `${l}.${k}`);
 });
 
+test("introKind: the app74 release adds the add-a-place note", () => {
+  assert.deepEqual(introKind("app73", "app74"), { kind: "news", keys: ["newsAddPlace"] });
+  assert.deepEqual(introKind("app66", "app74"), { kind: "news", keys: ["newsHighchair", "newsAddPlace"] });
+  assert.equal(introKind("app74", "app74"), null);
+});
+
 test("introTips: the features, then whatever the phone has", () => {
   assert.deepEqual(introTips("ios", "de"), [...INTRO_FEATURES, "tipControl", "tipWidget", "tipSiri"]);
   assert.deepEqual(introTips("ios", "fr"), [...INTRO_FEATURES, "tipControl", "tipWidget"]);

@@ -1,5 +1,5 @@
-– New: the high chair question now also appears at nurseries, childcare, community centres, social facilities and libraries, not only at cafés and restaurants. Try a nursery near you.
-– New: a pin's card is never taller than the free space between the search field and the bottom of the map. Longer content scrolls inside the card and the × stays put. A long wheelchair note shows three lines and "more …". Does anything still cover the answer buttons at the bottom?
-– New: when location is off for the app, the message now says where to turn it back on (in the phone's settings) instead of just "Couldn't get your location". To test: turn location off for PapaMap in Settings and tap the location button.
+– New: the map now moves faster. A short hop still glides, a long one (say from a country view to a pin) jumps straight there instead of flying for seconds. Does any move feel too abrupt or too slow?
+– New: a saved place (My PapaMap) and a freshly added pin now open their card first and then move the map. Check: save a place far away, open it from My PapaMap, and add a place and watch where the card lands. Is the card ever off-screen?
+– New: the MapComplete questions behind a grey pin ("Answer on MapComplete") are now in all 32 languages. Switch the language and open one.
 – As always: "Nearest changing table", colours for places you know, Siri, the widget.
 Anything unclear or broken: take a screenshot and send it through TestFlight.
