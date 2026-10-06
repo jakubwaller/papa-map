@@ -196,7 +196,7 @@ const STEMS = [
   { nn: "02", name: "nearest" },
   { nn: "03", name: "room" },
   { nn: "04", name: "route" },
-  { nn: "05", name: "search" },
+  { nn: "05", name: "add" },
   { nn: "06", name: "filters" },
   { nn: "07", name: "offline" },
   { nn: "08", name: "me" },
@@ -588,38 +588,41 @@ async function shootDevice(deviceName, device, langName, lang, outDir) {
       results.push({ shot: "route", ok: false, reason: err.message });
     }
 
-    // ---- 05: search — type a query, wait for result rows ----
+    // ---- 05: add — the "+ Add a place" dialog, list of nearby places OSM
+    // already knows (Photon, around the map centre). Replaces the search shot
+    // for 1.3: the list is the new thing, search is a field everyone knows. ----
     await reloadFresh(page, prefix);
     try {
-      await page.click("#search-input");
-      await page.type("#search-input", lang.query, { delay: 40 });
-      await page.waitForSelector("#search-results li.search-opt", { timeout: 8000 });
-      await page.waitForTimeout(500);
-      path = shotPath("05", "search");
+      // The list only loads from zoom 14 (VENUE_MIN_ZOOM); the wide view the
+      // other shots start from would only show "zoom in".
+      await page.evaluate(() => window._papamap.jumpTo({ center: [9.9937, 53.5503], zoom: 16 }));
+      await settleMap(page);
+      await page.click("#add-place");
+      await page.waitForSelector("#add-dialog[open]", { timeout: 8000 });
+      await page.waitForFunction(() => document.querySelectorAll("#venue-list .venue-row").length >= 3, { timeout: 30000 });
+      await page.waitForTimeout(600);
+      path = shotPath("05", "add");
       await page.screenshot({ path });
-      results.push({ shot: "search", path, ok: true });
+      results.push({ shot: "add", path, ok: true });
       console.log(`[${prefix}] wrote ${path}`);
     } catch (err) {
-      console.error(`[${prefix}] SKIP search: ${err.message}`);
-      results.push({ shot: "search", ok: false, reason: err.message });
+      console.error(`[${prefix}] SKIP add: ${err.message}`);
+      results.push({ shot: "add", ok: false, reason: err.message });
     }
 
-    // ---- 06: filters — Mama view, no chip filter active, chip bar at
-    // scroll 0, Papa/Mama toggle visible and Mama highlighted ----
-    // No chip click at all, on purpose: an active play chip narrows the map
-    // down to just the play-corner pins, and on iPhone that chip sits off
-    // screen at scroll 0 too — the shot read as "few pins, no reason". Mode
-    // alone gives a map full of Mama-view pins with the toggle itself
-    // carrying the "filters" idea.
+    // ---- 06: filters — the chip row scrolled to its end, so the feature chips
+    // (play corner, places, high chair) are in view; the map stays full.
+    // No chip is switched on: high chairs are recorded too sparsely for a
+    // narrowed Hamburg view to show more than a pin or two (tried, empty at
+    // zoom 15). The Dad/Mum toggle scrolls out of sight on a phone; that is
+    // the price of showing the high-chair chip. ----
     await reloadFresh(page, prefix);
     try {
-      await page.click("#mode-mama");
-      await page.waitForFunction(
-        () => document.getElementById("mode-mama")?.classList.contains("on")
-          && document.getElementById("mode-mama")?.getAttribute("aria-pressed") === "true",
-        { timeout: 5000 },
-      );
-      await page.waitForTimeout(300);
+      await page.evaluate(() => {
+        const bar = document.getElementById("filter-bar");
+        bar.scrollLeft = bar.scrollWidth;
+      });
+      await page.waitForTimeout(600);
       path = shotPath("06", "filters");
       await page.screenshot({ path });
       results.push({ shot: "filters", path, ok: true });

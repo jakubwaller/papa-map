@@ -34,8 +34,8 @@ The first three show in search results, so map, nearest and the grey-pin questio
 | 2 | `02-nearest` | after the nearest button, popup with distance toast | Der *nächste* Wickeltisch, den du auch erreichst | Mit Entfernung. Auch per Siri, Widget und Kontrollzentrum. |
 | 3 | `03-room` | popup on a grey pin with the room question | Grauer Pin? Sag, in welchem *Raum* der Tisch ist | Die Antwort geht direkt nach OpenStreetMap. |
 | 4 | `04-route` | green pin's popup with the Route button visible, no dialog | *Route* zum Wickeltisch | Öffnet deine Navi-App: Apple Maps, Google Maps, Waze oder Organic Maps. |
-| 5 | `05-search` | search field with results for "hamburg rathaus" | *Suche* nach Ort oder Adresse | Orte auf der Karte und Adressen weltweit. |
-| 6 | `06-filters` | Mama view, no chip filter, chip bar not scrolled: the toggle shows Mama and the map is full of Mama-view pins | *Mama*-Ansicht, Spielecke, Barrierefrei | Die Karte zeigt nur, was du brauchst. |
+| 5 | `05-add` | "+ Ort hinzufügen" dialog at zoom 16, list of nearby places OSM already knows | Fehlenden *Ort* eintragen | Orte in deiner Nähe, die OpenStreetMap schon kennt. Antworte gleich in der App. |
+| 6 | `06-filters` | chip bar scrolled to its end (play corner, places, high chair chip), no filter on, full map | *Hochstuhl*, Spielecke, Barrierefrei | Die Karte zeigt nur, was du brauchst. |
 | 7 | `07-offline` | offline dialog open (the download button in the map controls) | Stadt *offline* speichern | Hamburg sind 27 MB. Dann geht die Karte auch ohne Netz. |
 | 8 | `08-me` | Mein PapaMap panel open | *Mein* PapaMap | Deine Antworten, gemerkte Orte, und wie viel in deiner Stadt schon beantwortet ist. |
 | 9 | `09-widget` | Jakub's phone: home screen with the PapaMap widget | Der nächste Tisch auf dem *Homescreen* | Widget für Home- und Sperrbildschirm. |
@@ -47,8 +47,8 @@ The first three show in search results, so map, nearest and the grey-pin questio
 | 2 | The *nearest* table you can actually reach | With the distance. Also via Siri, widget and Control Center. |
 | 3 | Grey pin? Say which *room* the table is in | Your answer goes straight to OpenStreetMap. |
 | 4 | *Route* to the table | Opens your navigation app: Apple Maps, Google Maps, Waze or Organic Maps. |
-| 5 | *Search* a place or an address | Places on this map and addresses worldwide. |
-| 6 | *Mum* view, play corner, accessible | The map shows only what you need. |
+| 5 | Add a missing *place* | Places nearby that OpenStreetMap already knows. Answer right in the app. |
+| 6 | *High chair*, play corner, accessible | The map shows only what you need. |
 | 7 | Save a city *offline* | Hamburg is 27 MB. The map then works without a connection. |
 | 8 | *My* PapaMap | Your answers, saved places, and how much of your city is answered already. |
 | 9 | The nearest table on your *home screen* | Widget for the home and lock screen. |
@@ -103,3 +103,17 @@ as Android (`getPlatform() === "android"`: crosshair locate button, Android tips
 412 × 800 and composes it at 1440 × 2560, same shots and order. Shots 2 and 4 take
 their sublines from `texts.json`'s `android` block (widget and app icon instead of Siri and
 Control Center; "your maps app" instead of Apple Maps). Upload `final/play-{de,en}-01..08`.
+
+**Update 2026-10-06: the 1.3 set.** Shot 5 is now the add-a-place dialog (nearby places OSM already
+knows, #214/#216) instead of search, and shot 6 scrolls the chip bar to the end so the high-chair
+chip (#219) is in view. No chip is switched on: high chairs are recorded too sparsely for a
+narrowed Hamburg view to show more than a pin or two. The Dad/Mum toggle scrolls out of sight.
+The add dialog only loads its list from zoom 14, so the shot jumps to zoom 16 first, and it needs
+network access to Photon.
+
+**Product-page header (Apple's optional asset), same day.** `make-header.mjs` composes it from the
+raw shots (`node make-header.mjs ./out`, after a shoot): brand green `#009e73` ground, the logo from
+`web/icon.svg`, the app's font, the headline of shot 1 in white with the accent word in ink, and two
+phone frames (map, add dialog). 3840 × 1646 and 5244 × 2950, one per language, PNG without alpha.
+Apple crops the header per device, so logo, headline and both phones sit in the central 60 % of
+the width (x 768 to 3072 at 3840 wide).

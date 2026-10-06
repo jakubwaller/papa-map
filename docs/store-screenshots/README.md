@@ -2,7 +2,7 @@
 
 `shoot-store-screenshots.mjs` produces the finished App Store screenshot
 set: ten composed images per language for the iPhone 6.9" slot (map,
-nearest, room, route, search, filters, offline, me, widget, control), the
+nearest, room, route, add, filters, offline, me, widget, control), the
 same first eight recomposed for the iPhone 6.5" slot (see "The 6.5" canvas"
 below), and the first eight for iPad 13" (no widget/Control Center on a
 tablet). Design: `DESIGN.md`
@@ -227,3 +227,9 @@ route proxies serve. `verifyNativeShell()` asserts the app-mode markers on
 `<html>` before the first shot — and again after every reload — and aborts
 the run if they are missing. `--web` turns the stub off and shoots the
 website instead.
+
+## Header image
+
+`node make-header.mjs ./out` (after a shoot, it reads `out/raw/iphone69-*-01-map.png` and
+`-05-add.png`) writes `out/final/header-<lang>-3840x1646.png` and `-5244x2950.png`. The script checks
+size and that there is no alpha channel. Layout and rules: `DESIGN.md`.
