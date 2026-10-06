@@ -175,7 +175,7 @@ const DEVICES = {
 // bottom, so the raw image's own aspect ratio never has to match the canvas.
 const DEVICE_CANVAS = {
   iphone69: { width: 1320, height: 2868, frameWidth: 1140, margin: 90, headlineSize: 88, sublineSize: 44, radius: 72, gap: 26 },
-  iphone65: { width: 1284, height: 2778, frameWidth: 1110, margin: 87, headlineSize: 86, sublineSize: 43, radius: 70, gap: 26, rawDevice: "iphone69" },
+  iphone65: { width: 1284, height: 2778, frameWidth: 1110, margin: 87, headlineSize: 86, sublineSize: 43, radius: 70, gap: 26, rawDevice: "iphone69", texts: "phone" },
   ipad13: { width: 2064, height: 2752, frameWidth: 1560, margin: 252, headlineSize: 96, sublineSize: 48, radius: 60, gap: 30 },
   // Google Play phone: 9:16, or Play's asset library marks the image
   // "needs cropping" (seen 2026-10-02 on a 1:2 set). `texts: "android"` swaps
@@ -610,17 +610,25 @@ async function shootDevice(deviceName, device, langName, lang, outDir) {
       results.push({ shot: "add", ok: false, reason: err.message });
     }
 
-    // ---- 06: filters — the chip row scrolled to its end, so the feature chips
-    // (play corner, places, high chair) are in view; the map stays full.
-    // No chip is switched on: high chairs are recorded too sparsely for a
-    // narrowed Hamburg view to show more than a pin or two (tried, empty at
-    // zoom 15). The Dad/Mum toggle scrolls out of sight on a phone; that is
-    // the price of showing the high-chair chip. ----
+    // ---- 06: filters — the wheelchair chip switched on, the bar scrolled to
+    // start at it, so the map shows the narrowed result and the chips beside it
+    // stand in view. On the iPad (1032 px) all of wheelchair, play corner and
+    // high chair fit, with labels. On a 440 px phone they do not: the real
+    // counts make wheelchair..high chair ~470 CSS px, and style.css hides the
+    // wheelchair and high-chair labels below 640 px, so the phone shows
+    // wheelchair + both play-corner chips and its headline (texts.json "phone"
+    // block) names only those. The status chips and Dad/Mum toggle scroll out. ----
     await reloadFresh(page, prefix);
     try {
+      await page.click("#filter-bar .chip.wc");
+      await page.waitForTimeout(1200);
       await page.evaluate(() => {
         const bar = document.getElementById("filter-bar");
-        bar.scrollLeft = bar.scrollWidth;
+        const wc = bar.querySelector(".chip.wc");
+        const hc = bar.querySelector(".chip.hc");
+        const pad = parseFloat(getComputedStyle(bar).paddingLeft) || 14;
+        bar.scrollLeft = wc.offsetLeft - pad;
+        if (bar.clientWidth > 640 && hc.offsetLeft + hc.offsetWidth - bar.scrollLeft > bar.clientWidth) throw new Error("wheelchair..high-chair chips do not fit the bar");
       });
       await page.waitForTimeout(600);
       path = shotPath("06", "filters");

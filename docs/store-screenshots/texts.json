@@ -104,5 +104,19 @@
         "subline": "Opens your maps app, for example Google Maps or Organic Maps."
       }
     }
+  },
+  "phone": {
+    "de": {
+      "06": {
+        "headline": "*Barrierefrei*, Spielecke",
+        "subline": "Der Hochstuhl-Filter liegt gleich rechts daneben."
+      }
+    },
+    "en": {
+      "06": {
+        "headline": "*Accessible*, play corner",
+        "subline": "The high-chair filter sits right next to them."
+      }
+    }
   }
 }
