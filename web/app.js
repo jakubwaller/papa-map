@@ -1974,16 +1974,20 @@ searchList.addEventListener("mousedown", (e) => e.preventDefault());
 // Focus alone is not the reader asking for the list again. Closing a dialog
 // hands focus back to wherever the browser thinks it was, and on the iPhone
 // that can be this field: a saved place picked in My PapaMap (6 Oct 2026)
-// flew there with the previous search's results open over its card. With a
-// card up, only a press on the field itself brings the list back.
-let searchPressed = false;
-searchInput.addEventListener("pointerdown", () => { searchPressed = true; });
+// flew there with the previous search's results open over its card. Only a
+// press on the field or a Tab into it brings the list back; the flag dies with
+// any focus elsewhere and with the field's own blur, so a stale press can
+// never vouch for a later, restored focus.
+let searchAsked = false;
+searchInput.addEventListener("pointerdown", () => { searchAsked = true; });
+document.addEventListener("keydown", (e) => { if (e.key === "Tab") searchAsked = true; }, true);
+document.addEventListener("focusin", (e) => { if (e.target !== searchInput) searchAsked = false; });
 searchInput.addEventListener("focus", () => {
-  const asked = searchPressed || !popup;
-  searchPressed = false;
+  const asked = searchAsked;
+  searchAsked = false;
   if (searchRows.length && asked) setSearchOpen(true);
 });
-searchInput.addEventListener("blur", () => setSearchOpen(false));
+searchInput.addEventListener("blur", () => { searchAsked = false; setSearchOpen(false); });
 searchClear.addEventListener("click", () => { clearSearch(); searchInput.focus(); });
 
 // ---- The "which room?" card: ask, at the moment it might get answered ----
