@@ -174,7 +174,7 @@ const DEVICES = {
 // frame scales the image to frameWidth and lets it bleed off the canvas
 // bottom, so the raw image's own aspect ratio never has to match the canvas.
 const DEVICE_CANVAS = {
-  iphone69: { width: 1320, height: 2868, frameWidth: 1140, margin: 90, headlineSize: 88, sublineSize: 44, radius: 72, gap: 26 },
+  iphone69: { width: 1320, height: 2868, frameWidth: 1140, margin: 90, headlineSize: 88, sublineSize: 44, radius: 72, gap: 26, texts: "phone" },
   iphone65: { width: 1284, height: 2778, frameWidth: 1110, margin: 87, headlineSize: 86, sublineSize: 43, radius: 70, gap: 26, rawDevice: "iphone69", texts: "phone" },
   ipad13: { width: 2064, height: 2752, frameWidth: 1560, margin: 252, headlineSize: 96, sublineSize: 48, radius: 60, gap: 30 },
   // Google Play phone: 9:16, or Play's asset library marks the image

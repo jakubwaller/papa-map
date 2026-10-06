@@ -92,6 +92,10 @@
       "04": {
         "headline": "*Route* zum Wickeltisch",
         "subline": "Öffnet deine Karten-App, zum Beispiel Google Maps oder Organic Maps."
+      },
+      "06": {
+        "headline": "*Barrierefrei*, Spielecke",
+        "subline": "Die Karte zeigt nur, was du brauchst."
       }
     },
     "en": {
@@ -102,6 +106,10 @@
       "04": {
         "headline": "*Route* to the table",
         "subline": "Opens your maps app, for example Google Maps or Organic Maps."
+      },
+      "06": {
+        "headline": "*Accessible*, play corner",
+        "subline": "The map shows only what you need."
       }
     }
   },

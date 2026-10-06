@@ -48,7 +48,7 @@ The first three show in search results, so map, nearest and the grey-pin questio
 | 3 | Grey pin? Say which *room* the table is in | Your answer goes straight to OpenStreetMap. |
 | 4 | *Route* to the table | Opens your navigation app: Apple Maps, Google Maps, Waze or Organic Maps. |
 | 5 | Add a missing *place* | Places nearby that OpenStreetMap already knows. Answer right in the app. |
-| 6 | *High chair*, play corner, accessible | The map shows only what you need. |
+| 6 | iPad: *High chair*, play corner, accessible; phones (`phone`/`android` blocks): *Accessible*, play corner | The map shows only what you need. |
 | 7 | Save a city *offline* | Hamburg is 27 MB. The map then works without a connection. |
 | 8 | *My* PapaMap | Your answers, saved places, and how much of your city is answered already. |
 | 9 | The nearest table on your *home screen* | Widget for the home and lock screen. |
@@ -105,9 +105,11 @@ their sublines from `texts.json`'s `android` block (widget and app icon instead 
 Control Center; "your maps app" instead of Apple Maps). Upload `final/play-{de,en}-01..08`.
 
 **Update 2026-10-06: the 1.3 set.** Shot 5 is now the add-a-place dialog (nearby places OSM already
-knows, #214/#216) instead of search, and shot 6 scrolls the chip bar to the end so the high-chair
-chip (#219) is in view. No chip is switched on: high chairs are recorded too sparsely for a
-narrowed Hamburg view to show more than a pin or two. The Dad/Mum toggle scrolls out of sight.
+knows, #214/#216) instead of search, and shot 6 switches the wheelchair chip on and scrolls the chip bar to
+start at it. On the iPad all three filters (wheelchair, play corner, high chair #219) fit with
+labels; on phones (iPhone 6.5"/6.9", Play) the bar is too narrow for the high-chair chip and
+hides the wheelchair label below 640 px, so the phone and Android texts name only "accessible,
+play corner". The Dad/Mum toggle scrolls out of sight.
 The add dialog only loads its list from zoom 14, so the shot jumps to zoom 16 first, and it needs
 network access to Photon.
 
