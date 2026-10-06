@@ -17,11 +17,11 @@
       "subline": "Öffnet deine Navi-App: Apple Maps, Google Maps, Waze oder Organic Maps."
     },
     "05": {
-      "headline": "*Suche* nach Ort oder Adresse",
-      "subline": "Orte auf der Karte und Adressen weltweit."
+      "headline": "Fehlenden *Ort* eintragen",
+      "subline": "Orte in deiner Nähe, die OpenStreetMap schon kennt. Antworte gleich in der App."
     },
     "06": {
-      "headline": "*Mama*-Ansicht, Spielecke, Barrierefrei",
+      "headline": "*Hochstuhl*, Spielecke, Barrierefrei",
       "subline": "Die Karte zeigt nur, was du brauchst."
     },
     "07": {
@@ -59,11 +59,11 @@
       "subline": "Opens your navigation app: Apple Maps, Google Maps, Waze or Organic Maps."
     },
     "05": {
-      "headline": "*Search* a place or an address",
-      "subline": "Places on this map and addresses worldwide."
+      "headline": "Add a missing *place*",
+      "subline": "Places nearby that OpenStreetMap already knows. Answer right in the app."
     },
     "06": {
-      "headline": "*Mum* view, play corner, accessible",
+      "headline": "*High chair*, play corner, accessible",
       "subline": "The map shows only what you need."
     },
     "07": {
@@ -92,6 +92,10 @@
       "04": {
         "headline": "*Route* zum Wickeltisch",
         "subline": "Öffnet deine Karten-App, zum Beispiel Google Maps oder Organic Maps."
+      },
+      "06": {
+        "headline": "*Barrierefrei*, Spielecke",
+        "subline": "Die Karte zeigt nur, was du brauchst."
       }
     },
     "en": {
@@ -102,6 +106,24 @@
       "04": {
         "headline": "*Route* to the table",
         "subline": "Opens your maps app, for example Google Maps or Organic Maps."
+      },
+      "06": {
+        "headline": "*Accessible*, play corner",
+        "subline": "The map shows only what you need."
+      }
+    }
+  },
+  "phone": {
+    "de": {
+      "06": {
+        "headline": "*Barrierefrei*, Spielecke",
+        "subline": "Die Karte zeigt nur, was du brauchst."
+      }
+    },
+    "en": {
+      "06": {
+        "headline": "*Accessible*, play corner",
+        "subline": "The map shows only what you need."
       }
     }
   }
