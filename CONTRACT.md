@@ -1,5 +1,13 @@
 # papa-map — build contract (v0)
 
+> **v74 amendment (6 Oct 2026, the search list stays shut on a handed-back
+> focus): no data shape change.** Closing a dialog can return focus to the
+> search field, and the field reopened its last results on any focus: on the
+> iPhone, a saved place picked in Mein PapaMap flew there with the old list
+> over its card. The list now reopens on focus only after a press on the field
+> or a Tab into it, and the saved-place and "grey near you" picks close the
+> search outright. Shell pin `app74` → `app75`; no `WHATS_NEW` entry.
+
 > **v73 amendment (6 Oct 2026, what's-new for the add-a-place flow): no data
 > shape change.** "+ Add a place" has listed the places OSM already knows
 > nearby since #214/#216, but no what's-new note told readers of the store app.
