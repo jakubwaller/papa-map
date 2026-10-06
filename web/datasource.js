@@ -273,7 +273,7 @@ const PAPAMAP_THEME = "https://mapcomplete.org/theme.html?userlayout=" + PAPAMAP
 // (OSM account language, then the browser). The parameter also disables the
 // in-app language switch, so it is passed only where the site's choice is a
 // deliberate one — and it steers MapComplete's chrome; the theme's own
-// questions exist in de/da/en and fall back to English elsewhere.
+// questions exist in all of the site's languages (Norwegian as nb_NO and no).
 const MAPCOMPLETE_LANG = {
   ca: "ca", cs: "cs", da: "da", de: "de", el: "el", en: "en", es: "es", fi: "fi",
   fr: "fr", hu: "hu", it: "it", nl: "nl", no: "nb_NO", pl: "pl", pt: "pt",
