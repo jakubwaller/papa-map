@@ -442,12 +442,22 @@ export function marketingVersion(pbxproj = defaultPbxproj) {
 // preparation. When there is none, the next one is created here under the
 // project's own MARKETING_VERSION — the page the next release would have made
 // by hand — unless a version of that string already exists, in which case the
-// project needs a bump, not App Store Connect a duplicate.
+// project needs a bump, not App Store Connect a duplicate. A page in
+// preparation under another string is refused too: a rejected 1.3 pushed from
+// a tree that already says 1.3.1 would show 1.3's readers notes for a version
+// they do not have.
 async function editableVersion(app, pbxproj) {
   const versions = await appStoreVersions(app);
   const have = pickEditable(versions, versionState);
-  if (have) return have;
   const want = marketingVersion(pbxproj);
+  if (have) {
+    const name = have.attributes.versionString;
+    if (name !== want) {
+      throw new Error(`App Store version ${name} is being prepared (${versionState(have)}), but MARKETING_VERSION is ${want} — ` +
+                      `push from the commit that built ${name}`);
+    }
+    return have;
+  }
   const clash = versions.find((v) => v.attributes.versionString === want);
   if (clash) {
     throw new Error(`no App Store version is being prepared, and ${want} already exists (${versionState(clash)}) — ` +
