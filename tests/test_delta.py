@@ -714,7 +714,8 @@ def test_run_tick_catches_up_a_sequence_gap(tmp_path):
         stats_path=str(stats_path), delta_path=str(delta_path),
         fetch_state=fake_fetch_state, fetch_osc=fake_fetch_osc, now=NOW)
 
-    assert new_state == {"seq": 103, "base": "2026-09-23T08:00:00+00:00", "pending": []}
+    assert new_state == {"seq": 103, "base": "2026-09-23T08:00:00+00:00", "pending": [],
+                         "head": 103}
     urls = {f["properties"]["osm_url"] for f in out["tables"]["upsert"]}
     assert urls == {"https://www.openstreetmap.org/node/1", "https://www.openstreetmap.org/node/2"}
     # node/1 was created then modified within the gap — the later version
@@ -894,7 +895,8 @@ def _run(tmp_path, state, osc_by_seq, head, **kwargs):
         state, geojson_path=str(geojson_path), play_geojson_path=str(play_path),
         stats_path=str(stats_path), delta_path=str(delta_path),
         areas_bbox_path=str(tmp_path / "missing-areas-bbox.json"),
-        fetch_state=fake_fetch_state, fetch_osc=lambda seq: osc_by_seq.get(seq, _osc()),
+        fetch_state=fake_fetch_state,
+        fetch_osc=kwargs.pop("fetch_osc", lambda seq: osc_by_seq.get(seq, _osc())),
         now=kwargs.pop("now", NOW), **kwargs)
     delta.export.write_json_atomic(out, str(delta_path))
     return new_state, out
@@ -1091,3 +1093,257 @@ def test_retry_pending_rotates_a_failed_entry_to_the_back():
     events, remaining = delta.retry_pending(remaining, 1, _empty_dataset(), coord_fetch=fetch)
     assert fetch.calls == [("way", 900), ("way", 901)]
     assert [(e["id"], e["attempts"]) for e in remaining] == [(902, 0), (900, 1), (901, 1)]
+
+
+# ---- a coordinate lookup only for objects that could become an event ------
+
+def _spy():
+    calls = []
+
+    def fetch(osm_type, osm_id):
+        calls.append((osm_type, osm_id))
+        return (53.55, 9.99)
+    return fetch, calls
+
+
+def test_no_lookup_for_a_way_that_can_never_become_an_event():
+    # is_relevant_tags lets every one of these through, but no builder would
+    # keep any of them: an outdoor playground, a wheelchair-only shop, a
+    # toilet edited at v4 with no table, a highchair-only restaurant.
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("modify", 11, 7, "2026-09-23T10:00:00Z", {"leisure": "playground"}),
+        _way("modify", 12, 3, "2026-09-23T10:00:00Z",
+             {"building": "yes", "shop": "bakery", "wheelchair": "yes"}),
+        _way("modify", 13, 4, "2026-09-23T10:00:00Z", {"amenity": "toilets"}),
+        _way("modify", 14, 2, "2026-09-23T10:00:00Z",
+             {"amenity": "restaurant", "highchair": "yes"}))))
+    fetch, calls = _spy()
+    dropped = []
+    events = delta.process_changes(changes, _empty_dataset(), coord_fetch=fetch, dropped=dropped)
+    assert calls == []
+    assert events == [] and dropped == []
+
+
+def test_lookup_still_made_for_ways_that_can_become_an_event():
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("modify", 21, 3, "2026-09-23T10:00:00Z", {"leisure": "playground", "indoor": "yes"}),
+        _way("modify", 22, 5, "2026-09-23T10:00:00Z", {"changing_table": "yes"}),
+        _way("create", 23, 1, "2026-09-23T10:00:00Z", {"amenity": "toilets"}))))
+    fetch, calls = _spy()
+    events = delta.process_changes(changes, _empty_dataset(), coord_fetch=fetch)
+    assert calls == [("way", 21), ("way", 22), ("way", 23)]
+    assert [(u.rsplit("/", 1)[1], kind) for u, kind, _ in events] == [
+        ("21", "place"), ("22", "table"), ("23", "toilet_no_table")]
+
+
+def test_lookup_still_made_for_a_later_version_of_a_toilet_created_this_period():
+    # `created` comes from the accumulator, not this entry's version: v2 of a
+    # toilet created earlier this period still refreshes its entry.
+    url = "https://www.openstreetmap.org/way/30"
+    acc = delta.new_accumulator()
+    acc["new_toilets_no_table"][url] = {"osm_url": url, "lon": 9.9, "lat": 53.5,
+                                        "t": "2026-09-23T09:00:00Z", "version": 1,
+                                        "created": True}
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("modify", 30, 2, "2026-09-23T10:00:00Z", {"amenity": "toilets", "name": "WC"}))))
+    fetch, calls = _spy()
+    events = delta.process_changes(changes, _empty_dataset(), coord_fetch=fetch, acc=acc)
+    assert calls == [("way", 30)]
+    assert [(u, kind) for u, kind, _ in events] == [(url, "toilet_no_table")]
+    assert events[0][2]["version"] == 2 and events[0][2]["created"] is True
+
+
+def test_known_table_way_retagged_wheelchair_only_still_emits_its_removal():
+    url = "https://www.openstreetmap.org/way/31"
+    base = {"tables": {url: {"geometry": {"coordinates": [10.0, 53.5]},
+                             "properties": {"osm_url": url}}}, "places": {}}
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("modify", 31, 6, "2026-09-23T10:00:00Z", {"amenity": "cafe", "wheelchair": "yes"}))))
+    fetch, calls = _spy()
+    assert delta.process_changes(changes, base, coord_fetch=fetch) == [(url, "table", None)]
+    assert calls == []
+
+
+def test_a_queued_entry_that_can_never_become_an_event_drains_without_a_lookup():
+    since = "2026-09-23T09:00:00+00:00"
+    pending = [dict(_change(11, 7), tags={"leisure": "playground"}, attempts=3, since=since)]
+    fetch, calls = _spy()
+    events, remaining = delta.retry_pending(pending, 5, _empty_dataset(), coord_fetch=fetch)
+    assert (events, remaining, calls) == ([], [], [])
+
+
+# ---- a long walk keeps its progress (checkpoint per tick) ------------------
+
+def _table_create(id_, seq):
+    return _osc(_node("create", id_, 1, "2026-09-23T10:00:00Z", 53.5, 10.0 + id_ / 1000,
+                      {"changing_table": "yes", "changing_table:location": "unisex_toilet"}))
+
+
+def test_run_tick_keeps_the_sequences_walked_before_a_failed_fetch(tmp_path, capsys):
+    fetched = []
+
+    def flaky(seq):
+        fetched.append(seq)
+        if seq == 103:
+            raise RuntimeError("planet 503")
+        return {101: _table_create(1, 101), 102: _table_create(2, 102)}.get(seq, _osc())
+
+    state, out = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, {}, 105, fetch_osc=flaky)
+    assert fetched == [101, 102, 103]
+    assert (state["seq"], state["head"]) == (102, 105)
+    assert _table_urls(out) == {"https://www.openstreetmap.org/node/1",
+                                "https://www.openstreetmap.org/node/2"}
+    assert "seq 103 failed (RuntimeError: planet 503)" in capsys.readouterr().err
+
+    # The next tick resumes at 103, with nothing walked twice and the upserts
+    # from before the failure still there.
+    fetched.clear()
+    osc = {103: _table_create(3, 103), 104: _osc(), 105: _osc()}
+    state, out = _run(tmp_path, state, {}, 105, fetch_osc=lambda seq: fetched.append(seq) or osc[seq])
+    assert fetched == [103, 104, 105]
+    assert state["seq"] == 105
+    assert _table_urls(out) == {f"https://www.openstreetmap.org/node/{i}" for i in (1, 2, 3)}
+
+
+def test_run_tick_failing_on_its_first_sequence_still_raises(tmp_path):
+    def failing(seq):
+        raise RuntimeError("planet 503")
+
+    with pytest.raises(RuntimeError, match="planet 503"):
+        _run(tmp_path, {"seq": 100, "base": BASE_ISO}, {}, 105, fetch_osc=failing)
+
+
+def test_run_tick_walks_at_most_max_seq_and_resumes_to_the_same_result(tmp_path):
+    osc = {101: _table_create(1, 101), 103: _table_create(2, 103), 105: _table_create(3, 105)}
+    one_shot_dir = tmp_path / "one"
+    one_shot_dir.mkdir()
+    _, one_shot = _run(one_shot_dir, {"seq": 100, "base": BASE_ISO}, osc, 105, max_seq=100)
+
+    state, ticks = {"seq": 100, "base": BASE_ISO}, 0
+    while state["seq"] < 105:
+        state, out = _run(tmp_path, state, osc, 105, max_seq=2)
+        ticks += 1
+        assert state["seq"] == min(100 + 2 * ticks, 105)
+    assert ticks == 3
+    assert out["tables"] == one_shot["tables"]
+
+
+def test_run_forever_skips_its_sleep_while_a_tick_is_behind_the_head(monkeypatch):
+    results = iter([({"seq": 120, "head": 300, "base": BASE_ISO}, None),
+                    ({"seq": 240, "head": 300, "base": BASE_ISO}, None),
+                    ({"seq": 300, "head": 300, "base": BASE_ISO}, None)])
+    log = []
+
+    def fake_run_tick(state, **kwargs):
+        try:
+            new_state, _ = next(results)
+        except StopIteration:
+            raise SystemExit
+        log.append(("tick", new_state["seq"]))
+        return new_state, delta.render_delta(delta.new_accumulator(), BASE_ISO, new_state["seq"], NOW)
+
+    monkeypatch.setattr(delta, "run_tick", fake_run_tick)
+    monkeypatch.setattr(delta, "load_state", lambda path: None)
+    monkeypatch.setattr(delta, "save_state", lambda path, state: None)
+    monkeypatch.setattr(delta.export, "write_json_atomic", lambda data, path: None)
+    monkeypatch.setattr(delta.time, "sleep", lambda s: log.append(("sleep", s)))
+    with pytest.raises(SystemExit):
+        delta.run_forever(poll_s=60, state_path="unused", delta_path="unused")
+    assert log == [("tick", 120), ("tick", 240), ("tick", 300), ("sleep", 60)]
+
+
+# ---- a long gap under the same base catches up, it does not reset ----------
+
+def test_run_tick_long_gap_under_the_same_base_catches_up_from_state(tmp_path):
+    state, _ = _run(tmp_path, {"seq": 100, "base": BASE_ISO}, {101: _table_create(1, 101)}, 101)
+    fetched = []
+    head = 101 + 3000   # more than two days of minutely sequences
+
+    def spy(seq):
+        fetched.append(seq)
+        return _osc()
+
+    state, out = _run(tmp_path, state, {}, head, fetch_osc=spy)
+    assert fetched[0] == 102
+    assert state["seq"] == 102 + delta.MAX_SEQ_PER_TICK - 1
+    assert _table_urls(out) == {"https://www.openstreetmap.org/node/1"}
+
+
+# ---- an area box across the antimeridian -----------------------------------
+
+NZ_POINTS = [(-36.85, 174.76, "New Zealand"),    # Auckland
+             (-46.41, 168.35, "New Zealand"),    # Invercargill
+             (-43.95, -176.56, "New Zealand")]   # Chatham Islands, 176°W
+
+
+def test_compute_area_bboxes_wraps_an_area_across_the_antimeridian(capsys):
+    boxes = delta.compute_area_bboxes(NZ_POINTS + [(48.1, 11.6, "Bayern")], pad_deg=0.2)
+    nz = boxes["New Zealand"]
+    assert nz[0] == pytest.approx(168.15) and nz[2] == pytest.approx(183.64)
+    assert boxes["Bayern"] == pytest.approx([11.4, 47.9, 11.8, 48.3])
+    assert "New Zealand spans the antimeridian" in capsys.readouterr().err
+    for lat, lon, _ in NZ_POINTS + [(-44.0, -176.5, "Chatham, Waitangi")]:
+        assert delta.area_for_point(lon, lat, boxes) == "New Zealand"
+    for lon, lat in [(-57.55, -38.0), (-73.05, -36.82), (-71.3, -41.13)]:   # Mar del Plata, Concepción, Bariloche
+        assert not delta.in_any_bbox(lon, lat, boxes.values())
+        assert delta.area_for_point(lon, lat, boxes) is None
+
+
+def test_compute_area_bboxes_keeps_min_lon_within_minus_180():
+    boxes = delta.compute_area_bboxes([(-17.0, -179.9, "Fiji east")], pad_deg=0.2)
+    box = boxes["Fiji east"]
+    assert box[0] >= -180 and box[2] > 180
+    assert delta.in_bbox(-179.95, -17.0, box) and delta.in_bbox(179.95, -17.0, box)
+    assert not delta.in_bbox(-179.0, -17.0, box)
+
+
+def test_in_bbox_on_an_ordinary_box_is_unchanged():
+    box = [9.7, 53.4, 10.3, 53.7]
+    assert delta.in_bbox(9.99, 53.55, box)
+    assert not delta.in_bbox(9.99 - 360, 53.55, box)
+    assert not delta.in_bbox(9.99, 54.0, box)
+
+
+def test_new_object_in_south_america_is_not_admitted_as_new_zealand():
+    boxes = delta.compute_area_bboxes(NZ_POINTS, pad_deg=0.2)
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 801, 1, "2026-09-23T10:00:00Z", -38.0, -57.55, {"changing_table": "yes"}))))
+    assert delta.process_changes(changes, _empty_dataset(), area_boxes=list(boxes.values()),
+                                 area_boxes_by_name=boxes) == []
+
+
+# ---- overlapping area boxes: the nearest known table decides --------------
+
+OVERLAP = {"Bayern": [9.48, 47.35, 13.63, 50.3], "Austria": [9.55, 46.4, 16.57, 48.5]}
+
+
+def _ref(id_, lon, lat, area):
+    url = f"https://www.openstreetmap.org/node/{id_}"
+    return url, {"geometry": {"coordinates": [lon, lat]},
+                 "properties": {"osm_url": url, "area": area}}
+
+
+def test_area_for_point_breaks_an_overlap_by_the_nearest_known_table():
+    refs = [_ref(1, 11.58, 48.14, "Bayern")[1],      # München
+            _ref(2, 13.04, 47.81, "Austria")[1],     # Salzburg
+            _ref(3, 13.5, 47.6, None)[1]]            # no area: never votes
+    assert delta.area_for_point(13.05, 47.80, OVERLAP, refs) == "Austria"
+    assert delta.area_for_point(11.60, 48.10, OVERLAP, refs) == "Bayern"
+    # One containing box decides alone, without looking at refs.
+    assert delta.area_for_point(15.0, 47.5, OVERLAP, refs) == "Austria"
+
+
+def test_area_for_point_overlap_without_refs_takes_the_smallest_box():
+    reordered = dict(reversed(list(OVERLAP.items())))
+    assert delta.area_for_point(13.05, 47.80, OVERLAP) == "Bayern"
+    assert delta.area_for_point(13.05, 47.80, reordered) == "Bayern"
+
+
+def test_new_table_in_salzburg_gets_austria_not_the_first_overlapping_box():
+    base = {"tables": dict([_ref(1, 11.58, 48.14, "Bayern"), _ref(2, 13.04, 47.81, "Austria")]),
+            "places": {}}
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 803, 1, "2026-09-23T10:00:00Z", 47.80, 13.05, {"changing_table": "yes"}))))
+    events = delta.process_changes(changes, base, area_boxes=list(OVERLAP.values()),
+                                   area_boxes_by_name=OVERLAP, acc=delta.new_accumulator())
+    assert events[0][2]["properties"]["area"] == "Austria"

@@ -43,8 +43,11 @@ from .pages import ICON, STYLE, esc
 # (pipeline/toilet_counts.py): an area reused last week's count says so on
 # its line, and the parser must still see it as an area line — otherwise a
 # night that recounts a seventh of the areas shows a seventh of them swept.
+# ", recount failed" marks the reuse that was not the rota's: tonight's count
+# failed and the cached one stood in (the ops page names those areas).
 AREA_LINE = re.compile(r"^\s+(?P<area>.+?): ct=(?P<ct>\d+) play=(?P<play>\d+) "
-                       r"toilets=(?P<toilets>\d+)(?: \(counted \d+ d ago\))?\s*$")
+                       r"toilets=(?P<toilets>\d+)"
+                       r"(?: \(counted \d+ d ago(?P<failed>, recount failed)?\))?\s*$")
 WARN_LINE = re.compile(r"^\s*WARN\b(?P<text>.*)$")
 ROUND_LINE = re.compile(r"^\s+round (?P<n>\d+): retrying (?P<names>.+)$")
 RESULT_LINE = re.compile(r"^\{'features': .*\}\s*$")
@@ -243,24 +246,48 @@ OPS_STYLE = """\
 
 # ---- pipeline.log ----------------------------------------------------------
 
+def _crash_ends(lines: list[str]) -> list[int]:
+    """Index of the exception line that ends each traceback — the last line
+    of a build that died. A chained traceback ("During handling of the above
+    exception…") is one crash, ending at its final exception line."""
+    ends, in_tb, just_ended = [], False, False
+    for i, line in enumerate(lines):
+        if not line.strip():
+            continue
+        if line.startswith(("During handling of the above exception",
+                            "The above exception was the direct cause")):
+            if just_ended:
+                ends.pop()
+        elif "Traceback (most recent call last)" in line:
+            in_tb = True
+        elif in_tb and not line[0].isspace():
+            ends.append(i)
+            in_tb, just_ended = False, True
+            continue
+        just_ended = False
+    return ends
+
+
 def parse_build_log(text: str | None) -> dict | None:
     """The last build in an append-only log, as data. None when there is no
-    build in it at all. A build is the lines up to a result line; lines after
-    the last result line are a build that has not finished — a run in
-    progress at 07:30, or one that died, which the caller tells apart by
-    whether there is a traceback."""
+    build in it at all. A build ends at its result line, or at the exception
+    line of the traceback it died with; lines after the last such end are a
+    build that has not finished yet — a run in progress at 07:30. A crashed
+    night is its own build, so it is never folded into the next night's."""
     if not text:
         return None
     lines = text.splitlines()[-LOG_TAIL_LINES:]
     results = [i for i, line in enumerate(lines) if RESULT_LINE.match(line)]
-    after_last = lines[results[-1] + 1:] if results else lines
-    unfinished = any(AREA_LINE.match(line) or "Traceback" in line
-                     for line in after_last)
-    if unfinished:
-        segment, finished = after_last, False
-    elif results:
-        start = results[-2] + 1 if len(results) > 1 else 0
-        segment, finished = lines[start:results[-1] + 1], True
+    crashes = _crash_ends(lines)
+    ends = sorted(results + crashes)
+    last = ends[-1] if ends else -1
+    tail = lines[last + 1:]
+    if any(AREA_LINE.match(line) or "Traceback" in line for line in tail):
+        segment, finished = tail, False
+    elif ends:
+        start = ends[-2] + 1 if len(ends) > 1 else 0
+        segment = lines[start:last + 1]
+        finished = last in results
     else:
         return None
 
@@ -272,7 +299,8 @@ def parse_build_log(text: str | None) -> dict | None:
         if m:
             build["areas"].append({
                 "area": m["area"], "ct": int(m["ct"]),
-                "play": int(m["play"]), "toilets": int(m["toilets"])})
+                "play": int(m["play"]), "toilets": int(m["toilets"]),
+                **({"recount_failed": True} if m["failed"] else {})})
             continue
         m = ROUND_LINE.match(line)
         if m:
@@ -402,43 +430,14 @@ def _day_range(first: str, last: str, cap: int | None = CHART_DAYS) -> list[str]
             for i in range((d1 - d0).days + 1)]
 
 
-def transition_rows(history: list[dict]) -> list[tuple]:
-    """(day, tooltip, transitions, to_accessible) per calendar day for the
-    movement chart. Bar height counts status transitions only: new/gone swing
-    by the thousands when an area fails or comes back, and would flatten the
-    real signal — they stay in the tooltip. None = no run that day."""
-    by_date = {e["date"]: e for e in history
-               if isinstance(e.get("date"), str)}
-    days = sorted(by_date)
-    rows = []
-    for d in _day_range(days[0], days[-1]) if days else []:
-        e = by_date.get(d)
-        if e is None:
-            rows.append((d, f"{d} · no run", None, 0))
-            continue
-        ch = e.get("changes") or {}
-        ta = ch.get("to_accessible", 0)
-        tf, tu = ch.get("to_female_only", 0), ch.get("to_unknown", 0)
-        tip = (f"{d} · {ta} → accessible, {tf} → female-only, {tu} → unknown"
-               f" · +{ch.get('new', 0)} new, -{ch.get('gone', 0)} gone")
-        rows.append((d, tip, ta + tf + tu, ta))
-    return rows
-
-
-def edits_rows(edits_days: dict | None, noun: str = "changeset") -> list[tuple]:
-    """(day, tooltip, count, count) per calendar day for the theme-edits
-    chart and its sibling for the answers (`noun` is what the tooltip counts).
-    A day the state holds a 0 for is a real zero; a day it never fetched
-    (OSMCha down, token unset) is None, not a claimed quiet."""
-    days = sorted(edits_days or {})
-    rows = []
-    for d in _day_range(days[0], days[-1]) if days else []:
-        n = (edits_days or {}).get(d)
-        if n is None:
-            rows.append((d, f"{d} · not fetched", None, 0))
-        else:
-            rows.append((d, f"{d} · {n} {noun}{'' if n == 1 else 's'}", n, n))
-    return rows
+def _known(series: dict | None, d: str, since: str) -> int | None:
+    """A series' count for day `d`: the recorded figure, 0 before the series
+    could exist at all (no changeset can carry the tag yet), else None — a
+    day nobody fetched is not a claimed quiet."""
+    n = (series or {}).get(d)
+    if n is None and d < since:
+        return 0
+    return n
 
 
 def edit_totals(edits_days: dict | None,
@@ -1125,8 +1124,13 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
         t, w = theme_by.get(label), web_by.get(label)
         if not t and not w:
             continue
-        ref = t or w
-        sub = split(t, w) + f" · {esc(ref['first'])} → {esc(ref['last'])}"
+        if t and w and (t["first"], t["last"]) != (w["first"], w["last"]):
+            # A failing fetch stalls one series: two windows, two ranges.
+            sub = (split(t, w) + f" · theme {esc(t['first'])} → {esc(t['last'])}"
+                   f", app {esc(w['first'])} → {esc(w['last'])}")
+        else:
+            ref = t or w
+            sub = split(t, w) + f" · {esc(ref['first'])} → {esc(ref['last'])}"
         p.append(_tile(title, _n((t or {}).get("changesets", 0)
                                  + (w or {}).get("changesets", 0)), sub))
     # All time once either series reaches back to its own launch; the
@@ -1155,12 +1159,17 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
                        split(theme_all, web_all)))
     # The busiest day across both series.
     union = sorted(set(edits_days or {}) | set(web_edits_days or {}))
-    per_day = {d: ((edits_days or {}).get(d) or 0, (web_edits_days or {}).get(d) or 0)
+    per_day = {d: (_known(edits_days, d, THEME_LIVE_SINCE),
+                   _known(web_edits_days, d, WEB_ANSWERS_SINCE))
                for d in union}
-    best_day = max(union, key=lambda d: (sum(per_day[d]), d))
-    if sum(per_day[best_day]):
+
+    def known_sum(d) -> int:
+        return sum(x or 0 for x in per_day.get(d, ()))
+
+    best_day = max(union, key=lambda d: (known_sum(d), d))
+    if known_sum(best_day):
         t, w = per_day[best_day]
-        p.append(_tile("Best day", _n(t + w),
+        p.append(_tile("Best day", _n(known_sum(best_day)),
                        f"{esc(best_day)}, {_n(t)} theme · {_n(w)} in the app"))
     p.append("</div>\n")
 
@@ -1184,10 +1193,13 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
             rows.append((d, f"{d} · not fetched", None))
             continue
         t, w = per_day[d]
-        rows.append((d, f"{d} · {t} theme changeset{'' if t == 1 else 's'} · "
-                        f"{w} answer{'' if w == 1 else 's'} in the app",
-                     [("theme", t), ("app", w)]))
-    hi = max(sum(s[1] for s in st) for _, _, st in rows if st)
+        tip_t = ("theme: not fetched" if t is None
+                 else f"{t} theme changeset{'' if t == 1 else 's'}")
+        tip_w = ("app: not fetched" if w is None
+                 else f"{w} answer{'' if w == 1 else 's'} in the app")
+        stack = [(k, v) for k, v in (("theme", t), ("app", w)) if v is not None]
+        rows.append((d, f"{d} · {tip_t} · {tip_w}", stack or None))
+    hi = max((sum(s[1] for s in st) for _, _, st in rows if st), default=0)
     if hi:
         p.append(_legend(("--s-theme", "through the MapComplete theme"),
                          ("--s-app", "answered in the app or on the site")))
@@ -1196,7 +1208,7 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
                         _axis(span[0], span[-1], "edits per day")))
         running, cum = 0, []
         for d in _day_range(union[0], union[-1], cap=None):
-            running += sum(per_day.get(d, (0, 0)))
+            running += known_sum(d)
             cum.append(running)
         ctop = _nice_top(running)
         p.append(_frame(ctop, _line(cum, ctop, "--s-theme", area=True,
@@ -1215,7 +1227,8 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
              "total adds them. Windows count back from the newest recorded day, "
              "so a failing OSMCha fetch shows as the dates standing still, never "
              "as a quiet week. A window beyond one OSMCha page (~100 changesets) "
-             "is counted whole and not split by day.</p>\n"
+             "is counted whole and not split by day. A day one series never "
+             "fetched reads “not fetched” and adds nothing to the line.</p>\n"
              '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
              "<th>theme</th><th>in the app</th><th>total</th></tr></thead>\n<tbody>\n")
     for d in reversed(union):
@@ -1511,6 +1524,10 @@ def _build_details(build: dict | None, now: datetime, stats: dict | None) -> str
         zero = sum(1 for a in build["areas"] if a["ct"] == 0)
         tags.append(f'<span class="tag">{len(build["areas"])} areas swept'
                     + (f", {zero} with zero tables" if zero else "") + "</span>")
+    failed_counts = [a["area"] for a in build["areas"] if a.get("recount_failed")]
+    if failed_counts:
+        tags.append(f'<span class="warn">{len(failed_counts)} toilet counts '
+                    "from the cache</span>")
     if build["warns"]:
         tags.append(f'<span class="warn">{len(build["warns"]):,} warnings</span>')
     p = [f"<details id=\"build\"{'' if build['finished'] else ' open'}>\n"
@@ -1535,6 +1552,11 @@ def _build_details(build: dict | None, now: datetime, stats: dict | None) -> str
     if build["rounds"]:
         p.append("<p>Retries: " + " · ".join(esc(x) for x in build["rounds"])
                  + "</p>\n")
+    if failed_counts:
+        p.append('<p class="bad">Toilet count failed tonight, last count kept for '
+                 + esc(", ".join(failed_counts)) + ". The cache drops a count "
+                 "after four periods (28 days on the weekly rota); an area whose "
+                 "count is still failing then fails the build.</p>\n")
     if build["warns"]:
         groups = group_warns(build["warns"])
         p.append(f'<p class="bad">{len(build["warns"]):,} warnings, '
@@ -1756,7 +1778,10 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                 'Details under <a href="#build">Last build</a>.</span>')
     else:
         pill = '<span class="pill"><span class="dot g"></span>Healthy</span>'
-        note = '<span class="meta">fresh dataset · counts within bounds · last build finished</span>'
+        # No log is not a failed build, but nor is it a finished one.
+        last = ("last build finished" if build is not None
+                else "no build log found")
+        note = f'<span class="meta">fresh dataset · counts within bounds · {last}</span>'
     p.append(f'<div class="row"><h1>PapaMap ops</h1>{pill}{note}</div>\n')
     stamp = now.strftime("%Y-%m-%d %H:%M UTC")
     built = (stats or {}).get("generated_at")

@@ -95,6 +95,17 @@ def counts_from_features(features, region_by_key, city_by_key,
     return regions, cities
 
 
+def narrows_day(history: dict, day: str, regions: dict) -> list:
+    """The regions of an existing entry for `day` that `regions` lacks, in
+    its order — empty when there is no such entry or the new one covers it.
+    A non-empty answer means writing the new day would narrow it: a partial
+    same-day re-run must not replace the full nightly snapshot."""
+    for d in history.get("days", []):
+        if d.get("date") == day:
+            return [r for r in d.get("regions") or {} if r not in regions]
+    return []
+
+
 def append_day(history: dict, day: str, regions: dict, cities: dict,
                source: str = "build") -> dict:
     """Append one day's snapshot, replacing any existing entry for the same

@@ -47,8 +47,13 @@ def snapshot(date_iso: str, areas=None, cities=CITY_AREAS,
         # is believed. Only empty answers pay it.
         elements = data.get("elements", [])
         if not elements:
+            # From the host that gave the empty answer, as in run.py: a
+            # count from a healthy host says nothing about the area database
+            # of the one that found no changing tables.
+            url = data.get(osm.ANSWERED_BY)
+            pin = {"urls": [url]} if url else {}
             counts = osm.parse_counts(
-                fetch(toilets_counts_ql(name, lvl, date=attic)))
+                fetch(toilets_counts_ql(name, lvl, date=attic), **pin))
             # Two counts or nothing, as in run.py: one count is a truncated
             # answer, and a truncated answer must not vouch for an empty day —
             # and is named as such, so an operator watching an hour-long
@@ -68,6 +73,9 @@ def snapshot(date_iso: str, areas=None, cities=CITY_AREAS,
         sleep(pause_s)
     features = export.build_features(
         {"elements": osm.dedup_elements(ct_elements)})
+    # As in run.py: a table behind a Euro key is not a pin, and a backfilled
+    # day must count exactly what a build day counts.
+    features = [f for f in features if f["properties"]["key"] is None]
     city_ids: dict[str, set] = {}
     for display, area_name, lvl in cities:
         data = fetch(changing_table_ids_ql(area_name, lvl, date=attic))
