@@ -968,6 +968,18 @@ test("the OSM login's return leg is not mistaken for a table", () => {
   assert.deepEqual([back.length, opened.length], [1, 0]);
 });
 
+// Android killed the app while OSM's login was up: the return cold-starts it,
+// and the URL only arrives through getLaunchUrl.
+test("a cold start from the OSM login's return completes the login", async () => {
+  const back = [], opened = [];
+  let ran = 0;
+  const url = `${AUTH_REDIRECT}?code=c&state=s`;
+  const cold = fakeApp(url);
+  withApp(cold.plugin, () => onAppUrl({ auth: (u) => back.push(u), table: (o) => opened.push(o), nearest: () => ran++ }));
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual([back, opened.length, ran], [[url], 0, 0]);
+});
+
 // ---- The in-app Browser sheet: "reader is back" without visibilitychange --
 import { onBrowserFinished } from "./native.js";
 

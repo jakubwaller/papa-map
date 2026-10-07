@@ -1746,8 +1746,11 @@
 > in-memory feature is updated so the question does not reappear, and the pin keeps its
 > colour until the nightly build — the emitted shape is untouched. Any host other than
 > `papamap.de` talks to the sandbox API. The token lives in `localStorage`
-> (`papamap-osm-token`, `papamap-osm-user`), named in the Datenschutz; the pending answer
-> and the PKCE state sit in `sessionStorage` for the round trip only.
+> (`papamap-osm-token`, `papamap-osm-user`, and since the review fixes of Oct 2026
+> `papamap-osm-user-id`, the numeric id Mein PapaMap pages changesets by), named in the
+> Datenschutz; the pending answer and the PKCE state sit in `sessionStorage` for the round
+> trip only — in the app, `localStorage`, stamped and ignored after an hour, because Android
+> can kill the process while OSM's login is up.
 > **The play places get the same question** (later the same day): a room tapped on a
 > blue pin writes `changing_table=yes` *and* `changing_table:location`, because on an
 > object with no table tag at all the room alone would make a grey pin tonight and the

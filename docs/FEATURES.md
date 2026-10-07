@@ -644,7 +644,7 @@ Any host that is not `papamap.de` talks to the **sandbox** API
 periodically. Its client is registered for `http://127.0.0.1:8000/` and
 `:8899/` — open the dev server at `127.0.0.1`, not `localhost`, or the redirect
 is refused. The token is kept in `localStorage` (`papamap-osm-token`,
-`papamap-osm-user`) and named in the Datenschutz; "Abmelden" in the popup
+`papamap-osm-user`, `papamap-osm-user-id`) and named in the Datenschutz; "Abmelden" in the popup
 forgets it here and revokes it at OSM.
 
 ### Add a place: the café OSM already has

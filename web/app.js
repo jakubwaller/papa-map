@@ -15,8 +15,9 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app77";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          canonicalUrl, isCrawler } from "./i18n.js?v=app77";
-import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
-         setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
+import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
+         getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts,
+         roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
@@ -85,6 +86,8 @@ const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 // host: the changeset's `host` tag stays the site's address — the redirect is
 // only the OAuth return leg, and papamap://auth is no provenance for an edit.
 const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT, host: LIVE.redirect } : endpoints(location);
+// The app's login round trip has to survive Android killing the process (osm.js).
+if (isNative()) keepRoundTripAcrossRestarts();
 // Decides when to ask the store for a rating (native.js, reviewTracker): after
 // the third answer or the third day of opening pins, at a calm pin close. Only
 // in the app: the website neither counts nor asks, and writes no key for it.
@@ -879,10 +882,14 @@ function askHTML(question = "askRoom", busy = false) {
 
 // Who the answer will be filed as — or, before the first login, that it will
 // be. One line for both questions; a popup shows it once.
+// A token whose name has not arrived (the lookup on the return leg failed;
+// ensureUserInfo asks again) is still a login: it writes, so it gets its
+// logout, unnamed.
 function askWhoHTML() {
   const user = getUser();
-  const who = user
-    ? `${esc(t("askAs", { user }))} · <button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button>`
+  const logoutBtn = `<button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button>`;
+  const who = user ? `${esc(t("askAs", { user }))} · ${logoutBtn}`
+    : getToken() ? logoutBtn
     : esc(t("askLoginHint"));
   return `<div class="ask-who">${who}</div>`;
 }
@@ -2496,6 +2503,17 @@ async function answer(kind, obj, choice, freshToken = null) {
   const el = popup?.getElement();
   const btns = [...(el?.querySelectorAll("button.ask-btn, button.ask-more") ?? [])];
   btns.forEach((b) => { b.disabled = true; });
+  // Where the reply lands: that popup if it is still up, else the one open on
+  // this same object now — reopened during the round trip, or by the login's
+  // return leg — rendered busy (inFlight) and waiting for this answer. Never
+  // another pin's.
+  const here = () => (el?.isConnected ? el
+    : popupObj?.obj?.osm_url === obj.osm_url ? popup?.getElement() ?? null : null);
+  // Whatever question is left there was quieted for this round trip, not
+  // answered: its buttons come back. Queried afresh, because a re-render
+  // (renderMergedDataset) replaces them with copies drawn busy.
+  const wake = () => here()?.querySelectorAll("button.ask-btn, button.ask-more")
+    .forEach((b) => { b.disabled = false; });
   const rec = { kind, osm_url: obj.osm_url };
   setEditNote(rec, "looking", "askSaving");
   try {
@@ -2528,14 +2546,14 @@ async function answer(kind, obj, choice, freshToken = null) {
       // when this popup is reopened. Only its own line goes; a room question
       // still waiting above it stays.
       obj.play_recorded = true;
-      el?.querySelector(".ask-play")?.remove();
+      here()?.querySelector(".ask-play")?.remove();
     } else if (hc) {
       // The same for the high chair (v65), except that its line shows at
       // once: the question is replaced in place by the row it just recorded.
       // The chip's count waits for the pipeline, like the play ring.
       obj.highchair = choice === "hc_yes";
       obj.highchair_recorded = true;
-      const q = el?.querySelector(".ask-hc");
+      const q = here()?.querySelector(".ask-hc");
       if (q) q.outerHTML = highchairRows(obj).join("");
     } else {
       obj.changing_table = out.tags.changing_table;
@@ -2580,11 +2598,10 @@ async function answer(kind, obj, choice, freshToken = null) {
       // context lines marked .ask-ctx: a pin's "room unknown" headline in
       // either reading, a play place's "OSM says nothing" and "been here?".
       // .ask-play and .ask-hc (v65) are neither, and stay.
-      el?.querySelectorAll(".ask, .ask-ctx").forEach((x) => x.remove());
+      here()?.querySelectorAll(".ask, .ask-ctx").forEach((x) => x.remove());
     }
-    // Whatever survived the sweep is the other question, and it was quieted
-    // for this round trip, not answered: give it its buttons back.
-    btns.forEach((b) => { if (b.isConnected) b.disabled = false; });
+    // Whatever survived the sweep is the other question: its buttons back.
+    wake();
     // Quoted back: the group this answer wrote. A room answer names the table
     // and its room, a play answer the play corner — never the other question's
     // tags, which this tap did not touch.
@@ -2598,7 +2615,7 @@ async function answer(kind, obj, choice, freshToken = null) {
     }
     review?.answered();
   } catch (err) {
-    btns.forEach((b) => { b.disabled = false; });
+    wake();
     // A dead token is not the reader's problem: log in again, answer in hand.
     if (err.status === 401) { clearLogin(); rememberView(); goLogin(intent); return; }
     setEditNote(rec, "none", err.status === 409 ? "askConflict" : "askFailed", null,
@@ -3208,15 +3225,23 @@ async function completeLogin(href) {
     history.replaceState(null, "", url);
   }
   if (login?.token) {
-    setLogin(login.token, await userName(osm, login.token).catch(() => null));
+    // A failed lookup still stores the token; ensureUserInfo (boot, Mein
+    // PapaMap) asks again for the name and id.
+    const who = await userInfo(osm, login.token).catch(() => null);
+    setLogin(login.token, who?.name ?? null, who?.id ?? null);
     // A refresh started under a previous login (or no login at all, on a
     // shared device) must not write its result under this one's name.
     myAnswersGeneration++;
   }
   else if (login?.failed) toast(t("loginFailed"));
   // Taken whether or not the login went through: a refused consent must not
-  // leave an answer waiting to be filed under the next login.
-  const intent = takeIntent();
+  // leave an answer waiting to be filed under the next login. Only on a
+  // return, though: the app's intent waits in localStorage (osm.js), and an
+  // ordinary launch must not drop the one a cold-start return is bringing.
+  const intent = login ? takeIntent() : null;
+  // The intent's own reopen already draws the footer under the new login; a
+  // second one would detach the popup answer() is about to update.
+  let reopened = false;
   // An answer from the add dialog: the place has no pin to land on, so the
   // dialog reopens on its question and files the answer there — the write
   // itself re-reads the object, so a table somebody recorded in between is
@@ -3239,6 +3264,7 @@ async function completeLogin(href) {
     if (obj) {
       map.jumpTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
       reopen(kind, obj);
+      reopened = true;
       // Checked again against the dataset just loaded, not the one the tap
       // was made on: had the nightly build landed during the consent round
       // trip with somebody else's room on this object, the popup now shows
@@ -3255,7 +3281,17 @@ async function completeLogin(href) {
   // The login the "Mein PapaMap" dialog itself started: land back on it
   // rather than on a bare map (renderMeStats, above).
   if (intent?.kind === "me" && login?.token) { meDialog.showModal(); renderMeDialog(); refreshMyAnswers(); }
-  if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line names the login
+  if (popupObj && !reopened) reopen(popupObj.kind, popupObj.obj);   // the footer line names the login
+  if (login?.token) refreshUserInfo();   // the app's warm return does not pass boot
+}
+
+// The name and id a stored login lacks (osm.js, ensureUserInfo): fired and
+// forgotten at boot and on every Mein PapaMap open. The dialog follows when
+// they land; a popup's footer does on its next open.
+function refreshUserInfo() {
+  ensureUserInfo(osm).then((changed) => {
+    if (changed && meDialog.open) { renderMeDialog(); refreshMyAnswers(); }
+  });
 }
 
 // A pin (or a play place) by its OSM URL — the widget's and the shortcut's
@@ -3266,6 +3302,7 @@ async function completeLogin(href) {
 // bookmark) flies nowhere and says so once, rather than doing nothing —
 // which the widget and the shortcut inherit for free, not only the share link.
 let pendingPin = null;
+let pendingAuth = null;   // papamap://auth before the data (bootNative)
 // papamap://nearest (Android's widget and launcher shortcut, native.js): the
 // map's own "nearest" button, pressed for the reader — the same fix, the same
 // permission question, the same answer. Before the data is here it waits,
@@ -3594,8 +3631,11 @@ async function boot() {
   // there is a dataset to look it up in. jumpTo overrides fitHome's view.
   if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
   if (pendingNearest) { pendingNearest = false; runNearest(); }
-  // A return from OSM's consent screen lands here with ?code= and ?state=.
-  await completeLogin(location.href);
+  // A return from OSM's consent screen lands here with ?code= and ?state=,
+  // or, in the app, as the papamap://auth URL that cold-started it (bootNative).
+  if (pendingAuth) { const u = pendingAuth; pendingAuth = null; await completeLogin(u); }
+  else await completeLogin(location.href);
+  refreshUserInfo();
   if (isNative()) {
     // applyDataset above already shared the tables with the widget and the
     // shortcut; the settings are boot's own to hand over.
@@ -3652,7 +3692,10 @@ function bootNative() {
   document.querySelector("header").append(countEl);
   positionZoomCtrl();   // applyI18n placed the column under the taller header a moment ago
   offlineBtn.hidden = false;
-  onAppUrl({ auth: (url) => completeLogin(url), table: openPin, nearest: runNearest });
+  // A login's return before the data is here (a cold start) waits for it,
+  // like a pin: the answer it files needs its object to land on.
+  onAppUrl({ auth: (url) => { if (dataReady) completeLogin(url); else pendingAuth = url; },
+             table: openPin, nearest: runNearest });
   onBackButton(closeTopmost);
   const brand = document.querySelector(".brandmark");
   brand.removeAttribute("href");   // interceptLinks only looks at a[href]; an anchor without one goes nowhere
@@ -4167,7 +4210,9 @@ function recordMyAnswer(changesetId, lon, lat) {
   if (!user) return;
   const cache = ensureMyAnswers(user);
   cache.answers = mergeAnswers(cache.answers,
-    [{ id: Number(changesetId), lon, lat, closed_at: new Date().toISOString(), n: 1, radius_m: 50 }]);
+    // `local`: stamped by the device clock, so never the top-up's watermark
+    // (me.js, newestClosedAt); the server's copy replaces it once paged.
+    [{ id: Number(changesetId), lon, lat, closed_at: new Date().toISOString(), n: 1, radius_m: 50, local: true }]);
   writeMyAnswersRaw(user, cache.answers, cache.backfill);
 }
 
@@ -4191,7 +4236,8 @@ async function fetchChangesetPage(url, outerSignal) {
   } catch { return null; }
 }
 
-// GET .../changesets.json?display_name=<user>[&time=...] (me.js's
+// GET .../changesets.json?user=<id>[&time=...] — display_name=<name> for a
+// login whose id is not known yet — (me.js's
 // changesetsUrl says exactly what `time=` means and why). No auth header: a
 // user's changesets are public. Bounded to MY_ANSWERS_PAGES calls total,
 // split between two passes that share the one budget:
@@ -4217,7 +4263,8 @@ async function fetchChangesetPage(url, outerSignal) {
 // end of what it is asking for; the next open picks up exactly where this
 // one left off (the top-up from the cache's new watermark, the backfill
 // from its advanced cursor).
-async function fetchMyAnswers(user, cache, signal) {
+// `who` is { id, name }: the id once known, the name until then.
+async function fetchMyAnswers(who, cache, signal) {
   let answers = cache.answers ?? [];
   let backfill = cache.backfill ?? { oldest_scanned: null, done: false, floor: null };
   let pagesUsed = 0;
@@ -4227,7 +4274,7 @@ async function fetchMyAnswers(user, cache, signal) {
     let before = null;
     let reachedWatermark = false;
     while (pagesUsed < MY_ANSWERS_PAGES) {
-      const page = await fetchChangesetPage(changesetsUrl(osm.api, user, since, before), signal);
+      const page = await fetchChangesetPage(changesetsUrl(osm.api, who, since, before), signal);
       pagesUsed++;
       if (page === null) return { answers, backfill };   // network failure: keep what we have
       if (!page.length) { reachedWatermark = true; break; }
@@ -4240,8 +4287,8 @@ async function fetchMyAnswers(user, cache, signal) {
 
   while (!backfill.done && pagesUsed < MY_ANSWERS_PAGES) {
     const url = backfill.oldest_scanned
-      ? changesetsUrl(osm.api, user, null, backfill.oldest_scanned)
-      : changesetsUrl(osm.api, user, null, null);
+      ? changesetsUrl(osm.api, who, null, backfill.oldest_scanned)
+      : changesetsUrl(osm.api, who, null, null);
     const page = await fetchChangesetPage(url, signal);
     pagesUsed++;
     if (page === null) break;
@@ -4261,7 +4308,7 @@ async function refreshMyAnswers() {
   const generation = myAnswersGeneration;
   const cache = ensureMyAnswers(user);
   myAnswersAbort = new AbortController();
-  const { answers, backfill } = await fetchMyAnswers(user, cache, myAnswersAbort.signal);
+  const { answers, backfill } = await fetchMyAnswers({ id: getUserId(), name: user }, cache, myAnswersAbort.signal);
   // The reader may have logged out (or into a different account) while this
   // was in flight — refreshApplies (web/me.js) is the one place that decides
   // whether a result may still be applied. Discarded silently otherwise:
@@ -4342,6 +4389,12 @@ function renderMeSentence() {
 // ---- Part 2: your stats ----
 function renderMeStats() {
   const user = getUser();
+  // Logged in, the name not here yet (refreshUserInfo re-renders when it
+  // is): the answers are filed by name, so only the way out.
+  if (!user && getToken()) {
+    meStatsEl.innerHTML = `<p><button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button></p>`;
+    return;
+  }
   if (!user) {
     meStatsEl.innerHTML = `<p>${esc(t("meLoginInvite"))}</p>` +
       `<button type="button" id="me-login" class="btn primary">${esc(t("meLogin"))}</button>`;
@@ -4476,6 +4529,7 @@ meBtn.addEventListener("click", () => {
   meDialog.showModal();
   renderMeDialog();
   refreshMyAnswers();   // best-effort background top-up; re-renders when it lands
+  refreshUserInfo();    // a login still missing its name or id
 });
 document.getElementById("me-close").addEventListener("click", () => meDialog.close());
 meDialog.addEventListener("click", (e) => { if (e.target === meDialog) meDialog.close(); });
