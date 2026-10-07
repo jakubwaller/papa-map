@@ -11,7 +11,8 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
-         mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
+         mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
+         deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app77";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          canonicalUrl, isCrawler } from "./i18n.js?v=app77";
@@ -70,8 +71,12 @@ const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 // their second rather than falling straight to German.
 // A crawler is handed the address's language only (i18n.js, isCrawler).
 const crawler = isCrawler(navigator.userAgent);
+// A stored choice, or null where the browser blocks site data: there merely
+// touching localStorage throws, and at module top level that would stop the
+// whole map from starting.
+const readStored = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
 let lang = pickLang(new URLSearchParams(location.search).get("lang"),
-                    crawler ? null : localStorage.getItem("papamap-lang"),
+                    crawler ? null : readStored("papamap-lang"),
                     crawler ? null : navigator.languages ?? navigator.language);
 const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 
@@ -116,7 +121,7 @@ const CHANGESET_COMMENT = {
 // screenshot and every piece of og: copy describes, so a mother's map is a
 // deliberate opt-in rather than a silent redefinition for everyone.
 let mode = pickMode(new URLSearchParams(location.search).get("mode"),
-                    localStorage.getItem("papamap-mode"));
+                    readStored("papamap-mode"));
 
 // index.html ships German head tags; the ?lang= views have to carry their own,
 // or the hreflang alternates it advertises would all describe themselves as the
@@ -415,9 +420,14 @@ let basePlacesFC = null;
 // The delta most recently merged in, or null before the first successful
 // poll (or once a fresher applyDataset has superseded it — see applyDataset).
 let currentDelta = null;
+// deltaFingerprint of what is merged on screen: a poll that brings the same
+// objects again is not merged again. Null whenever a merge has to happen
+// regardless (no delta yet, or a new base under it).
+let currentDeltaKey = null;
 // A reader's own confirmed answers, instant-recoloured ahead of tonight's
-// build: {osm_url: {status, changing_table, location_raw, t}}, persisted so
-// a reload keeps the colour. Try/catch everywhere storage might be blocked
+// build: {osm_url: {status, changing_table, location_raw, play_answered,
+// highchair_answered, t, version}}, each answer merged into the object's
+// entry (mergeAnswerOverride), persisted so a reload keeps the colour. Try/catch everywhere storage might be blocked
 // (private mode, quota) — an override that cannot be remembered just waits
 // for the delta/nightly build like it always did.
 const ANSWER_OVERRIDES_KEY = "papamap-answer-overrides";
@@ -438,6 +448,10 @@ let myFeatureGrid = null;   // buildFeatureGrid(allFeatures) — "Mein PapaMap"'
 // themselves are rebuilt.
 let featuresByOsmUrl = new Map();
 let placesByOsmUrl = new Map();
+// Bumped each time allFeatures/allPlaces are rebuilt, and carried on every map
+// feature beside its idx, so a click can tell whether idx still points into
+// the arrays it was drawn from (the pin click handlers).
+let featureGen = 0;
 let visible = new Set(chipKeys("mama"));   // toggled-on chips, a superset of either reading
 let playOnly = false;                                     // narrow to play corners
 let highchairOnly = false;                                // narrow to high chairs (v65), not remembered
@@ -634,15 +648,20 @@ function addTableLayer() {
   // Both circle layers, so the halo's extra 5.5 px is part of the hit target
   // rather than a dead ring around a clickable pin; the key glyph too, so the
   // tap does not fall through the middle of the pin it sits on.
+  // A tap on tiles drawn from older arrays (featureGen) is dropped: its idx
+  // may already name the next object over. Only for the moment MapLibre
+  // takes to re-tile after a merge; the next tap lands on the new tiles.
   for (const layer of [PLAY_LAYER, SRC, KEY_LAYER, LIMITED_LAYER]) {
     map.on("click", layer, (e) => {
-      const f = allFeatures[e.features[0].properties.idx];
+      const props = e.features[0].properties;
+      const f = props.gen === featureGen ? allFeatures[props.idx] : null;
       if (f) openPopup(f);
     });
   }
   for (const layer of [PLACES, PLACES_NO, PLACES_LIMITED]) {
     map.on("click", layer, (e) => {
-      const p = allPlaces[e.features[0].properties.idx];
+      const props = e.features[0].properties;
+      const p = props.gen === featureGen ? allPlaces[props.idx] : null;
       if (p) openPlacePopup(p);
     });
   }
@@ -679,13 +698,40 @@ function refreshPins() {
   countEl.classList.toggle("nodata", !total);
   updateBarFade();   // on the website the count is the row's last item: its width moves the edge
   if (!styleReady) return;
-  map.getSource(SRC).setData(toFeatureCollection(shown, wheelchairOnly));
-  map.getSource(PLACES).setData(placesToFeatureCollection(places, wheelchairOnly));
+  map.getSource(SRC).setData(toFeatureCollection(shown, wheelchairOnly, featureGen));
+  map.getSource(PLACES).setData(placesToFeatureCollection(places, wheelchairOnly, featureGen));
 }
 
 // ---- Popup ----
 let popup = null;
 let popupObj = null;   // { kind: "table" | "place", obj } behind the open popup
+// The markup the open popup was last given, so a redraw that would change
+// nothing is skipped (showPopupHTML).
+let popupHtmlShown = null;
+
+// Redraws the open popup in place, only when its markup changed. A setHTML
+// replaces the card's scroller (scroll back to the top, an unfolded row
+// folded again) and MapLibre focuses the card's first button, so a delta poll
+// with nothing new for this object must not do it at all, and one that does
+// must not take the focus from wherever the reader is typing (the search
+// field). MapLibre's setDOMContent reads options.focusAfterOpen on every call,
+// so it is switched off for the redraw rather than undone afterwards: a blur
+// closes the search list, and iOS will not raise the keyboard again from a
+// focus() outside a gesture. A first open still focuses the card. Returns
+// whether it redrew.
+function showPopupHTML(html) {
+  if (!popup || html === popupHtmlShown) return false;
+  const active = document.activeElement;
+  const elsewhere = active && active !== document.body && !popup.getElement()?.contains(active);
+  const prev = popup.options.focusAfterOpen;
+  if (elsewhere) popup.options.focusAfterOpen = false;
+  try { popup.setHTML(html); }
+  finally { popup.options.focusAfterOpen = prev; }
+  popupHtmlShown = html;
+  // Fallback for a MapLibre that moved focus anyway.
+  if (elsewhere && active.isConnected && document.activeElement !== active) active.focus({ preventScroll: true });
+  return true;
+}
 
 // The URL fields are built by our own pipeline, but belt-and-braces: esc()
 // stops HTML injection, not a javascript: href — so only https links render.
@@ -916,10 +962,12 @@ function askPlayHTML(busy = false, who = false) {
 }
 
 // The high-chair line (v65): said when OSM records an answer either way,
-// nothing when it is silent. Shared by the pin and the play-place popup.
+// nothing when it is silent. Shared by the pin and the play-place popup. The
+// reader's own answer (highchair_answered) stands in until OSM's arrives.
 function highchairRows(o) {
-  if (o.highchair === true) return [`<div class="row hc">${esc(t("popupHighchairYes"))}</div>`];
-  if (o.highchair === false) return [`<div class="row hc no">${esc(t("popupHighchairNo"))}</div>`];
+  const hc = o.highchair ?? o.highchair_answered;
+  if (hc === true) return [`<div class="row hc">${esc(t("popupHighchairYes"))}</div>`];
+  if (hc === false) return [`<div class="row hc no">${esc(t("popupHighchairNo"))}</div>`];
   return [];
 }
 
@@ -991,6 +1039,10 @@ function placeHTML(p) {
   return `<div class="popup"><h3>${esc(title)}${starHTML(p.osm_url, title)}</h3>${sub}${rows.join("")}</div>`;
 }
 
+// A table popup clears the sign pin above its point, a place's has none to
+// clear: one rule for opening and for a card whose object changed kind.
+const popupOffset = (kind) => (kind === "place" ? POPUP_OFFSET : POPUP_OFFSET_WITH_MARKER);
+
 // Every popup this page ever opens is created here or in openPlacePopup, and
 // both wire its own "close" listener to the instance itself (`p`, not the
 // mutable `popup` variable — a closure over `popup` would name whichever
@@ -1003,10 +1055,11 @@ function openPopup(f) {
   hideRoomCard();   // the two never share the screen
   if (popup) popup.remove();
   popupObj = { kind: "table", obj: f };
+  popupHtmlShown = popupHTML(f);
   // Always the marker-aware offset: a "table" popup always gets the sign
   // pin (updateSignMarker below), never only sometimes.
-  const p = new maplibregl.Popup({ offset: POPUP_OFFSET_WITH_MARKER, maxWidth: popupMaxWidth() })
-    .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
+  const p = new maplibregl.Popup({ offset: popupOffset("table"), maxWidth: popupMaxWidth() })
+    .setLngLat([f.lon, f.lat]).setHTML(popupHtmlShown).addTo(map);
   p.on("close", () => onPopupClosed(p));
   popup = p;
   review?.pinOpened();
@@ -1020,10 +1073,11 @@ function openPlacePopup(p) {
   hideRoomCard();
   if (popup) popup.remove();
   popupObj = { kind: "place", obj: p };
+  popupHtmlShown = placeHTML(p);
   // A prospect carries no status: no marker, plain offset (updateSignMarker
   // below still runs, to clear a marker left over from a table selection).
-  const pop = new maplibregl.Popup({ offset: POPUP_OFFSET, maxWidth: popupMaxWidth() })
-    .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
+  const pop = new maplibregl.Popup({ offset: popupOffset("place"), maxWidth: popupMaxWidth() })
+    .setLngLat([p.lon, p.lat]).setHTML(popupHtmlShown).addTo(map);
   pop.on("close", () => onPopupClosed(pop));
   popup = pop;
   review?.pinOpened();
@@ -2345,10 +2399,12 @@ function setEditNote(rec, cls, key, tags = null, vars = null) {
 
 function toastEditNote() {
   const note = editNote;
-  const obj = (note.kind === "place" ? placesByOsmUrl : featuresByOsmUrl).get(note.osm_url);
+  // Either kind: the answer this note confirms may have promoted a play
+  // place to a table since the note was made.
+  const hit = resolvePopupObj(note.kind, note.osm_url, placesByOsmUrl, featuresByOsmUrl);
   toast(editText(note), {
     ms: 8000,
-    onTap: obj ? () => reopen(note.kind, obj) : null,
+    onTap: hit ? () => reopen(hit.kind, hit.obj) : null,
   });
 }
 
@@ -2516,6 +2572,15 @@ async function answer(kind, obj, choice, freshToken = null) {
     // dialog happens to page the changesets list: the write's own reply
     // already has everything an entry needs (CONTRACT.md v39).
     recordMyAnswer(out.changeset, obj.lon, obj.lat);
+    // Every answer is kept as an override until the delta carries it, merged
+    // into whatever this reader already answered on the object: in-memory
+    // flags alone were lost to the next re-merge (a delta poll), and the
+    // question came back, its second tap refused as somebody else's answer.
+    const remember = (fields) => {
+      answerOverrides = mergeAnswerOverride(answerOverrides, obj.osm_url, fields,
+                                            new Date().toISOString(), out.version);
+      saveAnswerOverrides(answerOverrides);
+    };
     // The popup's tag row and the question's absence both read from the
     // object, so the one in memory learns the answer. A room answer's own
     // status recolours instantly below (stats.json's answer_status — never
@@ -2528,13 +2593,18 @@ async function answer(kind, obj, choice, freshToken = null) {
       // when this popup is reopened. Only its own line goes; a room question
       // still waiting above it stays.
       obj.play_recorded = true;
+      remember({ play_answered: true });
+      renderMergedDataset();
       el?.querySelector(".ask-play")?.remove();
     } else if (hc) {
       // The same for the high chair (v65), except that its line shows at
       // once: the question is replaced in place by the row it just recorded.
-      // The chip's count waits for the pipeline, like the play ring.
-      obj.highchair = choice === "hc_yes";
+      // The chip's count waits for the pipeline, like the play ring: the
+      // answer lives in highchair_answered, which only the row reads.
+      obj.highchair_answered = choice === "hc_yes";
       obj.highchair_recorded = true;
+      remember({ highchair_answered: obj.highchair_answered });
+      renderMergedDataset();
       const q = el?.querySelector(".ask-hc");
       if (q) q.outerHTML = highchairRows(obj).join("");
     } else {
@@ -2554,26 +2624,25 @@ async function answer(kind, obj, choice, freshToken = null) {
       // v50: the same lookup for "the men's room only" — undefined in a
       // stats.json from before it, which the override then leaves to the base.
       const newMenOnly = lastStats?.answer_men_only?.[choice];
-      if (newStatus !== undefined && newStatus !== null) {
-        const t = new Date().toISOString();
-        // out.version is the OSM object's version AFTER this write (writeTags,
-        // web/osm.js) — the primary key pruneAnswerOverrides matches against
-        // a delta upsert's own osm_version. `t` (the client clock, after the
-        // round trip) stays only as the secondary, data_base-time fallback:
-        // OSM's own edited_at on that same delta feature is the server's
-        // timestamp from DURING the write, routinely earlier than `t`, so a
-        // time-only comparison against it would never clear this override.
-        answerOverrides = { ...answerOverrides, [obj.osm_url]:
-          { status: newStatus, men_only: newMenOnly, changing_table: obj.changing_table,
-            location_raw: obj.location_raw, t, version: out.version } };
-        saveAnswerOverrides(answerOverrides);
-        renderMergedDataset();
-        // renderMergedDataset() rebuilds featuresByOsmUrl/placesByOsmUrl and
-        // popupObj from the merged view — obj itself (this closure's own
-        // reference) may now be a stale copy if the answer promoted a place
-        // to a table, so the rest of this branch keeps using it only for the
-        // tag row below, never for anything that must reflect the promotion.
-      }
+      // A status only where the answer has one: "none" on a play place keeps
+      // the base's (none), and so does a stats.json from before answer_status;
+      // the table row and the question's absence are remembered either way.
+      // out.version is the OSM object's version AFTER this write (writeTags,
+      // web/osm.js) — the primary key pruneAnswerOverrides matches against
+      // a delta upsert's own osm_version. `t` (the client clock, after the
+      // round trip) stays only as the secondary, data_base-time fallback:
+      // OSM's own edited_at on that same delta feature is the server's
+      // timestamp from DURING the write, routinely earlier than `t`, so a
+      // time-only comparison against it would never clear this override.
+      const hasStatus = newStatus !== undefined && newStatus !== null;
+      remember({ changing_table: obj.changing_table, location_raw: obj.location_raw,
+                 ...(hasStatus ? { status: newStatus, men_only: newMenOnly } : {}) });
+      renderMergedDataset();
+      // renderMergedDataset() rebuilds featuresByOsmUrl/placesByOsmUrl and
+      // popupObj from the merged view — obj itself (this closure's own
+      // reference) may now be a stale copy if the answer promoted a place
+      // to a table, so the rest of this branch keeps using it only for the
+      // tag row below, never for anything that must reflect the promotion.
       // Everything that was true only while the question was open goes: the
       // question itself (.ask — querySelector would take the headline alone
       // and leave the buttons standing, sandbox test 13 Sep 2026) and the
@@ -2582,9 +2651,6 @@ async function answer(kind, obj, choice, freshToken = null) {
       // .ask-play and .ask-hc (v65) are neither, and stay.
       el?.querySelectorAll(".ask, .ask-ctx").forEach((x) => x.remove());
     }
-    // Whatever survived the sweep is the other question, and it was quieted
-    // for this round trip, not answered: give it its buttons back.
-    btns.forEach((b) => { if (b.isConnected) b.disabled = false; });
     // Quoted back: the group this answer wrote. A room answer names the table
     // and its room, a play answer the play corner — never the other question's
     // tags, which this tap did not touch.
@@ -2598,13 +2664,20 @@ async function answer(kind, obj, choice, freshToken = null) {
     }
     review?.answered();
   } catch (err) {
-    btns.forEach((b) => { b.disabled = false; });
     // A dead token is not the reader's problem: log in again, answer in hand.
     if (err.status === 401) { clearLogin(); rememberView(); goLogin(intent); return; }
     setEditNote(rec, "none", err.status === 409 ? "askConflict" : "askFailed", null,
                 { status: err.status || "network" });
   } finally {
     inFlight.delete(obj.osm_url);
+    // Whatever question is still standing was quieted for this round trip,
+    // not answered: its buttons come back — on the live card, which a
+    // re-merge during the write (this answer's own, or a delta poll) has
+    // redrawn with fresh, disabled buttons, so the ones taken above are gone.
+    // Only this object's card: another pin's question was never quieted.
+    if (popupObj?.obj.osm_url === obj.osm_url)
+      popup?.getElement()?.querySelectorAll("button.ask-btn, button.ask-more")
+        .forEach((b) => { b.disabled = false; });
   }
 }
 
@@ -3055,7 +3128,7 @@ function applyMode() {
   // no marker, so there is nothing here worth keeping open over — it still
   // just closes.
   if (popupObj?.kind === "table") {
-    popup.setHTML(popupHTML(popupObj.obj));
+    showPopupHTML(popupHTML(popupObj.obj));
     attachEditNote();
     updateSignMarker();
   } else {
@@ -3092,7 +3165,7 @@ for (const m of MODES) {
 
 langSelect.addEventListener("change", () => {
   lang = LANGS.includes(langSelect.value) ? langSelect.value : DEFAULT_LANG;
-  localStorage.setItem("papamap-lang", lang);
+  try { localStorage.setItem("papamap-lang", lang); } catch { /* blocked storage: this page only */ }
   fitLangSelect();
   shareSettings({ mode, lang });
   // A ?lang= param would override the stored choice on reload — drop it.
@@ -3328,6 +3401,7 @@ function stripOsmParam() {
 function applyFeatureSets(fc, places) {
   allFeatures = loadFeatures(fc);
   allPlaces = loadPlaces(places);
+  featureGen++;
   // "Mein PapaMap"'s own nearest-feature lookup (answerArea, web/me.js) —
   // rebuilt here with everything else that depends on allFeatures, not
   // lazily on first use, so a background refresh's new dataset is what the
@@ -3342,14 +3416,18 @@ function applyFeatureSets(fc, places) {
   refreshPins();
   if (isNative()) shareTables();   // the widget and the shortcut search this same data
   if (popupObj) {
-    const byUrl = popupObj.kind === "place" ? placesByOsmUrl : featuresByOsmUrl;
-    const obj = byUrl.get(popupObj.obj.osm_url);
-    if (obj) {
-      popupObj = { kind: popupObj.kind, obj };
+    // Either kind: a room answer (or a delta) that promotes a play place to a
+    // table keeps its card open as that table's, with the table's offset.
+    const hit = resolvePopupObj(popupObj.kind, popupObj.obj.osm_url, placesByOsmUrl, featuresByOsmUrl);
+    if (hit) {
+      const switched = hit.kind !== popupObj.kind;
+      popupObj = hit;
       if (popup) {
-        popup.setHTML(popupObj.kind === "place" ? placeHTML(obj) : popupHTML(obj));
-        attachEditNote();
-        fitPopup();
+        if (switched) popup.setOffset(popupOffset(hit.kind));
+        if (showPopupHTML(hit.kind === "place" ? placeHTML(hit.obj) : popupHTML(hit.obj))) {
+          attachEditNote();
+          fitPopup();
+        }
         updateSignMarker();   // tonight's build (or a delta, or this reader's own answer) may carry a new status for it
       }
     } else if (popup) {
@@ -3395,7 +3473,10 @@ function applyDataset(fc, places, stats, areas) {
   // after boot's first poll, and dropping a still-valid delta there hid a
   // fresh edit until the next 3-minute poll. An older one is dropped and
   // re-fetched (watchRefresh polls right after this).
-  if (currentDelta && !isDeltaFresh(currentDelta.base, stats?.data_base)) currentDelta = null;
+  if (currentDelta && !isDeltaFresh(currentDelta.base, stats?.data_base)) {
+    currentDelta = null;
+    currentDeltaKey = null;   // the same file fetched again must be merged again
+  }
   const versionByUrl = new Map();   // nothing to compare a fresh delta against yet — data_base alone decides here
   answerOverrides = pruneAnswerOverrides(answerOverrides, stats?.data_base, versionByUrl);
   saveAnswerOverrides(answerOverrides);
@@ -3447,9 +3528,18 @@ async function fetchDelta() {
 // through an older upsert still sitting in currentDelta. Ignored outright
 // when it is older than the loaded dataset's own base (isDeltaFresh):
 // CONTRACT.md's live-updates amendment.
+// One that lost a race to a newer one (isDeltaOlder) is dropped, and one that
+// brings the very objects already merged (deltaFingerprint — the follower
+// rewrites the file every tick) is not merged again unless it also retired
+// one of this reader's overrides: a re-merge costs a full rebuild and setData
+// of every pin.
 function applyDelta(deltaJson) {
   if (!baseFC || !deltaJson || !isDeltaFresh(deltaJson.base, lastStats?.data_base)) return;
+  if (isDeltaOlder(deltaJson, currentDelta)) return;
+  const key = deltaFingerprint(deltaJson);
+  const same = currentDelta !== null && key === currentDeltaKey;
   currentDelta = deltaJson;
+  currentDeltaKey = key;
   const versionByUrl = new Map();
   for (const f of (deltaJson.tables?.upsert || []).concat(deltaJson.places?.upsert || [])) {
     const url = f?.properties?.osm_url;
@@ -3457,12 +3547,13 @@ function applyDelta(deltaJson) {
     if (url && version != null) versionByUrl.set(url, version);
   }
   const pruned = pruneAnswerOverrides(answerOverrides, lastStats?.data_base, versionByUrl);
-  if (Object.keys(pruned).length !== Object.keys(answerOverrides).length) {
+  const overridesChanged = Object.keys(pruned).length !== Object.keys(answerOverrides).length;
+  if (overridesChanged) {
     answerOverrides = pruned;
     saveAnswerOverrides(answerOverrides);
   }
-  renderMergedDataset();
-  maybeNotifyAddedPlace(deltaJson);
+  if (!same || overridesChanged) renderMergedDataset();
+  maybeNotifyAddedPlace(deltaJson);   // every poll: the add watch has a clock of its own
 }
 
 async function pollDelta() {
@@ -4314,7 +4405,8 @@ function renderMeSentence() {
     // No area (stats.json missing entirely) is the one case renderStats
     // itself falls back to statsMissing rather than naming an area; the
     // dialog says the same rather than guessing at one from the map view.
-    : `<span>${esc(t("statsMissing", { href: t("methodsHref") }))}</span>`);
+    // Unescaped like renderStats: the template is our own i18n markup.
+    : `<span>${t("statsMissing", { href: t("methodsHref") })}</span>`);
   if (parts.grey.locate) {
     bits.push(`<button type="button" id="me-locate" class="linkish">${esc(t("meLocate"))}</button>`);
   } else if (parts.grey.vars) {
