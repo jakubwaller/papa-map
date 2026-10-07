@@ -41,8 +41,12 @@ struct NearestProvider: TimelineProvider {
         guard !tables.isEmpty else {
             return NearestEntry(date: .now, nearest: nil, state: .noData, mode: mode, lang: lang)
         }
+        // The extension's own permission and a fix under half an hour old,
+        // or no distance at all: `location` is whatever fix the system last
+        // held, and a widget renewed every 30 minutes would keep renewing it.
         let manager = CLLocationManager()
-        guard let loc = manager.location else {
+        guard manager.isAuthorizedForWidgetUpdates,
+              let loc = TableStore.freshFix(manager.location) else {
             return NearestEntry(date: .now, nearest: nil, state: .noLocation, mode: mode, lang: lang)
         }
         guard let hit = TableStore.nearest(to: loc, mode: mode, in: tables) else {
@@ -122,7 +126,7 @@ struct PapaMapWidget: Widget {
         }
         .configurationDisplayName(Text(verbatim: TableStore.lang == "de" ? "Nächster Wickeltisch" : "Nearest changing table"))
         .description(Text(verbatim: TableStore.lang == "de"
-            ? "Der nächste Wickeltisch, den du auch erreichst, mit Fußweg."
+            ? "Der nächste Wickeltisch, den du auch erreichst, mit Entfernung."
             : "The nearest changing table you can actually reach, with the distance."))
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
