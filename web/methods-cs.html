@@ -124,8 +124,25 @@
 <p class="muted">Přebalovací pulty, ke kterým se táta dostane. Celosvětová čísla z taginfo níže
 načítá noční build. Vzorek z osmi center měst je z 26.&nbsp;července&nbsp;2026 a zůstává beze
 změny.</p>
+<nav class="muted" aria-label="Obsah"><strong>Obsah</strong>
+<ul>
+  <li><a href="#what">Co tahle mapa je. A co není.</a></li>
+  <li><a href="#colours">Co barvy znamenají (přesné pravidlo)</a></li>
+  <li><a href="#mum-mode">Přepínač táta/máma</a></li>
+  <li><a href="#play-area">Modrý kroužek: dětský koutek</a></li>
+  <li><a href="#wheelchair">Chip Bezbariérové</a></li>
+  <li><a href="#empty-rings">Prázdné modré kroužky: místa na hraní bez odpovědi</a></li>
+  <li><a href="#high-chair">Chip Dětská židlička</a></li>
+  <li><a href="#grey-pin">Jak opravit šedý špendlík</a></li>
+  <li><a href="#contribute">Jak přidat chybějící místo</a></li>
+  <li><a href="#no-ranking">Proč index vybavenosti z OSM nejde</a></li>
+  <li><a href="#where-tables">Jediný spočítatelný fakt: kde pulty jsou</a></li>
+  <li><a href="#licence">Licence dat &amp; uvedení zdroje</a></li>
+  <li><a href="#privacy">Soukromí</a></li>
+  <li><a href="#how-made">Jak tahle stránka vzniká</a></li>
+</ul></nav>
 
-<h2>Co tahle mapa je. A co není.</h2>
+<h2 id="what">Co tahle mapa je. A co není.</h2>
 <p>PapaMap ukazuje místa ve 44 evropských zemích — od Islandu po Kypr, od Portugalska po
 Ukrajinu, a k tomu Austrálie, Nový Zéland, USA, Kanada a Japonsko —, o kterých
 OpenStreetMap ví, že tam je přebalovací pult
@@ -135,8 +152,9 @@ každého špendlíku.</p>
 <p>Nápad vznikl při čtení knihy <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> od Caroline Criado Perez.</p>
 <p>Žebříček měst podle vybavenosti toaletami to není. Proč to z otevřených dat poctivě nejde, je
 popsané níž.</p>
+<p>Jde jen o přebalovací pulty. Pro hřiště a další místa přátelská k rodinám viz <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> a <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Co barvy znamenají (přesné pravidlo)</h2>
+<h2 id="colours">Co barvy znamenají (přesné pravidlo)</h2>
 <p>Na mapu se dostanou jen objekty s <code>changing_table=yes</code> nebo <code>limited</code>
 (<code>no</code> se počítá jen do statistiky). Barva vychází z
 <code>changing_table:location</code>. Hodnota se rozdělí podle <code>;</code>, zbaví okolních mezer,
@@ -154,7 +172,7 @@ převede na malá písmena a každá část se porovnává celá. Nikdy jako pod
 </ul>
 <p>Objekt s tagem <code>centralkey</code> (jiným než <code>no</code>) zůstane mimo mapu, když klíč zamyká celé dveře: <code>access=centralkey</code>, pult na bezbariérovém WC, nebo nic v tazích neříká, že klíč platí jen pro jednu kabinu. Zařízení s otevřenými pánskými a dámskými WC a zamčenou bezbariérovou kabinou (<code>wheelchair:access=centralkey</code>, nebo <code>male=yes</code> a <code>female=yes</code>) na mapě zůstane, šedé, dokud někdo nezapíše místnost. Euroklíč se vydává jen proti doložení zdravotního postižení, takže většina tátů těmi dveřmi neprojde. Pod chipem <em>Bezbariérové</em> se tyto pulty vracejí, viz níže.</p>
 
-<h2>Přepínač táta/máma</h2>
+<h2 id="mum-mode">Přepínač táta/máma</h2>
 <p>Tři barvy nahoře odpovídají na otázku táty: Dostane se táta k pultu? Pro mámu se stejná
 odpověď obvykle čte jinak — pult na dámském WC může použít, a i u pultu bez zaznamenané
 místnosti je většina v místnosti, do které se dostane. Přepínač <em>Táta / Máma</em> vlevo v
@@ -176,7 +194,7 @@ samotný), je dostupný pro tátu, ale ne pro mámu. Pipeline tyto pulty označu
 mámině režimu jsou červené a nezapočítávají se do čísla nahoře. Starší verze aplikace je možná
 stále zobrazují zeleně, dokud nejsou aktualizované.</p>
 
-<h2>Modrý kroužek: dětský koutek</h2>
+<h2 id="play-area">Modrý kroužek: dětský koutek</h2>
 <p>Špendlík s modrým kroužkem má navíc dětský koutek &mdash; místo, kde se nejen přebaluje, ale kde
 se dá i chvíli zůstat. Filtr <em>S dětským koutkem</em> zúží mapu jen na ně. Místo se počítá, když
 je v OSM aspoň jedno z toho:</p>
@@ -211,11 +229,11 @@ minut později. Nikdo se neptá dvakrát: zaznamenané <code>kids_area</code> <e
 <code>leisure=playground</code> bez <code>indoor=yes</code> se neptá vůbec &mdash; místo
 <em>je</em> už místem na hraní, jen ne uvnitř.</p>
 
-<h2>Chip Bezbariérové</h2>
+<h2 id="wheelchair">Chip Bezbariérové</h2>
 <p>Chip <em>Bezbariérové</em> ukazuje místa, která mají v OSM <code>wheelchair=yes</code> nebo <code>wheelchair=limited</code>. <code>limited</code> znamená jeden schod do 7&nbsp;cm nebo nutnou pomoc. Se zapnutým chipem mají tato místa od přiblížení 13 vykřičník a ve vyskakovacím okně stojí <em>omezeně</em>. Samotné <code>toilets:wheelchair=yes</code> nestačí, ale přesto se zobrazí ve vyskakovacím okně spolu s <code>wheelchair:description</code>. Místo bez tagu není nepřístupné, OSM o něm prostě nic neříká, takže chip jen filtruje a nic nebarví. Modré kroužky (místa s dětským koutkem) chip filtruje a označuje stejně.</p>
 <p>Pod tímto chipem, a jen tam, se vracejí pulty za euroklíčem, s klíčem ve špendlíku: kdo chip potřebuje, obvykle klíč má. Na běžné mapě, v číslech a v žebříčku zůstávají venku.</p>
 
-<h2>Prázdné modré kroužky: místa na hraní bez odpovědi</h2>
+<h2 id="empty-rings">Prázdné modré kroužky: místa na hraní bez odpovědi</h2>
 <p>Stejné pravidlo platí pro mnohem víc míst, než kolik má mapa špendlíků. Jen
 <span data-stat="play_tables">111</span> z nich má špendlík. U
 dalších <span data-stat="play_places">701</span> nikdo neodpověděl na první otázku: je tady
@@ -230,14 +248,15 @@ restaurace s hernou &mdash; táta s batoletem tam stejně jde, a když už tam j
 Kliknutí na kroužek otevře MapComplete přímo na téhle jedné otázce. Když na ni odpovíš, kroužek
 během několika minut zmizí a na jeho místě bude opravdový špendlík.</p>
 
-<h2>Chip Dětská židlička</h2>
+<h2 id="high-chair">Chip Dětská židlička</h2>
 <p>Chip <em>Dětská židlička</em> ukazuje místa, kde OSM eviduje dětskou židličku: <code>highchair=yes</code> nebo číslo větší než 0. <code>highchair=no</code> nebo <code>0</code> je zapsané &bdquo;ne&ldquo;. Místo bez tagu není místo bez dětské židličky, OSM o něm prostě nic neříká, takže ho chip vynechá, aniž by cokoli tvrdil. Hodnota, kterou mapa neumí přečíst, třeba <code>ja</code> nebo <code>1+</code>, se také nepočítá a vyskakovací okno pro ni neukáže žádný řádek. Chip filtruje špendlíky i modré kroužky a nic nebarví.</p>
 <p>Na špendlíku u místa, kde se dá najíst (kavárna, restaurace, hospoda a podobně), nebo u místa pro rodiny (školka, knihovna, komunitní centrum a podobně) se vyskakovací okno ptá, dokud OSM nic neříká: <em>Je tu dětská židlička?</em> Tvoje odpověď jde do OSM jako <code>highchair=yes</code> nebo <code>highchair=no</code>, pod tvým vlastním účtem, stejně jako odpověď k místnosti.</p>
 
-<h2>Jak opravit šedý špendlík</h2>
+<h2 id="grey-pin">Jak opravit šedý špendlík</h2>
 <p>Šedá znamená: chybí jedna odpověď. Kde je přebalovací pult? Odpovědět na to může kdokoli s
 bezplatným účtem na OSM, přímo na místě, za necelou minutu:</p>
 <ul>
+  <li><strong>V aplikaci (nejrychleji):</strong> klepni na šedý špendlík. Vyskakovací okno se ptá <em>V jaké místnosti je přebalovací pult?</em> Klepni na <em>Pánské WC</em>, <em>Dámské WC</em>, <em>Dámy a páni</em> nebo pod <em>Další místnosti …</em> na jinou místnost. Přihlásíš se jednou přes OSM, odpověď se uloží pod tvým vlastním účtem a špendlík se během několika minut aktualizuje. Když klepneš na tlačítko polohy do 75&nbsp;m od šedého špendlíku, karta se zeptá, jestli tam právě jsi; <em>Odpovědět na otázku</em> otevře totéž okno.</li>
   <li><strong>MapComplete (jakýkoli mobil, v prohlížeči):</strong> &bdquo;Odpovědět na
       MapComplete&ldquo; u šedého špendlíku otevře stejný objekt ve vlastním tématu PapaMap pro
       MapComplete &mdash; u každého špendlíku, aby bylo poznat, že úpravy přišly odsud. MapComplete
@@ -272,6 +291,8 @@ Poprvé se přihlásíš svým bezplatným účtem OSM; odpověď se uloží do 
 špendlík se objeví za pár minut (mapa k němu přeletí). Pokud místo v seznamu není, použij
 <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">téma PapaMap pro MapComplete</a> (odkaz dole v dialogu). Nebo vlastní editor OSM, kroky níže
 fungují dál.</p>
+<details>
+<summary>S vlastním editorem OSM (iD)</summary>
 <p>To místo v OSM skoro jistě už je. Chybí jen tag <code>changing_table</code>. V editoru OSM (iD)
 to zabere asi dvě minuty:</p>
 <ol>
@@ -294,11 +315,12 @@ to zabere asi dvě minuty:</p>
       přebalovacího pultu&ldquo;), nahraj. Na OSM je to vidět do minuty, tady o několik minut
       později.</li>
 </ol>
+</details>
 <p class="muted">Prosím, taguj jen to, co znáš z vlastní zkušenosti. OSM zaznamenává, co je, ne co
 by mělo být. Když místnost neznáš, i samotné <code>changing_table=yes</code> je užitečné: z místa
 se stane šedý špendlík a na otázku po místnosti odpoví další táta.</p>
 
-<h2>Proč index vybavenosti z OSM nejde</h2>
+<h2 id="no-ranking">Proč index vybavenosti z OSM nejde</h2>
 <p>Nabízel by se větší projekt: poměr vybavenosti toaletami pro muže a pro ženy podle měst. Číslo, o
 které při &bdquo;potty parity&ldquo; ve skutečnosti jde. Z OpenStreetMap ho spočítat nelze.
 Ověřili jsme si to ještě předtím, než jsme mapu postavili, vzorkem z osmi center měst (Berlín,
@@ -333,7 +355,7 @@ Londýn, Paříž, New York, Tokio&nbsp;23&nbsp;obvodů, Amsterdam, Vídeň, Mel
 <p>Poctivé je tedy jen tohle: samotnou vybavenost dnes z otevřených dat změřit nejde. Tenhle web
 měří, co měřit jde, a z mezer dělá příspěvky.</p>
 
-<h2>Jediný spočítatelný fakt: kde pulty jsou</h2>
+<h2 id="where-tables">Jediný spočítatelný fakt: kde pulty jsou</h2>
 <p><code>changing_table:location</code> je, pokud víme, jediný otevřený slovník, který zachycuje,
 ve které místnosti přebalovací pult je. Je řídce obsazený:
 <span data-stat="location_total">3&nbsp;659</span> ze <span data-stat="ct_total">77&nbsp;000</span>
@@ -352,15 +374,7 @@ Směr ale sedí na to, co je odjinud dávno doložené: přebalovací pulty vis�
 To tátům zavírá dveře a tiše přitom předpokládá, kdo má přebalování na starosti. Tahle mapa dělá
 chybějící data viditelnými. A snadno opravitelnými.</p>
 
-<h2 id="related">Další rodinné mapy na OpenStreetMap</h2>
-<p>PapaMap odpovídá na jedinou otázku: dostane se táta k přebalovacímu pultu? Pro hřiště a další místa přátelská k rodinám stojí za pohled i tyto mapy postavené na stejných otevřených datech:</p>
-<ul>
-  <li><a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a> &mdash; místa přátelská k rodinám po celé Evropě: přebalovací pulty, herní koutky, jídelní židličky</li>
-  <li><a href="https://spieli.eu">spieli.eu</a> &mdash; mapa dětských hřišť</li>
-  <li><a href="https://knudli.de">Knudli</a> &mdash; vyhledávač dětských hřišť pro Android a v prohlížeči</li>
-</ul>
-
-<h2>Licence dat &amp; uvedení zdroje</h2>
+<h2 id="licence">Licence dat &amp; uvedení zdroje</h2>
 <p>Všechna mapová data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, dostupná pod licencí
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -368,7 +382,7 @@ Soubory GeoJSON a statistik, které tenhle web poskytuje, jsou odvozené z OSM, 
 Globální statistiky tagů pocházejí ze služby <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Vlastní kód webu je pod licencí MIT.</p>
 
-<h2>Soukromí</h2>
+<h2 id="privacy">Soukromí</h2>
 <p>Statický web. Žádné účty, žádné cookies, žádná analytika, žádné sledovací skripty. Stránka o
 tobě nic neukládá a nemá databázi. Mapové dlaždice pocházejí ze serverů OpenStreetMap, na tyhle
 požadavky se vztahují
@@ -382,7 +396,7 @@ edituješ pod svým vlastním účtem na OSM. Přes nás při tom nejde nic. For
 26.&nbsp;července&nbsp;2026 a statistika klíčů ze služby taginfo ke dni uvedenému výše. Místní
 čísla pocházejí ze stejného nočního dotazu, který staví i mapu.</p>
 
-<h2>Jak tahle stránka vzniká</h2>
+<h2 id="how-made">Jak tahle stránka vzniká</h2>
 <p>Při programování a psaní textů mi pomáhá AI. Všechno jsem si ale i tak přečetl sám.</p>
 
 <script>

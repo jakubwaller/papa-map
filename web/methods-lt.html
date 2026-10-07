@@ -124,8 +124,25 @@
 <p class="muted">Pervystymo stalai, kuriuos tėtis gali pasiekti. Pasauliniai taginfo skaičiai
 žemiau imami iš kas naktį vykstančio build'o. Aštuonių miestų centrų imtis yra iš
 26&nbsp;liep.&nbsp;2026 ir tokia išlieka.</p>
+<nav class="muted" aria-label="Turinys"><strong>Turinys</strong>
+<ul>
+  <li><a href="#what">Kas yra šis žemėlapis. Ir kas jis nėra.</a></li>
+  <li><a href="#colours">Ką reiškia spalvos (tiksli taisyklė)</a></li>
+  <li><a href="#mum-mode">Tėčio-mamos jungiklis</a></li>
+  <li><a href="#play-area">Mėlynas žiedas: žaidimų kampelis</a></li>
+  <li><a href="#wheelchair">Žymė Vežimėlis</a></li>
+  <li><a href="#empty-rings">Tušti mėlyni žiedai: vietos žaisti be atsakymo</a></li>
+  <li><a href="#high-chair">Žymė Maitinimo kėdutė</a></li>
+  <li><a href="#grey-pin">Kaip pataisyti pilką smeigtuką</a></li>
+  <li><a href="#contribute">Kaip pridėti trūkstamą vietą</a></li>
+  <li><a href="#no-ranking">Kodėl iš OSM nepavyksta sudaryti aprūpinimo rodiklio</a></li>
+  <li><a href="#where-tables">Vienintelis apskaičiuojamas faktas: kur yra stalai</a></li>
+  <li><a href="#licence">Duomenų licencija ir atributas</a></li>
+  <li><a href="#privacy">Privatumas</a></li>
+  <li><a href="#how-made">Kaip sukurta ši svetainė</a></li>
+</ul></nav>
 
-<h2>Kas yra šis žemėlapis. Ir kas jis nėra.</h2>
+<h2 id="what">Kas yra šis žemėlapis. Ir kas jis nėra.</h2>
 <p>PapaMap rodo vietas 44 Europos šalyse — nuo Islandijos iki Kipro, nuo Portugalijos iki
 Ukrainos, taip pat Australija, Naujoji Zelandija, JAV, Kanada ir Japonija — kuriose OpenStreetMap
 žino apie kūdikių pervystymo
@@ -135,8 +152,9 @@ pačiame OSM, per nuorodas prie kiekvieno smeigtuko.</p>
 <p>Idėja kilo skaitant Caroline Criado Perez knygą <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a>.</p>
 <p>Kurio miesto tualetų aprūpinimas geriausias — tokio reitingo čia nėra. Kodėl to sąžiningai
 neįmanoma padaryti iš atvirų duomenų, paaiškinta žemiau.</p>
+<p>Čia kalbama tik apie pervystymo stalus. Žaidimų aikštelėms ir kitoms šeimoms palankioms vietoms žiūrėk <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> ir <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Ką reiškia spalvos (tiksli taisyklė)</h2>
+<h2 id="colours">Ką reiškia spalvos (tiksli taisyklė)</h2>
 <p>Į žemėlapį patenka tik objektai, turintys <code>changing_table=yes</code> arba
 <code>limited</code> (<code>no</code> skaičiuojamas tik statistikoje). Spalva nustatoma pagal
 <code>changing_table:location</code>. Vertė padalijama ties <code>;</code>, apkarpoma, paverčiama
@@ -154,7 +172,7 @@ mažosiomis raidėmis ir lyginama kaip visas žodis. Niekada kaip fragmentas, ne
 </ul>
 <p>Objektas su <code>centralkey</code> žyma (kitokia nei <code>no</code>) lieka už žemėlapio ribų, kai raktas užrakina visas duris: <code>access=centralkey</code>, stalas neįgaliųjų tualete, arba niekas žymose nesako, kad raktas galioja tik vienai kabinai. Kompleksas su atvirais vyrų ir moterų tualetais ir užrakinta pritaikyta kabina (<code>wheelchair:access=centralkey</code>, arba <code>male=yes</code> ir <code>female=yes</code>) lieka žemėlapyje, pilkas, kol kas nors įrašys patalpą. Euro raktas išduodamas tik pateikus neįgalumą patvirtinantį dokumentą, tad dauguma tėčių pro tas duris nepateks. Po žyme <em>Vežimėlis</em> šie stalai grįžta, žr. žemiau.</p>
 
-<h2>Tėčio-mamos jungiklis</h2>
+<h2 id="mum-mode">Tėčio-mamos jungiklis</h2>
 <p>Trys spalvos aukščiau atsako į tėčio klausimą: ar tėtis patenka prie stalo? Mamai tas pats
 atsakymas paprastai skaitomas kitaip — stalu moterų tualete ji gali naudotis, o ir prie stalo be
 nurodytos patalpos dauguma stovi patalpoje, į kurią ji gali įeiti. Todėl jungiklis <em>Tėtis /
@@ -178,7 +196,7 @@ yra pasiekiamas tėčiui, bet ne mamai. Konvejeris tokius stalus žymi atskirai,
 jie yra raudoni ir neįtraukiami į skaičių aukščiau. Senesnės programos versijos gali juos vis dar
 rodyti žalius, kol nebus atnaujintos.</p>
 
-<h2>Mėlynas žiedas: žaidimų kampelis</h2>
+<h2 id="play-area">Mėlynas žiedas: žaidimų kampelis</h2>
 <p>Smeigtukas su mėlynu žiedu reiškia, kad ten yra ir žaidimų kampelis &mdash; vieta, kur ne tik
 pervystoma, bet ir pasiliekama ilgiau. Žyma <em>Su žaidimų kampeliu</em> susiaurina žemėlapį iki
 tokių vietų. Vieta skaičiuojama, jei OSM turi bent vieną iš šių žymų:</p>
@@ -214,11 +232,11 @@ neklausiamas du kartus: įrašytas <code>kids_area</code> <em>arba</em>
 <code>leisure=playground</code> be <code>indoor=yes</code> jis niekada neklausiamas &mdash; vieta
 <em>jau yra</em> vieta žaisti, tik ne viduje.</p>
 
-<h2>Žymė Vežimėlis</h2>
+<h2 id="wheelchair">Žymė Vežimėlis</h2>
 <p>Žymė <em>Vežimėlis</em> rodo vietas, kurios OSM turi <code>wheelchair=yes</code> arba <code>wheelchair=limited</code>. <code>limited</code> reiškia vieną laiptelį iki 7&nbsp;cm arba kad reikia pagalbos. Kai žymė įjungta, šios vietos nuo 13 mastelio turi šauktuką, o iššokančiame lange parašyta <em>ribotai</em>. Vien <code>toilets:wheelchair=yes</code> nepakanka, bet jis vis tiek rodomas iššokančiame lange kartu su <code>wheelchair:description</code>. Vieta be žymos nėra neprieinama, OSM apie ją tiesiog nieko nesako, todėl žymė tik filtruoja ir nieko nespalvina. Mėlynus apskritimus (vietas su žaidimų kampeliu) žymė filtruoja ir pažymi taip pat.</p>
 <p>Po šia žyme, ir tik ten, grįžta stalai už euro rakto, su raktu smeigtuke: kam reikia žymės, tas paprastai turi raktą. Įprastame žemėlapyje, skaičiuose ir reitinge jie lieka už ribų.</p>
 
-<h2>Tušti mėlyni žiedai: vietos žaisti be atsakymo</h2>
+<h2 id="empty-rings">Tušti mėlyni žiedai: vietos žaisti be atsakymo</h2>
 <p>Ta pati taisyklė atitinka gerokai daugiau vietų, nei žemėlapyje yra smeigtukų. Tik
 <span data-stat="play_tables">111</span> iš jų turi smeigtuką.
 Dar <span data-stat="play_places">701</span> vietose niekas neatsakė į pirmą klausimą: ar čia yra
@@ -233,14 +251,15 @@ su kamuoliukų baseinu, restoranas su žaidimų kambariu — tėtis su mažyliu 
 nueis, jau žinos atsakymą. Paspaudus žiedą atsiveria MapComplete lygiai su tuo vienu klausimu.
 Atsakius žiedas per kelias minutes dings, o jo vietą užims tikras smeigtukas.</p>
 
-<h2>Žymė Maitinimo kėdutė</h2>
+<h2 id="high-chair">Žymė Maitinimo kėdutė</h2>
 <p>Žymė <em>Maitinimo kėdutė</em> rodo vietas, kuriose OSM nurodyta maitinimo kėdutė: <code>highchair=yes</code> arba skaičius, didesnis už 0. <code>highchair=no</code> arba <code>0</code> yra užfiksuotas „ne“. Vieta be žymos nėra vieta be maitinimo kėdutės, OSM apie ją tiesiog nieko nesako, todėl žymė jos nerodo ir nieko netvirtina. Reikšmė, kurios žemėlapis negali perskaityti, pvz., <code>ja</code> ar <code>1+</code>, taip pat neskaičiuojama, o iššokančiame lange jai nerodoma jokia eilutė. Žymė filtruoja smeigtukus ir mėlynus žiedus ir nieko nespalvina.</p>
 <p>Valgymo vietų (kavinių, restoranų, ledainių ir panašiai) ar šeimoms skirtų vietų (darželių, bibliotekų, bendruomenės centrų ir panašiai) smeigtukuose iššokantis langas klausia, kol OSM apie tai nieko nesako: <em>Ar yra maitinimo kėdutė?</em> Tavo atsakymas patenka į OSM kaip <code>highchair=yes</code> arba <code>highchair=no</code>, per tavo paties paskyrą, kaip ir atsakymas apie patalpą.</p>
 
-<h2>Kaip pataisyti pilką smeigtuką</h2>
+<h2 id="grey-pin">Kaip pataisyti pilką smeigtuką</h2>
 <p>Pilka reiškia, kad trūksta vieno atsakymo. Kur yra pervystymo stalas? Į tai gali atsakyti
 kiekvienas, turintis nemokamą OSM paskyrą, vietoje, per mažiau nei minutę:</p>
 <ul>
+  <li><strong>Programėlėje (greičiausiai):</strong> palieski pilką smeigtuką. Iškylantis langas klausia <em>Kurioje patalpoje yra vystymo stalas?</em> Palieski <em>Vyrų tualete</em>, <em>Moterų tualete</em>, <em>Moterų ir vyrų</em> arba po <em>Daugiau patalpų …</em> – kitą patalpą. Prisijungi vieną kartą per OSM, atsakymas išsaugomas po tavo paties paskyra, o smeigtukas atsinaujina per kelias minutes. Jei paliesi vietos mygtuką ne toliau kaip 75&nbsp;m nuo pilko smeigtuko, kortelė paklaus, ar dabar esi ten; <em>Atsakyti į klausimą</em> atveria tą patį langą.</li>
   <li><strong>MapComplete (bet kuris telefonas, naršyklėje):</strong> mygtukas „Atsakyti per
       MapComplete“ prie pilko smeigtuko atveria tą patį objektą PapaMap nuosavoje MapComplete
       temoje &mdash; prie kiekvieno smeigtuko, kad pataisymus būtų galima atpažinti kaip atėjusius
@@ -275,6 +294,8 @@ patalpoje, ar jo nėra. Pirmą kartą prisijungi nemokama OSM paskyra; atsakymas
 OpenStreetMap po tavo paskyra, o žymeklis atsiranda po kelių minučių (žemėlapis nuskrenda prie jo).
 Jei vietos sąraše nėra, naudok <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMap temą MapComplete</a> (nuoroda lango apačioje). Arba paties
 OSM redaktorių, žingsniai žemiau tebeveikia.</p>
+<details>
+<summary>Naudojant paties OSM redaktorių (iD)</summary>
 <p>Ta vieta OSM beveik tikrai jau yra. Trūksta tik <code>changing_table</code> žymos. Pačiame OSM
 redaktoriuje (iD) tai užtrunka apie dvi minutes:</p>
 <ol>
@@ -296,11 +317,12 @@ redaktoriuje (iD) tai užtrunka apie dvi minutes:</p>
   <li>Spausk <strong>Įrašyti</strong>, parašyk trumpą komentarą („add changing table
       location“), įkelk. OSM tai matysis per minutę, PapaMap — po kelių minučių.</li>
 </ol>
+</details>
 <p class="muted">Prašom žymėti tik tai, ką pats matei. OSM fiksuoja tai, kas yra, o ne tai, kas
 turėtų būti. Jei nežinai patalpos, vien <code>changing_table=yes</code> vis tiek naudinga: vieta
 tampa pilku smeigtuku, o į klausimą apie patalpą atsako kitas tėtis.</p>
 
-<h2>Kodėl iš OSM nepavyksta sudaryti aprūpinimo rodiklio</h2>
+<h2 id="no-ranking">Kodėl iš OSM nepavyksta sudaryti aprūpinimo rodiklio</h2>
 <p>Akivaizdus didesnis projektas būtų vyrų ir moterų tualetų aprūpinimo santykis kiekviename
 mieste. Skaičius, apie kurį iš tiesų sukasi „potty parity“ argumentas. Iš OpenStreetMap jo
 apskaičiuoti neįmanoma. Tai patikrinome prieš pradėdami kurti, imtimi iš aštuonių miestų centrų
@@ -336,7 +358,7 @@ Melburnas; 26&nbsp;liep.&nbsp;2026):</p>
 <p>Taigi vienintelis sąžiningas teiginys yra toks: pats aprūpinimas šiandien iš atvirų duomenų
 neišmatuojamas. Ši svetainė matuoja tai, ką galima išmatuoti, ir spragas paverčia indėliais.</p>
 
-<h2>Vienintelis apskaičiuojamas faktas: kur yra stalai</h2>
+<h2 id="where-tables">Vienintelis apskaičiuojamas faktas: kur yra stalai</h2>
 <p><code>changing_table:location</code> yra, kiek žinome, vienintelis atviras žodynas, fiksuojantis,
 kurioje patalpoje stovi pervystymo stalas. Jis retas:
 <span data-stat="location_total">3&nbsp;659</span> iš <span data-stat="ct_total">77&nbsp;000</span>
@@ -355,15 +377,7 @@ nutylėjimą kabo moterų tualete. Tai užrakina duris tėčiams ir kartu tyliai
 atsako už sauskelnių keitimą. Šis žemėlapis parodo trūkstamus duomenis. Ir palengvina jų
 pataisymą.</p>
 
-<h2 id="related">Kiti šeimoms skirti žemėlapiai OpenStreetMap pagrindu</h2>
-<p>PapaMap atsako į vieną klausimą: ar tėtis gali pasiekti pervystymo stalą? Žaidimų aikštelėms ir kitoms šeimoms palankioms vietoms verta pasižiūrėti ir šiuos tais pačiais atvirais duomenimis grįstus žemėlapius:</p>
-<ul>
-  <li><a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a> &mdash; šeimoms palankios vietos visoje Europoje: pervystymo stalai, žaidimų kampeliai, maitinimo kėdutės</li>
-  <li><a href="https://spieli.eu">spieli.eu</a> &mdash; žaidimų aikštelių žemėlapis</li>
-  <li><a href="https://knudli.de">Knudli</a> &mdash; žaidimų aikštelių ieškiklis Android įrenginiams ir naršyklėje</li>
-</ul>
-
-<h2>Duomenų licencija ir atributas</h2>
+<h2 id="licence">Duomenų licencija ir atributas</h2>
 <p>Visi žemėlapio duomenys &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, prieinami pagal
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a> licenciją.
@@ -372,7 +386,7 @@ saugomi ODbL licencija. Pasaulinė žymų statistika gaunama iš
 <a href="https://taginfo.openstreetmap.org/">taginfo</a>. Pačios svetainės kodas platinamas MIT
 licencija.</p>
 
-<h2>Privatumas</h2>
+<h2 id="privacy">Privatumas</h2>
 <p>Statinė svetainė. Jokių paskyrų, jokių slapukų, jokios analitikos, jokių sekimo skriptų.
 Svetainė apie tave nesaugo nieko ir neturi duomenų bazės. Žemėlapio kaladėlės ateina iš
 OpenStreetMap kaladėlių serverių; šioms užklausoms taikoma
@@ -388,7 +402,7 @@ per savo OSM paskyrą. Per mus tuomet nieko nepraeina. Formalūs puslapiai:
 26&nbsp;liep.&nbsp;2026, ir taginfo raktų statistika, kurios data nurodyta aukščiau. Vietiniai
 skaičiai gaunami iš tos pačios nakties užklausos, kuri sukuria žemėlapį.</p>
 
-<h2>Kaip sukurta ši svetainė</h2>
+<h2 id="how-made">Kaip sukurta ši svetainė</h2>
 <p>Programuodamas ir rašydamas tekstus pasitelkiu DI pagalbą. Vis dėlto viskas pereina per mano
 paties akis.</p>
 

@@ -124,8 +124,25 @@
 <p class="muted">Pelenkázóasztalok, amikhez egy apa is hozzáfér. A lenti világszintű taginfo-számok
 az éjszakai buildből származnak. A nyolc városmagra kiterjedő minta 2026.&nbsp;júl.&nbsp;26-án
 készült, és ez nem fog változni.</p>
+<nav class="muted" aria-label="Tartalom"><strong>Tartalom</strong>
+<ul>
+  <li><a href="#what">Mi ez a térkép. És mi nem.</a></li>
+  <li><a href="#colours">Mit jelentenek a színek (a pontos szabály)</a></li>
+  <li><a href="#mum-mode">Az apa-anya kapcsoló</a></li>
+  <li><a href="#play-area">A kék gyűrű: játszósarok</a></li>
+  <li><a href="#wheelchair">A Kerekesszék csip</a></li>
+  <li><a href="#empty-rings">Az üres kék gyűrűk: játszóhelyek válasz nélkül</a></li>
+  <li><a href="#high-chair">Az Etetőszék csip</a></li>
+  <li><a href="#grey-pin">Hogyan javíts ki egy szürke jelölőt</a></li>
+  <li><a href="#contribute">Hogyan adj hozzá egy hiányzó helyet</a></li>
+  <li><a href="#no-ranking">Miért nem működik az OSM-ből készített ellátottsági mutató</a></li>
+  <li><a href="#where-tables">Az egyetlen kiszámítható tény: hol vannak az asztalok</a></li>
+  <li><a href="#licence">Adatlicenc és forrásmegjelölés</a></li>
+  <li><a href="#privacy">Adatvédelem</a></li>
+  <li><a href="#how-made">Hogyan készül ez az oldal</a></li>
+</ul></nav>
 
-<h2>Mi ez a térkép. És mi nem.</h2>
+<h2 id="what">Mi ez a térkép. És mi nem.</h2>
 <p>A PapaMap 44 európai ország helyeit mutatja — Izlandtól Ciprusig, Portugáliától
 Ukrajnáig, továbbá Ausztrália, Új-Zéland, az Egyesült Államok, Kanada és Japán —, amelyekről az OpenStreetMap tudja, hogy van ott
 pelenkázóasztal (<code>changing_table=yes</code> vagy <code>limited</code>). A szín azt mondja
@@ -134,8 +151,9 @@ adatok javítása magán az OSM-en történik, az egyes jelölőknél találhat�
 <p>Az ötlet Caroline Criado Perez <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> című könyvének olvasása közben született.</p>
 <p>Rangsor arról, melyik városban a legjobb a mosdóellátottság, ez nem. Hogy ez becsületesen miért
 nem állítható össze nyílt adatokból, lentebb olvasható.</p>
+<p>Itt csak a pelenkázóasztalokról van szó. Játszóterekhez és más családbarát helyekhez nézd meg ezeket: <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> és <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Mit jelentenek a színek (a pontos szabály)</h2>
+<h2 id="colours">Mit jelentenek a színek (a pontos szabály)</h2>
 <p>Csak a <code>changing_table=yes</code> vagy <code>limited</code> értékű objektumok kerülnek fel
 a térképre (a <code>no</code> csak a statisztikában számít). A szín a
 <code>changing_table:location</code> címkéből származik. Az értéket <code>;</code> mentén
@@ -155,7 +173,7 @@ szót.</p>
 </ul>
 <p>A <code>centralkey</code> címkés objektum (a <code>no</code> kivételével) akkor marad le a térképről, ha a kulcs az egész ajtót zárja: <code>access=centralkey</code>, asztal az akadálymentes mosdóban, vagy semmi nem mondja a címkékben, hogy a kulcs csak egy fülkére vonatkozik. Egy nyitott férfi és női mosdóval és kulcsra zárt akadálymentes fülkével rendelkező blokk (<code>wheelchair:access=centralkey</code>, vagy <code>male=yes</code> és <code>female=yes</code>) a térképen marad, szürkén, amíg valaki be nem írja a helyiséget. Eurokulcsot csak fogyatékosság igazolásával adnak, így a legtöbb apa nem jut be azon az ajtón. A <em>Kerekesszék</em> csip alatt ezek az asztalok visszatérnek, lásd lejjebb.</p>
 
-<h2>Az apa-anya kapcsoló</h2>
+<h2 id="mum-mode">Az apa-anya kapcsoló</h2>
 <p>A fenti három szín az apa-kérdésre válaszol: el tudja-e érni egy apa az asztalt? Egy anya
 számára ugyanez a válasz többnyire másképp olvasandó — a női mosdóban álló asztalt
 használhatja, és egy olyan asztalnál is, amelynek helyiségét nem rögzítették, a többség olyan
@@ -180,7 +198,7 @@ zöld szűrő száma pontosan ezekkel kevesebb, mint apa-módban.</p>
 asztalokat külön jelöli, ezért anya-módban pirosak, és nem számítanak bele a fenti számba. Az
 alkalmazás régebbi verziói még zöldnek mutathatják őket, amíg frissülnek.</p>
 
-<h2>A kék gyűrű: játszósarok</h2>
+<h2 id="play-area">A kék gyűrű: játszósarok</h2>
 <p>A kék gyűrűs jelölőnél játszósarok is van &mdash; olyan hely, ahol nemcsak pelenkázni lehet,
 hanem el is lehet időzni egy kicsit. A <em>Játszósarokkal</em> szűrő ezekre szűkíti a térképet.
 Egy hely akkor számít bele, ha az OSM ezek közül legalább az egyiket rögzíti:</p>
@@ -218,11 +236,11 @@ perccel később megjelenik (vagy elmarad). Senkit nem kérdeznek kétszer: egy 
 kérdést. Egy <code>leisure=playground</code>-nél <code>indoor=yes</code> nélkül soha nem kérdezi
 meg &mdash; a hely <em>már</em> játszóhely, csak nem beltéri.</p>
 
-<h2>A Kerekesszék csip</h2>
+<h2 id="wheelchair">A Kerekesszék csip</h2>
 <p>A <em>Kerekesszék</em> csip azokat a helyeket mutatja, amelyeken az OSM-ben <code>wheelchair=yes</code> vagy <code>wheelchair=limited</code> áll. A <code>limited</code> egy legfeljebb 7&nbsp;cm-es lépcsőt jelent, vagy azt, hogy segítség kell. Bekapcsolt csipnél ezeken a helyeken a 13-as nagyítástól felkiáltójel látszik, a felugró ablakban pedig ez áll: <em>korlátozott</em>. A <code>toilets:wheelchair=yes</code> önmagában nem elég, de a felugró ablakban így is megjelenik, a <code>wheelchair:description</code> mellett. Egy címke nélküli hely nem megközelíthetetlen, az OSM egyszerűen nem mond róla semmit, így a csip csak szűr, és semmit sem színez. A kék karikákat (játszósarokkal rendelkező helyek) a csip ugyanígy szűri és jelöli.</p>
 <p>E csip alatt, és csak ott, visszatérnek az eurokulcs mögötti asztalok, kulccsal a tűben: akinek a csip kell, annak többnyire kulcsa is van. A rendes térképen, a számokban és a ranglistán kimaradnak.</p>
 
-<h2>Az üres kék gyűrűk: játszóhelyek válasz nélkül</h2>
+<h2 id="empty-rings">Az üres kék gyűrűk: játszóhelyek válasz nélkül</h2>
 <p>Ugyanez a szabály sokkal több helyre illik, mint amennyi jelölő van a térképen. Közülük csak
 <span data-stat="play_tables">111</span>-nek van jelölője.
 Még <span data-stat="play_places">701</span> helyen senki sem válaszolt az első kérdésre: van itt
@@ -238,14 +256,15 @@ van, tudja a választ. Egy gyűrűre kattintva a MapComplete pontosan ezt az egy
 Ha megválaszolod, a gyűrű néhány percen belül eltűnik, a helyén pedig egy valódi
 jelölő jelenik meg.</p>
 
-<h2>Az Etetőszék csip</h2>
+<h2 id="high-chair">Az Etetőszék csip</h2>
 <p>Az <em>Etetőszék</em> csip azokat a helyeket mutatja, ahol az OSM-ben etetőszék szerepel: <code>highchair=yes</code> vagy 0-nál nagyobb szám. A <code>highchair=no</code> vagy a <code>0</code> rögzített „nem”. Egy címke nélküli hely nem etetőszék nélküli hely, az OSM egyszerűen nem mond róla semmit, így a csip kihagyja, anélkül hogy bármit állítana. Az olyan érték, amelyet a térkép nem tud olvasni, például <code>ja</code> vagy <code>1+</code>, szintén nem számít, és a felugró ablak nem mutat hozzá sort. A csip szűri a jelölőket és a kék karikákat, és semmit sem színez.</p>
 <p>Egy étkezőhely (kávézó, étterem, kocsma és hasonlók) vagy családi hely (óvoda, könyvtár, közösségi ház és hasonlók) jelölőjén a felugró ablak megkérdezi, amíg az OSM nem mond róla semmit: <em>Van etetőszék?</em> A válaszod <code>highchair=yes</code> vagy <code>highchair=no</code> formában kerül az OSM-be, a saját fiókod alatt, ugyanúgy, mint egy válasz a helyiségről.</p>
 
-<h2>Hogyan javíts ki egy szürke jelölőt</h2>
+<h2 id="grey-pin">Hogyan javíts ki egy szürke jelölőt</h2>
 <p>A szürke azt jelenti: hiányzik egy válasz. Hol van a pelenkázóasztal? Erre bárki válaszolhat
 ingyenes OSM-fiókkal, a helyszínen, egy percen belül:</p>
 <ul>
+  <li><strong>Az appban (a leggyorsabb):</strong> koppints a szürke jelölőre. A felugró ablak ezt kérdezi: <em>Melyik helyiségben van a pelenkázóasztal?</em> Koppints a(z) <em>Férfi mosdó</em>, <em>Női mosdó</em>, <em>Női és férfi</em> gombra, vagy a <em>További helyek …</em> alatt egy másik helyiségre. Egyszer bejelentkezel az OSM-mel, a válasz a saját fiókod alatt mentődik, és a jelölő néhány percen belül frissül. Ha a helymeghatározó gombra koppintasz egy szürke jelölő 75&nbsp;m-es körzetében, egy kártya megkérdezi, hogy most ott vagy-e; <em>Válasz a kérdésre</em> ugyanezt az ablakot nyitja meg.</li>
   <li><strong>MapComplete (bármelyik telefonon, böngészőben):</strong> a szürke jelölőn a
       &bdquo;Válaszolás a MapCompleten&rdquo; ugyanazt az objektumot nyitja meg a PapaMap saját
       MapComplete-témájában &mdash; minden jelölőnél ugyanígy, hogy a szerkesztések felismerhetők
@@ -285,6 +304,8 @@ jelentkezel be; a válasz a fiókod alatt mentődik az OpenStreetMapre, a jelöl
 később megjelenik (a térkép odarepül). Ha a hely nincs a listában, használd a <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMap
 MapComplete-témáját</a> (a párbeszédablak alján lévő link). Vagy az OSM saját szerkesztőjét, az alábbi
 lépések továbbra is működnek.</p>
+<details>
+<summary>Az OSM saját szerkesztőjével (iD)</summary>
 <p>A hely szinte biztosan már létezik az OSM-ben. Csak a <code>changing_table</code> címke
 hiányzik. Az OSM saját szerkesztőjében (iD) ez körülbelül két percet vesz igénybe:</p>
 <ol>
@@ -307,12 +328,13 @@ hiányzik. Az OSM saját szerkesztőjében (iD) ez körülbelül két percet ves
       (&bdquo;pelenkázóasztal helyiségének megadása&rdquo;), és töltsd fel. Az OSM-en egy percen
       belül élesedik, a PapaMapen néhány perccel később.</li>
 </ol>
+</details>
 <p class="muted">Kérjük, csak azt címkézd, amit saját magad láttál. Az OSM azt rögzíti, ami van,
 nem azt, aminek lennie kellene. Ha nem tudod a helyiséget, önmagában a
 <code>changing_table=yes</code> is hasznos: a helyből szürke jelölő lesz, és a helyiségre
 vonatkozó kérdésre a következő apa válaszol.</p>
 
-<h2>Miért nem működik az OSM-ből készített ellátottsági mutató</h2>
+<h2 id="no-ranking">Miért nem működik az OSM-ből készített ellátottsági mutató</h2>
 <p>A kézenfekvő nagyobb projekt egy városonkénti férfi-nő mosdóellátottsági arány lenne. Ez az a
 szám, amin a &bdquo;potty parity&rdquo; (mosdóegyenlőség) érv valójában múlik. Ezt nem lehet
 kiszámítani az OpenStreetMapből. Ezt még építés előtt leellenőriztük, egy nyolc városmagra
@@ -347,7 +369,7 @@ Bécs, Melbourne; 2026.&nbsp;júl.&nbsp;26.):</p>
 <p>Az egyetlen becsületes állítás tehát ez: magát az ellátottságot ma még nem lehet mérni nyílt
 adatokból. Ez az oldal azt méri, ami mérhető, a hiányokból pedig hozzájárulási lehetőséget csinál.</p>
 
-<h2>Az egyetlen kiszámítható tény: hol vannak az asztalok</h2>
+<h2 id="where-tables">Az egyetlen kiszámítható tény: hol vannak az asztalok</h2>
 <p>A <code>changing_table:location</code>, amennyire tudjuk, az egyetlen nyílt szótár, amely
 rögzíti, melyik helyiségben van a pelenkázóasztal. Ritkán fordul elő:
 <span data-stat="location_total">3&nbsp;659</span> a világ <span data-stat="ct_total">77&nbsp;000</span>
@@ -366,15 +388,7 @@ pelenkázóasztalok alapértelmezés szerint a női mosdóban lógnak. Ez kizár
 feltételezi, ki felel a pelenkázásért. Ez a térkép láthatóvá teszi a hiányzó adatokat. És könnyen
 javíthatóvá.</p>
 
-<h2 id="related">További családi térképek az OpenStreetMapen</h2>
-<p>A PapaMap egyetlen kérdésre válaszol: eljut-e egy apa a pelenkázóasztalhoz? Játszóterekhez és más családbarát helyekhez érdemes megnézni az ugyanezekre a nyílt adatokra épülő térképeket is:</p>
-<ul>
-  <li><a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a> &mdash; családbarát helyek egész Európában: pelenkázóasztalok, játszósarkok, etetőszékek</li>
-  <li><a href="https://spieli.eu">spieli.eu</a> &mdash; játszóterek térképe</li>
-  <li><a href="https://knudli.de">Knudli</a> &mdash; játszótérkereső Androidra és böngészőben</li>
-</ul>
-
-<h2>Adatlicenc és forrásmegjelölés</h2>
+<h2 id="licence">Adatlicenc és forrásmegjelölés</h2>
 <p>Minden térképadat &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 közreműködők</a>, elérhető az
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a> licenc
@@ -383,7 +397,7 @@ szintén ODbL licencesek. A globális címkestatisztikák a
 <a href="https://taginfo.openstreetmap.org/">taginfo</a>-ból származnak. Az oldal saját kódja
 MIT licenc alatt áll.</p>
 
-<h2>Adatvédelem</h2>
+<h2 id="privacy">Adatvédelem</h2>
 <p>Statikus weboldal. Nincsenek fiókok, nincsenek sütik, nincs elemzés, nincsenek követő
 szkriptek. Az oldal semmit sem tárol rólad, és nincs adatbázisa. A térképcsempék az OpenStreetMap
 csempekiszolgálóiról érkeznek; ezekre a kérésekre az
@@ -399,7 +413,7 @@ nem megy át. Hivatalos oldalak:
 állapotában. A helyi számok ugyanabból az éjszakai lekérdezésből származnak, amely a térképet is
 felépíti.</p>
 
-<h2>Hogyan készül ez az oldal</h2>
+<h2 id="how-made">Hogyan készül ez az oldal</h2>
 <p>Kódoláshoz és a szövegek megfogalmazásához AI segítségét is igénybe veszem. Mindent viszont a
 saját szememmel is átnézek.</p>
 

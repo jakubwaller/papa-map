@@ -124,8 +124,25 @@
 <p class="muted">Stolovi za previjanje do kojih tata može doći. Svjetski brojevi iz taginfo ispod
 dolaze iz noćnog builda. Uzorak iz osam gradskih centara je od 26.&nbsp;jul&nbsp;2026 i ostaje
 takav.</p>
+<nav class="muted" aria-label="Sadržaj"><strong>Sadržaj</strong>
+<ul>
+  <li><a href="#what">Šta je ova karta. A šta nije.</a></li>
+  <li><a href="#colours">Šta boje znače (tačno pravilo)</a></li>
+  <li><a href="#mum-mode">Prekidač tata/mama</a></li>
+  <li><a href="#play-area">Plavi prsten: kutak za igru</a></li>
+  <li><a href="#wheelchair">Čip Kolica</a></li>
+  <li><a href="#empty-rings">Prazni plavi prstenovi: mjesta za igru bez odgovora</a></li>
+  <li><a href="#high-chair">Čip Hranilica</a></li>
+  <li><a href="#grey-pin">Kako popraviti sivu oznaku</a></li>
+  <li><a href="#contribute">Kako dodati mjesto koje nedostaje</a></li>
+  <li><a href="#no-ranking">Zašto index opremljenosti iz OSM-a ne funkcioniše</a></li>
+  <li><a href="#where-tables">Jedina činjenica koja se može izračunati: gdje su stolovi</a></li>
+  <li><a href="#licence">Licenca podataka &amp; izvor</a></li>
+  <li><a href="#privacy">Privatnost</a></li>
+  <li><a href="#how-made">Kako nastaje ova stranica</a></li>
+</ul></nav>
 
-<h2>Šta je ova karta. A šta nije.</h2>
+<h2 id="what">Šta je ova karta. A šta nije.</h2>
 <p>PapaMap prikazuje mjesta u 44 evropske zemlje — od Islanda do Kipra, od Portugala do Ukrajine, a uz to Australija, Novi Zeland, SAD, Kanada i Japan
 — za koja OpenStreetMap zna da imaju sto
 za previjanje bebe (<code>changing_table=yes</code> ili <code>limited</code>). Boja govori da li
@@ -134,8 +151,9 @@ dešava se na samom OSM-u, preko linkova na svakoj oznaci.</p>
 <p>Ideja je nastala tokom čitanja knjige <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> autorice Caroline Criado Perez.</p>
 <p>Rang lista gradova po opremljenosti toaletama ovo nije. Zašto se to iz otvorenih podataka ne
 može pošteno napraviti, objašnjeno je dalje dole.</p>
+<p>Ovdje se radi samo o stolovima za previjanje. Za igrališta i druga mjesta prilagođena porodicama pogledaj <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> i <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Šta boje znače (tačno pravilo)</h2>
+<h2 id="colours">Šta boje znače (tačno pravilo)</h2>
 <p>Na kartu dolaze samo objekti sa <code>changing_table=yes</code> ili <code>limited</code>
 (<code>no</code> se računa samo u statistici). Boja dolazi iz
 <code>changing_table:location</code>. Vrijednost se dijeli po <code>;</code>, uklanjaju se razmaci,
@@ -153,7 +171,7 @@ sadrži <code>male</code>.</p>
 </ul>
 <p>Objekat s oznakom <code>centralkey</code> (različitom od <code>no</code>) ostaje izvan karte kad ključ zaključava cijela vrata: <code>access=centralkey</code>, sto u WC-u za invalide, ili ništa u oznakama ne kaže da ključ vrijedi samo za jednu kabinu. Objekat s otvorenim muškim i ženskim WC-om i zaključanom kabinom za invalide (<code>wheelchair:access=centralkey</code>, ili <code>male=yes</code> i <code>female=yes</code>) ostaje na karti, siv dok neko ne upiše prostoriju. Euro ključ se dobija samo uz dokaz o invaliditetu, pa većina tata ne prođe kroz ta vrata. Pod čipom <em>Kolica</em> ovi se stolovi vraćaju, vidi dolje.</p>
 
-<h2>Prekidač tata/mama</h2>
+<h2 id="mum-mode">Prekidač tata/mama</h2>
 <p>Tri boje gore odgovaraju na tatino pitanje: Može li tata doći do stola? Za mamu se isti
 odgovor obično čita drugačije — sto u ženskom WC-u ona može koristiti, a i kod stola bez
 zabilježene prostorije većina stoji u prostoriji u koju ona može ući. Prekidač
@@ -176,7 +194,7 @@ dostupan je tati, ali ne i mami. Pipeline te stolove označava posebno, pa su u 
 i ne računaju se u broj gore. Starije verzije aplikacije ih možda i dalje prikazuju zeleno, dok se
 ne ažuriraju.</p>
 
-<h2>Plavi prsten: kutak za igru</h2>
+<h2 id="play-area">Plavi prsten: kutak za igru</h2>
 <p>Oznaka sa plavim prstenom ima i kutak za igru &mdash; mjesto gdje dijete ne samo da presvučeš,
 nego i ostaneš neko vrijeme. Filter <em>S kutkom za igru</em> sužava kartu samo na njih. Mjesto se
 računa ako OSM bilježi bilo šta od ovoga:</p>
@@ -212,11 +230,11 @@ bez obzira na vrijednost, uklanja pitanje. Na <code>leisure=playground</code> be
 <code>indoor=yes</code> pitanje se uopšte ne postavlja &mdash; to mjesto <em>je</em> već mjesto za
 igru, samo ne unutra.</p>
 
-<h2>Čip Kolica</h2>
+<h2 id="wheelchair">Čip Kolica</h2>
 <p>Čip <em>Kolica</em> prikazuje mjesta koja u OSM-u imaju <code>wheelchair=yes</code> ili <code>wheelchair=limited</code>. <code>limited</code> znači jedna stepenica do 7&nbsp;cm ili potrebna pomoć. Uz uključen čip ta mjesta imaju uskličnik od zooma 13, a u prozorčiću piše <em>ograničeno</em>. Sam <code>toilets:wheelchair=yes</code> nije dovoljan, ali ipak stoji u prozorčiću, zajedno s <code>wheelchair:description</code>. Mjesto bez oznake nije nepristupačno, OSM o njemu jednostavno ništa ne kaže, pa čip samo filtrira i ništa ne boji. Plave kružiće (mjesta s kutkom za igru) čip filtrira i označava na isti način.</p>
 <p>Pod ovim čipom, i samo tu, vraćaju se stolovi iza euroključa, s ključem u pribadači: ko treba čip, obično ima ključ. Na običnoj karti, u brojkama i na rang-listi ostaju vani.</p>
 
-<h2>Prazni plavi prstenovi: mjesta za igru bez odgovora</h2>
+<h2 id="empty-rings">Prazni plavi prstenovi: mjesta za igru bez odgovora</h2>
 <p>Isto pravilo odgovara mnogo većem broju mjesta nego što karta ima oznaka. Samo
 <span data-stat="play_tables">111</span> njih ima oznaku na karti. Na još
 <span data-stat="play_places">701</span> mjesto niko nije odgovorio na prvo pitanje: ima li ovdje
@@ -231,14 +249,15 @@ sa lopticama, restoran sa sobom za igru — tata sa malim djetetom ionako ide ta
 zna odgovor. Klik na prsten otvara MapComplete tačno na to jedno pitanje. Odgovori na njega i
 prsten nestaje za nekoliko minuta, a zamjenjuje ga prava oznaka.</p>
 
-<h2>Čip Hranilica</h2>
+<h2 id="high-chair">Čip Hranilica</h2>
 <p>Čip <em>Hranilica</em> prikazuje mjesta za koja je u OSM-u zabilježena hranilica: <code>highchair=yes</code> ili broj veći od 0. <code>highchair=no</code> ili <code>0</code> je zabilježeno &bdquo;ne&ldquo;. Mjesto bez oznake nije mjesto bez hranilice, OSM o njemu jednostavno ništa ne kaže, pa ga čip izostavlja i ništa ne tvrdi. Vrijednost koju karta ne može pročitati, npr. <code>ja</code> ili <code>1+</code>, također se ne računa, i prozorčić za nju ne prikazuje nijedan red. Čip filtrira pinove i plave kružiće i ništa ne boji.</p>
 <p>Na pinu u mjestu za jelo (kafić, restoran, pub i slično) ili u porodičnom mjestu (vrtić, biblioteka, društveni centar i slično) prozorčić pita, dok god OSM ništa ne kaže: <em>Ima li hranilicu?</em> Tvoj odgovor ide u OSM kao <code>highchair=yes</code> ili <code>highchair=no</code>, pod tvojim vlastitim OSM nalogom, isto kao odgovor o prostoriji.</p>
 
-<h2>Kako popraviti sivu oznaku</h2>
+<h2 id="grey-pin">Kako popraviti sivu oznaku</h2>
 <p>Sivo znači da nedostaje jedan odgovor. Gdje je sto za previjanje? Svako sa besplatnim OSM
 nalogom može odgovoriti na to, na licu mjesta, za manje od minute:</p>
 <ul>
+  <li><strong>U aplikaciji (najbrže):</strong> dodirni sivu oznaku. Skočni prozor pita <em>U kojoj je prostoriji sto za previjanje?</em> Dodirni <em>Muški WC</em>, <em>Ženski WC</em>, <em>Ženski i muški</em> ili, ispod <em>Više prostorija …</em>, neku drugu prostoriju. Prijaviš se jednom putem OSM-a, odgovor se sprema pod tvojim vlastitim nalogom, a oznaka se ažurira u roku od nekoliko minuta. Ako dodirneš dugme za lokaciju na manje od 75&nbsp;m od sive oznake, kartica pita jesi li trenutno tamo; <em>Odgovori na pitanje</em> otvara isti prozor.</li>
   <li><strong>MapComplete (bilo koji telefon, u pregledniku):</strong> &bdquo;Odgovori na
       MapComplete&ldquo; na sivoj oznaci otvara isti objekat u PapaMapinoj vlastitoj MapComplete
       temi &mdash; na svakoj oznaci, tako da se izmjene prepoznaju kao odavde. MapComplete jednom
@@ -274,6 +293,8 @@ nema. Prvi put se prijaviš svojim besplatnim OSM nalogom; odgovor se sprema u O
 nalogom, a oznaka se pojavi nekoliko minuta kasnije (karta odleti do nje). Ako mjesta nema na listi,
 koristi <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMap temu u MapComplete</a> (link na dnu dijaloga). Ili koristi vlastiti OSM uređivač,
 koraci ispod i dalje vrijede.</p>
+<details>
+<summary>Pomoću OSM-ovog uređivača (iD)</summary>
 <p>To mjesto skoro sigurno već postoji u OSM-u. Nedostaje samo oznaka <code>changing_table</code>.
 U OSM-ovom vlastitom uređivaču (iD) to traje oko dva minuta:</p>
 <ol>
@@ -296,11 +317,12 @@ U OSM-ovom vlastitom uređivaču (iD) to traje oko dva minuta:</p>
       previjanje&ldquo;), pošalji. Na OSM-u je vidljivo za manje od minute, na PapaMapu
       nekoliko minuta kasnije.</li>
 </ol>
+</details>
 <p class="muted">Molimo, označavaj samo ono što si sam vidio. OSM bilježi ono što jeste, ne ono
 što bi trebalo biti. Ako ne znaš prostoriju, i samo <code>changing_table=yes</code> je korisno:
 mjesto postaje siva oznaka, a sljedeći tata odgovara na pitanje o prostoriji.</p>
 
-<h2>Zašto index opremljenosti iz OSM-a ne funkcioniše</h2>
+<h2 id="no-ranking">Zašto index opremljenosti iz OSM-a ne funkcioniše</h2>
 <p>Očigledan veći projekat bio bi omjer opremljenosti toaletima za muškarce i žene po gradu. Broj
 o kojem se zapravo radi u argumentu &bdquo;potty parity&ldquo;. To se ne može izračunati iz
 OpenStreetMapa. Provjerili smo prije nego što smo počeli graditi, uzorkom iz osam gradskih centara
@@ -335,7 +357,7 @@ OpenStreetMapa. Provjerili smo prije nego što smo počeli graditi, uzorkom iz o
 <p>Zato je jedina poštena tvrdnja: sama opremljenost danas se ne može izmjeriti iz otvorenih
 podataka. Ovaj sajt mjeri ono što je mjerljivo i pretvara praznine u doprinose.</p>
 
-<h2>Jedina činjenica koja se može izračunati: gdje su stolovi</h2>
+<h2 id="where-tables">Jedina činjenica koja se može izračunati: gdje su stolovi</h2>
 <p><code>changing_table:location</code> je, koliko znamo, jedini otvoreni rječnik koji bilježi u
 kojoj se prostoriji nalazi sto za previjanje. Rijetko se koristi:
 <span data-stat="location_total">3.659</span> od <span data-stat="ct_total">77.000</span>
@@ -353,15 +375,7 @@ Pravac se poklapa s onim što je odavno dokumentovano na drugim mjestima: stolov
 defaultu vise u ženskom WC-u. To zatvara vrata tatama, i tiho pretpostavlja ko je zadužen za
 pelene. Ova karta čini nedostajuće podatke vidljivim. I lako popravljivim.</p>
 
-<h2 id="related">Druge porodične karte na OpenStreetMapu</h2>
-<p>PapaMap odgovara na jedno pitanje: može li tata doći do stola za previjanje? Za igrališta i druga mjesta prilagođena porodicama vrijedi pogledati i ove karte izgrađene na istim otvorenim podacima:</p>
-<ul>
-  <li><a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a> &mdash; mjesta prilagođena porodicama širom Evrope: stolovi za previjanje, kutci za igru, stolice za hranjenje</li>
-  <li><a href="https://spieli.eu">spieli.eu</a> &mdash; karta igrališta</li>
-  <li><a href="https://knudli.de">Knudli</a> &mdash; tražilica igrališta za Android i u pregledniku</li>
-</ul>
-
-<h2>Licenca podataka &amp; izvor</h2>
+<h2 id="licence">Licenca podataka &amp; izvor</h2>
 <p>Svi podaci karte &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, dostupni pod licencom
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -369,7 +383,7 @@ GeoJSON i statistički fajlovi koje ovaj sajt nudi izvedeni su iz OSM-a i zato s
 Globalna statistika oznaka dolazi sa <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Vlastiti kod sajta je pod MIT licencom.</p>
 
-<h2>Privatnost</h2>
+<h2 id="privacy">Privatnost</h2>
 <p>Statički sajt. Bez naloga, bez kolačića, bez analitike, bez skripti za praćenje. Sajt o tebi ne
 čuva ništa i nema bazu podataka. Pločice karte dolaze sa OpenStreetMap-ovih servera za pločice; ti
 zahtjevi potpadaju pod
@@ -383,7 +397,7 @@ uređuješ pod svojim vlastitim OSM nalogom. Ništa ne prolazi kroz nas. Zvanič
 26.&nbsp;jul&nbsp;2026, i statistika ključeva iz taginfo prema datumu navedenom gore. Lokalni
 brojevi dolaze iz istog noćnog upita koji gradi kartu.</p>
 
-<h2>Kako nastaje ova stranica</h2>
+<h2 id="how-made">Kako nastaje ova stranica</h2>
 <p>Za programiranje i pisanje tekstova koristim AI. Sve ipak prolazi kroz moje oči.</p>
 
 <script>

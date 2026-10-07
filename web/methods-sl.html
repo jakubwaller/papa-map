@@ -124,8 +124,25 @@
 <p class="muted">Previjalne mize, ki jih doseže oče. Spodnje svetovne številke iz taginfo prihajajo iz
 nočne posodobitve. Vzorec iz osmih mestnih središč je z dne 26.&nbsp;jul.&nbsp;2026 in ostaja
 tak.</p>
+<nav class="muted" aria-label="Vsebina"><strong>Vsebina</strong>
+<ul>
+  <li><a href="#what">Kaj ta zemljevid je. In kaj ni.</a></li>
+  <li><a href="#colours">Kaj pomenijo barve (natančno pravilo)</a></li>
+  <li><a href="#mum-mode">Stikalo Oče-Mama</a></li>
+  <li><a href="#play-area">Modri obroč: igralni kotiček</a></li>
+  <li><a href="#wheelchair">Čip Invalidski voziček</a></li>
+  <li><a href="#empty-rings">Prazni modri obroči: kraji za igro brez odgovora</a></li>
+  <li><a href="#high-chair">Čip Otroški stolček</a></li>
+  <li><a href="#grey-pin">Kako popraviti sivo bucko</a></li>
+  <li><a href="#contribute">Kako dodati manjkajoč kraj</a></li>
+  <li><a href="#no-ranking">Zakaj ocena ponudbe iz OSM ne deluje</a></li>
+  <li><a href="#where-tables">Edino izračunljivo dejstvo: kje so mize</a></li>
+  <li><a href="#licence">Licenca podatkov &amp; navedba vira</a></li>
+  <li><a href="#privacy">Zasebnost</a></li>
+  <li><a href="#how-made">Kako nastaja ta stran</a></li>
+</ul></nav>
 
-<h2>Kaj ta zemljevid je. In kaj ni.</h2>
+<h2 id="what">Kaj ta zemljevid je. In kaj ni.</h2>
 <p>PapaMap prikazuje kraje v 44 evropskih državah — od Islandije do Cipra, od Portugalske do
 Ukrajine, pa tudi Avstralija, Nova Zelandija, ZDA, Kanada in Japonska —, kjer OpenStreetMap
 ve za previjalno mizo za dojenčke
@@ -135,8 +152,9 @@ poteka na samem OSM, prek povezav pri vsaki bucki.</p>
 <p>Ideja se je porodila ob branju knjige <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> avtorice Caroline Criado Perez.</p>
 <p>Lestvica, katero mesto ima najboljšo ponudbo stranišč, to ni. Zakaj tega iz odprtih podatkov
 pošteno ni mogoče narediti, je pojasnjeno spodaj.</p>
+<p>Tu gre samo za previjalne mize. Za igrišča in druga družinam prijazna mesta glej <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> in <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Kaj pomenijo barve (natančno pravilo)</h2>
+<h2 id="colours">Kaj pomenijo barve (natančno pravilo)</h2>
 <p>Na zemljevid pridejo samo objekti s <code>changing_table=yes</code> ali <code>limited</code>
 (<code>no</code> se šteje samo v statistiki). Barva izhaja iz
 <code>changing_table:location</code>. Vrednost se razdeli pri <code>;</code>, obreže presledkov,
@@ -154,7 +172,7 @@ vsebuje <code>male</code>.</p>
 </ul>
 <p>Objekt s tagom <code>centralkey</code> (drugačnim od <code>no</code>) ostane zunaj zemljevida, ko ključ zapira celotna vrata: <code>access=centralkey</code>, miza v stranišču za invalide, ali pa nič v tagih ne pove, da ključ velja le za eno kabino. Objekt z odprtim moškim in ženskim straniščem ter zaklenjeno kabino za invalide (<code>wheelchair:access=centralkey</code>, ali <code>male=yes</code> in <code>female=yes</code>) ostane na zemljevidu, siv, dokler kdo ne vpiše prostora. Evro ključ dobiš samo z dokazilom o invalidnosti, zato večina očetov skozi ta vrata ne pride. Pod čipom <em>Invalidski voziček</em> se te mize vrnejo, glej spodaj.</p>
 
-<h2>Stikalo Oče-Mama</h2>
+<h2 id="mum-mode">Stikalo Oče-Mama</h2>
 <p>Tri barve zgoraj odgovarjajo na očetovo vprašanje: Ali oče pride do mize? Za mamo se isti
 odgovor večinoma bere drugače — mizo v ženskem stranišču lahko uporabi, in tudi pri mizi brez
 zabeleženega prostora je večina v prostoru, v katerega lahko vstopi. Stikalo <em>Oče / Mama</em>
@@ -176,7 +194,7 @@ dosegljiva očetu, ne pa materi. Cevovod te mize označi posebej, zato so v nač
 ne štejejo v število zgoraj. Starejše različice aplikacije jih morda še vedno prikazujejo zelene,
 dokler niso posodobljene.</p>
 
-<h2>Modri obroč: igralni kotiček</h2>
+<h2 id="play-area">Modri obroč: igralni kotiček</h2>
 <p>Bucka z modrim obročem ima poleg tega tudi igralni kotiček &mdash; kraj, kjer otroka ne samo
 previješ, ampak tudi malo ostaneš. Filter <em>Z igralnim kotičkom</em> zemljevid zoži samo na te
 kraje. Kraj šteje, če OSM zabeleži karkoli od tega:</p>
@@ -212,11 +230,11 @@ glede na vrednost, umakne vprašanje. Pri <code>leisure=playground</code> brez
 <code>indoor=yes</code> vprašanja sploh ni &mdash; kraj <em>je</em> že kraj za igro, samo ne v
 notranjosti.</p>
 
-<h2>Čip Invalidski voziček</h2>
+<h2 id="wheelchair">Čip Invalidski voziček</h2>
 <p>Čip <em>Invalidski voziček</em> prikazuje kraje, ki imajo v OSM <code>wheelchair=yes</code> ali <code>wheelchair=limited</code>. <code>limited</code> pomeni eno stopnico do 7&nbsp;cm ali potrebno pomoč. Z vklopljenim čipom imajo ti kraji od povečave 13 klicaj, v pojavnem oknu pa piše <em>omejeno</em>. Samo <code>toilets:wheelchair=yes</code> ne zadošča, je pa vseeno v pojavnem oknu, skupaj z <code>wheelchair:description</code>. Kraj brez oznake ni nedostopen, OSM o njem preprosto ničesar ne pove, zato čip le filtrira in ničesar ne barva. Modre kroge (kraje s kotičkom za igro) čip filtrira in označuje enako.</p>
 <p>Pod tem čipom, in samo tam, se vrnejo mize za evroključem, s ključem v bucki: kdor potrebuje čip, ima navadno ključ. Na običajnem zemljevidu, v številkah in na lestvici ostanejo zunaj.</p>
 
-<h2>Prazni modri obroči: kraji za igro brez odgovora</h2>
+<h2 id="empty-rings">Prazni modri obroči: kraji za igro brez odgovora</h2>
 <p>Isto pravilo ustreza veliko več krajem, kot jih ima zemljevid bucke. Samo
 <span data-stat="play_tables">111</span> od njih ima bucko.
 Pri še <span data-stat="play_places">701</span> ni nihče odgovoril na prvo vprašanje: je tu
@@ -232,14 +250,15 @@ ko je enkrat tam, odgovor pozna. Klik na obroč odpre MapComplete natanko pri te
 Odgovoriš, in obroč izgine v nekaj minutah, namesto njega pa se pojavi prava
 bucka.</p>
 
-<h2>Čip Otroški stolček</h2>
+<h2 id="high-chair">Čip Otroški stolček</h2>
 <p>Čip <em>Otroški stolček</em> prikazuje kraje, kjer OSM beleži otroški stolček: <code>highchair=yes</code> ali število nad 0. <code>highchair=no</code> ali <code>0</code> je zabeležen &bdquo;ne&ldquo;. Kraj brez oznake ni kraj brez otroškega stolčka, OSM o njem preprosto ničesar ne pove, zato ga čip izpusti, ne da bi karkoli trdil. Vrednost, ki je zemljevid ne zna prebrati, na primer <code>ja</code> ali <code>1+</code>, prav tako ne šteje, pojavno okno pa zanjo ne pokaže nobene vrstice. Čip filtrira bucke in modre obroče ter ničesar ne barva.</p>
 <p>Pri bucki v gostinskem lokalu (kavarna, restavracija, gostilna in podobno), ali v kraju za družine (vrtec, knjižnica, skupnostni center in podobno) pojavno okno vpraša, dokler OSM o tem nič ne pove: <em>Ali imajo otroški stolček?</em> Tvoj odgovor gre v OSM kot <code>highchair=yes</code> ali <code>highchair=no</code>, pod tvojim lastnim računom, tako kot odgovor o prostoru.</p>
 
-<h2>Kako popraviti sivo bucko</h2>
+<h2 id="grey-pin">Kako popraviti sivo bucko</h2>
 <p>Siva pomeni, da manjka en odgovor. Kje je previjalna miza? Nanj lahko kdorkoli z brezplačnim
 računom OSM odgovori kar na kraju samem, v manj kot minuti:</p>
 <ul>
+  <li><strong>V aplikaciji (najhitreje):</strong> tapni sivo bucko. Okno vpraša <em>V katerem prostoru je previjalna miza?</em> Tapni <em>Moški WC</em>, <em>Ženski WC</em>, <em>Ženski in moški</em> ali pod <em>Več prostorov …</em> drug prostor. Enkrat se prijaviš z OSM, odgovor se shrani pod tvojim računom, bucka pa se posodobi v nekaj minutah. Če tapneš gumb za lokacijo do 75&nbsp;m od sive bucke, te kartica vpraša, ali si zdaj tam; <em>Odgovori na vprašanje</em> odpre isto okno.</li>
   <li><strong>MapComplete (kateri koli telefon, v brskalniku):</strong> &bdquo;Odgovori na
       MapComplete&ldquo; pri sivi bucki odpre isti objekt v lastni MapComplete temi PapaMap
       &mdash; pri vsaki bucki, da so popravki prepoznavni kot taki, ki prihajajo od tu.
@@ -274,6 +293,8 @@ je ni. Prvič se prijaviš z brezplačnim računom OSM; odgovor se shrani v Open
 računom, žebljiček pa se pojavi čez nekaj minut (zemljevid poleti do njega). Če kraja ni na seznamu,
 uporabi <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">temo PapaMap v MapComplete</a> (povezava na dnu pogovornega okna). Ali lastni urejevalnik
 OSM, spodnji koraki še vedno delujejo.</p>
+<details>
+<summary>Z OSM-ovim urejevalnikom (iD)</summary>
 <p>Kraj v OSM skoraj zagotovo že obstaja. Manjka samo tag <code>changing_table</code>. V lastnem
 urejevalniku OSM (iD) to traja približno dve minuti:</p>
 <ol>
@@ -296,11 +317,12 @@ urejevalniku OSM (iD) to traja približno dve minuti:</p>
       previjalne mize&ldquo;), naloži. Na OSM je vidno v minuti, na PapaMap nekaj minut
       pozneje.</li>
 </ol>
+</details>
 <p class="muted">Prosimo, označuj samo tisto, kar si videl na lastne oči. OSM beleži, kar je, ne
 kar bi moralo biti. Če prostora ne poznaš, je koristen že sam <code>changing_table=yes</code>:
 kraj postane siva bucka, naslednji oče pa odgovori na vprašanje o prostoru.</p>
 
-<h2>Zakaj ocena ponudbe iz OSM ne deluje</h2>
+<h2 id="no-ranking">Zakaj ocena ponudbe iz OSM ne deluje</h2>
 <p>Očiten večji projekt bi bilo razmerje ponudbe moških in ženskih stranišč po mestih. Številka,
 za katero pri argumentu &bdquo;potty parity&ldquo; v resnici gre. Iz OpenStreetMap je ni mogoče
 izračunati. To smo preverili še pred gradnjo, z vzorcem iz osmih mestnih središč (Berlin, London,
@@ -334,7 +356,7 @@ Pariz, New York, Tokio&nbsp;23&nbsp;okrožij, Amsterdam, Dunaj, Melbourne;
 <p>Edina poštena trditev je torej: same ponudbe danes iz odprtih podatkov ni mogoče izmeriti.
 Ta stran meri, kar je mogoče izmeriti, in iz vrzeli naredi prispevke.</p>
 
-<h2>Edino izračunljivo dejstvo: kje so mize</h2>
+<h2 id="where-tables">Edino izračunljivo dejstvo: kje so mize</h2>
 <p><code>changing_table:location</code> je, kolikor vemo, edini odprt slovar, ki beleži, v
 katerem prostoru je previjalna miza. Je redek:
 <span data-stat="location_total">3.659</span> od <span data-stat="ct_total">77.000</span>
@@ -352,15 +374,7 @@ precenjuj. Smer pa se ujema s tem, kar je že dolgo dokumentirano drugje: previj
 privzeto visijo v ženskem stranišču. To očetom zapre vrata in tiho predpostavlja, kdo skrbi za
 previjanje. Ta zemljevid manjkajoče podatke naredi vidne. In lahko popravljive.</p>
 
-<h2 id="related">Drugi družinski zemljevidi na OpenStreetMap</h2>
-<p>PapaMap odgovarja na eno samo vprašanje: ali oče lahko pride do previjalne mize? Za igrišča in druga družinam prijazna mesta se splača pogledati tudi te zemljevide, zgrajene na istih odprtih podatkih:</p>
-<ul>
-  <li><a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a> &mdash; družinam prijazna mesta po vsej Evropi: previjalne mize, igralni kotički, stolčki za hranjenje</li>
-  <li><a href="https://spieli.eu">spieli.eu</a> &mdash; zemljevid igrišč</li>
-  <li><a href="https://knudli.de">Knudli</a> &mdash; iskalnik igrišč za Android in v brskalniku</li>
-</ul>
-
-<h2>Licenca podatkov &amp; navedba vira</h2>
+<h2 id="licence">Licenca podatkov &amp; navedba vira</h2>
 <p>Vsi podatki zemljevida &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, na voljo pod licenco
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -368,7 +382,7 @@ Datoteke GeoJSON in statistike, ki jih ponuja ta stran, izhajajo iz OSM in so za
 ODbL. Svetovna statistika tagov prihaja iz <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Lastna koda strani je pod licenco MIT.</p>
 
-<h2>Zasebnost</h2>
+<h2 id="privacy">Zasebnost</h2>
 <p>Statična stran. Brez računov, brez piškotkov, brez analitike, brez sledilnih skriptov. Stran
 o tebi ne shranjuje ničesar in nima baze podatkov. Ploščice zemljevida prihajajo s strežnikov
 OpenStreetMap; za te zahteve velja
@@ -384,7 +398,7 @@ svojim lastnim računom OSM. Prek nas ne gre nič. Uradne strani:
 26.&nbsp;jul.&nbsp;2026, in statistika ključev taginfo na dan, naveden zgoraj. Lokalne številke
 prihajajo iz istega nočnega poizvedovanja, ki gradi zemljevid.</p>
 
-<h2>Kako nastaja ta stran</h2>
+<h2 id="how-made">Kako nastaja ta stran</h2>
 <p>Pri kodiranju in pisanju besedil si pomagam z umetno inteligenco. Vse pa gre skozi moje
 človeške oči.</p>
 

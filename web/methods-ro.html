@@ -124,8 +124,25 @@
 <p class="muted">Mese de înfășat la care ajunge un tată. Cifrele taginfo de mai jos, valabile la
 nivel mondial, provin din build-ul nocturn. Eșantionul din opt centre urbane este din
 26&nbsp;iul.&nbsp;2026 și rămâne așa.</p>
+<nav class="muted" aria-label="Cuprins"><strong>Cuprins</strong>
+<ul>
+  <li><a href="#what">Ce este această hartă. Și ce nu este.</a></li>
+  <li><a href="#colours">Ce înseamnă culorile (regula exactă)</a></li>
+  <li><a href="#mum-mode">Comutatorul Tata / Mama</a></li>
+  <li><a href="#play-area">Inelul albastru: zona de joacă</a></li>
+  <li><a href="#wheelchair">Cipul Scaun rulant</a></li>
+  <li><a href="#empty-rings">Inelele albastre goale: locuri de joacă, fără răspuns</a></li>
+  <li><a href="#high-chair">Cipul Scaun înalt pentru copii</a></li>
+  <li><a href="#grey-pin">Cum repari un marcaj gri</a></li>
+  <li><a href="#contribute">Cum adaugi un loc care lipsește</a></li>
+  <li><a href="#no-ranking">De ce un indice al ofertei de toalete din OSM nu funcționează</a></li>
+  <li><a href="#where-tables">Singurul fapt calculabil: unde sunt mesele</a></li>
+  <li><a href="#licence">Licența datelor și atribuire</a></li>
+  <li><a href="#privacy">Confidențialitate</a></li>
+  <li><a href="#how-made">Cum e făcut acest site</a></li>
+</ul></nav>
 
-<h2>Ce este această hartă. Și ce nu este.</h2>
+<h2 id="what">Ce este această hartă. Și ce nu este.</h2>
 <p>PapaMap arată locuri din 44 de țări europene — de la Islanda până la Cipru, de la Portugalia
 până la Ucraina, plus Australia, Noua Zeelandă, Statele Unite, Canada și Japonia — unde OpenStreetMap
 știe despre o masă de
@@ -135,8 +152,9 @@ Corectarea datelor se face chiar pe OSM, prin linkurile de la fiecare marcaj.</p
 <p>Ideea a venit citind cartea <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> de Caroline Criado Perez.</p>
 <p>Un clasament al orașelor după oferta de toalete, asta nu este. De ce așa ceva nu poate fi făcut
 cinstit din date deschise, se explică mai jos.</p>
+<p>Aici e vorba doar despre mesele de înfășat. Pentru locuri de joacă și alte locuri prietenoase cu familiile, vezi <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> și <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Ce înseamnă culorile (regula exactă)</h2>
+<h2 id="colours">Ce înseamnă culorile (regula exactă)</h2>
 <p>Pe hartă ajung doar obiectele cu <code>changing_table=yes</code> sau <code>limited</code>
 (<code>no</code> contează doar în statistici). Culoarea provine din
 <code>changing_table:location</code>. Valoarea este împărțită după <code>;</code>, curățată de
@@ -154,7 +172,7 @@ spații și scrisă cu litere mici, apoi fiecare parte este comparată în într
 </ul>
 <p>Un obiect cu o etichetă <code>centralkey</code> (alta decât <code>no</code>) rămâne în afara hărții când cheia închide toată ușa: <code>access=centralkey</code>, o masă în toaleta pentru persoane cu dizabilități, sau nimic din etichete nu spune că cheia e doar pentru o cabină. Un bloc cu toalete pentru bărbați și femei deschise și o cabină accesibilă încuiată (<code>wheelchair:access=centralkey</code>, sau <code>male=yes</code> și <code>female=yes</code>) rămâne pe hartă, gri până când cineva înregistrează încăperea. Cheia euro se eliberează doar cu dovadă de dizabilitate, așa că majoritatea taților nu trec de ușa aceea. Sub cipul <em>Scaun rulant</em> aceste mese revin, vezi mai jos.</p>
 
-<h2>Comutatorul Tata / Mama</h2>
+<h2 id="mum-mode">Comutatorul Tata / Mama</h2>
 <p>Cele trei culori de mai sus răspund la întrebarea tatălui: poate un tată ajunge la această
 masă? Pentru o mamă, același răspuns se citește de obicei altfel — o masă din toaleta femeilor
 ea o poate folosi, iar și la o masă fără încăpere înregistrată, majoritatea se află într-o
@@ -179,7 +197,7 @@ că numărul de la filtrul verde este mai mic decât în modul tata, exact cu ac
 marchează aceste mese separat, așa că în modul mama sunt roșii și nu sunt incluse în numărul de
 mai sus. Versiunile mai vechi ale aplicației le pot arăta încă verzi, până sunt actualizate.</p>
 
-<h2>Inelul albastru: zona de joacă</h2>
+<h2 id="play-area">Inelul albastru: zona de joacă</h2>
 <p>Un marcaj cu inel albastru are și o zonă de joacă &mdash; un loc unde nu doar schimbi copilul,
 ci mai și rămâi o vreme. Filtrul <em>Cu zonă de joacă</em> reduce harta doar la acestea. Un loc
 contează dacă OSM înregistrează oricare dintre următoarele:</p>
@@ -217,11 +235,11 @@ Inelul apare (sau rămâne absent) după câteva minute. Nimeni nu este
 <code>indoor=yes</code> nu se întreabă niciodată &mdash; locul <em>este</em> deja un loc de joacă,
 doar că nu interior.</p>
 
-<h2>Cipul Scaun rulant</h2>
+<h2 id="wheelchair">Cipul Scaun rulant</h2>
 <p>Cipul <em>Scaun rulant</em> arată locurile cu <code>wheelchair=yes</code> sau <code>wheelchair=limited</code> în OSM. <code>limited</code> înseamnă o treaptă de cel mult 7&nbsp;cm sau că e nevoie de ajutor. Cu cipul activ, aceste locuri au un semn de exclamare de la zoom 13, iar fereastra spune <em>limitat</em>. <code>toilets:wheelchair=yes</code> singur nu ajunge, dar apare totuși în fereastră, împreună cu <code>wheelchair:description</code>. Un loc fără etichetă nu este inaccesibil, OSM pur și simplu nu spune nimic, așa că cipul doar filtrează și nu colorează nimic. Cipul filtrează și marchează la fel cercurile albastre (locuri cu colț de joacă).</p>
 <p>Sub acest cip, și numai acolo, revin mesele din spatele unei chei Euro, cu o cheie desenată în ac: cine are nevoie de cip are de obicei cheia. Pe harta obișnuită, în cifre și în clasament rămân în afară.</p>
 
-<h2>Inelele albastre goale: locuri de joacă, fără răspuns</h2>
+<h2 id="empty-rings">Inelele albastre goale: locuri de joacă, fără răspuns</h2>
 <p>Aceeași regulă se potrivește la mult mai multe locuri decât are harta marcaje. Doar
 <span data-stat="play_tables">111</span> dintre ele au un marcaj.
 La încă <span data-stat="play_places">701</span>, nimeni nu a răspuns la prima întrebare: există
@@ -237,14 +255,15 @@ oricum acolo, iar odată ajuns, știe răspunsul. Un clic pe inel deschide MapCo
 întrebare. Răspunde la ea și inelul dispare în câteva minute, înlocuit de
 un marcaj adevărat.</p>
 
-<h2>Cipul Scaun înalt pentru copii</h2>
+<h2 id="high-chair">Cipul Scaun înalt pentru copii</h2>
 <p>Cipul <em>Scaun înalt pentru copii</em> arată locurile unde OSM înregistrează un scaun înalt pentru copii: <code>highchair=yes</code> sau un număr mai mare decât 0. <code>highchair=no</code> sau <code>0</code> este un „nu” înregistrat. Un loc fără etichetă nu este un loc fără scaun înalt, OSM pur și simplu nu spune nimic, așa că cipul îl lasă deoparte fără să afirme ceva. O valoare pe care harta nu o poate citi, cum ar fi <code>ja</code> sau <code>1+</code>, nu contează nici ea, iar fereastra nu arată niciun rând pentru ea. Cipul filtrează marcajele și inelele albastre și nu colorează nimic.</p>
 <p>La un marcaj dintr-un loc unde se mănâncă (cafenea, restaurant, pub și altele asemenea) sau dintr-un loc pentru familii (grădiniță, bibliotecă, centru comunitar și altele asemenea), fereastra întreabă, cât timp OSM nu spune nimic: <em>Există un scaun înalt pentru copii?</em> Răspunsul tău ajunge în OSM ca <code>highchair=yes</code> sau <code>highchair=no</code>, sub propriul tău cont, la fel ca un răspuns despre încăpere.</p>
 
-<h2>Cum repari un marcaj gri</h2>
+<h2 id="grey-pin">Cum repari un marcaj gri</h2>
 <p>Gri înseamnă că lipsește un răspuns. Unde este masa de înfășat? Oricine are un cont OSM gratuit
 poate răspunde, la fața locului, în mai puțin de un minut:</p>
 <ul>
+  <li><strong>În aplicație (cel mai rapid):</strong> atinge marcajul gri. Fereastra întreabă <em>În ce încăpere este masa de înfășat?</em> Atinge <em>Toaleta bărbaților</em>, <em>Toaleta femeilor</em>, <em>Femei și bărbați</em> sau, în spatele lui <em>Mai multe spații …</em>, altă încăpere. Te autentifici o singură dată cu OSM, răspunsul se salvează pe contul tău și marcajul se actualizează în câteva minute. Dacă atingi butonul de localizare la mai puțin de 75&nbsp;m de un marcaj gri, un card te întreabă dacă ești acolo chiar acum; <em>Răspunde la întrebare</em> deschide aceeași fereastră.</li>
   <li><strong>MapComplete (orice telefon, din browser):</strong> „Răspunde pe
       MapComplete” de pe un marcaj gri deschide același obiect în tema proprie PapaMap pentru
       MapComplete &mdash; la fiecare marcaj, ca să se recunoască editările venite de aici.
@@ -279,6 +298,8 @@ sau că nu există. Prima dată te autentifici cu contul tău OSM gratuit; răsp
 OpenStreetMap cu contul tău, iar pinul apare după câteva minute (harta zboară până la el). Dacă
 locul nu e în listă, folosește <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">tema MapComplete a PapaMap</a> (linkul din josul ferestrei). Sau
 editorul propriu al OSM, pașii de mai jos funcționează în continuare.</p>
+<details>
+<summary>Cu editorul propriu al OSM (iD)</summary>
 <p>Locul aproape sigur există deja în OSM. Lipsește doar eticheta <code>changing_table</code>. În
 editorul propriu al OSM (iD) durează cam două minute:</p>
 <ol>
@@ -301,11 +322,12 @@ editorul propriu al OSM (iD) durează cam două minute:</p>
       înfășat”), încarcă. Apare pe OSM în mai puțin de un minut, pe PapaMap după câteva
       minute.</li>
 </ol>
+</details>
 <p class="muted">Te rugăm să notezi doar ce ai văzut chiar tu. OSM înregistrează ce este, nu ce ar
 trebui să fie. Dacă nu știi încăperea, doar <code>changing_table=yes</code> tot e util: locul
 devine un marcaj gri, iar următorul tată răspunde la întrebarea despre încăpere.</p>
 
-<h2>De ce un indice al ofertei de toalete din OSM nu funcționează</h2>
+<h2 id="no-ranking">De ce un indice al ofertei de toalete din OSM nu funcționează</h2>
 <p>Proiectul mai amplu, evident, ar fi un raport dintre oferta de toalete pentru bărbați și cea
 pentru femei, pe fiecare oraș. Cifra de care depinde de fapt argumentul „egalității la toaletă”.
 Nu poate fi calculată din OpenStreetMap. Am verificat înainte să construim harta, cu un eșantion
@@ -342,7 +364,7 @@ Melbourne; 26&nbsp;iul.&nbsp;2026):</p>
 <p>Așa că singura afirmație cinstită este: oferta în sine nu poate fi măsurată azi din date
 deschise. Acest site măsoară ce se poate măsura și transformă lacunele în contribuții.</p>
 
-<h2>Singurul fapt calculabil: unde sunt mesele</h2>
+<h2 id="where-tables">Singurul fapt calculabil: unde sunt mesele</h2>
 <p><code>changing_table:location</code> este, din câte știm, singurul vocabular deschis care
 înregistrează în ce încăpere se află o masă de înfășat. E folosit rar:
 <span data-stat="location_total">3.659</span> din <span data-stat="ct_total">77.000</span> de
@@ -360,15 +382,7 @@ mult în raportul exact. Direcția se potrivește cu ce s-a documentat de multă
 mesele de înfășat atârnă implicit în toaleta femeilor. Asta îi ține pe tați afară și presupune
 tacit cine se ocupă de scutece. Această hartă face vizibile datele lipsă. Și ușor de corectat.</p>
 
-<h2 id="related">Alte hărți pentru familii pe OpenStreetMap</h2>
-<p>PapaMap răspunde la o singură întrebare: poate ajunge un tată la masa de înfășat? Pentru locuri de joacă și alte locuri prietenoase cu familiile, merită aruncată o privire și pe aceste hărți construite pe aceleași date deschise:</p>
-<ul>
-  <li><a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a> &mdash; locuri prietenoase cu familiile din toată Europa: mese de înfășat, colțuri de joacă, scaune înalte pentru copii</li>
-  <li><a href="https://spieli.eu">spieli.eu</a> &mdash; o hartă a locurilor de joacă</li>
-  <li><a href="https://knudli.de">Knudli</a> &mdash; un căutător de locuri de joacă pentru Android și în browser</li>
-</ul>
-
-<h2>Licența datelor și atribuire</h2>
+<h2 id="licence">Licența datelor și atribuire</h2>
 <p>Toate datele hărții &copy; <a href="https://www.openstreetmap.org/copyright">contribuitorii
 OpenStreetMap</a>, disponibile sub
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -377,7 +391,7 @@ urmare, tot ODbL. Statisticile globale despre etichete provin de la
 <a href="https://taginfo.openstreetmap.org/">taginfo</a>. Codul propriu al site-ului este
 licențiat MIT.</p>
 
-<h2>Confidențialitate</h2>
+<h2 id="privacy">Confidențialitate</h2>
 <p>Un site static. Fără conturi, fără cookie-uri, fără analiză de trafic, fără scripturi de
 urmărire. Site-ul nu stochează nimic despre tine și nu are bază de date. Plăcuțele hărții vin de
 la serverele de tile ale OpenStreetMap; acele cereri intră sub incidența
@@ -393,7 +407,7 @@ site-urile lor, editând cu propriul tău cont OSM. Nimic nu trece prin noi. Pag
 26&nbsp;iul.&nbsp;2026, și statisticile de chei taginfo la data indicată mai sus. Cifrele locale
 provin din aceeași interogare nocturnă care construiește harta.</p>
 
-<h2>Cum e făcut acest site</h2>
+<h2 id="how-made">Cum e făcut acest site</h2>
 <p>Chiar folosesc AI ca să mă ajute la scris cod și la redactarea textelor. Totul trece însă prin
 ochii mei, ca om.</p>
 

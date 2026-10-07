@@ -124,8 +124,25 @@
 <p class="muted">Canviadors a l'abast d'un pare. Les xifres mundials de taginfo de més avall
 provenen del build nocturn. La mostra de vuit centres urbans és del 26&nbsp;jul.&nbsp;2026 i es
 queda així.</p>
+<nav class="muted" aria-label="Contingut"><strong>Contingut</strong>
+<ul>
+  <li><a href="#what">Què és aquest mapa. I què no és.</a></li>
+  <li><a href="#colours">Què signifiquen els colors (la regla exacta)</a></li>
+  <li><a href="#mum-mode">El commutador pare/mare</a></li>
+  <li><a href="#play-area">L'anell blau: racó de jocs</a></li>
+  <li><a href="#wheelchair">El xip Cadira de rodes</a></li>
+  <li><a href="#empty-rings">Els anells blaus buits: llocs per jugar, sense resposta</a></li>
+  <li><a href="#high-chair">El xip Trona</a></li>
+  <li><a href="#grey-pin">Com reparar un pin gris</a></li>
+  <li><a href="#contribute">Com afegir un lloc que falta</a></li>
+  <li><a href="#no-ranking">Per què un índex de disponibilitat a partir d'OSM no funciona</a></li>
+  <li><a href="#where-tables">L'únic fet calculable: on són els canviadors</a></li>
+  <li><a href="#licence">Llicència de les dades i atribució</a></li>
+  <li><a href="#privacy">Privadesa</a></li>
+  <li><a href="#how-made">Com es fa aquest lloc</a></li>
+</ul></nav>
 
-<h2>Què és aquest mapa. I què no és.</h2>
+<h2 id="what">Què és aquest mapa. I què no és.</h2>
 <p>PapaMap mostra llocs de 44 països europeus — des d'Islàndia fins a Xipre, des de Portugal fins
 a Ucraïna, i a més Austràlia, Nova Zelanda, els Estats Units, el Canadà i el Japó — on OpenStreetMap
 sap que hi ha un canviador
@@ -135,8 +152,9 @@ través dels enllaços de cada pin.</p>
 <p>La idea va sorgir llegint el llibre <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> de Caroline Criado Perez.</p>
 <p>Una classificació de quina ciutat té la millor oferta de lavabos, això no ho és. Més avall
 expliquem per què no es pot fer honestament amb dades obertes.</p>
+<p>Aquí només es tracta de canviadors. Per a parcs infantils i altres llocs pensats per a famílies, consulta <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> i <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Què signifiquen els colors (la regla exacta)</h2>
+<h2 id="colours">Què signifiquen els colors (la regla exacta)</h2>
 <p>Al mapa només hi arriben els objectes amb <code>changing_table=yes</code> o
 <code>limited</code> (<code>no</code> només compta a les estadístiques). El color surt de
 <code>changing_table:location</code>. El valor es divideix per <code>;</code>, es retalla, es
@@ -155,7 +173,7 @@ passa a minúscules i cada part es compara sencera. Mai com a subcadena, perquè
 </ul>
 <p>Un objecte amb una etiqueta <code>centralkey</code> (diferent de <code>no</code>) queda fora del mapa quan la clau tanca tota la porta: <code>access=centralkey</code>, un canviador al lavabo adaptat, o res a les etiquetes diu que la clau és només per a una cabina. Un bloc amb lavabos d'homes i de dones oberts i una cabina adaptada tancada amb clau (<code>wheelchair:access=centralkey</code>, o <code>male=yes</code> i <code>female=yes</code>) es queda al mapa, gris fins que algú registri la sala. La clau Euro només es dona amb certificat de discapacitat, així que la majoria de pares no passen per aquesta porta. Sota el xip <em>Cadira de rodes</em> aquests canviadors tornen, vegeu més avall.</p>
 
-<h2>El commutador pare/mare</h2>
+<h2 id="mum-mode">El commutador pare/mare</h2>
 <p>Els tres colors de dalt responen la pregunta del pare: Hi arriba un pare, al canviador? Per a
 una mare, la mateixa resposta normalment es llegeix diferent — un canviador al lavabo de dones
 el pot utilitzar, i també en un canviador sense sala registrada la majoria és en una sala on pot
@@ -181,7 +199,7 @@ pipeline marca aquests canviadors per separat, per això en mode mare són verme
 el número de dalt. Versions més antigues de l'aplicació poden encara mostrar-los en verd fins que
 s'actualitzin.</p>
 
-<h2>L'anell blau: racó de jocs</h2>
+<h2 id="play-area">L'anell blau: racó de jocs</h2>
 <p>Un pin amb un anell blau també té un racó de jocs &mdash; un lloc on no només canvies el nadó,
 sinó que t'hi quedes una estona. El filtre <em>Amb racó de jocs</em> redueix el mapa a aquests
 llocs. Un lloc compta si OSM en registra qualsevol d'aquests:</p>
@@ -218,11 +236,11 @@ manté absent) pocs minuts després. Ningú es pregunta dues vegades: un
 valor, treu la pregunta. En un <code>leisure=playground</code> sense <code>indoor=yes</code> mai
 es pregunta &mdash; el lloc <em>ja és</em> un lloc per jugar, només que no a dins.</p>
 
-<h2>El xip Cadira de rodes</h2>
+<h2 id="wheelchair">El xip Cadira de rodes</h2>
 <p>El xip <em>Cadira de rodes</em> mostra els llocs amb <code>wheelchair=yes</code> o <code>wheelchair=limited</code> a OSM. <code>limited</code> vol dir un graó de fins a 7&nbsp;cm, o cal ajuda. Amb el xip activat, aquests llocs porten un signe d'exclamació a partir del zoom 13, i la finestra diu <em>limitat</em>. <code>toilets:wheelchair=yes</code> tot sol no és suficient, però apareix igualment a la finestra, amb <code>wheelchair:description</code>. Un lloc sense l'etiqueta no és inaccessible, OSM simplement no en diu res, així que el xip només filtra i no acoloreix res. El xip filtra i marca igual els cercles blaus (llocs amb racó de joc).</p>
 <p>Sota aquest xip, i només aquí, tornen els canviadors darrere una clau Euro, amb una clau dibuixada a l'agulla: qui necessita el xip sol tenir la clau. Al mapa normal, als números i a la classificació queden fora.</p>
 
-<h2>Els anells blaus buits: llocs per jugar, sense resposta</h2>
+<h2 id="empty-rings">Els anells blaus buits: llocs per jugar, sense resposta</h2>
 <p>La mateixa regla afecta molts més llocs dels que el mapa té pins. Només
 <span data-stat="play_tables">111</span> tenen pin. A
 <span data-stat="play_places">701</span> més, ningú no ha respost la primera pregunta: hi ha un
@@ -238,14 +256,15 @@ i un cop allà, ja sap la resposta. Fent clic a l'anell s'obre MapComplete amb e
 pregunta. Respon-la i l'anell desapareixerà en pocs minuts, substituït per un
 pin de veritat.</p>
 
-<h2>El xip Trona</h2>
+<h2 id="high-chair">El xip Trona</h2>
 <p>El xip <em>Trona</em> mostra els llocs on OSM registra una trona: <code>highchair=yes</code> o un nombre més gran que 0. <code>highchair=no</code> o <code>0</code> és un no registrat. Un lloc sense l'etiqueta no és un lloc sense trona, OSM simplement no en diu res, així que el xip el deixa fora sense afirmar res. Un valor que el mapa no sap llegir, com ara <code>ja</code> o <code>1+</code>, tampoc no compta, i la finestra no hi mostra cap línia. El xip filtra els pins i els cercles blaus i no acoloreix res.</p>
 <p>En un pin d'un lloc per menjar (cafè, restaurant, gelateria i similars) o d'un lloc per a famílies (escola bressol, biblioteca, centre cívic i similars), la finestra pregunta, mentre OSM no en digui res: <em>Hi ha trona?</em> La teva resposta va a OSM com a <code>highchair=yes</code> o <code>highchair=no</code>, amb el teu propi compte, igual que una resposta sobre la sala.</p>
 
-<h2>Com reparar un pin gris</h2>
+<h2 id="grey-pin">Com reparar un pin gris</h2>
 <p>Gris vol dir que falta una resposta. On és el canviador? Qualsevol persona amb un compte
 gratuït d'OSM ho pot respondre, allà mateix, en menys d'un minut:</p>
 <ul>
+  <li><strong>A l'app (el més ràpid):</strong> toca el pin gris. La finestra pregunta <em>A quina sala hi ha el canviador?</em> Toca <em>Lavabo d'homes</em>, <em>Lavabo de dones</em>, <em>Dones i homes</em> o, sota <em>Més espais …</em>, un altre espai. Inicies la sessió una sola vegada amb OSM, la resposta es desa amb el teu compte i el pin s'actualitza en pocs minuts. Si toques el botó d'ubicació a menys de 75&nbsp;m d'un pin gris, una targeta et pregunta si hi ets ara mateix; <em>Respon la pregunta</em> obre la mateixa finestra.</li>
   <li><strong>MapComplete (qualsevol mòbil, al navegador):</strong> &ldquo;Respon a
       MapComplete&rdquo; en un pin gris obre el mateix objecte al tema propi de PapaMap a
       MapComplete &mdash; a tots els pins, perquè les edicions es reconeguin com a fetes des
@@ -280,6 +299,8 @@ primera vegada inicies sessió amb el teu compte gratuït d'OSM; la resposta es 
 amb el teu compte i el pin apareix uns minuts després (el mapa hi vola). Si el lloc no és a la llista,
 fes servir el <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">tema de MapComplete de PapaMap</a> (l'enllaç al final del diàleg). O l'editor propi
 d'OSM, els passos de sota segueixen funcionant.</p>
+<details>
+<summary>Amb l'editor d'OSM (iD)</summary>
 <p>El lloc gairebé segur que ja existeix a OSM. Només falta l'etiqueta <code>changing_table</code>.
 Amb l'editor propi d'OSM (iD) això triga uns dos minuts:</p>
 <ol>
@@ -302,11 +323,12 @@ Amb l'editor propi d'OSM (iD) això triga uns dos minuts:</p>
       canviador&rdquo;), puja els canvis. En un minut és a OSM, i a PapaMap pocs minuts
       després.</li>
 </ol>
+</details>
 <p class="muted">Etiqueta només el que hagis vist tu mateix. OSM registra el que hi ha, no el que
 hauria d'haver-hi. Si no saps la sala, <code>changing_table=yes</code> tot sol ja és útil: el lloc
 esdevé un pin gris, i el proper pare respon la pregunta de la sala.</p>
 
-<h2>Per què un índex de disponibilitat a partir d'OSM no funciona</h2>
+<h2 id="no-ranking">Per què un índex de disponibilitat a partir d'OSM no funciona</h2>
 <p>El projecte més gran i evident seria una proporció d'oferta de lavabos entre homes i dones per
 ciutat. El número del qual depèn de debò l'argument de la &ldquo;paritat de lavabos&rdquo;. No es
 pot calcular a partir d'OpenStreetMap. Ho vam comprovar abans de construir el lloc, amb una mostra
@@ -343,7 +365,7 @@ Amsterdam, Viena, Melbourne;
 <p>Així que l'única afirmació honesta és: avui l'oferta en si no es pot mesurar amb dades obertes.
 Aquest lloc mesura el que es pot mesurar i converteix els buits en contribucions.</p>
 
-<h2>L'únic fet calculable: on són els canviadors</h2>
+<h2 id="where-tables">L'únic fet calculable: on són els canviadors</h2>
 <p><code>changing_table:location</code> és, pel que sabem, l'únic vocabulari obert que registra en
 quina sala hi ha un canviador. És escàs:
 <span data-stat="location_total">3.659</span> de <span data-stat="ct_total">77.000</span>
@@ -362,15 +384,7 @@ llocs: els canviadors pengen per defecte al lavabo de dones. Això deixa els par
 fet, sense dir-ho, qui s'encarrega dels bolquers. Aquest mapa fa visibles les dades que falten. I
 fàcils de corregir.</p>
 
-<h2 id="related">Altres mapes per a famílies a OpenStreetMap</h2>
-<p>PapaMap respon una sola pregunta: un pare pot arribar al canviador? Per a parcs infantils i altres llocs pensats per a famílies, val la pena donar un cop d'ull a aquests mapes basats en les mateixes dades obertes:</p>
-<ul>
-  <li><a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a> &mdash; llocs pensats per a famílies de tot Europa: canviadors, racons de joc, trones</li>
-  <li><a href="https://spieli.eu">spieli.eu</a> &mdash; un mapa de parcs infantils</li>
-  <li><a href="https://knudli.de">Knudli</a> &mdash; un cercador de parcs infantils per a Android i al navegador</li>
-</ul>
-
-<h2>Llicència de les dades i atribució</h2>
+<h2 id="licence">Llicència de les dades i atribució</h2>
 <p>Totes les dades del mapa &copy; <a href="https://www.openstreetmap.org/copyright">col·laboradors
 d'OpenStreetMap</a>, disponibles sota la
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -378,7 +392,7 @@ Els fitxers GeoJSON i d'estadístiques que serveix aquest lloc deriven d'OSM i, 
 ODbL. Les estadístiques globals d'etiquetes provenen de
 <a href="https://taginfo.openstreetmap.org/">taginfo</a>. El codi del lloc en si té llicència MIT.</p>
 
-<h2>Privadesa</h2>
+<h2 id="privacy">Privadesa</h2>
 <p>Un lloc estàtic. Sense comptes, sense galetes, sense analítica, sense scripts de seguiment. El
 lloc no desa res sobre tu i no té base de dades. Les tessel·les del mapa vénen dels servidors de
 tessel·les d'OpenStreetMap; aquestes peticions es regeixen per la
@@ -392,7 +406,7 @@ editant amb el teu propi compte d'OSM. Res no passa per nosaltres. Pàgines form
 26&nbsp;jul.&nbsp;2026, i les estadístiques de la clau a taginfo a la data indicada més amunt. Les
 xifres locals provenen de la mateixa consulta nocturna que construeix el mapa.</p>
 
-<h2>Com es fa aquest lloc</h2>
+<h2 id="how-made">Com es fa aquest lloc</h2>
 <p>Faig servir IA per ajudar-me a programar i a escriure els textos. Tot i així, ho reviso tot jo
 mateix.</p>
 

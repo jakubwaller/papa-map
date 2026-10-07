@@ -124,8 +124,25 @@
 <p class="muted">Tavolina ndërrimi që i arrin dot një baba. Shifrat botërore nga taginfo më poshtë
 vijnë nga ndërtimi i natës. Kampioni nga tetë qendra qytetesh është nga
 26&nbsp;korr&nbsp;2026 dhe mbetet i tillë.</p>
+<nav class="muted" aria-label="Përmbajtja"><strong>Përmbajtja</strong>
+<ul>
+  <li><a href="#what">Çfarë është kjo hartë. Dhe çfarë nuk është.</a></li>
+  <li><a href="#colours">Çfarë kuptojnë ngjyrat (rregulli i saktë)</a></li>
+  <li><a href="#mum-mode">Ndërruesi Baba-Nënë</a></li>
+  <li><a href="#play-area">Rrethi blu: hapësirë lojërash</a></li>
+  <li><a href="#wheelchair">Çipi Karrige me rrota</a></li>
+  <li><a href="#empty-rings">Rrathët blu bosh: vende loje, pa përgjigje</a></li>
+  <li><a href="#high-chair">Çipi Karrige e lartë për fëmijë</a></li>
+  <li><a href="#grey-pin">Si të rregullosh një shenjues gri</a></li>
+  <li><a href="#contribute">Si të shtosh një vend që mungon</a></li>
+  <li><a href="#no-ranking">Pse një tregues vlerësimi i ofertës nga OSM nuk funksionon</a></li>
+  <li><a href="#where-tables">I vetmi fakt i llogaritshëm: ku ndodhen tavolinat</a></li>
+  <li><a href="#licence">Licenca e të dhënave &amp; burimi</a></li>
+  <li><a href="#privacy">Privatësia</a></li>
+  <li><a href="#how-made">Si është ndërtuar ky sajt</a></li>
+</ul></nav>
 
-<h2>Çfarë është kjo hartë. Dhe çfarë nuk është.</h2>
+<h2 id="what">Çfarë është kjo hartë. Dhe çfarë nuk është.</h2>
 <p>PapaMap tregon vendndodhjet në 44 vende evropiane — nga Islanda deri në Qipro, nga
 Portugalia deri në Ukrainë, si dhe Australia, Zelanda e Re, SHBA-ja, Kanadaja dhe Japonia — për të cilat OpenStreetMap
 di se ka një tavolinë
@@ -134,8 +151,9 @@ një baba mund ta arrijë tavolinën. Harta lexon OSM. Përgjigjet shkojnë drej
 <p>Ideja lindi duke lexuar librin <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> të Caroline Criado Perez.</p>
 <p>Një renditje qytetesh sipas ofertës më të mirë të tualeteve kjo nuk është. Pse kjo nuk mund
 të bëhet me ndershmëri nga të dhëna të hapura, shpjegohet më poshtë.</p>
+<p>Këtu bëhet fjalë vetëm për tavolinat e ndërrimit. Për sheshet e lojërave dhe vende të tjera miqësore për familjet, shiko <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> dhe <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Çfarë kuptojnë ngjyrat (rregulli i saktë)</h2>
+<h2 id="colours">Çfarë kuptojnë ngjyrat (rregulli i saktë)</h2>
 <p>Në hartë futen vetëm objektet me <code>changing_table=yes</code> ose <code>limited</code>
 (<code>no</code> llogaritet vetëm në statistika). Ngjyra vjen nga
 <code>changing_table:location</code>. Vlera ndahet sipas <code>;</code>, pastrohet nga
@@ -154,7 +172,7 @@ si nënvarg, sepse <code>female_toilet</code> përmban <code>male</code>.</p>
 </ul>
 <p>Një objekt me etiketën <code>centralkey</code> (të ndryshme nga <code>no</code>) mbetet jashtë hartës kur çelësi mbyll gjithë derën: <code>access=centralkey</code>, një tavolinë në tualetin për persona me aftësi të kufizuara, ose asgjë në etiketa nuk thotë se çelësi vlen vetëm për një kabinë. Një bllok me tualete për burra dhe gra të hapura dhe një kabinë të aksesueshme të mbyllur me çelës (<code>wheelchair:access=centralkey</code>, ose <code>male=yes</code> dhe <code>female=yes</code>) mbetet në hartë, gri derisa dikush të regjistrojë dhomën. Çelësi Euro jepet vetëm me dëshmi aftësie të kufizuar, kështu që shumica e baballarëve nuk e kalojnë dot atë derë. Nën çipin <em>Karrige me rrota</em> këto tavolina kthehen, shih më poshtë.</p>
 
-<h2>Ndërruesi Baba-Nënë</h2>
+<h2 id="mum-mode">Ndërruesi Baba-Nënë</h2>
 <p>Tri ngjyrat më sipër u përgjigjen pyetjes së babait: A e arrin një baba tavolinën? Për një
 nënë, e njëjta përgjigje zakonisht lexohet ndryshe — një tavolinë te tualeti i grave ajo mund ta
 përdorë, dhe edhe te një tavolinë pa dhomë të regjistruar, shumica gjendet në një dhomë ku ajo
@@ -178,7 +196,7 @@ vetëm), është e arritshme për një baba, por jo për një nënë. Pipeline-i
 veçmas, prandaj në modin Nënë ato janë të kuqe dhe nuk llogariten në numrin më sipër. Versionet më
 të vjetra të aplikacionit mund t'i shfaqin ende të gjelbra, derisa të përditësohen.</p>
 
-<h2>Rrethi blu: hapësirë lojërash</h2>
+<h2 id="play-area">Rrethi blu: hapësirë lojërash</h2>
 <p>Një shenjues me rreth blu ka gjithashtu edhe një hapësirë lojërash &mdash; një vend ku nuk
 vetëm ndërron fëmijën, por rri edhe pak. Filtri <em>Me hapësirë lojërash</em> ngushton hartën
 vetëm te këto vende. Një vend numërohet nëse OSM regjistron qoftë edhe një nga këto:</p>
@@ -216,11 +234,11 @@ qoftë vlera, e heq pyetjen. Te një <code>leisure=playground</code> pa <code>in
 nuk pyetet kurrë &mdash; vendi <em>është</em> tashmë një vend për të luajtur, thjesht jo
 brenda.</p>
 
-<h2>Çipi Karrige me rrota</h2>
+<h2 id="wheelchair">Çipi Karrige me rrota</h2>
 <p>Çipi <em>Karrige me rrota</em> tregon vendet me <code>wheelchair=yes</code> ose <code>wheelchair=limited</code> në OSM. <code>limited</code> do të thotë një shkallë deri 7&nbsp;cm, ose nevojitet ndihmë. Kur çipi është aktiv, këto vende kanë një pikëçudi nga zmadhimi 13, dhe dritarja thotë <em>i kufizuar</em>. <code>toilets:wheelchair=yes</code> vetëm nuk mjafton, por shfaqet gjithsesi në dritare, bashkë me <code>wheelchair:description</code>. Një vend pa etiketë nuk është i paaksesueshëm, OSM thjesht nuk thotë asgjë, kështu që çipi vetëm filtron dhe nuk ngjyros asgjë. Çipi i filtron dhe i shënon njësoj rrathët blu (vendet me kënd lojërash).</p>
 <p>Nën këtë çip, dhe vetëm aty, kthehen tavolinat pas çelësit Euro, me një çelës në gjilpërë: kush ka nevojë për çipin zakonisht e ka çelësin. Në hartën e zakonshme, në numra dhe në renditje mbeten jashtë.</p>
 
-<h2>Rrathët blu bosh: vende loje, pa përgjigje</h2>
+<h2 id="empty-rings">Rrathët blu bosh: vende loje, pa përgjigje</h2>
 <p>I njëjti rregull përputhet me shumë më tepër vende sesa ka shenjues harta. Vetëm
 <span data-stat="play_tables">111</span> prej tyre kanë shenjues. Në <span data-stat="play_places">701</span> vende të tjera, askush nuk i është përgjigjur
 pyetjes së parë: a ka këtu tavolinë ndërrimi? Po, jo, askush s'e di — OSM nuk thotë asgjë fare.</p>
@@ -235,14 +253,15 @@ do të shkojë atje sido që të jetë, dhe kur të jetë atje, e di përgjigjen
 MapComplete pikërisht te ajo pyetje e vetme. Përgjigju dhe rrethi zhduket brenda pak minutash, i
 zëvendësuar nga një shenjues i vërtetë.</p>
 
-<h2>Çipi Karrige e lartë për fëmijë</h2>
+<h2 id="high-chair">Çipi Karrige e lartë për fëmijë</h2>
 <p>Çipi <em>Karrige e lartë për fëmijë</em> tregon vendet ku OSM shënon një karrige të lartë: <code>highchair=yes</code> ose një numër mbi 0. <code>highchair=no</code> ose <code>0</code> është një «jo» e regjistruar. Një vend pa etiketë nuk është vend pa karrige të lartë, OSM thjesht nuk thotë asgjë, kështu që çipi e lë jashtë pa pohuar asgjë. Një vlerë që harta nuk mund ta lexojë, si <code>ja</code> ose <code>1+</code>, nuk llogaritet as ajo, dhe dritarja nuk tregon asnjë rresht për të. Çipi filtron shenjuesit dhe rrathët blu dhe nuk ngjyros asgjë.</p>
 <p>Te një shenjues në një vend për të ngrënë (kafene, restorant, pijetore e të ngjashme) ose në një vend për familje (kopsht, bibliotekë, qendër komunitare e të ngjashme), dritarja pyet, për sa kohë OSM nuk thotë asgjë: <em>A ka karrige të lartë për fëmijë?</em> Përgjigja jote shkon në OSM si <code>highchair=yes</code> ose <code>highchair=no</code>, nën llogarinë tënde, njësoj si një përgjigje për dhomën.</p>
 
-<h2>Si të rregullosh një shenjues gri</h2>
+<h2 id="grey-pin">Si të rregullosh një shenjues gri</h2>
 <p>Gri do të thotë se mungon një përgjigje. Ku ndodhet tavolina e ndërrimit? Kushdo me një
 llogari falas në OSM mund t'i përgjigjet kësaj, aty për aty, në më pak se një minutë:</p>
 <ul>
+  <li><strong>Në aplikacion (më shpejt):</strong> prek shenjuesin gri. Dritarja pyet <em>Në cilën dhomë është tavolina e ndërrimit?</em> Prek <em>Tualeti i burrave</em>, <em>Tualeti i grave</em>, <em>Gra dhe burra</em> ose, nën <em>Më shumë hapësira …</em>, një hapësirë tjetër. Hyn një herë me OSM, përgjigjja ruhet nën llogarinë tënde dhe shenjuesi përditësohet brenda pak minutash. Nëse prek butonin e vendndodhjes brenda 75&nbsp;m nga një shenjues gri, një kartë pyet nëse je atje tani; <em>Përgjigju pyetjes</em> hap të njëjtën dritare.</li>
   <li><strong>MapComplete (çdo telefon, në shfletues):</strong> «Përgjigju në
       MapComplete» te një shenjues gri hap të njëjtin objekt në temën e vet të PapaMap-it për
       MapComplete &mdash; për çdo shenjues, që ndryshimet të njihen si të ardhura që këtu.
@@ -277,6 +296,8 @@ nuk ka. Herën e parë hyn me llogarinë tënde falas në OSM; përgjigjja ruhet
 llogarinë tënde dhe shenja shfaqet pas pak minutash (harta fluturon drejt saj). Nëse vendi nuk është
 në listë, përdor <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">temën e PapaMap-it për MapComplete</a> (lidhja në fund të dialogut). Ose editorin e
 vetë OSM, hapat më poshtë vazhdojnë të funksionojnë.</p>
+<details>
+<summary>Me editorin e vetë OSM-it (iD)</summary>
 <p>Vendi pothuajse me siguri ekziston tashmë në OSM. Mungon vetëm etiketa
 <code>changing_table</code>. Në editorin e vetë OSM-së (iD) kjo zgjat rreth dy minuta:</p>
 <ol>
@@ -299,11 +320,12 @@ vetë OSM, hapat më poshtë vazhdojnë të funksionojnë.</p>
       tavolinës»), ngarko. Publikohet në OSM brenda një minute, në PapaMap pak minuta më
       vonë.</li>
 </ol>
+</details>
 <p class="muted">Të lutem, etiketo vetëm atë që ke parë vetë. OSM regjistron atë çfarë është, jo
 atë çfarë duhet të jetë. Nëse nuk e di dhomën, vetëm <code>changing_table=yes</code> është ende i
 dobishëm: vendi bëhet shenjues gri, dhe babai tjetër i përgjigjet pyetjes së dhomës.</p>
 
-<h2>Pse një tregues vlerësimi i ofertës nga OSM nuk funksionon</h2>
+<h2 id="no-ranking">Pse një tregues vlerësimi i ofertës nga OSM nuk funksionon</h2>
 <p>Projekti më i madh që bie në sy do të ishte një raport ofertë tualetesh burra-gra për çdo
 qytet. Numri mbi të cilin mbështetet vërtet argumenti i «paritetit të banjove». Nuk mund të
 llogaritet nga OpenStreetMap. E kontrolluam këtë përpara se ta ndërtonim hartën, me një kampion
@@ -341,7 +363,7 @@ Vjenë, Melburn; 26&nbsp;korr&nbsp;2026):</p>
 <p>Pra, i vetmi pohim i ndershëm është: vetë oferta nuk mund të matet sot nga të dhëna të hapura.
 Ky sajt mat atë çfarë matet dot, dhe kthen boshllëqet në kontribute.</p>
 
-<h2>I vetmi fakt i llogaritshëm: ku ndodhen tavolinat</h2>
+<h2 id="where-tables">I vetmi fakt i llogaritshëm: ku ndodhen tavolinat</h2>
 <p>Për sa dimë, <code>changing_table:location</code> është fjalori i vetëm i hapur që regjistron
 në cilën dhomë ndodhet një tavolinë ndërrimi. Është i rrallë:
 <span data-stat="location_total">3&nbsp;659</span> nga <span data-stat="ct_total">77&nbsp;000</span>
@@ -360,15 +382,7 @@ gjetiu: tavolinat e ndërrimit varen si parazgjedhje te tualeti i grave. Kjo ua 
 baballarëve, dhe në heshtje supozon se kush merret me pelenat. Kjo hartë i bën të dukshme të
 dhënat që mungojnë. Dhe të lehta për t'u rregulluar.</p>
 
-<h2 id="related">Harta të tjera për familjet në OpenStreetMap</h2>
-<p>PapaMap i përgjigjet një pyetjeje të vetme: a mund t'i arrijë një baba tavolinës së ndërrimit? Për sheshet e lojërave dhe vende të tjera miqësore për familjet, vlen të hidhet një sy edhe këtyre hartave të ndërtuara mbi të njëjtat të dhëna të hapura:</p>
-<ul>
-  <li><a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a> &mdash; vende miqësore për familjet në gjithë Evropën: tavolina ndërrimi, qoshe lojërash, karrige ushqimi</li>
-  <li><a href="https://spieli.eu">spieli.eu</a> &mdash; një hartë e shesheve të lojërave</li>
-  <li><a href="https://knudli.de">Knudli</a> &mdash; një kërkues i shesheve të lojërave për Android dhe në shfletues</li>
-</ul>
-
-<h2>Licenca e të dhënave &amp; burimi</h2>
+<h2 id="licence">Licenca e të dhënave &amp; burimi</h2>
 <p>Të gjitha të dhënat e hartës &copy; <a href="https://www.openstreetmap.org/copyright">kontribuesit
 e OpenStreetMap</a>, të disponueshme sipas
 <a href="https://opendatacommons.org/licenses/odbl/">Licencës së Bazës së Hapur të të Dhënave
@@ -377,7 +391,7 @@ janë gjithashtu ODbL. Statistikat botërore të etiketave vijnë nga
 <a href="https://taginfo.openstreetmap.org/">taginfo</a>. Kodi i vetë sajtit është nën licencën
 MIT.</p>
 
-<h2>Privatësia</h2>
+<h2 id="privacy">Privatësia</h2>
 <p>Një sajt statik. Pa llogari, pa cookie, pa analitikë, pa skripta ndjekjeje. Sajti nuk ruan
 asgjë për ty dhe nuk ka bazë të dhënash. Pllakëzat e hartës vijnë nga serverët e OpenStreetMap;
 ato kërkesa bien nën
@@ -394,7 +408,7 @@ tyre, duke editiuar nën llogarinë tënde në OSM. Asgjë nuk kalon nëpër ne.
 26&nbsp;korr&nbsp;2026, si dhe statistikat e çelësave nga taginfo sipas datës së dhënë më lart.
 Shifrat vendore vijnë nga i njëjti kërkim nate që ndërton hartën.</p>
 
-<h2>Si është ndërtuar ky sajt</h2>
+<h2 id="how-made">Si është ndërtuar ky sajt</h2>
 <p>E përdor IA-në për të më ndihmuar me kodim dhe hartim tekstesh. Gjithsesi, gjithçka kalon nga
 sytë e mi njerëzorë.</p>
 

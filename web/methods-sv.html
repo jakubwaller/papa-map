@@ -124,8 +124,25 @@
 <p class="muted">Skötbord som en pappa kommer åt. De globala taginfo-siffrorna nedan hämtas av
 det nattliga bygget. Stickprovet över åtta stadskärnor är från 26&nbsp;juli&nbsp;2026 och står
 kvar oförändrat.</p>
+<nav class="muted" aria-label="Innehåll"><strong>Innehåll</strong>
+<ul>
+  <li><a href="#what">Vad den här kartan är. Och vad den inte är.</a></li>
+  <li><a href="#colours">Vad färgerna betyder (den exakta regeln)</a></li>
+  <li><a href="#mum-mode">Omkopplaren pappa/mamma</a></li>
+  <li><a href="#play-area">Den blå ringen: lekhörna</a></li>
+  <li><a href="#wheelchair">Chippet Rullstol</a></li>
+  <li><a href="#empty-rings">De tomma blå ringarna: lekställen utan svar</a></li>
+  <li><a href="#high-chair">Chippet Barnstol</a></li>
+  <li><a href="#grey-pin">Så fixar du en grå nål</a></li>
+  <li><a href="#contribute">Så lägger du till en plats som saknas</a></li>
+  <li><a href="#no-ranking">Varför ett täckningsindex ur OSM inte går</a></li>
+  <li><a href="#where-tables">Det enda som går att räkna fram: var borden står</a></li>
+  <li><a href="#licence">Datalicens &amp; attribution</a></li>
+  <li><a href="#privacy">Integritet</a></li>
+  <li><a href="#how-made">Hur den här sidan blir till</a></li>
+</ul></nav>
 
-<h2>Vad den här kartan är. Och vad den inte är.</h2>
+<h2 id="what">Vad den här kartan är. Och vad den inte är.</h2>
 <p>PapaMap visar platser i 44 europeiska länder — från Island till Cypern, från Portugal till
 Ukraina, samt Australien, Nya Zeeland, USA, Kanada och Japan — där OpenStreetMap
 känner till ett skötbord
@@ -135,8 +152,9 @@ via länkarna på varje nål.</p>
 <p>Idén kom när jag läste boken <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> av Caroline Criado Perez.</p>
 <p>Någon rankning av vilken stad som har bäst tillgång till toaletter är det här inte. Varför det
 inte går att göra ärligt ur öppna data står längre ner.</p>
+<p>Det handlar bara om skötbord. För lekplatser och andra familjevänliga platser, se <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> och <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Vad färgerna betyder (den exakta regeln)</h2>
+<h2 id="colours">Vad färgerna betyder (den exakta regeln)</h2>
 <p>På kartan hamnar bara objekt med <code>changing_table=yes</code> eller <code>limited</code>
 (<code>no</code> räknas bara i statistiken). Färgen kommer från
 <code>changing_table:location</code>. Värdet delas vid <code>;</code>, trimmas, görs till gemener
@@ -154,7 +172,7 @@ och varje del jämförs i sin helhet. Aldrig som delsträng, för <code>female_t
 </ul>
 <p>Ett objekt med en <code>centralkey</code>-tagg (utom <code>no</code>) hålls utanför kartan när nyckeln spärrar hela dörren: <code>access=centralkey</code>, ett bord i handikapptoaletten, eller inget i taggarna säger att nyckeln bara gäller en kabin. En anläggning med öppen herr- och damtoalett och en låst handikappkabin (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> och <code>female=yes</code>) stannar på kartan, grå tills någon registrerar rummet. Euronyckeln får man bara mot styrkt funktionsnedsättning, så de flesta pappor kommer inte genom den dörren. Under chippet <em>Rullstol</em> kommer dessa skötbord tillbaka, se nedan.</p>
 
-<h2>Omkopplaren pappa/mamma</h2>
+<h2 id="mum-mode">Omkopplaren pappa/mamma</h2>
 <p>De tre färgerna ovan svarar på pappas fråga: Kommer en pappa åt bordet? För en mamma läses
 samma svar oftast annorlunda — ett bord på damtoaletten kan hon använda, och även vid ett bord
 utan registrerat rum står de flesta i ett rum hon kommer in i. Omkopplaren <em>Pappa / Mamma</em>
@@ -176,7 +194,7 @@ ensamt), är nåbart för en pappa men inte för en mamma. Pipelinen markerar de
 i mamma-läget är de röda och räknas inte med i siffran ovan. Äldre versioner av appen kan
 fortfarande visa dem gröna, tills de uppdateras.</p>
 
-<h2>Den blå ringen: lekhörna</h2>
+<h2 id="play-area">Den blå ringen: lekhörna</h2>
 <p>En nål med blå ring har dessutom en lekhörna &mdash; en plats där man inte bara byter blöja utan
 också blir kvar en stund. Filtret <em>Med lekhörna</em> i filterraden visar bara dem. En plats räknas
 om något av det här står i OSM:</p>
@@ -212,11 +230,11 @@ registrerat <code>kids_area</code> <em>eller</em> <code>kids_area:indoor</code>,
 tar bort frågan. På en <code>leisure=playground</code> utan <code>indoor=yes</code> ställs den
 aldrig &mdash; platsen <em>är</em> redan ett ställe att leka på, bara inte inomhus.</p>
 
-<h2>Chippet Rullstol</h2>
+<h2 id="wheelchair">Chippet Rullstol</h2>
 <p>Chippet <em>Rullstol</em> visar platser med <code>wheelchair=yes</code> eller <code>wheelchair=limited</code> i OSM. <code>limited</code> betyder ett steg på upp till 7&nbsp;cm, eller att hjälp behövs. Med chippet på har dessa platser ett utropstecken från zoom 13, och popupen säger <em>begränsat</em>. <code>toilets:wheelchair=yes</code> ensamt räcker inte, men står ändå i popupen tillsammans med <code>wheelchair:description</code>. En plats utan taggen är inte otillgänglig, OSM säger bara inget, så chippet filtrerar bara och färgar inget. De blå ringarna (platser med lekhörna) filtrerar och markerar chippet på samma sätt.</p>
 <p>Under detta chip, och bara där, kommer skötborden bakom eurokey tillbaka, med en nyckel i nålen: den som behöver chippet har oftast nyckeln. På den vanliga kartan, i siffrorna och i rankningen stannar de utanför.</p>
 
-<h2>De tomma blå ringarna: lekställen utan svar</h2>
+<h2 id="empty-rings">De tomma blå ringarna: lekställen utan svar</h2>
 <p>Samma regel matchar långt fler platser än kartan har nålar. Bara
 <span data-stat="play_tables">111</span> av dem har en nål. På <span data-stat="play_places">701</span> till har ingen svarat
 på den första frågan: finns det ett skötbord här? Ja, nej, ingen vet — i OSM står det ingenting
@@ -231,14 +249,15 @@ en restaurang med lekrum — en pappa med ett litet barn går dit ändå, och v�
 svaret. Ett klick på ringen öppnar MapComplete direkt på just den frågan. Blir den besvarad
 försvinner ringen inom några minuter, och en riktig nål står där i stället.</p>
 
-<h2>Chippet Barnstol</h2>
+<h2 id="high-chair">Chippet Barnstol</h2>
 <p>Chippet <em>Barnstol</em> visar platser där OSM anger en barnstol: <code>highchair=yes</code> eller ett tal över 0. <code>highchair=no</code> eller <code>0</code> är ett registrerat nej. En plats utan taggen är inte en plats utan barnstol, OSM säger bara inget, så chippet utelämnar den utan att påstå något. Ett värde som kartan inte kan läsa, som <code>ja</code> eller <code>1+</code>, räknas inte heller, och popupen visar ingen rad för det. Chippet filtrerar nålar och blå ringar och färgar inget.</p>
 <p>På en nål vid ett matställe (kafé, restaurang, pub och liknande) eller ett familjeställe (förskola, bibliotek, medborgarhus och liknande) frågar popupen, så länge OSM inte säger något: <em>Finns det en barnstol?</em> Ditt svar går till OSM som <code>highchair=yes</code> eller <code>highchair=no</code>, under ditt eget OSM-konto, precis som ett svar om rummet.</p>
 
-<h2>Så fixar du en grå nål</h2>
+<h2 id="grey-pin">Så fixar du en grå nål</h2>
 <p>Grått betyder: ett svar saknas. Var står skötbordet? Det kan vem som helst med ett gratis
 OSM-konto besvara, på plats, på under en minut:</p>
 <ul>
+  <li><strong>I appen (snabbast):</strong> tryck på den grå nålen. Popup-rutan frågar <em>I vilket rum står skötbordet?</em> Tryck på <em>Herrtoalett</em>, <em>Damtoalett</em>, <em>Dam &amp; herr</em> eller, under <em>Fler rum …</em>, ett annat rum. Du loggar in en gång med OSM, svaret sparas under ditt eget konto och nålen uppdateras inom några minuter. Trycker du på platsknappen inom 75&nbsp;m från en grå nål frågar ett kort om du är där just nu; <em>Svara på frågan</em> öppnar samma ruta.</li>
   <li><strong>MapComplete (vilken mobil som helst, i webbläsaren):</strong> &rdquo;Svara på
       MapComplete&rdquo; på en grå nål öppnar samma objekt i PapaMaps eget MapComplete-tema
       &mdash; på varje nål, så att redigeringarna går att känna igen som gjorda härifrån.
@@ -273,6 +292,8 @@ att det inte gör det. Första gången loggar du in med ditt kostnadsfria OSM-ko
 OpenStreetMap under ditt konto och nålen dyker upp några minuter senare (kartan flyger dit). Finns
 inte platsen i listan, använd <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMaps MapComplete-tema</a> (länken längst ner i dialogrutan). Eller
 OSM:s egen editor, stegen nedan fungerar fortfarande.</p>
+<details>
+<summary>Med OSM:s egen redigerare (iD)</summary>
 <p>Platsen finns nästan säkert redan i OSM. Det är bara <code>changing_table</code>-taggen som
 saknas. I OSM:s egen editor (iD) tar det ungefär två minuter:</p>
 <ol>
@@ -295,11 +316,12 @@ saknas. I OSM:s egen editor (iD) tar det ungefär två minuter:</p>
       rum&rdquo;) och ladda upp. Live på OSM inom en minut, på PapaMap några minuter
       senare.</li>
 </ol>
+</details>
 <p class="muted">Tagga bara det du själv har sett. OSM registrerar vad som finns, inte vad som
 borde finnas. Vet du inte vilket rum det är, är <code>changing_table=yes</code> ensamt ändå
 användbart: platsen blir en grå nål, och nästa pappa svarar på rumsfrågan.</p>
 
-<h2>Varför ett täckningsindex ur OSM inte går</h2>
+<h2 id="no-ranking">Varför ett täckningsindex ur OSM inte går</h2>
 <p>Det närliggande, större projektet vore ett mått på tillgången till toaletter för män jämfört med
 kvinnor, stad för stad. Siffran som &rdquo;potty parity&rdquo; egentligen handlar om. Ur
 OpenStreetMap går den inte att räkna fram. Vi kontrollerade det innan vi byggde, med ett stickprov
@@ -334,7 +356,7 @@ Wien, Melbourne; 26&nbsp;juli&nbsp;2026):</p>
 <p>Det enda ärliga är alltså: själva tillgången går inte att mäta ur öppna data i dag. Den här
 webbplatsen mäter det som går att mäta och gör luckorna till bidrag.</p>
 
-<h2>Det enda som går att räkna fram: var borden står</h2>
+<h2 id="where-tables">Det enda som går att räkna fram: var borden står</h2>
 <p><code>changing_table:location</code> är såvitt vi vet det enda öppna vokabulär som håller reda
 på vilket rum ett skötbord står i. Det är glest ifyllt:
 <span data-stat="location_total">3&nbsp;659</span> av <span data-stat="ct_total">77&nbsp;000</span>
@@ -352,15 +374,7 @@ det exakta förhållandet. Riktningen stämmer ändå med det som länge varit d
 hänger som standard på damtoaletten. Det stänger ute pappor och antyder på köpet vem som har
 ansvaret för blöjbyten. Den här kartan gör de saknade uppgifterna synliga. Och lätta att fixa.</p>
 
-<h2 id="related">Fler familjekartor på OpenStreetMap</h2>
-<p>PapaMap svarar på en enda fråga: kommer en pappa åt skötbordet? För lekplatser och andra familjevänliga platser är de här kartorna, byggda på samma öppna data, värda en titt:</p>
-<ul>
-  <li><a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a> &mdash; familjevänliga platser i hela Europa: skötbord, lekhörnor, barnstolar</li>
-  <li><a href="https://spieli.eu">spieli.eu</a> &mdash; en karta över lekplatser</li>
-  <li><a href="https://knudli.de">Knudli</a> &mdash; en lekplatssökare för Android och i webbläsaren</li>
-</ul>
-
-<h2>Datalicens &amp; attribution</h2>
+<h2 id="licence">Datalicens &amp; attribution</h2>
 <p>Alla kartdata &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, tillgängliga under
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -369,7 +383,7 @@ också ODbL. Den globala taggstatistiken kommer från
 <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Webbplatsens egen kod är MIT-licensierad.</p>
 
-<h2>Integritet</h2>
+<h2 id="privacy">Integritet</h2>
 <p>En statisk webbplats. Inga konton, inga kakor, ingen webbanalys, inga spårningsskript. Sidan sparar
 ingenting om dig och har ingen databas. Kartrutorna kommer från OpenStreetMaps tile-servrar; för
 de förfrågningarna gäller
@@ -385,7 +399,7 @@ under ditt eget OSM-konto. Ingenting går via oss. Formalia:
 26&nbsp;juli&nbsp;2026 och taginfos nyckelstatistik med det datum som anges ovan. De lokala
 siffrorna kommer från samma nattliga fråga som bygger kartan.</p>
 
-<h2>Hur den här sidan blir till</h2>
+<h2 id="how-made">Hur den här sidan blir till</h2>
 <p>När jag programmerar och skriver texterna får jag hjälp av AI. Men allt har jag ändå läst
 igenom själv.</p>
 

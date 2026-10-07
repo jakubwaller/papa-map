@@ -124,8 +124,25 @@
 <p class="muted">Cambiadores a los que un papá llega. Las cifras mundiales de taginfo de más abajo
 vienen de la actualización nocturna. La muestra de ocho centros urbanos es del
 26&nbsp;jul&nbsp;2026 y se queda así.</p>
+<nav class="muted" aria-label="Contenido"><strong>Contenido</strong>
+<ul>
+  <li><a href="#what">Qué es este mapa. Y qué no es.</a></li>
+  <li><a href="#colours">Qué significan los colores (la regla exacta)</a></li>
+  <li><a href="#mum-mode">El interruptor papá-mamá</a></li>
+  <li><a href="#play-area">El anillo azul: zona de juegos</a></li>
+  <li><a href="#wheelchair">El chip Silla de ruedas</a></li>
+  <li><a href="#empty-rings">Los anillos azules vacíos: sitios para jugar, sin respuesta</a></li>
+  <li><a href="#high-chair">El chip Trona</a></li>
+  <li><a href="#grey-pin">Cómo arreglar un pin gris</a></li>
+  <li><a href="#contribute">Cómo añadir un lugar que falta</a></li>
+  <li><a href="#no-ranking">Por qué no sale una tabla de oferta a partir de OSM</a></li>
+  <li><a href="#where-tables">El único dato calculable: dónde están los cambiadores</a></li>
+  <li><a href="#licence">Licencia de los datos y atribución</a></li>
+  <li><a href="#privacy">Privacidad</a></li>
+  <li><a href="#how-made">Cómo está hecha esta web</a></li>
+</ul></nav>
 
-<h2>Qué es este mapa. Y qué no es.</h2>
+<h2 id="what">Qué es este mapa. Y qué no es.</h2>
 <p>PapaMap muestra lugares de 44 países europeos — de Islandia a Chipre, de Portugal a
 Ucrania, además de Australia, Nueva Zelanda, Estados Unidos, Canadá y Japón — donde OpenStreetMap sabe que hay un cambiador de bebés
 (<code>changing_table=yes</code> o <code>limited</code>). El color dice si un papá llega al
@@ -134,8 +151,9 @@ propio OSM, con los enlaces de cada pin.</p>
 <p>La idea surgió leyendo el libro <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> de Caroline Criado Perez.</p>
 <p>Lo que no es: una clasificación de qué ciudad tiene la mejor oferta de aseos. Más abajo se
 explica por qué eso no se puede hacer con datos abiertos sin mentir.</p>
+<p>Aquí solo se trata de cambiadores. Para parques infantiles y otros lugares aptos para familias, mira <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> y <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Qué significan los colores (la regla exacta)</h2>
+<h2 id="colours">Qué significan los colores (la regla exacta)</h2>
 <p>Solo los objetos con <code>changing_table=yes</code> o <code>limited</code> llegan al mapa
 (<code>no</code> cuenta solo en las estadísticas). El color sale de
 <code>changing_table:location</code>. El valor se parte por <code>;</code>, se le quitan los
@@ -153,7 +171,7 @@ espacios, se pasa a minúsculas y cada parte se compara entera. Nunca como subca
 </ul>
 <p>Un objeto con una etiqueta <code>centralkey</code> (distinta de <code>no</code>) queda fuera del mapa cuando la llave cierra toda la puerta: <code>access=centralkey</code>, un cambiador en el baño adaptado, o nada en las etiquetas dice que la llave es solo para una cabina. Un bloque con baños de hombres y mujeres abiertos y una cabina adaptada con llave (<code>wheelchair:access=centralkey</code>, o <code>male=yes</code> y <code>female=yes</code>) sigue en el mapa, gris hasta que alguien registre la sala. La llave Euro solo se da con certificado de discapacidad, así que la mayoría de los padres no pasan por esa puerta. Bajo el chip <em>Silla de ruedas</em> estos cambiadores vuelven, véase más abajo.</p>
 
-<h2>El interruptor papá-mamá</h2>
+<h2 id="mum-mode">El interruptor papá-mamá</h2>
 <p>Los tres colores de arriba responden a la pregunta del papá: ¿llega un padre a este cambiador?
 Para una madre, la misma respuesta suele leerse de otra manera &mdash; puede usar un cambiador en
 el baño de mujeres, y también la mayoría de los cambiadores sin sala registrada está en una sala a
@@ -177,7 +195,7 @@ a solas), es accesible para un papá pero no para una mamá. El pipeline marca e
 por separado, así que en modo mamá aparecen en rojo y no cuentan en la cifra de arriba. Versiones
 más antiguas de la app aún pueden mostrarlos en verde hasta que se actualicen.</p>
 
-<h2>El anillo azul: zona de juegos</h2>
+<h2 id="play-area">El anillo azul: zona de juegos</h2>
 <p>Un pin con anillo azul tiene además una zona de juegos &mdash; un sitio donde no solo cambias al
 niño, sino que te quedas un rato. El chip <em>Con zona de juegos</em> deja en el mapa solo esos. Un
 lugar cuenta si OSM registra cualquiera de estas:</p>
@@ -213,11 +231,11 @@ ausente) unos minutos después. A nadie se le pregunta dos veces: un
 valor, retira la pregunta. En un <code>leisure=playground</code> sin <code>indoor=yes</code>
 nunca se pregunta &mdash; el lugar <em>ya es</em> un sitio para jugar, solo que no interior.</p>
 
-<h2>El chip Silla de ruedas</h2>
+<h2 id="wheelchair">El chip Silla de ruedas</h2>
 <p>El chip <em>Silla de ruedas</em> muestra los lugares con <code>wheelchair=yes</code> o <code>wheelchair=limited</code> en OSM. <code>limited</code> significa un escalón de hasta 7&nbsp;cm, o que se necesita ayuda. Con el chip activado, estos lugares llevan un signo de exclamación desde el zoom 13, y la ventana dice <em>limitado</em>. <code>toilets:wheelchair=yes</code> por sí solo no basta, pero aparece igualmente en la ventana, junto con <code>wheelchair:description</code>. Un lugar sin la etiqueta no es inaccesible, OSM simplemente no dice nada, así que el chip solo filtra y no colorea nada. El chip filtra y marca igual los círculos azules (lugares con zona de juegos).</p>
 <p>Bajo este chip, y solo ahí, vuelven los cambiadores tras una llave Euro, con una llave dibujada en el pin: quien necesita el chip suele tener la llave. En el mapa normal, en las cifras y en la clasificación quedan fuera.</p>
 
-<h2>Los anillos azules vacíos: sitios para jugar, sin respuesta</h2>
+<h2 id="empty-rings">Los anillos azules vacíos: sitios para jugar, sin respuesta</h2>
 <p>La misma regla encaja con muchos más lugares de los que el mapa tiene pines. Solo
 <span data-stat="play_tables">111</span> de ellos tienen pin. En otros <span data-stat="play_places">701</span>, nadie ha respondido
 a la primera pregunta: ¿hay aquí un cambiador? Sí, no, nadie lo sabe — OSM no dice absolutamente
@@ -233,14 +251,15 @@ todas formas, y una vez allí sabe la respuesta. Al tocar un anillo se abre MapC
 exactamente esa pregunta. Respóndela y el anillo desaparece en unos minutos,
 sustituido por un pin de verdad.</p>
 
-<h2>El chip Trona</h2>
+<h2 id="high-chair">El chip Trona</h2>
 <p>El chip <em>Trona</em> muestra los lugares donde OSM registra una trona: <code>highchair=yes</code> o un número mayor que 0. <code>highchair=no</code> o <code>0</code> es un no registrado. Un lugar sin la etiqueta no es un lugar sin trona, OSM simplemente no dice nada, así que el chip lo deja fuera sin afirmar nada. Un valor que el mapa no sabe leer, como <code>ja</code> o <code>1+</code>, tampoco cuenta, y la ventana no muestra ninguna línea para él. El chip filtra los pines y los círculos azules y no colorea nada.</p>
 <p>En el pin de un sitio para comer (cafetería, restaurante, heladería y similares) o de un lugar para familias (guardería, biblioteca, centro cívico y similares), la ventana pregunta, mientras OSM no diga nada: <em>¿Hay trona?</em> Tu respuesta va a OSM como <code>highchair=yes</code> o <code>highchair=no</code>, con tu propia cuenta, igual que una respuesta sobre la sala.</p>
 
-<h2>Cómo arreglar un pin gris</h2>
+<h2 id="grey-pin">Cómo arreglar un pin gris</h2>
 <p>Gris significa que falta una respuesta. ¿Dónde está el cambiador? Cualquiera con una cuenta
 gratuita de OSM puede responderla, allí mismo, en menos de un minuto:</p>
 <ul>
+  <li><strong>En la app (lo más rápido):</strong> toca el pin gris. La ventana pregunta <em>¿En qué sala está el cambiador?</em> Toca <em>Baño de hombres</em>, <em>Baño de mujeres</em>, <em>Mujeres y hombres</em> o, detrás de <em>Más salas …</em>, otra sala. Inicias sesión una sola vez con OSM, la respuesta se guarda con tu propia cuenta y el pin se actualiza en pocos minutos. Si tocas el botón de ubicación a menos de 75&nbsp;m de un pin gris, una tarjeta te pregunta si estás ahí ahora mismo; <em>Responder a la pregunta</em> abre la misma ventana.</li>
   <li><strong>MapComplete (cualquier móvil, en el navegador):</strong> &ldquo;Responder en
       MapComplete&rdquo; en un pin gris abre el mismo objeto en el tema de MapComplete propio de
       PapaMap &mdash; en todos los pines, para que las ediciones se reconozcan como venidas de
@@ -276,6 +295,8 @@ que no lo hay. La primera vez inicias sesión con tu cuenta gratuita de OSM; la 
 en OpenStreetMap con tu cuenta y el pin aparece unos minutos después (el mapa vuela hasta él). Si el
 lugar no está en la lista, usa el <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">tema MapComplete de PapaMap</a> (el enlace al final del diálogo).
 O el editor propio de OSM, los pasos de abajo siguen funcionando.</p>
+<details>
+<summary>Con el editor propio de OSM (iD)</summary>
 <p>El lugar casi seguro que ya existe en OSM. Solo falta la etiqueta <code>changing_table</code>.
 En el editor propio de OSM (iD) son unos dos minutos:</p>
 <ol>
@@ -298,11 +319,12 @@ En el editor propio de OSM (iD) son unos dos minutos:</p>
       cambiador&rdquo;) y súbelo. En OSM en un minuto, en PapaMap unos minutos
       después.</li>
 </ol>
+</details>
 <p class="muted">Etiqueta solo lo que hayas visto tú. OSM registra lo que hay, no lo que debería
 haber. Si no sabes la sala, <code>changing_table=yes</code> a secas ya sirve: el lugar se convierte
 en un pin gris y el siguiente papá responde a la pregunta de la sala.</p>
 
-<h2>Por qué no sale una tabla de oferta a partir de OSM</h2>
+<h2 id="no-ranking">Por qué no sale una tabla de oferta a partir de OSM</h2>
 <p>El proyecto grande y obvio sería la proporción de aseos de hombres frente a los de mujeres por
 ciudad. La cifra sobre la que gira de verdad el argumento de la &ldquo;potty parity&rdquo;. No se
 puede calcular con OpenStreetMap. Lo comprobamos antes de construir nada, con una muestra de ocho
@@ -337,7 +359,7 @@ Melbourne; 26&nbsp;jul&nbsp;2026):</p>
 <p>Así que lo único honesto que se puede decir es: la oferta en sí no se puede medir hoy con datos
 abiertos. Esta web mide lo que se puede medir y convierte los huecos en contribuciones.</p>
 
-<h2>El único dato calculable: dónde están los cambiadores</h2>
+<h2 id="where-tables">El único dato calculable: dónde están los cambiadores</h2>
 <p><code>changing_table:location</code> es, que sepamos, el único vocabulario abierto que registra
 en qué sala está un cambiador. Es escaso:
 <span data-stat="location_total">3.659</span> de <span data-stat="ct_total">77.000</span>
@@ -357,15 +379,7 @@ en otros sitios: el cambiador va por defecto en el baño de mujeres. Eso deja fu
 por hecho sin decirlo quién se encarga de los pañales. Este mapa hace visibles los datos que faltan.
 Y fáciles de arreglar.</p>
 
-<h2 id="related">Otros mapas para familias en OpenStreetMap</h2>
-<p>PapaMap responde a una sola pregunta: ¿llega un papá al cambiador? Para parques infantiles y otros lugares aptos para familias, merece la pena echar un vistazo a estos mapas basados en los mismos datos abiertos:</p>
-<ul>
-  <li><a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a> &mdash; lugares aptos para familias en toda Europa: cambiadores, rincones de juego, tronas</li>
-  <li><a href="https://spieli.eu">spieli.eu</a> &mdash; un mapa de parques infantiles</li>
-  <li><a href="https://knudli.de">Knudli</a> &mdash; un buscador de parques infantiles para Android y en el navegador</li>
-</ul>
-
-<h2>Licencia de los datos y atribución</h2>
+<h2 id="licence">Licencia de los datos y atribución</h2>
 <p>Todos los datos del mapa &copy; <a href="https://www.openstreetmap.org/copyright">colaboradores
 de OpenStreetMap</a>, disponibles bajo la
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -374,7 +388,7 @@ ODbL. Las estadísticas mundiales de etiquetas vienen de
 <a href="https://taginfo.openstreetmap.org/">taginfo</a>. El código propio de la web tiene licencia
 MIT.</p>
 
-<h2>Privacidad</h2>
+<h2 id="privacy">Privacidad</h2>
 <p>Una web estática. Sin cuentas, sin cookies, sin analítica, sin scripts de seguimiento. La web no
 guarda nada sobre ti y no tiene base de datos. Las teselas del mapa vienen de los servidores de
 OpenStreetMap; esas peticiones caen bajo la
@@ -388,7 +402,7 @@ tu propia cuenta de OSM. Por aquí no pasa nada. Páginas formales:
 26&nbsp;jul&nbsp;2026 y estadísticas de claves de taginfo a la fecha indicada arriba. Las cifras
 locales vienen de la misma consulta nocturna que construye el mapa.</p>
 
-<h2>Cómo está hecha esta web</h2>
+<h2 id="how-made">Cómo está hecha esta web</h2>
 <p>Uso IA para ayudarme a programar y a escribir los textos. Aun así, todo pasa por mis propios
 ojos.</p>
 
