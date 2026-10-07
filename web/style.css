@@ -290,7 +290,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   flex: 0 0 auto;
   box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .35);
 }
-/* .7, not lighter: ink at .7 over the palest chip tint is 4.9:1 (WCAG 1.4.3). */
+/* .7, not lighter: the worst case is the ink-tinted wheelchair/highchair chip, ink at .7 over
+   its 14 % tint at about 4.86:1 (WCAG 1.4.3). */
 .chip .cnt { opacity: .7; font-weight: 500; }
 /* One language for every chip: dashed = not applied, solid + a tint of the
    chip's own colour (--chip) = applied. The meaning differs — the three status

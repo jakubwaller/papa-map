@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { BUCKET_COLOR } from "./datasource.js";
 
 const dir = new URL(".", import.meta.url);
 const read = (f) => readFileSync(new URL(f, dir), "utf8");
@@ -91,14 +92,19 @@ test("the popup's primary pill outranks the plain pill rule", () => {
   assert.match(css, /:is\(\.popup, #venue-ask\) \.btn\.primary\s*\{[^}]*color:\s*#fff/);
 });
 
-test("the chip counts reach 4.5:1 over the palest chip tint", () => {
+test("the chip counts reach 4.5:1 over every chip tint", () => {
   const opacity = Number(css.match(/\.chip \.cnt\s*\{[^}]*opacity:\s*([\d.]+)/)[1]);
   const ink = token("light", "--ink");
+  // The chip colours as defined: the pin buckets, plus every `.chip.X { --chip: var(--Y) }`.
+  const chips = new Map(Object.entries(BUCKET_COLOR).map(([k, hex]) => [`bucket ${k}`, rgb(hex)]));
+  for (const [, cls, tok] of css.matchAll(/\.chip\.([a-z-]+)\s*\{\s*--chip:\s*var\((--[a-z-]+)\)/g))
+    chips.set(`.chip.${cls} (${tok})`, token("light", tok));
+  assert.ok(chips.has("bucket maybe") && [...chips.keys()].some((k) => k.includes("--ink")));
   // A switched-on chip is 14 % of its own colour over white (.chip.on).
-  for (const chip of ["--green", "--red", "--grey-pin", "--play", "--mama"]) {
-    const bg = mix(token("light", chip), WHITE, 0.14);
+  for (const [name, colour] of chips) {
+    const bg = mix(colour, WHITE, 0.14);
     const r = contrast(mix(ink, bg, opacity), bg);
-    assert.ok(r >= 4.5, `.chip .cnt at ${opacity} on a ${chip} chip is ${r.toFixed(2)}:1`);
+    assert.ok(r >= 4.5, `.chip .cnt at ${opacity} on ${name} is ${r.toFixed(2)}:1`);
   }
 });
 
