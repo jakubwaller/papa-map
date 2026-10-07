@@ -12,6 +12,12 @@
 // nothing left.
 const DONATE = /<span class="donate">[\s\S]*?<\/span>/;
 
+// The website preloads its dataset files from data/ (index.html's head); the
+// bundle has no data/ — the app fetches the dataset from the site itself
+// (native.js, loadDatasetNative) — so a preload left in would 404 on every
+// launch and name a file build-www.js cannot copy.
+const DATA_PRELOAD = /[ \t]*<link rel="preload" href="data\/[^"]*"[^>]*>\n?/g;
+
 export function appShell(html) {
   // A changed footer must fail the build, not ship the link quietly.
   const cut = DONATE.exec(html);
@@ -21,7 +27,10 @@ export function appShell(html) {
   const out = html.replace(DONATE, "");
   if (/ko-fi\.com/i.test(out)) throw new Error("index.html: a Ko-fi link is left after the cut");
   if (/class="donate"/.test(out)) throw new Error("index.html: a second donate span is left after the cut");
-  return out;
+  const shell = out.replace(DATA_PRELOAD, "");
+  if (/<link\b[^>]*\bhref="(?:\.\/|\/)?data\//.test(shell))
+    throw new Error("index.html: a <link> to data/ is left after the cut");
+  return shell;
 }
 
 // Every file of its own the page loads: <link href>, <script src>, <img src>,
