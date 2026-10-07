@@ -1066,7 +1066,7 @@ Guideline 1.5), and the practical payoff is a mail instead of a one-star
 review.
 
 "Your stats" reads the reader's own **public** OSM changesets live, on the
-device: `GET {api}/changesets.json?display_name=<name>`, no login-privileged
+device: `GET {api}/changesets.json?user=<id>` (the account's numeric id, which survives a rename; `display_name=<name>` until the id is known), no login-privileged
 data, nothing a stranger with the same username could not also see. A
 changeset counts as PapaMap's if its tags say so — `created_by: "PapaMap"`
 for this site's own writes, or, for the MapComplete hand-off, a `theme` tag

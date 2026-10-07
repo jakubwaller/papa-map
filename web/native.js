@@ -19,6 +19,7 @@
 // nothing is sent that the website does not send: a download is a GET.
 
 import { isWheelchairLimited } from "./datasource.js?v=app77";
+import { awaitingReturn } from "./osm.js?v=app77";
 
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";
@@ -789,7 +790,7 @@ export function nativeNavigate(url) {
 // widget's deep link to a table, and papamap://nearest — Android's widget with
 // no position to hand and its launcher shortcut, which ask the page to run its
 // own "nearest" button. Returns nothing; the callbacks decide.
-export function onAppUrl({ auth, table, nearest = () => {} }) {
+export function onAppUrl({ auth, table, nearest = () => {}, awaiting = awaitingReturn }) {
   const app = plugin("App");
   if (!app) return;
   app.addListener("appUrlOpen", ({ url }) => {
@@ -806,9 +807,11 @@ export function onAppUrl({ auth, table, nearest = () => {} }) {
   // Cold start from a deep link: the listener above is attached too late for
   // the URL the app was launched with, so ask once. The OAuth return is one
   // of them when the OS killed the app during the login; the browser that
-  // showed OSM is gone already, so there is nothing to close.
+  // showed OSM is gone already, so there is nothing to close. Only a return
+  // still awaited, though: Android keeps the launch URL for the Activity's
+  // life, and a recreated one would replay an already-used code.
   app.getLaunchUrl?.().then((r) => {
-    if (r?.url?.startsWith(AUTH_REDIRECT)) auth(r.url);
+    if (r?.url?.startsWith(AUTH_REDIRECT)) { if (awaiting(r.url)) auth(r.url); }
     else if (r?.url?.startsWith("papamap://table")) table(new URL(r.url).searchParams.get("osm"));
     else if (r?.url?.startsWith("papamap://nearest")) nearest();
   }).catch(() => {});

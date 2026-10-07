@@ -16,7 +16,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          canonicalUrl, isCrawler } from "./i18n.js?v=app77";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
-         getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts,
+         getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
@@ -3239,6 +3239,8 @@ async function completeLogin(href) {
   // return, though: the app's intent waits in localStorage (osm.js), and an
   // ordinary launch must not drop the one a cold-start return is bringing.
   const intent = login ? takeIntent() : null;
+  // Not a return: an abandoned trip's records, once stale, go (osm.js).
+  if (!login) dropStaleRoundTrip();
   // The intent's own reopen already draws the footer under the new login; a
   // second one would detach the popup answer() is about to update.
   let reopened = false;
@@ -3694,7 +3696,7 @@ function bootNative() {
   offlineBtn.hidden = false;
   // A login's return before the data is here (a cold start) waits for it,
   // like a pin: the answer it files needs its object to land on.
-  onAppUrl({ auth: (url) => { if (dataReady) completeLogin(url); else pendingAuth = url; },
+  onAppUrl({ auth: (url) => { if (dataReady) completeLogin(url); else pendingAuth = preferReturn(pendingAuth, url); },
              table: openPin, nearest: runNearest });
   onBackButton(closeTopmost);
   const brand = document.querySelector(".brandmark");

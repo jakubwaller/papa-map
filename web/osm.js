@@ -83,6 +83,36 @@ export const ROUND_TRIP_MS = 60 * 60 * 1000;
 // A record without the stamp was stored by the page before it had one.
 const fresh = (rec) => (rec && !(Date.now() - (rec.at ?? Date.now()) > ROUND_TRIP_MS) ? rec : null);
 
+// Whether `href` is the return of a login this app is still waiting for: a
+// fresh PKCE record exists and its state is the URL's. Read only, nothing is
+// consumed. The app asks it of the launch URL, which Android's Bridge keeps
+// for the Activity's whole life: after a cold start from papamap://auth every
+// later recreation hands the same, already-used URL back.
+export function awaitingReturn(href) {
+  try {
+    const pkce = fresh(JSON.parse(roundTrip().getItem(PKCE_KEY) || "null"));
+    return !!pkce && pkce.state === new URL(href).searchParams.get("state");
+  } catch { return false; }
+}
+
+// Of two returns that arrived before the data did, the one still awaited
+// wins: a stale launch URL must not overwrite the real one (or the reverse).
+export const preferReturn = (current, next) =>
+  !current || awaitingReturn(next) || !awaitingReturn(current) ? next : current;
+
+// An abandoned trip (the Custom Tab closed with no login) leaves its verifier
+// and the reader's answer behind; nothing reads them again, and the app keeps
+// them in localStorage. Called when a load is not a return: removes the ones
+// past ROUND_TRIP_MS, leaves a trip still under way alone.
+export function dropStaleRoundTrip() {
+  for (const key of [PKCE_KEY, INTENT_KEY]) {
+    try {
+      const raw = roundTrip().getItem(key);
+      if (raw && !fresh(JSON.parse(raw))) roundTrip().removeItem(key);
+    } catch { try { roundTrip().removeItem(key); } catch { /* nothing to drop */ } }
+  }
+}
+
 export const getToken = () => { try { return local().getItem(TOKEN_KEY); } catch { return null; } };
 export const getUser = () => { try { return local().getItem(USER_KEY); } catch { return null; } };
 export const getUserId = () => {

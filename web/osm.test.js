@@ -7,7 +7,7 @@ import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
          PLAY_CHOICES, PLAY_KEYS, isPlayChoice, playPatch, guardKeys, changesetTags, changesetXml,
          HIGHCHAIR_CHOICES, HIGHCHAIR_VENUES, isHighchairChoice, isHighchairVenue, highchairPatch,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY,
-         startLogin, takeIntent, keepRoundTripAcrossRestarts, ROUND_TRIP_MS, PKCE_KEY, INTENT_KEY,
+         startLogin, takeIntent, keepRoundTripAcrossRestarts, awaitingReturn, preferReturn, dropStaleRoundTrip, ROUND_TRIP_MS, PKCE_KEY, INTENT_KEY,
          setLogin, clearLogin, getToken, getUser, getUserId, userInfo, userName, ensureUserInfo } from "./osm.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
@@ -146,6 +146,58 @@ test("the app's round trip outlives the process: localStorage, used once, stale 
       await assert.rejects(finishLogin(LIVE, `papamap://auth?code=c&state=${stateOf(went)}`, tokenReply), /state/);
       assert.equal(takeIntent(), null);
     } finally { Date.now = realNow; }
+  } finally { keepRoundTripAcrossRestarts(false); }
+});
+
+// Android hands the same launch URL back for the Activity's whole life; only
+// a return whose state matches a fresh record is one the app still awaits.
+test("awaitingReturn: a fresh record with the URL's state, read without consuming it", async () => {
+  keepRoundTripAcrossRestarts(true);
+  try {
+    globalThis.localStorage = fakeSession();
+    let went = null;
+    assert.equal(awaitingReturn("papamap://auth?code=c&state=s"), false);   // no record at all
+    await startLogin(LIVE, null, (u) => { went = u; });
+    const back = (state) => `papamap://auth?code=c&state=${state}`;
+    assert.equal(awaitingReturn(back(stateOf(went))), true);
+    assert.equal(awaitingReturn(back(stateOf(went))), true);   // still there: nothing was taken
+    assert.equal(awaitingReturn(back("other")), false);
+    assert.equal(awaitingReturn("not a url"), false);
+    const realNow = Date.now;
+    Date.now = () => realNow() + ROUND_TRIP_MS + 1000;
+    try { assert.equal(awaitingReturn(back(stateOf(went))), false); } finally { Date.now = realNow; }
+  } finally { keepRoundTripAcrossRestarts(false); }
+});
+
+test("preferReturn: of two early returns the awaited one wins, whichever came last", async () => {
+  keepRoundTripAcrossRestarts(true);
+  try {
+    globalThis.localStorage = fakeSession();
+    let went = null;
+    await startLogin(LIVE, null, (u) => { went = u; });
+    const real = `papamap://auth?code=b&state=${stateOf(went)}`;
+    const stale = "papamap://auth?code=a&state=old";
+    assert.equal(preferReturn(null, stale), stale);
+    assert.equal(preferReturn(stale, real), real);
+    assert.equal(preferReturn(real, stale), real);   // a late stale one does not overwrite
+  } finally { keepRoundTripAcrossRestarts(false); }
+});
+
+// A trip abandoned in the Custom Tab leaves the verifier and the answer in
+// the app's localStorage; nothing else would ever remove them.
+test("dropStaleRoundTrip removes an abandoned trip's records once stale, not before", async () => {
+  keepRoundTripAcrossRestarts(true);
+  try {
+    globalThis.localStorage = fakeSession();
+    await startLogin(LIVE, { kind: "table", osm_url: "u", choice: "male" }, () => {});
+    dropStaleRoundTrip();   // a trip still under way stays
+    assert.ok(globalThis.localStorage.getItem(PKCE_KEY));
+    assert.ok(globalThis.localStorage.getItem(INTENT_KEY));
+    const realNow = Date.now;
+    Date.now = () => realNow() + ROUND_TRIP_MS + 1000;
+    try { dropStaleRoundTrip(); } finally { Date.now = realNow; }
+    assert.equal(globalThis.localStorage.getItem(PKCE_KEY), null);
+    assert.equal(globalThis.localStorage.getItem(INTENT_KEY), null);
   } finally { keepRoundTripAcrossRestarts(false); }
 });
 
