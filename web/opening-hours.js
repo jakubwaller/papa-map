@@ -296,11 +296,12 @@ function resolvePoint(point, sunTimes) {
 // Date (month/day) selectors
 // -------------------------------------------------------------------------
 
-// A day-of-month number is never immediately followed by ":" — that would
+// A day-of-month number is never followed by ":" and a digit — that would
 // make it a clock time instead (the boundary "May-Oct 09:00-22:00" needs to
 // tell "Oct" the month from a would-be "09" day-of-month that's actually the
-// start of the time span).
-const DAY_NUM_SRC = "\\d{1,2}(?![:\\d])";
+// start of the time span). A bare ":" after it is the selector's optional
+// separator ("Dec 24: 10:00-14:00"), so only ":" plus a digit is refused.
+const DAY_NUM_SRC = "\\d{1,2}(?!\\d|:\\d)";
 const DATE_ITEM_SRC =
   `${MONTH_TOKEN}(?:\\s+${DAY_NUM_SRC})?(?:\\s*-\\s*(?:${MONTH_TOKEN}\\s+${DAY_NUM_SRC}|${MONTH_TOKEN}|${DAY_NUM_SRC}))?`;
 const DATE_ITEM_RE = new RegExp(
@@ -319,11 +320,15 @@ function parseDateItem(text) {
   if (startDay === undefined) {
     // A month, or a month-to-month range: cover the whole month(s).
     const start = sm * 100 + 1;
+    // "Apr-Oct 15" mixes a month with a day: not a form this reads, and
+    // guessing either end gives a firm wrong answer, so it is "unknown".
+    if (endMonthDay !== undefined || endDayOnly !== undefined) return null;
     if (endMonthOnly === undefined) return { start, end: sm * 100 + 31 };
     return { start, end: MONTH_INDEX[endMonthOnly] * 100 + 31 };
   }
   const sd = Number(startDay);
   const start = sm * 100 + sd;
+  if (endMonthOnly !== undefined) return null; // "Apr 15-Oct": mixed, as above
   if (endMonthDay !== undefined) return { start, end: MONTH_INDEX[endMonthDay] * 100 + Number(endDayOfMonth) };
   if (endDayOnly !== undefined) {
     const ed = Number(endDayOnly);
