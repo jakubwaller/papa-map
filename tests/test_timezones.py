@@ -72,6 +72,17 @@ def test_the_default_zone_is_never_an_override():
     ("British Columbia", 49.51, -115.77, "America/Edmonton"),       # Cranbrook
     ("British Columbia", 49.10, -116.51, "America/Creston"),        # Creston
     ("British Columbia", 51.00, -118.20, "America/Vancouver"),      # Revelstoke
+    ("British Columbia", 49.49, -117.29, "America/Vancouver"),      # Nelson
+    ("British Columbia", 49.32, -117.66, "America/Vancouver"),      # Castlegar
+    ("British Columbia", 49.19, -117.28, "America/Vancouver"),      # Salmo
+    ("British Columbia", 49.91, -116.91, "America/Vancouver"),      # Kaslo
+    ("British Columbia", 49.99, -117.38, "America/Vancouver"),      # New Denver
+    ("British Columbia", 49.68, -116.82, "America/Vancouver"),      # Crawford Bay
+    ("British Columbia", 50.65, -117.53, "America/Vancouver"),      # Trout Lake
+    ("British Columbia", 51.30, -116.96, "America/Edmonton"),       # Golden
+    ("British Columbia", 49.67, -115.98, "America/Edmonton"),       # Kimberley
+    ("British Columbia", 50.51, -116.03, "America/Edmonton"),       # Invermere
+    ("British Columbia", 49.50, -115.06, "America/Edmonton"),       # Fernie
 ])
 def test_multi_zone_areas(area, lat, lon, zone):
     assert zone_for(area, lat, lon) == zone

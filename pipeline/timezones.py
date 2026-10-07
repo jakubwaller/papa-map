@@ -160,7 +160,10 @@ def _british_columbia(lat: float, lon: float) -> str | None:
     # East Kootenay around it.
     if lat < 49.3 and -116.9 < lon < -116.2:
         return "America/Creston"
-    if lon > -117.5 and lat < 51.5:
+    # The East Kootenay and Golden are Mountain; the West Kootenay (Nelson,
+    # Kaslo, Crawford Bay) is Pacific. South of 50.5°N the line runs down the
+    # Purcells, east of Kootenay Lake; north of it, west of Golden.
+    if lat < 51.5 and lon > (-117.3 if lat > 50.5 else -116.6):
         return "America/Edmonton"
     return None
 
