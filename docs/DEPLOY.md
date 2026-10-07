@@ -32,7 +32,8 @@ docker compose run --build --rm pipeline   # first dataset build
 ```
 
 Already ran `up` without them? `mkdir -p` on a root-owned directory changes nothing, so hand
-them over instead: `sudo chown -R 1000:1000 web-data/tiles web-data/private ops-data`.
+the two `up` created over instead, and create the third (only the `ops` service mounts it):
+`sudo chown -R 1000:1000 web-data/tiles web-data/private && mkdir -p ops-data`.
 
 The container publishes no host port; point your existing ingress at it. The live setup
 reverse-proxies `papamap:8012` from a shared host Caddy over the external `web_proxy` network.
