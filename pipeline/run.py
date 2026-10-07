@@ -122,6 +122,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     counts_cache = toilet_counts.load(counts_path)
     counts_fresh: dict[str, tuple[int, int, str, str]] = {}  # recounted tonight
     counts_reused = 0
+    counts_fellback = 0  # reused because tonight's recount failed, not by the rota
     ct_elements, play_elements = [], []
     # Toilets arrive as two server-side counts per area, not objects
     # (config.toilets_counts_ql). Keyed by area and *assigned*, never added to
@@ -239,6 +240,13 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                     usable = (_usable_count(counts_cache.get(area_name), admin_level,
                                             count_key)
                               if sweep.get("elements") else None)
+                    # The fallback has no age cap of its own: the cache drops
+                    # an entry nobody refreshed in four periods, and from then
+                    # on a failing count fails the area again. Say so in the
+                    # log, where the ops page's warning list picks it up.
+                    prune_note = (f"; the cache drops it after "
+                                  f"{4 * max(counts_period, 1)} d, and a count "
+                                  "still failing then fails the area")
                     try:
                         count_answer = _fetch_count(overpass_fetch, count_ql, sweep)
                         _note_base(count_answer)
@@ -263,8 +271,8 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                             raise
                         print(f"  WARN {area_name}: toilet count failed ({exc}); "
                               f"using the count from "
-                              f"{toilet_counts.age_days(usable, today)} d ago",
-                              file=sys.stderr)
+                              f"{toilet_counts.age_days(usable, today)} d ago"
+                              f"{prune_note}", file=sys.stderr)
                         fallback = usable
                         counts = []
                     if fallback is None and usable is not None and not (counts and counts[0]):
@@ -275,8 +283,8 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                         # statement tonight than "0 public toilets".
                         print(f"  WARN {area_name}: toilet count answered "
                               f"{counts or 'nothing'}; using the count from "
-                              f"{toilet_counts.age_days(usable, today)} d ago",
-                              file=sys.stderr)
+                              f"{toilet_counts.age_days(usable, today)} d ago"
+                              f"{prune_note}", file=sys.stderr)
                         fallback = usable
                     if fallback is not None:
                         toilets_total, capacity_total = fallback["total"], fallback["capacity"]
@@ -334,7 +342,9 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             if remember:
                 counts_fresh[area_name] = (toilets_total, capacity_total,
                                            admin_level, count_key)
-            elif not recount or fallback is not None:
+            elif fallback is not None:
+                counts_fellback += 1
+            elif not recount:
                 counts_reused += 1
             for el in ct:
                 ct_area.setdefault((el.get("type"), el.get("id")), area_name)
@@ -343,7 +353,8 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             # The suffix ops_page.AREA_LINE expects whenever the published
             # number is not tonight's: the rota's reuse, or a fallback.
             counted = ("" if recount and fallback is None else
-                       f" (counted {toilet_counts.age_days(counts_cache[area_name], today)} d ago)")
+                       f" (counted {toilet_counts.age_days(counts_cache[area_name], today)} d ago"
+                       f"{', recount failed' if fallback is not None else ''})")
             print(f"  {area_name}: ct={len(ct)} play={len(play)} "
                   f"toilets={toilets_total}{counted}", file=sys.stderr)
         failed_cities = []
@@ -453,9 +464,11 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         print(f"  WARN area bboxes not saved to {areas_bbox_path}: {exc} — "
               "pipeline.delta falls back to its own whole-dataset approximation",
               file=sys.stderr)
-    print(f"  toilet counts: {len(toilets_by_area) - counts_reused} area(s) "
-          f"counted tonight, {counts_reused} reused from {counts_path}",
-          file=sys.stderr)
+    counted_tonight = len(toilets_by_area) - counts_reused - counts_fellback
+    print(f"  toilet counts: {counted_tonight} area(s) counted tonight, "
+          f"{counts_reused} reused from {counts_path}"
+          + (f", {counts_fellback} fell back after a failed recount"
+             if counts_fellback else ""), file=sys.stderr)
 
     # The area pages, written last: they are derived from the same features
     # the map just got, and the map data is the artifact that must never be

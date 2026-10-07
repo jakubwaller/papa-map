@@ -233,6 +233,10 @@ def test_the_reused_count_suffix_still_parses_as_an_area_line():
     assert m and m.group("area") == "Bremen" and m.group("toilets") == "3"
     assert AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3")
     assert not AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3 nonsense")
+    # A fallback is still an area line, and says it was one.
+    m = AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3 (counted 9 d ago, recount failed)")
+    assert m and m.group("failed") and not AREA_LINE.match(
+        "  Bremen: ct=3 play=1 toilets=3 (counted 3 d ago)").group("failed")
 
 
 def test_an_empty_count_body_is_not_remembered(tmp_path, load_fixture):
@@ -377,8 +381,21 @@ def test_a_failed_recount_next_to_a_full_sweep_keeps_the_cached_count(
     err = capsys.readouterr().err
     assert "WARN Bremen: toilet count" in err and "from 8 d ago" in err
     # The area line keeps the suffix the ops page parses.
-    assert "  Bremen: ct=9 play=4 toilets=100 (counted 8 d ago)" in err
-    assert "0 area(s) counted tonight, 17 reused" in err
+    assert "  Bremen: ct=9 play=4 toilets=100 (counted 8 d ago, recount failed)" in err
+    # Counted apart from the rota's reuse, so a persistent failure shows.
+    assert ("0 area(s) counted tonight, 0 reused from" in err
+            and "17 fell back after a failed recount" in err)
+    # The cache's four-period bound is stated where the warning is read.
+    assert "drops it after 28 d" in err
+
+
+def test_a_rota_reuse_is_not_counted_as_a_fallback(tmp_path, load_fixture, capsys):
+    _seed(tmp_path / "toilets_counts.json", SWEEP, TODAY - timedelta(days=3), total=100)
+    run_pipeline(**_kwargs(tmp_path, load_fixture,
+                           overpass_fetch=_fake_overpass(load_fixture)))
+    err = capsys.readouterr().err
+    assert "(counted 3 d ago)" in err and "recount failed" not in err
+    assert "after a failed recount" not in err and " reused from " in err
 
 
 def test_a_failed_recount_without_a_usable_cache_still_fails_the_area(

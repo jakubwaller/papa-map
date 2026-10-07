@@ -43,8 +43,11 @@ from .pages import ICON, STYLE, esc
 # (pipeline/toilet_counts.py): an area reused last week's count says so on
 # its line, and the parser must still see it as an area line — otherwise a
 # night that recounts a seventh of the areas shows a seventh of them swept.
+# ", recount failed" marks the reuse that was not the rota's: tonight's count
+# failed and the cached one stood in (the ops page names those areas).
 AREA_LINE = re.compile(r"^\s+(?P<area>.+?): ct=(?P<ct>\d+) play=(?P<play>\d+) "
-                       r"toilets=(?P<toilets>\d+)(?: \(counted \d+ d ago\))?\s*$")
+                       r"toilets=(?P<toilets>\d+)"
+                       r"(?: \(counted \d+ d ago(?P<failed>, recount failed)?\))?\s*$")
 WARN_LINE = re.compile(r"^\s*WARN\b(?P<text>.*)$")
 ROUND_LINE = re.compile(r"^\s+round (?P<n>\d+): retrying (?P<names>.+)$")
 RESULT_LINE = re.compile(r"^\{'features': .*\}\s*$")
@@ -272,7 +275,8 @@ def parse_build_log(text: str | None) -> dict | None:
         if m:
             build["areas"].append({
                 "area": m["area"], "ct": int(m["ct"]),
-                "play": int(m["play"]), "toilets": int(m["toilets"])})
+                "play": int(m["play"]), "toilets": int(m["toilets"]),
+                **({"recount_failed": True} if m["failed"] else {})})
             continue
         m = ROUND_LINE.match(line)
         if m:
@@ -1511,6 +1515,10 @@ def _build_details(build: dict | None, now: datetime, stats: dict | None) -> str
         zero = sum(1 for a in build["areas"] if a["ct"] == 0)
         tags.append(f'<span class="tag">{len(build["areas"])} areas swept'
                     + (f", {zero} with zero tables" if zero else "") + "</span>")
+    failed_counts = [a["area"] for a in build["areas"] if a.get("recount_failed")]
+    if failed_counts:
+        tags.append(f'<span class="warn">{len(failed_counts)} toilet counts '
+                    "from the cache</span>")
     if build["warns"]:
         tags.append(f'<span class="warn">{len(build["warns"]):,} warnings</span>')
     p = [f"<details id=\"build\"{'' if build['finished'] else ' open'}>\n"
@@ -1535,6 +1543,11 @@ def _build_details(build: dict | None, now: datetime, stats: dict | None) -> str
     if build["rounds"]:
         p.append("<p>Retries: " + " · ".join(esc(x) for x in build["rounds"])
                  + "</p>\n")
+    if failed_counts:
+        p.append('<p class="bad">Toilet count failed tonight, last count kept for '
+                 + esc(", ".join(failed_counts)) + ". The cache drops a count "
+                 "after four periods (28 days on the weekly rota); an area whose "
+                 "count is still failing then fails the build.</p>\n")
     if build["warns"]:
         groups = group_warns(build["warns"])
         p.append(f'<p class="bad">{len(build["warns"]):,} warnings, '

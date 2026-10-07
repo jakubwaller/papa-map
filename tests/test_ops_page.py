@@ -121,6 +121,24 @@ def test_warns_and_code_wrap_instead_of_forcing_the_page_wider():
     assert cjk in html
 
 
+def test_a_failed_recount_is_named_on_the_ops_page():
+    # A count that fell back to the cache looks like a rota reuse on the area
+    # line except for its suffix; the page must say which areas, well before
+    # the cache drops the entry and the build starts failing.
+    log = (FINISHED_BUILD.split("  Italy: ct=0")[0]
+           + "  United Kingdom: ct=700 play=90 toilets=8000 (counted 12 d ago, recount failed)\n"
+           + "  Bremen: ct=9 play=4 toilets=50 (counted 3 d ago)\n"
+           "{'features': 1931, 'pages': 45}\n")
+    build = ops_page.parse_build_log(log)
+    flagged = [a["area"] for a in build["areas"] if a.get("recount_failed")]
+    assert flagged == ["United Kingdom"]
+    html = render(build=build)
+    assert "1 toilet counts from the cache" in html
+    assert "last count kept for United Kingdom" in html
+    quiet = render(build=ops_page.parse_build_log(FINISHED_BUILD))
+    assert "last count kept for" not in quiet
+
+
 # ---- history.json ----------------------------------------------------------
 
 def test_region_rows_delta_against_a_week_ago():
