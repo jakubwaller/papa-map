@@ -51,7 +51,7 @@ html, body {
 }
 
 a { color: var(--green-strong); }
-a:hover { color: var(--green); }
+a:hover { color: var(--green-press); }
 
 #map { position: absolute; inset: 0; background: var(--bg); }
 
@@ -166,7 +166,7 @@ header {
   text-decoration: none;
   white-space: nowrap;
 }
-.app-btn:hover { background: var(--green-strong); color: #fff; }
+.app-btn:hover { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
 .app-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
 /* Language toggle: styled like the nav links, shaped like a small button.
@@ -183,10 +183,11 @@ header {
   letter-spacing: 0.04em;
   cursor: pointer;
 }
-.lang-btn:hover { border-color: var(--green); color: var(--green); }
+.lang-btn:hover { border-color: var(--green); color: var(--green-strong); }
 /* The language control is a <select> since the set grew to nine (a cycle
-   button would have needed seven taps to reach Svenska). Kept visually
-   identical to the button it replaced: the platform's own arrow is dropped,
+   button would have needed seven taps to reach Svenska). The same pill as
+   the button it replaced, at 16px so iOS does not zoom the page when it gets
+   focus (tighter padding keeps the header row as it was): the platform's own arrow is dropped,
    because at this size it crowded the two-to-ten-character label and the
    control already reads as interactive from its border. The native popup
    still opens on click, tap and keyboard. */
@@ -1167,7 +1168,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   cursor: pointer;
 }
 .mode-btn + .mode-btn { border-left: 1px solid var(--line); }
-.mode-btn:hover { color: var(--green); }
+.mode-btn:hover { color: var(--green-strong); }
 .mode-btn.on { background: var(--green-strong); color: #fff; }
 .mode-btn.on:hover, .mode-btn.on:active { color: #fff; background: var(--green-press); }
 #mode-mama.on, #mode-mama.on:hover, #mode-mama.on:active { background: var(--mama-strong); }
