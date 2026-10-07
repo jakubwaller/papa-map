@@ -7,7 +7,9 @@
 > see matched nothing and a screen reader dropped the count (WCAG 2.5.3, Label
 > in Name). The visible label and count are now the name; the explanation is the
 > chip's description (`aria-describedby` on a hidden node, `describeBy`, the
-> mechanism the static controls use) and stays its mouse tooltip. No
+> mechanism the static controls use) and stays its mouse tooltip. On a narrow
+> screen the wheelchair and high-chair chips show icon and count only, and their
+> word stays in the name, visually hidden (never `display: none`). No
 > `i18n.js` string changes.
 > Shell pin `app79` → `app80`; no `WHATS_NEW` entry.
 
