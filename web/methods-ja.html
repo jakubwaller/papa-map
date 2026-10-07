@@ -200,8 +200,8 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
 <code>kids_area</code><em>または</em><code>kids_area:indoor</code>があれば質問は消えます。
 <code>indoor=yes</code>のない<code>leisure=playground</code>では、そもそも尋ねられません — その場所はすでに
 遊べる場所<em>であり</em>、屋内ではないだけだからです。</p>
-<p>この規則に当てはまる場所は、ピンのある場所よりずっと多くあります。そのうち <code>changing_table</code> タグを
-持つのは <span data-stat="play_tables">111</span> か所だけです。さらに <span data-stat="play_places">701</span>
+<p>この規則に当てはまる場所は、ピンのある場所よりずっと多くあります。そのうちピンがあるのは
+<span data-stat="play_tables">111</span> か所だけです。さらに <span data-stat="play_places">701</span>
 か所では、最初の質問 — ここにおむつ交換台はある？ — にまだ誰も答えていません。地図はそれらに色を付けられないので、
 空の青い輪と専用のチップ<em>遊び場のみ</em>（初期状態ではオン）が付きます。どうせ子どもと一緒に行くなら、答えを
 知っているはずです。輪をクリックすると、MapCompleteがまさにその質問を開きます。</p>
@@ -210,6 +210,10 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
 <h2>「車いす」チップ</h2>
 <p><em>車いす</em>チップは、OSMで<code>wheelchair=yes</code>または<code>wheelchair=limited</code>が付いた場所を表示します。<code>limited</code>は、7&nbsp;cm以下の段差が1つあるか、介助が必要という意味です。チップを入れると、これらの場所にはズーム13から感嘆符が付き、ポップアップには<em>一部対応</em>と表示されます。<code>toilets:wheelchair=yes</code>だけでは足りませんが、ポップアップには<code>wheelchair:description</code>とともに表示されます。タグのない場所が入れないわけではなく、OSMに何も書かれていないだけなので、チップは絞り込むだけで色は付けません。青い輪（遊び場のある場所）も同じようにチップで絞り込み、印を付けます。</p>
 <p>このチップの下でだけ、ユーロキー等が必要な台が鍵マーク付きのピンで戻ってきます。チップが必要な人は、たいていその鍵を持っているからです。通常の地図、数値、ランキングには含まれません。</p>
+
+<h2>「ベビーチェア」チップ</h2>
+<p><em>ベビーチェア</em>チップは、OSMにベビーチェアの記録がある場所を表示します: <code>highchair=yes</code>または0より大きい数です。<code>highchair=no</code>または<code>0</code>は「ない」という記録です。タグのない場所がベビーチェアのない場所というわけではなく、OSMに何も書かれていないだけなので、チップは何も主張せずにその場所を外します。<code>ja</code>や<code>1+</code>のように地図が読み取れない値も数えず、ポップアップにもその行は表示しません。チップはピンと青い輪を絞り込むだけで、色は付けません。</p>
+<p>飲食店（カフェ、レストラン、パブなど）や家族向けの場所（幼稚園、図書館、公民館など）のピンでは、OSMに記録がない間、ポップアップが<em>ベビーチェアはありますか？</em>と尋ねます。答えは<code>highchair=yes</code>または<code>highchair=no</code>として、部屋についての答えと同じく、あなた自身のOSMアカウントでOSMに送られます。</p>
 
 <h2>灰色のピンの直し方</h2>
 <p>灰色は、答えがひとつ欠けているという意味です: 交換台はどこにある？ 無料のOSMアカウントがあれば誰でも、その場で
@@ -307,7 +311,7 @@ contributors</a>、<a href="https://opendatacommons.org/licenses/odbl/">Open Dat
 <h2>プライバシー</h2>
 <p>静的なサイトです。Cookieを設定せず、アナリティクスも動かしません。地図タイルはOpenStreetMapのタイルサーバーから
 来るので、それらのリクエストは <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMFのプライバシーポリシー</a>
-の下にあります。ピンで<em>MapCompleteで答える</em>をタップすると、ページはその後数分間、この1つのオブジェクトが今どうなっているかをapi.openstreetmap.orgに数回問い合わせます。これらのリクエストにも同じポリシーが適用されます。MapComplete、StreetComplete、openstreetmap.orgへのリンクはそれぞれのサイトに移動し、そこでは
+の下にあります。ピンで<em>MapCompleteで答える</em>をタップすると、ページはその後数分間、この1つのオブジェクトが今どうなっているかをapi.openstreetmap.orgに数回問い合わせます。これらのリクエストにも同じポリシーが適用されます。検索欄に3文字目を入力したときから、また<em>場所を追加</em>を開くたびに、ページはkomootの地名検索Photon（photon.komoot.io）にも問い合わせます。Photonには入力した文字列と丸めた地図の中心が送られ、ほかのサーバーと同じく、あなたのIPアドレスも伝わります。MapComplete、StreetComplete、openstreetmap.orgへのリンクはそれぞれのサイトに移動し、そこでは
 あなた自身のOSMアカウントで編集します。法的なページ:
 <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a>（ドイツ語）。</p>

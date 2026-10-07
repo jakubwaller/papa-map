@@ -224,7 +224,7 @@ giocare, solo non al chiuso.</p>
 
 <h2>Gli anelli blu vuoti: posti per giocare, nessuna risposta</h2>
 <p>La stessa regola vale per molti più luoghi di quanti pin abbia la mappa. Solo
-<span data-stat="play_tables">111</span> di questi hanno un tag <code>changing_table</code>. Per
+<span data-stat="play_tables">111</span> di questi hanno un pin. Per
 altri <span data-stat="play_places">701</span> nessuno ha risposto alla prima domanda: qui c'è un
 fasciatoio? Sì, no, non lo sa nessuno — in OSM non c'è scritto proprio nulla.</p>
 <p>Questi <span data-stat="play_places">701</span> la mappa non può colorarli, perché non c'è
@@ -237,6 +237,10 @@ con la piscina di palline, un ristorante con la sala giochi — un papà con un 
 va comunque, e una volta lì la risposta la sa. Un clic sull'anello apre MapComplete esattamente su
 quell'unica domanda. Se qualcuno risponde, entro pochi minuti l'anello sparisce
 e al suo posto compare un pin vero.</p>
+
+<h2>Il chip Seggiolone</h2>
+<p>Il chip <em>Seggiolone</em> mostra i luoghi dove OSM registra un seggiolone: <code>highchair=yes</code> o un numero maggiore di 0. <code>highchair=no</code> o <code>0</code> è un no registrato. Un luogo senza il tag non è un luogo senza seggiolone, OSM semplicemente non dice nulla: il chip lo lascia fuori senza affermare niente. Un valore che la mappa non sa leggere, come <code>ja</code> o <code>1+</code>, non conta neppure, e il popup non ne mostra alcuna riga. Il chip filtra i pin e i cerchi blu e non colora nulla.</p>
+<p>Sul pin di un posto dove mangiare (bar, ristorante, pub e simili) o di un luogo per famiglie (scuola dell'infanzia, biblioteca, centro civico e simili), il popup chiede, finché OSM non dice nulla: <em>C'è un seggiolone?</em> La tua risposta va in OSM come <code>highchair=yes</code> o <code>highchair=no</code>, con il tuo account, proprio come una risposta sulla stanza.</p>
 
 <h2>Come riparare un pin grigio</h2>
 <p>Grigio vuol dire che manca una risposta. Dov'è il fasciatoio? Può rispondere chiunque abbia un
@@ -370,7 +374,7 @@ Il codice del sito è sotto licenza MIT.</p>
 <p>Un sito statico. Nessun account, nessun cookie, nessun sistema di analisi, nessuno script di
 tracciamento. Il sito non salva niente su di te e non ha un database. Le tessere della mappa
 arrivano dai tile server di OpenStreetMap; per quelle richieste vale l'<a href="https://osmfoundation.org/wiki/Privacy_Policy">informativa
-privacy della OSMF</a>. Se tocchi <em>Rispondi su MapComplete</em> in un pin, per qualche minuto la pagina chiede anche ad api.openstreetmap.org cosa dice ora quell'oggetto — quelle richieste rientrano nella stessa informativa. Se segui un link a MapComplete, StreetComplete o openstreetmap.org sei sui
+privacy della OSMF</a>. Se tocchi <em>Rispondi su MapComplete</em> in un pin, per qualche minuto la pagina chiede anche ad api.openstreetmap.org cosa dice ora quell'oggetto — quelle richieste rientrano nella stessa informativa. Dal terzo carattere che digiti nel campo di ricerca, e ogni volta che apri <em>Aggiungi luogo</em>, la pagina interroga anche la ricerca di luoghi Photon di komoot (photon.komoot.io). Riceve il testo digitato e un centro della mappa arrotondato e, come qualsiasi server, il tuo indirizzo IP. Se segui un link a MapComplete, StreetComplete o openstreetmap.org sei sui
 loro siti e modifichi con il tuo account OSM. Da noi non passa niente. Pagine formali:
 <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (in tedesco).</p>

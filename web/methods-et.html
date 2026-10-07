@@ -217,7 +217,7 @@ pärast. Kelleltki ei küsita kaks korda: salvestatud <code>kids_area</code> <em
 
 <h2>Tühjad sinised rõngad: mängukohad, millele pole vastust</h2>
 <p>Sama reegel sobib palju rohkematele kohtadele, kui kaardil nõelu on. Ainult
-<span data-stat="play_tables">111</span>-l neist on üldse silt <code>changing_table</code>. Veel
+<span data-stat="play_tables">111</span>-l neist on nõel. Veel
 <span data-stat="play_places">701</span> koha puhul pole keegi vastanud esimesele küsimusele: kas
 siin on mähkimislaud? Jah, ei, keegi ei tea &mdash; OSM ei ütle selle kohta mitte midagi.</p>
 <p>Neid <span data-stat="play_places">701</span> kohta ei saa kaart värvida, sest värvida pole
@@ -229,6 +229,10 @@ sees, ja täidetud nõela asemel tühja sinise rõnga.</p>
 kohvik, mängutoaga restoran &mdash; väikelapsega isa läheb sinna niikuinii, ja kord juba kohapeal,
 teab ta vastust. Rõngal klõpsates avaneb MapComplete täpselt selle ühe küsimuse peal. Vasta sellele
 ja mõne minuti jooksul rõngas kaob, selle asemele ilmub päris nõel.</p>
+
+<h2>Kiip Lastetool</h2>
+<p>Kiip <em>Lastetool</em> näitab kohti, kus OSM-is on kirjas lastetool: <code>highchair=yes</code> või arv üle 0. <code>highchair=no</code> või <code>0</code> on kirja pandud &bdquo;ei&ldquo;. Sildita koht ei ole koht ilma lastetoolita, OSM lihtsalt ei ütle midagi, seega jätab kiip selle välja ega väida midagi. Väärtus, mida kaart lugeda ei oska, näiteks <code>ja</code> või <code>1+</code>, ei lähe samuti arvesse, ja hüpikaken ei näita selle kohta rida. Kiip filtreerib nõelu ja siniseid rõngaid ega värvi midagi.</p>
+<p>Söögikoha (kohvik, restoran, pubi ja muu selline) või perekoha (lasteaed, raamatukogu, kogukonnakeskus ja muu selline) nõelal küsib hüpikaken, seni kuni OSM midagi ei ütle: <em>Kas siin on lastetool?</em> Sinu vastus läheb OSM-i kujul <code>highchair=yes</code> või <code>highchair=no</code>, sinu enda konto all, täpselt nagu ruumi kohta antud vastus.</p>
 
 <h2>Kuidas hall nõel parandada</h2>
 <p>Hall tähendab, et üks vastus on puudu. Kus mähkimislaud asub? Sellele saab vastata igaüks, kellel
@@ -358,7 +362,7 @@ litsentsi all. Globaalne siltide statistika pärineb teenusest
 <p>Staatiline sait. Ei mingeid kontosid, küpsiseid, analüütikat ega jälgimisskripte. Leht ei
 salvesta sinu kohta midagi ja tal pole andmebaasi. Kaardikihid tulevad OpenStreetMapi
 tiiliserveritest; need päringud käivad
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF-i privaatsuspoliitika</a> alla. Kui koputad nõelal <em>Vasta MapComplete'is</em>, küsib leht järgnevate minutite jooksul mõne korra ka api.openstreetmap.org-ilt, mida see üks objekt nüüd ütleb — neile päringutele kehtib sama poliitika. Kui
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF-i privaatsuspoliitika</a> alla. Kui koputad nõelal <em>Vasta MapComplete'is</em>, küsib leht järgnevate minutite jooksul mõne korra ka api.openstreetmap.org-ilt, mida see üks objekt nüüd ütleb — neile päringutele kehtib sama poliitika. Alates kolmandast märgist, mille otsinguvälja kirjutad, ja iga kord, kui avad <em>Lisa koht</em>, küsib leht ka komooti kohaotsingult Photon (photon.komoot.io). See saab sinu kirjutatud teksti ja ümardatud kaardikeskme ning nagu iga server ka sinu IP-aadressi. Kui
 järgid linki MapComplete'ile, StreetComplete'ile või openstreetmap.org-ile, oled nende saidil ja
 redigeerid oma OSM-konto all. Meie kaudu ei liigu sealjuures mitte midagi. Ametlikud lehed:
 <a href="impressum.html">Impressum</a> ·
