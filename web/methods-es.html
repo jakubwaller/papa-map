@@ -219,8 +219,7 @@ nunca se pregunta &mdash; el lugar <em>ya es</em> un sitio para jugar, solo que 
 
 <h2>Los anillos azules vacíos: sitios para jugar, sin respuesta</h2>
 <p>La misma regla encaja con muchos más lugares de los que el mapa tiene pines. Solo
-<span data-stat="play_tables">111</span> de ellos llevan alguna etiqueta
-<code>changing_table</code>. En otros <span data-stat="play_places">701</span>, nadie ha respondido
+<span data-stat="play_tables">111</span> de ellos tienen pin. En otros <span data-stat="play_places">701</span>, nadie ha respondido
 a la primera pregunta: ¿hay aquí un cambiador? Sí, no, nadie lo sabe — OSM no dice absolutamente
 nada.</p>
 <p>El mapa no puede colorear esos <span data-stat="play_places">701</span>, porque no hay nada que
@@ -233,6 +232,10 @@ con piscina de bolas, un restaurante con sala de juegos — un padre con un niñ
 todas formas, y una vez allí sabe la respuesta. Al tocar un anillo se abre MapComplete con
 exactamente esa pregunta. Respóndela y el anillo desaparece en unos minutos,
 sustituido por un pin de verdad.</p>
+
+<h2>El chip Trona</h2>
+<p>El chip <em>Trona</em> muestra los lugares donde OSM registra una trona: <code>highchair=yes</code> o un número mayor que 0. <code>highchair=no</code> o <code>0</code> es un no registrado. Un lugar sin la etiqueta no es un lugar sin trona, OSM simplemente no dice nada, así que el chip lo deja fuera sin afirmar nada. Un valor que el mapa no sabe leer, como <code>ja</code> o <code>1+</code>, tampoco cuenta, y la ventana no muestra ninguna línea para él. El chip filtra los pines y los círculos azules y no colorea nada.</p>
+<p>En el pin de un sitio para comer (cafetería, restaurante, bar y similares) o de un lugar para familias (guardería, biblioteca, centro cívico y similares), la ventana pregunta, mientras OSM no diga nada: <em>¿Hay trona?</em> Tu respuesta va a OSM como <code>highchair=yes</code> o <code>highchair=no</code>, con tu propia cuenta, igual que una respuesta sobre la sala.</p>
 
 <h2>Cómo arreglar un pin gris</h2>
 <p>Gris significa que falta una respuesta. ¿Dónde está el cambiador? Cualquiera con una cuenta
@@ -367,7 +370,7 @@ MIT.</p>
 <p>Una web estática. Sin cuentas, sin cookies, sin analítica, sin scripts de seguimiento. La web no
 guarda nada sobre ti y no tiene base de datos. Las teselas del mapa vienen de los servidores de
 OpenStreetMap; esas peticiones caen bajo la
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">política de privacidad de la OSMF</a>. Si tocas <em>Responder en MapComplete</em> en un pin, durante unos minutos la página también pregunta a api.openstreetmap.org qué dice ahora ese objeto — esas peticiones se rigen por la misma política. Si
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">política de privacidad de la OSMF</a>. Si tocas <em>Responder en MapComplete</em> en un pin, durante unos minutos la página también pregunta a api.openstreetmap.org qué dice ahora ese objeto — esas peticiones se rigen por la misma política. A partir del tercer carácter que escribas en el campo de búsqueda, y siempre que abras <em>Añadir un lugar</em>, la página también consulta el buscador de lugares Photon de komoot (photon.komoot.io). Recibe el texto que escribiste y un centro del mapa redondeado y, como cualquier servidor, tu dirección IP. Si
 sigues un enlace a MapComplete, StreetComplete u openstreetmap.org, estás en sus webs, editando con
 tu propia cuenta de OSM. Por aquí no pasa nada. Páginas formales:
 <a href="impressum.html">Impressum</a> ·
