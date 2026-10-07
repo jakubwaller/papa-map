@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, verify } from "node:crypto";
-import { assertion, trackBody, parseArgs, retryable, withRetry } from "./play.mjs";
+import { assertion, trackBody, parseArgs, retryable, withRetry, commitEdit } from "./play.mjs";
 
 test("the assertion is an RS256 JWT Google's token endpoint accepts", () => {
   const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -60,4 +60,66 @@ test("a 403 fails at once, without a retry", async () => {
   const res = await withRetry(async () => (sent++, { status: 403 }), { sleep: async () => {} });
   assert.equal(res.status, 403);
   assert.equal(sent, 1);
+});
+
+// What fetch throws when the request never got an answer.
+const reset = () => new TypeError("fetch failed", { cause: { code: "ECONNRESET" } });
+
+test("a request that never got an answer is retried like a 503", async () => {
+  let sent = 0;
+  const res = await withRetry(async () => { if (++sent < 3) throw reset(); return { status: 200 }; },
+                              { sleep: async () => {} });
+  assert.equal(res.status, 200);
+  assert.equal(sent, 3);
+});
+
+test("a network error on the last try is thrown, and a bug is never retried", async () => {
+  let sent = 0;
+  await assert.rejects(withRetry(async () => { sent++; throw reset(); }, { tries: 2, sleep: async () => {} }),
+                       /fetch failed/);
+  assert.equal(sent, 2);
+  sent = 0;
+  await assert.rejects(withRetry(async () => { sent++; throw new RangeError("bug"); }, { sleep: async () => {} }),
+                       /bug/);
+  assert.equal(sent, 1);
+});
+
+// A stand-in for Play: answers the commit from `commits`, and the edit lookup
+// from `edit` (200 while it exists, 404 once committed).
+function fakePlay(commits, edit) {
+  const seen = [];
+  const f = async (url, { method = "GET" } = {}) => {
+    seen.push(`${method} ${url.replace(/.*\/edits\//, "")}`);
+    if (method === "POST") {
+      const next = commits.shift();
+      if (next instanceof Error) throw next;
+      return { status: next, ok: next < 300, text: async () => (next < 300 ? '{"id":"e1"}' : "error") };
+    }
+    return { status: edit.shift() ?? 200 };
+  };
+  return { f, seen };
+}
+
+test("a commit that failed is re-sent only while the edit still exists", async () => {
+  const { f, seen } = fakePlay([503, 200], [200]);
+  assert.deepEqual(await commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), { id: "e1" });
+  assert.deepEqual(seen, ["POST e1:commit", "GET e1", "POST e1:commit"]);
+});
+
+test("an edit gone after a 5xx commit reads as committed, not as a failure, and is not re-sent", async () => {
+  const { f, seen } = fakePlay([503], [404]);
+  assert.deepEqual(await commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), { probablyCommitted: true });
+  assert.deepEqual(seen, ["POST e1:commit", "GET e1"]);
+});
+
+test("a commit whose answer was lost is checked the same way", async () => {
+  const { f, seen } = fakePlay([reset()], [404]);
+  assert.deepEqual(await commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), { probablyCommitted: true });
+  assert.deepEqual(seen, ["POST e1:commit", "GET e1"]);
+});
+
+test("a commit Play refuses outright fails at once", async () => {
+  const { f, seen } = fakePlay([400], []);
+  await assert.rejects(commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), /: 400 error/);
+  assert.deepEqual(seen, ["POST e1:commit"]);
 });
