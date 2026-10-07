@@ -222,7 +222,7 @@ minutos depois. Ninguém é perguntado duas vezes: um <code>kids_area</code> <em
 
 <h2>Os anéis azuis vazios: locais para brincar, sem resposta</h2>
 <p>A mesma regra apanha muitos mais locais do que o mapa tem pins. Só
-<span data-stat="play_tables">111</span> deles têm mesmo uma tag <code>changing_table</code>. Em
+<span data-stat="play_tables">111</span> deles têm um pin. Em
 mais <span data-stat="play_places">701</span>, ninguém respondeu à primeira pergunta: há aqui um
 fraldário? Sim, não, ninguém sabe — o OSM não diz rigorosamente nada.</p>
 <p>O mapa não consegue colorir esses <span data-stat="play_places">701</span>, porque não há nada
@@ -235,6 +235,10 @@ com piscina de bolas, um restaurante com sala de brincar — um pai com uma cria
 qualquer forma, e assim que lá está, sabe a resposta. Clicar num anel abre o MapComplete exatamente
 nessa pergunta. Responde e o anel desaparece em poucos minutos, substituído por um pin
 a sério.</p>
+
+<h2>O chip Cadeira de papa</h2>
+<p>O chip <em>Cadeira de papa</em> mostra os locais onde o OSM regista uma cadeira de papa: <code>highchair=yes</code> ou um número acima de 0. <code>highchair=no</code> ou <code>0</code> é um «não» registado. Um local sem a etiqueta não é um local sem cadeira de papa, o OSM simplesmente nada diz, por isso o chip deixa-o de fora sem afirmar nada. Um valor que o mapa não consegue ler, como <code>ja</code> ou <code>1+</code>, também não conta, e a janela não mostra nenhuma linha para ele. O chip filtra pins e anéis azuis e nada colore.</p>
+<p>Num pin de um sítio para comer (café, restaurante, bar e afins) ou de um local para famílias (jardim de infância, biblioteca, centro comunitário e afins), a janela pergunta, enquanto o OSM nada disser: <em>Há cadeira de papa?</em> A tua resposta vai para o OSM como <code>highchair=yes</code> ou <code>highchair=no</code>, com a tua própria conta, tal como uma resposta sobre a sala.</p>
 
 <h2>Como corrigir um pin cinzento</h2>
 <p>Cinzento significa que falta uma resposta. Onde está o fraldário? Qualquer pessoa com uma conta
@@ -367,7 +371,10 @@ O código do próprio site tem licença MIT.</p>
 <p>Um site estático. Sem contas, sem cookies, sem análises, sem scripts de rastreio. O site não
 guarda nada sobre ti e não tem base de dados. Os tiles do mapa vêm dos servidores de tiles do
 OpenStreetMap; esses pedidos ficam sujeitos à
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">política de privacidade da OSMF</a>. Se tocares em <em>Responder no MapComplete</em> num pin, durante alguns minutos a página pergunta também a api.openstreetmap.org o que esse objeto diz agora — esses pedidos ficam sob a mesma política. Se
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">política de privacidade da OSMF</a>. Se tocares em <em>Responder no MapComplete</em> num pin, durante alguns minutos a página pergunta também a api.openstreetmap.org o que esse objeto diz agora — esses pedidos ficam sob a mesma política. A partir do terceiro carácter que escreves no campo de pesquisa, e sempre que abres
+<em>Adicionar um local</em>, a página pergunta também à pesquisa de locais Photon da komoot
+(photon.komoot.io). Esta recebe o texto que escreveste e um centro do mapa arredondado e, como
+qualquer servidor, o teu endereço IP. Se
 seguires uma ligação para o MapComplete, o StreetComplete ou o openstreetmap.org, estás nos sites
 deles, a editar com a tua própria conta OSM. Nada passa por nós. Páginas formais:
 <a href="impressum.html">Impressum</a> ·

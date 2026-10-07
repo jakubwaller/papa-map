@@ -222,8 +222,7 @@ brenda.</p>
 
 <h2>Rrathët blu bosh: vende loje, pa përgjigje</h2>
 <p>I njëjti rregull përputhet me shumë më tepër vende sesa ka shenjues harta. Vetëm
-<span data-stat="play_tables">111</span> prej tyre kanë ndonjë etiketë <code>changing_table</code>
-fare. Në <span data-stat="play_places">701</span> vende të tjera, askush nuk i është përgjigjur
+<span data-stat="play_tables">111</span> prej tyre kanë shenjues. Në <span data-stat="play_places">701</span> vende të tjera, askush nuk i është përgjigjur
 pyetjes së parë: a ka këtu tavolinë ndërrimi? Po, jo, askush s'e di — OSM nuk thotë asgjë fare.</p>
 <p>Harta nuk mund t'i ngjyrosë ato <span data-stat="play_places">701</span>, sepse s'ka gjë për
 t'u ngjyrosur. Nuk janë as gri: gri do të thotë «tavolina ekziston, mungon dhoma», dhe kjo nuk
@@ -235,6 +234,10 @@ kafene me pishinë topash, një restorant me dhomë lojërash &mdash; një baba 
 do të shkojë atje sido që të jetë, dhe kur të jetë atje, e di përgjigjen. Klikimi mbi rrethin hap
 MapComplete pikërisht te ajo pyetje e vetme. Përgjigju dhe rrethi zhduket brenda pak minutash, i
 zëvendësuar nga një shenjues i vërtetë.</p>
+
+<h2>Çipi Karrige e lartë për fëmijë</h2>
+<p>Çipi <em>Karrige e lartë për fëmijë</em> tregon vendet ku OSM shënon një karrige të lartë: <code>highchair=yes</code> ose një numër mbi 0. <code>highchair=no</code> ose <code>0</code> është një «jo» e regjistruar. Një vend pa etiketë nuk është vend pa karrige të lartë, OSM thjesht nuk thotë asgjë, kështu që çipi e lë jashtë pa pohuar asgjë. Një vlerë që harta nuk mund ta lexojë, si <code>ja</code> ose <code>1+</code>, nuk llogaritet as ajo, dhe dritarja nuk tregon asnjë rresht për të. Çipi filtron shenjuesit dhe rrathët blu dhe nuk ngjyros asgjë.</p>
+<p>Te një shenjues në një vend për të ngrënë (kafene, restorant, pijetore e të ngjashme) ose në një vend për familje (kopsht, bibliotekë, qendër komunitare e të ngjashme), dritarja pyet, për sa kohë OSM nuk thotë asgjë: <em>A ka karrige të lartë për fëmijë?</em> Përgjigja jote shkon në OSM si <code>highchair=yes</code> ose <code>highchair=no</code>, nën llogarinë tënde, njësoj si një përgjigje për dhomën.</p>
 
 <h2>Si të rregullosh një shenjues gri</h2>
 <p>Gri do të thotë se mungon një përgjigje. Ku ndodhet tavolina e ndërrimit? Kushdo me një
@@ -370,7 +373,10 @@ MIT.</p>
 <p>Një sajt statik. Pa llogari, pa cookie, pa analitikë, pa skripta ndjekjeje. Sajti nuk ruan
 asgjë për ty dhe nuk ka bazë të dhënash. Pllakëzat e hartës vijnë nga serverët e OpenStreetMap;
 ato kërkesa bien nën
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">politikën e privatësisë të OSMF-së</a>. Nëse prek <em>Përgjigju në MapComplete</em> në një shenjues, për disa minuta faqja pyet edhe api.openstreetmap.org se çfarë thotë tani ai objekt — ato kërkesa mbulohen nga e njëjta politikë.
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">politikën e privatësisë të OSMF-së</a>. Nëse prek <em>Përgjigju në MapComplete</em> në një shenjues, për disa minuta faqja pyet edhe api.openstreetmap.org se çfarë thotë tani ai objekt — ato kërkesa mbulohen nga e njëjta politikë. Që nga karakteri i tretë që shkruan në fushën e kërkimit, dhe sa herë që hap
+<em>Shto një vend</em>, faqja pyet edhe kërkimin e vendeve Photon të komoot (photon.komoot.io). Ai
+merr tekstin që shkrove dhe një qendër të rrumbullakosur të hartës dhe, si çdo server, adresën
+tënde IP.
 Nëse ndjek një lidhje drejt MapComplete, StreetComplete ose openstreetmap.org, je në sajtet e
 tyre, duke editiuar nën llogarinë tënde në OSM. Asgjë nuk kalon nëpër ne. Faqet zyrtare:
 <a href="impressum.html">Impressum</a> ·

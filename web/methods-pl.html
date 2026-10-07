@@ -221,7 +221,7 @@ ogóle się nie pojawia &mdash; to miejsce <em>już jest</em> miejscem do zabawy
 
 <h2>Puste niebieskie obwódki: miejsca do zabawy bez odpowiedzi</h2>
 <p>Ta sama reguła pasuje do dużo większej liczby miejsc, niż mapa ma pinezek. Tylko
-<span data-stat="play_tables">111</span> z nich ma w ogóle tag <code>changing_table</code>. Przy
+<span data-stat="play_tables">111</span> z nich ma pinezkę. Przy
 kolejnych <span data-stat="play_places">701</span> nikt nie odpowiedział na pierwsze pytanie: czy
 jest tu przewijak? Tak, nie, nikt nie wie &mdash; w OSM nie ma o tym ani słowa.</p>
 <p>Tych <span data-stat="play_places">701</span> mapa nie może pokolorować, bo nie ma czego
@@ -234,6 +234,10 @@ z kulkami, restauracja z pokojem zabaw &mdash; tata z małym dzieckiem i tak tam
 już tam jest, zna odpowiedź. Kliknięcie w obwódkę otwiera MapComplete dokładnie na tym jednym
 pytaniu. Wystarczy odpowiedzieć, a w ciągu kilku minut obwódka zniknie i jej
 miejsce zajmie prawdziwa pinezka.</p>
+
+<h2>Chip Krzesełko do karmienia</h2>
+<p>Chip <em>Krzesełko do karmienia</em> pokazuje miejsca, w których OSM odnotowuje krzesełko do karmienia: <code>highchair=yes</code> lub liczbę większą od 0. <code>highchair=no</code> lub <code>0</code> to zapisane &bdquo;nie&rdquo;. Miejsce bez tagu nie jest miejscem bez krzesełka, OSM po prostu nic o nim nie mówi, więc chip je pomija, niczego nie twierdząc. Wartość, której mapa nie umie odczytać, np. <code>ja</code> albo <code>1+</code>, też się nie liczy, a dymek nie pokazuje dla niej żadnej linijki. Chip filtruje pinezki i niebieskie obwódki i niczego nie koloruje.</p>
+<p>Przy pinezce w miejscu, gdzie się je (kawiarnia, restauracja, pub i podobne), albo w miejscu dla rodzin (przedszkole, biblioteka, dom kultury i podobne) dymek pyta, dopóki OSM nic o tym nie mówi: <em>Jest krzesełko do karmienia?</em> Twoja odpowiedź trafia do OSM jako <code>highchair=yes</code> lub <code>highchair=no</code>, na twoim własnym koncie, tak samo jak odpowiedź o pomieszczeniu.</p>
 
 <h2>Jak naprawić szarą pinezkę</h2>
 <p>Szary znaczy: brakuje jednej odpowiedzi. Gdzie jest przewijak? Odpowiedzieć może każdy, kto ma
@@ -364,7 +368,9 @@ Własny kod strony jest na licencji MIT.</p>
 <p>Statyczna strona. Żadnych kont, żadnych ciasteczek, żadnej analityki, żadnych skryptów
 śledzących. Strona nic o tobie nie zapisuje i nie ma bazy danych. Kafelki mapy pochodzą
 z serwerów OpenStreetMap; tych zapytań dotyczy
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">polityka prywatności OSMF</a>. Gdy w pinezce stukniesz <em>Odpowiedz w MapComplete</em>, strona przez kilka minut pyta też api.openstreetmap.org, co teraz mówi ten jeden obiekt — te zapytania podlegają tej samej polityce. Jeśli
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">polityka prywatności OSMF</a>. Gdy w pinezce stukniesz <em>Odpowiedz w MapComplete</em>, strona przez kilka minut pyta też api.openstreetmap.org, co teraz mówi ten jeden obiekt — te zapytania podlegają tej samej polityce. Od trzeciego znaku wpisanego w pole wyszukiwania, a także za każdym razem, gdy otworzysz
+<em>Dodaj miejsce</em>, strona pyta też wyszukiwarkę miejsc Photon firmy komoot (photon.komoot.io).
+Dostaje ona wpisany tekst i zaokrąglony środek mapy oraz, jak każdy serwer, twój adres IP. Jeśli
 klikniesz link do MapComplete, StreetComplete albo openstreetmap.org, jesteś na ich stronach
 i edytujesz na własnym koncie OSM. Przez nas nic wtedy nie przechodzi. Formalności:
 <a href="impressum.html">Impressum</a> ·

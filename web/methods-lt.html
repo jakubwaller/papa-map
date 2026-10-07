@@ -220,7 +220,7 @@ neklausiamas du kartus: įrašytas <code>kids_area</code> <em>arba</em>
 
 <h2>Tušti mėlyni žiedai: vietos žaisti be atsakymo</h2>
 <p>Ta pati taisyklė atitinka gerokai daugiau vietų, nei žemėlapyje yra smeigtukų. Tik
-<span data-stat="play_tables">111</span> iš jų apskritai turi <code>changing_table</code> žymą.
+<span data-stat="play_tables">111</span> iš jų turi smeigtuką.
 Dar <span data-stat="play_places">701</span> vietose niekas neatsakė į pirmą klausimą: ar čia yra
 pervystymo stalas? Taip, ne, niekas nežino — OSM apie tai nesako nieko.</p>
 <p>Šių <span data-stat="play_places">701</span> vietų žemėlapis nuspalvinti negali, nes nėra ko
@@ -232,6 +232,10 @@ mėlyną žiedą vietoj užpildyto smeigtuko.</p>
 su kamuoliukų baseinu, restoranas su žaidimų kambariu — tėtis su mažyliu ten vis tiek eis, o kai
 nueis, jau žinos atsakymą. Paspaudus žiedą atsiveria MapComplete lygiai su tuo vienu klausimu.
 Atsakius žiedas per kelias minutes dings, o jo vietą užims tikras smeigtukas.</p>
+
+<h2>Žymė Maitinimo kėdutė</h2>
+<p>Žymė <em>Maitinimo kėdutė</em> rodo vietas, kuriose OSM nurodyta maitinimo kėdutė: <code>highchair=yes</code> arba skaičius, didesnis už 0. <code>highchair=no</code> arba <code>0</code> yra užfiksuotas „ne“. Vieta be žymos nėra vieta be maitinimo kėdutės, OSM apie ją tiesiog nieko nesako, todėl žymė jos nerodo ir nieko netvirtina. Reikšmė, kurios žemėlapis negali perskaityti, pvz., <code>ja</code> ar <code>1+</code>, taip pat neskaičiuojama, o iššokančiame lange jai nerodoma jokia eilutė. Žymė filtruoja smeigtukus ir mėlynus žiedus ir nieko nespalvina.</p>
+<p>Valgymo vietų (kavinių, restoranų, barų ir panašiai) ar šeimoms skirtų vietų (darželių, bibliotekų, bendruomenės centrų ir panašiai) smeigtukuose iššokantis langas klausia, kol OSM apie tai nieko nesako: <em>Ar yra maitinimo kėdutė?</em> Tavo atsakymas patenka į OSM kaip <code>highchair=yes</code> arba <code>highchair=no</code>, per tavo paties paskyrą, kaip ir atsakymas apie patalpą.</p>
 
 <h2>Kaip pataisyti pilką smeigtuką</h2>
 <p>Pilka reiškia, kad trūksta vieno atsakymo. Kur yra pervystymo stalas? Į tai gali atsakyti
@@ -364,7 +368,9 @@ licencija.</p>
 <p>Statinė svetainė. Jokių paskyrų, jokių slapukų, jokios analitikos, jokių sekimo skriptų.
 Svetainė apie tave nesaugo nieko ir neturi duomenų bazės. Žemėlapio kaladėlės ateina iš
 OpenStreetMap kaladėlių serverių; šioms užklausoms taikoma
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privatumo politika</a>. Jei smeigtuke paliesi <em>Atsakyti per MapComplete</em>, puslapis kelias minutes dar kelis kartus paklausia api.openstreetmap.org, ką dabar sako tas vienas objektas — tiems užklausimams galioja ta pati politika. Jei paseki
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privatumo politika</a>. Jei smeigtuke paliesi <em>Atsakyti per MapComplete</em>, puslapis kelias minutes dar kelis kartus paklausia api.openstreetmap.org, ką dabar sako tas vienas objektas — tiems užklausimams galioja ta pati politika. Nuo trečio simbolio, kurį įvedi paieškos laukelyje, ir kaskart atidarius <em>Pridėti vietą</em>,
+puslapis dar kreipiasi į komoot vietų paiešką Photon (photon.komoot.io). Ji gauna įvestą tekstą
+ir suapvalintą žemėlapio centrą, o kaip ir bet kuris serveris, ir tavo IP adresą. Jei paseki
 nuorodą į MapComplete, StreetComplete ar openstreetmap.org, atsiduri jų svetainėse ir redaguoji
 per savo OSM paskyrą. Per mus tuomet nieko nepraeina. Formalūs puslapiai:
 <a href="impressum.html">Impressum</a> ·
