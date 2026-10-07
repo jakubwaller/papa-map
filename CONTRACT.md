@@ -464,8 +464,8 @@
 > and **ignores a delta whose `base` is older than the dataset it holds** —
 > `web/datasource.js`'s `mergeFeatureCollection`/`isDeltaFresh`, pure and
 > tested. `pipeline/delta.py`'s own design is documented in the module
-> itself and `docs/DEPLOY.md`, including: base estimation and the 48h-gap
-> reset; `web-data/private/areas-bbox.json` (one real, padded bbox per sweep
+> itself and `docs/DEPLOY.md`, including: base estimation and the
+> base-change reset; `web-data/private/areas-bbox.json` (one real, padded bbox per sweep
 > area, written by the nightly build from that area's own features), with a
 > whole-dataset bbox as the fallback only while that file doesn't exist yet;
 > an object created after the base and later deleted or retagged away is

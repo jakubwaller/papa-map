@@ -100,7 +100,10 @@ image, and a plain `up -d delta` after it keeps the old container running — wh
 2026-09-30 deploy left the follower on the previous code. The service does not rebuild itself
 on a plain restart either. `docker logs -f papamap-delta` shows one line
 per tick (sequence number, tables/places upserted); a network error is logged and the previous
-`delta.json` is left exactly as it was, retried the next minute — it never crash-loops.
+`delta.json` is left exactly as it was, retried the next minute — it never crash-loops. A long
+catch-up (after a new nightly base, or downtime) is walked 120 sequences per tick, back to back,
+each tick writing `delta.json` and the state, so a fetch that fails part-way logs
+`WARN delta: seq N failed` and keeps every sequence walked before it.
 
 A way or relation carries no coordinates in the diff, so one that is not already in the base needs
 an OSM API lookup; when that fails it is queued in `delta-state.json` and retried every tick (up to
