@@ -8,7 +8,7 @@ laptop: the `play` task of `.github/workflows/app-build.yml`.
 
 | What | Where |
 |---|---|
-| Upload key (PKCS12, alias `upload`, RSA 4096, valid to 2056) | `~/gitlab/papamap-android-upload-key/` on the Mac: `upload.p12`, `password.txt`, `upload.crt` — back these up in the password manager |
+| Upload key (PKCS12, alias `upload`, RSA 4096, valid to 2056) | `~/gitlab/papa-map-android-upload-key/` on the Mac: `upload.p12`, `password.txt`, `upload.crt` — back these up in the password manager |
 | `ANDROID_UPLOAD_KEYSTORE` | repo secret: `upload.p12`, base64 |
 | `ANDROID_UPLOAD_KEYSTORE_PASSWORD` | repo secret: `password.txt` (store and key share it) |
 | `PLAY_SERVICE_ACCOUNT_JSON` | repo secret: the service account's JSON key (below). Optional — without it the bundle is only a run artifact |
