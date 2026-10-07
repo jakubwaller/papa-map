@@ -50,16 +50,28 @@ function serviceAccount() {
 
 // Play answers a transient 503 now and then mid-edit (run 255, 1 Oct 2026),
 // and one of those used to fail the whole upload. 429 and 5xx are retried with
-// a doubling pause, the token request included; anything else is the
+// a doubling pause, the token request included, and so is a request that never
+// got an answer (fetch's TypeError, a reset socket); anything else is the
 // request's fault and fails at once.
 export const retryable = (status) => status === 429 || status >= 500;
+export const transient = (e) => e instanceof TypeError || typeof e?.cause?.code === "string";
 
-export async function withRetry(send, { tries = 4, pause = 2000, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+// stopIf, when given, is asked before every re-send; true ends the retries
+// with { stopped: true } instead of sending again (see commitEdit).
+export async function withRetry(send, { tries = 4, pause = 2000, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), stopIf } = {}) {
   for (let i = 1; ; i++) {
-    const res = await send();
-    if (!retryable(res.status) || i === tries) return res;
-    console.log(`${res.status}, retrying in ${pause * 2 ** (i - 1) / 1000} s`);
+    let why;
+    try {
+      const res = await send();
+      if (!retryable(res.status) || i === tries) return res;
+      why = res.status;
+    } catch (e) {
+      if (!transient(e) || i === tries) throw e;
+      why = `${e.message}${e.cause?.code ? ` (${e.cause.code})` : ""}`;
+    }
+    console.log(`${why}, retrying in ${pause * 2 ** (i - 1) / 1000} s`);
     await sleep(pause * 2 ** (i - 1));
+    if (stopIf && await stopIf()) return { stopped: true };
   }
 }
 
@@ -87,9 +99,63 @@ async function call(bearer, method, url, { json, body, type } = {}) {
     },
     body: json ? JSON.stringify(json) : body,
   }));
+  return parse(res, method, url);
+}
+
+async function parse(res, method, url) {
   const text = await res.text();
   if (!res.ok) throw new Error(`${method} ${url.replace(/\?.*/, "")}: ${res.status} ${text}`);
   return text ? JSON.parse(text) : {};
+}
+
+// The commit is the one request that is not safe to send again blindly: Play
+// can apply it and still answer 5xx (or the answer can be lost), and the
+// repeat then meets an edit that no longer exists and fails as if nothing had
+// shipped. So before each re-send, and once more after the last attempt, the
+// edit is looked up; gone means the earlier commit most likely went through,
+// and the log says so rather than failing on a confusing "edit not found".
+// Gone is a 404 or 410, or a 400 whose body names a deleted or committed edit
+// (Google reports it that way too; nothing here can check which, offline).
+const editGone = (status, text) =>
+  status === 404 || status === 410 || (status === 400 && /delet|committed/i.test(text));
+
+export async function commitEdit(bearer, id, { fetch: f = fetch, ...retry } = {}) {
+  const headers = { Authorization: `Bearer ${bearer}` };
+  const url = `${API}/edits/${id}:commit`;
+  const gone = async () => {
+    const r = await f(`${API}/edits/${id}`, { headers }).catch(() => null);
+    return !!r && editGone(r.status, r.status === 400 ? await r.text?.().catch(() => "") ?? "" : "");
+  };
+  const applied = () => {
+    console.log(`edit ${id} is gone after a failed commit: Play most likely applied it — check the track in the Play Console`);
+    return { probablyCommitted: true };
+  };
+  let lost = false;   // an earlier attempt failed in a way that may still have been applied
+  const send = async () => {
+    try {
+      const r = await f(url, { method: "POST", headers });
+      if (retryable(r.status)) lost = true;
+      return r;
+    } catch (e) {
+      if (transient(e)) lost = true;
+      throw e;
+    }
+  };
+  let res;
+  try {
+    res = await withRetry(send, { ...retry, stopIf: gone });
+  } catch (e) {
+    if (transient(e) && await gone()) return applied();
+    throw e;
+  }
+  if (res.stopped) return applied();
+  // Whatever the last answer, after an earlier one that may have been
+  // applied only the edit itself can tell: gone means the commit went
+  // through. A 4xx on the re-send is not proof on its own — the lookup just
+  // before it found the edit still there, so it is more likely a real
+  // refusal (a release Play rejects), which must fail the run.
+  if (!res.ok && lost && await gone()) return applied();
+  return parse(res, "POST", url);
 }
 
 // The release the track gets: this one version code, whole. Pure, so the
@@ -119,7 +185,7 @@ async function upload(file, { track, status }) {
   console.log(`uploaded version code ${bundle.versionCode} (sha256 ${bundle.sha256})`);
   await call(bearer, "PUT", `${API}/edits/${edit.id}/tracks/${track}`,
              { json: trackBody(track, bundle.versionCode, status) });
-  await call(bearer, "POST", `${API}/edits/${edit.id}:commit`);
+  await commitEdit(bearer, edit.id);
   console.log(`${track}: version code ${bundle.versionCode} as ${status}`);
 }
 
@@ -165,7 +231,7 @@ export async function listingsPush({ dir = listingsDir } = {}) {
       changed++;
     }
     if (changed) {
-      await call(bearer, "POST", `${API}/edits/${edit.id}:commit`);
+      await commitEdit(bearer, edit.id);
       console.log(`committed: ${changed} listing(s) changed`);
     } else {
       await call(bearer, "DELETE", `${API}/edits/${edit.id}`);

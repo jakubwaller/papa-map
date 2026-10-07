@@ -10,7 +10,8 @@ import CoreLocation
 // of the thread that created it, and a cooperative-pool thread has none.
 // The timeout makes sure Siri gets an answer even when no fix ever comes
 // (permission dialog never answered, no GPS indoors); it answers with the
-// last known position, or nothing.
+// last known position if it is under half an hour old (TableStore.freshFix,
+// the widget's rule), or nothing.
 @MainActor
 final class LocationOnce: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
@@ -22,12 +23,12 @@ final class LocationOnce: NSObject, CLLocationManagerDelegate {
             continuation = cont
             manager.delegate = self
             manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-            if let cached = manager.location, -cached.timestamp.timeIntervalSinceNow < 120 {
+            if let cached = TableStore.freshFix(manager.location, maxAge: 120) {
                 finish(cached); return
             }
             timeout = Task { [weak self] in
                 try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
-                self?.finish(self?.manager.location)
+                self?.finish(TableStore.freshFix(self?.manager.location))
             }
             switch manager.authorizationStatus {
             case .notDetermined:
@@ -51,7 +52,7 @@ final class LocationOnce: NSObject, CLLocationManagerDelegate {
         Task { @MainActor in self.finish(locations.last) }
     }
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        Task { @MainActor in self.finish(manager.location) }
+        Task { @MainActor in self.finish(TableStore.freshFix(manager.location)) }
     }
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus

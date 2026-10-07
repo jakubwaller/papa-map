@@ -6,6 +6,8 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.play.core.review.ReviewManager;
 import com.google.android.play.core.review.ReviewManagerFactory;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 // The app's own plugin, under the same name and with the same three methods as
 // PapaMapSharePlugin.swift, so web/native.js hands the widget its tables the
@@ -20,13 +22,19 @@ import com.google.android.play.core.review.ReviewManagerFactory;
 @CapacitorPlugin(name = "PapaMapShare")
 public class PapaMapSharePlugin extends Plugin {
 
+    // One worker, so writes land in the order the page made them: a thread per
+    // call raced for TableStore's monitor, which is not fair, and a quick
+    // chip on/off could leave the widget the superseded dataset.
+    private static final ExecutorService WRITER =
+            Executors.newSingleThreadExecutor(r -> new Thread(r, "papamap-share"));
+
     // The file write is a couple of megabytes; off the bridge's thread, which
     // every other plugin call waits behind.
     @PluginMethod
     public void writeDataset(PluginCall call) {
         String json = call.getString("json");
         if (json == null) { call.reject("json missing"); return; }
-        new Thread(() -> {
+        WRITER.execute(() -> {
             try {
                 TableStore.save(getContext(), json);
                 NearestWidget.refresh(getContext());
@@ -34,7 +42,7 @@ public class PapaMapSharePlugin extends Plugin {
             } catch (Exception e) {
                 call.reject("could not write the dataset: " + e.getMessage());
             }
-        }, "papamap-share").start();
+        });
     }
 
     @PluginMethod

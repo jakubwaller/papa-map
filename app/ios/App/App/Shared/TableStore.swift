@@ -98,8 +98,25 @@ public enum TableStore {
         return best
     }
 
+    // A fix older than this counts as none, as on Android (NearestWidget's
+    // MAX_FIX_AGE_MS): CLLocationManager.location is the last fix the system
+    // holds, of any age, and a distance quietly hours old is worse than none.
+    public static let maxFixAge: TimeInterval = 30 * 60
+
+    // The fix if it is recent enough to measure from, else nil. A timestamp
+    // in the future (clock skew) counts as fresh, as on Android.
+    public static func freshFix(_ loc: CLLocation?, maxAge: TimeInterval = TableStore.maxFixAge,
+                                now: Date = Date()) -> CLLocation? {
+        guard let loc = loc, now.timeIntervalSince(loc.timestamp) <= maxAge else { return nil }
+        return loc
+    }
+
+    // Mirrors web/datasource.js formatDistance: round to 10 m first, then
+    // pick the unit, so 999.6 m reads "1.0 km" rather than "1000 m" and the
+    // metres claim no more precision than the sensor has.
     public static func formatDistance(_ m: Double, lang: String) -> String {
-        if m < 1000 { return "\(Int(m.rounded())) m" }
+        let r = (m / 10).rounded() * 10
+        if r < 1000 { return "\(Int(r)) m" }
         let km = (m / 100).rounded() / 10
         return lang == "de" ? String(format: "%.1f km", km).replacingOccurrences(of: ".", with: ",")
                             : String(format: "%.1f km", km)
@@ -180,6 +197,11 @@ public enum L {
     public static func noLocation(lang: String) -> String {
         lang == "de" ? "Kein Standort — PapaMap braucht ihn nur auf dem Handy"
                      : "No location — PapaMap only needs it on the phone"
+    }
+    // The widget with permission but no fix from the last half hour: the
+    // tap runs the map's own "nearest" button. Android's widget says the same.
+    public static func tapToFind(lang: String) -> String {
+        lang == "de" ? "Tippen, und PapaMap sucht ihn" : "Tap and PapaMap finds it"
     }
     public static func title(lang: String) -> String {
         lang == "de" ? "Nächster Wickeltisch" : "Nearest changing table"

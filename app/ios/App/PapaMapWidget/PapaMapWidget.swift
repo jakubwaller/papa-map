@@ -15,7 +15,16 @@ struct NearestEntry: TimelineEntry {
     let state: State
     let mode: String
     let lang: String
-    enum State { case ok, noData, noLocation, none }
+    // noLocation: the widget may not use the position at all; staleFix: it
+    // may, but the phone holds no fix from the last half hour (the widget
+    // never asks for one), so the tap hands over to the map's own button.
+    enum State { case ok, noData, noLocation, staleFix, none }
+    // Where a tap goes: the table found, the map's own "nearest" button when
+    // only a fresh fix is missing (Android's widget does the same), else the map.
+    var tapURL: URL? {
+        if let n = nearest { return n.table.deepLink }
+        return URL(string: state == .staleFix ? "papamap://nearest" : "papamap://open")
+    }
 }
 
 struct NearestProvider: TimelineProvider {
@@ -41,9 +50,15 @@ struct NearestProvider: TimelineProvider {
         guard !tables.isEmpty else {
             return NearestEntry(date: .now, nearest: nil, state: .noData, mode: mode, lang: lang)
         }
+        // The extension's own permission and a fix under half an hour old,
+        // or no distance at all: `location` is whatever fix the system last
+        // held, and a widget renewed every 30 minutes would keep renewing it.
         let manager = CLLocationManager()
-        guard let loc = manager.location else {
+        guard manager.isAuthorizedForWidgetUpdates else {
             return NearestEntry(date: .now, nearest: nil, state: .noLocation, mode: mode, lang: lang)
+        }
+        guard let loc = TableStore.freshFix(manager.location) else {
+            return NearestEntry(date: .now, nearest: nil, state: .staleFix, mode: mode, lang: lang)
         }
         guard let hit = TableStore.nearest(to: loc, mode: mode, in: tables) else {
             return NearestEntry(date: .now, nearest: nil, state: .none, mode: mode, lang: lang)
@@ -79,11 +94,12 @@ struct NearestView: View {
                 }
             case .noData: Text(L.noData(lang: entry.lang)).font(.footnote)
             case .noLocation: Text(L.noLocation(lang: entry.lang)).font(.footnote)
+            case .staleFix: Text(L.tapToFind(lang: entry.lang)).font(.footnote)
             case .none: Text(L.none(lang: entry.lang)).font(.footnote)
             }
         }
         .padding(family == .systemSmall ? 2 : 4)
-        .widgetURL(entry.nearest?.table.deepLink ?? URL(string: "papamap://open"))
+        .widgetURL(entry.tapURL)
         .containerBackground(for: .widget) { Color(hex: "#f2f5f3") }
     }
 }
@@ -103,12 +119,13 @@ struct LockView: View {
                 } else {
                     Text(entry.state == .noData ? L.noData(lang: entry.lang)
                          : entry.state == .noLocation ? L.noLocation(lang: entry.lang)
+                         : entry.state == .staleFix ? L.tapToFind(lang: entry.lang)
                          : L.none(lang: entry.lang))
                         .font(.footnote).lineLimit(2)
                 }
             }
         }
-        .widgetURL(entry.nearest?.table.deepLink ?? URL(string: "papamap://open"))
+        .widgetURL(entry.tapURL)
         .containerBackground(for: .widget) { Color.clear }
     }
 }
@@ -122,7 +139,7 @@ struct PapaMapWidget: Widget {
         }
         .configurationDisplayName(Text(verbatim: TableStore.lang == "de" ? "Nächster Wickeltisch" : "Nearest changing table"))
         .description(Text(verbatim: TableStore.lang == "de"
-            ? "Der nächste Wickeltisch, den du auch erreichst, mit Fußweg."
+            ? "Der nächste Wickeltisch, den du auch erreichst, mit Entfernung."
             : "The nearest changing table you can actually reach, with the distance."))
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
