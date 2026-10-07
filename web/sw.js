@@ -55,6 +55,9 @@ const SHELL = [
 const SHELL_PIN = /\?v=([\w-]+)/.exec(SHELL.join(" "))?.[1] ?? "0";
 const CACHE = `papamap-${SHELL_PIN}`;
 
+// The shell entries whose URL survives a deploy unchanged (see install).
+const FRESH_HTML = new Set(["./", "index.html", "index-en.html"]);
+
 // The status pages exist to tell you what is true right now. A stale one is
 // worse than none, so they are never stored.
 const NEVER_CACHE = /(^|\/)(ops\.html|private\/)/;
@@ -86,6 +89,28 @@ const navKey = (url) => {
 // left to surface as an unhandled one in the worker.
 const store = (cache, req, res) => cache.put(req, res.clone()).catch(() => {});
 
+// The dataset is rebuilt once a night but fetched on every load, and writing
+// the same ~20 MB back into the store each time costs a phone flash and
+// battery for nothing. Caddy's file_server sends an ETag and Last-Modified
+// that change with the file, so a stored copy carrying the same validator is
+// the same build. Raw strings on purpose: a weak or "-gzip"-suffixed ETag is
+// still equal to itself. No validator on either side means no proof, so put.
+const sameBuild = (a, b) => {
+  const ea = a.headers?.get("ETag"), eb = b.headers?.get("ETag");
+  if (ea && eb) return ea === eb;
+  const la = a.headers?.get("Last-Modified"), lb = b.headers?.get("Last-Modified");
+  return !!la && la === lb;
+};
+
+// The clone is taken now, before the page reads the body; when the build is
+// the same it is cancelled so the tee does not hold the bytes for nobody.
+const storeIfChanged = (cache, req, res) => {
+  const copy = res.clone();
+  return cache.match(req)
+    .then((old) => (old && sameBuild(old, res) ? copy.body?.cancel?.() : cache.put(req, copy)))
+    .catch(() => {});
+};
+
 // A stored dataset answer carries a header the page reads to say "this is the
 // copy from an earlier visit". Nothing else can tell it: navigator.onLine
 // reports the machine's interface, and a Wi-Fi with no internet says "online".
@@ -115,10 +140,16 @@ const refresh = (req) =>
 self.addEventListener("install", (e) => {
   // addAll() is atomic — one 404 in the list aborts the install and leaves the
   // previous worker serving, which is the failure mode we want. "reload" for
-  // the same reason as refresh() above: a new pin's cache filled from the HTTP
-  // cache can hold the previous deploy's index.html under the new name.
+  // the unpinned HTML only, for the same reason as refresh() above: a new
+  // pin's cache filled from the HTTP cache can hold the previous deploy's
+  // index.html under the new name. A ?v= file cannot hold another deploy's
+  // bytes, and the page has just fetched the shell, so the rest comes from
+  // the HTTP cache instead of a second ~550 KB download on a first visit.
+  // The vendor files carry no pin but have not changed since they arrived;
+  // an upgrade of MapLibre should come under a new file name.
   e.waitUntil(caches.open(CACHE)
-    .then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" }))))
+    .then((c) => c.addAll(SHELL.map((u) =>
+      (FRESH_HTML.has(u) ? new Request(u, { cache: "reload" }) : new Request(u)))))
     .then(() => self.skipWaiting()));
 });
 
@@ -151,7 +182,7 @@ self.addEventListener("fetch", (e) => {
       // download carries on in the background into the store for the next
       // visit; waitUntil keeps the worker alive for it.
       const network = refresh(req).then((res) => {
-        if (res.ok && res.type === "basic") store(cache, req, res);
+        if (res.ok && res.type === "basic") storeIfChanged(cache, req, res);
         return res;
       }).catch(() => null);
       e.waitUntil(network);

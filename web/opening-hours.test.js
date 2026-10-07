@@ -717,3 +717,27 @@ test("a partial off for the small hours also closes yesterday's spill", () => {
   // A whole-day off for the next day still leaves the spill alone.
   assert.equal(isOpenNow("Fr 20:00-02:00; Sa off", sat(1, 0)), "open");
 });
+
+test("a date range mixing a bare month with a day is unknown, not cut short", () => {
+  // Read as written, each of these used to collapse to one month or one day
+  // and give a firm answer that was wrong for most of the season.
+  assert.equal(isOpenNow("Apr-Oct 15 Mo-Su 10:00-18:00", on(2026, 10, 7, 12, 0)), "unknown");
+  assert.equal(isOpenNow("Apr 15-Oct Mo-Su 10:00-18:00", on(2026, 7, 7, 12, 0)), "unknown");
+  assert.equal(isOpenNow("Mo-Fr 08:00-18:00; Sep 15-Oct off", on(2026, 10, 7, 12, 30)), "unknown");
+  assert.equal(isOpenNow("Mo-Fr 08:00-18:00; Oct-Nov 05 off", on(2026, 11, 3, 12, 0)), "unknown");
+});
+
+test("a date selector ending in a day number takes the optional colon", () => {
+  const range = "Apr 01-Oct 31: Mo-Su 10:00-18:00";
+  assert.equal(isOpenNow(range, on(2026, 7, 7, 12, 0)), "open");
+  assert.equal(isOpenNow(range, on(2026, 12, 7, 12, 0)), "closed");
+  assert.equal(isOpenNow("Apr 01-Oct 31 Mo-Su 10:00-18:00", on(2026, 7, 7, 12, 0)), "open");
+  assert.equal(isOpenNow("Dec 24: 10:00-14:00", on(2026, 12, 24, 12, 0)), "open");
+  assert.equal(isOpenNow("Dec 24: 10:00-14:00", on(2026, 12, 23, 12, 0)), "closed");
+  assert.equal(isOpenNow("Dec 24 10:00-14:00", on(2026, 12, 24, 12, 0)), "open");
+  // The later rule re-adds the day, as ; always does.
+  assert.equal(isOpenNow("Dec 25-26: off; Mo-Su 10:00-18:00", on(2026, 12, 25, 12, 0)), "open");
+  // A clock time right after a month is still a time, not a day.
+  assert.equal(isOpenNow("May-Oct 09:00-22:00", on(2026, 7, 7, 12, 0)), "open");
+  assert.equal(isOpenNow("May-Oct 09:00-22:00", on(2026, 7, 7, 8, 0)), "closed");
+});
