@@ -12,8 +12,8 @@
 // cannot filter on `changing_table`, which is why venueRows drops what the
 // map already has a pin for, and why writeTags' own re-read (web/osm.js)
 // stays the last word on whether the place is still unanswered.
-import { haversineKm } from "./datasource.js?v=app80";
-import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app80";
+import { haversineKm } from "./datasource.js?v=app81";
+import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app81";
 
 // The MapComplete theme's dad_venue layer, as tag lists: the same places the
 // theme offers for the same question. theme/papamap.theme.json is the source,
@@ -35,6 +35,26 @@ export const VENUE_TAGS = {
 
 export function isVenue(key, value) {
   return Boolean(VENUE_TAGS[key]?.includes(value));
+}
+
+// What the dialog's search box accepts: the list above, and anything else
+// under these keys. The nearby list stays on the theme's tags, since fifty
+// unasked-for places should be the likely ones. A name somebody typed is
+// different: they know the place, so a children's clothes shop or a bakery
+// (shop=clothes, Wohngeschwisterchen in the Schanze, 7 Oct 2026) is fair game.
+// Toilets stay out, they are the other button.
+export const VENUE_SEARCH_KEYS = ["amenity", "shop", "tourism", "leisure"];
+
+export function isSearchVenue(key, value) {
+  if (key === "amenity" && value === "toilets") return false;
+  return isVenue(key, value) || VENUE_SEARCH_KEYS.includes(key);
+}
+
+// The search box's Photon filter: a bare key means every value under it, and
+// the list's pairs under other keys (stations, terminals) are kept as pairs.
+export function venueSearchOsmTags() {
+  return [...VENUE_SEARCH_KEYS,
+    ...venueOsmTags().filter((t) => !VENUE_SEARCH_KEYS.includes(t.split(":")[0]))];
 }
 
 // Photon's own filter: one `osm_tag=key:value` per pair, ORed.
@@ -91,7 +111,7 @@ export function venueSearchUrl(query, lat, lon, { lang = null, endpoint = PHOTON
   });
   const l = photonLang(lang);
   if (l) p.set("lang", l);
-  for (const tag of venueOsmTags()) p.append("osm_tag", tag);
+  for (const tag of venueSearchOsmTags()) p.append("osm_tag", tag);
   return `${endpoint}?${p}`;
 }
 
@@ -100,12 +120,14 @@ const OSM_TYPE = { N: "node", W: "way", R: "relation" };
 // Photon's answer as rows the dialog can render, nearest first, or [] for
 // anything that is not a usable FeatureCollection (a throttled Photon can
 // answer an error body with a 200). Dropped: rows without a name (nobody
-// recognises "unnamed" from the street), anything not on the venue list (the
-// search box does not restrict by tag as strictly as reverse does), toilets
-// (they are the other button), duplicates (Photon indexes one object once
-// per matching tag), and whatever `known(osm_url)` says the map already has
-// a pin for — a table there is answered, the room question lives on its pin.
-export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_LIMIT } = {}) {
+// recognises "unnamed" from the street), anything `accept(key, value)` turns
+// down (isVenue for the nearby list, isSearchVenue for a typed name; Photon's
+// own filter is not trusted to be strict), toilets (they are the other
+// button), duplicates (Photon indexes one object once per matching tag), and
+// whatever `known(osm_url)` says the map already has a pin for — a table
+// there is answered, the room question lives on its pin.
+export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_LIMIT,
+                                  accept = isVenue } = {}) {
   const feats = Array.isArray(json?.features) ? json.features : [];
   const out = [], seen = new Set();
   for (const f of feats) {
@@ -114,7 +136,7 @@ export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_L
     const c = f?.geometry?.coordinates;
     if (!type || p.osm_id == null || !p.name) continue;
     if (!Array.isArray(c) || !Number.isFinite(c[0]) || !Number.isFinite(c[1])) continue;
-    if (!isVenue(p.osm_key, p.osm_value)) continue;
+    if (!accept(p.osm_key, p.osm_value)) continue;
     const osm_url = `https://www.openstreetmap.org/${type}/${p.osm_id}`;
     if (seen.has(osm_url) || known(osm_url)) continue;
     seen.add(osm_url);
