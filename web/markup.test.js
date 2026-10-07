@@ -131,7 +131,7 @@ test("no style.css rule takes a chip's label out of the accessibility tree", () 
   for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     if (!/display\s*:\s*none|visibility\s*:\s*hidden/.test(body)) continue;
     for (const s of sel.split(",").map((x) => x.trim()))
-      if (/\.chip\b/.test(s) && /\.label\b/.test(s)) bad.push(s);
+      if (/\.label\b/.test(s) && /(\.chip|\.wc|\.hc|#filter-bar)\b/.test(s)) bad.push(s);
   }
   assert.deepEqual(bad, []);
 });
