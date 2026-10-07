@@ -500,6 +500,26 @@ def test_write_all_pages_gives_the_us_and_canada_english_hubs(tmp_path):
 
 # ---- 44 countries, 31 page languages (23 Aug 2026) --------------------------
 
+def _leftover_placeholders(html):
+    """`{name_in}`-style placeholders a template forgot to format, anywhere on
+    the page. Style and script blocks are dropped first: CSS and the inline
+    JS carry braces of their own."""
+    body = re.sub(r"<style>.*?</style>|<script\b.*?</script>", "", html, flags=re.S)
+    return re.findall(r"\{[A-Za-z_]+\}", body)
+
+
+def test_leftover_check_sees_a_placeholder_in_the_page_body(monkeypatch):
+    # The old check read only the <head>, so a heading like this passed.
+    from pipeline.config import COUNTRY_PAGES
+    lang, name, name_in, name_for = COUNTRY_PAGES["dk"]
+    monkeypatch.setitem(pages_l10n.L[lang], "named_h2", "Steder {name_in}")
+    html = pages.render_area({
+        "lang": lang, "summary": pages.summarize(name, [feat(1, "Legoland")], 7),
+        "name_in": name_in, "name_for": name_for, "back": [],
+    }, GEN)
+    assert _leftover_placeholders(html) == ["{name_in}"]
+
+
 def test_every_page_language_defines_the_country_template_keys():
     # The 28 keys a country page renders from — the "en" entry is the
     # template. de and fr carry extra hub-only keys on top; nobody may carry
@@ -534,13 +554,14 @@ def test_every_country_page_renders_in_its_own_language(tmp_path):
         }, GEN)
         assert f'lang="{lang}"' in html, cc
         assert "<h1>" in html and "Legoland" in html, cc
-        assert "{" not in html.split("<style>")[0], cc  # unformatted leftover
+        assert not _leftover_placeholders(html), cc
         empty = pages.render_area({
             "lang": lang, "summary": pages.summarize(name, [], 0),
             "name_in": name_in, "name_for": name_for,
             "back": [(L[lang]["back_map"], "../")],
         }, GEN)
         assert f'lang="{lang}"' in empty, cc
+        assert not _leftover_placeholders(empty), cc
 
 
 def test_area_pages_link_their_own_leaderboard():
@@ -651,7 +672,8 @@ def test_hub_twins_render_english_copy_over_the_native_chunk_pages(tmp_path):
     assert "<strong>1</strong> places" in de   # the Hamburg feature
     index = (tmp_path / "index.html").read_text(encoding="utf-8")
     assert '<a href="deutschland-en.html">English</a>' in index
-    assert "{" not in de.split("<style>")[0] and "{" not in fr.split("<style>")[0]
+    for page in sorted(tmp_path.glob("*.html")):  # every hub and area page built
+        assert not _leftover_placeholders(page.read_text(encoding="utf-8")), page.name
 
 
 def test_area_index_maps_every_page_to_its_box_and_english_reading(tmp_path):

@@ -74,7 +74,16 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   so this is where the wall clock for the next countries comes from.
   `PAPAMAP_TOILETS_COUNTS_PERIOD_DAYS=1` recounts every area every night. An
   area whose sweep comes back empty is always recounted, whatever the rota:
-  the stale-mirror check needs a number fetched tonight, not a cached one.
+  the stale-mirror check needs a number fetched tonight, not a cached one —
+  and from the same host that answered the sweep, since a count from another
+  mirror cannot vouch for an area database this one never had. The other
+  direction is forgiving: next to a sweep with objects, a recount that fails
+  (or answers one number, nothing, or two zeros) keeps the cached count, up to
+  the cache's four-period limit (28 days), because failing the whole build
+  over a statistic is out of proportion. Those fallbacks are counted apart
+  from the rota's reuse in the log and shown on the ops page, so a count that
+  keeps failing is noticed before the cache drops it and the area fails the
+  build again.
 
 ## Area pages
 
@@ -981,8 +990,11 @@ per city) — and renders `web/wickeltische/rangliste.html` (German) plus
 answered share in percentage points against a snapshot at least a week back,
 never the absolute counts: levels measure mapping thoroughness, movement
 measures people answering the room question, and only the latter is an honest
-race. A same-date re-run replaces its history entry; partial builds write no
-history at all.
+race. A same-date re-run replaces its history entry, unless it swept fewer
+regions than the entry it would replace (then history is left alone). A build
+without all 16 Länder writes no history; one with them files only the cities of
+the countries it swept, so a `PAPAMAP_COUNTRIES=de` run on a day with no nightly
+entry still writes a 16-region day.
 
 `python -m pipeline.backfill 2026-07-17 2026-07-24 ...` seeds past days from
 Overpass attic (`[date:...]`) queries so the page can show a real week-over-week
