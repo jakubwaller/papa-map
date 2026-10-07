@@ -12,8 +12,15 @@
   --line-soft: #e4e9e4;
   --green: #009e73;
   --green-strong: #00775a;
+  /* White text needs 4.5:1 (WCAG 1.4.3) and --green gives it 3.4: every
+     filled control with words on it uses --green-strong (5.6:1) at rest and
+     --green-press (7.5:1) under the pointer. Pins, dots, outlines and borders
+     keep --green — non-text UI only needs 3:1. web/contrast.test.js holds it. */
+  --green-press: #00614a;
   /* Okabe-Ito reddish-purple, the mama half of the reading toggle. */
   --mama: #cc79a7;
+  /* The same, darkened to 5.5:1 under white for the switched-on mama button. */
+  --mama-strong: #a8457f;
   --red: #d55e00;
   --grey-pin: #3d4247;
   /* Okabe-Ito blue — the play-corner halo and chip. Not a status: the three
@@ -135,15 +142,15 @@ header {
   order: 3;
   padding: 7px 13px;
   border-radius: 999px;
-  border: 1px solid var(--green);
-  background: var(--green);
+  border: 1px solid var(--green-strong);
+  background: var(--green-strong);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
 }
-.add-btn:hover { background: var(--green-strong); border-color: var(--green-strong); }
+.add-btn:hover, .add-btn:active { background: var(--green-press); border-color: var(--green-press); }
 
 /* The app-page link: the add button's outlined twin, same row, same shape, so
    the two read as one pair — filled = act on the map, outlined = a question. */
@@ -159,7 +166,7 @@ header {
   text-decoration: none;
   white-space: nowrap;
 }
-.app-btn:hover { background: var(--green); color: #fff; }
+.app-btn:hover { background: var(--green-strong); color: #fff; }
 .app-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
 /* Language toggle: styled like the nav links, shaped like a small button.
@@ -196,6 +203,14 @@ select.lang-btn {
      German and English while Czech fit (measured 2026-09-07). app.js does
      the same by hand where field-sizing is not supported. */
   field-sizing: content;
+  /* Never under 16px, like every field in the shell: iOS zooms the page in
+     when a smaller control takes focus, now that the viewport lets readers
+     zoom (WCAG 1.4.4). The tighter padding keeps it the old button's height,
+     and with no tracking it is ~6px wider than at 12px rather than ~16, which
+     on a 375px phone keeps the English nav on one row (measured 2026-10-07). */
+  font-size: 16px;
+  letter-spacing: 0;
+  padding: 3px 6px;
 }
 /* Options render in the OS popup, which does not inherit the header's
    colours — say so explicitly or Windows dark mode draws black on black. */
@@ -275,7 +290,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   flex: 0 0 auto;
   box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .35);
 }
-.chip .cnt { opacity: .55; font-weight: 500; }
+/* .7, not lighter: ink at .7 over the palest chip tint is 4.9:1 (WCAG 1.4.3). */
+.chip .cnt { opacity: .7; font-weight: 500; }
 /* One language for every chip: dashed = not applied, solid + a tint of the
    chip's own colour (--chip) = applied. The meaning differs — the three status
    chips start on and subtract when switched off, the play, places and
@@ -503,9 +519,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   max-width: calc(100vw - 32px);
   height: 44px;
   padding: 0 20px 0 16px;
-  border: 1px solid var(--green);
+  border: 1px solid var(--green-strong);
   border-radius: 999px;
-  background: var(--green);
+  background: var(--green-strong);
   color: #fff;
   font: inherit;
   font-family: var(--ui);
@@ -517,7 +533,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 .nearest-btn span { overflow: hidden; text-overflow: ellipsis; }
 .nearest-btn svg { flex: 0 0 auto; }
-.nearest-btn:hover { background: var(--green-strong); border-color: var(--green-strong); }
+.nearest-btn:hover, .nearest-btn:active { background: var(--green-press); border-color: var(--green-press); }
 .nearest-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 .nearest-btn[hidden] { display: none; }
 
@@ -611,13 +627,13 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   display: inline-block;
   padding: 7px 14px;
   border-radius: 999px;
-  border: 1px solid var(--green);
-  background: var(--green);
+  border: 1px solid var(--green-strong);
+  background: var(--green-strong);
   color: #fff;
   font-size: 12.5px;
   font-weight: 600;
 }
-#room-card .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
+#room-card .btn.primary:hover, #room-card .btn.primary:active { background: var(--green-press); border-color: var(--green-press); }
 #room-card .close {
   position: absolute;
   top: 4px;
@@ -660,8 +676,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   color: var(--ink);
 }
 #add-dialog a.btn:hover { border-color: var(--green); }
-#add-dialog a.btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
-#add-dialog a.btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
+#add-dialog a.btn.primary { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
+#add-dialog a.btn.primary:hover, #add-dialog a.btn.primary:active { background: var(--green-press); border-color: var(--green-press); }
 #add-dialog a.btn .hint {
   display: block;
   margin-top: 3px;
@@ -677,7 +693,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    MapComplete links below stay on screen on a phone. */
 #venue-search {
   width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 9px 11px;
-  border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 14px;
+  border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 16px;
 }
 #venue-search:disabled { background: #f1f4f2; }
 #add-dialog .venue-status { margin: 0 0 10px; }
@@ -776,10 +792,11 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 #me-dialog .btn.primary, #intro-dialog .btn.primary {
   display: inline-block; padding: 9px 16px; border-radius: 999px;
-  border: 1px solid var(--green); background: var(--green); color: #fff;
+  border: 1px solid var(--green-strong); background: var(--green-strong); color: #fff;
   font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
 }
-#me-dialog .btn.primary:hover, #intro-dialog .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); }
+#me-dialog .btn.primary:hover, #intro-dialog .btn.primary:hover,
+#me-dialog .btn.primary:active, #intro-dialog .btn.primary:active { background: var(--green-press); border-color: var(--green-press); }
 .intro-lang { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: 13px; color: var(--muted-2); }
 #intro-dialog h4 { margin: 0 0 6px; font-size: 13.5px; }
 #intro-dialog { max-height: 88vh; max-height: min(88vh, calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px)); }
@@ -939,7 +956,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .row.wc .isa, .popup .row.key .key {
   width: 13px; height: 13px; margin-right: 5px; vertical-align: -2px; fill: currentColor;
 }
-.popup .row.wc.ok b { color: var(--green); }
+.popup .row.wc.ok b { color: var(--green-strong); }
 /* A mapper's note can run to a paragraph (v68): three lines, and fitPopup adds
    a "more" link where the clamp cut something. The text stays — the methods
    page promises it in the popup. */
@@ -975,8 +992,10 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   color: var(--muted-2);
 }
 :is(.popup, #venue-ask) .btn:hover { border-color: var(--green); color: var(--green-strong); }
-.popup .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
-.popup .btn.primary:hover { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
+/* Through the same :is() as the pill rule above, whose id would otherwise
+   outrank a plain .popup selector and paint the label dark grey on green. */
+:is(.popup, #venue-ask) .btn.primary { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
+:is(.popup, #venue-ask) .btn.primary:is(:hover, :active) { background: var(--green-press); border-color: var(--green-press); color: #fff; }
 /* The share button: icon only, in the same row as Route and the OSM link —
    at 375 px in German that row has no room left for one more word. The
    :is() is for specificity: the pill rule above carries an id through it,
@@ -1148,9 +1167,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 .mode-btn + .mode-btn { border-left: 1px solid var(--line); }
 .mode-btn:hover { color: var(--green); }
-.mode-btn.on { background: var(--green); color: #fff; }
-.mode-btn.on:hover { color: #fff; }
-#mode-mama.on { background: var(--mama); }
+.mode-btn.on { background: var(--green-strong); color: #fff; }
+.mode-btn.on:hover, .mode-btn.on:active { color: #fff; background: var(--green-press); }
+#mode-mama.on, #mode-mama.on:hover, #mode-mama.on:active { background: var(--mama-strong); }
 .mode-btn:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
 
 /* ---------- Offline cities (store app) ---------- */
@@ -1167,9 +1186,10 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .offline-list li.note .name { white-space: normal; }
 .offline-list button {
   flex: 0 0 auto; padding: 6px 12px; border-radius: 999px;
-  border: 1px solid var(--green); background: var(--green); color: #fff;
+  border: 1px solid var(--green-strong); background: var(--green-strong); color: #fff;
   font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: var(--ui);
 }
+.offline-list button:not(.saved):not(:disabled):is(:hover, :active) { background: var(--green-press); border-color: var(--green-press); }
 .offline-list button.saved { background: #fff; color: var(--muted-2); border-color: var(--line); }
 .offline-list button:disabled { opacity: .6; cursor: default; }
 
