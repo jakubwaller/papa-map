@@ -85,6 +85,16 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   keeps failing is noticed before the cache drops it and the area fails the
   build again.
 
+Every table and place still carries `mapcomplete_url`, its deep link into
+MapComplete, but the property is **deprecated since CONTRACT v80**: it is
+nothing but the theme URL, `z=18`, the coordinates and `#<type>/<id>`, about a
+quarter of the dataset's gzip, and the frontend now rebuilds it from `osm_url`
+and the coordinates (`mapCompleteObjectUrl` in `web/datasource.js`) whenever it
+is absent. The store apps bundle the web shell and read the dataset from
+papamap.de, so the pipeline keeps emitting it until every app build that reads
+it (versions before the release that bundles v80) has aged out; a later
+amendment drops it.
+
 ## Area pages
 
 The same run writes one static page per swept area into `web/wickeltische/`
@@ -848,10 +858,24 @@ badge in the chip and a line in the popup, nothing drawn on the pin.
 Wherever a popup already prints the raw `opening_hours` tag, it gets a same-line
 badge — "Open now" (green) or "Closed now" (grey) — whenever `web/opening-hours.js`
 is confident enough to say one. Evaluated client-side, at popup-render time,
-against the *viewer's own clock*: the tables are local to whoever is looking,
-and OSM carries no per-place timezone to check against instead. Pure and
-frontend-only; the pipeline exports `opening_hours` unchanged, so nothing
-here touches CONTRACT.md.
+on the *place's own clock* (CONTRACT v80): a reader in Berlin looking at a
+Tokyo café at 14:00 sees the 21:00 answer Tokyo would give, not Berlin's. The
+pipeline exports `opening_hours` unchanged.
+
+The zone comes from the build, not from OSM, which carries none.
+`pipeline/timezones.py` names one default IANA zone per country, and one per US
+state and Canadian province; stats.json lists the default of every swept area
+as `area_tz`. Coordinate rules refine the areas that span several zones —
+Australia's west, centre and Queensland, the Canaries, the Azores, the Chatham
+Islands, the Dutch Caribbean, the Faroes and Greenland, and the US states and
+Canadian provinces a zone line runs through — and only a feature whose zone
+differs from its area's default carries a `tz` of its own, so the tens of
+thousands in single-zone areas cost nothing. The lines are approximate on
+purpose (a border town may be an hour off). `zoneForFeature` in
+`web/datasource.js` picks `tz`, else the area's default, else null; with null,
+or a zone the browser does not know, the badge falls back to the device's clock
+as before. Weekday, date (for `Dec 25 off`), "yesterday" (for a span past
+midnight) and the sun events are all read in that zone.
 
 The parser understands `24/7`; day ranges and lists (`Mo-Fr`, `Mo,We`, with or
 without a space after the comma), including wrap-around ranges (`Fr-Mo`);

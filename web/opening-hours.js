@@ -1,18 +1,17 @@
 // A small, deliberately incomplete reader for OSM's opening_hours syntax
 // (https://wiki.openstreetmap.org/wiki/Key:opening_hours). It answers one
-// question — "is this place open right now, in the browser's own local
-// time?" — and it would rather say nothing than say something wrong: any
-// construct it does not confidently understand makes the whole value
-// "unknown", not a guess.
+// question — "is this place open right now, on the place's own clock?" —
+// and it would rather say nothing than say something wrong: any construct it
+// does not confidently understand makes the whole value "unknown", not a
+// guess.
 //
-// The places this map shows are local to the person looking at the popup
-// (a nappy-change table you can walk to), so evaluating against the
-// viewer's local clock rather than the place's own timezone is the right
-// approximation — there is no per-place timezone in the data to evaluate
-// against anyway. The same assumption extends to sunrise/sunset: the sun
-// event is computed for the place's coordinates, but converted to a
-// time-of-day using the *device's* timezone, on the same "viewer's clock,
-// viewer's location is close enough to the place's" reasoning.
+// The place's clock is its IANA zone (CONTRACT v80: stats.json's `area_tz`,
+// or the feature's own `tz`), passed in as `timeZone`; weekday, date and
+// minute of day are read in that zone (wallClock), and so are the sun events
+// computed for the place's coordinates. A reader in Berlin looking at a Tokyo
+// café sees Tokyo's answer. Without a zone (a dataset from before v80, an
+// area the build did not name) it falls back to the device's own clock, which
+// is right whenever the reader stands in the place's zone.
 //
 // Supported: "24/7"; day ranges and lists (Mo-Fr, Mo,We, Mo, We with spaces,
 // Sa-Su), including with spaces around the "-" (Mo - Sa); wrap-around day
@@ -262,17 +261,78 @@ function solarEventUTC(y, m, d, lat, lon, altitudeDeg, evening) {
   return new Date((jEvent - 2440587.5) * 86400000);
 }
 
-// Minute-of-day (in the *device's* local timezone, per the module's stated
-// assumption) of the four sun events on the given calendar date, or null
-// per event where the date sees polar day/night.
-function sunTimesForDate(y, m, d, lat, lon) {
-  const toMinutes = (date) => (date === null ? null : date.getHours() * 60 + date.getMinutes());
+// Minute-of-day of the four sun events on the given calendar date, on the
+// place's clock (timeZone; the device's when null), or null per event where
+// the date sees polar day/night. An instant that lands on another local date
+// in that zone (a far-west longitude against its zone's meridian) keeps the
+// device-clock reading this function always gave, rather than a minute of
+// the wrong day.
+function sunTimesForDate(y, m, d, lat, lon, timeZone = null) {
+  const toMinutes = (date) => {
+    if (date === null) return null;
+    const wc = wallClock(date, timeZone);
+    if (wc.y === y && wc.m === m && wc.d === d) return wc.minutes;
+    return date.getHours() * 60 + date.getMinutes();
+  };
   return {
     sunrise: toMinutes(solarEventUTC(y, m, d, lat, lon, -0.833, false)),
     sunset: toMinutes(solarEventUTC(y, m, d, lat, lon, -0.833, true)),
     dawn: toMinutes(solarEventUTC(y, m, d, lat, lon, -6, false)),
     dusk: toMinutes(solarEventUTC(y, m, d, lat, lon, -6, true)),
   };
+}
+
+// -------------------------------------------------------------------------
+// The place's clock
+// -------------------------------------------------------------------------
+
+// One formatter per zone (building one costs far more than formatting), and
+// null for a zone this engine does not know, which is remembered too.
+const FORMATTERS = new Map();
+const WEEKDAYS = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+
+function formatterFor(timeZone) {
+  if (!FORMATTERS.has(timeZone)) {
+    let fmt = null;
+    try {
+      fmt = new Intl.DateTimeFormat("en-US", {
+        timeZone, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric",
+        hour: "numeric", minute: "numeric", weekday: "short",
+      });
+    } catch (e) {
+      if (!(e instanceof RangeError)) throw e;
+    }
+    FORMATTERS.set(timeZone, fmt);
+  }
+  return FORMATTERS.get(timeZone);
+}
+
+// The wall clock at `date` in `timeZone`: { y, m (1-12), d, weekday
+// (0 = Monday), minutes (of the day) }. A null or invalid zone ("Mars/Base")
+// reads the device's own clock, exactly as this module always did.
+export function wallClock(date, timeZone = null) {
+  const fmt = timeZone ? formatterFor(timeZone) : null;
+  if (!fmt) {
+    return {
+      y: date.getFullYear(), m: date.getMonth() + 1, d: date.getDate(),
+      weekday: (date.getDay() + 6) % 7, // JS: 0 = Sunday -> ours: 0 = Monday
+      minutes: date.getHours() * 60 + date.getMinutes(),
+    };
+  }
+  const part = {};
+  for (const { type, value } of fmt.formatToParts(date)) part[type] = value;
+  return {
+    y: Number(part.year), m: Number(part.month), d: Number(part.day),
+    weekday: WEEKDAYS[part.weekday],
+    minutes: (Number(part.hour) % 24) * 60 + Number(part.minute),
+  };
+}
+
+// The calendar day before (y, m, d), by pure date arithmetic: "now minus 24
+// hours" lands on the same date on the night summer time ends.
+function dayBefore(y, m, d) {
+  const t = new Date(Date.UTC(y, m - 1, d - 1));
+  return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() };
 }
 
 // Resolves a time-span endpoint to a minute-of-day number given the
@@ -754,9 +814,10 @@ function evaluateGroups(groups, day, minutes, val, yval, sunTimes, ySunTimes) {
 const hasCoords = (coords) => Number.isFinite(coords?.lat) && Number.isFinite(coords?.lon);
 
 // The one function callers need: is `openingHours` open at `now` (a Date,
-// defaulting to the caller's clock)? "unknown" whenever the value can't be
-// parsed with confidence, parses to nothing usable, or needs a sun event
-// and no valid `coords` ({ lat, lon }) were given.
+// defaulting to the caller's clock), read on the clock of `timeZone` (the
+// place's IANA zone; null or unknown → the device's)? "unknown" whenever the
+// value can't be parsed with confidence, parses to nothing usable, or needs
+// a sun event and no valid `coords` ({ lat, lon }) were given.
 //
 // A "||" value tries its alternatives in order, purely on whether each one
 // is open *right now*: the first alternative that resolves to open wins
@@ -774,16 +835,16 @@ const hasCoords = (coords) => Number.isFinite(coords?.lat) && Number.isFinite(co
 // "closed"; if none could even be evaluated (all skipped), it's "unknown".
 // With just one alternative (the common case, no "||" at all) this reduces
 // to the same default-closed behaviour it always had.
-export function isOpenNow(openingHours, now = new Date(), coords = null) {
+export function isOpenNow(openingHours, now = new Date(), coords = null, timeZone = null) {
   if (!openingHours || typeof openingHours !== "string") return "unknown";
   const alts = openingHours.split("||");
 
-  const day = (now.getDay() + 6) % 7; // JS: 0 = Sunday -> ours: 0 = Monday
-  const minutes = now.getHours() * 60 + now.getMinutes();
-  const val = (now.getMonth() + 1) * 100 + now.getDate();
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yval = (yesterday.getMonth() + 1) * 100 + yesterday.getDate();
+  const clock = wallClock(now, timeZone);
+  const day = clock.weekday;
+  const minutes = clock.minutes;
+  const val = clock.m * 100 + clock.d;
+  const yesterday = dayBefore(clock.y, clock.m, clock.d);
+  const yval = yesterday.m * 100 + yesterday.d;
   const coordsOk = hasCoords(coords);
 
   let evaluatedAny = false;
@@ -796,9 +857,9 @@ export function isOpenNow(openingHours, now = new Date(), coords = null) {
     let sunTimes = null, ySunTimes = null;
     if (usesSun(rules)) {
       if (!coordsOk) return "unknown"; // can't resolve the sun event this needs
-      sunTimes = sunTimesForDate(now.getFullYear(), now.getMonth() + 1, now.getDate(), coords.lat, coords.lon);
+      sunTimes = sunTimesForDate(clock.y, clock.m, clock.d, coords.lat, coords.lon, timeZone);
       ySunTimes = sunTimesForDate(
-        yesterday.getFullYear(), yesterday.getMonth() + 1, yesterday.getDate(), coords.lat, coords.lon);
+        yesterday.y, yesterday.m, yesterday.d, coords.lat, coords.lon, timeZone);
       // Polar day/night: the event this value depends on doesn't occur on
       // today's or yesterday's date at this latitude — can't be evaluated,
       // not positively shown to be silent.

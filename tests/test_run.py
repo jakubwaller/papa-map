@@ -213,6 +213,9 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     assert payload["generated_at"] == "2026-07-26T03:00:00+00:00"
     assert payload["area_name"] == "Deutschland & Danmark"
     assert payload["area_key"] == "de_dk"  # frontend translates this per language
+    # v80: each swept area's default zone, for the popup's "Open now".
+    assert payload["area_tz"] == {**{land: "Europe/Berlin" for land in BUNDESLAENDER},
+                                  "Danmark": "Europe/Copenhagen"}
     assert payload["local"]["ct_yes"] == 6
     assert payload["local"]["capacity_tagged_toilets"] == 17  # 1 per area, summed
     # One fixture pin carries kids_area=yes; three prospects have a play area

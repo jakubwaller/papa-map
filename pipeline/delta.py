@@ -599,15 +599,25 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         existing_table = base_dataset["tables"].get(url)
         if existing_table is None and acc is not None:
             existing_table = acc["tables_upsert"].get(url)
+        existing_place = base_dataset["places"].get(url)
+        if existing_place is None and acc is not None:
+            existing_place = acc["places_upsert"].get(url)
         if existing_table is not None:
             area = existing_table["properties"].get("area")
+        elif existing_place is not None and existing_place["properties"].get("area"):
+            # A place carries its area since v80; one from an older base does
+            # not, and falls through to the boxes like a new object.
+            area = existing_place["properties"]["area"]
         else:
             refs = itertools.chain(base_dataset["tables"].values(),
                                    acc["tables_upsert"].values() if acc is not None else ())
             area = area_for_point(lon, lat, area_boxes_by_name, refs)
         created_by_url[url] = created
         table_feats = export.build_features({"elements": [el]}, {(osm_type, osm_id): area})
-        place_feats = export.build_play_features({"elements": [el]}, {"elements": []})
+        # The same area for the place half: its `area` and `tz` (v80), as the
+        # nightly build gives them.
+        place_feats = export.build_play_features({"elements": [el]}, {"elements": []},
+                                                 {(osm_type, osm_id): area})
         table_feat = table_feats[0] if table_feats else None
         place_feat = place_feats[0] if place_feats else None
         for f in (table_feat, place_feat):

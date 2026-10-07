@@ -13,7 +13,8 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
-         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app78";
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs,
+         zoneForFeature } from "./datasource.js?v=app78";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app78";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
@@ -787,14 +788,16 @@ function wheelchairRows(o) {
 
 // The raw opening_hours string, plus a same-line "Open now" / "Closed now"
 // badge wherever isOpenNow() is confident enough to say one — evaluated at
-// render time against the viewer's own clock. `coords` (the place's own
+// render time on the place's own clock: `timeZone` is its IANA zone
+// (zoneForFeature, v80), null for a dataset without one, which falls back
+// to the viewer's clock. `coords` (the place's own
 // lat/lon) only matters for a value that names a sunrise/sunset/dawn/dusk
 // event; without it those stay unbadged, same as anything else the parser
 // can't confidently resolve. A value it can't parse (or that only carries
 // PH/SH rules, which we never guess at) prints the hours with no badge at
 // all: no claim beats a wrong one.
-function hoursRowHTML(hours, coords) {
-  const state = isOpenNow(hours, new Date(), coords);
+function hoursRowHTML(hours, coords, timeZone) {
+  const state = isOpenNow(hours, new Date(), coords, timeZone);
   const badge = state === "unknown" ? "" :
     ` <span class="hours-badge ${state}">${esc(t(state === "open" ? "popupOpenNow" : "popupClosedNow"))}</span>`;
   return `<div class="row">${esc(t("popupHours"))}: ${esc(hours)}${badge}</div>`;
@@ -883,7 +886,9 @@ function popupHTML(f) {
   if (f.key)
     rows.push(`<div class="row key">${svgIcon(KEY_PATH, "key")}${esc(t("popupKey"))}</div>`);
   if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
-  if (f.opening_hours) rows.push(hoursRowHTML(f.opening_hours, { lat: f.lat, lon: f.lon }));
+  if (f.opening_hours)
+    rows.push(hoursRowHTML(f.opening_hours, { lat: f.lat, lon: f.lon },
+      zoneForFeature(f, lastStats?.area_tz)));
   if (asks) rows.push(askHTML("askRoom", inFlight.has(f.osm_url)));
   // The second question, on every pin where OSM says nothing about a play
   // area (play_recorded false — an answered "no" is an answer and is never
@@ -1054,7 +1059,9 @@ function placeHTML(p) {
   rows.push(...highchairRows(p));
   rows.push(...wheelchairRows(p));
   if (!p.changing_table) rows.push(askHTML("askTable", inFlight.has(p.osm_url)));
-  if (p.opening_hours) rows.push(hoursRowHTML(p.opening_hours, { lat: p.lat, lon: p.lon }));
+  if (p.opening_hours)
+    rows.push(hoursRowHTML(p.opening_hours, { lat: p.lat, lon: p.lon },
+      zoneForFeature(p, lastStats?.area_tz)));
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(p.mapcomplete_url, lang)),
         osmUrl = safeUrl(p.osm_url);
