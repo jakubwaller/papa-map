@@ -64,6 +64,56 @@ def test_parse_failed_build_names_the_exception():
     assert b["error"] == "RuntimeError: Bayern failed in every round"
 
 
+CRASHED_NIGHT = """\
+  Bayern: ct=9 play=9 toilets=9
+  WARN Berlin: 500 Server Error
+Traceback (most recent call last):
+  File "run.py", line 1, in <module>
+RuntimeError: boom
+"""
+
+
+def test_a_crashed_night_is_not_folded_into_the_next_build():
+    b = ops_page.parse_build_log(FINISHED_BUILD + CRASHED_NIGHT + FINISHED_BUILD)
+    assert b["finished"] is True and b["error"] is None
+    assert [a["area"] for a in b["areas"]] == ["Baden-Württemberg", "Bayern",
+                                               "Italy"]
+    assert not any("500 Server Error" in w for w in b["warns"])
+
+    # Two failed nights in a row: only the last one, once.
+    b = ops_page.parse_build_log(FINISHED_BUILD + CRASHED_NIGHT + CRASHED_NIGHT)
+    assert b["finished"] is False and b["error"] == "RuntimeError: boom"
+    assert [a["area"] for a in b["areas"]] == ["Bayern"]
+    assert b["warns"] == ["WARN Berlin: 500 Server Error"]
+
+    # A night in progress after a crash is only the night in progress.
+    b = ops_page.parse_build_log(FINISHED_BUILD + CRASHED_NIGHT
+                                 + "  Berlin: ct=1 play=1 toilets=1\n")
+    assert b["finished"] is False and b["error"] is None
+    assert [a["area"] for a in b["areas"]] == ["Berlin"] and b["warns"] == []
+
+
+def test_a_chained_traceback_is_one_crash():
+    chained = ("  Bayern: ct=9 play=9 toilets=9\n"
+               "Traceback (most recent call last):\n"
+               '  File "osm.py", line 1, in query\n'
+               "TimeoutError: slow\n"
+               "\n"
+               "During handling of the above exception, another exception "
+               "occurred:\n"
+               "\n"
+               "Traceback (most recent call last):\n"
+               '  File "run.py", line 1, in <module>\n'
+               "RuntimeError: Bayern failed in every round\n")
+    b = ops_page.parse_build_log(FINISHED_BUILD + chained)
+    assert b["finished"] is False
+    assert [a["area"] for a in b["areas"]] == ["Bayern"]
+    assert b["error"] == "RuntimeError: Bayern failed in every round"
+    b = ops_page.parse_build_log(FINISHED_BUILD + chained + FINISHED_BUILD)
+    assert b["finished"] is True and b["error"] is None
+    assert len(b["areas"]) == 3
+
+
 def test_parse_empty_or_buildless_log_is_none():
     assert ops_page.parse_build_log(None) is None
     assert ops_page.parse_build_log("") is None
@@ -228,7 +278,11 @@ def test_unfinished_or_failed_build_is_never_healthy():
     html = render(build=running, anomalies=["stats.json is missing"])
     assert "Anomalies" in html and "Last build had not" not in html
     # No log at all is not a failed build.
-    assert "Healthy" in render(build=None)
+    h = render(build=None)
+    assert "Healthy" in h and "last build finished" not in h
+    assert "no build log found" in h
+    h = render(build=ops_page.parse_build_log(FINISHED_BUILD))
+    assert "Healthy" in h and "last build finished" in h
 
 
 def test_anomalies_replace_the_healthy_line_and_escape():
@@ -270,37 +324,75 @@ def test_area_names_are_escaped():
 
 # ---- The movement charts -----------------------------------------------------
 
-def test_transition_rows_keep_the_axis_continuous():
+def _movement(html):
+    return html.split('<section id="movement"')[1].split("</section>")[0]
+
+
+def test_movement_axis_is_continuous():
     """A missed night is a visible gap, not two days silently stitched
     together — and bar height counts transitions only, because new/gone swing
     by the thousands when an area fails or comes back."""
-    rows = ops_page.transition_rows([
+    sec = _movement(render(history=[
         day("2026-08-20", 1, 1, 1, to_accessible=4, to_female_only=1,
             new=2000, gone=3),
         day("2026-08-22", 1, 1, 1, to_accessible=2, new=3, gone=1),
-    ])
-    assert [r[0] for r in rows] == ["2026-08-20", "2026-08-21", "2026-08-22"]
-    assert rows[0][2] == 5 and rows[0][3] == 4       # new/gone not in the bar
-    assert "+2000 new" in rows[0][1]                 # but in the tooltip
-    assert rows[1] == ("2026-08-21", "2026-08-21 · no run", None, 0)
-    assert rows[2][1] == ("2026-08-22 · 2 → accessible, 0 → female-only, "
-                          "0 → unknown · +3 new, -1 gone")
+    ]))
+    assert 'title="2026-08-21 · no run"' in sec
+    assert ('title="2026-08-20 · 4 → accessible, 1 → female-only, 0 → unknown'
+            ' · +2000 new, -3 gone"') in sec
+    assert ('title="2026-08-22 · 2 → accessible, 0 → female-only, '
+            '0 → unknown · +3 new, -1 gone"') in sec
 
 
-def test_transition_rows_show_at_most_chart_days():
+def test_movement_chart_shows_at_most_chart_days():
     from datetime import date, timedelta
     hist = [day((date(2026, 1, 1) + timedelta(days=i)).isoformat(), 1, 1, 1,
                 to_accessible=1) for i in range(200)]
-    rows = ops_page.transition_rows(hist)
-    assert len(rows) == ops_page.CHART_DAYS
-    assert rows[-1][0] == "2026-07-19"               # the newest day survives
+    sec = _movement(render(history=hist))
+    newest = date(2026, 7, 19)                       # the newest day survives
+    oldest = newest - timedelta(days=ops_page.CHART_DAYS - 1)
+    assert f'title="{newest.isoformat()} · 1 → accessible' in sec
+    assert f'title="{oldest.isoformat()} · 1 → accessible' in sec
+    assert (f'title="{(oldest - timedelta(days=1)).isoformat()} · 1 → accessible'
+            not in sec)
 
 
-def test_edits_rows_tell_zero_from_not_fetched():
-    rows = ops_page.edits_rows({"2026-08-20": 2, "2026-08-22": 0})
-    assert rows[0] == ("2026-08-20", "2026-08-20 · 2 changesets", 2, 2)
-    assert rows[1] == ("2026-08-21", "2026-08-21 · not fetched", None, 0)
-    assert rows[2] == ("2026-08-22", "2026-08-22 · 0 changesets", 0, 0)
+def test_edits_chart_tells_zero_from_not_fetched():
+    html = render(edits_days={"2026-08-20": 2, "2026-08-22": 0})
+    assert 'title="2026-08-21 · not fetched"' in html
+    assert 'title="2026-08-22 · 0 theme changesets · 0 answers in the app"' in html
+
+
+def test_edits_chart_does_not_claim_a_zero_for_an_unfetched_series():
+    # The in-app series starts later (or stalls): its missing days after it
+    # could exist are unknown, not quiet; before it could exist they are 0.
+    html = render(edits_days={"2026-10-03": 2, "2026-10-04": 3, "2026-10-05": 1},
+                  web_edits_days={"2026-10-05": 4})
+    assert 'title="2026-10-03 · 2 theme changesets · app: not fetched"' in html
+    assert 'title="2026-10-05 · 1 theme changeset · 4 answers in the app"' in html
+    html = render(edits_days={"2026-09-12": 2},
+                  web_edits_days={"2026-09-13": 1})
+    assert 'title="2026-09-12 · 2 theme changesets · 0 answers in the app"' in html
+    assert 'title="2026-09-13 · theme: not fetched · 1 answer in the app"' in html
+
+
+def test_edits_best_day_and_line_skip_unfetched_series():
+    html = render(edits_days={"2026-10-03": 2, "2026-10-04": 3},
+                  web_edits_days={"2026-10-02": 1})
+    assert '<span class="s">2026-10-04, 3 theme · – in the app</span>' in html
+    # The line adds the known counts only: 1 + 2 + 3.
+    assert 'aria-label="1 to 6"' in html and '<div class="end" style="bottom:100.0%">6</div>' in html
+
+
+def test_edits_window_tile_shows_both_ranges_when_series_disagree():
+    from datetime import date, timedelta
+    theme = {(date(2026, 9, 1) + timedelta(days=i)).isoformat(): 1
+             for i in range(20)}
+    web = {(date(2026, 9, 1) + timedelta(days=i)).isoformat(): 2
+           for i in range(18)}
+    html = render(edits_days=theme, web_edits_days=web)
+    assert ("theme 2026-09-14 → 2026-09-20, app 2026-09-12 → 2026-09-18"
+            in html)
 
 
 def days_from(first, values):
