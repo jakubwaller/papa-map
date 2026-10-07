@@ -26,6 +26,7 @@
 > the property is absent. The pipeline keeps emitting it until every store build
 > that reads it (app versions before the release that bundles this change) has
 > aged out, and a later amendment drops it. No user-facing wording changes.
+> Shell pin `app78` → `app79`; no `WHATS_NEW` entry.
 
 > **v79 amendment (7 Oct 2026, the login survives Android killing the app, and
 > Mein PapaMap pages by user id): no data shape change.** Four things in the
