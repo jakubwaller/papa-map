@@ -79,9 +79,13 @@ let roundTripLocal = false;
 export function keepRoundTripAcrossRestarts(on = true) { roundTripLocal = on; }
 const roundTrip = () => (roundTripLocal ? globalThis.localStorage : globalThis.sessionStorage);
 // Long enough to create an OSM account and confirm it by mail on the way.
+// The app's limit only: on the web the trip lives in the tab's own
+// sessionStorage, which ends with the tab, so a reader who takes longer still
+// lands their answer, as before the app needed a limit at all.
 export const ROUND_TRIP_MS = 60 * 60 * 1000;
 // A record without the stamp was stored by the page before it had one.
-const fresh = (rec) => (rec && !(Date.now() - (rec.at ?? Date.now()) > ROUND_TRIP_MS) ? rec : null);
+const fresh = (rec) => (rec && !(roundTripLocal && Date.now() - (rec.at ?? Date.now()) > ROUND_TRIP_MS)
+  ? rec : null);
 
 // Whether `href` is the return of a login this app is still waiting for: a
 // fresh PKCE record exists and its state is the URL's. Read only, nothing is

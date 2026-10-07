@@ -17,7 +17,7 @@
 > used once, ignored after one hour (`ROUND_TRIP_MS`) and removed by the next
 > load that is not a return, because Android may kill the process while OSM's
 > login is up and a `sessionStorage` would not outlive it. The web keeps
-> `sessionStorage`. Both transient keys are named in the Datenschutz. The cold
+> `sessionStorage`, with no time limit (the tab ends it). Both transient keys are named in the Datenschutz. The cold
 > start's `papamap://auth` arrives through `getLaunchUrl` and is routed only when
 > `awaitingReturn` says a fresh record with that state exists, since Android
 > replays the launch intent on every recreation of the Activity. **(4) The
@@ -600,7 +600,7 @@
 > delta or nightly build could possibly have it — and persisted in
 > `localStorage['papamap-answer-overrides']`
 > (`{osm_url: {status, changing_table, location_raw, t, version}}` in v39 — see
-> v77 for the shape since: every field but `t`/`version` optional, merged per
+> v78 for the shape since: every field but `t`/`version` optional, merged per
 > object; `version`
 > the OSM object version `writeTags` returned for this exact write) so a
 > reload keeps the colour. **Pruned by OSM version, primarily**: an entry is

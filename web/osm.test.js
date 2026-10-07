@@ -123,6 +123,24 @@ test("the web keeps the round trip in sessionStorage, and a login without an ans
   assert.equal(takeIntent(), null);
 });
 
+// The hour is the app's limit, for records in localStorage. A web reader who
+// signs up at OSM and confirms by mail on the way may take longer, in the
+// same tab, and the answer still lands.
+test("on the web the round trip has no time limit: the tab's own storage ends it", async () => {
+  globalThis.localStorage = fakeSession();
+  globalThis.sessionStorage = fakeSession();
+  let went = null;
+  const intent = { kind: "table", osm_url: "https://www.openstreetmap.org/node/2", choice: "unisex" };
+  await startLogin(LIVE, intent, (u) => { went = u; });
+  const realNow = Date.now;
+  Date.now = () => realNow() + 2 * ROUND_TRIP_MS;
+  try {
+    assert.ok(awaitingReturn(`https://papamap.de/?code=c&state=${stateOf(went)}`));
+    assert.deepEqual(await finishLogin(LIVE, `https://papamap.de/?code=c&state=${stateOf(went)}`, tokenReply), { token: "tok" });
+    assert.deepEqual(takeIntent(), intent);
+  } finally { Date.now = realNow; }
+});
+
 // Android kills the app's process while the OS browser has OSM's login up;
 // papamap://auth then cold-starts a WebView whose sessionStorage is empty.
 test("the app's round trip outlives the process: localStorage, used once, stale after the limit", async () => {
