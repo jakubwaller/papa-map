@@ -95,7 +95,8 @@ function fakePlay(commits, edit) {
       if (next instanceof Error) throw next;
       return { status: next, ok: next < 300, text: async () => (next < 300 ? '{"id":"e1"}' : "error") };
     }
-    return { status: edit.shift() ?? 200 };
+    const e = edit.shift() ?? 200;   // a status, or { status, body } for a lookup that explains itself
+    return typeof e === "number" ? { status: e } : { status: e.status, text: async () => e.body };
   };
   return { f, seen };
 }
@@ -122,4 +123,45 @@ test("a commit Play refuses outright fails at once", async () => {
   const { f, seen } = fakePlay([400], []);
   await assert.rejects(commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), /: 400 error/);
   assert.deepEqual(seen, ["POST e1:commit"]);
+});
+
+test("a commit that fails on its last attempt is checked once more, and read as committed if the edit is gone", async () => {
+  const { f, seen } = fakePlay([503, 503, 503, 503], [200, 200, 200, 404]);
+  assert.deepEqual(await commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), { probablyCommitted: true });
+  assert.deepEqual(seen, ["POST e1:commit", "GET e1", "POST e1:commit", "GET e1", "POST e1:commit", "GET e1",
+                          "POST e1:commit", "GET e1"]);
+});
+
+test("a last-attempt failure with the edit still there is the real failure", async () => {
+  const { f } = fakePlay([503, 503], [200, 200]);
+  await assert.rejects(commitEdit("t", "e1", { fetch: f, tries: 2, sleep: async () => {} }), /: 503 error/);
+});
+
+test("a lost answer on the last attempt is checked as well", async () => {
+  const { f, seen } = fakePlay([reset(), reset()], [200, 404]);
+  assert.deepEqual(await commitEdit("t", "e1", { fetch: f, tries: 2, sleep: async () => {} }), { probablyCommitted: true });
+  assert.deepEqual(seen, ["POST e1:commit", "GET e1", "POST e1:commit", "GET e1"]);
+});
+
+test("a 400 lookup that names a deleted edit counts as gone", async () => {
+  const { f, seen } = fakePlay([503], [{ status: 400, body: "This Edit has been deleted." }]);
+  assert.deepEqual(await commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), { probablyCommitted: true });
+  assert.deepEqual(seen, ["POST e1:commit", "GET e1"]);
+});
+
+test("a 400 lookup that says something else does not", async () => {
+  const { f, seen } = fakePlay([503, 200], [{ status: 400, body: "Invalid request" }]);
+  assert.deepEqual(await commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), { id: "e1" });
+  assert.deepEqual(seen, ["POST e1:commit", "GET e1", "POST e1:commit"]);
+});
+
+test("a 4xx on the re-sent commit after a 5xx reads as already applied", async () => {
+  const { f, seen } = fakePlay([503, 400], [200]);
+  assert.deepEqual(await commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), { probablyCommitted: true });
+  assert.deepEqual(seen, ["POST e1:commit", "GET e1", "POST e1:commit"]);
+});
+
+test("a 403 on the re-send is still a failure", async () => {
+  const { f } = fakePlay([503, 403], [200]);
+  await assert.rejects(commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), /: 403 error/);
 });

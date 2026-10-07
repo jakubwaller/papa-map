@@ -111,19 +111,48 @@ async function parse(res, method, url) {
 // The commit is the one request that is not safe to send again blindly: Play
 // can apply it and still answer 5xx (or the answer can be lost), and the
 // repeat then meets an edit that no longer exists and fails as if nothing had
-// shipped. So before each re-send the edit is looked up; gone (404) means the
-// earlier commit most likely went through, and the log says so rather than
-// failing on a confusing "edit not found".
+// shipped. So before each re-send, and once more after the last attempt, the
+// edit is looked up; gone means the earlier commit most likely went through,
+// and the log says so rather than failing on a confusing "edit not found".
+// Gone is a 404 or 410, or a 400 whose body names a deleted or committed edit
+// (Google reports it that way too; nothing here can check which, offline).
+const editGone = (status, text) =>
+  status === 404 || status === 410 || (status === 400 && /delet|committed/i.test(text));
+
 export async function commitEdit(bearer, id, { fetch: f = fetch, ...retry } = {}) {
   const headers = { Authorization: `Bearer ${bearer}` };
   const url = `${API}/edits/${id}:commit`;
-  const res = await withRetry(() => f(url, { method: "POST", headers }), {
-    ...retry,
-    stopIf: async () => (await f(`${API}/edits/${id}`, { headers }).catch(() => null))?.status === 404,
-  });
-  if (res.stopped) {
+  const gone = async () => {
+    const r = await f(`${API}/edits/${id}`, { headers }).catch(() => null);
+    return !!r && editGone(r.status, r.status === 400 ? await r.text?.().catch(() => "") ?? "" : "");
+  };
+  const applied = () => {
     console.log(`edit ${id} is gone after a failed commit: Play most likely applied it — check the track in the Play Console`);
     return { probablyCommitted: true };
+  };
+  let lost = false;   // an earlier attempt failed in a way that may still have been applied
+  const send = async () => {
+    try {
+      const r = await f(url, { method: "POST", headers });
+      if (retryable(r.status)) lost = true;
+      return r;
+    } catch (e) {
+      if (transient(e)) lost = true;
+      throw e;
+    }
+  };
+  let res;
+  try {
+    res = await withRetry(send, { ...retry, stopIf: gone });
+  } catch (e) {
+    if (transient(e) && await gone()) return applied();
+    throw e;
+  }
+  if (res.stopped) return applied();
+  if (!res.ok && lost) {
+    // The last answer was a 5xx: look the edit up once more. A 4xx on a
+    // re-send after a lost answer is Play refusing an edit it already closed.
+    if (retryable(res.status) ? await gone() : [400, 404, 409, 410].includes(res.status)) return applied();
   }
   return parse(res, "POST", url);
 }
