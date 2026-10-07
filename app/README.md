@@ -41,9 +41,10 @@ appears in a copy installed from Google Play.
 
 ```
 app/
-  package.json          Capacitor and its plugins (Filesystem, Geolocation, Browser, App, Network,
+  package.json          Capacitor and its plugins (Filesystem, Geolocation, Browser, App,
                         Preferences, AppLauncher — the last one only so the Route button
-                        can ask iOS which navigation apps exist, docs/FEATURES.md)
+                        can ask iOS which navigation apps exist, docs/FEATURES.md; no
+                        Network plugin, FEATURES.md says why it went)
   capacitor.config.json appId de.papamap.app, webDir www
   build-www.js          copies the shell from ../web into www/ (no sw.js, no site pages)
   shell.mjs             the one edit to the copied index.html: the donate span — the Ko-fi

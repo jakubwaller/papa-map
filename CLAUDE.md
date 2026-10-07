@@ -23,11 +23,14 @@ classification rule, and it is the thing to keep truthful when the rule changes.
 python -m pipeline.run     # full build → web/data/*.json + web/wickeltische/*.html (~5 min)
 pytest -v                  # pipeline tests, offline (fixtures only)
 node --test web/*.test.js  # frontend pure functions
+node --test app/*.test.mjs app/ios/*.test.mjs app/android/*.test.mjs  # store app; imports web/i18n.js
 python -m pipeline.theme_check   # MapComplete theme rot guard
 ```
 
-Code targets Python 3.9+ — every module starts with `from __future__ import annotations`, which is
-what keeps `str | None` hints working on the system Python. Keep it that way.
+Code targets Python 3.10+ — the pinned dependencies install on nothing older (macOS's system
+`python3` is 3.9 and cannot run the project; the image and CI use 3.12). Every module still starts
+with `from __future__ import annotations`: the house convention, which keeps annotations
+unevaluated at import time. Keep it that way.
 
 ## Things that are easy to get wrong
 
@@ -42,7 +45,8 @@ fail when one of them lags.
 **`CONTRACT.md` is the pipeline↔frontend contract.** Classification lives only in Python; the
 frontend consumes the `status` property and never re-derives it. `STATUSES` in `web/datasource.js`
 is the stable key set the UI renders zero badges from. Changing the emitted shape means amending
-CONTRACT.md — it is versioned by amendment, currently v54.
+CONTRACT.md — it is versioned by amendment, newest block first: read the top `vNN amendment`
+block and number yours one above it.
 
 **Overpass lies in two directions.** An all-Germany area query dies at a ~60 s network idle cutoff,
 so Germany stays chunked per Bundesland — and **France per région**, for the same reason and
@@ -110,7 +114,10 @@ Stage by naming paths, never `git add -A` / `git commit -a`, in any checkout you
 
 Branch, PR, squash-merge — never push to `main` directly, even for a one-line docs change.
 
-1. `pytest -v` and `node --test web/*.test.js` green before anything else.
+1. `pytest -v`, `node --test web/*.test.js` and
+   `node --test app/*.test.mjs app/ios/*.test.mjs app/android/*.test.mjs` green before anything
+   else — the same three commands as `ci.yml`. The app tests import `web/` modules (a language
+   added to `web/i18n.js` turns `app/listings.test.mjs` red), so a web-only change needs them too.
 2. Branch off `origin/main`, commit, `gh pr create`, let CI (`ci.yml`, `theme-check.yml`) run.
 3. `gh pr merge --squash --delete-branch`.
 4. Deploy and verify per **[`docs/DEPLOY.md`](docs/DEPLOY.md)** — that file is the runbook and the

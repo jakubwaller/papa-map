@@ -35,7 +35,13 @@
 	# standard order, and in that order respond comes BEFORE file_server, so
 	# the 404 fallback won every time (the 22 Aug 2026 deploy). route keeps
 	# the written order — snippet first, the 404 only if nothing served.
+	#
+	# no-store, set before the snippet runs: the page is token-gated, so it
+	# must never sit in a shared cache, and a 404 from a cookie-less visit
+	# must not be remembered past the ?token= visit that sets the cookie. A
+	# Set here also keeps the site-wide `header ?` hour below from applying.
 	route /private/* {
+		header Cache-Control "private, no-store"
 		import /etc/caddy/private/*.caddy
 		respond 404
 	}
@@ -73,6 +79,13 @@
 	@tiles path /tiles/*.pmtiles
 	header @tiles Cache-Control "public, max-age=86400"
 	header @tiles Content-Type application/vnd.pmtiles
+	# The worker script must reach readers on their next update check.
+	# Browsers already skip their own HTTP cache for it, but on the hour
+	# below Cloudflare kept it at the edge for four (DEPLOY.md, 2026-09-13),
+	# so a fix to the worker itself shipped hours late. no-cache plus
+	# file_server's ETag makes each check a cheap 304.
+	@sw path /sw.js
+	header @sw Cache-Control "no-cache"
 	# The site-wide hour is a *default*: `?` sets the header only if nothing
 	# has set it already. Caddy sorts same-directive `header` routes so the
 	# ones carrying a matcher run first, and a plain `header` is a Set — so

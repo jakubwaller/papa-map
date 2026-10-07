@@ -29,3 +29,58 @@ jobs:
           node-version: "22"
       - run: node --test web/*.test.js
       - run: node --test app/*.test.mjs app/ios/*.test.mjs app/android/*.test.mjs
+
+  # The image and the Caddyfile are what every cron and the site itself run on,
+  # and nothing above touches either: a PMTILES_VERSION bumped without its
+  # SHA, or a Caddyfile typo, stayed green here and failed at 02:00 (no data,
+  # and no 07:30 ops mail, which builds the same image) or on the next
+  # `docker compose restart papamap` (the whole site 502). Its own job, so a
+  # github.com download flake does not hold up the test job, and only when a
+  # file it covers changed — the paths filter is a step because workflow-level
+  # `paths` would skip the test job too.
+  deploy-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: changes
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          # A new branch's push has no `before` (all zeros): check everything.
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if git diff --name-only "$BASE" HEAD \
+              | grep -qE '^(Dockerfile|requirements[^/]*\.txt|docker-compose\.yml|deploy/|\.github/workflows/ci\.yml)'; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build the pipeline image
+        if: steps.changes.outputs.deploy == 'true'
+        run: docker build -t papa-map-ci .
+      - name: The image carries a working pmtiles
+        if: steps.changes.outputs.deploy == 'true'
+        run: docker run --rm papa-map-ci pmtiles version
+      # Twice, as the server can be: without the git-ignored auth snippet (the
+      # import glob matches nothing) and with the example in its place.
+      - name: Caddyfile loads without the private snippet
+        if: steps.changes.outputs.deploy == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/no-private"
+          docker run --rm \
+            -v "$PWD/deploy/papamap.Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v "$RUNNER_TEMP/no-private:/etc/caddy/private:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      - name: Caddyfile loads with the example snippet
+        if: steps.changes.outputs.deploy == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/private"
+          cp deploy/private/ops-auth.caddy.example "$RUNNER_TEMP/private/ops-auth.caddy"
+          docker run --rm \
+            -v "$PWD/deploy/papamap.Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v "$RUNNER_TEMP/private:/etc/caddy/private:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
