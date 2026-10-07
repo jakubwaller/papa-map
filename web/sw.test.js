@@ -53,8 +53,8 @@ function loadSW({ cached = {}, network = {} } = {}) {
   return { handlers, put, opened, fetched, added };
 }
 
-const res = (body, { ok = true, type = "basic" } = {}) =>
-  ({ ok, type, body, clone() { return this; } });
+const res = (body, { ok = true, type = "basic", headers } = {}) =>
+  ({ ok, type, body, headers: headers && new Headers(headers), clone() { return this; } });
 
 // Fire a fetch event and report whether the worker took it over at all.
 function fire(handlers, url, method = "GET", mode = "no-cors") {
@@ -108,6 +108,37 @@ test("the dataset is network-first: online, tonight's build beats last visit's c
   assert.equal(answer.headers, undefined, "a fresh answer is passed through untouched");
   await new Promise((r) => setImmediate(r));
   assert.deepEqual(put, [url], "the fresh copy is stored for the next offline visit");
+});
+
+// The dataset again: same build, same validators, and nothing is written.
+async function storedAfter(storedHeaders, freshHeaders) {
+  const url = `${ORIGIN}/data/changing_tables.geojson`;
+  const { handlers, put } = loadSW({
+    cached: { [url]: res("stored", { headers: storedHeaders }) },
+    network: { [url]: res("fresh", { headers: freshHeaders }) } });
+  assert.equal((await fire(handlers, url).responded).body, "fresh");
+  await new Promise((r) => setImmediate(r));
+  return put.length;
+}
+
+test("an unchanged dataset is not written into the store again", async () => {
+  // ~20 MB of identical JSON on every load is a phone's flash and battery
+  // spent for nothing. The production ETag carries a "-gzip" suffix, and the
+  // raw strings compare.
+  const etag = '"sf3k2j1a-gzip"';
+  assert.equal(await storedAfter({ ETag: etag }, { ETag: etag }), 0);
+  assert.equal(await storedAfter({ ETag: etag }, { ETag: '"sf9x0q2b-gzip"' }), 1);
+  const lm = "Wed, 07 Oct 2026 02:10:00 GMT";
+  assert.equal(await storedAfter({ "Last-Modified": lm }, { "Last-Modified": lm }), 0);
+  assert.equal(await storedAfter({ "Last-Modified": lm },
+                                 { "Last-Modified": "Thu, 08 Oct 2026 02:10:00 GMT" }), 1);
+  // The ETag decides when both sides have one, whatever Last-Modified says.
+  assert.equal(await storedAfter({ ETag: etag, "Last-Modified": lm },
+                                 { ETag: '"other"', "Last-Modified": lm }), 1);
+  // No validator on either side is no proof of sameness: store.
+  assert.equal(await storedAfter({ ETag: etag }, {}), 1);
+  assert.equal(await storedAfter({}, { ETag: etag }), 1);
+  assert.equal(await storedAfter(undefined, undefined), 1);
 });
 
 const later = (ms, value) => new Promise((r) => setTimeout(() => r(value), ms));
@@ -252,15 +283,21 @@ test("a page refresh asks the server, not the browser's HTTP cache", async () =>
   ]);
 });
 
-test("the install precaches fresh copies, not the HTTP cache's", async () => {
+test("the install precaches fresh HTML, and takes the pinned files from the HTTP cache", async () => {
   // A new pin's cache filled from the HTTP cache can hold the previous
-  // deploy's index.html under the new name.
+  // deploy's index.html under the new name. A ?v= file cannot, and the page
+  // has just downloaded it: fetching it again with "reload" doubled a first
+  // visit's shell bytes.
   const { handlers, added } = loadSW();
   let done;
   handlers.install({ waitUntil(p) { done = p; } });
   await done;
   assert.ok(added.some((r) => r.url === "index.html"), "the shell was not precached");
-  for (const r of added) assert.equal(r.cache, "reload", r.url);
+  for (const r of added) {
+    const html = ["./", "index.html", "index-en.html"].includes(r.url);
+    assert.equal(r.cache, html ? "reload" : undefined, r.url);
+  }
+  assert.ok(added.some((r) => r.url.includes("?v=")), "no pinned file was precached");
 });
 
 test("offline with nothing stored rejects rather than resolving to undefined", async () => {
