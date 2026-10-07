@@ -123,8 +123,25 @@
 <h1>PapaMap — meetodid ja ausus</h1>
 <p class="muted">Mähkimislauad, kuhu isa jõuab. Allpool toodud ülemaailmsed taginfo numbrid tulevad
 öisest buildist. Kaheksa linnasüdame valim pärineb 26.&nbsp;juulist&nbsp;2026 ja jääb samaks.</p>
+<nav class="muted" aria-label="Sisukord"><strong>Sisukord</strong>
+<ul>
+  <li><a href="#what">Mis see kaart on. Ja mis ta ei ole.</a></li>
+  <li><a href="#colours">Mida värvid tähendavad (täpne reegel)</a></li>
+  <li><a href="#mum-mode">Isa-ema lüliti</a></li>
+  <li><a href="#play-area">Sinine rõngas: mänguala</a></li>
+  <li><a href="#wheelchair">Kiip Ratastool</a></li>
+  <li><a href="#empty-rings">Tühjad sinised rõngad: mängukohad, millele pole vastust</a></li>
+  <li><a href="#high-chair">Kiip Lastetool</a></li>
+  <li><a href="#grey-pin">Kuidas hall nõel parandada</a></li>
+  <li><a href="#contribute">Kuidas lisada puuduv koht</a></li>
+  <li><a href="#no-ranking">Miks varustatuse edetabelit OSM-i põhjal teha ei saa</a></li>
+  <li><a href="#where-tables">Ainus arvutatav fakt: kus lauad asuvad</a></li>
+  <li><a href="#licence">Andmete litsents ja viitamine</a></li>
+  <li><a href="#privacy">Privaatsus</a></li>
+  <li><a href="#how-made">Kuidas see leht valmib</a></li>
+</ul></nav>
 
-<h2>Mis see kaart on. Ja mis ta ei ole.</h2>
+<h2 id="what">Mis see kaart on. Ja mis ta ei ole.</h2>
 <p>PapaMap näitab kohti 44 Euroopa riigis — Islandist Küproseni, Portugalist Ukrainani, lisaks Austraalia, Uus-Meremaa, USA, Kanada ja Jaapan —, kus
 OpenStreetMap
 teab mähkimislauast
@@ -133,8 +150,9 @@ olevate linkide kaudu.</p>
 <p>Idee sündis Caroline Criado Perezi raamatut <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> lugedes.</p>
 <p>Milline linn pakub kõige paremaid tualette — selline edetabel see ei ole. Miks seda avatud
 andmetest ausalt teha ei saa, on selgitatud allpool.</p>
+<p>Siin on jutt ainult mähkimislaudadest. Mänguväljakute ja muude peresõbralike kohtade jaoks vaata <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> ja <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Mida värvid tähendavad (täpne reegel)</h2>
+<h2 id="colours">Mida värvid tähendavad (täpne reegel)</h2>
 <p>Kaardile jõuavad ainult objektid, millel on <code>changing_table=yes</code> või
 <code>limited</code> (<code>no</code> läheb ainult statistikasse). Värv tuleneb sildist
 <code>changing_table:location</code>. Väärtus tükeldatakse märgi <code>;</code> järgi, tühikud
@@ -152,7 +170,7 @@ alamstringina, sest <code>female_toilet</code> sisaldab sõna <code>male</code>.
 </ul>
 <p><code>centralkey</code>-sildiga (muu kui <code>no</code>) objekt jääb kaardilt välja, kui võti lukustab kogu ukse: <code>access=centralkey</code>, laud invatualetis, või miski siltides ei ütle, et võti kehtib ainult ühe kabiini kohta. Avatud meeste- ja naistetualetiga ning lukustatud invakabiiniga kompleks (<code>wheelchair:access=centralkey</code>, või <code>male=yes</code> ja <code>female=yes</code>) jääb kaardile, hallina, kuni keegi ruumi kirja paneb. Eurovõtme saab ainult puude tõendamisel, nii et enamik isasid sellest uksest läbi ei saa. Kiibi <em>Ratastool</em> all tulevad need lauad tagasi, vt allpool.</p>
 
-<h2>Isa-ema lüliti</h2>
+<h2 id="mum-mode">Isa-ema lüliti</h2>
 <p>Kolm ülalpool kirjeldatud värvi vastavad isa küsimusele: kas isa pääseb laua juurde? Emale on
 sama vastus enamasti teistsugune &mdash; naiste WC-s olevat lauda saab ta kasutada, ja ka lauast,
 mille ruum on märkimata, on suurem osa sellises ruumis, kuhu ta pääseb sisse. Lüliti
@@ -175,7 +193,7 @@ kuid emale mitte. Pipeline märgib need lauad eraldi, seepärast on need ema-re�
 lähe kaasa ülalpool oleva arvu sisse. Rakenduse vanemad versioonid võivad neid siiani rohelisena
 näidata, kuni need uuendatakse.</p>
 
-<h2>Sinine rõngas: mänguala</h2>
+<h2 id="play-area">Sinine rõngas: mänguala</h2>
 <p>Sinise rõngaga nõelal on lisaks ka mänguala &mdash; koht, kus last ei mähita lihtsalt ära, vaid
 jäädakse veidi pikemaks. Filter <em>Mängualaga</em> näitab kaardil ainult neid kohti. Koht loetakse
 mängualaga kohaks, kui OSM registreerib mõne järgnevatest:</p>
@@ -211,11 +229,11 @@ pärast. Kelleltki ei küsita kaks korda: salvestatud <code>kids_area</code> <em
 <code>leisure=playground</code> puhul ilma <code>indoor=yes</code>-ta ei küsita seda üldse
 &mdash; koht <em>on</em> juba mängukoht, lihtsalt mitte sees.</p>
 
-<h2>Kiip Ratastool</h2>
+<h2 id="wheelchair">Kiip Ratastool</h2>
 <p>Kiip <em>Ratastool</em> näitab kohti, millel on OSM-is <code>wheelchair=yes</code> või <code>wheelchair=limited</code>. <code>limited</code> tähendab ühte kuni 7&nbsp;cm astet või abi vajadust. Kiibi sisselülitatuna on neil kohtadel suumist 13 alates hüüumärk ja hüpikaknas on <em>piiratud</em>. Ainult <code>toilets:wheelchair=yes</code> ei piisa, kuid on siiski hüpikaknas koos <code>wheelchair:description</code>-ga. Sildita koht ei ole ligipääsmatu, OSM lihtsalt ei ütle midagi, seega kiip ainult filtreerib ega värvi midagi. Siniseid rõngaid (mängunurgaga kohad) filtreerib ja märgib kiip samamoodi.</p>
 <p>Selle kiibi all, ja ainult seal, tulevad eurovõtme taga olevad lauad tagasi, võtmega nõela sees: kes kiipi vajab, sel on enamasti võti. Tavalisel kaardil, arvudes ja edetabelis jäävad nad välja.</p>
 
-<h2>Tühjad sinised rõngad: mängukohad, millele pole vastust</h2>
+<h2 id="empty-rings">Tühjad sinised rõngad: mängukohad, millele pole vastust</h2>
 <p>Sama reegel sobib palju rohkematele kohtadele, kui kaardil nõelu on. Ainult
 <span data-stat="play_tables">111</span>-l neist on nõel. Veel
 <span data-stat="play_places">701</span> koha puhul pole keegi vastanud esimesele küsimusele: kas
@@ -230,14 +248,15 @@ kohvik, mängutoaga restoran &mdash; väikelapsega isa läheb sinna niikuinii, j
 teab ta vastust. Rõngal klõpsates avaneb MapComplete täpselt selle ühe küsimuse peal. Vasta sellele
 ja mõne minuti jooksul rõngas kaob, selle asemele ilmub päris nõel.</p>
 
-<h2>Kiip Lastetool</h2>
+<h2 id="high-chair">Kiip Lastetool</h2>
 <p>Kiip <em>Lastetool</em> näitab kohti, kus OSM-is on kirjas lastetool: <code>highchair=yes</code> või arv üle 0. <code>highchair=no</code> või <code>0</code> on kirja pandud &bdquo;ei&ldquo;. Sildita koht ei ole koht ilma lastetoolita, OSM lihtsalt ei ütle midagi, seega jätab kiip selle välja ega väida midagi. Väärtus, mida kaart lugeda ei oska, näiteks <code>ja</code> või <code>1+</code>, ei lähe samuti arvesse, ja hüpikaken ei näita selle kohta rida. Kiip filtreerib nõelu ja siniseid rõngaid ega värvi midagi.</p>
 <p>Söögikoha (kohvik, restoran, pubi ja muu selline) või perekoha (lasteaed, raamatukogu, kogukonnakeskus ja muu selline) nõelal küsib hüpikaken, seni kuni OSM midagi ei ütle: <em>Kas siin on lastetool?</em> Sinu vastus läheb OSM-i kujul <code>highchair=yes</code> või <code>highchair=no</code>, sinu enda konto all, täpselt nagu ruumi kohta antud vastus.</p>
 
-<h2>Kuidas hall nõel parandada</h2>
+<h2 id="grey-pin">Kuidas hall nõel parandada</h2>
 <p>Hall tähendab, et üks vastus on puudu. Kus mähkimislaud asub? Sellele saab vastata igaüks, kellel
 on tasuta OSM-konto, kohapeal, alla minutiga:</p>
 <ul>
+  <li><strong>Rakenduses (kõige kiiremini):</strong> puuduta halli nõela. Hüpikaken küsib <em>Millises ruumis mähkimislaud on?</em> Puuduta <em>Meeste WC</em>, <em>Naiste WC</em>, <em>Naiste ja meeste</em> või valiku <em>Veel ruume …</em> alt mõnda muud ruumi. Logid OSM-iga sisse ühe korra, vastus salvestatakse sinu enda konto alla ja nõel uueneb mõne minuti jooksul. Kui puudutad asukohanuppu 75&nbsp;m raadiuses hallist nõelast, küsib kaart, kas oled praegu seal; <em>Vasta küsimusele</em> avab sama hüpikakna.</li>
   <li><strong>MapComplete (mistahes telefon, brauseris):</strong> &bdquo;Vasta
       MapComplete'is&ldquo; halli nõela juures avab sama objekti PapaMapi enda MapComplete'i teemas
       &mdash; iga nõela puhul, et muudatused oleks äratuntavad siit tulevat. MapComplete hoiatab
@@ -271,6 +290,8 @@ korral logid sisse oma tasuta OSM-kontoga; vastus salvestatakse OpenStreetMapi s
 marker ilmub mõne minuti pärast (kaart lendab sinna). Kui kohta nimekirjas pole, kasuta
 <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMapi MapComplete'i teemat</a> (dialoogi lõpus olev link). Või OSM-i enda redaktorit, allolevad
 sammud töötavad endiselt.</p>
+<details>
+<summary>OSM-i enda redaktoriga (iD)</summary>
 <p>Koht on OSM-is peaaegu kindlasti juba olemas. Puudu on ainult silt <code>changing_table</code>.
 OSM-i enda redaktoris (iD) võtab see aega umbes kaks minutit:</p>
 <ol>
@@ -293,11 +314,12 @@ OSM-i enda redaktoris (iD) võtab see aega umbes kaks minutit:</p>
       asukoht lisatud&ldquo;), lae üles. OSM-is on see näha minuti jooksul, PapaMapil mõne
       minuti pärast.</li>
 </ol>
+</details>
 <p class="muted">Palun märgi ainult seda, mida oled ise näinud. OSM kajastab seda, mis on, mitte
 seda, mis peaks olema. Kui sa ruumi ei tea, on ka pelgalt <code>changing_table=yes</code> kasulik:
 kohast saab hall nõel ja järgmine isa vastab ruumi küsimusele.</p>
 
-<h2>Miks varustatuse edetabelit OSM-i põhjal teha ei saa</h2>
+<h2 id="no-ranking">Miks varustatuse edetabelit OSM-i põhjal teha ei saa</h2>
 <p>Ilmne suurem projekt oleks meeste ja naiste tualettide varustatuse suhe linnade kaupa. See on
 arv, millele &bdquo;tualettide sooline võrdõiguslikkus&ldquo; argument tegelikult toetub.
 OpenStreetMapist seda arvutada ei saa. Kontrollisime seda enne kaardi ehitamist, valimiga kaheksast
@@ -332,7 +354,7 @@ linnasüdamest (Berliin, London, Pariis, New York, Tokyo 23 linnaosa, Amsterdam,
 <p>Nii et ainus aus lause on: pakkumist ennast ei saa täna avatud andmete põhjal mõõta. See leht
 mõõdab seda, mida saab mõõta, ja teeb lünkadest panuse.</p>
 
-<h2>Ainus arvutatav fakt: kus lauad asuvad</h2>
+<h2 id="where-tables">Ainus arvutatav fakt: kus lauad asuvad</h2>
 <p><code>changing_table:location</code> on, niipalju kui teada, ainus avatud sõnavara, mis
 fikseerib, mis ruumis mähkimislaud asub. See on hõre:
 <span data-stat="location_total">3&nbsp;659</span> objekti <span data-stat="ct_total">77&nbsp;000</span>-st
@@ -350,7 +372,7 @@ suhtest liiga palju välja. Suund klapib sellega, mis on mujal juba ammu dokumen
 mähkimislauad ripuvad vaikimisi naiste WC-s. See sulgeb isade ees ukse ja eeldab vaikimisi, kelle
 õlul mähkimine lasub. See kaart teeb puuduvad andmed nähtavaks. Ja lihtsalt parandatavaks.</p>
 
-<h2>Andmete litsents ja viitamine</h2>
+<h2 id="licence">Andmete litsents ja viitamine</h2>
 <p>Kõik kaardiandmed &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, litsentsi
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a> alusel.
@@ -358,7 +380,7 @@ Selle lehe pakutavad GeoJSON- ja statistikafailid on tuletatud OSM-ist ning seeg
 litsentsi all. Globaalne siltide statistika pärineb teenusest
 <a href="https://taginfo.openstreetmap.org/">taginfo</a>. Lehe enda kood on MIT-litsentsi all.</p>
 
-<h2>Privaatsus</h2>
+<h2 id="privacy">Privaatsus</h2>
 <p>Staatiline sait. Ei mingeid kontosid, küpsiseid, analüütikat ega jälgimisskripte. Leht ei
 salvesta sinu kohta midagi ja tal pole andmebaasi. Kaardikihid tulevad OpenStreetMapi
 tiiliserveritest; need päringud käivad
@@ -372,7 +394,7 @@ redigeerid oma OSM-konto all. Meie kaudu ei liigu sealjuures mitte midagi. Ametl
 26.&nbsp;juulist&nbsp;2026, ja taginfo võtmestatistika ülalnimetatud kuupäeva seisuga. Kohalikud
 numbrid pärinevad samast öisest päringust, mis kaarti üles ehitab.</p>
 
-<h2>Kuidas see leht valmib</h2>
+<h2 id="how-made">Kuidas see leht valmib</h2>
 <p>Kasutan koodimisel ja tekstide kirjutamisel abiks tehisintellekti. Kõik käib siiski läbi minu
 enda silmade.</p>
 

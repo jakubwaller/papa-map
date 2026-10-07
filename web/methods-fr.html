@@ -124,8 +124,25 @@
 <p class="muted">Des tables à langer accessibles aux papas. Les chiffres taginfo mondiaux
 ci-dessous viennent du build nocturne. L'échantillon sur huit centres-villes date du
 26&nbsp;juillet&nbsp;2026 et reste tel quel.</p>
+<nav class="muted" aria-label="Sommaire"><strong>Sommaire</strong>
+<ul>
+  <li><a href="#what">Ce que cette carte est. Et ce qu'elle n'est pas.</a></li>
+  <li><a href="#colours">Ce que les couleurs veulent dire (la règle exacte)</a></li>
+  <li><a href="#mum-mode">Le sélecteur Papa / Maman</a></li>
+  <li><a href="#play-area">L'anneau bleu : le coin jeux</a></li>
+  <li><a href="#wheelchair">La puce Fauteuil roulant</a></li>
+  <li><a href="#empty-rings">Les anneaux bleus vides : des lieux pour jouer, sans réponse</a></li>
+  <li><a href="#high-chair">La puce Chaise haute</a></li>
+  <li><a href="#grey-pin">Comment réparer un marqueur gris</a></li>
+  <li><a href="#contribute">Comment ajouter un lieu manquant</a></li>
+  <li><a href="#no-ranking">Pourquoi un indice de l'offre en toilettes ne sort pas d'OSM</a></li>
+  <li><a href="#where-tables">Le seul fait calculable : où sont les tables</a></li>
+  <li><a href="#licence">Licence des données &amp; attribution</a></li>
+  <li><a href="#privacy">Confidentialité</a></li>
+  <li><a href="#how-made">Comment ce site est fait</a></li>
+</ul></nav>
 
-<h2>Ce que cette carte est. Et ce qu'elle n'est pas.</h2>
+<h2 id="what">Ce que cette carte est. Et ce qu'elle n'est pas.</h2>
 <p>PapaMap montre les lieux de 44 pays européens &mdash; de l'Islande à Chypre, du Portugal à
 l'Ukraine, plus l'Australie, la Nouvelle-Zélande, les États-Unis, le Canada et le Japon &mdash; pour lesquels OpenStreetMap connaît une table à langer
 (<code>changing_table=yes</code> ou <code>limited</code>). La couleur dit si un papa peut
@@ -134,8 +151,9 @@ peux les corriger directement sur OSM, par les liens de chaque marqueur.</p>
 <p>L’idée est venue en lisant le livre <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> de Caroline Criado Perez.</p>
 <p>Un classement des villes selon leur offre de toilettes, ce n'est pas ça. Pourquoi on ne peut pas
 le faire honnêtement à partir de données ouvertes, c'est expliqué plus bas.</p>
+<p>Ici, il n'est question que de tables à langer. Pour les aires de jeux et d'autres lieux adaptés aux familles, voir <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> et <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Ce que les couleurs veulent dire (la règle exacte)</h2>
+<h2 id="colours">Ce que les couleurs veulent dire (la règle exacte)</h2>
 <p>Seuls les objets avec <code>changing_table=yes</code> ou <code>limited</code> arrivent sur la
 carte (<code>no</code> ne compte que dans les statistiques). La couleur vient de
 <code>changing_table:location</code>. La valeur est découpée à chaque <code>;</code>, débarrassée des
@@ -154,7 +172,7 @@ espaces, mise en minuscules, et chaque partie est comparée en entier. Jamais co
 </ul>
 <p>Un objet avec un tag <code>centralkey</code> (autre que <code>no</code>) reste hors de la carte quand la clé ferme toute la porte : <code>access=centralkey</code>, une table dans le WC handicapé, ou rien dans les tags ne dit que la clé ne concerne qu'une cabine. Un bloc avec WC hommes et femmes ouverts et une cabine PMR fermée à clé (<code>wheelchair:access=centralkey</code>, ou <code>male=yes</code> et <code>female=yes</code>) reste sur la carte, gris jusqu'à ce que quelqu'un renseigne la pièce. La clé européenne ne se délivre que sur justificatif de handicap, la plupart des papas ne passent donc pas cette porte. Sous la puce <em>Fauteuil roulant</em>, ces tables reviennent, voir plus bas.</p>
 
-<h2>Le sélecteur Papa / Maman</h2>
+<h2 id="mum-mode">Le sélecteur Papa / Maman</h2>
 <p>Les trois couleurs ci-dessus répondent à la question papa : un papa peut-il accéder à la table ?
 Pour une maman, la même réponse se lit généralement autrement — une table dans les WC femmes, elle
 peut l'utiliser, et même une table sans pièce renseignée se trouve, dans la plupart des cas, dans
@@ -181,7 +199,7 @@ marque ces tables à part, donc en mode maman elles sont rouges et ne comptent p
 ci-dessus. D'anciennes versions de l'application peuvent encore les afficher en vert, en attendant
 d'être mises à jour.</p>
 
-<h2>L'anneau bleu : le coin jeux</h2>
+<h2 id="play-area">L'anneau bleu : le coin jeux</h2>
 <p>Un marqueur avec un anneau bleu a en plus un coin jeux &mdash; un endroit où l'on ne fait pas que
 changer le petit, où l'on reste aussi un moment. Le filtre <em>Avec coin jeux</em> ne montre que
 ceux-là. Un lieu compte si l'un de ces tags est dans OSM :</p>
@@ -219,11 +237,11 @@ question. Sur un <code>leisure=playground</code> sans <code>indoor=yes</code>, e
 posée du tout &mdash; l'endroit <em>est</em> déjà un endroit où jouer, juste pas à
 l'intérieur.</p>
 
-<h2>La puce Fauteuil roulant</h2>
+<h2 id="wheelchair">La puce Fauteuil roulant</h2>
 <p>La puce <em>Fauteuil roulant</em> affiche les lieux portant <code>wheelchair=yes</code> ou <code>wheelchair=limited</code> dans OSM. <code>limited</code> veut dire une marche de 7&nbsp;cm au plus, ou de l'aide nécessaire. Avec la puce, ces lieux portent un point d'exclamation à partir du zoom 13, et la fenêtre indique <em>limité</em>. <code>toilets:wheelchair=yes</code> seul ne suffit pas, mais figure tout de même dans la fenêtre, avec <code>wheelchair:description</code>. Un lieu sans ce tag n'est pas inaccessible, OSM n'en dit simplement rien : la puce filtre, elle ne colore rien. La puce filtre et marque de la même façon les cercles bleus (lieux avec coin jeux).</p>
 <p>Sous cette puce, et seulement là, les tables derrière une clé Euro reviennent, avec une clé dessinée dans l'épingle : qui a besoin de la puce a le plus souvent la clé. Sur la carte normale, dans les chiffres et dans le classement, elles restent absentes.</p>
 
-<h2>Les anneaux bleus vides : des lieux pour jouer, sans réponse</h2>
+<h2 id="empty-rings">Les anneaux bleus vides : des lieux pour jouer, sans réponse</h2>
 <p>La même règle correspond à bien plus de lieux que la carte n'a de marqueurs. Seuls
 <span data-stat="play_tables">111</span> d'entre eux ont un marqueur.
 Pour <span data-stat="play_places">701</span> autres, personne n'a répondu à la première question :
@@ -240,14 +258,15 @@ tout-petit y va de toute façon, et une fois sur place, il connaît la réponse.
 ouvre MapComplete exactement sur cette question. Réponds-y et l'anneau disparaît en quelques
 minutes, remplacé par un vrai marqueur.</p>
 
-<h2>La puce Chaise haute</h2>
+<h2 id="high-chair">La puce Chaise haute</h2>
 <p>La puce <em>Chaise haute</em> affiche les lieux où OSM enregistre une chaise haute : <code>highchair=yes</code> ou un nombre supérieur à 0. <code>highchair=no</code> ou <code>0</code> est un non enregistré. Un lieu sans ce tag n'est pas un lieu sans chaise haute, OSM n'en dit simplement rien : la puce le laisse de côté sans rien affirmer. Une valeur que la carte ne sait pas lire, comme <code>ja</code> ou <code>1+</code>, ne compte pas non plus, et la fenêtre n'affiche aucune ligne pour elle. La puce filtre les marqueurs et les cercles bleus, et ne colore rien.</p>
 <p>Sur le marqueur d'un lieu où manger (café, restaurant, pub et autres) ou d'un lieu pour les familles (école maternelle, bibliothèque, maison de quartier et autres), la fenêtre demande, tant qu'OSM n'en dit rien : <em>Y a-t-il une chaise haute ?</em> Ta réponse part dans OSM sous la forme <code>highchair=yes</code> ou <code>highchair=no</code>, sous ton propre compte, comme une réponse sur la pièce.</p>
 
-<h2>Comment réparer un marqueur gris</h2>
+<h2 id="grey-pin">Comment réparer un marqueur gris</h2>
 <p>Gris veut dire qu'il manque une réponse. Où est la table à langer ? N'importe qui avec un compte
 OSM gratuit peut y répondre, sur place, en moins d'une minute :</p>
 <ul>
+  <li><strong>Dans l'application (le plus rapide) :</strong> touche le marqueur gris. La fenêtre demande <em>Dans quelle pièce se trouve la table à langer ?</em> Touche <em>Toilettes hommes</em>, <em>Toilettes femmes</em>, <em>Femmes &amp; hommes</em> ou, derrière <em>Plus de pièces …</em>, une autre pièce. Tu te connectes une seule fois avec OSM, la réponse est enregistrée sous ton propre compte et le marqueur se met à jour en quelques minutes. Si tu touches le bouton de localisation à moins de 75&nbsp;m d'un marqueur gris, une carte demande si tu y es en ce moment ; <em>Répondre à la question</em> ouvre la même fenêtre.</li>
   <li><strong>MapComplete (n'importe quel téléphone, dans le navigateur) :</strong> « Répondre sur
       MapComplete » sur un marqueur gris ouvre le même objet dans le thème MapComplete propre à
       PapaMap &mdash; sur chaque marqueur, pour que les modifications soient reconnaissables
@@ -286,6 +305,8 @@ avec ton compte OSM gratuit ; la réponse est enregistrée dans OpenStreetMap so
 repère apparaît quelques minutes plus tard (la carte s'y envole). Si le lieu n'est pas dans la
 liste, utilise le <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">thème MapComplete de PapaMap</a> (le lien en bas du dialogue). Ou l'éditeur d'OSM,
 les étapes ci-dessous fonctionnent toujours.</p>
+<details>
+<summary>Avec l'éditeur d'OSM (iD)</summary>
 <p>Le lieu existe quasi certainement déjà dans OSM. Il ne manque que le tag
 <code>changing_table</code>. Dans l'éditeur d'OSM (iD), cela prend environ deux minutes :</p>
 <ol>
@@ -308,12 +329,13 @@ les étapes ci-dessous fonctionnent toujours.</p>
       l'emplacement de la table à langer »), envoie. En ligne sur OSM en une minute, sur PapaMap
       quelques minutes plus tard.</li>
 </ol>
+</details>
 <p class="muted">Merci de ne taguer que ce que tu as vu toi-même. OSM note ce qui est, pas ce qui
 devrait être. Si tu ne connais pas la pièce, <code>changing_table=yes</code> tout seul reste
 utile : le lieu devient un marqueur gris, et le prochain papa répondra à la question de la
 pièce.</p>
 
-<h2>Pourquoi un indice de l'offre en toilettes ne sort pas d'OSM</h2>
+<h2 id="no-ranking">Pourquoi un indice de l'offre en toilettes ne sort pas d'OSM</h2>
 <p>Le projet plus ambitieux qui vient à l'esprit serait un rapport hommes/femmes de l'offre de
 toilettes par ville. Le chiffre dont il est vraiment question dans le débat sur la « potty
 parity ». Il ne se calcule pas à partir d'OpenStreetMap. Nous avons vérifié avant de construire
@@ -351,7 +373,7 @@ Tokyo&nbsp;23&nbsp;arrondissements, Amsterdam, Vienne, Melbourne ;
 ouvertes aujourd'hui. Ce site mesure ce qui est mesurable et transforme les manques en
 contributions.</p>
 
-<h2>Le seul fait calculable : où sont les tables</h2>
+<h2 id="where-tables">Le seul fait calculable : où sont les tables</h2>
 <p><code>changing_table:location</code> est, à notre connaissance, le seul vocabulaire ouvert qui
 note dans quelle pièce se trouve une table à langer. Il est peu répandu :
 <span data-stat="location_total">3&nbsp;659</span> des <span data-stat="ct_total">77&nbsp;000</span>
@@ -371,7 +393,7 @@ longtemps ailleurs : par défaut, les tables à langer sont dans les WC femmes. 
 à la porte et désigne au passage qui s'occupe des couches. Cette carte rend visibles les données
 qui manquent. Et faciles à corriger.</p>
 
-<h2>Licence des données &amp; attribution</h2>
+<h2 id="licence">Licence des données &amp; attribution</h2>
 <p>Toutes les données cartographiques &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, disponibles sous l'<a href="https://opendatacommons.org/licenses/odbl/">Open
 Database License (ODbL)</a>.
@@ -380,7 +402,7 @@ sous ODbL. Les statistiques mondiales de tags viennent de
 <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Le code du site est sous licence MIT.</p>
 
-<h2>Confidentialité</h2>
+<h2 id="privacy">Confidentialité</h2>
 <p>Un site statique. Pas de comptes, pas de cookies, pas d'analytics, pas de scripts de suivi. Le
 site ne stocke rien sur toi et n'a pas de base de données. Les tuiles de la carte viennent des
 serveurs d'OpenStreetMap ; ces requêtes relèvent de la
@@ -394,7 +416,7 @@ leurs sites et tu édites sous ton propre compte OSM. Rien ne passe par nous. Me
 26&nbsp;juillet&nbsp;2026, et statistiques de clés taginfo à la date indiquée plus haut. Les
 chiffres locaux viennent de la même requête nocturne qui construit la carte.</p>
 
-<h2>Comment ce site est fait</h2>
+<h2 id="how-made">Comment ce site est fait</h2>
 <p>Pour coder et pour rédiger les textes, l'IA m'aide. Mais tout passe quand même sous mes yeux
 d'humain.</p>
 

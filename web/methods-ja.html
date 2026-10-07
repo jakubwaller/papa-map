@@ -123,8 +123,24 @@
 <h1>PapaMap — 方法と誠実さ</h1>
 <p class="muted">パパが使えるおむつ交換台。このページの世界全体の数字は夜間ビルドから来ています。
 8都市のサンプルは&nbsp;2026年7月26日時点のもので、そのまま固定です。</p>
+<nav class="muted" aria-label="目次"><strong>目次</strong>
+<ul>
+  <li><a href="#what">この地図とは</a></li>
+  <li><a href="#colours">色の意味</a></li>
+  <li><a href="#mum-mode">パパ / ママ切り替え</a></li>
+  <li><a href="#play-area">青い輪: 遊び場</a></li>
+  <li><a href="#wheelchair">「車いす」チップ</a></li>
+  <li><a href="#high-chair">「ベビーチェア」チップ</a></li>
+  <li><a href="#grey-pin">灰色のピンの直し方</a></li>
+  <li><a href="#contribute">足りない場所の追加方法</a></li>
+  <li><a href="#no-ranking">都市ランキングがない理由</a></li>
+  <li><a href="#where-tables">交換台がある場所</a></li>
+  <li><a href="#licence">データのライセンスと帰属</a></li>
+  <li><a href="#privacy">プライバシー</a></li>
+  <li><a href="#how-made">このサイトの作り方</a></li>
+</ul></nav>
 
-<h2>この地図とは</h2>
+<h2 id="what">この地図とは</h2>
 <p>PapaMapは、ヨーロッパ、オーストラリア、ニュージーランド、米国、カナダ、日本で、OpenStreetMapがおむつ交換台を
 知っている場所（<code>changing_table=yes</code> または <code>limited</code>）を表示します。色は、パパがその
 交換台を使えるかどうかを示します。この地図はOSMを読みます。回答は、地図上から、または各ピンのリンクから、あなた自身のOSMアカウントで直接OSMに書き込まれます。PapaMap自体は何も保存しません。間違いがあれば、各ピンの
@@ -133,8 +149,9 @@
 <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible
 Women</em></a>（邦題『存在しない女たち』）を読んだことから生まれました。</p>
 <p>どの都市のトイレが一番良いかのランキングではありません。それがオープンデータからできない理由は下にあります。</p>
+<p>ここで扱うのはおむつ交換台だけです。遊び場やそのほかのファミリー向けの場所については、<a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>、<a href="https://spieli.eu">spieli.eu</a>、<a href="https://knudli.de">Knudli</a>をご覧ください。</p>
 
-<h2>色の意味</h2>
+<h2 id="colours">色の意味</h2>
 <p><code>changing_table=yes</code> または <code>limited</code> のオブジェクトだけがピンになります（<code>no</code>
 は統計にだけ数えます）。色は <code>changing_table:location</code> から決まります。値は <code>;</code> で分割し、
 前後の空白を除き、小文字にして、各部分をまるごと比較します。部分一致は決して使いません。
@@ -155,7 +172,7 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
 誰かが部屋を記録するまで灰色です。ユーロキーやRADARキーは障害の証明がなければ手に入らないので、ほとんどのパパは
 そのドアを通れません。<em>車いす</em>チップの下ではこれらの台が戻ってきます（下記参照）。</p>
 
-<h2>パパ / ママ切り替え</h2>
+<h2 id="mum-mode">パパ / ママ切り替え</h2>
 <p>上の3色は、パパの質問に答えます: パパはその交換台まで行ける？ ママにとっては同じ答えの意味が違うことが
 多いです — 女性トイレにある交換台はママが使えますし、部屋が記録されていない交換台も、たいていはママが
 入れる部屋にあります。チップ欄の左にある<em>パパ / ママ</em>切り替えは、だからこの3つの答えの読み方だけを
@@ -175,7 +192,7 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
 交換台を別扱いにするので、ママモードでは赤になり、上の数字にも含まれません。アプリの古いバージョンでは、
 更新されるまでまだ緑で表示されることがあります。</p>
 
-<h2>青い輪: 遊び場</h2>
+<h2 id="play-area">青い輪: 遊び場</h2>
 <p>青い輪の付いたピンには遊び場もあります。<em>遊び場あり</em>のチップでそれらだけに絞れます。OSMに次のいずれかの
 タグがあれば数えます:</p>
 <ul>
@@ -207,18 +224,19 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
 知っているはずです。輪をクリックすると、MapCompleteがまさにその質問を開きます。</p>
 <p><em>破線</em>の輪は、遊び場はあるがおむつ交換台はない（<code>changing_table=no</code>）という意味です。これはピンではなく、赤でもありません。赤は「交換台はあるが、パパは使えない」という意味だからです。ここには誰のための交換台もありません。それでも地図に載せているのは、子ども連れなら交換台がなくても行きたい場所だからです。</p>
 
-<h2>「車いす」チップ</h2>
+<h2 id="wheelchair">「車いす」チップ</h2>
 <p><em>車いす</em>チップは、OSMで<code>wheelchair=yes</code>または<code>wheelchair=limited</code>が付いた場所を表示します。<code>limited</code>は、7&nbsp;cm以下の段差が1つあるか、介助が必要という意味です。チップを入れると、これらの場所にはズーム13から感嘆符が付き、ポップアップには<em>一部対応</em>と表示されます。<code>toilets:wheelchair=yes</code>だけでは足りませんが、ポップアップには<code>wheelchair:description</code>とともに表示されます。タグのない場所が入れないわけではなく、OSMに何も書かれていないだけなので、チップは絞り込むだけで色は付けません。青い輪（遊び場のある場所）も同じようにチップで絞り込み、印を付けます。</p>
 <p>このチップの下でだけ、ユーロキー等が必要な台が鍵マーク付きのピンで戻ってきます。チップが必要な人は、たいていその鍵を持っているからです。通常の地図、数値、ランキングには含まれません。</p>
 
-<h2>「ベビーチェア」チップ</h2>
+<h2 id="high-chair">「ベビーチェア」チップ</h2>
 <p><em>ベビーチェア</em>チップは、OSMにベビーチェアの記録がある場所を表示します: <code>highchair=yes</code>または0より大きい数です。<code>highchair=no</code>または<code>0</code>は「ない」という記録です。タグのない場所がベビーチェアのない場所というわけではなく、OSMに何も書かれていないだけなので、チップは何も主張せずにその場所を外します。<code>ja</code>や<code>1+</code>のように地図が読み取れない値も数えず、ポップアップにもその行は表示しません。チップはピンと青い輪を絞り込むだけで、色は付けません。</p>
 <p>飲食店（カフェ、レストラン、パブなど）や家族向けの場所（幼稚園、図書館、公民館など）のピンでは、OSMに記録がない間、ポップアップが<em>ベビーチェアはありますか？</em>と尋ねます。答えは<code>highchair=yes</code>または<code>highchair=no</code>として、部屋についての答えと同じく、あなた自身のOSMアカウントでOSMに送られます。</p>
 
-<h2>灰色のピンの直し方</h2>
+<h2 id="grey-pin">灰色のピンの直し方</h2>
 <p>灰色は、答えがひとつ欠けているという意味です: 交換台はどこにある？ 無料のOSMアカウントがあれば誰でも、その場で
 1分以内に答えられます。</p>
 <ul>
+  <li><strong>アプリで（いちばん手軽）:</strong> 灰色のピンをタップします。ポップアップに<em>おむつ交換台はどの部屋にありますか？</em>と出るので、<em>男性用トイレ</em>、<em>女性用トイレ</em>、<em>男女両方のトイレ</em>、または<em>その他の場所 …</em>の中の別の部屋をタップします。OSMへのログインは最初の1回だけで、回答はあなた自身のアカウントで保存され、数分以内にピンが更新されます。灰色のピンから75&nbsp;m以内で現在地ボタンをタップすると、今そこにいるかを尋ねるカードが表示され、<em>質問に答える</em>で同じポップアップが開きます。</li>
   <li><strong>MapComplete（どのスマホでも、ブラウザで）:</strong> 灰色のピンの「MapCompleteで答える」を押すと、
       PapaMap独自のMapCompleteテーマで同じオブジェクトが開きます。MapCompleteは非公式テーマについて一度警告しますが、
       問題ありません。OSMアカウントでログインし、部屋についての質問も含めて、おむつ交換台の質問に答えてください。
@@ -246,6 +264,8 @@ MapCompleteテーマ</a>（ダイアログの下にある<em>公衆トイレが�
 初回は無料のOSMアカウントでログインします。回答はあなたのアカウントでOpenStreetMapに保存され、数分後にピンが表示されます（地図がそこへ移動します）。
 場所がリストにない場合は、<a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMapのMapCompleteテーマ</a>（ダイアログの下にあるリンク）を使ってください。
 OSM自身のエディタを使いたい場合は、以下の手順でもできます。</p>
+<details>
+<summary>OSM標準のエディタ（iD）で編集する</summary>
 <p>その場所はほぼ確実にすでにOSMにあり、<code>changing_table</code> タグだけが欠けています。OSM自身のエディタ（iD）
 なら2分ほどです:</p>
 <ol>
@@ -266,10 +286,11 @@ OSM自身のエディタを使いたい場合は、以下の手順でもでき�
   <li><strong>保存</strong>を押し、短いコメント（「add changing table location」）を書いてアップロードします。
       OSMには1分以内に反映され、PapaMapにはその数分後に反映されます。</li>
 </ol>
+</details>
 <p class="muted">自分の目で見たものだけをタグ付けしてください。部屋が分からなければ、<code>changing_table=yes</code>
 だけでも役に立ちます: その場所は灰色のピンになり、次のパパが部屋の質問に答えます。</p>
 
-<h2>都市ランキングがない理由</h2>
+<h2 id="no-ranking">都市ランキングがない理由</h2>
 <p>当然考えられる、より大きなプロジェクトは都市ごとの男女トイレ比率で、「トイレの平等」論争が扱っている数字です。
 作る前に、OSMがその数字を出せるか確かめました。出せません。以下は&nbsp;2026年7月26日時点の、8都市の中心部に
 わたるサンプルです:</p>
@@ -290,7 +311,7 @@ OSM自身のエディタを使いたい場合は、以下の手順でもでき�
 ありません。ランキングはトイレではなくOSM貢献者を採点することになります。だからこのサイトは、測れるものに
 とどまります。</p>
 
-<h2>交換台がある場所</h2>
+<h2 id="where-tables">交換台がある場所</h2>
 <p><code>changing_table:location</code> は、おむつ交換台がどの部屋にあるかを記録する、私が知る唯一のオープンな語彙です。
 稀です: 世界全体の <code>changing_table</code> オブジェクト <span data-stat="ct_total">77,000</span> 件のうち
 <span data-stat="location_total">3,659</span> 件、<span data-stat="share">4.8%</span>。あるところでは偏っています
@@ -302,13 +323,13 @@ OSM自身のエディタを使いたい場合は、以下の手順でもでき�
 です: おむつ交換台は、初期設定では女性トイレに掛かっています。この地図はデータが欠けている場所を示し、どの灰色の
 ピンにも編集ボタンがあります。</p>
 
-<h2>データのライセンスと帰属</h2>
+<h2 id="licence">データのライセンスと帰属</h2>
 <p>すべての地図データは &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>、<a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a> の下で利用
 できます。このサイトが配信するGeoJSONと統計ファイルはOSMから派生したもので、同じくODbLです。タグの世界統計は
 <a href="https://taginfo.openstreetmap.org/">taginfo</a> から来ています。サイト自体のコードはMITライセンスです。</p>
 
-<h2>プライバシー</h2>
+<h2 id="privacy">プライバシー</h2>
 <p>静的なサイトです。Cookieを設定せず、アナリティクスも動かしません。地図タイルはOpenStreetMapのタイルサーバーから
 来るので、それらのリクエストは <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMFのプライバシーポリシー</a>
 の下にあります。ピンで<em>MapCompleteで答える</em>をタップすると、ページはその後数分間、この1つのオブジェクトが今どうなっているかをapi.openstreetmap.orgに数回問い合わせます。これらのリクエストにも同じポリシーが適用されます。検索欄に3文字目を入力したときから、また<em>場所を追加</em>を開くたびに、ページはkomootの地名検索Photon（photon.komoot.io）にも問い合わせます。Photonには入力した文字列と丸めた地図の中心が送られ、ほかのサーバーと同じく、あなたのIPアドレスも伝わります。MapComplete、StreetComplete、openstreetmap.orgへのリンクはそれぞれのサイトに移動し、そこでは
@@ -317,7 +338,7 @@ contributors</a>、<a href="https://opendatacommons.org/licenses/odbl/">Open Dat
 <a href="datenschutz.html">Datenschutzerklärung</a>（ドイツ語）。</p>
 
 
-<h2>このサイトの作り方</h2>
+<h2 id="how-made">このサイトの作り方</h2>
 <p>コーディングと文章の下書きにはAIの助けを借りています。ただし、すべて人間である私の目を通しています。</p>
 
 <script>

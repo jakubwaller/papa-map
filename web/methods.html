@@ -124,8 +124,24 @@
 <p class="muted">Wickeltische, die ein Papa erreicht. Die weltweiten Zahlen auf dieser Seite holt
 der nächtliche Build. Die Stichprobe über acht Innenstädte ist vom 26.&nbsp;Juli&nbsp;2026 und
 bleibt so stehen.</p>
+<nav class="muted" aria-label="Inhalt"><strong>Inhalt</strong>
+<ul>
+  <li><a href="#what">Was diese Karte ist</a></li>
+  <li><a href="#colours">Was die Farben bedeuten</a></li>
+  <li><a href="#mum-mode">Der Papa-Mama-Schalter</a></li>
+  <li><a href="#play-area">Der blaue Ring: Spielecke</a></li>
+  <li><a href="#wheelchair">Der Chip Barrierefrei</a></li>
+  <li><a href="#high-chair">Der Chip Hochstuhl</a></li>
+  <li><a href="#grey-pin">Wie du einen grauen Pin reparierst</a></li>
+  <li><a href="#contribute">Wie du einen fehlenden Ort hinzufügst</a></li>
+  <li><a href="#no-ranking">Warum es kein Städte-Ranking gibt</a></li>
+  <li><a href="#where-tables">Wo die Tische sind</a></li>
+  <li><a href="#licence">Datenlizenz &amp; Attribution</a></li>
+  <li><a href="#privacy">Datenschutz</a></li>
+  <li><a href="#how-made">Wie die Seite entsteht</a></li>
+</ul></nav>
 
-<h2>Was diese Karte ist</h2>
+<h2 id="what">Was diese Karte ist</h2>
 <p>PapaMap zeigt Orte in Europa, Australien, Neuseeland, den USA, Kanada und Japan, für die OpenStreetMap einen Wickeltisch kennt
 (<code>changing_table=yes</code> oder <code>limited</code>). Die Farbe sagt, ob ein Papa den Tisch
 erreicht. Die Karte liest OSM. Antworten gehen direkt nach OSM, unter deinem eigenen OSM-Konto — von der Karte selbst oder über die Links an jedem Pin; PapaMap speichert nichts. Wenn was nicht stimmt, reparierst du
@@ -133,8 +149,9 @@ es direkt auf OSM, über die Links an jedem Pin.</p>
 <p>Die Idee kam beim Lesen des Buchs <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> von Caroline Criado Perez.</p>
 <p>Ein Ranking, welche Stadt die besten Toiletten hat, ist das nicht. Warum das aus offenen Daten
 nicht geht, steht weiter unten.</p>
+<p>Es geht hier nur um Wickeltische. Für Spielplätze und andere familienfreundliche Orte gibt es <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> und <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Was die Farben bedeuten</h2>
+<h2 id="colours">Was die Farben bedeuten</h2>
 <p>Einen Pin bekommen nur Objekte mit <code>changing_table=yes</code> oder
 <code>limited</code> (<code>no</code> zählt nur in die Statistik). Die Farbe kommt aus
 <code>changing_table:location</code>. Der Wert wird an <code>;</code> getrennt, getrimmt,
@@ -152,7 +169,7 @@ kleingeschrieben, und jeder Teil wird als Ganzes verglichen, nie als Teilstring,
 </ul>
 <p>Ein Objekt mit <code>centralkey</code>-Tag (außer <code>no</code>) bleibt von der Karte, wenn der Schlüssel die ganze Tür sperrt: <code>access=centralkey</code>, ein Tisch im Behinderten-WC, oder nichts im Tagging sagt, dass der Schlüssel nur für eine Kabine gilt. Eine Anlage mit offenem Herren- und Damen-WC und einer Behindertenkabine mit Schlüssel (<code>wheelchair:access=centralkey</code>, oder <code>male=yes</code> und <code>female=yes</code>) bleibt auf der Karte, grau, bis jemand den Raum einträgt. Den Euroschlüssel bekommt man nur mit nachgewiesener Behinderung, die meisten Väter kommen durch diese Tür nicht. Unter dem Chip <em>Barrierefrei</em> kommen diese Tische zurück, siehe unten.</p>
 
-<h2>Der Papa-Mama-Schalter</h2>
+<h2 id="mum-mode">Der Papa-Mama-Schalter</h2>
 <p>Die drei Farben oben beantworten die Papa-Frage: Kommt ein Vater an den Tisch? Für eine Mutter
 ist dieselbe Antwort meistens anders zu lesen — einen Tisch im Damen-WC kann sie benutzen, und auch
 bei einem Tisch ohne erfassten Raum steht die Mehrheit in einem Raum, den sie betreten kann. Der
@@ -175,7 +192,7 @@ für einen Papa erreichbar, für eine Mama nicht. Die Pipeline markiert diese Ti
 sind sie im Mama-Modus rot und zählen in der Zahl oben nicht mit. Ältere Versionen der App zeigen
 sie womöglich noch grün, bis sie aktualisiert sind.</p>
 
-<h2>Der blaue Ring: Spielecke</h2>
+<h2 id="play-area">Der blaue Ring: Spielecke</h2>
 <p>Ein Pin mit blauem Ring hat außerdem eine Spielecke. Der Chip <em>Mit Spielecke</em> zeigt nur
 diese. Ein Ort zählt, wenn eines dieser Tags in OSM steht:</p>
 <ul>
@@ -217,18 +234,19 @@ Ring öffnet MapComplete genau bei dieser Frage.</p>
 einen Tisch gibt, nur nicht für Papa. Hier gibt es keinen, für niemanden. Auf der Karte ist der
 Ort trotzdem, weil man mit Kind auch ohne Tisch gern hingeht.</p>
 
-<h2>Der Chip Barrierefrei</h2>
+<h2 id="wheelchair">Der Chip Barrierefrei</h2>
 <p>Der Chip <em>Barrierefrei</em> zeigt Orte, die in OSM <code>wheelchair=yes</code> oder <code>wheelchair=limited</code> tragen. <code>limited</code> heißt eine Stufe bis 7&nbsp;cm oder Hilfe nötig. Diese Orte haben unter dem Chip ab Zoomstufe 13 ein Ausrufezeichen im Pin, und im Popup steht <em>eingeschränkt</em>. <code>toilets:wheelchair=yes</code> allein reicht nicht, steht aber trotzdem im Popup, zusammen mit <code>wheelchair:description</code>. Ein Ort ohne Tag ist nicht unzugänglich, in OSM steht dazu einfach nichts, also filtert der Chip nur und färbt nichts. Die blauen Ringe (Orte mit Spielecke) filtert und markiert der Chip genauso.</p>
 <p>Unter diesem Chip, und nur dort, kommen die Tische hinter Euroschlüssel zurück, mit einem Schlüssel im Pin: Wer den Chip braucht, hat meist den Schlüssel. Auf der normalen Karte, in den Zahlen und in der Rangliste bleiben sie draußen.</p>
 
-<h2>Der Chip Hochstuhl</h2>
+<h2 id="high-chair">Der Chip Hochstuhl</h2>
 <p>Der Chip <em>Hochstuhl</em> zeigt Orte, an denen OSM einen Hochstuhl verzeichnet: <code>highchair=yes</code> oder eine Zahl über 0. <code>highchair=no</code> oder <code>0</code> ist ein eingetragenes Nein. Ein Ort ohne den Tag ist kein Ort ohne Hochstuhl, in OSM steht dazu einfach nichts, also lässt der Chip ihn weg, ohne etwas zu behaupten. Ein Wert, den die Karte nicht lesen kann, etwa <code>ja</code> oder <code>1+</code>, zählt auch nicht, und das Popup zeigt dafür keine Zeile. Der Chip filtert Pins und blaue Ringe und färbt nichts.</p>
 <p>An einem Pin in einem Lokal (Café, Restaurant, Kneipe und Ähnliches) oder an einem Familienort (Kita, Bibliothek, Gemeindezentrum und Ähnliches) fragt das Popup, solange OSM nichts dazu sagt: <em>Gibt es einen Hochstuhl?</em> Deine Antwort landet als <code>highchair=yes</code> oder <code>highchair=no</code> in OSM, unter deinem eigenen Konto, genau wie eine Antwort zum Raum.</p>
 
-<h2>Wie du einen grauen Pin reparierst</h2>
+<h2 id="grey-pin">Wie du einen grauen Pin reparierst</h2>
 <p>Grau heißt, eine Antwort fehlt: Wo ist der Tisch? Das kann jeder mit einem kostenlosen
 OSM-Konto vor Ort in unter einer Minute beantworten.</p>
 <ul>
+  <li><strong>In der App (am schnellsten):</strong> Tippe auf den grauen Pin. Das Popup fragt <em>In welchem Raum ist der Wickeltisch?</em> Tippe auf <em>Herren-WC</em>, <em>Damen-WC</em>, <em>Damen &amp; Herren</em> oder, hinter <em>Weitere Räume …</em>, auf einen anderen Raum. Du meldest dich einmal mit OSM an, die Antwort wird unter deinem eigenen Konto gespeichert und der Pin ist wenige Minuten später aktualisiert. Tippst du im Umkreis von 75&nbsp;m eines grauen Pins auf den Standort-Knopf, fragt eine Karte, ob du gerade dort bist; <em>Frage beantworten</em> öffnet dasselbe Popup.</li>
   <li><strong>MapComplete (jedes Handy, im Browser):</strong> &bdquo;Auf MapComplete
       beantworten&ldquo; am grauen Pin öffnet dasselbe Objekt im PapaMap-Thema von MapComplete.
       MapComplete warnt einmal vor einem inoffiziellen Thema, das ist okay. Mit dem OSM-Konto
@@ -263,6 +281,8 @@ OSM-Konto ein; die Antwort wird unter deinem Konto in OpenStreetMap gespeichert,
 erscheint nach ein paar Minuten (die Karte fliegt dorthin). Steht der Ort nicht in der Liste,
 nimm das <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMap-Thema von MapComplete</a> (der Link unten im Dialog). Oder nimm den OSM-Editor
 selbst, die Schritte unten gehen weiterhin.</p>
+<details>
+<summary>Mit dem OSM-eigenen Editor (iD)</summary>
 <p>Den Ort gibt es in OSM fast sicher schon, es fehlt nur das <code>changing_table</code>-Tag.
 Im OSM-Editor (iD) dauert das etwa zwei Minuten:</p>
 <ol>
@@ -286,11 +306,12 @@ Im OSM-Editor (iD) dauert das etwa zwei Minuten:</p>
       (&bdquo;Wickeltisch-Raum ergänzt&ldquo;), hochladen. Nach einer Minute live auf OSM, wenige
       Minuten später auf PapaMap.</li>
 </ol>
+</details>
 <p class="muted">Bitte nur taggen, was du selbst gesehen hast. Kennst du den Raum nicht, ist
 <code>changing_table=yes</code> allein trotzdem nützlich: Der Ort wird ein grauer Pin, und der
 nächste Papa beantwortet die Raumfrage.</p>
 
-<h2>Warum es kein Städte-Ranking gibt</h2>
+<h2 id="no-ranking">Warum es kein Städte-Ranking gibt</h2>
 <p>Das naheliegende größere Projekt wäre das Verhältnis von Männer- zu Frauentoiletten pro Stadt,
 die Zahl, um die es bei &bdquo;Potty Parity&ldquo; geht. Ich habe vor dem Bau geprüft, ob OSM
 diese Zahl hergibt. Tut es nicht. Eine Stichprobe über acht Innenstädte vom
@@ -313,7 +334,7 @@ Städten keine. Und eine Tagging-Quote misst die Mapper-Community, nicht die Sta
 würde OSM-Beitragende benoten, nicht Toiletten. Deshalb bleibt die Seite bei dem, was sich messen
 lässt.</p>
 
-<h2>Wo die Tische sind</h2>
+<h2 id="where-tables">Wo die Tische sind</h2>
 <p><code>changing_table:location</code> ist das einzige offene Vokabular, das ich kenne, das
 festhält, in welchem Raum ein Wickeltisch steht. Es ist selten:
 <span data-stat="location_total">3.659</span> von <span data-stat="ct_total">77.000</span>
@@ -327,7 +348,7 @@ Räumen.</p>
 nicht überinterpretieren. Die Richtung ist dieselbe wie überall: Wickeltische hängen standardmäßig
 im Damen-WC. Diese Karte zeigt, wo die Daten fehlen, und jeder graue Pin hat einen Edit-Knopf.</p>
 
-<h2>Datenlizenz &amp; Attribution</h2>
+<h2 id="licence">Datenlizenz &amp; Attribution</h2>
 <p>Alle Kartendaten &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, verfügbar unter der
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -335,7 +356,7 @@ Die GeoJSON- und Statistikdateien dieser Website sind aus OSM abgeleitet und dam
 Die globalen Tag-Statistiken kommen von <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Der Code der Website ist MIT-lizenziert.</p>
 
-<h2>Datenschutz</h2>
+<h2 id="privacy">Datenschutz</h2>
 <p>Eine statische Website. Sie setzt keine Cookies und hat keine Analytics. Die Kartenkacheln
 kommen von den Tile-Servern von OpenStreetMap, für diese Anfragen gilt die
 <a href="https://osmfoundation.org/wiki/Privacy_Policy">Datenschutzerklärung der OSMF</a>. Tippst du in einem Pin auf <em>Auf MapComplete beantworten</em>, fragt die Seite in den folgenden Minuten außerdem einige Male bei api.openstreetmap.org nach, was dieses eine Objekt jetzt sagt — für diese Anfragen gilt dieselbe Erklärung. Ab dem dritten Zeichen im Suchfeld und beim Öffnen von
@@ -348,7 +369,7 @@ unter deinem eigenen OSM-Konto. Formales:
 <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
 
 
-<h2>Wie die Seite entsteht</h2>
+<h2 id="how-made">Wie die Seite entsteht</h2>
 <p>Beim Programmieren und beim Schreiben der Texte hilft mir KI. Drübergeguckt habe ich
 trotzdem alles selbst.</p>
 

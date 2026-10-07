@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { NUMBER_LOCALE, DEFAULT_LANG, LANGS } from "./i18n.js";
+import { NUMBER_LOCALE, DEFAULT_LANG, LANGS, STRINGS } from "./i18n.js";
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const PAGES = fs.readdirSync(DIR)
@@ -194,5 +194,74 @@ test("no link anywhere on a translated page drops the language on the way home",
     if (lang === DEFAULT_LANG) continue;
     const bare = read(f).match(/href="(\.\/|index\.html)"/);
     assert.equal(bare, null, `${f} still links to the map without ?lang=${lang}`);
+  }
+});
+
+// The anchors other pages deep-link to (app footers, the leaderboard, the
+// native app's help link) and the ones the contents list uses. One id set for
+// every language, so a link written for one page works on all of them. Only the
+// "empty blue rings" section exists in some languages and not in others
+// (de, en and ja fold it into the blue-ring section).
+const H2_IDS = ["what", "colours", "mum-mode", "play-area", "wheelchair", "high-chair",
+  "grey-pin", "contribute", "no-ranking", "where-tables", "licence", "privacy", "how-made"];
+const H2_IDS_OPTIONAL = ["empty-rings"];
+
+test("every h2 on a methods page has the same stable id in every language", () => {
+  for (const f of PAGES) {
+    const ids = [...read(f).matchAll(/<h2 id="([^"]+)">/g)].map((m) => m[1]);
+    const all = [...read(f).matchAll(/<h2[ >]/g)];
+    assert.equal(ids.length, all.length, `${f} has an h2 without an id`);
+    assert.deepEqual(ids.filter((i) => !H2_IDS_OPTIONAL.includes(i)), H2_IDS, f);
+    assert.equal(new Set(ids).size, ids.length, `${f} repeats an id`);
+  }
+});
+
+test("the contents list links to every h2 and nothing else", () => {
+  for (const f of PAGES) {
+    const src = read(f);
+    const nav = (src.match(/<nav[^>]*>[\s\S]*?<\/nav>/) || [])[0];
+    assert.ok(nav, `${f} has no contents list`);
+    const linked = [...nav.matchAll(/<a href="#([^"]+)">/g)].map((m) => m[1]);
+    const ids = [...src.matchAll(/<h2 id="([^"]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(linked, ids, `${f}: contents list and h2 ids differ`);
+    // it sits between the intro and the first section
+    assert.ok(src.indexOf("<nav") < src.indexOf("<h2"), f);
+  }
+});
+
+test("the pointer to other family maps is one sentence in the first section", () => {
+  for (const f of PAGES) {
+    const src = read(f);
+    assert.ok(!src.includes('id="related"'), `${f} still has the bottom section`);
+    const first = src.slice(src.indexOf('<h2 id="what">'), src.indexOf('<h2 id="colours">'));
+    for (const url of ["https://kinderfreundlicheorte.de", "https://spieli.eu", "https://knudli.de"])
+      assert.ok(first.includes(`<a href="${url}">`), `${f} lacks ${url} in the first section`);
+    assert.equal(src.split("https://knudli.de").length - 1, 1, `${f} links Knudli twice`);
+  }
+});
+
+test("the iD walkthrough is folded into one <details>", () => {
+  for (const f of PAGES) {
+    const src = read(f);
+    assert.equal(src.split("<details>").length - 1, 1, f);
+    const d = src.slice(src.indexOf("<details>"), src.indexOf("</details>"));
+    assert.match(d, /<summary>[^<]+\(iD\)[^<]*<\/summary>|<summary>[^<]*iD[^<]*<\/summary>/, f);
+    assert.ok(d.includes("<ol>") && d.includes("</ol>"), `${f}: the steps are outside the <details>`);
+    assert.equal(src.split("<ol>").length - 1, 1, `${f} has a list outside the <details>`);
+  }
+});
+
+test("the grey-pin section leads with the in-app question, in the app's own words", () => {
+  // The popup's labels are quoted from i18n.js, so a changed label makes this
+  // page wrong until it is updated; the check fails there instead of in the field.
+  for (const f of PAGES) {
+    const lang = langOf(f);
+    const s = STRINGS[lang];
+    const src = read(f);
+    const sec = src.slice(src.indexOf('<h2 id="grey-pin">'), src.indexOf('<h2 id="contribute">'));
+    const first = sec.slice(sec.indexOf("<li>"), sec.indexOf("</li>"));
+    const esc = (v) => v.replace(/&/g, "&amp;");
+    for (const k of ["askRoom", "roomMale", "roomFemale", "roomBoth", "askMore", "roomCardOpen"])
+      assert.ok(first.includes(`<em>${esc(s[k])}</em>`), `${f}: first item lacks the ${k} label "${s[k]}"`);
   }
 });

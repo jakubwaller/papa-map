@@ -123,8 +123,24 @@
 <h1>PapaMap — methods &amp; honesty</h1>
 <p class="muted">Changing tables a dad can reach. The worldwide numbers on this page come from the
 nightly build. The eight-city sample is from 26&nbsp;Jul&nbsp;2026 and stays that way.</p>
+<nav class="muted" aria-label="Contents"><strong>Contents</strong>
+<ul>
+  <li><a href="#what">What this map is</a></li>
+  <li><a href="#colours">What the colours mean</a></li>
+  <li><a href="#mum-mode">The Dad / Mum switch</a></li>
+  <li><a href="#play-area">The blue ring: play area</a></li>
+  <li><a href="#wheelchair">The Wheelchair chip</a></li>
+  <li><a href="#high-chair">The High chair chip</a></li>
+  <li><a href="#grey-pin">How to fix a grey pin</a></li>
+  <li><a href="#contribute">How to add a missing place</a></li>
+  <li><a href="#no-ranking">Why there is no city ranking</a></li>
+  <li><a href="#where-tables">Where the tables are</a></li>
+  <li><a href="#licence">Data licence &amp; attribution</a></li>
+  <li><a href="#privacy">Privacy</a></li>
+  <li><a href="#how-made">How this site is made</a></li>
+</ul></nav>
 
-<h2>What this map is</h2>
+<h2 id="what">What this map is</h2>
 <p>PapaMap shows places in Europe, Australia, New Zealand, the United States, Canada and Japan where OpenStreetMap knows about a changing table
 (<code>changing_table=yes</code> or <code>limited</code>). The colour says whether a dad can reach
 it. The map reads OSM. Answers go straight to OSM under your own OSM account, from the map itself or through the links on each pin; PapaMap stores nothing. If something is wrong, you fix it on OSM, through
@@ -132,8 +148,9 @@ the links on each pin.</p>
 <p>The idea came from reading <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> by Caroline Criado Perez.</p>
 <p>It is not a ranking of which city has the best toilets. Why that can't be done from open data
 is further down.</p>
+<p>It is about changing tables only. For playgrounds and other family-friendly places, see <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> and <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>What the colours mean</h2>
+<h2 id="colours">What the colours mean</h2>
 <p>Only objects with <code>changing_table=yes</code> or <code>limited</code> get a pin
 (<code>no</code> only counts in the stats). The colour comes from
 <code>changing_table:location</code>. The value is split on <code>;</code>, trimmed, lowercased
@@ -151,7 +168,7 @@ and each part is compared whole, never as a substring, because <code>female_toil
 </ul>
 <p>An object with a <code>centralkey</code> tag (other than <code>no</code>) is left off the map when the key locks the whole door: <code>access=centralkey</code>, a table in the wheelchair toilet, or nothing in the tags saying the key is for one cubicle only. A block with open men's and women's rooms and a key-locked accessible cubicle (<code>wheelchair:access=centralkey</code>, or <code>male=yes</code> and <code>female=yes</code>) stays on the map, grey until someone records the room. You only get a Euro or RADAR key with proof of disability, so most dads don't get through that door. Under the <em>Wheelchair</em> chip these tables come back, see below.</p>
 
-<h2>The Dad / Mum switch</h2>
+<h2 id="mum-mode">The Dad / Mum switch</h2>
 <p>The three colours above answer the dad's question: can a dad reach the table? For a mum the
 same answer usually reads differently — she can use a table in the women's room, and even a table
 with no recorded room is, in most cases, in a room she can enter too. The <em>Dad / Mum</em> switch
@@ -174,7 +191,7 @@ alone) is reachable for a dad but not for a mum. The pipeline marks these tables
 mum mode they are red and are left out of the number above. Older versions of the app may still
 show them green until they are updated.</p>
 
-<h2>The blue ring: play area</h2>
+<h2 id="play-area">The blue ring: play area</h2>
 <p>A pin with a blue ring also has a play area. The <em>With play area</em> chip filters down to
 those. A place counts if OSM has one of these tags:</p>
 <ul>
@@ -214,18 +231,19 @@ answer. Clicking a ring opens MapComplete on exactly that question.</p>
 table, just not for dad. Here there is none, for anyone. The place is on the map anyway, because
 with a kid you'd happily go there without one.</p>
 
-<h2>The Wheelchair chip</h2>
+<h2 id="wheelchair">The Wheelchair chip</h2>
 <p>The <em>Wheelchair</em> chip shows places tagged <code>wheelchair=yes</code> or <code>wheelchair=limited</code> in OSM. <code>limited</code> means one step of up to 7&nbsp;cm, or help needed. Under the chip these places carry an exclamation mark from zoom 13, and the popup says <em>limited</em>. <code>toilets:wheelchair=yes</code> on its own is not enough, but it still appears in the popup, together with <code>wheelchair:description</code>. A place without the tag is not inaccessible, OSM simply says nothing, so the chip only filters and colours nothing. The chip filters and marks the blue rings (places with a play area) the same way.</p>
 <p>Under this chip, and only there, the tables behind a Euro or RADAR key come back, with a key drawn in the pin: whoever needs the chip usually holds the key. On the normal map, in the numbers and in the leaderboard they stay out.</p>
 
-<h2>The High chair chip</h2>
+<h2 id="high-chair">The High chair chip</h2>
 <p>The <em>High chair</em> chip shows places where OSM records a high chair: <code>highchair=yes</code> or a number above 0. <code>highchair=no</code> or <code>0</code> is a recorded no. A place without the tag is not a place without a high chair, OSM simply says nothing, so the chip leaves it out without claiming anything. A value the map can't read, such as <code>ja</code> or <code>1+</code>, doesn't count either, and the popup shows no line for it. The chip filters pins and blue rings and colours nothing.</p>
 <p>On a pin at a place to eat (café, restaurant, pub and the like) or a family place (kindergarten, library, community centre and the like), the popup asks, as long as OSM says nothing: <em>Is there a high chair?</em> Your answer goes to OSM as <code>highchair=yes</code> or <code>highchair=no</code>, under your own account, just like a room answer.</p>
 
-<h2>How to fix a grey pin</h2>
+<h2 id="grey-pin">How to fix a grey pin</h2>
 <p>Grey means one answer is missing: where is the table? Anyone with a free OSM account can answer
 that on site in under a minute.</p>
 <ul>
+  <li><strong>In the app (quickest):</strong> tap the grey pin. The popup asks <em>Which room is the changing table in?</em> Tap <em>Men's room</em>, <em>Women's room</em>, <em>Women's &amp; men's</em> or, behind <em>More rooms …</em>, another room. You log in once with OSM, the answer is saved under your own account, and the pin updates within a few minutes. Tap the location button within 75&nbsp;m of a grey pin and a card asks whether you are there right now; <em>Answer the question</em> opens the same popup.</li>
   <li><strong>MapComplete (any phone, in the browser):</strong> &ldquo;Answer on
       MapComplete&rdquo; on a grey pin opens the same object in PapaMap's own MapComplete theme.
       MapComplete warns once about an unofficial theme, that's fine. Log in with your OSM account
@@ -258,6 +276,8 @@ room, or that there is none. The first time, you log in with your free OSM accou
 is saved to OpenStreetMap under your account and the pin shows up a few minutes later (the map
 flies to it). If the place isn't in the list, use <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMap's MapComplete theme</a> (the link at the
 bottom of the dialog). Or use OSM's own editor, the steps below still work.</p>
+<details>
+<summary>Using OSM's own editor (iD)</summary>
 <p>The place is almost certainly in OSM already, only the <code>changing_table</code> tag is
 missing. In OSM's own editor (iD) that takes about two minutes:</p>
 <ol>
@@ -280,11 +300,12 @@ missing. In OSM's own editor (iD) that takes about two minutes:</p>
       location&rdquo;), upload. Live on OSM within a minute, on PapaMap a few minutes
       later.</li>
 </ol>
+</details>
 <p class="muted">Please only tag what you have seen yourself. If you don't know the room,
 <code>changing_table=yes</code> alone is still useful: the place becomes a grey pin, and the next
 dad answers the room question.</p>
 
-<h2>Why there is no city ranking</h2>
+<h2 id="no-ranking">Why there is no city ranking</h2>
 <p>The obvious bigger project would be a male-to-female toilet ratio per city, the number the
 &ldquo;potty parity&rdquo; debate is about. I checked before building whether OSM can give that
 number. It can't. A sample across eight city cores from 26&nbsp;Jul&nbsp;2026:</p>
@@ -305,7 +326,7 @@ never counts, and cubicle counts per gender are zero in all eight cities. And a 
 measures the mapper community, not the city. A ranking would grade OSM contributors, not toilets.
 So this site sticks to what can be measured.</p>
 
-<h2>Where the tables are</h2>
+<h2 id="where-tables">Where the tables are</h2>
 <p><code>changing_table:location</code> is the only open vocabulary I know of that records which
 room a changing table is in. It is rare:
 <span data-stat="location_total">3,659</span> of <span data-stat="ct_total">77,000</span>
@@ -319,7 +340,7 @@ rooms.</p>
 ratio. The direction is the same as everywhere else: changing tables hang in the women's room by
 default. This map shows where the data is missing, and every grey pin has an edit button.</p>
 
-<h2>Data licence &amp; attribution</h2>
+<h2 id="licence">Data licence &amp; attribution</h2>
 <p>All map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, available under the
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -327,7 +348,7 @@ The GeoJSON and stats files this site serves are derived from OSM and therefore 
 Global tag statistics come from <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 The site's own code is MIT-licensed.</p>
 
-<h2>Privacy</h2>
+<h2 id="privacy">Privacy</h2>
 <p>A static site. It sets no cookies and runs no analytics. The map tiles come from
 OpenStreetMap's tile servers, so those requests fall under the
 <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privacy policy</a>. Tap <em>Answer on MapComplete</em> in a pin, and for a few minutes the page also asks api.openstreetmap.org what that one object now says — those requests fall under the same policy. From the third character you type into the search
@@ -340,7 +361,7 @@ your own OSM account. Formal pages:
 <a href="datenschutz-en.html">Privacy policy</a>.</p>
 
 
-<h2>How this site is made</h2>
+<h2 id="how-made">How this site is made</h2>
 <p>I do use AI to help me with coding and drafting texts. Everything goes through my human
 eyes though.</p>
 

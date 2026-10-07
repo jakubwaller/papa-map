@@ -124,8 +124,25 @@
 <p class="muted">Fasciatoi che un papà può raggiungere. I numeri mondiali di taginfo qui sotto li
 recupera l'aggiornamento notturno. Il campione su otto centri urbani è del
 26&nbsp;luglio&nbsp;2026 e resta così com'è.</p>
+<nav class="muted" aria-label="Indice"><strong>Indice</strong>
+<ul>
+  <li><a href="#what">Che cos'è questa mappa. E che cosa non è.</a></li>
+  <li><a href="#colours">Che cosa significano i colori (la regola esatta)</a></li>
+  <li><a href="#mum-mode">Il selettore Papà / Mamma</a></li>
+  <li><a href="#play-area">L'anello blu: l'angolo giochi</a></li>
+  <li><a href="#wheelchair">Il chip Sedia a rotelle</a></li>
+  <li><a href="#empty-rings">Gli anelli blu vuoti: posti per giocare, nessuna risposta</a></li>
+  <li><a href="#high-chair">Il chip Seggiolone</a></li>
+  <li><a href="#grey-pin">Come riparare un pin grigio</a></li>
+  <li><a href="#contribute">Come aggiungere un luogo che manca</a></li>
+  <li><a href="#no-ranking">Perché da OSM non si può ricavare un indice dell'offerta di bagni</a></li>
+  <li><a href="#where-tables">L'unico dato calcolabile: dove sono i fasciatoi</a></li>
+  <li><a href="#licence">Licenza dei dati &amp; attribuzione</a></li>
+  <li><a href="#privacy">Privacy</a></li>
+  <li><a href="#how-made">Come nasce questo sito</a></li>
+</ul></nav>
 
-<h2>Che cos'è questa mappa. E che cosa non è.</h2>
+<h2 id="what">Che cos'è questa mappa. E che cosa non è.</h2>
 <p>PapaMap mostra i luoghi in 44 paesi europei — dall'Islanda a Cipro, dal Portogallo
 all'Ucraina, più Australia, Nuova Zelanda, Stati Uniti, Canada e Giappone — dove
 OpenStreetMap sa che c'è un fasciatoio
@@ -135,8 +152,9 @@ direttamente su OSM, tramite i link su ogni pin.</p>
 <p>L’idea è nata leggendo il libro <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> di Caroline Criado Perez.</p>
 <p>Una classifica delle città con la migliore offerta di bagni, questa mappa non lo è. Più
 sotto è spiegato perché dai dati aperti non la si possa ricavare in modo onesto.</p>
+<p>Qui si parla solo di fasciatoi. Per parchi giochi e altri luoghi a misura di famiglia, vedi <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> e <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Che cosa significano i colori (la regola esatta)</h2>
+<h2 id="colours">Che cosa significano i colori (la regola esatta)</h2>
 <p>Sulla mappa finiscono solo gli oggetti con <code>changing_table=yes</code> o
 <code>limited</code> (<code>no</code> conta solo nelle statistiche). Il colore viene da
 <code>changing_table:location</code>. Il valore viene diviso sul <code>;</code>, ripulito dagli
@@ -155,7 +173,7 @@ spazi, messo in minuscolo, e ogni parte viene confrontata per intero. Mai come s
 </ul>
 <p>Un oggetto con un tag <code>centralkey</code> (diverso da <code>no</code>) resta fuori dalla mappa quando la chiave chiude tutta la porta: <code>access=centralkey</code>, un fasciatoio nel bagno disabili, o niente nei tag dice che la chiave vale solo per una cabina. Un blocco con bagni uomini e donne aperti e una cabina disabili chiusa a chiave (<code>wheelchair:access=centralkey</code>, oppure <code>male=yes</code> e <code>female=yes</code>) resta sulla mappa, grigio finché qualcuno non registra la stanza. La chiave europea si ottiene solo dimostrando una disabilità, quindi la maggior parte dei papà da quella porta non passa. Sotto il chip <em>Sedia a rotelle</em> questi fasciatoi tornano, vedi sotto.</p>
 
-<h2>Il selettore Papà / Mamma</h2>
+<h2 id="mum-mode">Il selettore Papà / Mamma</h2>
 <p>I tre colori qui sopra rispondono alla domanda del papà: un papà riesce a raggiungere il
 fasciatoio? Per una mamma la stessa risposta si legge di solito in modo diverso — può usare un
 fasciatoio nel bagno donne, e anche un fasciatoio senza stanza registrata si trova, nella maggior
@@ -179,7 +197,7 @@ solo), è raggiungibile da un papà ma non da una mamma. La pipeline segna quest
 separatamente, quindi in modalità mamma sono rossi e non contano nel numero sopra. Versioni più
 vecchie dell'app potrebbero ancora mostrarli verdi, finché non vengono aggiornate.</p>
 
-<h2>L'anello blu: l'angolo giochi</h2>
+<h2 id="play-area">L'anello blu: l'angolo giochi</h2>
 <p>Un pin con l'anello blu ha anche un angolo giochi &mdash; un posto dove non si cambia soltanto
 il bambino, ci si ferma anche un po'. Il filtro <em>Con angolo giochi</em> mostra solo questi
 luoghi. Un luogo conta se in OSM c'è una di queste cose:</p>
@@ -218,11 +236,11 @@ registrato, qualunque sia il valore, toglie la domanda. Su un <code>leisure=play
 senza <code>indoor=yes</code> non viene mai chiesto &mdash; il posto <em>è</em> già un posto per
 giocare, solo non al chiuso.</p>
 
-<h2>Il chip Sedia a rotelle</h2>
+<h2 id="wheelchair">Il chip Sedia a rotelle</h2>
 <p>Il chip <em>Sedia a rotelle</em> mostra i luoghi con <code>wheelchair=yes</code> o <code>wheelchair=limited</code> in OSM. <code>limited</code> significa un gradino fino a 7&nbsp;cm, o aiuto necessario. Con il chip attivo questi luoghi hanno un punto esclamativo dallo zoom 13, e il popup dice <em>limitato</em>. <code>toilets:wheelchair=yes</code> da solo non basta, ma compare comunque nel popup, insieme a <code>wheelchair:description</code>. Un luogo senza il tag non è inaccessibile, OSM semplicemente non dice nulla: il chip filtra soltanto, non colora. Il chip filtra e segna allo stesso modo i cerchi blu (luoghi con area giochi).</p>
 <p>Sotto questo chip, e solo lì, tornano i fasciatoi dietro una chiave Euro, con una chiave disegnata nel segnaposto: chi ha bisogno del chip di solito ha la chiave. Sulla mappa normale, nei numeri e nella classifica restano fuori.</p>
 
-<h2>Gli anelli blu vuoti: posti per giocare, nessuna risposta</h2>
+<h2 id="empty-rings">Gli anelli blu vuoti: posti per giocare, nessuna risposta</h2>
 <p>La stessa regola vale per molti più luoghi di quanti pin abbia la mappa. Solo
 <span data-stat="play_tables">111</span> di questi hanno un pin. Per
 altri <span data-stat="play_places">701</span> nessuno ha risposto alla prima domanda: qui c'è un
@@ -238,14 +256,15 @@ va comunque, e una volta lì la risposta la sa. Un clic sull'anello apre MapComp
 quell'unica domanda. Se qualcuno risponde, entro pochi minuti l'anello sparisce
 e al suo posto compare un pin vero.</p>
 
-<h2>Il chip Seggiolone</h2>
+<h2 id="high-chair">Il chip Seggiolone</h2>
 <p>Il chip <em>Seggiolone</em> mostra i luoghi dove OSM registra un seggiolone: <code>highchair=yes</code> o un numero maggiore di 0. <code>highchair=no</code> o <code>0</code> è un no registrato. Un luogo senza il tag non è un luogo senza seggiolone, OSM semplicemente non dice nulla: il chip lo lascia fuori senza affermare niente. Un valore che la mappa non sa leggere, come <code>ja</code> o <code>1+</code>, non conta neppure, e il popup non ne mostra alcuna riga. Il chip filtra i pin e i cerchi blu e non colora nulla.</p>
 <p>Sul pin di un posto dove mangiare (bar, ristorante, pub e simili) o di un luogo per famiglie (scuola dell'infanzia, biblioteca, centro civico e simili), il popup chiede, finché OSM non dice nulla: <em>C'è un seggiolone?</em> La tua risposta va in OSM come <code>highchair=yes</code> o <code>highchair=no</code>, con il tuo account, proprio come una risposta sulla stanza.</p>
 
-<h2>Come riparare un pin grigio</h2>
+<h2 id="grey-pin">Come riparare un pin grigio</h2>
 <p>Grigio vuol dire che manca una risposta. Dov'è il fasciatoio? Può rispondere chiunque abbia un
 account OSM gratuito, sul posto, in meno di un minuto:</p>
 <ul>
+  <li><strong>Nell'app (il modo più rapido):</strong> tocca il pin grigio. Il popup chiede <em>In quale stanza si trova il fasciatoio?</em> Tocca <em>Bagno uomini</em>, <em>Bagno donne</em>, <em>Donne &amp; uomini</em> oppure, dietro <em>Altre stanze …</em>, un'altra stanza. Accedi una sola volta con OSM, la risposta viene salvata con il tuo account e il pin si aggiorna entro pochi minuti. Se tocchi il pulsante di posizione a meno di 75&nbsp;m da un pin grigio, una scheda chiede se sei lì in questo momento; <em>Rispondi alla domanda</em> apre lo stesso popup.</li>
   <li><strong>MapComplete (qualsiasi telefono, nel browser):</strong> &laquo;Rispondi su
       MapComplete&raquo; su un pin grigio apre lo stesso oggetto nel tema MapComplete di PapaMap
       &mdash; su ogni pin, così le modifiche si riconoscono come arrivate da qui. MapComplete
@@ -280,6 +299,8 @@ stanza, oppure che non c'è. La prima volta accedi con il tuo account OSM gratui
 salvata su OpenStreetMap con il tuo account e il pin compare pochi minuti dopo (la mappa vola lì).
 Se il luogo non è nell'elenco, usa il <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">tema MapComplete di PapaMap</a> (il link in fondo alla
 finestra). Oppure l'editor di OSM, i passaggi qui sotto funzionano comunque.</p>
+<details>
+<summary>Con l'editor di OSM (iD)</summary>
 <p>Il luogo su OSM quasi di sicuro esiste già. Manca solo il tag <code>changing_table</code>.
 Nell'editor di OSM (iD) ci vogliono circa due minuti:</p>
 <ol>
@@ -302,12 +323,13 @@ Nell'editor di OSM (iD) ci vogliono circa due minuti:</p>
       fasciatoio&raquo;), carica. Su OSM è online in un minuto, su PapaMap pochi minuti
       dopo.</li>
 </ol>
+</details>
 <p class="muted">Per favore tagga solo quello che hai visto con i tuoi occhi. OSM registra quello
 che c'è, non quello che dovrebbe esserci. Se non sai in che stanza sia,
 <code>changing_table=yes</code> da solo è comunque utile: il luogo diventa un pin grigio, e il
 prossimo papà risponde alla domanda sulla stanza.</p>
 
-<h2>Perché da OSM non si può ricavare un indice dell'offerta di bagni</h2>
+<h2 id="no-ranking">Perché da OSM non si può ricavare un indice dell'offerta di bagni</h2>
 <p>Il progetto più grande e più ovvio sarebbe il rapporto tra i bagni per gli uomini e quelli per
 le donne, città per città. Il numero attorno a cui ruota davvero il discorso della
 &laquo;potty parity&raquo;. Da OpenStreetMap non si può calcolare. L'abbiamo verificato prima di
@@ -342,7 +364,7 @@ Tokyo&nbsp;23&nbsp;quartieri, Amsterdam, Vienna, Melbourne; 26&nbsp;luglio&nbsp;
 <p>L'unica cosa onesta da dire è quindi: l'offerta in sé, dai dati aperti, oggi non si può
 misurare. Questo sito misura quello che è misurabile e trasforma le lacune in contributi.</p>
 
-<h2>L'unico dato calcolabile: dove sono i fasciatoi</h2>
+<h2 id="where-tables">L'unico dato calcolabile: dove sono i fasciatoi</h2>
 <p><code>changing_table:location</code> è, per quanto ne sappiamo, l'unico vocabolario aperto che
 registra in quale stanza si trova un fasciatoio. È poco usato:
 <span data-stat="location_total">3.659</span> oggetti <code>changing_table</code> su
@@ -362,7 +384,7 @@ il fasciatoio, di norma, sta nel bagno delle donne. Questo taglia fuori i papà
 e, senza dirlo, dà per scontato a chi tocchi cambiare il pannolino. Questa mappa rende visibili i
 dati che mancano. E facili da sistemare.</p>
 
-<h2>Licenza dei dati &amp; attribuzione</h2>
+<h2 id="licence">Licenza dei dati &amp; attribuzione</h2>
 <p>Tutti i dati della mappa &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, disponibili con la
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -370,7 +392,7 @@ I file GeoJSON e di statistiche pubblicati da questo sito derivano da OSM e sono
 ODbL. Le statistiche globali sui tag vengono da <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Il codice del sito è sotto licenza MIT.</p>
 
-<h2>Privacy</h2>
+<h2 id="privacy">Privacy</h2>
 <p>Un sito statico. Nessun account, nessun cookie, nessun sistema di analisi, nessuno script di
 tracciamento. Il sito non salva niente su di te e non ha un database. Le tessere della mappa
 arrivano dai tile server di OpenStreetMap; per quelle richieste vale l'<a href="https://osmfoundation.org/wiki/Privacy_Policy">informativa
@@ -383,7 +405,7 @@ loro siti e modifichi con il tuo account OSM. Da noi non passa niente. Pagine fo
 26&nbsp;luglio&nbsp;2026 e le statistiche taginfo sulle chiavi alla data indicata sopra. I numeri
 locali vengono dalla stessa query notturna che costruisce la mappa.</p>
 
-<h2>Come nasce questo sito</h2>
+<h2 id="how-made">Come nasce questo sito</h2>
 <p>Per programmare e per scrivere i testi mi faccio aiutare dall'IA. Ma poi tutto lo ricontrollo
 io, con i miei occhi.</p>
 

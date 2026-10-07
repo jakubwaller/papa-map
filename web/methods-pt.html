@@ -124,8 +124,25 @@
 <p class="muted">Fraldários a que um pai consegue chegar. Os números mundiais do taginfo abaixo vêm
 da compilação noturna. A amostra em oito centros urbanos é de 26&nbsp;jul&nbsp;2026 e mantém-se
 assim.</p>
+<nav class="muted" aria-label="Conteúdo"><strong>Conteúdo</strong>
+<ul>
+  <li><a href="#what">O que este mapa é. E o que não é.</a></li>
+  <li><a href="#colours">O que as cores significam (a regra exata)</a></li>
+  <li><a href="#mum-mode">O seletor Pai / Mãe</a></li>
+  <li><a href="#play-area">O anel azul: cantinho de brincar</a></li>
+  <li><a href="#wheelchair">O chip Cadeira de rodas</a></li>
+  <li><a href="#empty-rings">Os anéis azuis vazios: locais para brincar, sem resposta</a></li>
+  <li><a href="#high-chair">O chip Cadeira de papa</a></li>
+  <li><a href="#grey-pin">Como corrigir um pin cinzento</a></li>
+  <li><a href="#contribute">Como adicionar um local em falta</a></li>
+  <li><a href="#no-ranking">Porque é que um índice de oferta a partir do OSM não funciona</a></li>
+  <li><a href="#where-tables">O único facto calculável: onde estão os fraldários</a></li>
+  <li><a href="#licence">Licença de dados &amp; atribuição</a></li>
+  <li><a href="#privacy">Privacidade</a></li>
+  <li><a href="#how-made">Como este site é feito</a></li>
+</ul></nav>
 
-<h2>O que este mapa é. E o que não é.</h2>
+<h2 id="what">O que este mapa é. E o que não é.</h2>
 <p>O PapaMap mostra locais em 44 países europeus — da Islândia a Chipre, de Portugal até à
 Ucrânia, mais a Austrália, a Nova Zelândia, os Estados Unidos, o Canadá e o Japão — onde o OpenStreetMap
 sabe de um
@@ -136,8 +153,9 @@ no próprio OSM, através das ligações em cada pin.</p>
 <p>A ideia surgiu ao ler o livro <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a>, de Caroline Criado Perez.</p>
 <p>Uma tabela de qual cidade tem a melhor oferta de casas de banho, isto não é. Porque é que isso
 não se pode fazer com honestidade a partir de dados abertos, explica-se mais abaixo.</p>
+<p>Aqui só se fala de fraldários. Para parques infantis e outros locais amigos das famílias, vê <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> e <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>O que as cores significam (a regra exata)</h2>
+<h2 id="colours">O que as cores significam (a regra exata)</h2>
 <p>Só os objetos com <code>changing_table=yes</code> ou <code>limited</code> entram no mapa
 (<code>no</code> só conta nas estatísticas). A cor vem de
 <code>changing_table:location</code>. O valor é dividido por <code>;</code>, os espaços nas pontas
@@ -156,7 +174,7 @@ porque <code>female_toilet</code> contém
 </ul>
 <p>Um objeto com uma tag <code>centralkey</code> (diferente de <code>no</code>) fica fora do mapa quando a chave fecha a porta toda: <code>access=centralkey</code>, um fraldário na casa de banho adaptada, ou nada nas tags diz que a chave é só para uma cabina. Um bloco com casas de banho de homens e de mulheres abertas e uma cabina adaptada fechada à chave (<code>wheelchair:access=centralkey</code>, ou <code>male=yes</code> e <code>female=yes</code>) fica no mapa, cinzento até alguém registar a sala. A chave Euro só se obtém com prova de deficiência, por isso a maioria dos pais não passa por essa porta. Sob o chip <em>Cadeira de rodas</em> estes fraldários voltam, ver abaixo.</p>
 
-<h2>O seletor Pai / Mãe</h2>
+<h2 id="mum-mode">O seletor Pai / Mãe</h2>
 <p>As três cores acima respondem à pergunta do pai: um pai consegue chegar a este fraldário?
 Para uma mãe, a mesma resposta costuma ler-se de outra forma — um fraldário na casa de banho
 feminina ela pode usar, e também num fraldário sem sala registada, a maioria está numa sala
@@ -180,7 +198,7 @@ chip vermelho, por isso o número do chip verde é menor do que no modo pai, exa
 fraldários à parte, por isso no modo mãe são vermelhos e não contam para o número acima. Versões
 mais antigas da app podem ainda mostrá-los a verde, até serem atualizadas.</p>
 
-<h2>O anel azul: cantinho de brincar</h2>
+<h2 id="play-area">O anel azul: cantinho de brincar</h2>
 <p>Um pin com um anel azul também tem um cantinho de brincar &mdash; um local onde não te limitas a
 mudar a fralda, ficas um bocado. O chip <em>Com cantinho de brincar</em> filtra o mapa para mostrar
 só esses. Um local conta se o OSM registar algum destes:</p>
@@ -216,11 +234,11 @@ minutos depois. Ninguém é perguntado duas vezes: um <code>kids_area</code> <em
 <code>leisure=playground</code> sem <code>indoor=yes</code> nunca é perguntado &mdash; o local
 <em>já é</em> um sítio para brincar, só que não interior.</p>
 
-<h2>O chip Cadeira de rodas</h2>
+<h2 id="wheelchair">O chip Cadeira de rodas</h2>
 <p>O chip <em>Cadeira de rodas</em> mostra os locais com <code>wheelchair=yes</code> ou <code>wheelchair=limited</code> no OSM. <code>limited</code> quer dizer um degrau até 7&nbsp;cm, ou ajuda necessária. Com o chip ligado, estes locais têm um ponto de exclamação a partir do zoom 13, e a janela diz <em>limitado</em>. <code>toilets:wheelchair=yes</code> por si só não chega, mas aparece na mesma na janela, com <code>wheelchair:description</code>. Um local sem a etiqueta não é inacessível, o OSM simplesmente nada diz, por isso o chip só filtra e nada colore. O chip filtra e marca da mesma forma os círculos azuis (locais com zona de brincar).</p>
 <p>Sob este chip, e só aí, voltam os fraldários atrás de uma chave Euro, com uma chave desenhada no pino: quem precisa do chip costuma ter a chave. No mapa normal, nos números e na classificação ficam de fora.</p>
 
-<h2>Os anéis azuis vazios: locais para brincar, sem resposta</h2>
+<h2 id="empty-rings">Os anéis azuis vazios: locais para brincar, sem resposta</h2>
 <p>A mesma regra apanha muitos mais locais do que o mapa tem pins. Só
 <span data-stat="play_tables">111</span> deles têm um pin. Em
 mais <span data-stat="play_places">701</span>, ninguém respondeu à primeira pergunta: há aqui um
@@ -236,14 +254,15 @@ qualquer forma, e assim que lá está, sabe a resposta. Clicar num anel abre o M
 nessa pergunta. Responde e o anel desaparece em poucos minutos, substituído por um pin
 a sério.</p>
 
-<h2>O chip Cadeira de papa</h2>
+<h2 id="high-chair">O chip Cadeira de papa</h2>
 <p>O chip <em>Cadeira de papa</em> mostra os locais onde o OSM regista uma cadeira de papa: <code>highchair=yes</code> ou um número acima de 0. <code>highchair=no</code> ou <code>0</code> é um «não» registado. Um local sem a etiqueta não é um local sem cadeira de papa, o OSM simplesmente nada diz, por isso o chip deixa-o de fora sem afirmar nada. Um valor que o mapa não consegue ler, como <code>ja</code> ou <code>1+</code>, também não conta, e a janela não mostra nenhuma linha para ele. O chip filtra pins e anéis azuis e nada colore.</p>
 <p>Num pin de um sítio para comer (café, restaurante, gelataria e afins) ou de um local para famílias (jardim de infância, biblioteca, centro comunitário e afins), a janela pergunta, enquanto o OSM nada disser: <em>Há cadeira de papa?</em> A tua resposta vai para o OSM como <code>highchair=yes</code> ou <code>highchair=no</code>, com a tua própria conta, tal como uma resposta sobre a sala.</p>
 
-<h2>Como corrigir um pin cinzento</h2>
+<h2 id="grey-pin">Como corrigir um pin cinzento</h2>
 <p>Cinzento significa que falta uma resposta. Onde está o fraldário? Qualquer pessoa com uma conta
 OSM gratuita pode responder a isso, no local, em menos de um minuto:</p>
 <ul>
+  <li><strong>Na app (o mais rápido):</strong> toca no pin cinzento. A janela pergunta <em>Em que sala está o fraldário?</em> Toca em <em>Casa de banho de homens</em>, <em>Casa de banho de senhoras</em>, <em>Senhoras e homens</em> ou, atrás de <em>Mais espaços …</em>, noutra sala. Inicias sessão uma só vez com o OSM, a resposta é guardada na tua própria conta e o pin atualiza em poucos minutos. Se tocares no botão de localização a menos de 75&nbsp;m de um pin cinzento, um cartão pergunta se estás aí neste momento; <em>Responder à pergunta</em> abre a mesma janela.</li>
   <li><strong>MapComplete (qualquer telemóvel, no navegador):</strong> «Responder no
       MapComplete» num pin cinzento abre o mesmo objeto no tema MapComplete próprio do PapaMap
       &mdash; em todos os pins, para que as edições se reconheçam como vindas daqui. O MapComplete
@@ -278,6 +297,8 @@ há. À primeira vez inicias sessão com a tua conta OSM gratuita; a resposta é
 OpenStreetMap com a tua conta e o pin aparece alguns minutos depois (o mapa voa até lá). Se o local
 não estiver na lista, usa o <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">tema MapComplete do PapaMap</a> (o link no fim da caixa de diálogo). Ou
 o editor do próprio OSM, os passos abaixo continuam a funcionar.</p>
+<details>
+<summary>Com o editor do próprio OSM (iD)</summary>
 <p>O local quase de certeza já existe no OSM. Só falta a tag <code>changing_table</code>. No
 próprio editor do OSM (iD) isso demora cerca de dois minutos:</p>
 <ol>
@@ -300,11 +321,12 @@ próprio editor do OSM (iD) isso demora cerca de dois minutos:</p>
       fraldário»), envia. Ativo no OSM dentro de um minuto, no PapaMap poucos minutos
       depois.</li>
 </ol>
+</details>
 <p class="muted">Por favor, regista só o que vires com os teus próprios olhos. O OSM regista o que
 existe, não o que devia existir. Se não souberes a sala, só o <code>changing_table=yes</code> já é
 útil: o local passa a pin cinzento, e o próximo pai responde à pergunta da sala.</p>
 
-<h2>Porque é que um índice de oferta a partir do OSM não funciona</h2>
+<h2 id="no-ranking">Porque é que um índice de oferta a partir do OSM não funciona</h2>
 <p>O grande projeto óbvio seria um rácio de oferta de casas de banho masculinas para femininas por
 cidade. O número em que o argumento da «paridade das sanitas» realmente assenta. Não pode ser
 calculado a partir do OpenStreetMap. Verificámos isso antes de construir o site, com uma amostra em
@@ -340,7 +362,7 @@ Amesterdão, Viena, Melbourne;
 <p>Por isso, a única afirmação honesta é: a oferta em si não pode ser medida a partir de dados
 abertos, hoje. Este site mede o que é mensurável e transforma as lacunas em contribuições.</p>
 
-<h2>O único facto calculável: onde estão os fraldários</h2>
+<h2 id="where-tables">O único facto calculável: onde estão os fraldários</h2>
 <p><code>changing_table:location</code> é, tanto quanto sabemos, o único vocabulário aberto que
 regista em que sala está um fraldário. É escasso:
 <span data-stat="location_total">3&nbsp;659</span> de <span data-stat="ct_total">77&nbsp;000</span>
@@ -359,7 +381,7 @@ fraldários ficam por defeito na casa de banho feminina. Isso deixa os pais de f
 silenciosamente quem trata das fraldas. Este mapa torna visíveis os dados em falta. E fáceis de
 corrigir.</p>
 
-<h2>Licença de dados &amp; atribuição</h2>
+<h2 id="licence">Licença de dados &amp; atribuição</h2>
 <p>Todos os dados do mapa &copy; <a href="https://www.openstreetmap.org/copyright">colaboradores
 do OpenStreetMap</a>, disponíveis sob a
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -367,7 +389,7 @@ Os ficheiros GeoJSON e de estatísticas que este site serve derivam do OSM e sã
 ODbL. As estatísticas globais das tags vêm do <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 O código do próprio site tem licença MIT.</p>
 
-<h2>Privacidade</h2>
+<h2 id="privacy">Privacidade</h2>
 <p>Um site estático. Sem contas, sem cookies, sem análises, sem scripts de rastreio. O site não
 guarda nada sobre ti e não tem base de dados. Os tiles do mapa vêm dos servidores de tiles do
 OpenStreetMap; esses pedidos ficam sujeitos à
@@ -384,7 +406,7 @@ deles, a editar com a tua própria conta OSM. Nada passa por nós. Páginas form
 26&nbsp;jul&nbsp;2026, e estatísticas de tags do taginfo à data indicada acima. Os números locais
 vêm da mesma consulta noturna que constrói o mapa.</p>
 
-<h2>Como este site é feito</h2>
+<h2 id="how-made">Como este site é feito</h2>
 <p>De facto, uso IA para me ajudar a programar e a redigir textos. Mas tudo passa pelos meus
 olhos humanos.</p>
 

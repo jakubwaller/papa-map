@@ -123,8 +123,25 @@
 <h1>PapaMap — metode &amp; ærlighed</h1>
 <p class="muted">Pusleborde, en far kan nå. De globale taginfo-tal nedenfor hentes af det
 natlige build. Stikprøven over otte bymidter er fra 26.&nbsp;juli&nbsp;2026 og bliver stående.</p>
+<nav class="muted" aria-label="Indhold"><strong>Indhold</strong>
+<ul>
+  <li><a href="#what">Hvad dette kort er. Og hvad det ikke er.</a></li>
+  <li><a href="#colours">Hvad farverne betyder (den præcise regel)</a></li>
+  <li><a href="#mum-mode">Far / Mor-kontakten</a></li>
+  <li><a href="#play-area">Den blå ring: legeområde</a></li>
+  <li><a href="#wheelchair">Chippen Kørestol</a></li>
+  <li><a href="#empty-rings">De tomme blå ringe: legesteder uden svar</a></li>
+  <li><a href="#high-chair">Chippen Højstol</a></li>
+  <li><a href="#grey-pin">Sådan retter du en grå nål</a></li>
+  <li><a href="#contribute">Sådan tilføjer du et sted, der mangler</a></li>
+  <li><a href="#no-ranking">Hvorfor et dækningsindeks ikke kan laves ud fra OSM</a></li>
+  <li><a href="#where-tables">Det ene fakta, der kan beregnes: hvor bordene står</a></li>
+  <li><a href="#licence">Datalicens &amp; kreditering</a></li>
+  <li><a href="#privacy">Privatliv</a></li>
+  <li><a href="#how-made">Sådan bliver siden til</a></li>
+</ul></nav>
 
-<h2>Hvad dette kort er. Og hvad det ikke er.</h2>
+<h2 id="what">Hvad dette kort er. Og hvad det ikke er.</h2>
 <p>PapaMap viser steder i 44 europæiske lande &mdash; fra Island til Cypern, fra Portugal til
 Ukraine, samt Australien, New Zealand, USA, Canada og Japan &mdash;, hvor OpenStreetMap
 kender et puslebord
@@ -134,8 +151,9 @@ linkene på hver nål.</p>
 <p>Idéen kom, da jeg læste bogen <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> af Caroline Criado Perez.</p>
 <p>En rangliste over hvilken by der har den bedste toiletdækning er dette ikke. Hvorfor det ikke
 kan gøres ærligt ud fra åbne data, står længere nede.</p>
+<p>Det handler kun om pusleborde. Til legepladser og andre børnevenlige steder, se <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> og <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Hvad farverne betyder (den præcise regel)</h2>
+<h2 id="colours">Hvad farverne betyder (den præcise regel)</h2>
 <p>Kun objekter med <code>changing_table=yes</code> eller <code>limited</code> havner på kortet
 (<code>no</code> tæller kun med i statistikken). Farven kommer fra
 <code>changing_table:location</code>. Værdien deles ved <code>;</code>, trimmes, sættes med små
@@ -153,7 +171,7 @@ bogstaver, og hver del sammenlignes i sin helhed. Aldrig som delstreng, for
 </ul>
 <p>Et objekt med et <code>centralkey</code>-tag (bortset fra <code>no</code>) holdes ude af kortet, når nøglen spærrer hele døren: <code>access=centralkey</code>, et bord i handicaptoilettet, eller intet i taggene siger, at nøglen kun gælder én kabine. Et anlæg med åbent herre- og dametoilet og en aflåst handicapkabine (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> og <code>female=yes</code>) bliver på kortet, gråt indtil nogen registrerer rummet. Euronøglen udleveres kun mod dokumenteret handicap, så de fleste fædre kommer ikke gennem den dør. Under chippen <em>Kørestol</em> kommer disse borde tilbage, se nedenfor.</p>
 
-<h2>Far / Mor-kontakten</h2>
+<h2 id="mum-mode">Far / Mor-kontakten</h2>
 <p>De tre farver ovenfor besvarer farens spørgsmål: kan en far nå bordet? For en mor er det samme
 svar som regel anderledes at læse — et bord på dametoilettet kan hun bruge, og selv et bord uden
 registreret rum står i de fleste tilfælde også i et rum, hun kan komme ind i. Kontakten
@@ -176,7 +194,7 @@ kan nås af en far, men ikke af en mor. Pipelinen markerer disse borde særskilt
 mor-tilstand er røde og ikke tælles med i tallet ovenfor. Ældre versioner af appen kan stadig vise
 dem grønne, indtil de bliver opdateret.</p>
 
-<h2>Den blå ring: legeområde</h2>
+<h2 id="play-area">Den blå ring: legeområde</h2>
 <p>En nål med en blå ring har også et legeområde &mdash; et sted, hvor man ikke bare skifter barnet,
 men bliver lidt. Filteret <em>Med legeområde</em> viser kun dem. Et sted tæller med, hvis OSM
 angiver én af disse:</p>
@@ -211,11 +229,11 @@ senere. Ingen bliver spurgt to gange: et registreret <code>kids_area</code> <em>
 <code>leisure=playground</code> uden <code>indoor=yes</code> bliver der slet ikke spurgt &mdash;
 stedet <em>er</em> allerede et sted at lege, bare ikke indendørs.</p>
 
-<h2>Chippen Kørestol</h2>
+<h2 id="wheelchair">Chippen Kørestol</h2>
 <p>Chippen <em>Kørestol</em> viser steder med <code>wheelchair=yes</code> eller <code>wheelchair=limited</code> i OSM. <code>limited</code> betyder ét trin på op til 7&nbsp;cm, eller hjælp nødvendig. Med chippen slået til har disse steder et udråbstegn fra zoom 13, og popuppen siger <em>begrænset</em>. <code>toilets:wheelchair=yes</code> alene er ikke nok, men står stadig i popuppen sammen med <code>wheelchair:description</code>. Et sted uden tagget er ikke utilgængeligt, OSM siger bare ingenting, så chippen filtrerer kun og farver intet. De blå ringe (steder med legehjørne) filtrerer og markerer chippen på samme måde.</p>
 <p>Under denne chip, og kun der, kommer bordene bag euronøgle tilbage med en nøgle i nålen: den, der har brug for chippen, har som regel nøglen. På det almindelige kort, i tallene og på ranglisten bliver de ude.</p>
 
-<h2>De tomme blå ringe: legesteder uden svar</h2>
+<h2 id="empty-rings">De tomme blå ringe: legesteder uden svar</h2>
 <p>Den samme regel rammer langt flere steder, end kortet har nåle. Kun
 <span data-stat="play_tables">111</span> af dem har en nål. For
 <span data-stat="play_places">701</span> andre har ingen besvaret det første spørgsmål: er der et
@@ -230,14 +248,15 @@ en restaurant med legerum &mdash; en far med et lille barn kommer der alligevel,
 kender han svaret. Et klik på ringen åbner MapComplete på præcis det ene spørgsmål. Bliver det
 besvaret, forsvinder ringen inden for få minutter, og en rigtig nål står i stedet.</p>
 
-<h2>Chippen Højstol</h2>
+<h2 id="high-chair">Chippen Højstol</h2>
 <p>Chippen <em>Højstol</em> viser steder, hvor OSM har registreret en højstol: <code>highchair=yes</code> eller et tal over 0. <code>highchair=no</code> eller <code>0</code> er et registreret nej. Et sted uden tagget er ikke et sted uden højstol, OSM siger bare ingenting, så chippen udelader det uden at påstå noget. En værdi, kortet ikke kan læse, som <code>ja</code> eller <code>1+</code>, tæller heller ikke, og popuppen viser ingen linje for den. Chippen filtrerer nåle og blå ringe og farver intet.</p>
 <p>På en nål ved et spisested (café, restaurant, værtshus og lignende) eller et familiested (børnehave, bibliotek, medborgerhus og lignende) spørger popuppen, så længe OSM ikke siger noget: <em>Er der en højstol?</em> Dit svar havner i OSM som <code>highchair=yes</code> eller <code>highchair=no</code>, under din egen konto, ligesom et svar om rummet.</p>
 
-<h2>Sådan retter du en grå nål</h2>
+<h2 id="grey-pin">Sådan retter du en grå nål</h2>
 <p>Grå betyder: et svar mangler. Hvor står puslebordet? Det kan enhver med en gratis OSM-konto
 svare på, på stedet, på under et minut:</p>
 <ul>
+  <li><strong>I appen (hurtigst):</strong> Tryk på den grå nål. Pop op-vinduet spørger <em>Hvilket rum står puslebordet i?</em> Tryk på <em>Herretoilet</em>, <em>Dametoilet</em>, <em>Damer &amp; herrer</em> eller, under <em>Flere rum …</em>, et andet rum. Du logger ind med OSM én gang, svaret gemmes under din egen konto, og nålen opdateres inden for få minutter. Trykker du på placeringsknappen inden for 75&nbsp;m fra en grå nål, spørger et kort, om du er der lige nu; <em>Besvar spørgsmålet</em> åbner det samme vindue.</li>
   <li><strong>MapComplete (enhver telefon, i browseren):</strong> &raquo;Svar på
       MapComplete&laquo; på den grå nål åbner det samme objekt i PapaMaps eget MapComplete-tema
       &mdash; ved hver nål, så redigeringerne kan genkendes som kommende herfra. MapComplete
@@ -273,6 +292,8 @@ der ikke er noget. Første gang logger du ind med din gratis OSM-konto; svaret g
 under din konto, og nålen dukker op få minutter senere (kortet flyver derhen). Står stedet ikke på
 listen, så brug <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMaps MapComplete-tema</a> (linket nederst i dialogen). Eller OSM's egen editor,
 trinnene nedenfor virker stadig.</p>
+<details>
+<summary>Med OSM's egen editor (iD)</summary>
 <p>Stedet findes næsten helt sikkert i OSM allerede. Det er kun
 <code>changing_table</code>-tagget, der mangler. I OSM-editoren (iD) tager det omkring to
 minutter:</p>
@@ -296,11 +317,12 @@ minutter:</p>
       (&raquo;tilføjet rum for puslebord&laquo;) og upload. Live på OSM efter et minut, på PapaMap
       få minutter senere.</li>
 </ol>
+</details>
 <p class="muted">Tag kun det, du selv har set. OSM registrerer, hvad der er, ikke hvad der burde
 være. Kender du ikke rummet, er <code>changing_table=yes</code> alene stadig nyttigt: stedet
 bliver en grå nål, og den næste far svarer på spørgsmålet om rummet.</p>
 
-<h2>Hvorfor et dækningsindeks ikke kan laves ud fra OSM</h2>
+<h2 id="no-ranking">Hvorfor et dækningsindeks ikke kan laves ud fra OSM</h2>
 <p>Det oplagte større projekt ville være et forhold mellem toiletdækningen for mænd og kvinder pr.
 by. Tallet, som &raquo;potty parity&laquo; egentlig handler om. Det kan ikke beregnes ud fra
 OpenStreetMap. Vi tjekkede det, før vi byggede, med en stikprøve over otte bymidter (Berlin,
@@ -336,7 +358,7 @@ London, Paris, New York, Tokyo&nbsp;23&nbsp;bydele, Amsterdam, Wien, Melbourne;
 <p>Ærligt er derfor kun: selve dækningen kan man i dag ikke måle ud fra åbne data. Dette websted
 måler det, der kan måles, og laver hullerne om til bidrag.</p>
 
-<h2>Det ene fakta, der kan beregnes: hvor bordene står</h2>
+<h2 id="where-tables">Det ene fakta, der kan beregnes: hvor bordene står</h2>
 <p><code>changing_table:location</code> er så vidt vi ved det eneste åbne vokabular, der noterer,
 i hvilket rum et puslebord står. Det er tyndt besat:
 <span data-stat="location_total">3.659</span> ud af <span data-stat="ct_total">77.000</span>
@@ -355,7 +377,7 @@ ikke overfortolkes. Retningen passer dog med det, der længe har været dokument
 hænger som standard på dametoilettet. Det lukker fædre ude og antyder samtidig, hvem der har
 ansvaret for at skifte ble. Dette kort gør de manglende data synlige. Og lette at rette.</p>
 
-<h2>Datalicens &amp; kreditering</h2>
+<h2 id="licence">Datalicens &amp; kreditering</h2>
 <p>Alle kortdata &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, tilgængelige under
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -363,7 +385,7 @@ Dette websteds GeoJSON- og statistikfiler er afledt af OSM og dermed også ODbL.
 Den globale tag-statistik kommer fra <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Webstedets kode er MIT-licenseret.</p>
 
-<h2>Privatliv</h2>
+<h2 id="privacy">Privatliv</h2>
 <p>Et statisk websted. Ingen konti, ingen cookies, ingen analytics, ingen tracking-scripts. Siden
 gemmer ingenting om dig og har ingen database. Kortfliserne kommer fra OpenStreetMaps
 tile-servere; for de forespørgsler gælder
@@ -377,7 +399,7 @@ under din egen OSM-konto. Intet af det går gennem os. Det formelle (på tysk):
 26.&nbsp;juli&nbsp;2026 og taginfos nøglestatistik med den dato, der står ovenfor. De lokale tal
 kommer fra den samme natlige forespørgsel, som også bygger kortet.</p>
 
-<h2>Sådan bliver siden til</h2>
+<h2 id="how-made">Sådan bliver siden til</h2>
 <p>KI hjælper mig med at programmere og skrive teksterne. Jeg har alligevel selv læst
 det hele igennem.</p>
 

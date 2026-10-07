@@ -123,8 +123,25 @@
 <h1>PapaMap — metody i uczciwość</h1>
 <p class="muted">Przewijaki, do których dotrze tata. Światowe liczby z taginfo poniżej pobiera
 nocny build. Próbka z ośmiu centrów miast jest z 26&nbsp;lipca&nbsp;2026 i taka zostaje.</p>
+<nav class="muted" aria-label="Spis treści"><strong>Spis treści</strong>
+<ul>
+  <li><a href="#what">Czym ta mapa jest. A czym nie jest.</a></li>
+  <li><a href="#colours">Co znaczą kolory (dokładna reguła)</a></li>
+  <li><a href="#mum-mode">Przełącznik tata/mama</a></li>
+  <li><a href="#play-area">Niebieska obwódka: kącik zabaw</a></li>
+  <li><a href="#wheelchair">Chip Wózek</a></li>
+  <li><a href="#empty-rings">Puste niebieskie obwódki: miejsca do zabawy bez odpowiedzi</a></li>
+  <li><a href="#high-chair">Chip Krzesełko do karmienia</a></li>
+  <li><a href="#grey-pin">Jak naprawić szarą pinezkę</a></li>
+  <li><a href="#contribute">Jak dodać brakujące miejsce</a></li>
+  <li><a href="#no-ranking">Dlaczego wskaźnik dostępności toalet z OSM nie wychodzi</a></li>
+  <li><a href="#where-tables">Jedyny policzalny fakt: gdzie są przewijaki</a></li>
+  <li><a href="#licence">Licencja danych i atrybucja</a></li>
+  <li><a href="#privacy">Prywatność</a></li>
+  <li><a href="#how-made">Jak powstaje ta strona</a></li>
+</ul></nav>
 
-<h2>Czym ta mapa jest. A czym nie jest.</h2>
+<h2 id="what">Czym ta mapa jest. A czym nie jest.</h2>
 <p>PapaMap pokazuje miejsca w 44 krajach Europy — od Islandii po Cypr, od Portugalii po
 Ukrainę, a także Australia, Nowa Zelandia, USA, Kanada i Japonia — o których
 OpenStreetMap wie, że jest tam przewijak
@@ -134,8 +151,9 @@ w OSM, przez linki przy każdej pinezce.</p>
 <p>Pomysł wziął się z lektury książki <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> Caroline Criado Perez.</p>
 <p>Rankingiem tego, które miasto ma najlepszą dostępność toalet, ta mapa nie jest. Dlaczego z
 otwartych danych nie da się go zrobić uczciwie, wyjaśniamy niżej.</p>
+<p>Chodzi tu tylko o przewijaki. Jeśli chodzi o place zabaw i inne miejsca przyjazne rodzinom, zajrzyj na <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> i <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Co znaczą kolory (dokładna reguła)</h2>
+<h2 id="colours">Co znaczą kolory (dokładna reguła)</h2>
 <p>Na mapę trafiają tylko obiekty z <code>changing_table=yes</code> albo <code>limited</code>
 (<code>no</code> liczy się wyłącznie do statystyk). Kolor bierze się z
 <code>changing_table:location</code>. Wartość jest dzielona po <code>;</code>, przycinana,
@@ -154,7 +172,7 @@ zamieniana na małe litery, a każda część jest porównywana w całości. Nig
 </ul>
 <p>Obiekt z tagiem <code>centralkey</code> (innym niż <code>no</code>) zostaje poza mapą, gdy klucz zamyka całe drzwi: <code>access=centralkey</code>, przewijak w toalecie dla niepełnosprawnych, albo nic w tagach nie mówi, że klucz dotyczy tylko jednej kabiny. Obiekt z otwartą toaletą męską i damską oraz zamkniętą na klucz kabiną dla niepełnosprawnych (<code>wheelchair:access=centralkey</code>, albo <code>male=yes</code> i <code>female=yes</code>) zostaje na mapie, szary, dopóki ktoś nie wpisze pomieszczenia. Euroklucz dostaje się wyłącznie po okazaniu orzeczenia o niepełnosprawności, więc większość ojców przez te drzwi nie przejdzie. Pod chipem <em>Wózek</em> te przewijaki wracają, patrz niżej.</p>
 
-<h2>Przełącznik tata/mama</h2>
+<h2 id="mum-mode">Przełącznik tata/mama</h2>
 <p>Trzy kolory na górze odpowiadają na pytanie taty: Czy tata dotrze do przewijaka? Dla mamy ta
 sama odpowiedź najczęściej czyta się inaczej — z przewijaka w damskim WC może skorzystać, a przy
 przewijaku bez zapisanego pomieszczenia większość stoi w pomieszczeniu, do którego może wejść.
@@ -178,7 +196,7 @@ samo), jest dostępny dla taty, ale nie dla mamy. Pipeline oznacza takie przewij
 trybie mamy są czerwone i nie liczą się do liczby powyżej. Starsze wersje aplikacji mogą wciąż
 pokazywać je jako zielone, dopóki nie zostaną zaktualizowane.</p>
 
-<h2>Niebieska obwódka: kącik zabaw</h2>
+<h2 id="play-area">Niebieska obwódka: kącik zabaw</h2>
 <p>Pinezka z niebieską obwódką ma dodatkowo kącik zabaw &mdash; miejsce, w którym nie tylko się
 przewija, ale i zostaje na dłużej. Filtr <em>Z kącikiem zabaw</em> pokazuje na mapie tylko takie.
 Miejsce się liczy, jeśli w OSM jest którykolwiek z tych zapisów:</p>
@@ -215,11 +233,11 @@ wartości, usuwa pytanie. Na <code>leisure=playground</code> bez <code>indoor=ye
 ogóle się nie pojawia &mdash; to miejsce <em>już jest</em> miejscem do zabawy, tylko nie w
 środku.</p>
 
-<h2>Chip Wózek</h2>
+<h2 id="wheelchair">Chip Wózek</h2>
 <p>Chip <em>Wózek</em> pokazuje miejsca z <code>wheelchair=yes</code> lub <code>wheelchair=limited</code> w OSM. <code>limited</code> oznacza jeden stopień do 7&nbsp;cm lub potrzebną pomoc. Przy włączonym chipie te miejsca mają od powiększenia 13 wykrzyknik, a w dymku stoi <em>ograniczony</em>. Samo <code>toilets:wheelchair=yes</code> nie wystarcza, ale i tak widać je w dymku, razem z <code>wheelchair:description</code>. Miejsce bez tagu nie jest niedostępne, OSM po prostu nic o nim nie mówi, więc chip tylko filtruje i niczego nie koloruje. Niebieskie kółka (miejsca z kącikiem zabaw) chip filtruje i oznacza tak samo.</p>
 <p>Pod tym chipem, i tylko tam, wracają przewijaki za eurokluczem, z kluczem w pinezce: kto potrzebuje chipa, zwykle ma klucz. Na zwykłej mapie, w liczbach i w rankingu pozostają poza.</p>
 
-<h2>Puste niebieskie obwódki: miejsca do zabawy bez odpowiedzi</h2>
+<h2 id="empty-rings">Puste niebieskie obwódki: miejsca do zabawy bez odpowiedzi</h2>
 <p>Ta sama reguła pasuje do dużo większej liczby miejsc, niż mapa ma pinezek. Tylko
 <span data-stat="play_tables">111</span> z nich ma pinezkę. Przy
 kolejnych <span data-stat="play_places">701</span> nikt nie odpowiedział na pierwsze pytanie: czy
@@ -235,14 +253,15 @@ już tam jest, zna odpowiedź. Kliknięcie w obwódkę otwiera MapComplete dokł
 pytaniu. Wystarczy odpowiedzieć, a w ciągu kilku minut obwódka zniknie i jej
 miejsce zajmie prawdziwa pinezka.</p>
 
-<h2>Chip Krzesełko do karmienia</h2>
+<h2 id="high-chair">Chip Krzesełko do karmienia</h2>
 <p>Chip <em>Krzesełko do karmienia</em> pokazuje miejsca, w których OSM odnotowuje krzesełko do karmienia: <code>highchair=yes</code> lub liczbę większą od 0. <code>highchair=no</code> lub <code>0</code> to zapisane &bdquo;nie&rdquo;. Miejsce bez tagu nie jest miejscem bez krzesełka, OSM po prostu nic o nim nie mówi, więc chip je pomija, niczego nie twierdząc. Wartość, której mapa nie umie odczytać, np. <code>ja</code> albo <code>1+</code>, też się nie liczy, a dymek nie pokazuje dla niej żadnej linijki. Chip filtruje pinezki i niebieskie obwódki i niczego nie koloruje.</p>
 <p>Przy pinezce w miejscu, gdzie się je (kawiarnia, restauracja, pub i podobne), albo w miejscu dla rodzin (przedszkole, biblioteka, dom kultury i podobne) dymek pyta, dopóki OSM nic o tym nie mówi: <em>Jest krzesełko do karmienia?</em> Twoja odpowiedź trafia do OSM jako <code>highchair=yes</code> lub <code>highchair=no</code>, na twoim własnym koncie, tak samo jak odpowiedź o pomieszczeniu.</p>
 
-<h2>Jak naprawić szarą pinezkę</h2>
+<h2 id="grey-pin">Jak naprawić szarą pinezkę</h2>
 <p>Szary znaczy: brakuje jednej odpowiedzi. Gdzie jest przewijak? Odpowiedzieć może każdy, kto ma
 darmowe konto OSM, na miejscu, w niecałą minutę:</p>
 <ul>
+  <li><strong>W aplikacji (najszybciej):</strong> dotknij szarej pinezki. Okienko pyta <em>W którym pomieszczeniu jest przewijak?</em> Wybierz <em>Toaleta męska</em>, <em>Toaleta damska</em>, <em>Damska i męska</em> albo, pod <em>Więcej pokoi …</em>, inne pomieszczenie. Logujesz się raz przez OSM, odpowiedź zapisuje się na twoim własnym koncie, a pinezka aktualizuje się w ciągu kilku minut. Jeśli dotkniesz przycisku lokalizacji w promieniu 75&nbsp;m od szarej pinezki, karta zapyta, czy właśnie tam jesteś; <em>Odpowiedz na pytanie</em> otwiera to samo okienko.</li>
   <li><strong>MapComplete (dowolny telefon, w przeglądarce):</strong> &bdquo;Odpowiedz
       w MapComplete&rdquo; przy szarej pinezce otwiera ten sam obiekt we własnym motywie PapaMap
       dla MapComplete &mdash; przy każdej pinezce, żeby edycje dało się rozpoznać jako pochodzące
@@ -277,6 +296,8 @@ go nie ma. Za pierwszym razem logujesz się darmowym kontem OSM; odpowiedź zapi
 OpenStreetMap z twojego konta, a pinezka pojawia się kilka minut później (mapa przelatuje do niej).
 Jeśli miejsca nie ma na liście, użyj <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">motywu PapaMap w MapComplete</a> (link na dole okna). Albo
 własnego edytora OSM, kroki poniżej nadal działają.</p>
+<details>
+<summary>W edytorze OSM (iD)</summary>
 <p>To miejsce prawie na pewno już jest w OSM. Brakuje tylko tagu <code>changing_table</code>.
 W edytorze samego OSM (iD) zajmuje to jakieś dwie minuty:</p>
 <ol>
@@ -299,11 +320,12 @@ W edytorze samego OSM (iD) zajmuje to jakieś dwie minuty:</p>
       przewijaka&rdquo;), wyślij. Na OSM widać to po minucie, na PapaMap kilka minut
       później.</li>
 </ol>
+</details>
 <p class="muted">Proszę, taguj tylko to, co widzisz na własne oczy. OSM zapisuje to, co jest, a nie
 to, co być powinno. Jeśli nie znasz pomieszczenia, samo <code>changing_table=yes</code> i tak się
 przyda: miejsce staje się szarą pinezką, a kolejny tata odpowie na pytanie o pomieszczenie.</p>
 
-<h2>Dlaczego wskaźnik dostępności toalet z OSM nie wychodzi</h2>
+<h2 id="no-ranking">Dlaczego wskaźnik dostępności toalet z OSM nie wychodzi</h2>
 <p>Oczywistym większym projektem byłby stosunek dostępności toalet dla mężczyzn i dla kobiet
 w każdym mieście. Liczba, o którą tak naprawdę chodzi w sporze o &bdquo;potty parity&rdquo;.
 Z OpenStreetMap nie da się jej policzyć. Sprawdziliśmy to przed budową mapy, na próbce z ośmiu
@@ -337,7 +359,7 @@ Amsterdam, Wiedeń, Melbourne; 26&nbsp;lipca&nbsp;2026):</p>
 <p>Uczciwe jest więc tylko jedno: samej dostępności nie da się dziś zmierzyć z otwartych danych.
 Ta strona mierzy to, co mierzalne, i zamienia braki w danych w konkretne poprawki.</p>
 
-<h2>Jedyny policzalny fakt: gdzie są przewijaki</h2>
+<h2 id="where-tables">Jedyny policzalny fakt: gdzie są przewijaki</h2>
 <p><code>changing_table:location</code> jest, o ile wiemy, jedynym otwartym słownikiem, który
 zapisuje, w jakim pomieszczeniu stoi przewijak. Wypełniany jest rzadko:
 <span data-stat="location_total">3&nbsp;659</span> z <span data-stat="ct_total">77&nbsp;000</span>
@@ -356,7 +378,7 @@ przeceniać. Kierunek zgadza się jednak z tym, co od dawna jest udokumentowane:
 wiszą w damskiej toalecie. To zamyka drzwi przed tatami i przy okazji z góry zakłada, kto odpowiada
 za przewijanie. Ta mapa pokazuje brakujące dane. I ułatwia ich naprawę.</p>
 
-<h2>Licencja danych i atrybucja</h2>
+<h2 id="licence">Licencja danych i atrybucja</h2>
 <p>Wszystkie dane mapowe &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 contributors</a>, dostępne na licencji
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
@@ -364,7 +386,7 @@ Pliki GeoJSON i pliki statystyk, które udostępnia ta strona, pochodzą z OSM, 
 Światowe statystyki tagów pochodzą z <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Własny kod strony jest na licencji MIT.</p>
 
-<h2>Prywatność</h2>
+<h2 id="privacy">Prywatność</h2>
 <p>Statyczna strona. Żadnych kont, żadnych ciasteczek, żadnej analityki, żadnych skryptów
 śledzących. Strona nic o tobie nie zapisuje i nie ma bazy danych. Kafelki mapy pochodzą
 z serwerów OpenStreetMap; tych zapytań dotyczy
@@ -380,7 +402,7 @@ i edytujesz na własnym koncie OSM. Przez nas nic wtedy nie przechodzi. Formalno
 26&nbsp;lipca&nbsp;2026 i statystyka kluczy z taginfo z podaną wyżej datą. Lokalne liczby pochodzą
 z tego samego nocnego zapytania, które buduje mapę.</p>
 
-<h2>Jak powstaje ta strona</h2>
+<h2 id="how-made">Jak powstaje ta strona</h2>
 <p>Przy programowaniu i pisaniu tekstów pomaga mi AI. Wszystko i tak przechodzi przez moje
 ludzkie oczy.</p>
 

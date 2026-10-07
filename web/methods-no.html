@@ -123,8 +123,25 @@
 <h1>PapaMap — metode &amp; åpenhet</h1>
 <p class="muted">Stellebord en pappa når. De verdensomspennende taginfo-tallene nedenfor kommer
 fra den nattlige oppdateringen. Utvalget fra åtte bysentre er fra 26.&nbsp;juli&nbsp;2026 og blir uendret.</p>
+<nav class="muted" aria-label="Innhold"><strong>Innhold</strong>
+<ul>
+  <li><a href="#what">Hva dette kartet er og ikke er</a></li>
+  <li><a href="#colours">Hva fargekodingen betyr</a></li>
+  <li><a href="#mum-mode">Pappa-mamma-bryteren</a></li>
+  <li><a href="#play-area">Den blå ringen: lekeområde</a></li>
+  <li><a href="#wheelchair">Chippen Rullestol</a></li>
+  <li><a href="#empty-rings">De tomme blå ringene: lekeplasser uten svar</a></li>
+  <li><a href="#high-chair">Chippen Barnestol</a></li>
+  <li><a href="#grey-pin">Slik retter du et grått punkt</a></li>
+  <li><a href="#contribute">Slik legger du til et sted som mangler</a></li>
+  <li><a href="#no-ranking">Hvorfor et dekningsindeks ikke kan lages ut fra OSM</a></li>
+  <li><a href="#where-tables">Det ene beregnbare faktumet: hvor bordene står</a></li>
+  <li><a href="#licence">Datalisens &amp; kreditering</a></li>
+  <li><a href="#privacy">Personvern</a></li>
+  <li><a href="#how-made">Slik blir nettstedet til</a></li>
+</ul></nav>
 
-<h2>Hva dette kartet er og ikke er</h2>
+<h2 id="what">Hva dette kartet er og ikke er</h2>
 <p>PapaMap viser steder i 44 europeiske land — fra Island til Kypros, fra Portugal til
 Ukraina, samt Australia, New Zealand, USA, Canada og Japan — der OpenStreetMap (OSM)
 kjenner til et stellebord
@@ -134,8 +151,9 @@ skjer på selve OSM, via lenkene på hvert punkt.</p>
 <p>Ideen kom da jeg leste boken <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> av Caroline Criado Perez.</p>
 <p>Dette er ikke en rangering av hvilken by som har det beste toalettilbudet. Hvorfor det ikke
 kan gjøres ut fra åpne data, forklares lenger nede.</p>
+<p>Her handler det bare om stellebord. For lekeplasser og andre familievennlige steder, se <a href="https://kinderfreundlicheorte.de">kinderfreundlicheorte.de</a>, <a href="https://spieli.eu">spieli.eu</a> og <a href="https://knudli.de">Knudli</a>.</p>
 
-<h2>Hva fargekodingen betyr</h2>
+<h2 id="colours">Hva fargekodingen betyr</h2>
 <p>Bare steder med <code>changing_table=yes</code> eller <code>limited</code> havner på kartet
 (<code>no</code>, som i bekreftet ikke tilstede, telles bare med i statistikken). Fargen kommer fra
 <code>changing_table:location</code>. Verdien deles opp ved <code>;</code>, trimmes, gjøres om til
@@ -153,7 +171,7 @@ små bokstaver, og hver verdi sammenlignes som en helhet. Aldri som en delstreng
 </ul>
 <p>Et objekt med et <code>centralkey</code>-tag (annet enn <code>no</code>) holdes utenfor kartet når nøkkelen sperrer hele døra: <code>access=centralkey</code>, et bord på handikaptoalettet, eller ingenting i taggene sier at nøkkelen bare gjelder én bås. Et anlegg med åpent herre- og dametoalett og en låst handikapbås (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> og <code>female=yes</code>) blir på kartet, grått til noen kategoriserer rommet korrekt. <a href="https://en.wikipedia.org/wiki/Euro_key">Euronøkkelen</a>, en uoffisiell europeisk standard, utstedes bare mot dokumentert funksjonsnedsettelse, så de fleste pappaer får ikke tilgang. Under chippen <em>Rullestol</em> kommer disse stellebordene tilbake, se nedenfor.</p>
 
-<h2>Pappa-mamma-bryteren</h2>
+<h2 id="mum-mode">Pappa-mamma-bryteren</h2>
 <p>De tre fargene over svarer på pappa-spørsmålet: kommer en pappa til bordet? For en mamma skal
 det samme svaret vanligvis leses annerledes — et bord på dametoalettet kan hun bruke, og også
 ved et bord uten registrert rom står de fleste i et rom hun kan gå inn i. Bryteren <em>Pappa /
@@ -176,7 +194,7 @@ er tilgjengelig for en pappa, men ikke for en mamma. Pipelinen markerer disse bo
 i mamma-modus er de røde og telles ikke med i tallet over. Eldre versjoner av appen kan fortsatt
 vise dem grønne, inntil de er oppdatert.</p>
 
-<h2>Den blå ringen: lekeområde</h2>
+<h2 id="play-area">Den blå ringen: lekeområde</h2>
 <p>Et punkt med en blå ring har også et lekeområde &mdash; et sted der du ikke bare skifter på barnet,
 men kan bli en stund. Filteret <em>Med lekeområde</em> viser bare disse. Et sted telles med hvis OSM
 registrerer en av disse verdiene:</p>
@@ -212,11 +230,11 @@ uansett verdi, fjerner spørsmålet. På en <code>leisure=playground</code> uten
 <code>indoor=yes</code> blir det aldri spurt &mdash; stedet <em>er</em> allerede et sted å leke,
 bare ikke innendørs.</p>
 
-<h2>Chippen Rullestol</h2>
+<h2 id="wheelchair">Chippen Rullestol</h2>
 <p>Chippen <em>Rullestol</em> viser steder med <code>wheelchair=yes</code> eller <code>wheelchair=limited</code> i OSM. <code>limited</code> betyr ett trinn på opptil 7&nbsp;cm, eller hjelp trengs. Med chippen på har disse stedene et utropstegn fra zoom 13, og popupen sier <em>begrenset</em>. <code>toilets:wheelchair=yes</code> alene er ikke nok, men står likevel i popupen sammen med <code>wheelchair:description</code>. Et sted uten taggen er ikke utilgjengelig, OSM sier bare ingenting, så chippen bare filtrerer og farger ingenting. De blå ringene (steder med lekekrok) filtrerer og markerer chippen på samme måte.</p>
 <p>Under denne chippen, og bare der, kommer stellebordene bak euronøkkel tilbake, med en nøkkel i nålen: den som trenger chippen, har som regel nøkkelen. På det vanlige kartet, i tallene og på rangeringen blir de ute.</p>
 
-<h2>De tomme blå ringene: lekeplasser uten svar</h2>
+<h2 id="empty-rings">De tomme blå ringene: lekeplasser uten svar</h2>
 <p>Den samme regelen treffer langt flere steder enn kartet har punkter. Bare
 <span data-stat="play_tables">111</span> av dem har et punkt. På
 <span data-stat="play_places">701</span> flere har ingen svart på det første spørsmålet: er det et
@@ -232,14 +250,15 @@ han først er der, kan han finne svaret. Et klikk på ringen åpner MapComplete 
 spørsmålet. Svar på det, så er ringen borte i løpet av få minutter, og erstattet av et oppdatert
 punkt.</p>
 
-<h2>Chippen Barnestol</h2>
+<h2 id="high-chair">Chippen Barnestol</h2>
 <p>Chippen <em>Barnestol</em> viser steder der OSM oppgir en barnestol: <code>highchair=yes</code> eller et tall over 0. <code>highchair=no</code> eller <code>0</code> er et registrert nei. Et sted uten taggen er ikke et sted uten barnestol, OSM sier bare ingenting, så chippen utelater det uten å påstå noe. En verdi kartet ikke kan lese, som <code>ja</code> eller <code>1+</code>, teller heller ikke, og popupen viser ingen linje for den. Chippen filtrerer punkter og blå ringer og farger ingenting.</p>
 <p>På et punkt ved et spisested (kafé, restaurant, pub og lignende) eller et familiested (barnehage, bibliotek, samfunnshus og lignende) spør popupen, så lenge OSM ikke sier noe: <em>Finnes det en barnestol?</em> Svaret ditt går til OSM som <code>highchair=yes</code> eller <code>highchair=no</code>, under din egen OSM-konto, akkurat som et svar om rommet.</p>
 
-<h2>Slik retter du et grått punkt</h2>
+<h2 id="grey-pin">Slik retter du et grått punkt</h2>
 <p>Grå betyr at et svar mangler. Hvor befinner stellebordet seg? Alle med en OSM-konto kan svare på
 det, på under et minutt:</p>
 <ul>
+  <li><strong>I appen (raskest):</strong> trykk på det grå punktet. Popup-vinduet spør <em>Hvilket rom står stellebordet i?</em> Trykk på <em>Herretoalett</em>, <em>Dametoalett</em>, <em>Dame og herre</em> eller, bak <em>Flere rom …</em>, et annet rom. Du logger inn én gang med OSM, svaret lagres under din egen konto, og punktet oppdateres i løpet av noen minutter. Trykker du på posisjonsknappen innen 75&nbsp;m fra et grått punkt, spør et kort om du er der akkurat nå; <em>Svar på spørsmålet</em> åpner samme vindu.</li>
   <li><strong>MapComplete (hvilken som helst telefon, i nettleseren):</strong> «Svar på
       MapComplete» på et grått punkt åpner det samme objektet i PapaMaps eget MapComplete-tema
       &mdash; på hvert punkt, slik at endringene er gjenkjennelige som at de kommer herfra.
@@ -273,6 +292,8 @@ at det ikke gjør det. Første gang logger du inn med din gratis OSM-bruker; sva
 OpenStreetMap under brukeren din, og nålen dukker opp noen minutter senere (kartet flyr dit). Står
 ikke stedet i listen, bruk <a href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json">PapaMaps MapComplete-tema</a> (lenken nederst i dialogen). Eller OSMs egen
 editor, stegene nedenfor fungerer fortsatt.</p>
+<details>
+<summary>Med OSMs eget redigeringsverktøy (iD)</summary>
 <p>Stedet finnes nesten helt sikkert allerede i OSM. Det er bare <code>changing_table</code>-tagget
 som mangler. I OSMs egen editor (iD) tar det omtrent to minutter:</p>
 <ol>
@@ -295,11 +316,12 @@ som mangler. I OSMs egen editor (iD) tar det omtrent to minutter:</p>
       stellebord»), trykk så: <strong>Last opp</strong>. Informasjonen er nå live på OSM innen et minutt. På PapaMap få minutter
       senere.</li>
 </ol>
+</details>
 <p class="muted">Tagg bare det du selv har sett. OSM registrerer det som er, ikke det som burde
 være. Vet du ikke rommet, er <code>changing_table=yes</code> alene fortsatt nyttig: stedet blir et
 grått punkt, og neste pappa kan svare på spørsmålet om rommet.</p>
 
-<h2>Hvorfor et dekningsindeks ikke kan lages ut fra OSM</h2>
+<h2 id="no-ranking">Hvorfor et dekningsindeks ikke kan lages ut fra OSM</h2>
 <p>Det opplagte, større prosjektet ville vært et forhold mellom toalettilbudet for menn og
 kvinner per by. Tallet som «potty parity»-argumentet egentlig dreier seg om. Det kan ikke beregnes
 ut fra OpenStreetMap. Vi sjekket dette før vi bygde, med et utvalg fra åtte bysentre (Berlin,
@@ -334,7 +356,7 @@ London, Paris, New York, Tokyo&nbsp;23&nbsp;bydeler, Amsterdam, Wien, Melbourne;
 <p>Så det eneste ærlige å si er: selve tilbudet kan ikke måles ut fra åpne data i dag. Dette
 nettstedet måler det som er målbart, og gjør hullene om til bidrag.</p>
 
-<h2>Det ene beregnbare faktumet: hvor bordene står</h2>
+<h2 id="where-tables">Det ene beregnbare faktumet: hvor bordene står</h2>
 <p><code>changing_table:location</code> er, så vidt vi vet, det eneste åpne vokabularet som
 registrerer hvilket rom et stellebord står i. Det er tynt utbredt:
 <span data-stat="location_total">3&nbsp;659</span> av <span data-stat="ct_total">77&nbsp;000</span>
@@ -353,14 +375,14 @@ stellebord henger som standard på dametoalettet. Det stenger pappaer ute, og fo
 stilltiende hvem som har ansvaret for bleieskift. Dette kartet gjør de manglende dataene synlige.
 Og er enkle å rette.</p>
 
-<h2>Datalisens &amp; kreditering</h2>
+<h2 id="licence">Datalisens &amp; kreditering</h2>
 <p>Alle kartdata &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap-bidragsytere</a>, tilgjengelig under
 <a href="https://opendatacommons.org/licenses/odbl/">Open Database License (ODbL)</a>.
 GeoJSON- og statistikkfilene dette nettstedet tilbyr, er avledet fra OSM og dermed også ODbL.
 Global tag-statistikk kommer fra <a href="https://taginfo.openstreetmap.org/">taginfo</a>.
 Nettstedets egen kode er MIT-lisensiert.</p>
 
-<h2>Personvern</h2>
+<h2 id="privacy">Personvern</h2>
 <p>Et statisk nettsted. Ingen kontoer, ingen informasjonskapsler, ingen analyseverktøy, ingen
 sporingsskript. Nettstedet lagrer ingenting om deg og har ingen database. Kartflisene kommer fra
 OpenStreetMaps kartserver; de forespørslene faller inn under
@@ -376,7 +398,7 @@ redigerer under din egen OSM-konto. Ingenting går gjennom oss. Formelle sider:
 26.&nbsp;juli&nbsp;2026, og taginfos nøkkelstatistikk per datoen oppgitt ovenfor. De lokale
 tallene kommer fra det samme nattlige søket som også bygger kartet.</p>
 
-<h2>Slik blir nettstedet til</h2>
+<h2 id="how-made">Slik blir nettstedet til</h2>
 <p>Jeg bruker KI som hjelp med koding og til å utkaste og oversette tekster. Alt sjekkes likevel av mine egne
 øyne.</p>
 
