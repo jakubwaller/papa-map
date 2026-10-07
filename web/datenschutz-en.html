@@ -120,7 +120,8 @@
      and sign in there with your OSM account (OAuth 2 with PKCE; this website never sees your
      password). OSM returns an access token to the site, which is kept in your browser's local
      storage (key <code>papamap-osm-token</code>, plus your OSM display name under
-     <code>papamap-osm-user</code>), until you tap "Log out" in the pin or delete your browser data
+     <code>papamap-osm-user</code> and your numeric OSM user id under
+     <code>papamap-osm-user-id</code>), until you tap "Log out" in the pin or delete your browser data
      (§ 25(2) no. 2 TDDDG). Your answer is written by the browser directly to
      api.openstreetmap.org, as a changeset under your own OSM account and name, marked with
      <code>created_by=PapaMap</code>; the
@@ -139,7 +140,7 @@
      to OpenStreetMap, the site requests the public list of your own changesets from
      api.openstreetmap.org when the dialog opens — the same list anyone can see in your OSM
      profile — and counts, on your device, those made through PapaMap or through MapComplete's
-     PapaMap theme. The request names your OSM display name but sends no access token; it
+     PapaMap theme. The request names your numeric OSM user id (your display name until the id is known) but sends no access token; it
      transmits your IP address to the OpenStreetMap Foundation (see above). The number, position
      and date of these changesets are kept by the browser in local storage (key
      <code>papamap-my-answers</code>) so they need not be loaded again each time; they are deleted
@@ -240,7 +241,11 @@
   <p>The app stores the same functional keys as the website — language (<code>papamap-lang</code>),
      dad or mum view (<code>papamap-mode</code>), the "Wheelchair" filter
      (<code>papamap-wheelchair</code>) and, after signing in, the access token and your OSM display
-     name (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>), plus the saved places
+     name and user id (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>,
+     <code>papamap-osm-user-id</code>), while signing in, for an hour at most, the sign-in
+     record (<code>papamap-osm-pkce</code>) and the answer still waiting
+     (<code>papamap-osm-intent</code>), deleted on the return or at a start after that hour,
+     plus the saved places
      (<code>papamap-saved</code>), your own answers (<code>papamap-my-answers</code>) and the
      closed room notes (<code>papamap-card-dismissed</code>) and a note of which version of the app last showed
      the start screen (the welcome on first opening, or what's new after an update)

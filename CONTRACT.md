@@ -1,6 +1,31 @@
 # papa-map — build contract (v0)
 
-> **v77 amendment (7 Oct 2026, a reader's own answers survive delta polls): no
+> **v79 amendment (7 Oct 2026, the login survives Android killing the app, and
+> Mein PapaMap pages by user id): no data shape change.** Four things in the
+> OSM login, all in `web/osm.js`, `web/native.js`, `web/me.js`, `web/app.js`:
+> **(1) A new `localStorage` key, `papamap-osm-user-id`**, beside `papamap-osm-token`
+> and `papamap-osm-user`: the numeric account id from `/user/details.json`,
+> removed by "Abmelden" with the other two and named in the Datenschutz. A login
+> stored before it has no id; `ensureUserInfo` asks for it once, at boot and when
+> Mein PapaMap opens. **(2) "Your stats" pages by `user=<id>`**, not
+> `display_name=<name>`, because a renamed account's old name answers 404 for good
+> (`changesetsUrl` in `web/me.js`); the display name remains the fallback until the
+> id is known. The request is still the public changesets list with no token; the
+> Datenschutz and FEATURES say so. **(3) The app's round trip is stored in
+> `localStorage`** (`keepRoundTripAcrossRestarts`): the PKCE record
+> (`papamap-osm-pkce`) and the pending answer (`papamap-osm-intent`) are stamped,
+> used once, ignored after one hour (`ROUND_TRIP_MS`) and removed by the next
+> load that is not a return, because Android may kill the process while OSM's
+> login is up and a `sessionStorage` would not outlive it. The web keeps
+> `sessionStorage`. Both transient keys are named in the Datenschutz. The cold
+> start's `papamap://auth` arrives through `getLaunchUrl` and is routed only when
+> `awaitingReturn` says a fresh record with that state exists, since Android
+> replays the launch intent on every recreation of the Activity. **(4) The
+> only silent OAuth error is `access_denied`** (the reader said no); any other
+> `error=` (`temporarily_unavailable`, `server_error`) toasts "login failed".
+> Shell pin `app77` → `app78`, one bump shared with v78; no `WHATS_NEW` entry.
+
+> **v78 amendment (7 Oct 2026, a reader's own answers survive delta polls): no
 > data shape change; the override layer is documented as it now is.** The
 > `papamap-answer-overrides` entry in `localStorage` is
 > `{osm_url: {status?, men_only?, changing_table?, location_raw?,
@@ -30,9 +55,8 @@
 > instead of opening the wrong pin. An open popup is redrawn only when its
 > markup changed, with MapLibre's `focusAfterOpen` off for the redraw whenever
 > the focus sits outside the card (the search field keeps it), and a card whose
-> play place became a table stays open as the table. Shell pin: the lead bumps
-> it once when the batches are integrated; this change must not ship without
-> that bump (the new `datasource.js` exports would meet a stale cached module).
+> play place became a table stays open as the table. Shell pin `app77` →
+> `app78`, one bump shared with v79.
 
 > **v76 amendment (6 Oct 2026, the share icon centred in its bubble): no data
 > shape change.** The round share button in a pin's popup card showed its icon
@@ -956,7 +980,7 @@
 > picks the key and the numbers for all three clauses.
 >
 > **2. Your stats**, from the reader's own **public** OSM changesets, read
-> live on the device: `GET {api}/changesets.json?display_name=<user>`, no
+> live on the device: `GET {api}/changesets.json?user=<id>` (`display_name=<user>` until the id is known, v77), no
 > auth header — a user's changesets are public information, this is not a
 > privileged read. `time=T1` asks "closed after T1" (a top-up: only what's
 > new since the cache); `time=T1,T2` additionally bounds "created before

@@ -283,14 +283,26 @@ export function extractAnswers(list) {
 // answer can arrive twice: once from the write's own response, appended on
 // the spot, and again the next time the list is paged) and sorted newest
 // first, which is also the order the OSM API itself returns by default.
+//
+// A record marked `local` is the write's own, stamped by the device clock
+// (web/app.js, recordMyAnswer); the server's copy of the same changeset
+// replaces it, never the other way round.
 export function mergeAnswers(cached, fresh) {
   const byId = new Map();
-  for (const a of [...(cached ?? []), ...(fresh ?? [])]) byId.set(a.id, a);
+  for (const a of [...(cached ?? []), ...(fresh ?? [])]) {
+    if (a?.local && byId.has(a.id) && !byId.get(a.id).local) continue;
+    byId.set(a.id, a);
+  }
   return [...byId.values()].sort((a, b) => (b.closed_at ?? "").localeCompare(a.closed_at ?? ""));
 }
 
+// The top-up's watermark: the newest record OSM itself stamped. A local
+// record's closed_at is the device clock, and a phone running fast would push
+// the `time=` bound past changesets that closed after it in real time — a
+// MapComplete session finished a minute later would never be counted.
 export function newestClosedAt(answers) {
-  return answers?.[0]?.closed_at ?? null;   // mergeAnswers keeps them newest-first
+  // mergeAnswers keeps them newest-first
+  return (answers ?? []).find((a) => !a?.local)?.closed_at ?? null;
 }
 
 export function oldestClosedAt(answers) {
@@ -298,7 +310,7 @@ export function oldestClosedAt(answers) {
 }
 
 // ---- Paging the OSM changesets list ----
-// GET .../changesets.json?display_name=U[&time=...] returns at most 100,
+// GET .../changesets.json?user=ID[&time=...] returns at most 100,
 // newest first. `time=T1` asks "closed after T1" — exactly a "what's new
 // since the cache" query. `time=T1,T2` additionally bounds "created before
 // T2", which is how a page beyond the first 100 is reached: T1 stays the
@@ -307,9 +319,16 @@ export function oldestClosedAt(answers) {
 // call picks up exactly where the last one stopped rather than repeating it.
 export const EPOCH = "1970-01-01T00:00:00Z";
 
-export function changesetsUrl(api, user, since, before) {
+//
+// `who` is `{ id, name }`: the numeric account id when it is known, because a
+// display name can be renamed on osm.org and the old one then answers 404 for
+// good; the name only for a login stored before the id was (web/osm.js,
+// ensureUserInfo, fetches it). A bare string is a name.
+export function changesetsUrl(api, who, since, before) {
   const u = new URL(`${api}/changesets.json`);
-  u.searchParams.set("display_name", user);
+  const { id, name } = who && typeof who === "object" ? who : { id: null, name: who };
+  if (Number.isInteger(id) && id > 0) u.searchParams.set("user", String(id));
+  else u.searchParams.set("display_name", name);
   if (before) u.searchParams.set("time", `${since || EPOCH},${before}`);
   else if (since) u.searchParams.set("time", since);
   return u.href;

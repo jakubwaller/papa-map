@@ -123,7 +123,8 @@
      openstreetmap.org weitergeleitet und melden sich dort mit Ihrem OSM-Konto an (OAuth 2 mit PKCE;
      Ihr Passwort sieht diese Website nie). OSM gibt der Seite ein Zugriffstoken zurück, das im
      Local Storage Ihres Browsers liegt (Schlüssel <code>papamap-osm-token</code>, dazu Ihr
-     OSM-Anzeigename unter <code>papamap-osm-user</code>), bis Sie im Pin auf „Abmelden“ tippen
+     OSM-Anzeigename unter <code>papamap-osm-user</code> und Ihre numerische OSM-Nutzer-ID unter
+     <code>papamap-osm-user-id</code>), bis Sie im Pin auf „Abmelden“ tippen
      oder die Browserdaten löschen (§ 25 Abs. 2 Nr. 2 TDDDG). Ihre Antwort schreibt der Browser
      direkt an api.openstreetmap.org, als Änderungssatz unter Ihrem eigenen OSM-Konto und Namen,
      gekennzeichnet mit <code>created_by=PapaMap</code>; es gelten die
@@ -143,8 +144,8 @@
      OpenStreetMap angemeldet, ruft die Seite dafür beim Öffnen des Dialogs bei
      api.openstreetmap.org die öffentliche Liste Ihrer eigenen Änderungssätze ab — dieselbe Liste,
      die jeder in Ihrem OSM-Profil einsehen kann — und zählt auf Ihrem Gerät diejenigen, die über
-     PapaMap oder das PapaMap-Thema von MapComplete entstanden sind. Die Anfrage nennt Ihren
-     OSM-Anzeigenamen, sendet aber kein Zugriffstoken; dabei wird Ihre IP-Adresse an die
+     PapaMap oder das PapaMap-Thema von MapComplete entstanden sind. Die Anfrage nennt Ihre
+     numerische OSM-Nutzer-ID (bis sie bekannt ist, Ihren OSM-Anzeigenamen), sendet aber kein Zugriffstoken; dabei wird Ihre IP-Adresse an die
      OpenStreetMap Foundation übertragen (siehe oben). Nummer, Position und Datum dieser
      Änderungssätze legt der Browser im Local Storage ab (Schlüssel
      <code>papamap-my-answers</code>), damit sie nicht jedes Mal neu geladen werden; beim Abmelden
@@ -247,7 +248,11 @@
   <p>Die App speichert dieselben funktionalen Schlüssel wie die Website — Sprache
      (<code>papamap-lang</code>), Papa- oder Mama-Sicht (<code>papamap-mode</code>), den Filter
      „Barrierefrei“ (<code>papamap-wheelchair</code>) und, nach einer Anmeldung, das Zugriffstoken
-     und Ihren OSM-Anzeigenamen (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>),
+     und Ihren OSM-Anzeigenamen samt Nutzer-ID (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>,
+     <code>papamap-osm-user-id</code>),
+     während der Anmeldung zusätzlich für höchstens eine Stunde den Anmeldevorgang
+     (<code>papamap-osm-pkce</code>) und Ihre noch wartende Antwort (<code>papamap-osm-intent</code>),
+     die nach der Rückkehr oder bei einem Start nach dieser Stunde gelöscht werden,
      dazu die gemerkten Orte (<code>papamap-saved</code>), Ihre eigenen Antworten
      (<code>papamap-my-answers</code>) und die geschlossenen Raum-Hinweise
      (<code>papamap-card-dismissed</code>) sowie den Vermerk, mit welcher Version der App der Startbildschirm (die Begrüßung
