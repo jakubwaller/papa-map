@@ -16,7 +16,8 @@ import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
          nearestUnknownRoom, isFixFresh, popupPan, popupMaxHeight, isAppleTouch,
          shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
-         applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl,
+         applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl, mergeAnswerOverride,
+         deltaFingerprint, isDeltaOlder, resolvePopupObj,
          isNewlyCreated, selectAddedPlace } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
@@ -139,8 +140,8 @@ test("placesToFeatureCollection carries idx, the no flag and limited", () => {
   const out = placesToFeatureCollection(loadPlaces(PLACES_FC));
   assert.equal(out.type, "FeatureCollection");
   assert.deepEqual(out.features.map((f) => f.properties),
-    [{ idx: 0, no: false, limited: false }, { idx: 1, no: false, limited: false },
-     { idx: 2, no: true, limited: false }]);
+    [{ idx: 0, gen: 0, no: false, limited: false }, { idx: 1, gen: 0, no: false, limited: false },
+     { idx: 2, gen: 0, no: true, limited: false }]);
   assert.deepEqual(out.features[0].geometry.coordinates, [9.98, 53.54]);
   assert.deepEqual(placesToFeatureCollection([]).features, []);
 });
@@ -509,12 +510,12 @@ test("MapComplete language: only codes it has, and the fragment stays last", () 
   assert.equal(withMapCompleteLanguage(null, "en"), null);
 });
 
-test("toFeatureCollection carries only {idx, status, men_only, play, key, limited} and idx survives the reorder", () => {
+test("toFeatureCollection carries only {idx, gen, status, men_only, play, key, limited} and idx survives the reorder", () => {
   const v = loadFeatures(FC);
   const out = toFeatureCollection(filterByStatus(v, ["unknown", "accessible"]));
   assert.equal(out.type, "FeatureCollection");
   for (const f of out.features) {
-    assert.deepEqual(Object.keys(f.properties).sort(), ["idx", "key", "limited", "men_only", "play", "status"]);
+    assert.deepEqual(Object.keys(f.properties).sort(), ["gen", "idx", "key", "limited", "men_only", "play", "status"]);
     const orig = v[f.properties.idx];  // the click-lookup the app does
     assert.equal(orig.status, f.properties.status);
     assert.equal(orig.play, f.properties.play);   // drives the halo layer filter
@@ -1562,6 +1563,148 @@ test("a play-place room answer promotes it, survives a reload, then is dropped o
   const notYetCovered = pruneAnswerOverrides(overrides, "2026-09-23T09:00:00+00:00",
     new Map([[url, 2]]));
   assert.deepEqual(notYetCovered, overrides);
+});
+
+// ---- the reader's own play / high-chair / "none" answers ----------------------
+// Kept as overrides like a room answer, so the next re-merge (a delta poll
+// that does not carry the edit yet) cannot bring the question back.
+const OWN = "https://www.openstreetmap.org/node/7001";
+const ownTable = (extra = {}) => ({ type: "FeatureCollection", features: [
+  feat(9.9, 53.5, { osm_url: OWN, amenity: "cafe", status: "accessible", changing_table: "yes",
+                    location_raw: "unisex", ...extra }),
+] });
+const noPlaces = () => ({ type: "FeatureCollection", features: [] });
+
+test("a play answer override keeps the table, its room and its status, and marks the question answered", () => {
+  const out = applyAnswerOverrides(ownTable(), noPlaces(),
+    { [OWN]: { play_answered: true, t: "2026-10-07T10:00:00Z", version: 4 } });
+  assert.equal(out.places.features.length, 0);   // never duplicated into the places
+  assert.equal(out.fc.features.length, 1);
+  const p = out.fc.features[0].properties;
+  assert.equal(p.status, "accessible");
+  assert.equal(p.changing_table, "yes");
+  assert.equal(p.location_raw, "unisex");
+  const [f] = loadFeatures(out.fc);
+  assert.equal(f.play_recorded, true);
+  assert.equal(f.play, false);   // the ring waits for the pipeline
+});
+
+test("a high-chair answer override is recorded and shown, while the chip waits for the pipeline", () => {
+  const out = applyAnswerOverrides(ownTable(), noPlaces(),
+    { [OWN]: { highchair_answered: true, t: "2026-10-07T10:00:00Z", version: 4 } });
+  const [f] = loadFeatures(out.fc);
+  assert.equal(f.highchair_recorded, true);
+  assert.equal(f.highchair_answered, true);
+  assert.equal(f.highchair, null);
+  assert.equal(isHighchair(f), false);
+  const no = loadFeatures(applyAnswerOverrides(ownTable(), noPlaces(),
+    { [OWN]: { highchair_answered: false, t: "2026-10-07T10:00:00Z", version: 4 } }).fc)[0];
+  assert.equal(no.highchair_recorded, true);
+  assert.equal(no.highchair_answered, false);
+  // Nothing answered: nothing recorded.
+  assert.equal(loadFeatures(ownTable())[0].highchair_answered, null);
+});
+
+test("a 'none' override keeps a play place a place, answered", () => {
+  const places = { type: "FeatureCollection", features: [feat(9.9, 53.5, { osm_url: OWN, kind: "cafe" })] };
+  const out = applyAnswerOverrides(noPlaces(), places,
+    { [OWN]: { changing_table: "no", t: "2026-10-07T10:00:00Z", version: 2 } });
+  assert.equal(out.fc.features.length, 0);
+  assert.equal(loadPlaces(out.places)[0].changing_table, "no");
+});
+
+test("mergeAnswerOverride keeps an earlier answer on the same object and takes the latest version", () => {
+  const room = mergeAnswerOverride({}, OWN, { status: "accessible", changing_table: "yes",
+    location_raw: "unisex" }, "2026-10-07T10:00:00Z", 3);
+  const both = mergeAnswerOverride(room, OWN, { play_answered: true }, "2026-10-07T10:01:00Z", 4);
+  assert.deepEqual(both[OWN], { status: "accessible", changing_table: "yes", location_raw: "unisex",
+                                play_answered: true, t: "2026-10-07T10:01:00Z", version: 4 });
+  assert.deepEqual(room[OWN].version, 3);   // pure: the input is untouched
+  // Another object's entry is left alone.
+  const other = mergeAnswerOverride(both, "https://www.openstreetmap.org/node/7002",
+    { play_answered: true }, "2026-10-07T10:02:00Z", 1);
+  assert.deepEqual(other[OWN], both[OWN]);
+  // Pruned only once the delta holds the latest write, which carries both.
+  assert.deepEqual(pruneAnswerOverrides(both, null, new Map([[OWN, 3]])), both);
+  assert.deepEqual(pruneAnswerOverrides(both, null, new Map([[OWN, 4]])), {});
+});
+
+test("a delta poll without the edit does not bring the play question back", () => {
+  const base = ownTable();
+  const overrides = mergeAnswerOverride({}, OWN, { play_answered: true }, "2026-10-07T10:00:00Z", 4);
+  // The follower re-emits the object at its old version: no kids_area yet.
+  const stale = feat(9.9, 53.5, { osm_url: OWN, amenity: "cafe", status: "accessible",
+    changing_table: "yes", location_raw: "unisex", osm_version: 3 });
+  const fc = mergeFeatureCollection(base, [stale], []);
+  const kept = pruneAnswerOverrides(overrides, null, new Map([[OWN, 3]]));
+  const [f] = loadFeatures(applyAnswerOverrides(fc, noPlaces(), kept).fc);
+  assert.equal(f.play_recorded, true);
+  // Once the delta carries it, the pipeline's own play value takes over.
+  const caught = feat(9.9, 53.5, { osm_url: OWN, amenity: "cafe", status: "accessible",
+    changing_table: "yes", location_raw: "unisex", play: true, osm_version: 4 });
+  const pruned = pruneAnswerOverrides(overrides, null, new Map([[OWN, 4]]));
+  const [g] = loadFeatures(applyAnswerOverrides(mergeFeatureCollection(base, [caught], []), noPlaces(), pruned).fc);
+  assert.equal(g.play_recorded, true);
+  assert.equal(g.play, true);
+});
+
+// ---- delta polls: only a different delta is merged again --------------------
+const delta = (over = {}) => ({
+  base: "2026-10-07T02:00:00+00:00", generated: "2026-10-07T10:00:00+00:00", seq: 100,
+  tables: { upsert: [feat(1, 2, { osm_url: OWN, osm_version: 3, status: "unknown" })], remove: [] },
+  places: { upsert: [], remove: [] },
+  new_toilets_no_table: [],
+  ...over,
+});
+
+test("deltaFingerprint ignores generated, seq and new_toilets_no_table", () => {
+  assert.equal(deltaFingerprint(delta()),
+    deltaFingerprint(delta({ generated: "2026-10-07T10:03:00+00:00", seq: 103,
+                             new_toilets_no_table: [{ osm_url: "x" }] })));
+  assert.equal(deltaFingerprint(null), null);
+});
+
+test("deltaFingerprint changes with the base, a removal, or a late fill at the same version", () => {
+  const k = deltaFingerprint(delta());
+  assert.notEqual(deltaFingerprint(delta({ base: "2026-10-08T02:00:00+00:00" })), k);
+  assert.notEqual(deltaFingerprint(delta({ tables: { upsert: delta().tables.upsert, remove: ["y"] } })), k);
+  assert.notEqual(deltaFingerprint(delta({ places: { upsert: [], remove: ["z"] } })), k);
+  // Same osm_version, new coordinates: still a different delta.
+  assert.notEqual(deltaFingerprint(delta({ tables: { upsert:
+    [feat(1.5, 2, { osm_url: OWN, osm_version: 3, status: "unknown" })], remove: [] } })), k);
+});
+
+test("isDeltaOlder drops only a lower seq on no newer base", () => {
+  assert.equal(isDeltaOlder(delta({ seq: 99 }), delta()), true);
+  assert.equal(isDeltaOlder(delta({ seq: 100 }), delta()), false);   // equal: up to the fingerprint
+  assert.equal(isDeltaOlder(delta({ seq: 101 }), delta()), false);
+  assert.equal(isDeltaOlder(delta({ seq: 99 }), null), false);        // nothing merged yet
+  assert.equal(isDeltaOlder(delta({ seq: undefined }), delta()), false);
+  assert.equal(isDeltaOlder(delta({ seq: 99 }), delta({ seq: "100" })), false);
+  assert.equal(isDeltaOlder(delta({ seq: 99, base: "2026-10-08T02:00:00+00:00" }), delta()), false);
+});
+
+// ---- the open popup follows its object across a merge -----------------------
+test("resolvePopupObj follows a play place promoted to a table, and gives up when it is gone", () => {
+  const place = { osm_url: OWN, kind: "cafe" }, table = { osm_url: OWN, status: "accessible" };
+  assert.deepEqual(resolvePopupObj("place", OWN, new Map(), new Map([[OWN, table]])),
+    { kind: "table", obj: table });
+  assert.deepEqual(resolvePopupObj("place", OWN, new Map([[OWN, place]]), new Map()),
+    { kind: "place", obj: place });
+  // Both hold the url: the card's own kind wins.
+  assert.deepEqual(resolvePopupObj("place", OWN, new Map([[OWN, place]]), new Map([[OWN, table]])),
+    { kind: "place", obj: place });
+  assert.deepEqual(resolvePopupObj("table", OWN, new Map([[OWN, place]]), new Map([[OWN, table]])),
+    { kind: "table", obj: table });
+  assert.equal(resolvePopupObj("table", OWN, new Map(), new Map()), null);
+});
+
+// ---- a tap on tiles from before a merge -------------------------------------
+test("the layer features carry the generation their idx points into", () => {
+  const v = loadFeatures(FC);
+  assert.ok(toFeatureCollection(v, false, 7).features.every((f) => f.properties.gen === 7));
+  assert.ok(placesToFeatureCollection(loadPlaces(PLACES_FC), false, 7).features
+    .every((f) => f.properties.gen === 7));
 });
 
 // ---- the add-a-place flow: selectAddedPlace / isNewlyCreated ---------------
