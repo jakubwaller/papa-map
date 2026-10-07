@@ -980,7 +980,7 @@
 > picks the key and the numbers for all three clauses.
 >
 > **2. Your stats**, from the reader's own **public** OSM changesets, read
-> live on the device: `GET {api}/changesets.json?user=<id>` (`display_name=<user>` until the id is known, v77), no
+> live on the device: `GET {api}/changesets.json?user=<id>` (`display_name=<user>` until the id is known, v79), no
 > auth header — a user's changesets are public information, this is not a
 > privileged read. `time=T1` asks "closed after T1" (a top-up: only what's
 > new since the cache); `time=T1,T2` additionally bounds "created before
