@@ -206,6 +206,10 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     # The two datasets stay disjoint: a place is a pin or a prospect, never both.
     play_fc = json.loads(play_geojson.read_text(encoding="utf-8"))
     assert [f["properties"]["osm_id"] for f in play_fc["features"]] == [9001, 9002, 9003]
+    # Play places carry their sweep area too (the popup's zone), whichever
+    # half of the sweep found them.
+    assert all(f["properties"]["area"] in {*BUNDESLAENDER, "Danmark"}
+               for f in play_fc["features"])
     pin_ids = {f["properties"]["osm_id"] for f in fc["features"]}
     assert pin_ids.isdisjoint({9001, 9002, 9003})
 

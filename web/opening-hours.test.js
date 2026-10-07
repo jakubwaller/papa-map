@@ -786,11 +786,30 @@ test("sun events are converted on the place's clock", () => {
     "closed"); // 21:00 JST
 });
 
+test("a sun event on another local date is read on the place's clock", () => {
+  // Sunset on 21 June in Reykjavik is 00:04 on the 22nd, local time.
+  const reykjavik = { lat: 64.15, lon: -21.94 };
+  const now = new Date("2026-06-21T10:00:00Z"); // 10:00 local, broad daylight
+  assert.equal(isOpenNow("08:00-sunset", now, reykjavik, "Atlantic/Reykjavik"), "open");
+  assert.equal(isOpenNow("sunrise-sunset", now, reykjavik, "Atlantic/Reykjavik"), "open");
+});
+
+test("a dated span past midnight spills from the place's yesterday", () => {
+  const now = new Date("2026-12-24T15:30:00Z"); // Dec 25 00:30 JST
+  assert.equal(isOpenNow("Dec 24 22:00-02:00", now, null, "Asia/Tokyo"), "open");
+});
+
 test("a date rule is matched on the place's date", () => {
   const now = new Date("2026-12-24T12:00:00Z"); // Dec 25 01:00 in Auckland, Dec 24 13:00 in Berlin
   const oh = "Mo-Su 10:00-20:00; Dec 25 off";
   assert.equal(isOpenNow(oh, now, null, "Pacific/Auckland"), "closed");
   assert.equal(isOpenNow(oh, now, null, "Europe/Berlin"), "open");
+  // Inside the opening span, so only the date can decide it (Dec 25 11:00 in
+  // Auckland, Dec 24 in Berlin and on a UTC device).
+  const day = new Date("2026-12-24T22:00:00Z");
+  const allDay = "Mo-Su 00:00-24:00; Dec 25 off";
+  assert.equal(isOpenNow(allDay, day, null, "Pacific/Auckland"), "closed");
+  assert.equal(isOpenNow(allDay, day, null, "Europe/Berlin"), "open");
 });
 
 test("a span past midnight spills from the place's yesterday", () => {

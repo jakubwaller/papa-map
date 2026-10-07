@@ -264,16 +264,10 @@ function solarEventUTC(y, m, d, lat, lon, altitudeDeg, evening) {
 // Minute-of-day of the four sun events on the given calendar date, on the
 // place's clock (timeZone; the device's when null), or null per event where
 // the date sees polar day/night. An instant that lands on another local date
-// in that zone (a far-west longitude against its zone's meridian) keeps the
-// device-clock reading this function always gave, rather than a minute of
-// the wrong day.
+// in that zone (a far-west longitude against its zone's meridian) is still
+// read on the place's clock, so it compares against `minutes` on one clock.
 function sunTimesForDate(y, m, d, lat, lon, timeZone = null) {
-  const toMinutes = (date) => {
-    if (date === null) return null;
-    const wc = wallClock(date, timeZone);
-    if (wc.y === y && wc.m === m && wc.d === d) return wc.minutes;
-    return date.getHours() * 60 + date.getMinutes();
-  };
+  const toMinutes = (date) => (date === null ? null : wallClock(date, timeZone).minutes);
   return {
     sunrise: toMinutes(solarEventUTC(y, m, d, lat, lon, -0.833, false)),
     sunset: toMinutes(solarEventUTC(y, m, d, lat, lon, -0.833, true)),
