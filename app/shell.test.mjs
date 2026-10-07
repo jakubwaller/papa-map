@@ -12,8 +12,36 @@ test("the app's shell has no donate link, and loses nothing else", () => {
   // is left reads as if the coffee link had never been in the line.
   assert.doesNotMatch(out, /class="donate"/);
   assert.match(out, />Status<\/a> · <a href="https:\/\/jakubwaller\.eu"/);
+  const preloads = page.match(/[ \t]*<link rel="preload" href="data\/[^"]*"[^>]*>\n/g) ?? [];
   assert.equal(page.length - out.length,
-               page.match(/<span class="donate">[\s\S]*?<\/span>/)[0].length);
+               page.match(/<span class="donate">[\s\S]*?<\/span>/)[0].length
+               + preloads.reduce((n, p) => n + p.length, 0)
+               - ", maximum-scale=1".length);
+});
+
+test("the website may be zoomed; the app's shell keeps maximum-scale=1", () => {
+  // WKWebView zooms on a double tap even with Capacitor's zoomEnabled off
+  // (ionic-team/capacitor#8226), and the app has no pinch to undo it.
+  assert.doesNotMatch(page, /maximum-scale/);
+  assert.match(appShell(page),
+    /<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"/);
+  assert.throws(() => appShell(page.replace('initial-scale=1, viewport-fit', 'initial-scale=1.0, viewport-fit')),
+                /viewport meta/);
+});
+
+test("the app's shell drops the website's dataset preloads, and keeps the rest of the head", () => {
+  // The bundle has no data/: a preload left in 404s on every launch, and
+  // build-www.js would refuse a page that names a file it cannot copy.
+  assert.match(page, /<link rel="preload" href="data\/changing_tables\.geojson"/);
+  const out = appShell(page);
+  assert.doesNotMatch(out, /rel="preload"/);
+  assert.ok(!localRefs(out).some((r) => r.startsWith("data/")));
+  assert.match(out, /<link rel="preconnect" href="https:\/\/tile\.openstreetmap\.org" crossorigin \/>/);
+});
+
+test("a <link> to data/ the cut does not recognise fails the build", () => {
+  assert.throws(() => appShell(page.replace("</head>", '<link rel="prefetch" href="data/stats.json" />\n</head>')),
+                /<link> to data\/ is left/);
 });
 
 test("a footer without the span fails the build instead of passing quietly", () => {

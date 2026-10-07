@@ -63,12 +63,11 @@ export function buildIndexEn(html) {
   out = subOnce(out,
     '<link rel="canonical" href="https://papamap.de/" />',
     '<link rel="canonical" href="https://papamap.de/?lang=en" />');
-  // The App pill: app.js sets both per language at load, but this file
-  // exists for the crawlers and unfurlers that never run it.
+  // The App pill: app.js sets the href per language at load, but this file
+  // exists for the crawlers and unfurlers that never run it. Its name is its
+  // visible "App"; the longer description is added by app.js (data-i18n-desc).
   out = subOnce(out, 'href="app.html" data-i18n="app"',
     'href="app-en.html" data-i18n="app"');
-  out = subOnce(out, `aria-label="${esc(STRINGS.de.ariaApp)}">App</a>`,
-    `aria-label="${esc(STRINGS.en.ariaApp)}">App</a>`);
 
   // The long explanatory comment describes index.html's own situation;
   // in the generated file the useful thing to say is "generated".

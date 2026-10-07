@@ -136,3 +136,28 @@ test("both privacy pages cover the Android app, and the manifest keeps their thr
     for (const w of words) assert.ok(html.includes(w), `${f}: ${w}`);
   }
 });
+
+test("the store link reads at AA contrast in both colour schemes", () => {
+  // In dark mode the badge kept the light scheme's #00775a on the box's dark
+  // green, 2.7:1. It takes the page's link colour, which each scheme sets.
+  const lum = (hex) => {
+    const c = hex.match(/[0-9a-f]{2}/gi).map((h) => parseInt(h, 16) / 255)
+      .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  const contrast = (a, b) => {
+    const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+    return (x + 0.05) / (y + 0.05);
+  };
+  for (const f of PAGES) {
+    const src = read(f);
+    const color = src.match(/\.store a\.badge \{[^}]*color: var\((--[a-z-]+)\)/)[1];
+    const roots = [...src.matchAll(/:root \{([^}]*)\}/g)].map((m) => m[1]);
+    assert.equal(roots.length, 2, `${f}: expected a light and a dark :root`);
+    for (const root of roots) {
+      const v = (name) => root.match(new RegExp(`${name}: (#[0-9a-f]{6})`, "i"))[1];
+      const ratio = contrast(v(color), v("--green-soft"));
+      assert.ok(ratio >= 4.5, `${f}: ${color} on --green-soft is ${ratio.toFixed(2)}:1`);
+    }
+  }
+});

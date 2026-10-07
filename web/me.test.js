@@ -205,6 +205,25 @@ test("newestClosedAt / oldestClosedAt read mergeAnswers' own order", () => {
   assert.equal(oldestClosedAt(null), null);
 });
 
+// A phone clock running fast stamps the write's own record in the future;
+// used as the watermark, it hid every changeset that closed before that
+// moment in real time, a MapComplete session included, for good.
+test("newestClosedAt skips the device-stamped local records", () => {
+  const answers = mergeAnswers([], [
+    { id: 1, closed_at: "2026-10-07T12:20:00Z", local: true },   // clock 20 min fast
+    { id: 2, closed_at: "2026-10-07T11:00:00Z" },
+  ]);
+  assert.equal(newestClosedAt(answers), "2026-10-07T11:00:00Z");
+  assert.equal(newestClosedAt([{ id: 1, closed_at: "2026-10-07T12:20:00Z", local: true }]), null);
+});
+
+test("mergeAnswers: the server's copy replaces a local record, never the reverse", () => {
+  const local = { id: 7, closed_at: "2026-10-07T12:20:00Z", n: 1, local: true };
+  const server = { id: 7, closed_at: "2026-10-07T12:00:05Z", n: 1 };
+  assert.deepEqual(mergeAnswers([local], [server]), [server]);
+  assert.deepEqual(mergeAnswers([server], [local]), [server]);
+});
+
 // ---- The game sentence's numbers, scoped to one sweep area ----
 // The live fixture: Hamburg today is 131 tables, 35 accessible + 6
 // female_only -> 31%, checked against a real copy of changing_tables.geojson
@@ -361,6 +380,18 @@ test("changesetsUrl: display_name always, time= only when there is a bound to gi
   assert.ok(withBound.includes(encodeURIComponent(`${EPOCH},2026-01-01T00:00:00Z`)));
   const topUpBound = changesetsUrl(api, "example_user", "2026-06-01T00:00:00Z", "2026-08-01T00:00:00Z");
   assert.ok(topUpBound.includes(encodeURIComponent("2026-06-01T00:00:00Z,2026-08-01T00:00:00Z")));
+});
+
+// A display name can be renamed on osm.org, and the old one then answers
+// 404 for good; the numeric id cannot.
+test("changesetsUrl asks by account id once it is known, by name until then", () => {
+  const api = "https://api.openstreetmap.org/api/0.6";
+  assert.equal(changesetsUrl(api, { id: 123, name: "example_user" }, null, null),
+    `${api}/changesets.json?user=123`);
+  assert.equal(changesetsUrl(api, { id: null, name: "example_user" }, null, null),
+    `${api}/changesets.json?display_name=example_user`);
+  assert.equal(changesetsUrl(api, { id: 123, name: "example_user" }, "2026-09-01T00:00:00Z", null),
+    `${api}/changesets.json?user=123&time=2026-09-01T00%3A00%3A00Z`);
 });
 
 test("pageBoundary: one second past the oldest created_at in a full page, null once a page is short", () => {

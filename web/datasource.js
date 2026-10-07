@@ -50,7 +50,11 @@ export function loadFeatures(fc) {
       // A dataset from before v30 says false for every pin without a corner,
       // so the question simply does not appear until the next nightly build —
       // never on a pin whose reader has already answered it.
-      play_recorded: p.play === true || p.play === false,
+      // A reader's own play answer (play_answered, from the override layer in
+      // applyAnswerOverrides) counts as recorded too, so the question stays
+      // answered across every re-merge until the delta carries the tag. `play`
+      // itself still waits for the pipeline: the ring is OSM's, not ours.
+      play_recorded: p.play === true || p.play === false || p.play_answered === true,
       // Tri-state or null, straight from the pipeline (v26). Same strictness
       // as play: only the three wiki values pass, so a dataset from before the
       // property, or a junk value, reads as "unrecorded" — never as "no".
@@ -66,7 +70,12 @@ export function loadFeatures(fc) {
       // somebody's tag the write would be refused on) — false only where OSM
       // is silent, the one case the popup asks about.
       highchair: p.highchair === true ? true : p.highchair === false ? false : null,
-      highchair_recorded: p.highchair === true || p.highchair === false || p.highchair === "unreadable",
+      highchair_recorded: p.highchair === true || p.highchair === false || p.highchair === "unreadable"
+        || typeof p.highchair_answered === "boolean",
+      // A reader's own high-chair answer, true / false, or null: the popup's
+      // row shows it, while `highchair` (and with it the chip and its count)
+      // waits for the pipeline, like the play ring.
+      highchair_answered: typeof p.highchair_answered === "boolean" ? p.highchair_answered : null,
       // The central key system that locks the door ("eurokey", "nks", …) or
       // null. A keyed table is not a pin: it is hidden by default and comes
       // back only under the wheelchair chip, whose audience holds the key.
@@ -320,8 +329,11 @@ export function mapCompleteVenueUrl(lon, lat, zoom, lang) {
 // color, play the halo layer's filter, key the key-icon layer's, limited the
 // exclamation-mark layer's (true only with the chip on, v53), idx the click
 // lookup. "unknown" features are emitted last so their grey circles draw on top of the others — the untagged rooms
-// are the call to action.
-export function toFeatureCollection(features, wheelchairOnly = false) {
+// are the call to action. `gen` is the generation of the arrays idx points
+// into: until MapLibre has re-tiled a setData, a tap still hits the old tiles,
+// whose idx may name another object after a removal, so app.js ignores a tap
+// whose gen is not the current one. A number, not an osm_url: one per pin.
+export function toFeatureCollection(features, wheelchairOnly = false, gen = 0) {
   const ordered = [...features].sort(
     (a, b) => (a.status === "unknown") - (b.status === "unknown"));
   return {
@@ -329,7 +341,7 @@ export function toFeatureCollection(features, wheelchairOnly = false) {
     features: ordered.map((f) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [f.lon, f.lat] },
-      properties: { idx: f.idx, status: f.status, men_only: f.men_only === true,
+      properties: { idx: f.idx, gen, status: f.status, men_only: f.men_only === true,
                     play: f.play, key: f.key !== null,
                     limited: wheelchairOnly && isWheelchairLimited(f) },
     })),
@@ -337,8 +349,8 @@ export function toFeatureCollection(features, wheelchairOnly = false) {
 }
 
 // The same for the play places, which need no status and no ordering — one
-// uniform ring layer, and idx for the click lookup.
-export function placesToFeatureCollection(places, wheelchairOnly = false) {
+// uniform ring layer, and idx (with its gen) for the click lookup.
+export function placesToFeatureCollection(places, wheelchairOnly = false, gen = 0) {
   return {
     type: "FeatureCollection",
     features: places.map((p) => ({
@@ -346,7 +358,7 @@ export function placesToFeatureCollection(places, wheelchairOnly = false) {
       geometry: { type: "Point", coordinates: [p.lon, p.lat] },
       // `no` picks the dashed ring over the hollow one; `limited` (only with
       // the wheelchair chip on, v53) picks the exclamation mark in it.
-      properties: { idx: p.idx, no: p.changing_table === "no",
+      properties: { idx: p.idx, gen, no: p.changing_table === "no",
                     limited: wheelchairOnly && isWheelchairLimited(p) },
     })),
   };
@@ -1054,29 +1066,47 @@ export function resolveDataUrl(path, native, site) {
 // place -> table promotion a room answer on a play place causes (both a
 // grey table's room and a play place's own room question can move an
 // object's status). `overrides` is localStorage's papamap-answer-overrides
-// shape: {osm_url: {status, men_only, changing_table, location_raw, t}}
-// (men_only since v50; an override stored before it keeps the base's). An override
-// for an object neither collection has any more (deleted, or never loaded)
-// is silently skipped. `status` present promotes/keeps the object as a
-// table (out.fc); its absence (a play answer with no room, e.g. "none") — or
-// an object that was never a table — keeps it in `places`.
+// shape: {osm_url: {status, men_only, changing_table, location_raw,
+// play_answered, highchair_answered, t, version}}, every field but t and
+// version optional (men_only since v50; an override stored before it keeps
+// the base's). Only the fields an entry carries are written: a play or
+// high-chair answer must not blank the room the base already records. An
+// override for an object neither collection has any more (deleted, or never
+// loaded) is silently skipped. `status` present promotes/keeps the object as
+// a table (out.fc); without one (a play place's "none", a play or high-chair
+// answer) the object stays in whichever collection it was in.
 export function applyAnswerOverrides(fc, places, overrides) {
   const entries = overrides ? Object.entries(overrides) : [];
   if (!entries.length) return { fc, places };
   const tableByUrl = new Map(((fc && fc.features) || []).map((f) => [f.properties.osm_url, f]));
   const placeByUrl = new Map(((places && places.features) || []).map((f) => [f.properties.osm_url, f]));
   for (const [url, o] of entries) {
+    const isTable = tableByUrl.has(url);
     const base = tableByUrl.get(url) || placeByUrl.get(url);
-    if (!base) continue;
-    const patched = { ...base, properties: { ...base.properties,
-      changing_table: o.changing_table, location_raw: o.location_raw,
-      status: o.status ?? base.properties.status,
-      men_only: o.men_only ?? base.properties.men_only } };
-    if (o.status) { tableByUrl.set(url, patched); placeByUrl.delete(url); }
+    if (!base || !o) continue;
+    const props = { ...base.properties };
+    if (o.changing_table !== undefined) props.changing_table = o.changing_table;
+    if (o.location_raw !== undefined) props.location_raw = o.location_raw;
+    if (o.status) props.status = o.status;
+    if (o.men_only != null) props.men_only = o.men_only;
+    if (o.play_answered === true) props.play_answered = true;
+    if (typeof o.highchair_answered === "boolean") props.highchair_answered = o.highchair_answered;
+    const patched = { ...base, properties: props };
+    if (o.status || isTable) { tableByUrl.set(url, patched); placeByUrl.delete(url); }
     else placeByUrl.set(url, patched);
   }
   return { fc: { type: "FeatureCollection", features: [...tableByUrl.values()] },
           places: { type: "FeatureCollection", features: [...placeByUrl.values()] } };
+}
+
+// One more confirmed answer for `url`, merged into the entry already there
+// rather than replacing it: a room answer and a play answer on the same
+// object are two writes, and both have to survive until the delta carries
+// them. `version` and `t` are the latest write's, so pruneAnswerOverrides
+// clears the merged entry only once the delta holds that write, which
+// carries every earlier one too. Pure: returns a new object.
+export function mergeAnswerOverride(overrides, url, fields, t, version) {
+  return { ...(overrides || {}), [url]: { ...((overrides && overrides[url]) || {}), ...fields, t, version } };
 }
 
 // Which override entries a fresher delta or dataset has already caught up
@@ -1106,6 +1136,44 @@ export function pruneAnswerOverrides(overrides, datasetBase, versionByUrl) {
     if (!coveredByVersion && !coveredByBase) out[url] = o;
   }
   return out;
+}
+
+// What makes one delta.json different from the last for the map: its base
+// and the four lists. Never `generated` or `seq`, which the follower stamps
+// afresh on every tick even when no object changed (pipeline/delta.py), nor
+// new_toilets_no_table, which only the add-a-place watch reads. The whole
+// upserts, not only url and version: a pending coordinate lookup can fill in
+// later at the same osm_version.
+export function deltaFingerprint(d) {
+  if (!d) return null;
+  return JSON.stringify([d.base ?? null, d.tables?.upsert ?? [], d.tables?.remove ?? [],
+                         d.places?.upsert ?? [], d.places?.remove ?? []]);
+}
+
+// A delta that lost a race: two polls in flight (boot's and the background
+// refresh's) can resolve out of order, and the slower one may carry the older
+// replication `seq`. Only when both seqs are numbers and the newcomer sits on
+// no newer base; anything less certain is merged as before.
+export function isDeltaOlder(next, prev) {
+  if (!next || !prev) return false;
+  if (!Number.isFinite(next.seq) || !Number.isFinite(prev.seq)) return false;
+  if (next.base && prev.base && next.base > prev.base) return false;
+  return next.seq < prev.seq;
+}
+
+// The object an open popup shows, looked up again after the arrays were
+// rebuilt. Its own kind first (the two kinds share the osm_url keyspace),
+// then the other: a room answer, or a delta, can promote a play place to a
+// table while its card is open, and that card must follow the object rather
+// than close. Null when neither has it any more.
+export function resolvePopupObj(kind, url, placesByUrl, featuresByUrl) {
+  const mapOf = (k) => (k === "place" ? placesByUrl : featuresByUrl);
+  const other = kind === "place" ? "table" : "place";
+  for (const k of [kind, other]) {
+    const obj = mapOf(k)?.get(url);
+    if (obj) return { kind: k, obj };
+  }
+  return null;
 }
 
 // ---- The add-a-place flow: which delta entry (if any) is what THIS reader

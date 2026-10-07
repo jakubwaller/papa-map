@@ -12,6 +12,19 @@
 // nothing left.
 const DONATE = /<span class="donate">[\s\S]*?<\/span>/;
 
+// The website preloads its dataset files from data/ (index.html's head); the
+// bundle has no data/ — the app fetches the dataset from the site itself
+// (native.js, loadDatasetNative) — so a preload left in would 404 on every
+// launch and name a file build-www.js cannot copy.
+const DATA_PRELOAD = /[ \t]*<link rel="preload" href="data\/[^"]*"[^>]*>\n?/g;
+
+// The website lets a reader zoom the page (WCAG 1.4.4); the app's web view
+// cannot pinch at all (Capacitor's zoomEnabled is off), yet WKWebView still
+// zooms on a double tap (ionic-team/capacitor#8226), and a page zoomed that
+// way has no pinch to come back with. So the bundled page keeps
+// maximum-scale=1, which the app's web view honours.
+const VIEWPORT = /(<meta name="viewport" content="width=device-width, initial-scale=1)(, viewport-fit=cover")/;
+
 export function appShell(html) {
   // A changed footer must fail the build, not ship the link quietly.
   const cut = DONATE.exec(html);
@@ -21,7 +34,11 @@ export function appShell(html) {
   const out = html.replace(DONATE, "");
   if (/ko-fi\.com/i.test(out)) throw new Error("index.html: a Ko-fi link is left after the cut");
   if (/class="donate"/.test(out)) throw new Error("index.html: a second donate span is left after the cut");
-  return out;
+  const shell = out.replace(DATA_PRELOAD, "");
+  if (/<link\b[^>]*\bhref="(?:\.\/|\/)?data\//.test(shell))
+    throw new Error("index.html: a <link> to data/ is left after the cut");
+  if (!VIEWPORT.test(shell)) throw new Error("index.html: the viewport meta is not the one the app pins");
+  return shell.replace(VIEWPORT, "$1, maximum-scale=1$2");
 }
 
 // Every file of its own the page loads: <link href>, <script src>, <img src>,

@@ -18,7 +18,8 @@
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
 // nothing is sent that the website does not send: a download is a GET.
 
-import { isWheelchairLimited } from "./datasource.js?v=app77";
+import { isWheelchairLimited } from "./datasource.js?v=app78";
+import { awaitingReturn } from "./osm.js?v=app78";
 
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";
@@ -773,8 +774,10 @@ export async function followRoute(url, web, launcher = plugin("AppLauncher"), ex
 }
 
 // ---- OSM login through the in-app browser ----
-// The page's flow (osm.js) is unchanged: PKCE in sessionStorage, the intent
-// too, and the consent screen is a URL. The two differences are where the
+// The page's flow (osm.js) is unchanged but for one thing: the PKCE record
+// and the intent wait in localStorage rather than sessionStorage, because
+// Android may kill the app while the reader is away logging in
+// (keepRoundTripAcrossRestarts). The consent screen is a URL. The two differences are where the
 // URL opens (the in-app browser: a browser view of the OS's own, which the
 // app cannot read into, so the password never passes through a WebView of
 // ours) and how the code comes back (the papamap://auth URL, which the OS
@@ -787,7 +790,7 @@ export function nativeNavigate(url) {
 // widget's deep link to a table, and papamap://nearest — Android's widget with
 // no position to hand and its launcher shortcut, which ask the page to run its
 // own "nearest" button. Returns nothing; the callbacks decide.
-export function onAppUrl({ auth, table, nearest = () => {} }) {
+export function onAppUrl({ auth, table, nearest = () => {}, awaiting = awaitingReturn }) {
   const app = plugin("App");
   if (!app) return;
   app.addListener("appUrlOpen", ({ url }) => {
@@ -802,9 +805,14 @@ export function onAppUrl({ auth, table, nearest = () => {} }) {
     }
   });
   // Cold start from a deep link: the listener above is attached too late for
-  // the URL the app was launched with, so ask once.
+  // the URL the app was launched with, so ask once. The OAuth return is one
+  // of them when the OS killed the app during the login; the browser that
+  // showed OSM is gone already, so there is nothing to close. Only a return
+  // still awaited, though: Android keeps the launch URL for the Activity's
+  // life, and a recreated one would replay an already-used code.
   app.getLaunchUrl?.().then((r) => {
-    if (r?.url?.startsWith("papamap://table")) table(new URL(r.url).searchParams.get("osm"));
+    if (r?.url?.startsWith(AUTH_REDIRECT)) { if (awaiting(r.url)) auth(r.url); }
+    else if (r?.url?.startsWith("papamap://table")) table(new URL(r.url).searchParams.get("osm"));
     else if (r?.url?.startsWith("papamap://nearest")) nearest();
   }).catch(() => {});
 }

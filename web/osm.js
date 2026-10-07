@@ -53,10 +53,13 @@ export function endpoints(loc) {
 
 // ---- Storage ----
 // The token survives the tab: a login is meant to last, as an editor's
-// does. Both keys are named in the Datenschutz. The PKCE state and the
+// does. The three keys are named in the Datenschutz. The PKCE state and the
 // pending answer live only for the round trip to OSM and back.
 export const TOKEN_KEY = "papamap-osm-token";
 export const USER_KEY = "papamap-osm-user";
+// The numeric account id: Mein PapaMap asks for the reader's changesets by
+// it, because a display name can be renamed (web/me.js, changesetsUrl).
+export const USER_ID_KEY = "papamap-osm-user-id";
 export const PKCE_KEY = "papamap-osm-pkce";
 // The two calls on the return leg run before the map loads its data: a
 // hanging OSM must not hold the map hostage (a failed one already does not).
@@ -64,24 +67,85 @@ const OSM_TIMEOUT_MS = 15000;
 export const INTENT_KEY = "papamap-osm-intent";
 
 const local = () => globalThis.localStorage;
-const session = () => globalThis.sessionStorage;
+
+// Where the round trip's PKCE record and intent wait. sessionStorage on the
+// web, where it is per tab and the tab survives the trip. The app hands the
+// trip to the OS's own browser, and Android may kill the app's process
+// meanwhile (a password manager, a low-memory phone): the WebView's
+// sessionStorage goes with it, and the papamap://auth that cold-starts the
+// app could only ever fail. The app keeps them in localStorage instead,
+// removed on use and ignored once older than ROUND_TRIP_MS.
+let roundTripLocal = false;
+export function keepRoundTripAcrossRestarts(on = true) { roundTripLocal = on; }
+const roundTrip = () => (roundTripLocal ? globalThis.localStorage : globalThis.sessionStorage);
+// Long enough to create an OSM account and confirm it by mail on the way.
+// The app's limit only: on the web the trip lives in the tab's own
+// sessionStorage, which ends with the tab, so a reader who takes longer still
+// lands their answer, as before the app needed a limit at all.
+export const ROUND_TRIP_MS = 60 * 60 * 1000;
+// A record without the stamp was stored by the page before it had one.
+const fresh = (rec) => (rec && !(roundTripLocal && Date.now() - (rec.at ?? Date.now()) > ROUND_TRIP_MS)
+  ? rec : null);
+
+// Whether `href` is the return of a login this app is still waiting for: a
+// fresh PKCE record exists and its state is the URL's. Read only, nothing is
+// consumed. The app asks it of the launch URL, which Android's Bridge keeps
+// for the Activity's whole life: after a cold start from papamap://auth every
+// later recreation hands the same, already-used URL back.
+export function awaitingReturn(href) {
+  try {
+    const pkce = fresh(JSON.parse(roundTrip().getItem(PKCE_KEY) || "null"));
+    return !!pkce && pkce.state === new URL(href).searchParams.get("state");
+  } catch { return false; }
+}
+
+// Of two returns that arrived before the data did, the one still awaited
+// wins: a stale launch URL must not overwrite the real one (or the reverse).
+export const preferReturn = (current, next) =>
+  !current || awaitingReturn(next) || !awaitingReturn(current) ? next : current;
+
+// An abandoned trip (the Custom Tab closed with no login) leaves its verifier
+// and the reader's answer behind; nothing reads them again, and the app keeps
+// them in localStorage. Called when a load is not a return: removes the ones
+// past ROUND_TRIP_MS, leaves a trip still under way alone.
+export function dropStaleRoundTrip() {
+  for (const key of [PKCE_KEY, INTENT_KEY]) {
+    try {
+      const raw = roundTrip().getItem(key);
+      if (raw && !fresh(JSON.parse(raw))) roundTrip().removeItem(key);
+    } catch { try { roundTrip().removeItem(key); } catch { /* nothing to drop */ } }
+  }
+}
 
 export const getToken = () => { try { return local().getItem(TOKEN_KEY); } catch { return null; } };
 export const getUser = () => { try { return local().getItem(USER_KEY); } catch { return null; } };
-export function setLogin(token, user) {
-  try { local().setItem(TOKEN_KEY, token); if (user) local().setItem(USER_KEY, user); } catch { /* blocked storage: the login lasts this page */ }
+export const getUserId = () => {
+  try { const id = Number(local().getItem(USER_ID_KEY)); return Number.isInteger(id) && id > 0 ? id : null; }
+  catch { return null; }
+};
+// The whole login at once: a name or id not given is removed, so a fresh
+// token is never paired with a previous account's name.
+export function setLogin(token, user, id = null) {
+  try {
+    local().setItem(TOKEN_KEY, token);
+    if (user) local().setItem(USER_KEY, user); else local().removeItem(USER_KEY);
+    if (id) local().setItem(USER_ID_KEY, String(id)); else local().removeItem(USER_ID_KEY);
+  } catch { /* blocked storage: the login lasts this page */ }
 }
 export function clearLogin() {
-  try { local().removeItem(TOKEN_KEY); local().removeItem(USER_KEY); } catch { /* nothing to clear */ }
+  try { for (const k of [TOKEN_KEY, USER_KEY, USER_ID_KEY]) local().removeItem(k); } catch { /* nothing to clear */ }
 }
 
 // The answer the reader gave before being sent to log in, so that the round
 // trip ends with the answer saved rather than with the reader asked again.
 export function takeIntent() {
   try {
-    const raw = session().getItem(INTENT_KEY);
-    session().removeItem(INTENT_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const raw = roundTrip().getItem(INTENT_KEY);
+    roundTrip().removeItem(INTENT_KEY);
+    const rec = fresh(raw ? JSON.parse(raw) : null);
+    if (!rec) return null;
+    const { at, ...intent } = rec;
+    return intent;
   } catch { return null; }
 }
 
@@ -113,8 +177,12 @@ export function authorizeUrl(cfg, { state, challenge }) {
 export async function startLogin(cfg, intent, navigate = (url) => location.assign(url)) {
   const verifier = randomToken(48), state = randomToken(16);
   try {
-    session().setItem(PKCE_KEY, JSON.stringify({ verifier, state }));
-    if (intent) session().setItem(INTENT_KEY, JSON.stringify(intent));
+    const at = Date.now();
+    roundTrip().setItem(PKCE_KEY, JSON.stringify({ verifier, state, at }));
+    // No intent clears the last one: an abandoned trip's answer must not be
+    // filed by a later login started for something else.
+    if (intent) roundTrip().setItem(INTENT_KEY, JSON.stringify({ ...intent, at }));
+    else roundTrip().removeItem(INTENT_KEY);
   } catch { /* no session storage: the return cannot be verified, so no login */ return false; }
   navigate(authorizeUrl(cfg, { state, challenge: await pkceChallenge(verifier) }));
   return true;
@@ -122,14 +190,20 @@ export async function startLogin(cfg, intent, navigate = (url) => location.assig
 
 // Called on every page load. null when this load is not a return from OSM;
 // { token } after a successful exchange; { denied: true } when the reader
-// said no on the consent screen. Throws when the exchange itself fails.
+// said no on the consent screen (error=access_denied, and only that). Throws
+// when the exchange itself fails, and on any other error OSM sends back
+// (temporarily_unavailable, server_error): those are not the reader's no,
+// and the caller says the login failed rather than nothing at all.
 export async function finishLogin(cfg, href, fetchFn = fetch) {
   const params = new URL(href).searchParams;
-  const code = params.get("code"), state = params.get("state");
-  if (!code && !params.get("error")) return null;
+  const code = params.get("code"), state = params.get("state"), error = params.get("error");
+  if (!code && !error) return null;
   let pkce = null;
-  try { pkce = JSON.parse(session().getItem(PKCE_KEY) || "null"); session().removeItem(PKCE_KEY); } catch { /* fall through */ }
-  if (!code) return { denied: true };
+  try { pkce = fresh(JSON.parse(roundTrip().getItem(PKCE_KEY) || "null")); roundTrip().removeItem(PKCE_KEY); } catch { /* fall through */ }
+  if (!code) {
+    if (error === "access_denied") return { denied: true };
+    throw new Error(`oauth error: ${error}`);
+  }
   // A code with the wrong state is not ours: somebody pasted a URL, or the
   // login was started in another tab. Do not exchange it.
   if (!pkce || pkce.state !== state) throw new Error("oauth state mismatch");
@@ -147,12 +221,42 @@ export async function finishLogin(cfg, href, fetchFn = fetch) {
   return { token: access_token };
 }
 
-// The display name, for "logged in as …". read_prefs is the scope for it.
-export async function userName(cfg, token, fetchFn = fetch) {
+// The display name, for "logged in as …", and the numeric account id, which
+// survives a rename. read_prefs is the scope for both.
+export async function userInfo(cfg, token, fetchFn = fetch) {
   const r = await fetchFn(`${cfg.api}/user/details.json`,
     { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout?.(OSM_TIMEOUT_MS) });
   if (!r.ok) throw httpError(r.status, "user");
-  return (await r.json())?.user?.display_name ?? null;
+  const user = (await r.json())?.user;
+  const id = Number(user?.id);
+  return { id: Number.isInteger(id) && id > 0 ? id : null, name: user?.display_name ?? null };
+}
+
+export async function userName(cfg, token, fetchFn = fetch) {
+  return (await userInfo(cfg, token, fetchFn)).name;
+}
+
+// A stored token without its name or id: the lookup on the return leg failed
+// (a weak connection, a timeout), or the login predates the id. Asked again
+// here, once at a time; the caller fires and forgets it. Resolves true when
+// the stored login changed — the name or id arrived, or OSM no longer knows
+// the token (401), which ends the login. Any other failure leaves it for the
+// next try.
+let infoInFlight = null;
+export function ensureUserInfo(cfg, fetchFn = fetch) {
+  const token = getToken();
+  if (!token || (getUser() && getUserId())) return Promise.resolve(false);
+  infoInFlight ??= userInfo(cfg, token, fetchFn).then(({ id, name }) => {
+    // Logged out, or in as someone else, while this was on its way.
+    if (getToken() !== token || !(name || id)) return false;
+    setLogin(token, name ?? getUser(), id ?? getUserId());
+    return true;
+  }, (err) => {
+    if (err?.status !== 401 || getToken() !== token) return false;
+    clearLogin();
+    return true;
+  }).finally(() => { infoInFlight = null; });
+  return infoInFlight;
 }
 
 // Best effort: OSM forgets the token too, so a stolen device cannot use it.

@@ -9,7 +9,7 @@
 // the world, from a geocoder — because a parent planning a trip wants to look
 // at Lisbon before they are standing in it, and this map has no street index
 // of its own.
-import { haversineKm } from "./datasource.js?v=app77";
+import { haversineKm } from "./datasource.js?v=app78";
 
 // ---- The geocoder ----
 // Photon (komoot), not Nominatim. Nominatim's usage policy forbids
@@ -73,8 +73,18 @@ export const PHOTON_BIAS_DECIMALS = 1;
 // combining diaeresis and the range strips the mark, so a German reader typing
 // "muhlen" finds "Mühlenkamp" and a Czech one typing "namesti" finds
 // "Náměstí" — which is the whole point on a phone keyboard.
+//
+// NFKD rather than NFD also folds full-width Latin ("ｒｅｗｅ" from a Japanese
+// IME) to ASCII. Some letters are their own code point with no mark to strip
+// (ß, ø, ł …), so a table spells them the way a phone keyboard would: "lodz"
+// finds "Łódź", "kobenhavn" "København", "gross" "Großmann". Lowercase first
+// so the table only needs the small letters, and strip marks after it, since
+// "İ" lowercases to "i" plus a combining dot.
+const FOLD = { ß: "ss", ø: "o", æ: "ae", œ: "oe", ł: "l", đ: "d", ð: "d", þ: "th", ı: "i" };
 export function normalise(s) {
-  return String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return String(s ?? "").normalize("NFKD").toLowerCase()
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[ßøæœłđðþı]/g, (c) => FOLD[c]);
 }
 
 // The map's own places, nearest to the map centre first. `tables` are the pins

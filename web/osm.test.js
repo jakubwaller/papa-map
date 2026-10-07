@@ -6,7 +6,9 @@ import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
          roomLabelKeys,
          PLAY_CHOICES, PLAY_KEYS, isPlayChoice, playPatch, guardKeys, changesetTags, changesetXml,
          HIGHCHAIR_CHOICES, HIGHCHAIR_VENUES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY } from "./osm.js";
+         elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY,
+         startLogin, takeIntent, keepRoundTripAcrossRestarts, awaitingReturn, preferReturn, dropStaleRoundTrip, ROUND_TRIP_MS, PKCE_KEY, INTENT_KEY,
+         setLogin, clearLogin, getToken, getUser, getUserId, userInfo, userName, ensureUserInfo } from "./osm.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 // ---- Which OSM ----
@@ -89,6 +91,191 @@ test("finishLogin: not a return, a refusal, a foreign code, and the exchange", a
   assert.equal(seen.body.get("client_secret"), null, "a public client sends no secret");
   // The PKCE record is single-use.
   assert.equal(globalThis.sessionStorage.getItem("papamap-osm-pkce"), null);
+});
+
+// Only the reader's own no is silent. OSM down for maintenance, or failing,
+// sends an error too, and the reader must hear the login did not happen
+// rather than assume the answer went through.
+test("finishLogin: only access_denied is a refusal; any other error throws", async () => {
+  for (const err of ["temporarily_unavailable", "server_error"]) {
+    globalThis.sessionStorage = fakeSession({ "papamap-osm-pkce": JSON.stringify({ verifier: "v", state: "s" }) });
+    await assert.rejects(finishLogin(LIVE, `https://papamap.de/?error=${err}&state=s`), /oauth error/);
+    assert.equal(globalThis.sessionStorage.getItem(PKCE_KEY), null, err);
+  }
+  globalThis.sessionStorage = fakeSession({ "papamap-osm-pkce": JSON.stringify({ verifier: "v", state: "s" }) });
+  assert.deepEqual(await finishLogin(LIVE, "https://papamap.de/?error=access_denied&state=s"), { denied: true });
+  assert.equal(globalThis.sessionStorage.getItem(PKCE_KEY), null);
+});
+
+const tokenReply = async () => ({ ok: true, status: 200, json: async () => ({ access_token: "tok" }) });
+const stateOf = (url) => new URL(url).searchParams.get("state");
+
+test("the web keeps the round trip in sessionStorage, and a login without an answer clears the last one", async () => {
+  globalThis.localStorage = fakeSession();
+  globalThis.sessionStorage = fakeSession();
+  let went = null;
+  await startLogin(LIVE, { kind: "table", osm_url: "u", choice: "male" }, (u) => { went = u; });
+  assert.ok(globalThis.sessionStorage.getItem(PKCE_KEY));
+  assert.equal(globalThis.localStorage.getItem(PKCE_KEY), null);
+  // An abandoned trip, then a login started for something else.
+  await startLogin(LIVE, null, (u) => { went = u; });
+  assert.deepEqual(await finishLogin(LIVE, `https://papamap.de/?code=c&state=${stateOf(went)}`, tokenReply), { token: "tok" });
+  assert.equal(takeIntent(), null);
+});
+
+// The hour is the app's limit, for records in localStorage. A web reader who
+// signs up at OSM and confirms by mail on the way may take longer, in the
+// same tab, and the answer still lands.
+test("on the web the round trip has no time limit: the tab's own storage ends it", async () => {
+  globalThis.localStorage = fakeSession();
+  globalThis.sessionStorage = fakeSession();
+  let went = null;
+  const intent = { kind: "table", osm_url: "https://www.openstreetmap.org/node/2", choice: "unisex" };
+  await startLogin(LIVE, intent, (u) => { went = u; });
+  const realNow = Date.now;
+  Date.now = () => realNow() + 2 * ROUND_TRIP_MS;
+  try {
+    assert.ok(awaitingReturn(`https://papamap.de/?code=c&state=${stateOf(went)}`));
+    assert.deepEqual(await finishLogin(LIVE, `https://papamap.de/?code=c&state=${stateOf(went)}`, tokenReply), { token: "tok" });
+    assert.deepEqual(takeIntent(), intent);
+  } finally { Date.now = realNow; }
+});
+
+// Android kills the app's process while the OS browser has OSM's login up;
+// papamap://auth then cold-starts a WebView whose sessionStorage is empty.
+test("the app's round trip outlives the process: localStorage, used once, stale after the limit", async () => {
+  keepRoundTripAcrossRestarts(true);
+  try {
+    globalThis.localStorage = fakeSession();
+    globalThis.sessionStorage = fakeSession();
+    let went = null;
+    const intent = { kind: "place", osm_url: "https://www.openstreetmap.org/node/1", choice: "play_yes" };
+    await startLogin(LIVE, intent, (u) => { went = u; });
+    globalThis.sessionStorage = fakeSession();   // the process died
+    assert.deepEqual(await finishLogin(LIVE, `papamap://auth?code=c&state=${stateOf(went)}`, tokenReply), { token: "tok" });
+    assert.deepEqual(takeIntent(), intent);
+    assert.equal(globalThis.localStorage.getItem(PKCE_KEY), null);
+    assert.equal(globalThis.localStorage.getItem(INTENT_KEY), null);
+    // A record left from a trip long abandoned is not this login's.
+    await startLogin(LIVE, intent, (u) => { went = u; });
+    const realNow = Date.now;
+    Date.now = () => realNow() + ROUND_TRIP_MS + 1000;
+    try {
+      await assert.rejects(finishLogin(LIVE, `papamap://auth?code=c&state=${stateOf(went)}`, tokenReply), /state/);
+      assert.equal(takeIntent(), null);
+    } finally { Date.now = realNow; }
+  } finally { keepRoundTripAcrossRestarts(false); }
+});
+
+// Android hands the same launch URL back for the Activity's whole life; only
+// a return whose state matches a fresh record is one the app still awaits.
+test("awaitingReturn: a fresh record with the URL's state, read without consuming it", async () => {
+  keepRoundTripAcrossRestarts(true);
+  try {
+    globalThis.localStorage = fakeSession();
+    let went = null;
+    assert.equal(awaitingReturn("papamap://auth?code=c&state=s"), false);   // no record at all
+    await startLogin(LIVE, null, (u) => { went = u; });
+    const back = (state) => `papamap://auth?code=c&state=${state}`;
+    assert.equal(awaitingReturn(back(stateOf(went))), true);
+    assert.equal(awaitingReturn(back(stateOf(went))), true);   // still there: nothing was taken
+    assert.equal(awaitingReturn(back("other")), false);
+    assert.equal(awaitingReturn("not a url"), false);
+    const realNow = Date.now;
+    Date.now = () => realNow() + ROUND_TRIP_MS + 1000;
+    try { assert.equal(awaitingReturn(back(stateOf(went))), false); } finally { Date.now = realNow; }
+  } finally { keepRoundTripAcrossRestarts(false); }
+});
+
+test("preferReturn: of two early returns the awaited one wins, whichever came last", async () => {
+  keepRoundTripAcrossRestarts(true);
+  try {
+    globalThis.localStorage = fakeSession();
+    let went = null;
+    await startLogin(LIVE, null, (u) => { went = u; });
+    const real = `papamap://auth?code=b&state=${stateOf(went)}`;
+    const stale = "papamap://auth?code=a&state=old";
+    assert.equal(preferReturn(null, stale), stale);
+    assert.equal(preferReturn(stale, real), real);
+    assert.equal(preferReturn(real, stale), real);   // a late stale one does not overwrite
+  } finally { keepRoundTripAcrossRestarts(false); }
+});
+
+// A trip abandoned in the Custom Tab leaves the verifier and the answer in
+// the app's localStorage; nothing else would ever remove them.
+test("dropStaleRoundTrip removes an abandoned trip's records once stale, not before", async () => {
+  keepRoundTripAcrossRestarts(true);
+  try {
+    globalThis.localStorage = fakeSession();
+    await startLogin(LIVE, { kind: "table", osm_url: "u", choice: "male" }, () => {});
+    dropStaleRoundTrip();   // a trip still under way stays
+    assert.ok(globalThis.localStorage.getItem(PKCE_KEY));
+    assert.ok(globalThis.localStorage.getItem(INTENT_KEY));
+    const realNow = Date.now;
+    Date.now = () => realNow() + ROUND_TRIP_MS + 1000;
+    try { dropStaleRoundTrip(); } finally { Date.now = realNow; }
+    assert.equal(globalThis.localStorage.getItem(PKCE_KEY), null);
+    assert.equal(globalThis.localStorage.getItem(INTENT_KEY), null);
+  } finally { keepRoundTripAcrossRestarts(false); }
+});
+
+// ---- The stored login ----
+
+const detailsReply = (status, user) => async () =>
+  ({ ok: status < 300, status, json: async () => ({ user }) });
+
+test("setLogin stores the whole login: a missing name or id is never a previous account's", () => {
+  globalThis.localStorage = fakeSession();
+  setLogin("old", "example_old", 1);
+  setLogin("tok", null);
+  assert.equal(getToken(), "tok");
+  assert.equal(getUser(), null);
+  assert.equal(getUserId(), null);
+  setLogin("tok", "example_user", 42);
+  assert.deepEqual([getUser(), getUserId()], ["example_user", 42]);
+  clearLogin();
+  assert.deepEqual([getToken(), getUser(), getUserId()], [null, null, null]);
+});
+
+test("userInfo reads the id and the name; userName still the name", async () => {
+  const fetchFn = detailsReply(200, { id: 123, display_name: "example_user" });
+  assert.deepEqual(await userInfo(LIVE, "tok", fetchFn), { id: 123, name: "example_user" });
+  assert.equal(await userName(LIVE, "tok", fetchFn), "example_user");
+  await assert.rejects(userInfo(LIVE, "tok", detailsReply(504)), (e) => e.status === 504);
+});
+
+// The name lookup on the return leg failed: a token, no name, and a UI that
+// would otherwise say "logged out" with no way to log out, for good.
+test("ensureUserInfo fills in a missing name and id, once at a time", async () => {
+  globalThis.localStorage = fakeSession();
+  setLogin("tok", null);
+  let calls = 0;
+  const ok = async (...a) => { calls++; return detailsReply(200, { id: 7, display_name: "example_user" })(...a); };
+  const [a, b] = await Promise.all([ensureUserInfo(LIVE, ok), ensureUserInfo(LIVE, ok)]);
+  assert.deepEqual([a, b, calls], [true, true, 1]);
+  assert.deepEqual([getToken(), getUser(), getUserId()], ["tok", "example_user", 7]);
+  // Known already: nothing asked.
+  assert.equal(await ensureUserInfo(LIVE, ok), false);
+  assert.equal(calls, 1);
+  // A login from before the id was stored gets it too.
+  setLogin("tok", "example_user");
+  assert.equal(await ensureUserInfo(LIVE, ok), true);
+  assert.equal(getUserId(), 7);
+});
+
+test("ensureUserInfo: a dead token ends the login, a flaky network keeps it", async () => {
+  globalThis.localStorage = fakeSession();
+  for (const fetchFn of [detailsReply(504), async () => { throw new TypeError("network"); }]) {
+    setLogin("tok", null);
+    assert.equal(await ensureUserInfo(LIVE, fetchFn), false);
+    assert.equal(getToken(), "tok");
+  }
+  assert.equal(await ensureUserInfo(LIVE, detailsReply(401)), true);
+  assert.equal(getToken(), null);
+  // Logged out: nothing to look up.
+  let calls = 0;
+  assert.equal(await ensureUserInfo(LIVE, async () => { calls++; }), false);
+  assert.equal(calls, 0);
 });
 
 // ---- The answer ----

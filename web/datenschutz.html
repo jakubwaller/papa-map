@@ -100,6 +100,12 @@
      unter Ihrem eigenen Konto an OpenStreetMap (siehe unten). Rechtsgrundlage: Art. 6 Abs. 1
      lit. f DSGVO. Möchten Sie nichts übertragen, verschieben Sie die Karte vor dem Öffnen, oder
      nutzen Sie die beiden MapComplete-Links im Dialog.</p>
+  <p>Tippen Sie auf einen der MapComplete-Links im Dialog oder beantworten Sie dort einen Ort,
+     merkt sich der Browser im Session Storage (Schlüssel <code>papamap-add-watch</code>) den
+     Kartenausschnitt beziehungsweise den Ort und die Uhrzeit, um Ihnen den neuen Eintrag zu
+     zeigen, sobald er in den Kartendaten auftaucht. Verworfen wird das, sobald der Eintrag
+     erscheint, nach zehn Minuten oder beim Schließen des Tabs. Rein funktional, nur auf Ihrem
+     Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>Spracheinstellung (Local Storage)</h2>
   <p>Wählen Sie über den Sprachumschalter eine Sprache, wird diese Wahl im Local Storage Ihres
      Browsers gespeichert (Schlüssel <code>papamap-lang</code>); ebenso, ob Sie die Karte aus
@@ -123,13 +129,22 @@
      openstreetmap.org weitergeleitet und melden sich dort mit Ihrem OSM-Konto an (OAuth 2 mit PKCE;
      Ihr Passwort sieht diese Website nie). OSM gibt der Seite ein Zugriffstoken zurück, das im
      Local Storage Ihres Browsers liegt (Schlüssel <code>papamap-osm-token</code>, dazu Ihr
-     OSM-Anzeigename unter <code>papamap-osm-user</code>), bis Sie im Pin auf „Abmelden“ tippen
+     OSM-Anzeigename unter <code>papamap-osm-user</code> und Ihre numerische OSM-Nutzer-ID unter
+     <code>papamap-osm-user-id</code>), bis Sie im Pin auf „Abmelden“ tippen
      oder die Browserdaten löschen (§ 25 Abs. 2 Nr. 2 TDDDG). Ihre Antwort schreibt der Browser
      direkt an api.openstreetmap.org, als Änderungssatz unter Ihrem eigenen OSM-Konto und Namen,
      gekennzeichnet mit <code>created_by=PapaMap</code>; es gelten die
      <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">Datenschutzbestimmungen der OSMF</a>.
      Dieser Server erfährt davon nichts: Token, Konto und Antwort laufen nicht über papamap.de, und
      PapaMap speichert keine Bearbeitungen. Ohne Anmeldung bleibt die Karte vollständig nutzbar.</p>
+  <p>Für die Dauer der Anmeldung legt der Browser im Session Storage einen Prüfwert für den
+     Anmeldevorgang (Schlüssel <code>papamap-osm-pkce</code>) und die angetippte Antwort (Schlüssel
+     <code>papamap-osm-intent</code>) ab und löscht beide, sobald Sie von openstreetmap.org
+     zurückkommen, spätestens beim Schließen des Tabs. Nach einer Antwort behält der Browser Ihre
+     eigene Antwort im Local Storage (Schlüssel <code>papamap-answer-overrides</code>: OSM-Link des
+     Ortes, die gegebene Antwort, die Versionsnummer des Objekts und ein Zeitpunkt), damit der Ort
+     sie sofort zeigt, bis die Kartendaten Ihre Änderung enthalten; dann wird der Eintrag gelöscht,
+     sonst mit den Browserdaten. Rein funktional, nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>Abgleich nach einer Bearbeitung (OSM-API)</h2>
   <p>Tippen Sie in einem Pin auf „Auf MapComplete beantworten“, fragt die Seite in den folgenden
      Minuten einige Male bei api.openstreetmap.org die aktuellen Tags dieses einen Objekts ab, um
@@ -143,8 +158,8 @@
      OpenStreetMap angemeldet, ruft die Seite dafür beim Öffnen des Dialogs bei
      api.openstreetmap.org die öffentliche Liste Ihrer eigenen Änderungssätze ab — dieselbe Liste,
      die jeder in Ihrem OSM-Profil einsehen kann — und zählt auf Ihrem Gerät diejenigen, die über
-     PapaMap oder das PapaMap-Thema von MapComplete entstanden sind. Die Anfrage nennt Ihren
-     OSM-Anzeigenamen, sendet aber kein Zugriffstoken; dabei wird Ihre IP-Adresse an die
+     PapaMap oder das PapaMap-Thema von MapComplete entstanden sind. Die Anfrage nennt Ihre
+     numerische OSM-Nutzer-ID (bis sie bekannt ist, Ihren OSM-Anzeigenamen), sendet aber kein Zugriffstoken; dabei wird Ihre IP-Adresse an die
      OpenStreetMap Foundation übertragen (siehe oben). Nummer, Position und Datum dieser
      Änderungssätze legt der Browser im Local Storage ab (Schlüssel
      <code>papamap-my-answers</code>), damit sie nicht jedes Mal neu geladen werden; beim Abmelden
@@ -247,9 +262,14 @@
   <p>Die App speichert dieselben funktionalen Schlüssel wie die Website — Sprache
      (<code>papamap-lang</code>), Papa- oder Mama-Sicht (<code>papamap-mode</code>), den Filter
      „Barrierefrei“ (<code>papamap-wheelchair</code>) und, nach einer Anmeldung, das Zugriffstoken
-     und Ihren OSM-Anzeigenamen (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>),
+     und Ihren OSM-Anzeigenamen samt Nutzer-ID (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>,
+     <code>papamap-osm-user-id</code>),
+     während der Anmeldung zusätzlich für höchstens eine Stunde den Anmeldevorgang
+     (<code>papamap-osm-pkce</code>) und Ihre noch wartende Antwort (<code>papamap-osm-intent</code>),
+     die nach der Rückkehr oder bei einem Start nach dieser Stunde gelöscht werden,
      dazu die gemerkten Orte (<code>papamap-saved</code>), Ihre eigenen Antworten
-     (<code>papamap-my-answers</code>) und die geschlossenen Raum-Hinweise
+     (<code>papamap-my-answers</code>), Antworten, die die Karte bis zum nächsten Datenstand
+     selbst anzeigt (<code>papamap-answer-overrides</code>), und die geschlossenen Raum-Hinweise
      (<code>papamap-card-dismissed</code>) sowie den Vermerk, mit welcher Version der App der Startbildschirm (die Begrüßung
      beim ersten Öffnen oder die Neuigkeiten nach einem Update) zuletzt gezeigt wurde (<code>papamap-intro</code>),
      und für die einmalige Bitte um eine Bewertung einen Zählerstand: wie viele Antworten Sie in
@@ -339,6 +359,6 @@
      <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a>.</p>
   <p>Außerdem haben Sie das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren
      (Art. 77 DSGVO), zum Beispiel bei der Behörde an Ihrem Wohnort.</p>
-  <p style="margin-top:30px">Stand: 2. Oktober 2026</p>
+  <p style="margin-top:30px">Stand: 7. Oktober 2026</p>
   <p><a href="./">← Zur Karte</a></p>
 </body></html>

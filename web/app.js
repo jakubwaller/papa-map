@@ -11,16 +11,18 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, haversineKm, shareUrl, parseShareOsm, withoutOsmParam, nearestUnknownRoom,
          isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
-         mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
-         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app77";
+         mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
+         deltaFingerprint, isDeltaOlder, resolvePopupObj,
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app78";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app77";
-import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
-         setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app78";
+import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
+         getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
+         roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app77";
+         writeTags } from "./osm.js?v=app78";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -28,7 +30,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app77";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app78";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -38,27 +40,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app77";
+         reviewTracker } from "./native.js?v=app78";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app77";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app78";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app77";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app78";
 // opening_hours -> open-right-now, evaluated against the viewer's own clock
 // (the places are local to whoever is looking, and there is no per-place
 // timezone in the data to check against instead). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app77";
+import { isOpenNow } from "./opening-hours.js?v=app78";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         VENUE_MIN_ZOOM } from "./venues.js?v=app77";
-// The bundled shell's pin (`?v=app77`), what the intro key records.
+         VENUE_MIN_ZOOM } from "./venues.js?v=app78";
+// The bundled shell's pin (`?v=app78`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -70,8 +72,12 @@ const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 // their second rather than falling straight to German.
 // A crawler is handed the address's language only (i18n.js, isCrawler).
 const crawler = isCrawler(navigator.userAgent);
+// A stored choice, or null where the browser blocks site data: there merely
+// touching localStorage throws, and at module top level that would stop the
+// whole map from starting.
+const readStored = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
 let lang = pickLang(new URLSearchParams(location.search).get("lang"),
-                    crawler ? null : localStorage.getItem("papamap-lang"),
+                    crawler ? null : readStored("papamap-lang"),
                     crawler ? null : navigator.languages ?? navigator.language);
 const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 
@@ -85,6 +91,8 @@ const t = (key, vars) => fmt((STRINGS[lang] ?? STRINGS.de)[key] ?? key, vars);
 // host: the changeset's `host` tag stays the site's address — the redirect is
 // only the OAuth return leg, and papamap://auth is no provenance for an edit.
 const osm = isNative() ? { ...LIVE, redirect: AUTH_REDIRECT, host: LIVE.redirect } : endpoints(location);
+// The app's login round trip has to survive Android killing the process (osm.js).
+if (isNative()) keepRoundTripAcrossRestarts();
 // Decides when to ask the store for a rating (native.js, reviewTracker): after
 // the third answer or the third day of opening pins, at a calm pin close. Only
 // in the app: the website neither counts nor asks, and writes no key for it.
@@ -116,7 +124,7 @@ const CHANGESET_COMMENT = {
 // screenshot and every piece of og: copy describes, so a mother's map is a
 // deliberate opt-in rather than a silent redefinition for everyone.
 let mode = pickMode(new URLSearchParams(location.search).get("mode"),
-                    localStorage.getItem("papamap-mode"));
+                    readStored("papamap-mode"));
 
 // index.html ships German head tags; the ?lang= views have to carry their own,
 // or the hreflang alternates it advertises would all describe themselves as the
@@ -131,7 +139,9 @@ function applyHeadTags() {
 
 // Swap every static string in index.html: data-i18n = textContent,
 // data-i18n-html = trusted markup from i18n.js (never user input),
-// data-i18n-aria = aria-label. Idempotent — called on boot and on toggle.
+// data-i18n-aria = aria-label (icon-only controls), data-i18n-desc = the
+// description of a control whose visible text is its name. Idempotent —
+// called on boot and on toggle.
 function applyI18n() {
   document.documentElement.lang = lang;
   document.title = t("title");
@@ -143,6 +153,23 @@ function applyI18n() {
   for (const el of document.querySelectorAll("[data-i18n-aria]")) {
     el.setAttribute("aria-label", t(el.dataset.i18nAria));
     if (el.title) el.title = t(el.dataset.i18nAria);
+  }
+  // A control with words on it is named by those words, so a voice-control
+  // reader can say what they see (WCAG 2.5.3): an aria-label replaced
+  // "Nearest changing table" with a sentence nobody would say. The longer
+  // explanation is its description instead, in a hidden node of its own.
+  for (const el of document.querySelectorAll("[data-i18n-desc]")) {
+    const text = t(el.dataset.i18nDesc);
+    let desc = document.getElementById(el.getAttribute("aria-describedby"));
+    if (!desc) {
+      desc = document.createElement("span");
+      desc.id = `desc-${el.dataset.i18nDesc}`;
+      desc.hidden = true;   // aria-describedby still reads a hidden node's text
+      document.body.append(desc);
+      el.setAttribute("aria-describedby", desc.id);
+    }
+    desc.textContent = text;
+    if (el.title) el.title = text;
   }
   // The search field's own prompt. Its own attribute rather than data-i18n:
   // an <input> has no text content to swap.
@@ -157,6 +184,11 @@ function applyI18n() {
   updateRegionsLink();
   // German reads its own app page, every other language the English one.
   document.getElementById("app-link").href = t("appHref");
+  // The logo reloads the map in the language on screen: a bare "./" lands a
+  // reader who came by ?lang=fr, with nothing stored, back in the browser's
+  // language. The app's brandmark has no href (bootNative) and keeps none.
+  const brand = document.querySelector(".brandmark");
+  if (brand?.hasAttribute("href")) brand.setAttribute("href", langUrl(lang, "./"));
   // Boot may have resolved a language the markup does not show (a stored
   // choice, or a Czech browser): the control has to agree with the page.
   const sel = document.getElementById("lang-select");
@@ -415,9 +447,14 @@ let basePlacesFC = null;
 // The delta most recently merged in, or null before the first successful
 // poll (or once a fresher applyDataset has superseded it — see applyDataset).
 let currentDelta = null;
+// deltaFingerprint of what is merged on screen: a poll that brings the same
+// objects again is not merged again. Null whenever a merge has to happen
+// regardless (no delta yet, or a new base under it).
+let currentDeltaKey = null;
 // A reader's own confirmed answers, instant-recoloured ahead of tonight's
-// build: {osm_url: {status, changing_table, location_raw, t}}, persisted so
-// a reload keeps the colour. Try/catch everywhere storage might be blocked
+// build: {osm_url: {status, changing_table, location_raw, play_answered,
+// highchair_answered, t, version}}, each answer merged into the object's
+// entry (mergeAnswerOverride), persisted so a reload keeps the colour. Try/catch everywhere storage might be blocked
 // (private mode, quota) — an override that cannot be remembered just waits
 // for the delta/nightly build like it always did.
 const ANSWER_OVERRIDES_KEY = "papamap-answer-overrides";
@@ -438,6 +475,10 @@ let myFeatureGrid = null;   // buildFeatureGrid(allFeatures) — "Mein PapaMap"'
 // themselves are rebuilt.
 let featuresByOsmUrl = new Map();
 let placesByOsmUrl = new Map();
+// Bumped each time allFeatures/allPlaces are rebuilt, and carried on every map
+// feature beside its idx, so a click can tell whether idx still points into
+// the arrays it was drawn from (the pin click handlers).
+let featureGen = 0;
 let visible = new Set(chipKeys("mama"));   // toggled-on chips, a superset of either reading
 let playOnly = false;                                     // narrow to play corners
 let highchairOnly = false;                                // narrow to high chairs (v65), not remembered
@@ -634,15 +675,20 @@ function addTableLayer() {
   // Both circle layers, so the halo's extra 5.5 px is part of the hit target
   // rather than a dead ring around a clickable pin; the key glyph too, so the
   // tap does not fall through the middle of the pin it sits on.
+  // A tap on tiles drawn from older arrays (featureGen) is dropped: its idx
+  // may already name the next object over. Only for the moment MapLibre
+  // takes to re-tile after a merge; the next tap lands on the new tiles.
   for (const layer of [PLAY_LAYER, SRC, KEY_LAYER, LIMITED_LAYER]) {
     map.on("click", layer, (e) => {
-      const f = allFeatures[e.features[0].properties.idx];
+      const props = e.features[0].properties;
+      const f = props.gen === featureGen ? allFeatures[props.idx] : null;
       if (f) openPopup(f);
     });
   }
   for (const layer of [PLACES, PLACES_NO, PLACES_LIMITED]) {
     map.on("click", layer, (e) => {
-      const p = allPlaces[e.features[0].properties.idx];
+      const props = e.features[0].properties;
+      const p = props.gen === featureGen ? allPlaces[props.idx] : null;
       if (p) openPlacePopup(p);
     });
   }
@@ -679,13 +725,40 @@ function refreshPins() {
   countEl.classList.toggle("nodata", !total);
   updateBarFade();   // on the website the count is the row's last item: its width moves the edge
   if (!styleReady) return;
-  map.getSource(SRC).setData(toFeatureCollection(shown, wheelchairOnly));
-  map.getSource(PLACES).setData(placesToFeatureCollection(places, wheelchairOnly));
+  map.getSource(SRC).setData(toFeatureCollection(shown, wheelchairOnly, featureGen));
+  map.getSource(PLACES).setData(placesToFeatureCollection(places, wheelchairOnly, featureGen));
 }
 
 // ---- Popup ----
 let popup = null;
 let popupObj = null;   // { kind: "table" | "place", obj } behind the open popup
+// The markup the open popup was last given, so a redraw that would change
+// nothing is skipped (showPopupHTML).
+let popupHtmlShown = null;
+
+// Redraws the open popup in place, only when its markup changed. A setHTML
+// replaces the card's scroller (scroll back to the top, an unfolded row
+// folded again) and MapLibre focuses the card's first button, so a delta poll
+// with nothing new for this object must not do it at all, and one that does
+// must not take the focus from wherever the reader is typing (the search
+// field). MapLibre's setDOMContent reads options.focusAfterOpen on every call,
+// so it is switched off for the redraw rather than undone afterwards: a blur
+// closes the search list, and iOS will not raise the keyboard again from a
+// focus() outside a gesture. A first open still focuses the card. Returns
+// whether it redrew.
+function showPopupHTML(html) {
+  if (!popup || html === popupHtmlShown) return false;
+  const active = document.activeElement;
+  const elsewhere = active && active !== document.body && !popup.getElement()?.contains(active);
+  const prev = popup.options.focusAfterOpen;
+  if (elsewhere) popup.options.focusAfterOpen = false;
+  try { popup.setHTML(html); }
+  finally { popup.options.focusAfterOpen = prev; }
+  popupHtmlShown = html;
+  // Fallback for a MapLibre that moved focus anyway.
+  if (elsewhere && active.isConnected && document.activeElement !== active) active.focus({ preventScroll: true });
+  return true;
+}
 
 // The URL fields are built by our own pipeline, but belt-and-braces: esc()
 // stops HTML injection, not a javascript: href — so only https links render.
@@ -879,10 +952,14 @@ function askHTML(question = "askRoom", busy = false) {
 
 // Who the answer will be filed as — or, before the first login, that it will
 // be. One line for both questions; a popup shows it once.
+// A token whose name has not arrived (the lookup on the return leg failed;
+// ensureUserInfo asks again) is still a login: it writes, so it gets its
+// logout, unnamed.
 function askWhoHTML() {
   const user = getUser();
-  const who = user
-    ? `${esc(t("askAs", { user }))} · <button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button>`
+  const logoutBtn = `<button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button>`;
+  const who = user ? `${esc(t("askAs", { user }))} · ${logoutBtn}`
+    : getToken() ? logoutBtn
     : esc(t("askLoginHint"));
   return `<div class="ask-who">${who}</div>`;
 }
@@ -916,10 +993,12 @@ function askPlayHTML(busy = false, who = false) {
 }
 
 // The high-chair line (v65): said when OSM records an answer either way,
-// nothing when it is silent. Shared by the pin and the play-place popup.
+// nothing when it is silent. Shared by the pin and the play-place popup. The
+// reader's own answer (highchair_answered) stands in until OSM's arrives.
 function highchairRows(o) {
-  if (o.highchair === true) return [`<div class="row hc">${esc(t("popupHighchairYes"))}</div>`];
-  if (o.highchair === false) return [`<div class="row hc no">${esc(t("popupHighchairNo"))}</div>`];
+  const hc = o.highchair ?? o.highchair_answered;
+  if (hc === true) return [`<div class="row hc">${esc(t("popupHighchairYes"))}</div>`];
+  if (hc === false) return [`<div class="row hc no">${esc(t("popupHighchairNo"))}</div>`];
   return [];
 }
 
@@ -991,6 +1070,10 @@ function placeHTML(p) {
   return `<div class="popup"><h3>${esc(title)}${starHTML(p.osm_url, title)}</h3>${sub}${rows.join("")}</div>`;
 }
 
+// A table popup clears the sign pin above its point, a place's has none to
+// clear: one rule for opening and for a card whose object changed kind.
+const popupOffset = (kind) => (kind === "place" ? POPUP_OFFSET : POPUP_OFFSET_WITH_MARKER);
+
 // Every popup this page ever opens is created here or in openPlacePopup, and
 // both wire its own "close" listener to the instance itself (`p`, not the
 // mutable `popup` variable — a closure over `popup` would name whichever
@@ -1003,10 +1086,11 @@ function openPopup(f) {
   hideRoomCard();   // the two never share the screen
   if (popup) popup.remove();
   popupObj = { kind: "table", obj: f };
+  popupHtmlShown = popupHTML(f);
   // Always the marker-aware offset: a "table" popup always gets the sign
   // pin (updateSignMarker below), never only sometimes.
-  const p = new maplibregl.Popup({ offset: POPUP_OFFSET_WITH_MARKER, maxWidth: popupMaxWidth() })
-    .setLngLat([f.lon, f.lat]).setHTML(popupHTML(f)).addTo(map);
+  const p = new maplibregl.Popup({ offset: popupOffset("table"), maxWidth: popupMaxWidth() })
+    .setLngLat([f.lon, f.lat]).setHTML(popupHtmlShown).addTo(map);
   p.on("close", () => onPopupClosed(p));
   popup = p;
   review?.pinOpened();
@@ -1020,10 +1104,11 @@ function openPlacePopup(p) {
   hideRoomCard();
   if (popup) popup.remove();
   popupObj = { kind: "place", obj: p };
+  popupHtmlShown = placeHTML(p);
   // A prospect carries no status: no marker, plain offset (updateSignMarker
   // below still runs, to clear a marker left over from a table selection).
-  const pop = new maplibregl.Popup({ offset: POPUP_OFFSET, maxWidth: popupMaxWidth() })
-    .setLngLat([p.lon, p.lat]).setHTML(placeHTML(p)).addTo(map);
+  const pop = new maplibregl.Popup({ offset: popupOffset("place"), maxWidth: popupMaxWidth() })
+    .setLngLat([p.lon, p.lat]).setHTML(popupHtmlShown).addTo(map);
   pop.on("close", () => onPopupClosed(pop));
   popup = pop;
   review?.pinOpened();
@@ -2345,10 +2430,12 @@ function setEditNote(rec, cls, key, tags = null, vars = null) {
 
 function toastEditNote() {
   const note = editNote;
-  const obj = (note.kind === "place" ? placesByOsmUrl : featuresByOsmUrl).get(note.osm_url);
+  // Either kind: the answer this note confirms may have promoted a play
+  // place to a table since the note was made.
+  const hit = resolvePopupObj(note.kind, note.osm_url, placesByOsmUrl, featuresByOsmUrl);
   toast(editText(note), {
     ms: 8000,
-    onTap: obj ? () => reopen(note.kind, obj) : null,
+    onTap: hit ? () => reopen(hit.kind, hit.obj) : null,
   });
 }
 
@@ -2496,6 +2583,17 @@ async function answer(kind, obj, choice, freshToken = null) {
   const el = popup?.getElement();
   const btns = [...(el?.querySelectorAll("button.ask-btn, button.ask-more") ?? [])];
   btns.forEach((b) => { b.disabled = true; });
+  // Where the reply lands: that popup if it is still up, else the one open on
+  // this same object now — reopened during the round trip, or by the login's
+  // return leg — rendered busy (inFlight) and waiting for this answer. Never
+  // another pin's.
+  const here = () => (el?.isConnected ? el
+    : popupObj?.obj?.osm_url === obj.osm_url ? popup?.getElement() ?? null : null);
+  // Whatever question is left there was quieted for this round trip, not
+  // answered: its buttons come back. Queried afresh, because a re-render
+  // (renderMergedDataset) replaces them with copies drawn busy.
+  const wake = () => here()?.querySelectorAll("button.ask-btn, button.ask-more")
+    .forEach((b) => { b.disabled = false; });
   const rec = { kind, osm_url: obj.osm_url };
   setEditNote(rec, "looking", "askSaving");
   try {
@@ -2516,6 +2614,15 @@ async function answer(kind, obj, choice, freshToken = null) {
     // dialog happens to page the changesets list: the write's own reply
     // already has everything an entry needs (CONTRACT.md v39).
     recordMyAnswer(out.changeset, obj.lon, obj.lat);
+    // Every answer is kept as an override until the delta carries it, merged
+    // into whatever this reader already answered on the object: in-memory
+    // flags alone were lost to the next re-merge (a delta poll), and the
+    // question came back, its second tap refused as somebody else's answer.
+    const remember = (fields) => {
+      answerOverrides = mergeAnswerOverride(answerOverrides, obj.osm_url, fields,
+                                            new Date().toISOString(), out.version);
+      saveAnswerOverrides(answerOverrides);
+    };
     // The popup's tag row and the question's absence both read from the
     // object, so the one in memory learns the answer. A room answer's own
     // status recolours instantly below (stats.json's answer_status — never
@@ -2528,14 +2635,19 @@ async function answer(kind, obj, choice, freshToken = null) {
       // when this popup is reopened. Only its own line goes; a room question
       // still waiting above it stays.
       obj.play_recorded = true;
-      el?.querySelector(".ask-play")?.remove();
+      remember({ play_answered: true });
+      renderMergedDataset();
+      here()?.querySelector(".ask-play")?.remove();
     } else if (hc) {
       // The same for the high chair (v65), except that its line shows at
       // once: the question is replaced in place by the row it just recorded.
-      // The chip's count waits for the pipeline, like the play ring.
-      obj.highchair = choice === "hc_yes";
+      // The chip's count waits for the pipeline, like the play ring: the
+      // answer lives in highchair_answered, which only the row reads.
+      obj.highchair_answered = choice === "hc_yes";
       obj.highchair_recorded = true;
-      const q = el?.querySelector(".ask-hc");
+      remember({ highchair_answered: obj.highchair_answered });
+      renderMergedDataset();
+      const q = here()?.querySelector(".ask-hc");
       if (q) q.outerHTML = highchairRows(obj).join("");
     } else {
       obj.changing_table = out.tags.changing_table;
@@ -2554,37 +2666,33 @@ async function answer(kind, obj, choice, freshToken = null) {
       // v50: the same lookup for "the men's room only" — undefined in a
       // stats.json from before it, which the override then leaves to the base.
       const newMenOnly = lastStats?.answer_men_only?.[choice];
-      if (newStatus !== undefined && newStatus !== null) {
-        const t = new Date().toISOString();
-        // out.version is the OSM object's version AFTER this write (writeTags,
-        // web/osm.js) — the primary key pruneAnswerOverrides matches against
-        // a delta upsert's own osm_version. `t` (the client clock, after the
-        // round trip) stays only as the secondary, data_base-time fallback:
-        // OSM's own edited_at on that same delta feature is the server's
-        // timestamp from DURING the write, routinely earlier than `t`, so a
-        // time-only comparison against it would never clear this override.
-        answerOverrides = { ...answerOverrides, [obj.osm_url]:
-          { status: newStatus, men_only: newMenOnly, changing_table: obj.changing_table,
-            location_raw: obj.location_raw, t, version: out.version } };
-        saveAnswerOverrides(answerOverrides);
-        renderMergedDataset();
-        // renderMergedDataset() rebuilds featuresByOsmUrl/placesByOsmUrl and
-        // popupObj from the merged view — obj itself (this closure's own
-        // reference) may now be a stale copy if the answer promoted a place
-        // to a table, so the rest of this branch keeps using it only for the
-        // tag row below, never for anything that must reflect the promotion.
-      }
+      // A status only where the answer has one: "none" on a play place keeps
+      // the base's (none), and so does a stats.json from before answer_status;
+      // the table row and the question's absence are remembered either way.
+      // out.version is the OSM object's version AFTER this write (writeTags,
+      // web/osm.js) — the primary key pruneAnswerOverrides matches against
+      // a delta upsert's own osm_version. `t` (the client clock, after the
+      // round trip) stays only as the secondary, data_base-time fallback:
+      // OSM's own edited_at on that same delta feature is the server's
+      // timestamp from DURING the write, routinely earlier than `t`, so a
+      // time-only comparison against it would never clear this override.
+      const hasStatus = newStatus !== undefined && newStatus !== null;
+      remember({ changing_table: obj.changing_table, location_raw: obj.location_raw,
+                 ...(hasStatus ? { status: newStatus, men_only: newMenOnly } : {}) });
+      renderMergedDataset();
+      // renderMergedDataset() rebuilds featuresByOsmUrl/placesByOsmUrl and
+      // popupObj from the merged view — obj itself (this closure's own
+      // reference) may now be a stale copy if the answer promoted a place
+      // to a table, so the rest of this branch keeps using it only for the
+      // tag row below, never for anything that must reflect the promotion.
       // Everything that was true only while the question was open goes: the
       // question itself (.ask — querySelector would take the headline alone
       // and leave the buttons standing, sandbox test 13 Sep 2026) and the
       // context lines marked .ask-ctx: a pin's "room unknown" headline in
       // either reading, a play place's "OSM says nothing" and "been here?".
       // .ask-play and .ask-hc (v65) are neither, and stay.
-      el?.querySelectorAll(".ask, .ask-ctx").forEach((x) => x.remove());
+      here()?.querySelectorAll(".ask, .ask-ctx").forEach((x) => x.remove());
     }
-    // Whatever survived the sweep is the other question, and it was quieted
-    // for this round trip, not answered: give it its buttons back.
-    btns.forEach((b) => { if (b.isConnected) b.disabled = false; });
     // Quoted back: the group this answer wrote. A room answer names the table
     // and its room, a play answer the play corner — never the other question's
     // tags, which this tap did not touch.
@@ -2598,13 +2706,16 @@ async function answer(kind, obj, choice, freshToken = null) {
     }
     review?.answered();
   } catch (err) {
-    btns.forEach((b) => { b.disabled = false; });
     // A dead token is not the reader's problem: log in again, answer in hand.
     if (err.status === 401) { clearLogin(); rememberView(); goLogin(intent); return; }
     setEditNote(rec, "none", err.status === 409 ? "askConflict" : "askFailed", null,
                 { status: err.status || "network" });
   } finally {
     inFlight.delete(obj.osm_url);
+    // Answered or failed, whatever question is still standing comes back to
+    // life on the live card (wake, above): only after the delete, so a
+    // re-render from here on draws it ready rather than busy.
+    wake();
   }
 }
 
@@ -3055,7 +3166,7 @@ function applyMode() {
   // no marker, so there is nothing here worth keeping open over — it still
   // just closes.
   if (popupObj?.kind === "table") {
-    popup.setHTML(popupHTML(popupObj.obj));
+    showPopupHTML(popupHTML(popupObj.obj));
     attachEditNote();
     updateSignMarker();
   } else {
@@ -3092,7 +3203,7 @@ for (const m of MODES) {
 
 langSelect.addEventListener("change", () => {
   lang = LANGS.includes(langSelect.value) ? langSelect.value : DEFAULT_LANG;
-  localStorage.setItem("papamap-lang", lang);
+  try { localStorage.setItem("papamap-lang", lang); } catch { /* blocked storage: this page only */ }
   fitLangSelect();
   shareSettings({ mode, lang });
   // A ?lang= param would override the stored choice on reload — drop it.
@@ -3208,15 +3319,25 @@ async function completeLogin(href) {
     history.replaceState(null, "", url);
   }
   if (login?.token) {
-    setLogin(login.token, await userName(osm, login.token).catch(() => null));
+    // A failed lookup still stores the token; ensureUserInfo (boot, Mein
+    // PapaMap) asks again for the name and id.
+    const who = await userInfo(osm, login.token).catch(() => null);
+    setLogin(login.token, who?.name ?? null, who?.id ?? null);
     // A refresh started under a previous login (or no login at all, on a
     // shared device) must not write its result under this one's name.
     myAnswersGeneration++;
   }
   else if (login?.failed) toast(t("loginFailed"));
   // Taken whether or not the login went through: a refused consent must not
-  // leave an answer waiting to be filed under the next login.
-  const intent = takeIntent();
+  // leave an answer waiting to be filed under the next login. Only on a
+  // return, though: the app's intent waits in localStorage (osm.js), and an
+  // ordinary launch must not drop the one a cold-start return is bringing.
+  const intent = login ? takeIntent() : null;
+  // Not a return: an abandoned trip's records, once stale, go (osm.js).
+  if (!login) dropStaleRoundTrip();
+  // The intent's own reopen already draws the footer under the new login; a
+  // second one would detach the popup answer() is about to update.
+  let reopened = false;
   // An answer from the add dialog: the place has no pin to land on, so the
   // dialog reopens on its question and files the answer there — the write
   // itself re-reads the object, so a table somebody recorded in between is
@@ -3239,6 +3360,7 @@ async function completeLogin(href) {
     if (obj) {
       map.jumpTo({ center: [obj.lon, obj.lat], zoom: Math.max(map.getZoom(), 16) });
       reopen(kind, obj);
+      reopened = true;
       // Checked again against the dataset just loaded, not the one the tap
       // was made on: had the nightly build landed during the consent round
       // trip with somebody else's room on this object, the popup now shows
@@ -3255,7 +3377,17 @@ async function completeLogin(href) {
   // The login the "Mein PapaMap" dialog itself started: land back on it
   // rather than on a bare map (renderMeStats, above).
   if (intent?.kind === "me" && login?.token) { meDialog.showModal(); renderMeDialog(); refreshMyAnswers(); }
-  if (popupObj) reopen(popupObj.kind, popupObj.obj);   // the footer line names the login
+  if (popupObj && !reopened) reopen(popupObj.kind, popupObj.obj);   // the footer line names the login
+  if (login?.token) refreshUserInfo();   // the app's warm return does not pass boot
+}
+
+// The name and id a stored login lacks (osm.js, ensureUserInfo): fired and
+// forgotten at boot and on every Mein PapaMap open. The dialog follows when
+// they land; a popup's footer does on its next open.
+function refreshUserInfo() {
+  ensureUserInfo(osm).then((changed) => {
+    if (changed && meDialog.open) { renderMeDialog(); refreshMyAnswers(); }
+  });
 }
 
 // A pin (or a play place) by its OSM URL — the widget's and the shortcut's
@@ -3266,6 +3398,7 @@ async function completeLogin(href) {
 // bookmark) flies nowhere and says so once, rather than doing nothing —
 // which the widget and the shortcut inherit for free, not only the share link.
 let pendingPin = null;
+let pendingAuth = null;   // papamap://auth before the data (bootNative)
 // papamap://nearest (Android's widget and launcher shortcut, native.js): the
 // map's own "nearest" button, pressed for the reader — the same fix, the same
 // permission question, the same answer. Before the data is here it waits,
@@ -3328,6 +3461,7 @@ function stripOsmParam() {
 function applyFeatureSets(fc, places) {
   allFeatures = loadFeatures(fc);
   allPlaces = loadPlaces(places);
+  featureGen++;
   // "Mein PapaMap"'s own nearest-feature lookup (answerArea, web/me.js) —
   // rebuilt here with everything else that depends on allFeatures, not
   // lazily on first use, so a background refresh's new dataset is what the
@@ -3342,14 +3476,18 @@ function applyFeatureSets(fc, places) {
   refreshPins();
   if (isNative()) shareTables();   // the widget and the shortcut search this same data
   if (popupObj) {
-    const byUrl = popupObj.kind === "place" ? placesByOsmUrl : featuresByOsmUrl;
-    const obj = byUrl.get(popupObj.obj.osm_url);
-    if (obj) {
-      popupObj = { kind: popupObj.kind, obj };
+    // Either kind: a room answer (or a delta) that promotes a play place to a
+    // table keeps its card open as that table's, with the table's offset.
+    const hit = resolvePopupObj(popupObj.kind, popupObj.obj.osm_url, placesByOsmUrl, featuresByOsmUrl);
+    if (hit) {
+      const switched = hit.kind !== popupObj.kind;
+      popupObj = hit;
       if (popup) {
-        popup.setHTML(popupObj.kind === "place" ? placeHTML(obj) : popupHTML(obj));
-        attachEditNote();
-        fitPopup();
+        if (switched) popup.setOffset(popupOffset(hit.kind));
+        if (showPopupHTML(hit.kind === "place" ? placeHTML(hit.obj) : popupHTML(hit.obj))) {
+          attachEditNote();
+          fitPopup();
+        }
         updateSignMarker();   // tonight's build (or a delta, or this reader's own answer) may carry a new status for it
       }
     } else if (popup) {
@@ -3395,7 +3533,10 @@ function applyDataset(fc, places, stats, areas) {
   // after boot's first poll, and dropping a still-valid delta there hid a
   // fresh edit until the next 3-minute poll. An older one is dropped and
   // re-fetched (watchRefresh polls right after this).
-  if (currentDelta && !isDeltaFresh(currentDelta.base, stats?.data_base)) currentDelta = null;
+  if (currentDelta && !isDeltaFresh(currentDelta.base, stats?.data_base)) {
+    currentDelta = null;
+    currentDeltaKey = null;   // the same file fetched again must be merged again
+  }
   const versionByUrl = new Map();   // nothing to compare a fresh delta against yet — data_base alone decides here
   answerOverrides = pruneAnswerOverrides(answerOverrides, stats?.data_base, versionByUrl);
   saveAnswerOverrides(answerOverrides);
@@ -3447,9 +3588,18 @@ async function fetchDelta() {
 // through an older upsert still sitting in currentDelta. Ignored outright
 // when it is older than the loaded dataset's own base (isDeltaFresh):
 // CONTRACT.md's live-updates amendment.
+// One that lost a race to a newer one (isDeltaOlder) is dropped, and one that
+// brings the very objects already merged (deltaFingerprint — the follower
+// rewrites the file every tick) is not merged again unless it also retired
+// one of this reader's overrides: a re-merge costs a full rebuild and setData
+// of every pin.
 function applyDelta(deltaJson) {
   if (!baseFC || !deltaJson || !isDeltaFresh(deltaJson.base, lastStats?.data_base)) return;
+  if (isDeltaOlder(deltaJson, currentDelta)) return;
+  const key = deltaFingerprint(deltaJson);
+  const same = currentDelta !== null && key === currentDeltaKey;
   currentDelta = deltaJson;
+  currentDeltaKey = key;
   const versionByUrl = new Map();
   for (const f of (deltaJson.tables?.upsert || []).concat(deltaJson.places?.upsert || [])) {
     const url = f?.properties?.osm_url;
@@ -3457,12 +3607,13 @@ function applyDelta(deltaJson) {
     if (url && version != null) versionByUrl.set(url, version);
   }
   const pruned = pruneAnswerOverrides(answerOverrides, lastStats?.data_base, versionByUrl);
-  if (Object.keys(pruned).length !== Object.keys(answerOverrides).length) {
+  const overridesChanged = Object.keys(pruned).length !== Object.keys(answerOverrides).length;
+  if (overridesChanged) {
     answerOverrides = pruned;
     saveAnswerOverrides(answerOverrides);
   }
-  renderMergedDataset();
-  maybeNotifyAddedPlace(deltaJson);
+  if (!same || overridesChanged) renderMergedDataset();
+  maybeNotifyAddedPlace(deltaJson);   // every poll: the add watch has a clock of its own
 }
 
 async function pollDelta() {
@@ -3594,8 +3745,11 @@ async function boot() {
   // there is a dataset to look it up in. jumpTo overrides fitHome's view.
   if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
   if (pendingNearest) { pendingNearest = false; runNearest(); }
-  // A return from OSM's consent screen lands here with ?code= and ?state=.
-  await completeLogin(location.href);
+  // A return from OSM's consent screen lands here with ?code= and ?state=,
+  // or, in the app, as the papamap://auth URL that cold-started it (bootNative).
+  if (pendingAuth) { const u = pendingAuth; pendingAuth = null; await completeLogin(u); }
+  else await completeLogin(location.href);
+  refreshUserInfo();
   if (isNative()) {
     // applyDataset above already shared the tables with the widget and the
     // shortcut; the settings are boot's own to hand over.
@@ -3652,7 +3806,10 @@ function bootNative() {
   document.querySelector("header").append(countEl);
   positionZoomCtrl();   // applyI18n placed the column under the taller header a moment ago
   offlineBtn.hidden = false;
-  onAppUrl({ auth: (url) => completeLogin(url), table: openPin, nearest: runNearest });
+  // A login's return before the data is here (a cold start) waits for it,
+  // like a pin: the answer it files needs its object to land on.
+  onAppUrl({ auth: (url) => { if (dataReady) completeLogin(url); else pendingAuth = preferReturn(pendingAuth, url); },
+             table: openPin, nearest: runNearest });
   onBackButton(closeTopmost);
   const brand = document.querySelector(".brandmark");
   brand.removeAttribute("href");   // interceptLinks only looks at a[href]; an anchor without one goes nowhere
@@ -4167,7 +4324,9 @@ function recordMyAnswer(changesetId, lon, lat) {
   if (!user) return;
   const cache = ensureMyAnswers(user);
   cache.answers = mergeAnswers(cache.answers,
-    [{ id: Number(changesetId), lon, lat, closed_at: new Date().toISOString(), n: 1, radius_m: 50 }]);
+    // `local`: stamped by the device clock, so never the top-up's watermark
+    // (me.js, newestClosedAt); the server's copy replaces it once paged.
+    [{ id: Number(changesetId), lon, lat, closed_at: new Date().toISOString(), n: 1, radius_m: 50, local: true }]);
   writeMyAnswersRaw(user, cache.answers, cache.backfill);
 }
 
@@ -4191,7 +4350,8 @@ async function fetchChangesetPage(url, outerSignal) {
   } catch { return null; }
 }
 
-// GET .../changesets.json?display_name=<user>[&time=...] (me.js's
+// GET .../changesets.json?user=<id>[&time=...] — display_name=<name> for a
+// login whose id is not known yet — (me.js's
 // changesetsUrl says exactly what `time=` means and why). No auth header: a
 // user's changesets are public. Bounded to MY_ANSWERS_PAGES calls total,
 // split between two passes that share the one budget:
@@ -4217,7 +4377,8 @@ async function fetchChangesetPage(url, outerSignal) {
 // end of what it is asking for; the next open picks up exactly where this
 // one left off (the top-up from the cache's new watermark, the backfill
 // from its advanced cursor).
-async function fetchMyAnswers(user, cache, signal) {
+// `who` is { id, name }: the id once known, the name until then.
+async function fetchMyAnswers(who, cache, signal) {
   let answers = cache.answers ?? [];
   let backfill = cache.backfill ?? { oldest_scanned: null, done: false, floor: null };
   let pagesUsed = 0;
@@ -4227,7 +4388,7 @@ async function fetchMyAnswers(user, cache, signal) {
     let before = null;
     let reachedWatermark = false;
     while (pagesUsed < MY_ANSWERS_PAGES) {
-      const page = await fetchChangesetPage(changesetsUrl(osm.api, user, since, before), signal);
+      const page = await fetchChangesetPage(changesetsUrl(osm.api, who, since, before), signal);
       pagesUsed++;
       if (page === null) return { answers, backfill };   // network failure: keep what we have
       if (!page.length) { reachedWatermark = true; break; }
@@ -4240,8 +4401,8 @@ async function fetchMyAnswers(user, cache, signal) {
 
   while (!backfill.done && pagesUsed < MY_ANSWERS_PAGES) {
     const url = backfill.oldest_scanned
-      ? changesetsUrl(osm.api, user, null, backfill.oldest_scanned)
-      : changesetsUrl(osm.api, user, null, null);
+      ? changesetsUrl(osm.api, who, null, backfill.oldest_scanned)
+      : changesetsUrl(osm.api, who, null, null);
     const page = await fetchChangesetPage(url, signal);
     pagesUsed++;
     if (page === null) break;
@@ -4261,7 +4422,7 @@ async function refreshMyAnswers() {
   const generation = myAnswersGeneration;
   const cache = ensureMyAnswers(user);
   myAnswersAbort = new AbortController();
-  const { answers, backfill } = await fetchMyAnswers(user, cache, myAnswersAbort.signal);
+  const { answers, backfill } = await fetchMyAnswers({ id: getUserId(), name: user }, cache, myAnswersAbort.signal);
   // The reader may have logged out (or into a different account) while this
   // was in flight — refreshApplies (web/me.js) is the one place that decides
   // whether a result may still be applied. Discarded silently otherwise:
@@ -4314,7 +4475,8 @@ function renderMeSentence() {
     // No area (stats.json missing entirely) is the one case renderStats
     // itself falls back to statsMissing rather than naming an area; the
     // dialog says the same rather than guessing at one from the map view.
-    : `<span>${esc(t("statsMissing", { href: t("methodsHref") }))}</span>`);
+    // Unescaped like renderStats: the template is our own i18n markup.
+    : `<span>${t("statsMissing", { href: t("methodsHref") })}</span>`);
   if (parts.grey.locate) {
     bits.push(`<button type="button" id="me-locate" class="linkish">${esc(t("meLocate"))}</button>`);
   } else if (parts.grey.vars) {
@@ -4342,6 +4504,12 @@ function renderMeSentence() {
 // ---- Part 2: your stats ----
 function renderMeStats() {
   const user = getUser();
+  // Logged in, the name not here yet (refreshUserInfo re-renders when it
+  // is): the answers are filed by name, so only the way out.
+  if (!user && getToken()) {
+    meStatsEl.innerHTML = `<p><button type="button" class="linkish" data-logout>${esc(t("askLogout"))}</button></p>`;
+    return;
+  }
   if (!user) {
     meStatsEl.innerHTML = `<p>${esc(t("meLoginInvite"))}</p>` +
       `<button type="button" id="me-login" class="btn primary">${esc(t("meLogin"))}</button>`;
@@ -4476,6 +4644,7 @@ meBtn.addEventListener("click", () => {
   meDialog.showModal();
   renderMeDialog();
   refreshMyAnswers();   // best-effort background top-up; re-renders when it lands
+  refreshUserInfo();    // a login still missing its name or id
 });
 document.getElementById("me-close").addEventListener("click", () => meDialog.close());
 meDialog.addEventListener("click", (e) => { if (e.target === meDialog) meDialog.close(); });

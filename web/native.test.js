@@ -968,6 +968,40 @@ test("the OSM login's return leg is not mistaken for a table", () => {
   assert.deepEqual([back.length, opened.length], [1, 0]);
 });
 
+// Android killed the app while OSM's login was up: the return cold-starts it,
+// and the URL only arrives through getLaunchUrl.
+test("a cold start from the OSM login's return completes the login", async () => {
+  const back = [], opened = [];
+  let ran = 0;
+  const url = `${AUTH_REDIRECT}?code=c&state=s`;
+  const cold = fakeApp(url);
+  globalThis.sessionStorage = { getItem: () => JSON.stringify({ verifier: "v", state: "s", at: Date.now() }) };
+  try {
+    withApp(cold.plugin, () => onAppUrl({ auth: (u) => back.push(u), table: (o) => opened.push(o), nearest: () => ran++ }));
+    await new Promise((r) => setTimeout(r, 0));
+  } finally { delete globalThis.sessionStorage; }
+  assert.deepEqual([back, opened.length, ran], [[url], 0, 0]);
+});
+
+// Android's Bridge keeps the intent that created the Activity: every later
+// recreation hands the same, already-used papamap://auth back, with its PKCE
+// record long gone. Replaying it would toast a failed login for nothing.
+test("a cold start whose auth URL no login is waiting for never calls auth", async () => {
+  const back = [];
+  const cold = fakeApp(`${AUTH_REDIRECT}?code=c&state=used`);
+  globalThis.sessionStorage = { getItem: () => null };
+  try {
+    withApp(cold.plugin, () => onAppUrl({ auth: (u) => back.push(u), table: () => {} }));
+    await new Promise((r) => setTimeout(r, 0));
+    // Nor one whose record belongs to another trip.
+    globalThis.sessionStorage = { getItem: () => JSON.stringify({ verifier: "v", state: "other", at: Date.now() }) };
+    const second = fakeApp(`${AUTH_REDIRECT}?code=c&state=used`);
+    withApp(second.plugin, () => onAppUrl({ auth: (u) => back.push(u), table: () => {} }));
+    await new Promise((r) => setTimeout(r, 0));
+  } finally { delete globalThis.sessionStorage; }
+  assert.deepEqual(back, []);
+});
+
 // ---- The in-app Browser sheet: "reader is back" without visibilitychange --
 import { onBrowserFinished } from "./native.js";
 
