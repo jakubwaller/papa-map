@@ -23,6 +23,12 @@
   --shadow-soft: 0 1px 0 rgba(0, 0, 0, .06);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Non-zero only on a notched iPhone held in landscape, where viewport-fit=cover
+     (and the app's contentInset "never") puts the notch or island over the page's
+     side edge. Every edge-anchored control adds them; strips keep a full-width
+     background and pad their content instead. */
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
   --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -63,7 +69,7 @@ header {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px 16px;
-  padding: 10px 24px;
+  padding: 10px calc(24px + var(--safe-right)) 10px calc(24px + var(--safe-left));
   background: var(--header);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
@@ -211,7 +217,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   display: flex;
   flex-wrap: wrap;
   gap: 2px 26px;
-  padding: 7px 24px;
+  padding: 7px calc(24px + var(--safe-right)) 7px calc(24px + var(--safe-left));
   background: var(--bar);
   border-top: 1px solid var(--line-soft);
   font-size: 12.5px;
@@ -229,7 +235,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 24px;
+  padding: 8px calc(24px + var(--safe-right)) 8px calc(24px + var(--safe-left));
   background: var(--bar);
   border-top: 1px solid var(--line-soft);
   overflow-x: auto;
@@ -338,7 +344,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #zoom-ctrl {
   position: absolute;
   top: 140px;
-  right: 16px;
+  right: calc(16px + var(--safe-right));
   z-index: 9;
   display: flex;
   flex-direction: column;
@@ -378,8 +384,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    and sits at the top left of the map, where every other map puts it. */
 #search {
   position: absolute;
-  left: 12px;
-  right: 62px;
+  left: calc(12px + var(--safe-left));
+  right: calc(62px + var(--safe-right));
   max-width: 380px;
   z-index: 9;
 }
@@ -585,8 +591,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    the two never overlap when a toast fires while the card is up. */
 #room-card {
   position: absolute;
-  left: 12px;
-  right: 12px;
+  left: calc(12px + var(--safe-left));
+  right: calc(12px + var(--safe-right));
   bottom: calc(118px + var(--safe-bottom));   /* clear of .nearest-btn: 64 + 44 + 10 */
   z-index: 25;
   max-width: 420px;
@@ -827,12 +833,14 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .saved-list .dot.play { background: var(--play); }
 .saved-list .dot.neutral { background: none; border: 1.5px solid var(--line); }
 
-/* The star, in the popup's title line (not the Route row): sized to the
-   headline so it never pushes the card taller. */
+/* The star, in the popup's title line (not the Route row): an 18px glyph
+   sized to the headline, in a 28px tap target whose negative margin keeps the
+   card from growing taller. The h3's padding-right holds it ~19px clear of
+   MapLibre's ×, which a thumb otherwise hit instead (WCAG 2.5.8). */
 .popup h3 { display: flex; align-items: center; gap: 6px; }
 .popup .star-btn {
-  flex: 0 0 auto; border: 0; background: none; padding: 0; margin-left: auto;
-  width: 18px; height: 18px; color: var(--muted); cursor: pointer;
+  flex: 0 0 auto; border: 0; background: none; padding: 5px; margin: -5px 0 -5px auto;
+  width: 28px; height: 28px; box-sizing: border-box; color: var(--muted); cursor: pointer;
 }
 .popup .star-btn svg { width: 100%; height: 100%; }
 .popup .star-btn.on { color: #e6a700; }
@@ -842,14 +850,14 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #attribution {
   position: absolute;
   bottom: calc(8px + var(--safe-bottom));
-  right: 10px;
+  right: calc(10px + var(--safe-right));
   z-index: 9;
   font-size: 10px;
   color: var(--muted);
   background: rgba(255, 255, 255, .8);
   /* Anchored right with no left edge, so a fourth link (Bundesländer) grows
      the box off the left of a 375px phone. Cap it and let it wrap instead. */
-  max-width: calc(100vw - 20px);
+  max-width: calc(100vw - 20px - var(--safe-left) - var(--safe-right));
   text-align: right;
   padding: 2px 8px;
   border-radius: 6px;
@@ -888,7 +896,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 .maplibregl-popup-close-button:hover { color: var(--ink); background: none; }
 
-.popup h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); padding-right: 14px; }
+.popup h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); padding-right: 30px; }
 .popup .sub {
   font-size: 11px;
   text-transform: capitalize;
@@ -1056,7 +1064,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
-  header { padding: 8px 14px; gap: 6px 12px; }
+  header { padding: 8px calc(14px + var(--safe-right)) 8px calc(14px + var(--safe-left)); gap: 6px 12px; }
   /* Four links no longer fit beside the wordmark, and a nav that wraps into a
      ragged block next to it reads as debris. Row of its own instead, under the
      brand and its button, above the tagline. That is three rows only because
@@ -1073,8 +1081,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   .tagline { order: 4; flex-basis: 100%; font-size: 12px; }
   .add-btn { padding: 6px 11px; font-size: 12px; }
   .app-btn { padding: 6px 11px; font-size: 12px; }
-  #stats { padding: 6px 14px; gap: 2px 18px; font-size: 12px; }
-  .chip-bar { padding-left: 14px; padding-right: 14px; gap: 8px; }
+  #stats { padding: 6px 14px 6px calc(14px + var(--safe-left)); gap: 2px 18px; font-size: 12px; }
+  .chip-bar { padding-left: calc(14px + var(--safe-left)); padding-right: calc(14px + var(--safe-right)); gap: 8px; }
   .chip { padding: 7px 10px; font-size: 12px; }
   .chip.wc .label, .chip.hc .label { display: none; }
   .native header .count { max-width: 60%; font-size: 11px; }
@@ -1088,7 +1096,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
      "as of" date fold away. */
   .stats-wrap:not(.open) #stats .stat:not(:first-child) { display: none; }
   .stats-wrap:not(.open) #stats { cursor: pointer; }
-  #stats { padding-right: 44px; }   /* room for the toggle, which overlays it */
+  #stats { padding-right: calc(44px + var(--safe-right)); }   /* room for the toggle, which overlays it */
 
   /* Pinned to the strip's top-right rather than centred: the collapsed strip is
      three lines tall and the expanded one is seven, so a centred chevron would
@@ -1096,7 +1104,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   .stats-toggle {
     position: absolute;
     top: 3px;
-    right: 5px;
+    right: calc(5px + var(--safe-right));
     display: flex;
     align-items: center;
     justify-content: center;

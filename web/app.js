@@ -14,7 +14,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs } from "./datasource.js?v=app77";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, isCrawler } from "./i18n.js?v=app77";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app77";
 import { LIVE, endpoints, startLogin, finishLogin, userName, revoke, getToken, getUser,
          setLogin, clearLogin, takeIntent, roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
@@ -131,7 +131,9 @@ function applyHeadTags() {
 
 // Swap every static string in index.html: data-i18n = textContent,
 // data-i18n-html = trusted markup from i18n.js (never user input),
-// data-i18n-aria = aria-label. Idempotent — called on boot and on toggle.
+// data-i18n-aria = aria-label (icon-only controls), data-i18n-desc = the
+// description of a control whose visible text is its name. Idempotent —
+// called on boot and on toggle.
 function applyI18n() {
   document.documentElement.lang = lang;
   document.title = t("title");
@@ -143,6 +145,23 @@ function applyI18n() {
   for (const el of document.querySelectorAll("[data-i18n-aria]")) {
     el.setAttribute("aria-label", t(el.dataset.i18nAria));
     if (el.title) el.title = t(el.dataset.i18nAria);
+  }
+  // A control with words on it is named by those words, so a voice-control
+  // reader can say what they see (WCAG 2.5.3): an aria-label replaced
+  // "Nearest changing table" with a sentence nobody would say. The longer
+  // explanation is its description instead, in a hidden node of its own.
+  for (const el of document.querySelectorAll("[data-i18n-desc]")) {
+    const text = t(el.dataset.i18nDesc);
+    let desc = document.getElementById(el.getAttribute("aria-describedby"));
+    if (!desc) {
+      desc = document.createElement("span");
+      desc.id = `desc-${el.dataset.i18nDesc}`;
+      desc.hidden = true;   // aria-describedby still reads a hidden node's text
+      document.body.append(desc);
+      el.setAttribute("aria-describedby", desc.id);
+    }
+    desc.textContent = text;
+    if (el.title) el.title = text;
   }
   // The search field's own prompt. Its own attribute rather than data-i18n:
   // an <input> has no text content to swap.
@@ -157,6 +176,11 @@ function applyI18n() {
   updateRegionsLink();
   // German reads its own app page, every other language the English one.
   document.getElementById("app-link").href = t("appHref");
+  // The logo reloads the map in the language on screen: a bare "./" lands a
+  // reader who came by ?lang=fr, with nothing stored, back in the browser's
+  // language. The app's brandmark has no href (bootNative) and keeps none.
+  const brand = document.querySelector(".brandmark");
+  if (brand?.hasAttribute("href")) brand.setAttribute("href", langUrl(lang, "./"));
   // Boot may have resolved a language the markup does not show (a stored
   // choice, or a Czech browser): the control has to agree with the page.
   const sel = document.getElementById("lang-select");
