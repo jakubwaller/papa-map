@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { VENUE_TAGS, isVenue, isSearchVenue, venueOsmTags, venueSearchOsmTags, venueReverseUrl,
          venueSearchUrl, venueRows, venueDistance, venueCentreKey, VENUE_LIMIT,
-         VENUE_SEARCH_KEYS } from "./venues.js";
+         VENUE_SEARCH_KEYS, VENUE_SEARCH_EXCLUDE } from "./venues.js";
 
 const feat = (props, coords = [9.9563, 53.5745]) =>
   ({ type: "Feature", geometry: { type: "Point", coordinates: coords }, properties: props });
@@ -42,6 +42,15 @@ test("isSearchVenue: the list, plus any shop, amenity, tourism or leisure; toile
   assert.equal(isSearchVenue("amenity", "toilets"), false);
   assert.equal(isSearchVenue("railway", "halt"), false);
   assert.equal(isSearchVenue("highway", "bus_stop"), false);
+  assert.equal(isSearchVenue("amenity", "parking"), false, "the supermarket's car park");
+  assert.equal(isSearchVenue("leisure", "park"), false);
+});
+
+test("VENUE_SEARCH_EXCLUDE never takes back a place the list offers", () => {
+  for (const [k, vs] of Object.entries(VENUE_SEARCH_EXCLUDE)) {
+    assert.ok(VENUE_SEARCH_KEYS.includes(k), k);
+    for (const v of vs) assert.equal(isVenue(k, v), false, `${k}=${v}`);
+  }
 });
 
 test("venueSearchOsmTags: bare keys, plus the list's pairs under any other key", () => {
@@ -49,8 +58,11 @@ test("venueSearchOsmTags: bare keys, plus the list's pairs under any other key",
   for (const k of VENUE_SEARCH_KEYS) assert.ok(tags.includes(k), k);
   assert.ok(tags.includes("railway:station"));
   assert.ok(tags.includes("aeroway:terminal"));
-  assert.ok(!tags.some((t) => VENUE_SEARCH_KEYS.includes(t.split(":")[0]) && t.includes(":")),
-            "no pair a bare key already covers");
+  assert.ok(tags.includes("!amenity:toilets"));
+  assert.ok(tags.includes("!amenity:parking"));
+  assert.ok(!tags.some((t) => !t.startsWith("!") && t.includes(":")
+                              && VENUE_SEARCH_KEYS.includes(t.split(":")[0])),
+            "no include pair a bare key already covers");
 });
 
 test("venueReverseUrl: centre rounded to ~100 m, radius, limit, one osm_tag per pair", () => {

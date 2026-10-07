@@ -42,19 +42,37 @@ export function isVenue(key, value) {
 // unasked-for places should be the likely ones. A name somebody typed is
 // different: they know the place, so a children's clothes shop or a bakery
 // (shop=clothes, Wohngeschwisterchen in the Schanze, 7 Oct 2026) is fair game.
-// Toilets stay out, they are the other button.
 export const VENUE_SEARCH_KEYS = ["amenity", "shop", "tourism", "leisure"];
 
+// Except what shares a shop's name without being anywhere to change a nappy:
+// a row shows only name, street and distance, so "Edeka" would list the
+// supermarket and its car park alike, and the nearer one would take the tag.
+// Toilets are here too, they are the other button. Sent to Photon as
+// `!key:value` as well, so they do not use up the answer's fifteen rows.
+export const VENUE_SEARCH_EXCLUDE = {
+  amenity: ["toilets", "parking", "parking_entrance", "parking_space", "bicycle_parking",
+    "motorcycle_parking", "charging_station", "car_wash", "vending_machine", "atm",
+    "post_box", "parcel_locker", "recycling", "waste_basket", "waste_disposal", "bench",
+    "shelter", "telephone", "drinking_water", "fountain", "bicycle_rental", "car_sharing",
+    "car_rental", "taxi", "grave_yard"],
+  leisure: ["park", "garden", "pitch", "track", "nature_reserve", "playground", "dog_park",
+    "picnic_table", "slipway", "marina", "stadium", "golf_course"],
+  tourism: ["information", "viewpoint", "artwork", "picnic_site", "camp_site", "camp_pitch",
+    "caravan_site"],
+};
+
 export function isSearchVenue(key, value) {
-  if (key === "amenity" && value === "toilets") return false;
-  return isVenue(key, value) || VENUE_SEARCH_KEYS.includes(key);
+  if (isVenue(key, value)) return true;
+  return VENUE_SEARCH_KEYS.includes(key) && !VENUE_SEARCH_EXCLUDE[key]?.includes(value);
 }
 
-// The search box's Photon filter: a bare key means every value under it, and
-// the list's pairs under other keys (stations, terminals) are kept as pairs.
+// The search box's Photon filter: a bare key means every value under it, the
+// list's pairs under other keys (stations, terminals) stay pairs, and the
+// exclusions go as `!key:value`.
 export function venueSearchOsmTags() {
   return [...VENUE_SEARCH_KEYS,
-    ...venueOsmTags().filter((t) => !VENUE_SEARCH_KEYS.includes(t.split(":")[0]))];
+    ...venueOsmTags().filter((t) => !VENUE_SEARCH_KEYS.includes(t.split(":")[0])),
+    ...Object.entries(VENUE_SEARCH_EXCLUDE).flatMap(([k, vs]) => vs.map((v) => `!${k}:${v}`))];
 }
 
 // Photon's own filter: one `osm_tag=key:value` per pair, ORed.
