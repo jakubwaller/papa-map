@@ -97,6 +97,11 @@
      answer, the answer goes to OpenStreetMap under your own account like any other answer (see
      below). Legal basis: Art. 6(1)(f) GDPR. If you do not want anything transmitted, move the map
      before opening the dialog, or use the two MapComplete links in it.</p>
+  <p>When you tap one of the dialog's MapComplete links, or answer for a place listed there, the
+     browser keeps the map section (or that place) and the time in session storage (key
+     <code>papamap-add-watch</code>), to show you the new entry as soon as it appears in the map
+     data. It is discarded once the entry appears, after ten minutes, or when you close the tab.
+     Purely functional, only on your device (§ 25(2) no. 2 TDDDG).</p>
   <h2>Language setting (local storage)</h2>
   <p>If you choose a language via the language switcher, that choice is stored in your browser's
      local storage (key <code>papamap-lang</code>); the same applies to whether you read the map
@@ -128,6 +133,14 @@
      <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">OSMF Privacy Policy</a> applies.
      This server learns nothing of it: the token, the account and the answer never pass through
      papamap.de, and PapaMap stores no edits. The map remains fully usable without signing in.</p>
+  <p>While you sign in, the browser keeps a check value for the sign-in (key
+     <code>papamap-osm-pkce</code>) and the answer you tapped (key <code>papamap-osm-intent</code>)
+     in session storage and deletes both as soon as you come back from openstreetmap.org, at the
+     latest when you close the tab. After an answer, the browser keeps your own answer in local
+     storage (key <code>papamap-answer-overrides</code>: the place's OSM link, the answer you gave,
+     the object's version number and a time), so the place shows it at once until the map data
+     contains your change; then the entry is deleted, otherwise with your browser data. Purely
+     functional, only on your device (§ 25(2) no. 2 TDDDG).</p>
   <h2>Checking back after an edit (OSM API)</h2>
   <p>If you tap "Answer on MapComplete" in a pin, the site queries api.openstreetmap.org for that
      one object's current tags a few times over the following minutes, to show you your change.
@@ -246,7 +259,8 @@
      record (<code>papamap-osm-pkce</code>) and the answer still waiting
      (<code>papamap-osm-intent</code>), deleted on the return or at a start after that hour,
      plus the saved places
-     (<code>papamap-saved</code>), your own answers (<code>papamap-my-answers</code>) and the
+     (<code>papamap-saved</code>), your own answers (<code>papamap-my-answers</code>), answers the
+     map shows by itself until the next data update (<code>papamap-answer-overrides</code>) and the
      closed room notes (<code>papamap-card-dismissed</code>) and a note of which version of the app last showed
      the start screen (the welcome on first opening, or what's new after an update)
      (<code>papamap-intro</code>), and, for the one-time request for a rating, a tally of how
@@ -328,6 +342,6 @@
      <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a>.</p>
   <p>You also have the right to lodge a complaint with a data protection supervisory authority
      (Art. 77 GDPR), for example the one where you live.</p>
-  <p style="margin-top:30px">Last updated: 2 October 2026</p>
+  <p style="margin-top:30px">Last updated: 7 October 2026</p>
   <p><a href="./?lang=en">← Back to the map</a></p>
 </body></html>

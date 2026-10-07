@@ -100,6 +100,12 @@
      unter Ihrem eigenen Konto an OpenStreetMap (siehe unten). Rechtsgrundlage: Art. 6 Abs. 1
      lit. f DSGVO. Möchten Sie nichts übertragen, verschieben Sie die Karte vor dem Öffnen, oder
      nutzen Sie die beiden MapComplete-Links im Dialog.</p>
+  <p>Tippen Sie auf einen der MapComplete-Links im Dialog oder beantworten Sie dort einen Ort,
+     merkt sich der Browser im Session Storage (Schlüssel <code>papamap-add-watch</code>) den
+     Kartenausschnitt beziehungsweise den Ort und die Uhrzeit, um Ihnen den neuen Eintrag zu
+     zeigen, sobald er in den Kartendaten auftaucht. Verworfen wird das, sobald der Eintrag
+     erscheint, nach zehn Minuten oder beim Schließen des Tabs. Rein funktional, nur auf Ihrem
+     Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>Spracheinstellung (Local Storage)</h2>
   <p>Wählen Sie über den Sprachumschalter eine Sprache, wird diese Wahl im Local Storage Ihres
      Browsers gespeichert (Schlüssel <code>papamap-lang</code>); ebenso, ob Sie die Karte aus
@@ -131,6 +137,14 @@
      <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">Datenschutzbestimmungen der OSMF</a>.
      Dieser Server erfährt davon nichts: Token, Konto und Antwort laufen nicht über papamap.de, und
      PapaMap speichert keine Bearbeitungen. Ohne Anmeldung bleibt die Karte vollständig nutzbar.</p>
+  <p>Für die Dauer der Anmeldung legt der Browser im Session Storage einen Prüfwert für den
+     Anmeldevorgang (Schlüssel <code>papamap-osm-pkce</code>) und die angetippte Antwort (Schlüssel
+     <code>papamap-osm-intent</code>) ab und löscht beide, sobald Sie von openstreetmap.org
+     zurückkommen, spätestens beim Schließen des Tabs. Nach einer Antwort behält der Browser Ihre
+     eigene Antwort im Local Storage (Schlüssel <code>papamap-answer-overrides</code>: OSM-Link des
+     Ortes, die gegebene Antwort, die Versionsnummer des Objekts und ein Zeitpunkt), damit der Ort
+     sie sofort zeigt, bis die Kartendaten Ihre Änderung enthalten; dann wird der Eintrag gelöscht,
+     sonst mit den Browserdaten. Rein funktional, nur auf Ihrem Gerät (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>Abgleich nach einer Bearbeitung (OSM-API)</h2>
   <p>Tippen Sie in einem Pin auf „Auf MapComplete beantworten“, fragt die Seite in den folgenden
      Minuten einige Male bei api.openstreetmap.org die aktuellen Tags dieses einen Objekts ab, um
@@ -254,7 +268,8 @@
      (<code>papamap-osm-pkce</code>) und Ihre noch wartende Antwort (<code>papamap-osm-intent</code>),
      die nach der Rückkehr oder bei einem Start nach dieser Stunde gelöscht werden,
      dazu die gemerkten Orte (<code>papamap-saved</code>), Ihre eigenen Antworten
-     (<code>papamap-my-answers</code>) und die geschlossenen Raum-Hinweise
+     (<code>papamap-my-answers</code>), Antworten, die die Karte bis zum nächsten Datenstand
+     selbst anzeigt (<code>papamap-answer-overrides</code>), und die geschlossenen Raum-Hinweise
      (<code>papamap-card-dismissed</code>) sowie den Vermerk, mit welcher Version der App der Startbildschirm (die Begrüßung
      beim ersten Öffnen oder die Neuigkeiten nach einem Update) zuletzt gezeigt wurde (<code>papamap-intro</code>),
      und für die einmalige Bitte um eine Bewertung einen Zählerstand: wie viele Antworten Sie in
@@ -344,6 +359,6 @@
      <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a>.</p>
   <p>Außerdem haben Sie das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren
      (Art. 77 DSGVO), zum Beispiel bei der Behörde an Ihrem Wohnort.</p>
-  <p style="margin-top:30px">Stand: 2. Oktober 2026</p>
+  <p style="margin-top:30px">Stand: 7. Oktober 2026</p>
   <p><a href="./">← Zur Karte</a></p>
 </body></html>
