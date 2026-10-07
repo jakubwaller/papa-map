@@ -1,5 +1,33 @@
 # papa-map — build contract (v0)
 
+> **v80 amendment (7 Oct 2026, "Open now" on the place's own clock, and
+> `mapcomplete_url` derived on the client): two additive properties, one
+> deprecation.** **(1) `stats.json` gains `area_tz`**, `{area name: IANA zone}`
+> for every area swept in the build: the area's default zone
+> (`pipeline/timezones.py`, `COUNTRY_TZ` per country, `AREA_TZ` per US state, DC
+> and Canadian province / territory). An area config does not know is left out.
+> **(2) A table or play place carries `tz`** (an IANA zone string) **only** where
+> the coordinate rules in `timezones.zone_for` put it in a zone other than its
+> area's default — Perth in "Australia", El Paso in "Texas", Las Palmas in
+> "Spain"; everywhere else the key is absent. Set wherever a feature's area is
+> decided: `export.build_features` / `build_play_features` (the nightly build;
+> the backfill writes no features) and `pipeline/delta.py` (upserts), so delta features carry it
+> too. To make that possible **a play place carries `area`** as a table has since
+> v32 (the sweep area that found it, or null); the delta keeps a known place's
+> area and assigns a new one's by the same boxes as a table's. The frontend reads
+> the zone as `f.tz ?? area_tz[f.area] ?? null` (`zoneForFeature`) and evaluates
+> `opening_hours` — weekday, date, yesterday and sun events — on that clock
+> (`isOpenNow(..., timeZone)`, `wallClock`); null or a zone the engine does not
+> know falls back to the device's clock, which is all a dataset from before v80
+> gives. The pipeline handles zones as plain strings and needs no tz database.
+> **(3) `mapcomplete_url` is deprecated.** It is derivable from `osm_url` and the
+> coordinates, and the frontend derives it since this amendment
+> (`mapCompleteObjectUrl`, the same string as `export._mapcomplete_url`) whenever
+> the property is absent. The pipeline keeps emitting it until every store build
+> that reads it (app versions before the release that bundles this change) has
+> aged out, and a later amendment drops it. No user-facing wording changes.
+> Shell pin `app78` → `app79`; no `WHATS_NEW` entry.
+
 > **v79 amendment (7 Oct 2026, the login survives Android killing the app, and
 > Mein PapaMap pages by user id): no data shape change.** Four things in the
 > OSM login, all in `web/osm.js`, `web/native.js`, `web/me.js`, `web/app.js`:

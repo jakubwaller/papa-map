@@ -18,7 +18,7 @@ import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces,
          shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
          applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
-         isNewlyCreated, selectAddedPlace } from "./datasource.js";
+         isNewlyCreated, selectAddedPlace, mapCompleteObjectUrl, zoneForFeature } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -86,12 +86,15 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
     opening_hours: "Mo-Fr 09:00-18:00",
     osm_url: "https://www.openstreetmap.org/node/9001",
     mapcomplete_url: "https://mapcomplete.org/theme.html#node/9001",
+    area: null, tz: null,
   });
   // idx is the position in the returned array, so it still addresses the
   // right object after the geometry-less feature was dropped.
   assert.equal(places[1].idx, 1);
   assert.equal(places[1].name, null);
-  assert.equal(places[1].mapcomplete_url, null);
+  // No mapcomplete_url in the data: derived from osm_url (v80).
+  assert.equal(places[1].mapcomplete_url, mapCompleteObjectUrl(
+    "https://www.openstreetmap.org/way/9002", 53.58, 10.02));
 });
 
 test("loadPlaces reads changing_table=no and nothing else as an answer", () => {
@@ -1986,4 +1989,56 @@ test("flightMs: the floor, the cap, and the jump line", () => {
   // so the null case is ruled out by name).
   const zoomIn = flightMs(flightLength(844, 300, 15));
   assert.ok(zoomIn !== null && zoomIn <= 4000, String(zoomIn));
+});
+
+// ---- v80: mapcomplete_url derived on the client, the place's time zone -----
+
+// Copied from pipeline/export.py::_mapcomplete_url("node", 4242, 53.5511, 9.9937).
+const PY_MAPCOMPLETE_URL = "https://mapcomplete.org/theme.html?userlayout="
+  + "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json"
+  + "&z=18&lat=53.5511&lon=9.9937#node/4242";
+
+test("mapCompleteObjectUrl rebuilds the pipeline's deep link exactly", () => {
+  assert.equal(mapCompleteObjectUrl("https://www.openstreetmap.org/node/4242", 53.5511, 9.9937),
+    PY_MAPCOMPLETE_URL);
+  assert.equal(mapCompleteObjectUrl("https://www.openstreetmap.org/way/77", 53.5511, 9.9937),
+    PY_MAPCOMPLETE_URL.replace("#node/4242", "#way/77"));
+});
+
+test("mapCompleteObjectUrl is null without a parsable osm_url or a coordinate", () => {
+  assert.equal(mapCompleteObjectUrl("https://example.com/node/1", 53.5, 9.9), null);
+  assert.equal(mapCompleteObjectUrl(null, 53.5, 9.9), null);
+  assert.equal(mapCompleteObjectUrl("https://www.openstreetmap.org/node/1", undefined, 9.9), null);
+});
+
+test("the loaders keep a carried mapcomplete_url and derive a missing one", () => {
+  const osm_url = "https://www.openstreetmap.org/node/4242";
+  for (const load of [loadFeatures, loadPlaces]) {
+    const [derived] = load({ features: [feat(9.9937, 53.5511, { status: "accessible", osm_url })] });
+    assert.equal(derived.mapcomplete_url, PY_MAPCOMPLETE_URL);
+    const [carried] = load({ features: [feat(9.9937, 53.5511,
+      { status: "accessible", osm_url, mapcomplete_url: "https://example.com/mc" })] });
+    assert.equal(carried.mapcomplete_url, "https://example.com/mc");
+    const [junk] = load({ features: [feat(9.9937, 53.5511, { osm_url: "nope" })] });
+    assert.equal(junk.mapcomplete_url, null);
+  }
+});
+
+test("the loaders carry the place's tz and area", () => {
+  const props = { status: "accessible", area: "Australia", tz: "Australia/Perth" };
+  for (const load of [loadFeatures, loadPlaces]) {
+    const [f] = load({ features: [feat(115.86, -31.95, props)] });
+    assert.equal(f.tz, "Australia/Perth");
+    assert.equal(f.area, "Australia");
+    const [g] = load({ features: [feat(11.58, 48.14, { status: "accessible" })] });
+    assert.equal(g.tz, null);
+  }
+});
+
+test("zoneForFeature: the feature's own tz, else its area's default, else null", () => {
+  const areaTz = { Australia: "Australia/Sydney" };
+  assert.equal(zoneForFeature({ tz: "Australia/Perth", area: "Australia" }, areaTz), "Australia/Perth");
+  assert.equal(zoneForFeature({ tz: null, area: "Australia" }, areaTz), "Australia/Sydney");
+  assert.equal(zoneForFeature({ tz: null, area: "Atlantis" }, areaTz), null);
+  assert.equal(zoneForFeature({ tz: null, area: "Australia" }, undefined), null);
 });

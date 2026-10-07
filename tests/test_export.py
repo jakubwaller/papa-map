@@ -212,6 +212,7 @@ def test_play_features_are_their_own_dataset(load_fixture):
                             "https://raw.githubusercontent.com/jakubwaller/papa-map/"
                             "main/theme/papamap.theme.json"
                             "&z=18&lat=53.5545&lon=9.9925#node/9001"),
+        "area": None,
     }
     for f in feats:
         assert "status" not in f["properties"]

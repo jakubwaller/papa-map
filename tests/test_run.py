@@ -206,6 +206,10 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     # The two datasets stay disjoint: a place is a pin or a prospect, never both.
     play_fc = json.loads(play_geojson.read_text(encoding="utf-8"))
     assert [f["properties"]["osm_id"] for f in play_fc["features"]] == [9001, 9002, 9003]
+    # Play places carry their sweep area too (the popup's zone), whichever
+    # half of the sweep found them.
+    assert all(f["properties"]["area"] in {*BUNDESLAENDER, "Danmark"}
+               for f in play_fc["features"])
     pin_ids = {f["properties"]["osm_id"] for f in fc["features"]}
     assert pin_ids.isdisjoint({9001, 9002, 9003})
 
@@ -213,6 +217,9 @@ def test_run_writes_both_files(tmp_path, load_fixture):
     assert payload["generated_at"] == "2026-07-26T03:00:00+00:00"
     assert payload["area_name"] == "Deutschland & Danmark"
     assert payload["area_key"] == "de_dk"  # frontend translates this per language
+    # v80: each swept area's default zone, for the popup's "Open now".
+    assert payload["area_tz"] == {**{land: "Europe/Berlin" for land in BUNDESLAENDER},
+                                  "Danmark": "Europe/Copenhagen"}
     assert payload["local"]["ct_yes"] == 6
     assert payload["local"]["capacity_tagged_toilets"] == 17  # 1 per area, summed
     # One fixture pin carries kids_area=yes; three prospects have a play area

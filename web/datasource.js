@@ -83,11 +83,16 @@ export function loadFeatures(fc) {
       fee: p.fee ?? null,
       opening_hours: p.opening_hours ?? null,
       osm_url: p.osm_url ?? null,
-      mapcomplete_url: p.mapcomplete_url ?? null,
+      // Deprecated in the data since v80: derived here when absent, so the
+      // pipeline can stop emitting it once the older store builds are gone.
+      mapcomplete_url: p.mapcomplete_url ?? mapCompleteObjectUrl(p.osm_url, coords[1], coords[0]),
       // The sweep area that found the object (v32): a Land, a région, a
       // state, or a whole country. Null from a dataset written before the
       // property existed, which the footer link treats as "no vote".
       area: typeof p.area === "string" && p.area ? p.area : null,
+      // The place's own IANA zone (v80), only where it differs from its
+      // area's default in stats.json's area_tz; see zoneForFeature.
+      tz: p.tz ?? null,
     });
   }
   return out;
@@ -128,7 +133,11 @@ export function loadPlaces(fc) {
       highchair_recorded: p.highchair === true || p.highchair === false || p.highchair === "unreadable",
       opening_hours: p.opening_hours ?? null,
       osm_url: p.osm_url ?? null,
-      mapcomplete_url: p.mapcomplete_url ?? null,
+      mapcomplete_url: p.mapcomplete_url ?? mapCompleteObjectUrl(p.osm_url, coords[1], coords[0]),
+      // As on the pins (v80): the sweep area, the key to area_tz, and the
+      // place's own zone where it differs.
+      area: typeof p.area === "string" && p.area ? p.area : null,
+      tz: p.tz ?? null,
     });
   }
   return out;
@@ -322,6 +331,27 @@ export function mapCompleteAddUrl(lon, lat, zoom, lang) {
 // the raw tag editor and typing two keys.
 export function mapCompleteVenueUrl(lon, lat, zoom, lang) {
   return mapCompleteViewUrl(lon, lat, zoom, 17, lang);
+}
+
+// The deep link onto one object, the pipeline's mapcomplete_url
+// (pipeline/export.py::_mapcomplete_url) rebuilt from osm_url and the
+// coordinates, string for string: the theme, z=18, the coordinates as the
+// dataset carries them, and #<type>/<id> to preselect the object. (A whole
+// degree prints as 9 where Python wrote 9.0; MapComplete reads both.) The data
+// still carries the property; since v80 it is deprecated, and this is what
+// stands in where it is absent. Null without a parsable osm_url or a
+// coordinate.
+export function mapCompleteObjectUrl(osmUrl, lat, lon) {
+  const ref = osmRef(osmUrl);
+  if (!ref || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return `${PAPAMAP_THEME}&z=18&lat=${lat}&lon=${lon}#${ref.type}/${ref.id}`;
+}
+
+// The IANA zone a feature's opening hours are read in (v80): its own `tz`
+// where the pipeline set one, else its area's default from stats.json's
+// area_tz, else null — the device's clock, as before v80.
+export function zoneForFeature(f, areaTz) {
+  return f?.tz ?? areaTz?.[f?.area] ?? null;
 }
 
 // Rebuild a FeatureCollection for the map source. Properties carry only

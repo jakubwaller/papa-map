@@ -4,7 +4,7 @@ import sys
 import time
 from datetime import datetime, timezone
 
-from . import delta, export, leaderboard, osm, pages, stats, toilet_counts
+from . import delta, export, leaderboard, osm, pages, stats, timezones, toilet_counts
 from .room_choices import answer_men_only_table, answer_status_table
 from .config import (AREA_COUNTRY, AREAS_PATH, BUNDESLAENDER, CITY_AREAS,
                      GEOJSON_PATH, HISTORY_PATH,
@@ -406,7 +406,9 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     ct_data = {"elements": osm.dedup_elements(ct_elements)}
     play_data = {"elements": osm.dedup_elements(play_elements)}
     features = export.build_features(ct_data, ct_area)
-    play_features = export.build_play_features(play_data, ct_data)
+    # A place answered `changing_table=no` comes from the ct half, so ct_area
+    # knows it; the open questions are play_area's.
+    play_features = export.build_play_features(play_data, ct_data, {**play_area, **ct_area})
     # The key-locked tables ride along in the GeoJSON for the wheelchair chip
     # (v26) and nowhere else: the pages, the leaderboard and the history
     # count pins, and a table behind a Euro key is not one.
@@ -449,6 +451,9 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         "answer_status": answer_status_table(),
         # Its v50 companion: whether that answer is the men's room only.
         "answer_men_only": answer_men_only_table(),
+        # v80: the zone each swept area's opening hours are meant in, for the
+        # popup's "Open now"; a feature off its area's default carries `tz`.
+        "area_tz": timezones.area_tz_table(name for name, _ in areas),
     }, stats_path)
     # One padded bbox per sweep area (pipeline.delta's real country-coverage
     # filter, v48 follow-up) — never served (web-data/private/, like

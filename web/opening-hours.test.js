@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isOpenNow, parseOpeningHours } from "./opening-hours.js";
+import { isOpenNow, parseOpeningHours, wallClock } from "./opening-hours.js";
 
 // The module reads the clock in the device's timezone and assumes it is the
 // place's. The sun tests use Berlin coordinates with Berlin wall-clock times,
@@ -740,4 +740,92 @@ test("a date selector ending in a day number takes the optional colon", () => {
   // A clock time right after a month is still a time, not a day.
   assert.equal(isOpenNow("May-Oct 09:00-22:00", on(2026, 7, 7, 12, 0)), "open");
   assert.equal(isOpenNow("May-Oct 09:00-22:00", on(2026, 7, 7, 8, 0)), "closed");
+});
+
+// ---- the place's own clock (CONTRACT v80) ----------------------------------
+// Run under TZ=UTC like CI, so "the device's clock" below is UTC.
+
+test("hours are read on the place's clock, not the device's", () => {
+  const now = new Date("2026-10-07T12:00:00Z"); // Wed: 21:00 in Tokyo, 14:00 in Berlin
+  assert.equal(isOpenNow("Mo-Su 09:00-18:00", now, null, "Asia/Tokyo"), "closed");
+  assert.equal(isOpenNow("Mo-Su 09:00-18:00", now, null, "Europe/Berlin"), "open");
+  assert.equal(isOpenNow("Mo-Su 09:00-18:00", now, null, null), "open");
+});
+
+test("the weekday is the place's: Friday in UTC is Saturday in Tokyo", () => {
+  const now = new Date("2026-10-09T23:30:00Z"); // Sat 08:30 JST
+  assert.equal(isOpenNow("Mo-Fr 08:00-17:00", now, null, "Asia/Tokyo"), "closed");
+});
+
+test("a zone west of the device's clock opens later", () => {
+  const now = new Date("2026-10-07T16:30:00Z"); // Wed 09:30 PDT
+  assert.equal(isOpenNow("Mo-Fr 09:00-17:00", now, null, "America/Los_Angeles"), "open");
+});
+
+test("the hour summer time ends is read as the place's wall clock", () => {
+  const now = new Date("2026-10-25T00:30:00Z"); // Sun 02:30 CEST, before the switch
+  assert.equal(isOpenNow("Su 02:00-03:00", now, null, "Europe/Berlin"), "open");
+});
+
+test("an unknown zone reads the device's clock and never throws", () => {
+  for (const iso of ["2026-10-07T12:00:00Z", "2026-10-09T23:30:00Z", "2026-10-25T00:30:00Z"]) {
+    const now = new Date(iso);
+    for (const oh of ["Mo-Su 09:00-18:00", "Mo-Fr 08:00-17:00", "Su 02:00-03:00"]) {
+      assert.equal(isOpenNow(oh, now, null, "Mars/Base"), isOpenNow(oh, now, null, null));
+    }
+  }
+  assert.deepEqual(wallClock(new Date("2026-10-07T12:00:00Z"), "Mars/Base"),
+    wallClock(new Date("2026-10-07T12:00:00Z"), null));
+});
+
+test("sun events are converted on the place's clock", () => {
+  const tokyo = { lat: 35.68, lon: 139.69 };
+  assert.equal(isOpenNow("sunrise-sunset", new Date("2026-06-21T03:00:00Z"), tokyo, "Asia/Tokyo"),
+    "open");   // 12:00 JST
+  assert.equal(isOpenNow("sunrise-sunset", new Date("2026-06-21T12:00:00Z"), tokyo, "Asia/Tokyo"),
+    "closed"); // 21:00 JST
+});
+
+test("a sun event on another local date is read on the place's clock", () => {
+  // Sunset on 21 June in Reykjavik is 00:04 on the 22nd, local time.
+  const reykjavik = { lat: 64.15, lon: -21.94 };
+  const now = new Date("2026-06-21T10:00:00Z"); // 10:00 local, broad daylight
+  const device = process.env.TZ;
+  process.env.TZ = "Asia/Tokyo"; // a device whose clock is nowhere near the place's
+  try {
+    assert.equal(isOpenNow("08:00-sunset", now, reykjavik, "Atlantic/Reykjavik"), "open");
+    assert.equal(isOpenNow("sunrise-sunset", now, reykjavik, "Atlantic/Reykjavik"), "open");
+  } finally {
+    process.env.TZ = device;
+  }
+});
+
+test("a dated span past midnight spills from the place's yesterday", () => {
+  const now = new Date("2026-12-24T15:30:00Z"); // Dec 25 00:30 JST
+  assert.equal(isOpenNow("Dec 24 22:00-02:00", now, null, "Asia/Tokyo"), "open");
+});
+
+test("a date rule is matched on the place's date", () => {
+  const now = new Date("2026-12-24T12:00:00Z"); // Dec 25 01:00 in Auckland, Dec 24 13:00 in Berlin
+  const oh = "Mo-Su 10:00-20:00; Dec 25 off";
+  assert.equal(isOpenNow(oh, now, null, "Pacific/Auckland"), "closed");
+  assert.equal(isOpenNow(oh, now, null, "Europe/Berlin"), "open");
+  // Inside the opening span, so only the date can decide it (Dec 25 11:00 in
+  // Auckland, Dec 24 in Berlin and on a UTC device).
+  const day = new Date("2026-12-24T22:00:00Z");
+  const allDay = "Mo-Su 00:00-24:00; Dec 25 off";
+  assert.equal(isOpenNow(allDay, day, null, "Pacific/Auckland"), "closed");
+  assert.equal(isOpenNow(allDay, day, null, "Europe/Berlin"), "open");
+});
+
+test("a span past midnight spills from the place's yesterday", () => {
+  const now = new Date("2026-10-09T15:30:00Z"); // Sat 00:30 JST, Fri 15:30 UTC
+  assert.equal(isOpenNow("Fr 22:00-02:00", now, null, "Asia/Tokyo"), "open");
+});
+
+test("wallClock reads the zone's fields", () => {
+  assert.deepEqual(wallClock(new Date("2026-10-09T23:30:00Z"), "Asia/Tokyo"),
+    { y: 2026, m: 10, d: 10, weekday: 5, minutes: 8 * 60 + 30 });
+  // Midnight is hour 0, never 24.
+  assert.equal(wallClock(new Date("2026-10-09T15:00:00Z"), "Asia/Tokyo").minutes, 0);
 });

@@ -8,6 +8,7 @@ from pathlib import Path
 from .classify import (central_key, classify, has_play_area, highchair_state, men_only,
                        play_state, wheelchair_state)
 from .osm import element_coords
+from .timezones import tz_override
 
 
 PAPAMAP_THEME_URL = ("https://raw.githubusercontent.com/jakubwaller/papa-map/"
@@ -66,6 +67,7 @@ def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]
             continue
         osm_type, osm_id = el["type"], el["id"]
         amenity = tags.get("amenity")
+        area = area_by_key.get((osm_type, osm_id))
         features.append({
             "type": "Feature",
             "geometry": {"type": "Point", "coordinates": [lon, lat]},
@@ -97,10 +99,21 @@ def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]
                 "opening_hours": tags.get("opening_hours"),
                 "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
                 "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),
-                "area": area_by_key.get((osm_type, osm_id)),
+                "area": area,
             },
         })
+        _set_tz(features[-1], area, lat, lon)
     return features
+
+
+def _set_tz(feature: dict, area: str | None, lat: float, lon: float) -> None:
+    """Give the feature a `tz` (v80) only where its zone differs from its
+    area's default in stats.json's `area_tz` — a Perth table in "Australia",
+    an El Paso one in "Texas". Sparse on purpose: the 40k features in
+    single-zone areas carry nothing, and the frontend falls back to area_tz."""
+    tz = tz_override(area, lat, lon)
+    if tz is not None:
+        feature["properties"]["tz"] = tz
 
 
 # What the object *is*, most specific first — a shopping centre is both
@@ -109,7 +122,8 @@ def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]
 KIND_KEYS = ("leisure", "amenity", "shop", "tourism", "healthcare")
 
 
-def build_play_features(play_data: dict, ct_data: dict | None = None) -> list[dict]:
+def build_play_features(play_data: dict, ct_data: dict | None = None,
+                        area_by_key: dict | None = None) -> list[dict]:
     """GeoJSON features for places that record an indoor play area and are not
     pins — the prospecting list, and a strictly different dataset from the
     pins.
@@ -127,7 +141,12 @@ def build_play_features(play_data: dict, ct_data: dict | None = None) -> list[di
     The two are told apart by `changing_table`: `"no"` for the answered ones
     (they come from `ct_data`, the sweep's changing_table half, which build_
     features drops), `None` for the open questions (from `play_data`). Any
-    other value is a pin or junk, never a place."""
+    other value is a pin or junk, never a place.
+
+    `area_by_key` is build_features' own parameter: the sweep area that found
+    each place, as `area` (v80) — the key to stats.json's `area_tz`, the zone
+    the popup's "Open now" is evaluated in — and the source of its `tz`."""
+    area_by_key = area_by_key or {}
     features = []
     elements = list(play_data.get("elements", [])) + list((ct_data or {}).get("elements", []))
     for el in elements:
@@ -144,6 +163,7 @@ def build_play_features(play_data: dict, ct_data: dict | None = None) -> list[di
         if lat is None:
             continue
         osm_type, osm_id = el["type"], el["id"]
+        area = area_by_key.get((osm_type, osm_id))
         features.append({
             "type": "Feature",
             "geometry": {"type": "Point", "coordinates": [lon, lat]},
@@ -164,8 +184,10 @@ def build_play_features(play_data: dict, ct_data: dict | None = None) -> list[di
                 "opening_hours": tags.get("opening_hours"),
                 "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
                 "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),
+                "area": area,
             },
         })
+        _set_tz(features[-1], area, lat, lon)
     return features
 
 
