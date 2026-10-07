@@ -1,6 +1,8 @@
 import json
+import re
 from pathlib import Path
 
+from pipeline.classify import ACCESSIBLE_TOKENS, FEMALE_TOKEN
 from pipeline.config import SITE_BASE_URL
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -39,3 +41,14 @@ def test_taginfo_lists_the_keys_the_map_is_actually_built_on():
                    ("amenity", "toilets"), ("centralkey", None)):
         assert wanted in tags, wanted
     assert len(tags) == len(_project()["tags"]), "duplicate key/value entry"
+
+
+def test_taginfo_location_description_names_the_whole_rule():
+    """The description is what a mapper reads on taginfo; it has to name every
+    room classify() turns green and the one it turns red, so a vocabulary
+    change that forgets this file fails here. Whole words only: `room` is
+    inside `dedicated_room`, and `male_toilet` inside `female_toilet`."""
+    (entry,) = [t for t in _project()["tags"] if t["key"] == "changing_table:location"]
+    words = set(re.findall(r"\w+", entry["description"]))
+    for token in sorted(ACCESSIBLE_TOKENS | {FEMALE_TOKEN}):
+        assert token in words, token
