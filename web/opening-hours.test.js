@@ -790,8 +790,14 @@ test("a sun event on another local date is read on the place's clock", () => {
   // Sunset on 21 June in Reykjavik is 00:04 on the 22nd, local time.
   const reykjavik = { lat: 64.15, lon: -21.94 };
   const now = new Date("2026-06-21T10:00:00Z"); // 10:00 local, broad daylight
-  assert.equal(isOpenNow("08:00-sunset", now, reykjavik, "Atlantic/Reykjavik"), "open");
-  assert.equal(isOpenNow("sunrise-sunset", now, reykjavik, "Atlantic/Reykjavik"), "open");
+  const device = process.env.TZ;
+  process.env.TZ = "Asia/Tokyo"; // a device whose clock is nowhere near the place's
+  try {
+    assert.equal(isOpenNow("08:00-sunset", now, reykjavik, "Atlantic/Reykjavik"), "open");
+    assert.equal(isOpenNow("sunrise-sunset", now, reykjavik, "Atlantic/Reykjavik"), "open");
+  } finally {
+    process.env.TZ = device;
+  }
 });
 
 test("a dated span past midnight spills from the place's yesterday", () => {
