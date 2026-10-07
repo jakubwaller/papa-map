@@ -218,7 +218,7 @@ vnútri.</p>
 
 <h2>Prázdne modré krúžky: miesta na hranie bez odpovede</h2>
 <p>To isté pravidlo sedí na oveľa viac miest, než koľko má mapa špendlíkov. Len
-<span data-stat="play_tables">111</span> z nich má vôbec nejaký tag <code>changing_table</code>. Pri
+<span data-stat="play_tables">111</span> z nich má špendlík. Pri
 ďalších <span data-stat="play_places">701</span> nikto neodpovedal na prvú otázku: je tu
 prebaľovací pult? Áno, nie, nikto nevie — OSM o tom nehovorí vôbec nič.</p>
 <p>Mapa tie <span data-stat="play_places">701</span> miest nedokáže obarviť, pretože nie je čo
@@ -230,6 +230,10 @@ zapnutý, a namiesto plného špendlíka prázdny modrý krúžok.</p>
 loptičkami, reštaurácia s herňou &mdash; otec s batoľaťom tam aj tak ide, a keď tam už je, odpoveď
 pozná. Kliknutím na krúžok sa otvorí MapComplete presne na tejto jednej otázke. Keď na ňu
 odpovieš, krúžok o niekoľko minút zmizne a nahradí ho ozajstný špendlík.</p>
+
+<h2>Čip Detská stolička</h2>
+<p>Čip <em>Detská stolička</em> ukazuje miesta, kde OSM eviduje detskú stoličku: <code>highchair=yes</code> alebo číslo väčšie ako 0. <code>highchair=no</code> alebo <code>0</code> je zaznamenané &bdquo;nie&ldquo;. Miesto bez tagu nie je miesto bez detskej stoličky, OSM o ňom jednoducho nič nehovorí, takže ho čip vynechá a nič netvrdí. Hodnota, ktorú mapa nevie prečítať, napríklad <code>ja</code> alebo <code>1+</code>, sa tiež nepočíta a vyskakovacie okno pre ňu neukáže žiadny riadok. Čip filtruje špendlíky a modré krúžky a nič nefarbí.</p>
+<p>Pri špendlíku na mieste, kde sa je (kaviareň, reštaurácia, krčma a podobne), alebo na mieste pre rodiny (škôlka, knižnica, komunitné centrum a podobne) sa vyskakovacie okno pýta, kým OSM nič nehovorí: <em>Je tu detská stolička?</em> Tvoja odpoveď ide do OSM ako <code>highchair=yes</code> alebo <code>highchair=no</code>, pod tvojím vlastným účtom, rovnako ako odpoveď o miestnosti.</p>
 
 <h2>Ako opraviť sivý špendlík</h2>
 <p>Sivá znamená, že chýba jedna odpoveď. Kde je prebaľovací pult? Odpovedať na to môže ktokoľvek s
@@ -360,7 +364,10 @@ Vlastný kód webu je pod licenciou MIT.</p>
 <p>Statický web. Žiadne účty, žiadne cookies, žiadna analytika, žiadne sledovacie skripty. Stránka
 o tebe nič neukladá a nemá databázu. Mapové dlaždice pochádzajú zo serverov OpenStreetMap, na tieto
 požiadavky sa vzťahujú
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">zásady ochrany súkromia OSMF</a>. Ak v pine klepneš na <em>Odpovedať na MapComplete</em>, stránka sa navyše v nasledujúcich minútach niekoľkokrát opýta api.openstreetmap.org, čo tento jeden objekt teraz hovorí — na tieto dopyty sa vzťahujú rovnaké zásady. Ak
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">zásady ochrany súkromia OSMF</a>. Ak v pine klepneš na <em>Odpovedať na MapComplete</em>, stránka sa navyše v nasledujúcich minútach niekoľkokrát opýta api.openstreetmap.org, čo tento jeden objekt teraz hovorí — na tieto dopyty sa vzťahujú rovnaké zásady. Od tretieho znaku, ktorý napíšeš do vyhľadávacieho poľa, a vždy, keď otvoríš
+<em>Pridať miesto</em>, sa stránka pýta aj vyhľadávača miest Photon od spoločnosti komoot
+(photon.komoot.io). Ten dostane napísaný text, zaokrúhlený stred mapy a, ako každý server, tvoju
+IP adresu. Ak
 klikneš na odkaz na MapComplete, StreetComplete alebo openstreetmap.org, si na ich stránkach a
 upravuješ pod svojím vlastným účtom na OSM. Cez nás pritom nejde nič. Formálne stránky:
 <a href="impressum.html">Impressum</a> ·
