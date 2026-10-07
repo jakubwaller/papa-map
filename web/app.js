@@ -14,16 +14,16 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs,
-         zoneForFeature } from "./datasource.js?v=app79";
+         zoneForFeature } from "./datasource.js?v=app80";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app79";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app80";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app79";
+         writeTags } from "./osm.js?v=app80";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -31,7 +31,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app79";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app80";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -41,27 +41,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app79";
+         reviewTracker } from "./native.js?v=app80";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app79";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app80";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app79";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app80";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app79";
+import { isOpenNow } from "./opening-hours.js?v=app80";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         VENUE_MIN_ZOOM } from "./venues.js?v=app79";
-// The bundled shell's pin (`?v=app79`), what the intro key records.
+         VENUE_MIN_ZOOM } from "./venues.js?v=app80";
+// The bundled shell's pin (`?v=app80`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -138,6 +138,26 @@ function applyHeadTags() {
   if (canonical) canonical.href = canonicalUrl(new URLSearchParams(location.search).get("lang"));
 }
 
+// A control with words on it is named by those words, so a voice-control
+// reader can say what they see (WCAG 2.5.3): an aria-label replaced
+// "Nearest changing table" with a sentence nobody would say. The longer
+// explanation is its description instead, in a hidden node of its own, found
+// again by its id so a re-render (the language toggle rebuilds the chips)
+// updates it rather than adding another.
+function describeBy(el, key) {
+  const text = t(key);
+  let desc = document.getElementById(`desc-${key}`);
+  if (!desc) {
+    desc = document.createElement("span");
+    desc.id = `desc-${key}`;
+    desc.hidden = true;   // aria-describedby still reads a hidden node's text
+    document.body.append(desc);
+  }
+  desc.textContent = text;
+  el.setAttribute("aria-describedby", desc.id);
+  if (el.title) el.title = text;
+}
+
 // Swap every static string in index.html: data-i18n = textContent,
 // data-i18n-html = trusted markup from i18n.js (never user input),
 // data-i18n-aria = aria-label (icon-only controls), data-i18n-desc = the
@@ -155,23 +175,8 @@ function applyI18n() {
     el.setAttribute("aria-label", t(el.dataset.i18nAria));
     if (el.title) el.title = t(el.dataset.i18nAria);
   }
-  // A control with words on it is named by those words, so a voice-control
-  // reader can say what they see (WCAG 2.5.3): an aria-label replaced
-  // "Nearest changing table" with a sentence nobody would say. The longer
-  // explanation is its description instead, in a hidden node of its own.
-  for (const el of document.querySelectorAll("[data-i18n-desc]")) {
-    const text = t(el.dataset.i18nDesc);
-    let desc = document.getElementById(el.getAttribute("aria-describedby"));
-    if (!desc) {
-      desc = document.createElement("span");
-      desc.id = `desc-${el.dataset.i18nDesc}`;
-      desc.hidden = true;   // aria-describedby still reads a hidden node's text
-      document.body.append(desc);
-      el.setAttribute("aria-describedby", desc.id);
-    }
-    desc.textContent = text;
-    if (el.title) el.title = text;
-  }
+  for (const el of document.querySelectorAll("[data-i18n-desc]"))
+    describeBy(el, el.dataset.i18nDesc);
   // The search field's own prompt. Its own attribute rather than data-i18n:
   // an <input> has no text content to swap.
   for (const el of document.querySelectorAll("[data-i18n-placeholder]"))
@@ -1345,8 +1350,8 @@ function blueChip({ label, aria, count, on, hollow, toggle }) {
   b.type = "button";
   b.className = "chip play" + (on ? " on" : "") + (hollow ? " hollow" : "");
   b.setAttribute("aria-pressed", String(on));
-  b.setAttribute("aria-label", t(aria));
   b.title = t(aria);
+  describeBy(b, aria);
   // A ring, not a filled dot — the same shape the map draws.
   b.innerHTML = `<span class="ring"></span>` +
     `${esc(t(label))} <span class="cnt">${count}</span>`;
@@ -1383,8 +1388,8 @@ function highchairChip(count) {
   b.type = "button";
   b.className = "chip hc" + (highchairOnly ? " on" : "");
   b.setAttribute("aria-pressed", String(highchairOnly));
-  b.setAttribute("aria-label", t("ariaHighchair"));
   b.title = t("ariaHighchair");
+  describeBy(b, "ariaHighchair");
   b.innerHTML = svgIcon(HIGHCHAIR_PATH, "hc-icon") +
     `<span class="label">${esc(t("stHighchair"))}</span> <span class="cnt">${count}</span>`;
   b.addEventListener("click", () => {
@@ -1410,8 +1415,8 @@ function wheelchairChip(count) {
   b.type = "button";
   b.className = "chip wc" + (wheelchairOnly ? " on" : "");
   b.setAttribute("aria-pressed", String(wheelchairOnly));
-  b.setAttribute("aria-label", t("ariaWheelchair"));
   b.title = t("ariaWheelchair");
+  describeBy(b, "ariaWheelchair");
   b.innerHTML = svgIcon(ISA_PATH, "isa") +
     `<span class="label">${esc(t("stWheelchair"))}</span> <span class="cnt">${count}</span>`;
   b.addEventListener("click", () => {

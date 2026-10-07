@@ -1,5 +1,16 @@
 # papa-map — build contract (v0)
 
+> **v81 amendment (7 Oct 2026, filter chips are named by their visible text): no
+> data shape change.** The wheelchair, play, places and high-chair chips in
+> `web/app.js` carried an `aria-label` that replaced "Mit Spielecke 12" with a
+> sentence as their accessible name, so a voice-control reader saying what they
+> see matched nothing and a screen reader dropped the count (WCAG 2.5.3, Label
+> in Name). The visible label and count are now the name; the explanation is the
+> chip's description (`aria-describedby` on a hidden node, `describeBy`, the
+> mechanism the static controls use) and stays its mouse tooltip. No
+> `i18n.js` string changes.
+> Shell pin `app79` → `app80`; no `WHATS_NEW` entry.
+
 > **v80 amendment (7 Oct 2026, "Open now" on the place's own clock, and
 > `mapcomplete_url` derived on the client): two additive properties, one
 > deprecation.** **(1) `stats.json` gains `area_tz`**, `{area name: IANA zone}`
