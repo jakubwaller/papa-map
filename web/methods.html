@@ -207,8 +207,7 @@ schon geantwortet hat, wird nicht noch einmal gefragt: Ein erfasstes <code>kids_
 einem <code>leisure=playground</code> ohne <code>indoor=yes</code> steht sie gar nicht erst: Der
 Ort <em>ist</em> eine Spielmöglichkeit, nur eben draußen.</p>
 <p>Auf viel mehr Orte trifft die Regel zu, als Pins haben. Nur
-<span data-stat="play_tables">111</span> davon haben überhaupt ein
-<code>changing_table</code>-Tag. Bei <span data-stat="play_places">701</span> weiteren hat niemand
+<span data-stat="play_tables">111</span> davon haben einen Pin. Bei <span data-stat="play_places">701</span> weiteren hat niemand
 die erste Frage beantwortet: Gibt es hier einen Wickeltisch? Die kann die Karte nicht einfärben,
 also bekommen sie einen leeren blauen Ring und einen eigenen Chip, <em>Nur Spielecke</em>, der
 standardmäßig an ist. Wer mit Kind sowieso dort hingeht, kennt die Antwort. Ein Klick auf den
@@ -221,6 +220,10 @@ Ort trotzdem, weil man mit Kind auch ohne Tisch gern hingeht.</p>
 <h2>Der Chip Barrierefrei</h2>
 <p>Der Chip <em>Barrierefrei</em> zeigt Orte, die in OSM <code>wheelchair=yes</code> oder <code>wheelchair=limited</code> tragen. <code>limited</code> heißt eine Stufe bis 7&nbsp;cm oder Hilfe nötig. Diese Orte haben unter dem Chip ab Zoomstufe 13 ein Ausrufezeichen im Pin, und im Popup steht <em>eingeschränkt</em>. <code>toilets:wheelchair=yes</code> allein reicht nicht, steht aber trotzdem im Popup, zusammen mit <code>wheelchair:description</code>. Ein Ort ohne Tag ist nicht unzugänglich, in OSM steht dazu einfach nichts, also filtert der Chip nur und färbt nichts. Die blauen Ringe (Orte mit Spielecke) filtert und markiert der Chip genauso.</p>
 <p>Unter diesem Chip, und nur dort, kommen die Tische hinter Euroschlüssel zurück, mit einem Schlüssel im Pin: Wer den Chip braucht, hat meist den Schlüssel. Auf der normalen Karte, in den Zahlen und in der Rangliste bleiben sie draußen.</p>
+
+<h2>Der Chip Hochstuhl</h2>
+<p>Der Chip <em>Hochstuhl</em> zeigt Orte, an denen OSM einen Hochstuhl verzeichnet: <code>highchair=yes</code> oder eine Zahl über 0. <code>highchair=no</code> oder <code>0</code> ist ein eingetragenes Nein. Ein Ort ohne den Tag ist kein Ort ohne Hochstuhl, in OSM steht dazu einfach nichts, also lässt der Chip ihn weg, ohne etwas zu behaupten. Ein Wert, den die Karte nicht lesen kann, etwa <code>ja</code> oder <code>1+</code>, zählt auch nicht, und das Popup zeigt dafür keine Zeile. Der Chip filtert Pins und blaue Ringe und färbt nichts.</p>
+<p>An einem Pin in einem Lokal (Café, Restaurant, Kneipe und Ähnliches) oder an einem Familienort (Kita, Bibliothek, Gemeindezentrum und Ähnliches) fragt das Popup, solange OSM nichts dazu sagt: <em>Gibt es einen Hochstuhl?</em> Deine Antwort landet als <code>highchair=yes</code> oder <code>highchair=no</code> in OSM, unter deinem eigenen Konto, genau wie eine Antwort zum Raum.</p>
 
 <h2>Wie du einen grauen Pin reparierst</h2>
 <p>Grau heißt, eine Antwort fehlt: Wo ist der Tisch? Das kann jeder mit einem kostenlosen
@@ -335,7 +338,10 @@ Der Code der Website ist MIT-lizenziert.</p>
 <h2>Datenschutz</h2>
 <p>Eine statische Website. Sie setzt keine Cookies und hat keine Analytics. Die Kartenkacheln
 kommen von den Tile-Servern von OpenStreetMap, für diese Anfragen gilt die
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">Datenschutzerklärung der OSMF</a>. Tippst du in einem Pin auf <em>Auf MapComplete beantworten</em>, fragt die Seite in den folgenden Minuten außerdem einige Male bei api.openstreetmap.org nach, was dieses eine Objekt jetzt sagt — für diese Anfragen gilt dieselbe Erklärung. Links
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">Datenschutzerklärung der OSMF</a>. Tippst du in einem Pin auf <em>Auf MapComplete beantworten</em>, fragt die Seite in den folgenden Minuten außerdem einige Male bei api.openstreetmap.org nach, was dieses eine Objekt jetzt sagt — für diese Anfragen gilt dieselbe Erklärung. Ab dem dritten Zeichen im Suchfeld und beim Öffnen von
+<em>Ort hinzufügen</em> fragt die Seite außerdem die Ortssuche Photon von komoot
+(photon.komoot.io). Sie bekommt den getippten Text und einen gerundeten Kartenmittelpunkt und,
+wie jeder Server, deine IP-Adresse. Links
 zu MapComplete, StreetComplete oder openstreetmap.org führen auf deren Seiten, dort editierst du
 unter deinem eigenen OSM-Konto. Formales:
 <a href="impressum.html">Impressum</a> ·
