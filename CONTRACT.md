@@ -56,7 +56,14 @@
 > markup changed, with MapLibre's `focusAfterOpen` off for the redraw whenever
 > the focus sits outside the card (the search field keeps it), and a card whose
 > play place became a table stays open as the table. Shell pin `app77` →
-> `app78`, one bump shared with v79.
+> `app78`, one bump shared with v79. The same bump carries the review's other
+> shell fixes, none of which changes a data shape: AA contrast on the filled
+> buttons, page zoom allowed, safe-area insets left and right, named dialogs,
+> accessible names that contain the visible text, a bigger save star, methods
+> back links that keep the language, search folding ß/ø/æ/ł and full-width
+> letters, two opening_hours date-range fixes, and a service worker that stores
+> the dataset only when it changed and precaches the pinned shell from the
+> HTTP cache.
 
 > **v76 amendment (6 Oct 2026, the share icon centred in its bubble): no data
 > shape change.** The round share button in a pin's popup card showed its icon
