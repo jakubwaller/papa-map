@@ -401,18 +401,23 @@ def test_a_rota_reuse_is_not_counted_as_a_fallback(tmp_path, load_fixture, capsy
 def test_a_failed_recount_without_a_usable_cache_still_fails_the_area(
         tmp_path, load_fixture):
     path = tmp_path / "toilets_counts.json"
-    # Another level's count, another query's count, and a zero: none of them
-    # may stand in for tonight's.
+    # Another level's count, another query's count, a zero, an undated entry
+    # and one past the cache's four periods (28 d at the default period of
+    # 7): none of them may stand in for tonight's.
+    undated = _entry(TODAY - timedelta(days=8), name="Hamburg")
+    del undated["date"]
     toilet_counts.save(str(path), {
         "Bremen": _entry(TODAY - timedelta(days=8), level="6"),
         "Bayern": dict(_entry(TODAY - timedelta(days=8), name="Bayern"),
                        query="0123456789ab"),
-        "Berlin": _entry(TODAY - timedelta(days=8), total=0, name="Berlin")})
+        "Berlin": _entry(TODAY - timedelta(days=8), total=0, name="Berlin"),
+        "Hamburg": undated,
+        "Hessen": _entry(TODAY - timedelta(days=29), name="Hessen")})
     fetch = _failing_counts(load_fixture, FAILED_COUNTS["raises"])
     with pytest.raises(RuntimeError, match="sweep failed for") as err:
         run_pipeline(**_kwargs(tmp_path, load_fixture, overpass_fetch=fetch,
                                sweep_rounds=1, sweep_pause_s=0))
-    for name in ("Bremen", "Bayern", "Berlin"):
+    for name in ("Bremen", "Bayern", "Berlin", "Hamburg", "Hessen"):
         assert name in str(err.value)
 
 

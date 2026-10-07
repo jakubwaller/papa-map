@@ -16,12 +16,18 @@ from .config import (AREA_COUNTRY, AREAS_PATH, BUNDESLAENDER, CITY_AREAS,
                      toilets_counts_ql)
 
 
-def _usable_count(entry, admin_level: str, count_key: str) -> dict | None:
+def _usable_count(entry, admin_level: str, count_key: str, today,
+                  period_days: int) -> dict | None:
     """A cached count that may stand in for a failed recount: made at this
-    admin_level by this very query (toilet_counts.is_due's own rule) and
-    non-zero. Its age does not matter — prune() drops entries no build has
-    refreshed in four periods, and an old number beats a published zero."""
+    admin_level by this very query (toilet_counts.is_due's own rule),
+    non-zero, and one prune() would keep — dated, at most four periods old.
+    Checked here rather than left to prune(), which runs only after the
+    sweep and only on a night something was recounted; an old number beats
+    a published zero, but not without limit."""
     if not isinstance(entry, dict):
+        return None
+    age = toilet_counts.age_days(entry, today)
+    if age is None or not 0 <= age <= 4 * max(period_days, 1):
         return None
     if not all(isinstance(entry.get(k), int) and not isinstance(entry.get(k), bool)
                for k in ("total", "capacity")):
@@ -238,12 +244,12 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                     # tonight, not evidence. An empty sweep needs the real
                     # count for the zero-objects check below.
                     usable = (_usable_count(counts_cache.get(area_name), admin_level,
-                                            count_key)
+                                            count_key, today, counts_period)
                               if sweep.get("elements") else None)
-                    # The fallback has no age cap of its own: the cache drops
-                    # an entry nobody refreshed in four periods, and from then
-                    # on a failing count fails the area again. Say so in the
-                    # log, where the ops page's warning list picks it up.
+                    # The fallback takes only an entry at most four periods
+                    # old (the cache's own bound), and past that a failing
+                    # count fails the area again. Say so in the log, where
+                    # the ops page's warning list picks it up.
                     prune_note = (f"; the cache drops it after "
                                   f"{4 * max(counts_period, 1)} d, and a count "
                                   "still failing then fails the area")
