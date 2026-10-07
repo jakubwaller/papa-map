@@ -217,7 +217,7 @@ stedet <em>er</em> allerede et sted at lege, bare ikke indendørs.</p>
 
 <h2>De tomme blå ringe: legesteder uden svar</h2>
 <p>Den samme regel rammer langt flere steder, end kortet har nåle. Kun
-<span data-stat="play_tables">111</span> af dem har overhovedet et <code>changing_table</code>-tag. For
+<span data-stat="play_tables">111</span> af dem har en nål. For
 <span data-stat="play_places">701</span> andre har ingen besvaret det første spørgsmål: er der et
 puslebord her? Ja, nej, ingen ved det &mdash; OSM siger slet ingenting.</p>
 <p>De <span data-stat="play_places">701</span> kan kortet ikke farvelægge, for der er intet at
@@ -229,6 +229,10 @@ standard, og en tom blå ring i stedet for en udfyldt nål.</p>
 en restaurant med legerum &mdash; en far med et lille barn kommer der alligevel, og når han er der,
 kender han svaret. Et klik på ringen åbner MapComplete på præcis det ene spørgsmål. Bliver det
 besvaret, forsvinder ringen inden for få minutter, og en rigtig nål står i stedet.</p>
+
+<h2>Chippen Højstol</h2>
+<p>Chippen <em>Højstol</em> viser steder, hvor OSM har registreret en højstol: <code>highchair=yes</code> eller et tal over 0. <code>highchair=no</code> eller <code>0</code> er et registreret nej. Et sted uden tagget er ikke et sted uden højstol, OSM siger bare ingenting, så chippen udelader det uden at påstå noget. En værdi, kortet ikke kan læse, som <code>ja</code> eller <code>1+</code>, tæller heller ikke, og popuppen viser ingen linje for den. Chippen filtrerer nåle og blå ringe og farver intet.</p>
+<p>På en nål ved et spisested (café, restaurant, værtshus og lignende) eller et familiested (børnehave, bibliotek, medborgerhus og lignende) spørger popuppen, så længe OSM ikke siger noget: <em>Er der en højstol?</em> Dit svar havner i OSM som <code>highchair=yes</code> eller <code>highchair=no</code>, under din egen konto, ligesom et svar om rummet.</p>
 
 <h2>Sådan retter du en grå nål</h2>
 <p>Grå betyder: et svar mangler. Hvor står puslebordet? Det kan enhver med en gratis OSM-konto
@@ -363,7 +367,7 @@ Webstedets kode er MIT-licenseret.</p>
 <p>Et statisk websted. Ingen konti, ingen cookies, ingen analytics, ingen tracking-scripts. Siden
 gemmer ingenting om dig og har ingen database. Kortfliserne kommer fra OpenStreetMaps
 tile-servere; for de forespørgsler gælder
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF's privatlivspolitik</a>. Trykker du på <em>Svar på MapComplete</em> i en nål, spørger siden desuden i nogle minutter api.openstreetmap.org, hvad netop det objekt nu siger — de forespørgsler er omfattet af samme politik. Følger du et
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF's privatlivspolitik</a>. Trykker du på <em>Svar på MapComplete</em> i en nål, spørger siden desuden i nogle minutter api.openstreetmap.org, hvad netop det objekt nu siger — de forespørgsler er omfattet af samme politik. Fra det tredje tegn, du skriver i søgefeltet, og hver gang du åbner <em>Tilføj et sted</em>, spørger siden desuden komoots stedsøgning Photon (photon.komoot.io). Den får den tekst, du har skrevet, og et afrundet kortcentrum og, som enhver server, din IP-adresse. Følger du et
 link til MapComplete, StreetComplete eller openstreetmap.org, er du på deres sider og redigerer
 under din egen OSM-konto. Intet af det går gennem os. Det formelle (på tysk):
 <a href="impressum.html">Impressum</a> ·

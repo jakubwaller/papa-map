@@ -218,8 +218,7 @@ aldrig &mdash; platsen <em>är</em> redan ett ställe att leka på, bara inte in
 
 <h2>De tomma blå ringarna: lekställen utan svar</h2>
 <p>Samma regel matchar långt fler platser än kartan har nålar. Bara
-<span data-stat="play_tables">111</span> av dem har över huvud taget en
-<code>changing_table</code>-tagg. På <span data-stat="play_places">701</span> till har ingen svarat
+<span data-stat="play_tables">111</span> av dem har en nål. På <span data-stat="play_places">701</span> till har ingen svarat
 på den första frågan: finns det ett skötbord här? Ja, nej, ingen vet — i OSM står det ingenting
 alls om det.</p>
 <p>De där <span data-stat="play_places">701</span> kan kartan inte färglägga, för det finns inget
@@ -231,6 +230,10 @@ standard, och en tom blå ring i stället för en fylld nål.</p>
 en restaurang med lekrum — en pappa med ett litet barn går dit ändå, och väl på plats vet han
 svaret. Ett klick på ringen öppnar MapComplete direkt på just den frågan. Blir den besvarad
 försvinner ringen inom några minuter, och en riktig nål står där i stället.</p>
+
+<h2>Chippet Barnstol</h2>
+<p>Chippet <em>Barnstol</em> visar platser där OSM anger en barnstol: <code>highchair=yes</code> eller ett tal över 0. <code>highchair=no</code> eller <code>0</code> är ett registrerat nej. En plats utan taggen är inte en plats utan barnstol, OSM säger bara inget, så chippet utelämnar den utan att påstå något. Ett värde som kartan inte kan läsa, som <code>ja</code> eller <code>1+</code>, räknas inte heller, och popupen visar ingen rad för det. Chippet filtrerar nålar och blå ringar och färgar inget.</p>
+<p>På en nål vid ett matställe (kafé, restaurang, pub och liknande) eller ett familjeställe (förskola, bibliotek, medborgarhus och liknande) frågar popupen, så länge OSM inte säger något: <em>Finns det en barnstol?</em> Ditt svar går till OSM som <code>highchair=yes</code> eller <code>highchair=no</code>, under ditt eget OSM-konto, precis som ett svar om rummet.</p>
 
 <h2>Så fixar du en grå nål</h2>
 <p>Grått betyder: ett svar saknas. Var står skötbordet? Det kan vem som helst med ett gratis
@@ -362,7 +365,9 @@ Webbplatsens egen kod är MIT-licensierad.</p>
 <p>En statisk webbplats. Inga konton, inga kakor, ingen webbanalys, inga spårningsskript. Sidan sparar
 ingenting om dig och har ingen databas. Kartrutorna kommer från OpenStreetMaps tile-servrar; för
 de förfrågningarna gäller
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF:s integritetspolicy</a>. Trycker du på <em>Svara på MapComplete</em> i en nål frågar sidan dessutom api.openstreetmap.org några gånger under de följande minuterna vad just det objektet säger nu — de anropen omfattas av samma policy. Följer du en
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF:s integritetspolicy</a>. Trycker du på <em>Svara på MapComplete</em> i en nål frågar sidan dessutom api.openstreetmap.org några gånger under de följande minuterna vad just det objektet säger nu — de anropen omfattas av samma policy. Från det tredje tecknet du skriver i sökfältet, och varje gång du öppnar <em>Ny plats</em>, frågar
+sidan också komoots platssökning Photon (photon.komoot.io). Den får texten du skrev och en
+avrundad kartmittpunkt och, som varje server, din IP-adress. Följer du en
 länk till MapComplete, StreetComplete eller openstreetmap.org är du på deras sidor och redigerar
 under ditt eget OSM-konto. Ingenting går via oss. Formalia:
 <a href="impressum.html">Impressum</a> ·

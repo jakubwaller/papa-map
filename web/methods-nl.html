@@ -223,7 +223,7 @@ gevraagd &mdash; de plek <em>is</em> al een speelplek, alleen niet binnen.</p>
 
 <h2>De lege blauwe ringen: speelplekken zonder antwoord</h2>
 <p>Dezelfde regel geldt voor veel meer plekken dan de kaart pins heeft. Slechts
-<span data-stat="play_tables">111</span> daarvan dragen ook echt een <code>changing_table</code>-tag.
+<span data-stat="play_tables">111</span> daarvan hebben een pin.
 Bij <span data-stat="play_places">701</span> andere heeft niemand de eerste vraag beantwoord: is
 hier een verschoontafel? Ja, nee, niemand weet het &mdash; OSM zegt er helemaal niets over.</p>
 <p>Die <span data-stat="play_places">701</span> kan de kaart niet inkleuren, want er is niets in te
@@ -236,6 +236,10 @@ ballenbak, een restaurant met speelkamer &mdash; een vader met een peuter gaat d
 als hij er is, weet hij het antwoord. Een klik op de ring opent MapComplete precies op die ene
 vraag. Wordt die beantwoord, dan is de ring binnen een paar minuten verdwenen en staat
 er een echte pin.</p>
+
+<h2>De chip Kinderstoel</h2>
+<p>De chip <em>Kinderstoel</em> toont plekken waar OSM een kinderstoel vermeldt: <code>highchair=yes</code> of een getal boven 0. <code>highchair=no</code> of <code>0</code> is een vastgelegd nee. Een plek zonder de tag is geen plek zonder kinderstoel, OSM zegt er gewoon niets over, dus de chip laat hem weg zonder iets te beweren. Een waarde die de kaart niet kan lezen, zoals <code>ja</code> of <code>1+</code>, telt ook niet mee, en de popup toont er geen regel voor. De chip filtert pins en blauwe ringen en kleurt niets.</p>
+<p>Bij een pin op een plek om te eten (café, restaurant, kroeg en dergelijke) of een gezinsplek (kinderopvang, bibliotheek, buurthuis en dergelijke) vraagt de popup, zolang OSM er niets over zegt: <em>Is er een kinderstoel?</em> Je antwoord gaat als <code>highchair=yes</code> of <code>highchair=no</code> naar OSM, onder je eigen account, net als een antwoord over de ruimte.</p>
 
 <h2>Hoe je een grijze pin repareert</h2>
 <p>Grijs betekent: er ontbreekt één antwoord. Waar staat de verschoontafel? Dat kan iedereen met
@@ -369,7 +373,9 @@ De code van de site zelf staat onder de MIT-licentie.</p>
 <p>Een statische website. Geen accounts, geen cookies, geen analytics, geen trackingscripts. De
 site slaat niets over je op en heeft geen database. De kaarttegels komen van de tileservers van
 OpenStreetMap; voor die verzoeken geldt het
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">privacybeleid van de OSMF</a>. Tik je in een pin op <em>Beantwoorden op MapComplete</em>, dan vraagt de pagina de volgende minuten ook een paar keer aan api.openstreetmap.org wat dat ene object nu zegt — voor die verzoeken geldt hetzelfde beleid. Volg je een
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">privacybeleid van de OSMF</a>. Tik je in een pin op <em>Beantwoorden op MapComplete</em>, dan vraagt de pagina de volgende minuten ook een paar keer aan api.openstreetmap.org wat dat ene object nu zegt — voor die verzoeken geldt hetzelfde beleid. Vanaf het derde teken dat je in het zoekveld typt, en telkens als je <em>Plek toevoegen</em>
+opent, vraagt de pagina ook de plaatszoekfunctie Photon van komoot (photon.komoot.io). Die krijgt
+de getypte tekst en een afgerond middelpunt van de kaart en, zoals elke server, je IP-adres. Volg je een
 link naar MapComplete, StreetComplete of openstreetmap.org, dan ben je op hun sites en bewerk je
 onder je eigen OSM-account. Via ons loopt daarbij niets. Formele pagina&rsquo;s:
 <a href="impressum.html">Impressum</a> ·

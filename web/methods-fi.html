@@ -218,7 +218,7 @@ kysytä lainkaan &mdash; paikka <em>on</em> jo leikkipaikka, ei vain sisällä.<
 
 <h2>Tyhjät siniset renkaat: leikkipaikkoja, ei vastausta</h2>
 <p>Sama sääntö osuu paljon useampaan paikkaan kuin kartalla on nastoja. Vain
-<span data-stat="play_tables">111</span> niistä kantaa ylipäätään <code>changing_table</code>-tagia.
+<span data-stat="play_tables">111</span> niistä näkyy nastana.
 <span data-stat="play_places">701</span> muussa kukaan ei ole vastannut ensimmäiseen kysymykseen:
 onko täällä hoitopöytä? Kyllä, ei, ei tietoa — OSM ei kerro yhtään mitään.</p>
 <p>Kartta ei voi värittää niitä <span data-stat="play_places">701</span> paikkaa, koska ei ole
@@ -231,6 +231,10 @@ pallomeri, ravintola jossa on leikkihuone — taaperon kanssa liikkuva isä mene
 tapauksessa, ja kun hän on siellä, hän tietää vastauksen. Renkaan klikkaaminen avaa MapCompleten
 juuri siihen yhteen kysymykseen. Vastaa siihen, ja rengas katoaa muutamassa minuutissa, tilalle
 tulee oikea nasta.</p>
+
+<h2>Syöttötuoli-nappi</h2>
+<p><em>Syöttötuoli</em>-nappi näyttää paikat, joihin OSM:ssä on merkitty syöttötuoli: <code>highchair=yes</code> tai lukua 0 suurempi luku. <code>highchair=no</code> tai <code>0</code> on kirjattu "ei". Paikka ilman tagia ei ole paikka ilman syöttötuolia, OSM ei vain sano mitään, joten nappi jättää sen pois väittämättä mitään. Arvoa, jota kartta ei osaa lukea, kuten <code>ja</code> tai <code>1+</code>, ei myöskään lasketa, eikä ponnahdusikkunassa näy sille riviä. Nappi suodattaa nastat ja siniset renkaat eikä värjää mitään.</p>
+<p>Ruokapaikan (kahvila, ravintola, pubi ja vastaavat) tai perhepaikan (päiväkoti, kirjasto, asukastalo ja vastaavat) nastassa ponnahdusikkuna kysyy, niin kauan kuin OSM ei sano mitään: <em>Onko täällä syöttötuoli?</em> Vastauksesi menee OSM:ään muodossa <code>highchair=yes</code> tai <code>highchair=no</code> omalla tunnuksellasi, aivan kuten vastaus tilasta.</p>
 
 <h2>Näin korjaat harmaan nastan</h2>
 <p>Harmaa tarkoittaa, että yksi vastaus puuttuu. Missä hoitopöytä on? Kuka tahansa, jolla on
@@ -364,7 +368,7 @@ MIT-lisensoitu.</p>
 <p>Staattinen sivusto. Ei tilejä, ei evästeitä, ei analytiikkaa, ei seurantaskriptejä. Sivusto ei
 tallenna sinusta mitään, eikä sillä ole tietokantaa. Karttalaatat tulevat OpenStreetMapin
 laattapalvelimilta; nämä pyynnöt kuuluvat
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF:n tietosuojakäytännön</a> piiriin. Kun napautat nastassa <em>Vastaa MapCompletessa</em>, sivu kysyy seuraavien minuuttien aikana lisäksi muutaman kerran osoitteesta api.openstreetmap.org, mitä tuo yksi kohde nyt sanoo — niihin pyyntöihin pätee sama käytäntö.
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF:n tietosuojakäytännön</a> piiriin. Kun napautat nastassa <em>Vastaa MapCompletessa</em>, sivu kysyy seuraavien minuuttien aikana lisäksi muutaman kerran osoitteesta api.openstreetmap.org, mitä tuo yksi kohde nyt sanoo — niihin pyyntöihin pätee sama käytäntö. Kolmannesta hakukenttään kirjoittamastasi merkistä alkaen, ja aina kun avaat näkymän <em>Lisää paikka</em>, sivu kysyy lisäksi komootin Photon-paikkahaulta (photon.komoot.io). Se saa kirjoittamasi tekstin ja pyöristetyn kartan keskipisteen sekä, kuten mikä tahansa palvelin, IP-osoitteesi.
 Jos seuraat linkkiä MapCompleteen, StreetCompleteen tai openstreetmap.orgiin, olet heidän
 sivustollaan ja muokkaat omalla OSM-tunnuksellasi. Mikään ei kulje meidän kauttamme. Viralliset
 sivut: <a href="impressum.html">Impressum</a> ·

@@ -65,7 +65,7 @@ No `condition` limits which venues get asked. An allowlist of plausible amenity 
 would rot, and "no" is an informative answer anywhere — the Hamburg sample turned up
 doctors' surgeries with a play corner.
 
-### The `highchair` question (v65)
+### The `highchair` question (v65, family venues v67)
 
 Asked directly after `kids-area` on `dad_changing_table_amenity`, `dad_play_place` and
 `dad_venue` — never on `dad_toilet` — writing the one key the site's popup writes:
@@ -74,9 +74,11 @@ Asked directly after `kids-area` on `dad_changing_table_amenity`, `dad_play_plac
 - `highchair=no` → *"No, there is no high chair"*
 
 Unlike `kids-area` it has a `condition`: an `or` over `amenity=cafe|restaurant|fast_food|
-food_court|ice_cream|pub|biergarten|canteen`. A high chair is something a place brings to
-the table you eat at, so outside eating places the question is noise. The list is the
-site's `HIGHCHAIR_VENUES` (`web/osm.js`), and `web/osm.test.js` fails when the two differ.
+food_court|ice_cream|pub|biergarten|canteen|kindergarten|childcare|community_centre|
+social_facility|library`. A high chair is something a place brings to the table you eat
+at: the eating places from v65, plus (v67) the family venues where one is expected too.
+Anywhere else the question is noise. The list is the site's `HIGHCHAIR_VENUES`
+(`web/osm.js`), and `web/osm.test.js` fails when the two differ.
 
 ### Classification → tagRendering conditions
 
@@ -84,14 +86,16 @@ The contract rule (split `changing_table:location` on `;`, trim, lowercase, EXAC
 match) is expressed as MapComplete full-match regexes (`~i~` = case-invariant, must match
 the entire value per `Docs/Tags_format.md`):
 
-- accessible: `changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area) *(;.*)?`
+- accessible: `changing_table:location~i~(.*;)? *(male_toilet|unisex_toilet|dedicated_room|room|wheelchair_toilet|sales_area|outdoor) *(;.*)?`
 - female-only: `changing_table:location~i~(.*;)? *female_toilet *(;.*)?`
 
 Precedence (accessible wins over female-only; anything else with `changing_table` ∈
 {yes, limited} is grey) comes from mapping order in the marker color. The regexes were
 unit-checked offline against 17 cases from the contract (including `female_toilet` not
 matching the `male_toilet` alternative as a substring, `;`-lists with spaces, and junk
-values like `02`) — all match the contract's pure function.
+values like `02`) — all match the contract's pure function. `outdoor` joined the
+accessible tokens later (#64, `ACCESSIBLE_TOKENS` in `pipeline/classify.py`), after that
+check; the regex is the same alternation with one more name.
 
 Colors: green `#117733`, red `#cc3311`, grey `#555555` (colorblind-safe; grey is
 deliberately dark — it is the call to action).
@@ -162,7 +166,8 @@ GitHub master mirror of MapComplete):
 Verified offline:
 
 - The JSON parses.
-- Validated with python-jsonschema against `Docs/Schemas/ThemeConfig.schema.json` — with
+- Validated with python-jsonschema against `Docs/Schemas/ThemeConfig.schema.json` (its
+  name then; `pipeline/theme_check.py` now fetches `ThemeConfigJson.schema.json`) — with
   an important caveat: the published schema is auto-generated and rejects *every*
   translation object (its `Record<string,string>` definition is
   `{"type":"object","additionalProperties":false}`, which matches only `{}`). As a
@@ -214,13 +219,14 @@ this theme uses.
   the right question becomes a green or red pin.
 - **No freeform text on the location question** — only the approved wiki value list
   (`female_toilet`, `male_toilet`, `unisex_toilet`, `wheelchair_toilet`,
-  `dedicated_room`, `room`, `sales_area`). Free text is how junk like `02` got into this
+  `dedicated_room`, `room`, `sales_area`, `outdoor`). Free text is how junk like `02` got into this
   tag in the first place. A junk value simply re-asks the question; answering overwrites
   it with clean tokens.
 - `changing_table=limited` is rendered when present but not offered as an answer
   (matching the bundled theme's conservatism).
-- Nothing in this repo writes to OSM. This theme only makes MapComplete — with a
-  logged-in user pressing the buttons — do so.
+- The pipeline never writes to OSM; the site writes only a logged-in reader's own
+  answers, under their own account (`web/osm.js`). This theme does the same through
+  MapComplete — a logged-in user pressing the buttons.
 
 ## Languages
 

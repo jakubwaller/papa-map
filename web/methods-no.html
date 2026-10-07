@@ -218,7 +218,7 @@ bare ikke innendørs.</p>
 
 <h2>De tomme blå ringene: lekeplasser uten svar</h2>
 <p>Den samme regelen treffer langt flere steder enn kartet har punkter. Bare
-<span data-stat="play_tables">111</span> av dem har i det hele tatt et <code>changing_table</code>-tag. På
+<span data-stat="play_tables">111</span> av dem har et punkt. På
 <span data-stat="play_places">701</span> flere har ingen svart på det første spørsmålet: er det et
 stellebord her? Ja, nei, ingen vet &mdash; OSM har ingen data.</p>
 <p>Kartet kan ikke fargelegge disse <span data-stat="play_places">701</span>, for det er ingenting
@@ -231,6 +231,10 @@ ballbasseng, en restaurant med lekerom &mdash; en pappa med en smårolling drar 
 han først er der, kan han finne svaret. Et klikk på ringen åpner MapComplete med akkurat det ene
 spørsmålet. Svar på det, så er ringen borte i løpet av få minutter, og erstattet av et oppdatert
 punkt.</p>
+
+<h2>Chippen Barnestol</h2>
+<p>Chippen <em>Barnestol</em> viser steder der OSM oppgir en barnestol: <code>highchair=yes</code> eller et tall over 0. <code>highchair=no</code> eller <code>0</code> er et registrert nei. Et sted uten taggen er ikke et sted uten barnestol, OSM sier bare ingenting, så chippen utelater det uten å påstå noe. En verdi kartet ikke kan lese, som <code>ja</code> eller <code>1+</code>, teller heller ikke, og popupen viser ingen linje for den. Chippen filtrerer punkter og blå ringer og farger ingenting.</p>
+<p>På et punkt ved et spisested (kafé, restaurant, pub og lignende) eller et familiested (barnehage, bibliotek, samfunnshus og lignende) spør popupen, så lenge OSM ikke sier noe: <em>Finnes det en barnestol?</em> Svaret ditt går til OSM som <code>highchair=yes</code> eller <code>highchair=no</code>, under din egen OSM-konto, akkurat som et svar om rommet.</p>
 
 <h2>Slik retter du et grått punkt</h2>
 <p>Grå betyr at et svar mangler. Hvor befinner stellebordet seg? Alle med en OSM-konto kan svare på
@@ -360,7 +364,9 @@ Nettstedets egen kode er MIT-lisensiert.</p>
 <p>Et statisk nettsted. Ingen kontoer, ingen informasjonskapsler, ingen analyseverktøy, ingen
 sporingsskript. Nettstedet lagrer ingenting om deg og har ingen database. Kartflisene kommer fra
 OpenStreetMaps kartserver; de forespørslene faller inn under
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMFs personvernerklæring</a>. Trykker du på <em>Svar på MapComplete</em> i et punkt, spør siden dessuten api.openstreetmap.org noen ganger de neste minuttene om hva akkurat det objektet sier nå — de forespørslene omfattes av samme retningslinjer. Følger du
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMFs personvernerklæring</a>. Trykker du på <em>Svar på MapComplete</em> i et punkt, spør siden dessuten api.openstreetmap.org noen ganger de neste minuttene om hva akkurat det objektet sier nå — de forespørslene omfattes av samme retningslinjer. Fra tredje tegn du skriver i søkefeltet, og hver gang du åpner <em>Legg til et sted</em>, spør
+siden også komoots stedssøk Photon (photon.komoot.io). Den får teksten du skrev og et avrundet
+kartsentrum og, som enhver server, IP-adressen din. Følger du
 en lenke til MapComplete, StreetComplete eller openstreetmap.org, er du på deres nettsteder og
 redigerer under din egen OSM-konto. Ingenting går gjennom oss. Formelle sider:
 <a href="impressum.html">Impressum</a> ·

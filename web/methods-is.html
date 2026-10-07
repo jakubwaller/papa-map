@@ -217,8 +217,7 @@ sér, bara ekki innandyra.</p>
 
 <h2>Auðu bláu hringirnir: staðir til að leika, ósvarað</h2>
 <p>Sama reglan á við um miklu fleiri staði en kortið hefur punkta fyrir. Aðeins
-<span data-stat="play_tables">111</span> þeirra eru með <code>changing_table</code>-merkingu
-yfirhöfuð. Hjá <span data-stat="play_places">701</span> til viðbótar hefur enginn svarað fyrstu
+<span data-stat="play_tables">111</span> þeirra hafa punkt á kortinu. Hjá <span data-stat="play_places">701</span> til viðbótar hefur enginn svarað fyrstu
 spurningunni: er skiptiborð hér? Já, nei, enginn veit — OSM segir nákvæmlega ekkert.</p>
 <p>Kortið getur ekki litað þessa <span data-stat="play_places">701</span> staði, því það er ekkert
 til að lita. Þeir eru heldur ekki gráir: grátt þýðir „borðið er til, rýmið vantar", og það á ekki
@@ -230,6 +229,10 @@ kúlulaug, veitingastaður með leikherbergi — pabbi með smábarn er hvort e�
 leið og hann er kominn þangað veit hann svarið. Að smella á hring opnar MapComplete með
 nákvæmlega þeirri einu spurningu. Svaraðu henni og hringurinn hverfur innan fárra mínútna,
 punktur kemur í staðinn.</p>
+
+<h2>Flísin Barnastóll</h2>
+<p>Flísin <em>Barnastóll</em> sýnir staði þar sem OSM skráir barnastól: <code>highchair=yes</code> eða tölu yfir 0. <code>highchair=no</code> eða <code>0</code> er skráð „nei“. Staður án merkisins er ekki staður án barnastóls, OSM segir bara ekkert, svo flísin sleppir honum án þess að fullyrða neitt. Gildi sem kortið getur ekki lesið, eins og <code>ja</code> eða <code>1+</code>, telst ekki heldur með, og sprettiglugginn sýnir enga línu fyrir það. Flísin síar punkta og bláa hringi og litar ekkert.</p>
+<p>Á punkti á matsölustað (kaffihúsi, veitingastað, krá og þess háttar) eða fjölskyldustað (leikskóla, bókasafni, félagsmiðstöð og þess háttar) spyr sprettiglugginn, á meðan OSM segir ekkert: <em>Er barnastóll hér?</em> Svarið þitt fer í OSM sem <code>highchair=yes</code> eða <code>highchair=no</code>, undir þínum eigin aðgangi, alveg eins og svar um rýmið.</p>
 
 <h2>Hvernig á að laga gráan punkt</h2>
 <p>Grátt þýðir að eitt svar vantar. Hvar er skiptiborðið? Hver sem er með ókeypis OSM-aðgang getur
@@ -361,7 +364,7 @@ Eigin kóði vefsíðunnar er MIT-leyfður.</p>
 <p>Kyrrstæð vefsíða. Engir aðgangar, engar vefkökur, engin greiningartól, engin rakningarforrit.
 Vefsíðan geymir ekkert um þig og er ekki með gagnagrunn. Kortaflísarnar koma frá flísaþjónum
 OpenStreetMap; þær beiðnir falla undir
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">persónuverndarstefnu OSMF</a>. Ýtirðu á <em>Svara á MapComplete</em> í punkti spyr síðan auk þess api.openstreetmap.org nokkrum sinnum næstu mínúturnar hvað þetta eina fyrirbæri segir núna — sama stefna gildir um þær fyrirspurnir. Ef þú
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">persónuverndarstefnu OSMF</a>. Ýtirðu á <em>Svara á MapComplete</em> í punkti spyr síðan auk þess api.openstreetmap.org nokkrum sinnum næstu mínúturnar hvað þetta eina fyrirbæri segir núna — sama stefna gildir um þær fyrirspurnir. Frá þriðja staf sem þú slærð inn í leitarreitinn, og í hvert sinn sem þú opnar <em>Bæta við stað</em>, spyr síðan líka staðaleit komoot, Photon (photon.komoot.io). Hún fær textann sem þú slóst inn og námundaða miðju kortsins og, eins og hver netþjónn, IP-töluna þína. Ef þú
 fylgir tengli á MapComplete, StreetComplete eða openstreetmap.org ertu kominn á þeirra vefsíður og
 breytir undir þínum eigin OSM-aðgangi. Ekkert fer í gegnum okkur. Formlegar síður:
 <a href="impressum.html">Impressum</a> ·

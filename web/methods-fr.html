@@ -225,7 +225,7 @@ l'intérieur.</p>
 
 <h2>Les anneaux bleus vides : des lieux pour jouer, sans réponse</h2>
 <p>La même règle correspond à bien plus de lieux que la carte n'a de marqueurs. Seuls
-<span data-stat="play_tables">111</span> d'entre eux portent un tag <code>changing_table</code>.
+<span data-stat="play_tables">111</span> d'entre eux ont un marqueur.
 Pour <span data-stat="play_places">701</span> autres, personne n'a répondu à la première question :
 y a-t-il une table à langer ici ? Oui, non, personne ne sait &mdash; OSM n'en dit absolument
 rien.</p>
@@ -239,6 +239,10 @@ un café avec piscine à balles, un restaurant avec une salle de jeux &mdash; un
 tout-petit y va de toute façon, et une fois sur place, il connaît la réponse. Un clic sur l'anneau
 ouvre MapComplete exactement sur cette question. Réponds-y et l'anneau disparaît en quelques
 minutes, remplacé par un vrai marqueur.</p>
+
+<h2>La puce Chaise haute</h2>
+<p>La puce <em>Chaise haute</em> affiche les lieux où OSM enregistre une chaise haute : <code>highchair=yes</code> ou un nombre supérieur à 0. <code>highchair=no</code> ou <code>0</code> est un non enregistré. Un lieu sans ce tag n'est pas un lieu sans chaise haute, OSM n'en dit simplement rien : la puce le laisse de côté sans rien affirmer. Une valeur que la carte ne sait pas lire, comme <code>ja</code> ou <code>1+</code>, ne compte pas non plus, et la fenêtre n'affiche aucune ligne pour elle. La puce filtre les marqueurs et les cercles bleus, et ne colore rien.</p>
+<p>Sur le marqueur d'un lieu où manger (café, restaurant, pub et autres) ou d'un lieu pour les familles (école maternelle, bibliothèque, maison de quartier et autres), la fenêtre demande, tant qu'OSM n'en dit rien : <em>Y a-t-il une chaise haute ?</em> Ta réponse part dans OSM sous la forme <code>highchair=yes</code> ou <code>highchair=no</code>, sous ton propre compte, comme une réponse sur la pièce.</p>
 
 <h2>Comment réparer un marqueur gris</h2>
 <p>Gris veut dire qu'il manque une réponse. Où est la table à langer ? N'importe qui avec un compte
@@ -381,7 +385,7 @@ Le code du site est sous licence MIT.</p>
 site ne stocke rien sur toi et n'a pas de base de données. Les tuiles de la carte viennent des
 serveurs d'OpenStreetMap ; ces requêtes relèvent de la
 <a href="https://osmfoundation.org/wiki/Privacy_Policy">politique de confidentialité de
-l'OSMF</a>. Si tu appuies sur <em>Répondre sur MapComplete</em> dans un marqueur, la page interroge aussi api.openstreetmap.org quelques fois pendant les minutes suivantes pour savoir ce que dit désormais cet objet — ces requêtes relèvent de la même politique. Si tu suis un lien vers MapComplete, StreetComplete ou openstreetmap.org, tu es sur
+l'OSMF</a>. Si tu appuies sur <em>Répondre sur MapComplete</em> dans un marqueur, la page interroge aussi api.openstreetmap.org quelques fois pendant les minutes suivantes pour savoir ce que dit désormais cet objet — ces requêtes relèvent de la même politique. À partir du troisième caractère que tu tapes dans le champ de recherche, et chaque fois que tu ouvres <em>Ajouter un lieu</em>, la page interroge aussi la recherche de lieux Photon de komoot (photon.komoot.io). Elle reçoit le texte tapé et un centre de carte arrondi et, comme tout serveur, ton adresse IP. Si tu suis un lien vers MapComplete, StreetComplete ou openstreetmap.org, tu es sur
 leurs sites et tu édites sous ton propre compte OSM. Rien ne passe par nous. Mentions légales :
 <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (en allemand).</p>

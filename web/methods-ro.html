@@ -223,7 +223,7 @@ doar că nu interior.</p>
 
 <h2>Inelele albastre goale: locuri de joacă, fără răspuns</h2>
 <p>Aceeași regulă se potrivește la mult mai multe locuri decât are harta marcaje. Doar
-<span data-stat="play_tables">111</span> dintre ele au vreo etichetă <code>changing_table</code>.
+<span data-stat="play_tables">111</span> dintre ele au un marcaj.
 La încă <span data-stat="play_places">701</span>, nimeni nu a răspuns la prima întrebare: există
 aici o masă de înfășat? Da, nu, nimeni nu știe — OSM nu spune absolut nimic.</p>
 <p>Harta nu poate colora acele <span data-stat="play_places">701</span>, pentru că nu are ce
@@ -236,6 +236,10 @@ cafenea cu piscină cu bile, un restaurant cu o cameră de joacă — un tată c
 oricum acolo, iar odată ajuns, știe răspunsul. Un clic pe inel deschide MapComplete exact la acea
 întrebare. Răspunde la ea și inelul dispare în câteva minute, înlocuit de
 un marcaj adevărat.</p>
+
+<h2>Cipul Scaun înalt pentru copii</h2>
+<p>Cipul <em>Scaun înalt pentru copii</em> arată locurile unde OSM înregistrează un scaun înalt pentru copii: <code>highchair=yes</code> sau un număr mai mare decât 0. <code>highchair=no</code> sau <code>0</code> este un „nu” înregistrat. Un loc fără etichetă nu este un loc fără scaun înalt, OSM pur și simplu nu spune nimic, așa că cipul îl lasă deoparte fără să afirme ceva. O valoare pe care harta nu o poate citi, cum ar fi <code>ja</code> sau <code>1+</code>, nu contează nici ea, iar fereastra nu arată niciun rând pentru ea. Cipul filtrează marcajele și inelele albastre și nu colorează nimic.</p>
+<p>La un marcaj dintr-un loc unde se mănâncă (cafenea, restaurant, pub și altele asemenea) sau dintr-un loc pentru familii (grădiniță, bibliotecă, centru comunitar și altele asemenea), fereastra întreabă, cât timp OSM nu spune nimic: <em>Există un scaun înalt pentru copii?</em> Răspunsul tău ajunge în OSM ca <code>highchair=yes</code> sau <code>highchair=no</code>, sub propriul tău cont, la fel ca un răspuns despre încăpere.</p>
 
 <h2>Cum repari un marcaj gri</h2>
 <p>Gri înseamnă că lipsește un răspuns. Unde este masa de înfășat? Oricine are un cont OSM gratuit
@@ -370,7 +374,9 @@ licențiat MIT.</p>
 urmărire. Site-ul nu stochează nimic despre tine și nu are bază de date. Plăcuțele hărții vin de
 la serverele de tile ale OpenStreetMap; acele cereri intră sub incidența
 <a href="https://osmfoundation.org/wiki/Privacy_Policy">politicii de confidențialitate a
-OSMF</a>. Dacă atingi <em>Răspunde pe MapComplete</em> într-un marcaj, în minutele următoare pagina întreabă de câteva ori și api.openstreetmap.org ce spune acum acel obiect — acele cereri intră sub aceeași politică. Dacă urmezi un link către MapComplete, StreetComplete sau openstreetmap.org, ești pe
+OSMF</a>. Dacă atingi <em>Răspunde pe MapComplete</em> într-un marcaj, în minutele următoare pagina întreabă de câteva ori și api.openstreetmap.org ce spune acum acel obiect — acele cereri intră sub aceeași politică. De la al treilea caracter tastat în câmpul de căutare, și ori de câte ori deschizi
+<em>Adaugă un loc</em>, pagina întreabă și căutarea de locuri Photon a komoot (photon.komoot.io).
+Aceasta primește textul tastat și un centru rotunjit al hărții și, ca orice server, adresa ta IP. Dacă urmezi un link către MapComplete, StreetComplete sau openstreetmap.org, ești pe
 site-urile lor, editând cu propriul tău cont OSM. Nimic nu trece prin noi. Pagini oficiale:
 <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (în germană).</p>

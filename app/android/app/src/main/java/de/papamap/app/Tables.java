@@ -91,8 +91,12 @@ public final class Tables {
         return 2 * 6371000 * Math.asin(Math.min(1, Math.sqrt(a)));
     }
 
+    // Mirrors web/datasource.js formatDistance: round to 10 m first, then pick
+    // the unit, so 999.6 m reads "1.0 km" rather than "1000 m" and the metres
+    // claim no more precision than the sensor has.
     public static String formatDistance(double m, String lang) {
-        if (m < 1000) return Math.round(m) + " m";
+        long r = Math.round(m / 10) * 10;
+        if (r < 1000) return r + " m";
         String km = String.format(Locale.ROOT, "%.1f km", Math.round(m / 100) / 10.0);
         return "de".equals(lang) ? km.replace('.', ',') : km;
     }

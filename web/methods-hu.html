@@ -224,7 +224,7 @@ meg &mdash; a hely <em>már</em> játszóhely, csak nem beltéri.</p>
 
 <h2>Az üres kék gyűrűk: játszóhelyek válasz nélkül</h2>
 <p>Ugyanez a szabály sokkal több helyre illik, mint amennyi jelölő van a térképen. Közülük csak
-<span data-stat="play_tables">111</span>-nek van egyáltalán <code>changing_table</code> címkéje.
+<span data-stat="play_tables">111</span>-nek van jelölője.
 Még <span data-stat="play_places">701</span> helyen senki sem válaszolt az első kérdésre: van itt
 pelenkázóasztal? Igen, nem, senki sem tudja — az OSM egyáltalán nem mond semmit.</p>
 <p>Ezt a <span data-stat="play_places">701</span> helyet a térkép nem tudja beszínezni, mert
@@ -237,6 +237,10 @@ labdamedencés kávézó, egy játszószobás étterem — egy kisgyerekes apa �
 van, tudja a választ. Egy gyűrűre kattintva a MapComplete pontosan ezt az egy kérdést nyitja meg.
 Ha megválaszolod, a gyűrű néhány percen belül eltűnik, a helyén pedig egy valódi
 jelölő jelenik meg.</p>
+
+<h2>Az Etetőszék csip</h2>
+<p>Az <em>Etetőszék</em> csip azokat a helyeket mutatja, ahol az OSM-ben etetőszék szerepel: <code>highchair=yes</code> vagy 0-nál nagyobb szám. A <code>highchair=no</code> vagy a <code>0</code> rögzített „nem”. Egy címke nélküli hely nem etetőszék nélküli hely, az OSM egyszerűen nem mond róla semmit, így a csip kihagyja, anélkül hogy bármit állítana. Az olyan érték, amelyet a térkép nem tud olvasni, például <code>ja</code> vagy <code>1+</code>, szintén nem számít, és a felugró ablak nem mutat hozzá sort. A csip szűri a jelölőket és a kék karikákat, és semmit sem színez.</p>
+<p>Egy étkezőhely (kávézó, étterem, kocsma és hasonlók) vagy családi hely (óvoda, könyvtár, közösségi ház és hasonlók) jelölőjén a felugró ablak megkérdezi, amíg az OSM nem mond róla semmit: <em>Van etetőszék?</em> A válaszod <code>highchair=yes</code> vagy <code>highchair=no</code> formában kerül az OSM-be, a saját fiókod alatt, ugyanúgy, mint egy válasz a helyiségről.</p>
 
 <h2>Hogyan javíts ki egy szürke jelölőt</h2>
 <p>A szürke azt jelenti: hiányzik egy válasz. Hol van a pelenkázóasztal? Erre bárki válaszolhat
@@ -376,7 +380,7 @@ MIT licenc alatt áll.</p>
 szkriptek. Az oldal semmit sem tárol rólad, és nincs adatbázisa. A térképcsempék az OpenStreetMap
 csempekiszolgálóiról érkeznek; ezekre a kérésekre az
 <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF adatvédelmi szabályzata</a>
-vonatkozik. Ha egy jelölőben a <em>Válaszolás a MapCompleten</em> gombra koppintasz, az oldal a következő percekben néhányszor az api.openstreetmap.org-tól is megkérdezi, mit mond most az az egy objektum — ezekre a kérésekre ugyanaz a szabályzat vonatkozik. Ha a MapCompletere, a StreetCompletere vagy az openstreetmap.orgra mutató linket
+vonatkozik. Ha egy jelölőben a <em>Válaszolás a MapCompleten</em> gombra koppintasz, az oldal a következő percekben néhányszor az api.openstreetmap.org-tól is megkérdezi, mit mond most az az egy objektum — ezekre a kérésekre ugyanaz a szabályzat vonatkozik. A keresőmezőbe írt harmadik karaktertől kezdve, és valahányszor megnyitod a <em>Hely hozzáadása</em> ablakot, az oldal a komoot Photon nevű helykeresőjét is megkérdezi (photon.komoot.io). Ez megkapja a beírt szöveget és a térkép kerekített középpontját, valamint, mint minden szerver, az IP-címedet. Ha a MapCompletere, a StreetCompletere vagy az openstreetmap.orgra mutató linket
 követsz, az ő oldalukon vagy, és a saját OSM-fiókod alatt szerkesztesz. Rajtunk keresztül semmi
 nem megy át. Hivatalos oldalak:
 <a href="impressum.html">Impressum</a> ·

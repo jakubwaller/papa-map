@@ -1,7 +1,7 @@
 # Deploying papa-map (static)
 
-The site is static: the nightly pipeline writes two JSON files into `web/data/` and one HTML
-page per Bundesland into `web/wickeltische/`, and any web server serves `web/` as plain files.
+The site is static: the nightly pipeline writes the dataset files into `web/data/` and the area
+and leaderboard pages into `web/wickeltische/`, and any web server serves `web/` as plain files.
 **No API process and no database** — nothing to keep running except a web server and cron.
 
 The live deployment runs the bundled `docker-compose.yml`: a `caddy:2-alpine` container that
@@ -24,10 +24,16 @@ With Docker, which is how the live site runs:
 ```bash
 ssh <your-server>
 git clone <repo-url> papa-map && cd papa-map
-mkdir -p web-data/wickeltische             # mountpoint — see the warning further down
+# mountpoints, owned by you — before `up`, which would otherwise create them root-owned,
+# and the tiles and ops services run as 1000:1000 (edit their `user:` if your uid differs)
+mkdir -p web-data/wickeltische web-data/private web-data/tiles ops-data && touch pipeline.log
 docker compose up -d papamap               # static server on :8012, no host port
 docker compose run --build --rm pipeline   # first dataset build
 ```
+
+Already ran `up` without them? `mkdir -p` on a root-owned directory changes nothing, so hand
+the two `up` created over instead, and create the third (only the `ops` service mounts it):
+`sudo chown -R 1000:1000 web-data/tiles web-data/private && mkdir -p ops-data`.
 
 The container publishes no host port; point your existing ingress at it. The live setup
 reverse-proxies `papamap:8012` from a shared host Caddy over the external `web_proxy` network.
@@ -40,6 +46,9 @@ git clone <repo-url> papa-map && cd papa-map
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m pipeline.run    # first dataset build
 ```
+
+That needs Python 3.10 or newer: the pinned `requests` installs on nothing older (the image and
+CI use 3.12). macOS's own `/usr/bin/python3` is 3.9 and too old.
 
 (No git remote yet? `rsync -av --exclude .venv --exclude .git ./ <your-server>:~/papa-map/`
 from the dev machine works the same; re-run it to update.)
@@ -71,8 +80,8 @@ Protomaps bucket is meant for extracts rather than for daily hammering:
 ```
 
 About 3 GB on disk for the 62 cities at zoom 14 (Hamburg is 24 MB), roughly a minute per city
-over the network — the whole run is well under two hours. `mkdir -p web-data/tiles` before the
-first run so the host user owns it (the service runs as 1000:1000). One city by hand:
+over the network — the whole run is well under two hours. `web-data/tiles` is created in the
+One-time block so the host user owns it (the service runs as 1000:1000). One city by hand:
 `docker compose run --build --rm tiles python -m pipeline.tiles --out /out/tiles --only hamburg`.
 The image carries the `pmtiles` binary (Dockerfile, pinned and checksummed), so the host needs
 nothing new. After the first run, `curl -sI https://papamap.de/tiles/index.json | grep -i
@@ -284,7 +293,7 @@ lose its run history, visits curve and theme-edit series:
 
 ```bash
 cd ~/papa-map
-mkdir -p ops-data web-data/private && touch pipeline.log   # mountpoints, owned by you
+mkdir -p ops-data web-data/private && touch pipeline.log   # already done in One-time; harmless
 [ -f ops-state.json ] && mv ops-state.json ops-data/ops-state.json     # migrate the state
 docker compose run --build --rm ops        # first run: writes the state and both pages
 ```
@@ -405,11 +414,14 @@ It is served at `https://papamap.de/private/ops.html` **only once you add the au
 `deploy/papamap.Caddyfile` answers 404 under `/private/` until `deploy/private/*.caddy`
 exists, so a checkout without it never exposes the page. Access is a token in the URL, the
 way Bürgerwecker's admin works: bookmark `…/private/ops.html?token=…`; the first visit also
-sets a cookie, so the plain URL works afterwards in that browser. One-time setup on the server:
+sets a cookie, so the plain URL works afterwards in that browser. Everything under `/private/`,
+the 404 included, goes out `Cache-Control: private, no-store` (set in the Caddyfile, not the
+snippet): no shared cache may keep the page, and a browser must not remember a cookie-less 404
+past the `?token=` visit. One-time setup on the server:
 
 ```sh
 cd ~/papa-map
-mkdir -p web-data/private                      # before `up`: Docker would create it as root
+mkdir -p web-data/private                      # already done in One-time; harmless
 T=$(openssl rand -base64 30 | tr -d '/+=')
 sed "s/REPLACE-WITH-THE-TOKEN/$T/g" deploy/private/ops-auth.caddy.example > deploy/private/ops-auth.caddy
 chmod 600 deploy/private/ops-auth.caddy
@@ -489,18 +501,24 @@ file that no more specific matcher claims (`/data/*` and `/ops.html` get 900). C
 (`cf-cache-status: HIT`), and on those responses it rewrites the header to `max-age=14400`. So a
 reader's browser may keep a stale file for four hours, and the service worker's background
 refresh reads that same browser cache. HTML is not edge-cached (`DYNAMIC`) and keeps Caddy's
-hour (measured 2026-09-13). Three rules follow:
+hour (measured 2026-09-13). Update 2026-10-07: `sw.js` now goes out `Cache-Control: no-cache`
+from Caddy, which Cloudflare should neither edge-cache nor rewrite — confirm after the deploy
+with `curl -sI https://papamap.de/sw.js` (`no-cache`, and `cf-cache-status` not `HIT`). Three
+rules follow:
 
-- **Any change to a shell file needs a pin bump:** `app.js`, `i18n.js`, `datasource.js`,
-  `osm.js` or `style.css`. Without one, the edge keeps serving the old file under the old URL.
+- **Any change to a shell file needs a pin bump:** every file in the `SHELL` list in
+  `web/sw.js` that carries a `?v=` pin — `style.css` and every pinned `web/*.js` module
+  (`app.js`, `i18n.js`, `search.js`, `venues.js` and the rest; the list is the source).
+  Without one, the edge keeps serving the old file under the old URL.
   #97's Norwegian wording was live at the origin and invisible to readers for that reason
   (2026-09-13). A bump does not reach every edge-cached file. `impressum.html` and
   `datenschutz.html` load `style.css` with no pin, and `vendor/maplibre-gl.*` has none either.
-  Nor does `sw.js` itself. A change to the worker, its rules or a new `SHELL` list, reaches a
-  returning reader only when their cached copy runs out, up to four hours later. Nothing breaks
-  in the meantime, because the old worker fetches new-pin URLs as they come up.
-  A change there waits out the browsers' four hours. A purge only helps readers who have not
-  loaded the file yet.
+  Nor does `sw.js` itself. A change to the worker, its rules or a new `SHELL` list, reached a
+  returning reader only when their cached copy ran out, up to four hours later. Nothing breaks
+  in the meantime, because the old worker fetches new-pin URLs as they come up. Since
+  2026-10-07 `sw.js` is `no-cache` (above), so it reaches them on their next update check.
+  A change to the other unpinned files waits out the browsers' four hours. A purge only helps
+  readers who have not loaded the file yet.
 - **Never fetch a new-pin URL before the `git pull` on the server.** The first request caches
   whatever the origin serves at that moment under the new URL: first at the edge, then in every
   browser that loads it. A pre-deploy

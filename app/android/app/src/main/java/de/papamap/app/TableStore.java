@@ -42,11 +42,9 @@ public final class TableStore {
 
     // Written beside the old copy and renamed over it, so the widget never
     // reads half a file.
-    // synchronized: every writeDataset call runs on a thread of its own, and two
-    // that overlap (boot's applyDataset and watchRefresh's, or two quick taps on
-    // the wheelchair chip) would otherwise interleave their bytes in the one
-    // .new file. Serialized, each write lands whole — though a monitor is not
-    // fair, so two calls started within microseconds may land in either order.
+    // synchronized: writeDataset calls already run one at a time, in order, on
+    // PapaMapSharePlugin's single writer thread; the monitor keeps any other
+    // caller from interleaving its bytes in the one .new file.
     public static synchronized void save(Context c, String json) throws IOException {
         File dir = c.getFilesDir();
         File tmp = new File(dir, DATASET_FILE + ".new");

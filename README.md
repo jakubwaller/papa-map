@@ -46,7 +46,7 @@ python -m pipeline.run                 # ~5 min: Overpass -> web/data/*.json + w
 python3 -m http.server -d web 8000     # http://127.0.0.1:8000
 ```
 
-Python 3.9+. The default build sweeps Germany and Denmark. `PAPAMAP_COUNTRIES=de,dk,at,ch`
+Python 3.10+ (CI and the Docker image use 3.12). The default build sweeps Germany and Denmark. `PAPAMAP_COUNTRIES=de,dk,at,ch`
 picks other countries (ISO codes, the UK is `gb`); papamap.de sets the full list in
 `docker-compose.yml`. Use `127.0.0.1`, not `localhost`, if you want to test the OSM login
 against the sandbox.
@@ -57,6 +57,7 @@ against the sandbox.
 pip install -r requirements-dev.txt
 pytest -v                  # pipeline, offline
 node --test web/*.test.js  # frontend
+node --test app/*.test.mjs app/ios/*.test.mjs app/android/*.test.mjs  # store app
 ```
 
 ## Deploy

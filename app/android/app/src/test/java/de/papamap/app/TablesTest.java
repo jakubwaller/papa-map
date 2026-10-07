@@ -70,9 +70,13 @@ public class TablesTest {
     }
 
     @Test
-    public void distancesReadLikeTheIosWidget() {
+    public void distancesReadLikeTheMap() {
+        // web/datasource.js formatDistance: to the nearest 10 m, then the unit.
         assertEquals("240 m", Tables.formatDistance(240.4, "en"));
-        assertEquals("999 m", Tables.formatDistance(999.4, "de"));
+        assertEquals("440 m", Tables.formatDistance(437, "en"));
+        assertEquals("990 m", Tables.formatDistance(994, "en"));
+        assertEquals("1,0 km", Tables.formatDistance(999.4, "de"));
+        assertEquals("1.0 km", Tables.formatDistance(999.6, "en"));
         assertEquals("1.1 km", Tables.formatDistance(1111.95, "en"));
         assertEquals("1,1 km", Tables.formatDistance(1111.95, "de"));
     }

@@ -737,7 +737,7 @@ row for the header and shows only when the dataset is empty; the chips' badges
 carry the numbers. Costs no extra Overpass query: the sweep already returns every tag on these
 objects. Measured on the DE+DK build of 17 Aug 2026: 828 objects pass the rule
 and 111 of them are already pins (48 accessible / 13 female_only / 50 unknown).
-Those are DE+DK figures and the 46-country sweep is larger, so the served
+Those are DE+DK figures and the full multi-country sweep is larger, so the served
 numbers come from `stats.json` (`local.play_tables`, `local.play_places`) —
 the methods pages read them from there rather than repeating a number that
 moves every night.
@@ -985,8 +985,9 @@ A full build also appends one entry per day to `web/data/history.json` —
 `[accessible, female_only, unknown]` counts per region (the 16 Bundesländer,
 plus every swept country outside Germany under its own label) and per big
 city (the curated `CITY_AREAS` list, membership via one ids-only Overpass query
-per city) — and renders `web/wickeltische/rangliste.html` (German) plus
-`leaderboard.html` (English) from it. The tables rank the **change** of the
+per city) — and renders one leaderboard page per site language from it (32:
+`rangliste.html` for German, `leaderboard.html` for English, `leaderboard-<lang>.html`
+for the rest, the copy in `pipeline/leaderboard_strings.py`). The tables rank the **change** of the
 answered share in percentage points against a snapshot at least a week back,
 never the absolute counts: levels measure mapping thoroughness, movement
 measures people answering the room question, and only the latter is an honest
@@ -1203,7 +1204,14 @@ layout, the build and the signing):
   Papa/Mama setting, so the widget, the shortcut and the app's own button name the same table.
   `status` is read there, never derived. Under the chip a `wheelchair=limited` table is named
   as such in words on the widget and in Siri's sentence ("limited wheelchair access", the
-  map's exclamation mark), never as a colour.
+  map's exclamation mark), never as a colour. Neither trusts an old position: the widget
+  reads the phone's last fix and, like Android's, treats one older than half an hour as none
+  — with permission granted, that is an ordinary state, so it says "Tap and PapaMap finds it"
+  and the tap runs the map's own "nearest" button (`papamap://nearest`), as on Android; only a
+  widget without the permission says "No location". Siri, which asks for a fresh fix, falls back
+  to the last one only when it is under half an hour old, rather than naming a table near where
+  the phone was this morning. Their distances round like the map's, to 10 m first, so 999.6 m
+  reads "1.0 km" on the widget and in Siri ("1 km" on the map), never "1000 m".
 - **A button in Control Center** (iOS 18), which is also a Lock Screen button and the Action
   button: one tap on the nearest reachable table, no app to find first. It asks the same
   question as the shortcut — one lookup, `NearestLookup`, so the two cannot drift apart — from
