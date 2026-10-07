@@ -20,6 +20,27 @@ test("normalise folds case and diacritics, both sides of the comparison", () => 
   assert.equal(normalise("Αθήνα"), "αθηνα");
 });
 
+test("normalise folds letters NFD leaves alone, and full-width Latin", () => {
+  // No mark to strip on these: each is its own letter, typed on a phone
+  // keyboard as the ASCII spelling.
+  assert.equal(normalise("Großmann"), "grossmann");
+  assert.equal(normalise("Łódź"), "lodz");
+  assert.equal(normalise("København"), "kobenhavn");
+  assert.equal(normalise("ｒｅｗｅ"), "rewe");
+  const near = { lat: 52, lon: 13 };
+  const pins = [
+    { name: "Łódź Kaliska", lat: 51.76, lon: 19.43, status: "unknown" },
+    { name: "København H", lat: 55.67, lon: 12.56, status: "unknown" },
+    { name: "Bäckerei Großmann", lat: 52.5, lon: 13.4, status: "unknown" },
+    { name: "Rewe", lat: 52.4, lon: 13.3, status: "unknown" },
+  ];
+  const names = (q) => matchLocal(pins, [], q, near).map((h) => h.obj.name);
+  assert.deepEqual(names("lodz"), ["Łódź Kaliska"]);
+  assert.deepEqual(names("kobenhavn"), ["København H"]);
+  assert.deepEqual(names("gross"), ["Bäckerei Großmann"]);
+  assert.deepEqual(names("ｒｅｗｅ"), ["Rewe"]);
+});
+
 test("matchLocal: substring, diacritic-blind, nearest to the map centre first", () => {
   const tables = [
     table("Rewe City", 53.60, 9.993),      // ~5.6 km north
