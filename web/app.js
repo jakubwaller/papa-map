@@ -51,9 +51,9 @@ import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
          PHOTON_DEBOUNCE_MS } from "./search.js?v=app79";
-// opening_hours -> open-right-now, evaluated against the viewer's own clock
-// (the places are local to whoever is looking, and there is no per-place
-// timezone in the data to check against instead). Pure and deliberately
+// opening_hours -> open-right-now, evaluated on the place's own clock (its
+// IANA zone from the data, CONTRACT v80; the viewer's clock when the data
+// names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
 import { isOpenNow } from "./opening-hours.js?v=app79";

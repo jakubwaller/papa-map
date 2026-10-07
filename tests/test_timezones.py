@@ -22,6 +22,21 @@ def test_single_zone_area_takes_its_country_default_and_no_override():
     (-33.87, 151.21, "Australia/Sydney"),
     # Tweed Heads: New South Wales, a street south of Queensland's border.
     (-28.18, 153.54, "Australia/Sydney"),
+    (-28.17, 153.54, "Australia/Brisbane"),   # Coolangatta, across the street
+    # Either side of the rest of the border (NSW keeps summer time, QLD not).
+    (-28.22, 152.03, "Australia/Brisbane"),   # Warwick
+    (-28.65, 151.93, "Australia/Brisbane"),   # Stanthorpe
+    (-28.42, 151.08, "Australia/Brisbane"),   # Inglewood
+    (-28.85, 151.17, "Australia/Brisbane"),   # Texas, QLD
+    (-28.23, 153.27, "Australia/Brisbane"),   # Springbrook
+    (-28.55, 150.31, "Australia/Brisbane"),   # Goondiwindi
+    (-28.33, 152.29, "Australia/Brisbane"),   # Killarney
+    (-28.60, 150.37, "Australia/Sydney"),     # Boggabilla, across the Macintyre
+    (-29.05, 152.02, "Australia/Sydney"),     # Tenterfield
+    (-28.39, 152.61, "Australia/Sydney"),     # Woodenbong
+    (-28.33, 153.39, "Australia/Sydney"),     # Murwillumbah
+    (-28.64, 153.61, "Australia/Sydney"),     # Byron Bay
+    (-31.95, 141.45, "Australia/Broken_Hill"),
 ])
 def test_australia_splits_by_coordinates(lat, lon, zone):
     assert zone_for("Australia", lat, lon) == zone
@@ -46,6 +61,17 @@ def test_the_default_zone_is_never_an_override():
     ("Ontario", 43.65, -79.38, "America/Toronto"),
     ("Idaho", 47.68, -116.78, "America/Los_Angeles"),
     ("Idaho", 43.62, -116.20, "America/Boise"),
+    # British Columbia: the Peace River country and the Northern Rockies lie
+    # west of the 120°W border and keep UTC-7 all year; Mackenzie is Pacific.
+    ("British Columbia", 55.76, -120.24, "America/Dawson_Creek"),   # Dawson Creek
+    ("British Columbia", 56.25, -120.85, "America/Dawson_Creek"),   # Fort St. John
+    ("British Columbia", 55.70, -121.63, "America/Dawson_Creek"),   # Chetwynd
+    ("British Columbia", 58.81, -122.70, "America/Fort_Nelson"),    # Fort Nelson
+    ("British Columbia", 55.34, -123.09, "America/Vancouver"),      # Mackenzie
+    ("British Columbia", 53.92, -122.75, "America/Vancouver"),      # Prince George
+    ("British Columbia", 49.51, -115.77, "America/Edmonton"),       # Cranbrook
+    ("British Columbia", 49.10, -116.51, "America/Creston"),        # Creston
+    ("British Columbia", 51.00, -118.20, "America/Vancouver"),      # Revelstoke
 ])
 def test_multi_zone_areas(area, lat, lon, zone):
     assert zone_for(area, lat, lon) == zone

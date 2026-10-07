@@ -10,8 +10,8 @@
 > the coordinate rules in `timezones.zone_for` put it in a zone other than its
 > area's default — Perth in "Australia", El Paso in "Texas", Las Palmas in
 > "Spain"; everywhere else the key is absent. Set wherever a feature's area is
-> decided: `export.build_features` / `build_play_features` (the nightly build and
-> the backfill) and `pipeline/delta.py` (upserts), so delta features carry it
+> decided: `export.build_features` / `build_play_features` (the nightly build;
+> the backfill writes no features) and `pipeline/delta.py` (upserts), so delta features carry it
 > too. To make that possible **a play place carries `area`** as a table has since
 > v32 (the sweep area that found it, or null); the delta keeps a known place's
 > area and assigns a new one's by the same boxes as a table's. The frontend reads

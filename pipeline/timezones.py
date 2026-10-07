@@ -36,7 +36,7 @@ COUNTRY_TZ = {
     "ro": "Europe/Bucharest", "bg": "Europe/Sofia", "rs": "Europe/Belgrade",
     "ba": "Europe/Sarajevo", "me": "Europe/Podgorica", "al": "Europe/Tirane",
     "mk": "Europe/Skopje", "xk": "Europe/Belgrade", "md": "Europe/Chisinau",
-    "ua": "Europe/Kyiv", "by": "Europe/Minsk",
+    "ua": "Europe/Kiev", "by": "Europe/Minsk",
     "au": "Australia/Sydney", "nz": "Pacific/Auckland",
     "us": "America/New_York", "ca": "America/Toronto", "jp": "Asia/Tokyo",
 }
@@ -101,6 +101,28 @@ def area_tz_table(areas) -> dict[str, str]:
     return table
 
 
+# The Queensland / New South Wales border east of 141°E, as (lon, lat)
+# points: along 29°S to Mungindi, down the Barwon and Macintyre past
+# Goondiwindi (QLD) and Boggabilla (NSW), the Dumaresq past Texas, up the
+# range from Wallangarra to Killarney, and along the McPherson Range to
+# Point Danger between Coolangatta (QLD) and Tweed Heads (NSW). Straight
+# lines between them: a town right on the border can still land on the
+# wrong side, the towns either side of it do not.
+_QLD_BORDER = ((141.0, -29.0), (148.95, -29.0), (150.34, -28.575), (151.15, -28.93),
+               (151.95, -28.97), (152.30, -28.36), (152.65, -28.32), (152.9, -28.28),
+               (153.3, -28.26), (153.55, -28.17))
+
+
+def _qld_border_lat(lon: float) -> float:
+    pts = _QLD_BORDER
+    if lon <= pts[0][0]:
+        return pts[0][1]
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        if lon <= x1:
+            return y0 + (lon - x0) / (x1 - x0) * (y1 - y0)
+    return pts[-1][1]
+
+
 def _australia(lat: float, lon: float) -> str | None:
     if lon < 129:
         return "Australia/Perth"
@@ -108,11 +130,12 @@ def _australia(lat: float, lon: float) -> str | None:
         return "Australia/Darwin"
     if lon < 141 and lat <= -26:
         return "Australia/Adelaide"
-    # Queensland keeps no summer time; the cut-out is the Tweed, which is
-    # New South Wales south of the border at -28.17.
-    if (lon >= 138 and lat > -26) or (
-            lon >= 141 and lat > -29 and not (lon > 151.0 and lat < -28.17)):
+    # Queensland keeps no summer time.
+    if (lon >= 138 and lat > -26) or (lon >= 141 and lat > _qld_border_lat(lon)):
         return "Australia/Brisbane"
+    # Broken Hill, in New South Wales, keeps South Australia's clock.
+    if -32.6 < lat < -31.0 and lon < 142.0:
+        return "Australia/Broken_Hill"
     return None
 
 
@@ -125,8 +148,18 @@ def _nunavut(lat: float, lon: float) -> str | None:
 
 
 def _british_columbia(lat: float, lon: float) -> str | None:
-    if lon > -120.0 and lat > 55.5:
+    # North of 53.8°N the province ends at 120°W, so the Peace River country
+    # (Dawson Creek, Fort St. John, Chetwynd) and the Northern Rockies (Fort
+    # Nelson), on UTC-7 all year, lie WEST of it; Mackenzie, at -123.1, is
+    # Pacific.
+    if lat > 57.5 and lon > -127.5:
+        return "America/Fort_Nelson"
+    if lat > 55.0 and lon > -122.5:
         return "America/Dawson_Creek"
+    # Creston keeps Mountain Standard Time all year, unlike the rest of the
+    # East Kootenay around it.
+    if lat < 49.3 and -116.9 < lon < -116.2:
+        return "America/Creston"
     if lon > -117.5 and lat < 51.5:
         return "America/Edmonton"
     return None

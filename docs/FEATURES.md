@@ -954,9 +954,9 @@ time ranges (`Mo - Sa 08:00 - 19:00`), same as it already was around `,`.
 `sunrise`, `sunset`, civil `dawn`/`dusk` (-6°), and offsets from them
 (`(dusk-00:30)`, `(sunset+01:00)`) work as time-span endpoints, computed for
 the place's own coordinates via a compact solar-position calculation (no
-external service) — but converted to a time of day using the *device's*
-timezone, on the same "viewer's clock is close enough" reasoning the rest of
-the module already makes. Without the place's coordinates, or on a date
+external service) — and read as a time of day on the place's own clock, like
+the rest of the evaluation since v80 (the device's clock when the data names
+no zone). Without the place's coordinates, or on a date
 where the event doesn't occur at that latitude (polar day/night), a value
 that needs one is `"unknown"`.
 
