@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import gzip
 import io
+import itertools
 import json
+import math
 import os
 import sys
 import time
@@ -41,9 +43,13 @@ STATE_PATH = os.environ.get("PAPAMAP_DELTA_STATE_PATH", "web-data/private/delta-
 DELTA_PATH = os.environ.get("PAPAMAP_DELTA_PATH", "web/data/delta.json")
 
 POLL_INTERVAL_S = float(os.environ.get("PAPAMAP_DELTA_POLL_S", "60"))
-# "downtime... over 48h" in the design: past that, catching up minute by
-# minute costs more than just rebasing on tonight's build.
-MAX_GAP_H = float(os.environ.get("PAPAMAP_DELTA_MAX_GAP_H", "48"))
+# How far one tick walks before it hands back what it has: run_forever
+# writes delta.json and the state after every tick, so a long catch-up (a
+# reset after the nightly build, or a follower that was down) is
+# checkpointed every this many sequences instead of being one all-or-nothing
+# walk that a single failed fetch near the end throws away. A tick still
+# behind the head is followed at once, without the poll sleep.
+MAX_SEQ_PER_TICK = int(os.environ.get("PAPAMAP_DELTA_MAX_SEQ_PER_TICK", "120"))
 
 # The keys build_features/build_play_features care about, mirrored here only
 # to decide whether a diff object is worth acting on at all — the same
@@ -148,7 +154,8 @@ def fetch_osm_full_centroid(osm_type: str, osm_id: int, get=None) -> tuple[float
     """A way/relation's diff entry carries no coordinates. Rare (a few a
     day, per the design) — only hit when the object isn't already in the
     base dataset (whose own coordinates are reused instead, see
-    process_changes)."""
+    process_changes) and its tags could make it an event at all
+    (_could_emit)."""
     if osm_type == "node":
         return None
     get = get or requests.get
@@ -262,16 +269,37 @@ def compute_area_bboxes(elements_with_area, pad_deg: float = AREA_BBOX_PAD_DEG) 
     play_area, the same per-area sweep authority the pages and the
     leaderboard use). Returns {area_name: [min_lon, min_lat, max_lon,
     max_lat]}, padded. An entry with no usable coordinates or no area is
-    skipped, never crashes the build."""
-    boxes: dict[str, list[float]] = {}
+    skipped, never crashes the build.
+
+    An area straddling the antimeridian (New Zealand's relation includes the
+    Chatham Islands at 176°W) would get a plain min/max box the wrong way
+    round the planet, admitting new pins in Chile and Argentina as "New
+    Zealand". When shifting the west longitudes by +360 gives the narrower
+    box, that one is kept instead, with max_lon past 180 — still four
+    numbers, which in_bbox reads as wrapping."""
+    points: dict[str, list[tuple[float, float]]] = {}
     for lat, lon, area in elements_with_area:
         if lat is None or lon is None or not area:
             continue
-        b = boxes.setdefault(area, [lon, lat, lon, lat])
-        b[0], b[1] = min(b[0], lon), min(b[1], lat)
-        b[2], b[3] = max(b[2], lon), max(b[3], lat)
-    return {area: [b[0] - pad_deg, b[1] - pad_deg, b[2] + pad_deg, b[3] + pad_deg]
-            for area, b in boxes.items()}
+        points.setdefault(area, []).append((lon, lat))
+    out = {}
+    for area, pts in points.items():
+        lons = [p[0] for p in pts]
+        lats = [p[1] for p in pts]
+        min_lon, max_lon = min(lons), max(lons)
+        if max_lon - min_lon > 180:
+            wrapped = [lon + 360 if lon < 0 else lon for lon in lons]
+            if max(wrapped) - min(wrapped) < max_lon - min_lon:
+                min_lon, max_lon = min(wrapped), max(wrapped)
+                print(f"  delta: {area} spans the antimeridian, its box wraps "
+                      f"(lon {min_lon:.2f}..{max_lon:.2f})", file=sys.stderr)
+        box = [min_lon - pad_deg, min(lats) - pad_deg, max_lon + pad_deg, max(lats) + pad_deg]
+        if box[0] < -180:
+            # Padding pushed a box at the dateline past -180: the same box,
+            # expressed the wrapping way, so a point just across still matches.
+            box[0], box[2] = box[0] + 360, box[2] + 360
+        out[area] = box
+    return out
 
 
 def load_area_bboxes(path: str = AREAS_BBOX_PATH) -> dict | None:
@@ -310,7 +338,11 @@ def in_bbox(lon: float, lat: float, bbox: tuple | None) -> bool:
     if bbox is None:
         return True
     min_lon, min_lat, max_lon, max_lat = bbox
-    return min_lon <= lon <= max_lon and min_lat <= lat <= max_lat
+    if not min_lat <= lat <= max_lat:
+        return False
+    # max_lon past 180: a box across the antimeridian (compute_area_bboxes),
+    # so a west longitude is also tried one turn of the globe further east.
+    return min_lon <= lon <= max_lon or (max_lon > 180 and min_lon <= lon + 360 <= max_lon)
 
 
 def in_any_bbox(lon: float, lat: float, boxes) -> bool:
@@ -323,20 +355,48 @@ def in_any_bbox(lon: float, lat: float, boxes) -> bool:
     return any(in_bbox(lon, lat, tuple(b)) for b in boxes)
 
 
-def area_for_point(lon: float, lat: float, area_boxes_by_name: dict | None) -> str | None:
-    """Which sweep area's own bbox (load_area_bboxes' shape, {name: bbox})
-    (lon, lat) falls inside — the first one found, since sweep areas can
-    overlap a little at their padded edges and any one of them is an honest
-    enough answer (the same tolerance the nightly build's own area
-    assignment has at a real boundary). None when there is no real per-area
-    map to consult (the dataset_bbox fallback has no area names at all) or
-    the point is outside every box — never a guess."""
+def _box_size(box) -> float:
+    return (box[2] - box[0]) * (box[3] - box[1])
+
+
+def area_for_point(lon: float, lat: float, area_boxes_by_name: dict | None,
+                   refs=None) -> str | None:
+    """Which sweep area (lon, lat) belongs to, from the per-area bboxes
+    (load_area_bboxes' shape, {name: bbox}). One containing box decides
+    alone. Rectangles of irregular areas overlap a lot, not just at their
+    padded edges — Salzburg lies inside Bavaria's box, Strasbourg inside
+    Baden-Württemberg's — so with several, the nearest of `refs` (features
+    carrying an `area`: the base dataset's tables and this period's upserts)
+    whose area is one of them decides; the nightly build put that one there
+    from the real Overpass area query. Without any such ref, the smallest
+    containing box, which is still deterministic and not dict order. `refs`
+    is only iterated when boxes overlap, so a lazy chain over the whole
+    dataset costs nothing for the ordinary point. None when there is no real
+    per-area map to consult (the dataset_bbox fallback has no area names at
+    all) or the point is outside every box — never a guess."""
     if not area_boxes_by_name:
         return None
-    for name, box in area_boxes_by_name.items():
-        if in_bbox(lon, lat, tuple(box)):
-            return name
-    return None
+    candidates = [name for name, box in area_boxes_by_name.items()
+                  if in_bbox(lon, lat, tuple(box))]
+    if len(candidates) <= 1:
+        return candidates[0] if candidates else None
+    wanted = set(candidates)
+    k = math.cos(math.radians(lat))
+    best, best_d = None, None
+    for f in refs or ():
+        area = (f.get("properties") or {}).get("area")
+        if area not in wanted:
+            continue
+        flon, flat = f["geometry"]["coordinates"]
+        # Equirectangular is plenty to rank neighbours; the dlon wrap keeps
+        # it honest across the antimeridian.
+        dlon = (flon - lon + 180) % 360 - 180
+        d = (dlon * k) ** 2 + (flat - lat) ** 2
+        if best_d is None or d < best_d:
+            best, best_d = area, d
+    if best is not None:
+        return best
+    return min(candidates, key=lambda n: _box_size(area_boxes_by_name[n]))
 
 
 def read_data_base(stats_path: str = STATS_PATH) -> str | None:
@@ -387,6 +447,26 @@ def find_start_seq(base_iso: str, fetch_state=fetch_state, max_backoff: int = 8,
 
 # ---- Turning diff objects into features, with the nightly build's own code -
 
+def _is_new_toilet_no_table(tags: dict, created: bool) -> bool:
+    """The toilet_no_table test, short of "and it is no table/place" — shared
+    by the event itself and by _could_emit, so the two cannot drift apart."""
+    value = (tags.get("changing_table") or "").strip()
+    return created and tags.get("amenity") == "toilets" and value != "no"
+
+
+def _could_emit(osm_type: str, osm_id: int, tags: dict, created: bool) -> bool:
+    """Whether an object nobody knows yet could produce any event at all,
+    asked BEFORE paying for its coordinate. Neither builder needs one to
+    decide inclusion (both drop on the tags before element_coords), so the
+    real export.build_features/build_play_features run on a placeholder
+    point — the same functions the event path calls, never a copy of their
+    rules."""
+    probe = {"type": osm_type, "id": osm_id, "tags": tags, "lat": 0.0, "lon": 0.0}
+    return bool(export.build_features({"elements": [probe]})
+                or export.build_play_features({"elements": [probe]}, {"elements": []})
+                or _is_new_toilet_no_table(tags, created))
+
+
 def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
                     coord_fetch=None, acc: dict | None = None,
                     area_boxes_by_name: dict | None = None,
@@ -406,8 +486,9 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
     (never the dataset_bbox fallback, which has no area names) — a table
     feature's `area` property (CONTRACT.md v32, the footer's area link)
     carries over from the base/accumulator's own feature when the object is
-    already known, else is assigned from the first area box the point falls
-    in, else None. Built with export.build_features's own area_by_key
+    already known, else is assigned by area_for_point (the one area box the
+    point falls in, or the nearest known table's area among several), else
+    None. Built with export.build_features's own area_by_key
     parameter, exactly the way the nightly build assigns it — never left at
     the default None, which would silently wipe a known object's area on
     every delta upsert.
@@ -476,29 +557,6 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         tags = ch.get("tags") or {}
         if not (is_relevant_tags(tags) or was_table or was_place):
             continue
-        lat, lon = ch.get("lat"), ch.get("lon")
-        if lat is None:
-            ref = base_dataset["tables"].get(url) or base_dataset["places"].get(url)
-            if ref is None and acc is not None:
-                ref = acc["tables_upsert"].get(url) or acc["places_upsert"].get(url)
-            if ref:
-                lon, lat = ref["geometry"]["coordinates"]
-            elif coord_fetch:
-                got = coord_fetch(osm_type, osm_id)
-                if got:
-                    lat, lon = got
-        if lat is None or lon is None:
-            if dropped is not None and last_pos[(osm_type, osm_id)] == i:
-                dropped.append({**ch, "tags": dict(tags)})
-            continue  # no coordinate reachable — never guess; the caller may retry
-        if not (was_table or was_place) and not in_any_bbox(lon, lat, area_boxes):
-            continue  # a brand-new object outside every covered sweep area
-        el = {"type": osm_type, "id": osm_id, "tags": tags, "lat": lat, "lon": lon}
-        existing_table = base_dataset["tables"].get(url)
-        if existing_table is None and acc is not None:
-            existing_table = acc["tables_upsert"].get(url)
-        area = (existing_table["properties"].get("area") if existing_table is not None
-                else area_for_point(lon, lat, area_boxes_by_name))
         # The first-seen-version rule, decided once per url per accumulation
         # period (see created_by_url's own comment above): already decided
         # (an earlier event for this url, this batch or a previous tick) ->
@@ -513,6 +571,40 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
             created = False   # known already, from the base or earlier in this period
         else:
             created = ch.get("version") == 1
+        lat, lon = ch.get("lat"), ch.get("lon")
+        if lat is None:
+            ref = base_dataset["tables"].get(url) or base_dataset["places"].get(url)
+            if ref is None and acc is not None:
+                ref = acc["tables_upsert"].get(url) or acc["places_upsert"].get(url)
+            if ref:
+                lon, lat = ref["geometry"]["coordinates"]
+            elif not (was_table or was_place or _could_emit(osm_type, osm_id, tags, created)):
+                # is_relevant_tags lets through every playground, toilet and
+                # wheelchair tag on the planet; an unknown way/relation that
+                # can never become an event is not worth an OSM API call, a
+                # slot under the per-sequence cap or a place in the retry queue.
+                created_by_url[url] = created
+                continue
+            elif coord_fetch:
+                got = coord_fetch(osm_type, osm_id)
+                if got:
+                    lat, lon = got
+        if lat is None or lon is None:
+            if dropped is not None and last_pos[(osm_type, osm_id)] == i:
+                dropped.append({**ch, "tags": dict(tags)})
+            continue  # no coordinate reachable — never guess; the caller may retry
+        if not (was_table or was_place) and not in_any_bbox(lon, lat, area_boxes):
+            continue  # a brand-new object outside every covered sweep area
+        el = {"type": osm_type, "id": osm_id, "tags": tags, "lat": lat, "lon": lon}
+        existing_table = base_dataset["tables"].get(url)
+        if existing_table is None and acc is not None:
+            existing_table = acc["tables_upsert"].get(url)
+        if existing_table is not None:
+            area = existing_table["properties"].get("area")
+        else:
+            refs = itertools.chain(base_dataset["tables"].values(),
+                                   acc["tables_upsert"].values() if acc is not None else ())
+            area = area_for_point(lon, lat, area_boxes_by_name, refs)
         created_by_url[url] = created
         table_feats = export.build_features({"elements": [el]}, {(osm_type, osm_id): area})
         place_feats = export.build_play_features({"elements": [el]}, {"elements": []})
@@ -535,7 +627,6 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         elif was_place:
             events.append((url, "place", None))
             known_places.discard(url)
-        value = (tags.get("changing_table") or "").strip()
         # A toilet_no_table entry only for a genuinely created object (the
         # same `created` flag the table/place upsert above would carry, had
         # this object qualified as one) — never for merely editing an
@@ -546,8 +637,7 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         # answer the table question a moment later, v2, now a table) — so a
         # stale "no table" toast can never fire once the table itself has
         # landed.
-        if (created and tags.get("amenity") == "toilets"
-                and table_feat is None and place_feat is None and value != "no"):
+        if table_feat is None and place_feat is None and _is_new_toilet_no_table(tags, created):
             events.append((url, "toilet_no_table",
                           {"osm_url": url, "lon": lon, "lat": lat, "t": ch.get("timestamp"),
                            "version": ch.get("version"), "created": created}))
@@ -707,15 +797,21 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
             play_geojson_path: str = PLAY_GEOJSON_PATH, stats_path: str = STATS_PATH,
             delta_path: str = DELTA_PATH, areas_bbox_path: str = AREAS_BBOX_PATH,
             fetch_state=fetch_state, fetch_osc=fetch_osc,
-            coord_fetch=None, coord_fetch_factory=None, max_gap_h: float = MAX_GAP_H,
+            coord_fetch=None, coord_fetch_factory=None,
+            max_seq: int | None = None,
             now: datetime | None = None) -> tuple[dict, dict]:
     """One catch-up tick: first a retry pass over the lookups still pending
-    from earlier ticks (retry_pending), then every sequence from state+1 up
-    to the replication head, so downtime is caught up automatically. Returns
-    (new_state, delta_dict), new_state carrying the retry queue as
-    `pending`. Raises on a hard failure (no data base yet, network down) —
+    from earlier ticks (retry_pending), then the sequences from state+1
+    towards the replication head, at most `max_seq` (MAX_SEQ_PER_TICK) of
+    them, so downtime is caught up automatically over as many ticks as it
+    takes. Returns (new_state, delta_dict), new_state carrying the retry
+    queue as `pending` and the head it walked towards as `head` (run_forever
+    skips its sleep while `seq` is short of it). Raises on a hard failure
+    (no data base yet, network down, the very first sequence unfetchable) —
     the caller (run_forever) is what keeps the last good delta.json and
-    retries.
+    retries. A sequence that fails after others were walked ends the tick
+    early instead, returning the progress so far, which the next tick
+    resumes from.
 
     `coord_fetch` is used as-is for the retry pass and every sequence (tests
     inject it); otherwise `coord_fetch_factory` is called once for the retry
@@ -741,9 +837,12 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
         area_boxes = list(area_boxes_by_name.values())
 
     current = fetch_state()
+    # Only a new base resets. A long gap under the same base used to reset
+    # too, but find_start_seq lands at or before the base, which state.seq
+    # was walked forward from: the reset re-walked every sequence a plain
+    # catch-up would, plus the ones already done, and threw away the
+    # accumulator they had built.
     need_reset = state is None or state.get("base") != base_iso
-    if not need_reset and current["seq"] - state["seq"] > max_gap_h * 60:
-        need_reset = True
 
     if need_reset:
         start_seq = find_start_seq(base_iso, fetch_state=fetch_state)
@@ -771,14 +870,25 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
                                         acc=acc, area_boxes_by_name=area_boxes_by_name)
         apply_events(acc, events)
 
-    for seq in range(last_seq + 1, current["seq"] + 1):
-        raw = fetch_osc(seq)
-        changes = parse_osc(io.BytesIO(raw))
+    head = current["seq"]
+    first_seq = last_seq + 1
+    end_seq = min(head, last_seq + (max_seq if max_seq is not None else MAX_SEQ_PER_TICK))
+    for seq in range(first_seq, end_seq + 1):
         dropped: list = []
-        apply_events(acc, process_changes(changes, base_dataset, area_boxes=area_boxes,
-                                          coord_fetch=_fetcher(), acc=acc,
-                                          area_boxes_by_name=area_boxes_by_name,
-                                          dropped=dropped))
+        try:
+            changes = parse_osc(io.BytesIO(fetch_osc(seq)))
+            events = process_changes(changes, base_dataset, area_boxes=area_boxes,
+                                     coord_fetch=_fetcher(), acc=acc,
+                                     area_boxes_by_name=area_boxes_by_name,
+                                     dropped=dropped)
+        except Exception as exc:  # noqa: BLE001 — keep what was walked, see the docstring
+            if seq == first_seq:
+                raise  # nothing walked this tick: run_forever logs it and sleeps
+            print(f"  WARN delta: seq {seq} failed ({exc.__class__.__name__}: {exc}), "
+                  f"keeping {first_seq}..{seq - 1} and resuming there next tick",
+                  file=sys.stderr)
+            break
+        apply_events(acc, events)
         # A newer diff entry for a pending object decides its fate now — a
         # delete or a retag away from relevance included — so the older
         # pending entry goes, whatever this one did.
@@ -789,7 +899,7 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
         last_seq = seq
 
     delta = render_delta(acc, base_iso, last_seq, now=now)
-    return {"seq": last_seq, "base": base_iso, "pending": pending}, delta
+    return {"seq": last_seq, "base": base_iso, "pending": pending, "head": head}, delta
 
 
 def run_forever(poll_s: float = POLL_INTERVAL_S, state_path: str = STATE_PATH,
@@ -809,6 +919,7 @@ def run_forever(poll_s: float = POLL_INTERVAL_S, state_path: str = STATE_PATH,
     print(f"  delta: following {REPLICATION_BASE}, polling every {poll_s:.0f}s",
           file=sys.stderr)
     while True:
+        behind = False
         try:
             state = load_state(state_path)
             if coord_fetch is not None:
@@ -824,10 +935,15 @@ def run_forever(poll_s: float = POLL_INTERVAL_S, state_path: str = STATE_PATH,
                   f"{len(delta['tables']['upsert'])} table(s), "
                   f"{len(delta['places']['upsert'])} place(s) upserted{pending_note}",
                   file=sys.stderr)
+            # A capped or cut-short catch-up goes on at once; a tick that
+            # walked nothing raised instead, so a host that keeps failing
+            # still gets the full sleep between attempts.
+            behind = new_state["seq"] < new_state.get("head", new_state["seq"])
         except Exception as exc:  # noqa: BLE001 — must never crash-loop
             print(f"  WARN delta tick failed, keeping last good delta.json: {exc}",
                   file=sys.stderr)
-        time.sleep(poll_s)
+        if not behind:
+            time.sleep(poll_s)
 
 
 def main() -> None:

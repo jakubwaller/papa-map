@@ -8,7 +8,7 @@ import pytest
 import requests
 
 from pipeline import config, leaderboard, osm, run
-from pipeline.config import BUNDESLAENDER, CITY_AREAS, sweep_areas
+from pipeline.config import BUNDESLAENDER, sweep_areas
 from pipeline.run import run_pipeline
 
 NOW = datetime(2026, 7, 26, 3, 0, tzinfo=timezone.utc)
@@ -17,12 +17,22 @@ NOW = datetime(2026, 7, 26, 3, 0, tzinfo=timezone.utc)
 # admin_level=2. A full build follows up with one ids-only query per
 # leaderboard city.
 SWEEP = [(name, "4") for name in BUNDESLAENDER] + [("Danmark", "2")]
-CITY_SWEEP = [(area, lvl) for _, area, lvl in CITY_AREAS]
+
+
+def _city_sweep(codes):
+    """The ids queries a build over `codes` makes: only the cities of the
+    countries it swept, in config order."""
+    return [(area, lvl) for c, cities in config.CITY_AREAS_BY_COUNTRY.items()
+            if c in codes for _, area, lvl in cities]
+
+
+CITY_SWEEP = _city_sweep(("de", "dk"))
 
 # The seven neighbours that each answer whole inside the [timeout:55] budget,
 # plus Germany and Denmark. Kept as its own name because several tests are
 # about exactly this shape — one admin_level=2 area per country.
 RING = ("de", "dk", "be", "nl", "at", "ch", "cz", "pl", "se")
+RING_CITY_SWEEP = _city_sweep(RING)
 RING_SWEEP = SWEEP + [("Belgium", "2"), ("Netherlands", "2"), ("Austria", "2"),
                       ("Switzerland", "2"), ("Czechia", "2"), ("Poland", "2"),
                       ("Sweden", "2")]
@@ -410,7 +420,7 @@ def test_full_build_writes_history_and_leaderboard(tmp_path, load_fixture):
     assert len(day["regions"]) == 17
     assert day["cities"]["Berlin"] == [3, 2, 2]
     assert day["cities"]["København"] == [0, 0, 0]
-    assert len(day["cities"]) == len(CITY_AREAS)
+    assert len(day["cities"]) == len(CITY_SWEEP)
     de = (tmp_path / "pages" / "rangliste.html").read_text(encoding="utf-8")
     en = (tmp_path / "pages" / "leaderboard.html").read_text(encoding="utf-8")
     assert 'lang="de"' in de and "Die Rangliste" in de
@@ -434,7 +444,7 @@ def test_ring_build_files_each_neighbour_under_its_english_name(
         overpass_fetch=fake_overpass,
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
     assert fake_overpass.areas_seen == ([a for a in RING_SWEEP for _ in (1, 2)]
-                                        + CITY_SWEEP)
+                                        + RING_CITY_SWEEP)
     payload = json.loads(stats.read_text(encoding="utf-8"))
     assert payload["area_key"] == "countries_9"
     day = json.loads(history_path.read_text(encoding="utf-8"))["days"][0]
@@ -1047,3 +1057,123 @@ def test_japan_build_writes_japanese_hub_and_prefecture_pages(tmp_path, load_fix
     assert "<h1>東京都のおむつ交換台</h1>" in tokyo
     assert 'href="nihon.html"' in tokyo and "<h2>他の都道府県</h2>" in tokyo
     assert "2026年7月26日" in tokyo
+
+
+# ---- the recount of an empty sweep asks the host that gave it ---------------
+
+def _two_hosts(monkeypatch, answers):
+    """The real fetch_overpass cascade over two fake hosts, http://m1 and
+    http://m2: `answers(url, ql)` returns the JSON body or raises. Records
+    (host, query kind) per request."""
+    calls = []
+
+    def fetch_once(url, ql):
+        kind = ("count" if '"amenity"="toilets"' in ql
+                else "ids" if "out ids" in ql else "sweep")
+        calls.append((url, kind))
+        return answers(url, kind)
+
+    monkeypatch.setattr(osm, "_fetch_once", fetch_once)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+
+    def overpass_fetch(ql, urls=None):
+        return osm.fetch_overpass(ql, urls=urls or ["http://m1", "http://m2"],
+                                  retries=1, backoff=0)
+    return overpass_fetch, calls
+
+
+def test_an_empty_sweep_is_not_vouched_for_by_another_hosts_count(
+        tmp_path, load_fixture, monkeypatch):
+    # m1 is busy for the sweep, m2 (no area database) answers it empty; m1
+    # then has a slot for the count and would answer it with real numbers.
+    # Those numbers say nothing about m2's empty answer — the recount must
+    # go to m2, whose empty count fails the area.
+    def answers(url, kind):
+        if url == "http://m1" and kind == "sweep":
+            raise _http_error(504)
+        if url == "http://m1":
+            return _count_answer(9, 1)
+        return {"elements": []}
+
+    overpass_fetch, calls = _two_hosts(monkeypatch, answers)
+    with pytest.raises(RuntimeError, match="Bayern.*zero objects"):
+        run_pipeline(geojson_path=str(tmp_path / "ct.geojson"),
+                     stats_path=str(tmp_path / "stats.json"),
+                     areas=[("Bayern", "4")], display_area="Bayern",
+                     overpass_fetch=overpass_fetch,
+                     taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
+                     sweep_rounds=1, sweep_pause_s=0)
+    assert calls == [("http://m1", "sweep"), ("http://m2", "sweep"),
+                     ("http://m2", "count")]
+    assert not (tmp_path / "ct.geojson").exists()
+
+
+def test_an_empty_sweep_with_toilets_on_the_same_host_still_resolves(
+        tmp_path, load_fixture, monkeypatch):
+    # The Northwest Territories: no changing table at all, but toilets — and
+    # both answers from the same host, so the area did resolve.
+    def answers(url, kind):
+        if url == "http://m1":
+            raise _http_error(504)
+        return _count_answer(59, 0) if kind == "count" else {"elements": []}
+
+    overpass_fetch, calls = _two_hosts(monkeypatch, answers)
+    summary = run_pipeline(geojson_path=str(tmp_path / "ct.geojson"),
+                           stats_path=str(tmp_path / "stats.json"),
+                           areas=[("Bayern", "4")], display_area="Bayern",
+                           overpass_fetch=overpass_fetch,
+                           taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
+                           sweep_rounds=1, sweep_pause_s=0)
+    assert summary["toilets_total"] == 59 and summary["features"] == 0
+    assert calls[-1] == ("http://m2", "count")
+
+
+def test_a_resting_recount_host_fails_only_its_own_area(tmp_path, load_fixture, monkeypatch):
+    # Pinned to one host, a recount that finds it resting must not read as
+    # "every host is resting" and take the rest of the round down with it.
+    def answers(url, kind):
+        return {"elements": []}
+
+    overpass_fetch, calls = _two_hosts(monkeypatch, answers)
+
+    def fetch(ql, urls=None):
+        if urls == ["http://m2"]:
+            raise osm.OverpassUnavailable("every Overpass host is resting")
+        data = overpass_fetch(ql, urls=urls)
+        data[osm.ANSWERED_BY] = "http://m2"
+        return data
+
+    with pytest.raises(RuntimeError, match="Bayern, Bremen .*recount host http://m2 is resting"):
+        run_pipeline(geojson_path=str(tmp_path / "ct.geojson"),
+                     stats_path=str(tmp_path / "stats.json"),
+                     areas=[("Bayern", "4"), ("Bremen", "4")], display_area="x",
+                     overpass_fetch=fetch,
+                     taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
+                     sweep_rounds=1, sweep_pause_s=0)
+    # Both areas were swept: Bayern's resting recount did not skip Bremen.
+    assert [k for _, k in calls] == ["sweep", "sweep"]
+
+
+# ---- a partial same-day re-run never narrows the history --------------------
+
+def test_a_partial_rerun_neither_queries_foreign_cities_nor_narrows_history(
+        tmp_path, load_fixture, monkeypatch, capsys):
+    kw = dict(geojson_path=str(tmp_path / "ct.geojson"),
+              stats_path=str(tmp_path / "stats.json"),
+              pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+              history_path=str(tmp_path / "history.json"),
+              taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", RING)
+    run_pipeline(overpass_fetch=_fake_overpass(load_fixture), **kw)
+    full = json.loads((tmp_path / "history.json").read_text(encoding="utf-8"))
+    assert len(full["days"][0]["regions"]) == 24
+
+    # The operator checks a German fix on the same day.
+    monkeypatch.setattr(config, "SWEEP_COUNTRIES", ("de",))
+    fake = _fake_overpass(load_fixture)
+    run_pipeline(overpass_fetch=fake, **kw)
+    # Only German cities were asked about: Wien and Paris were not swept.
+    assert fake.areas_seen[-len(_city_sweep(("de",))):] == _city_sweep(("de",))
+    assert len(fake.areas_seen) == 16 + len(_city_sweep(("de",)))
+    assert json.loads((tmp_path / "history.json").read_text(encoding="utf-8")) == full
+    assert "history and leaderboard left unchanged" in capsys.readouterr().err

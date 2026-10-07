@@ -35,7 +35,9 @@ what keeps `str | None` hints working on the system Python. Keep it that way.
 `"male_toilet"`, so a substring check silently classifies every women's-room table as
 dad-accessible — inverting the entire point of the map. `ACCESSIBLE_TOKENS`, `FEMALE_TOKEN` and
 `FEATURE_VALUES` are the vocabulary; changing any of them changes what the site claims, so update
-`web/methods.html` in the same commit.
+`web/methods.html` (and its 31 translations), `theme/papamap.theme.json` and `web/taginfo.json` in the
+same commit; `tests/test_methods_tokens.py`, `tests/test_theme_rule.py` and `tests/test_taginfo.py`
+fail when one of them lags.
 
 **`CONTRACT.md` is the pipeline↔frontend contract.** Classification lives only in Python; the
 frontend consumes the `status` property and never re-derives it. `STATUSES` in `web/datasource.js`

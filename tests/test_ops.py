@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -38,7 +39,9 @@ def fresh_delta(stats, now, minutes=2):
 
 
 def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None,
-        delta="fresh", delta_state=None):
+        delta="fresh", delta_state=None, stats_mtime=None):
+    """`stats_mtime` dates the stats.json write; default is when it is
+    written here, i.e. the real clock, not `now`."""
     state_path = tmp_path / "state.json"
     if delta == "off":
         delta_path = ""
@@ -54,10 +57,13 @@ def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None,
     if state is not None:
         write(state_path, state)
     sent = mails if mails is not None else []
+    stats_path = (write(tmp_path / "stats.json", stats) if stats is not None
+                  else str(tmp_path / "absent-stats.json"))
+    if stats is not None and stats_mtime is not None:
+        os.utime(stats_path, (stats_mtime.timestamp(),) * 2)
     anomalies, report = ops.run_check(
         now=now, state_path=str(state_path),
-        stats_path=write(tmp_path / "stats.json", stats) if stats is not None
-        else str(tmp_path / "absent-stats.json"),
+        stats_path=stats_path,
         geojson_path=write(tmp_path / "gj.json", gj) if gj is not None
         else str(tmp_path / "absent-gj.json"),
         mail=lambda subject, body: sent.append((subject, body)),
@@ -550,26 +556,46 @@ def test_stale_delta_alerts(tmp_path):
 
 
 def test_delta_base_behind_alerts_after_the_grace_period(tmp_path):
-    two_h_ago = TUESDAY - timedelta(hours=2)
-    stats = {"generated_at": two_h_ago.isoformat(timespec="seconds"),
+    # generated_at is the build's START; a late build wrote stats.json
+    # hours after it.
+    five_h_ago = TUESDAY - timedelta(hours=5)
+    stats = {"generated_at": five_h_ago.isoformat(timespec="seconds"),
              "data_base": "2026-08-03T02:00:00Z"}
     delta = fresh_delta(stats, TUESDAY)
     delta["base"] = "2026-08-02T02:00:00Z"
     anomalies, report, _, _ = run(
         tmp_path, stats=stats, gj=geojson([("node", 1, "unknown")]),
-        now=TUESDAY, delta=delta)
+        now=TUESDAY, delta=delta, stats_mtime=TUESDAY - timedelta(hours=2))
     assert len(anomalies) == 1
     assert "base 2026-08-02T02:00:00Z is behind the dataset's data_base " \
            "2026-08-03T02:00:00Z" in anomalies[0]
     assert "base BEHIND the dataset" in report
 
-    # The build wrote stats.json three minutes ago: the follower needs a tick.
-    stats["generated_at"] = (TUESDAY - timedelta(minutes=3)).isoformat(
-        timespec="seconds")
+    # The build wrote stats.json three minutes ago: the follower needs a
+    # tick, however long ago the build started.
     anomalies, _, _, _ = run(
         tmp_path, stats=stats, gj=geojson([("node", 1, "unknown")]),
-        now=TUESDAY, delta=delta)
+        now=TUESDAY, delta=delta, stats_mtime=TUESDAY - timedelta(minutes=3))
     assert anomalies == []
+
+
+def test_rebase_grace_falls_back_to_generated_at_without_a_write_time():
+    stats = {"generated_at": (TUESDAY - timedelta(hours=5)).isoformat(
+                 timespec="seconds"),
+             "data_base": "2026-08-03T02:00:00Z"}
+    delta = ops.delta_summary(
+        dict(fresh_delta(stats, TUESDAY), base="2026-08-02T02:00:00Z"),
+        None, stats, TUESDAY)
+    def behind(**kw):
+        return [a for a in ops.find_anomalies(
+            stats, None, None, TUESDAY, delta=delta, delta_expected=True, **kw)
+            if "has not rebased" in a]
+    assert behind(stats_written=TUESDAY - timedelta(minutes=3)) == []
+    assert len(behind(stats_written=TUESDAY - timedelta(hours=2))) == 1
+    assert len(behind(stats_written=None)) == 1
+    stats["generated_at"] = (TUESDAY - timedelta(minutes=3)).isoformat(
+        timespec="seconds")
+    assert behind(stats_written=None) == []
 
 
 def test_unparsable_delta_generated_alerts(tmp_path):
@@ -624,3 +650,40 @@ def test_delta_summary_survives_garbage():
                           {"pending": [1, {"since": 3, "attempts": "x"}]},
                           None, NOW)
     assert s["tables_upsert"] == 0
+
+
+def test_mail_week_line_counts_tonight(tmp_path):
+    # The page's 7-day row includes tonight; so must the mail's, or a jump
+    # the alert says is "counted below" is missing from it.
+    entry = {"date": "2026-08-01",
+             "counts": {"total": 1, "accessible": 0, "female_only": 0,
+                        "unknown": 1},
+             "changes": dict(ops.diff_statuses({}, {}), new=2)}
+    state = {"statuses": {"node/1": "unknown"},
+             "history": [dict(entry) for _ in range(3)]}
+    _, report, _, _ = run(
+        tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, state=state,
+        gj=geojson([("node", 1, "accessible"), ("node", 2, "unknown")]))
+    assert "last 4 days: +7 new, 1 -> accessible, 0 -> female-only" in report
+
+    # A first run after a reset: tonight alone, singular.
+    state = {"statuses": {"node/1": "unknown"}, "history": []}
+    _, report, _, state_path = run(
+        tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, state=state,
+        gj=geojson([("node", 1, "accessible")]))
+    assert "last 1 day: +0 new, 1 -> accessible" in report
+    assert len(json.loads(state_path.read_text())["history"]) == 1
+
+
+def test_mail_week_line_includes_a_jump(tmp_path):
+    entry = {"date": "2026-08-03",
+             "counts": {"total": 2, "accessible": 0, "female_only": 0,
+                        "unknown": 2},
+             "changes": ops.diff_statuses({}, {})}
+    state = {"statuses": {"node/1": "unknown", "node/2": "unknown"},
+             "history": [entry]}
+    anomalies, report, _, _ = run(
+        tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, state=state,
+        gj=geojson([("node", i, "unknown") for i in range(1, 11)]))
+    assert any("jumped 2 -> 10" in a for a in anomalies)
+    assert "last 2 days: +8 new" in report

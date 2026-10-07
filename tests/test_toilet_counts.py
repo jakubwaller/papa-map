@@ -5,8 +5,9 @@ import json
 from datetime import date, timedelta
 
 import pytest
+import requests
 
-from pipeline import config, toilet_counts
+from pipeline import config, osm, toilet_counts
 from pipeline.run import run_pipeline
 
 from test_run import (CITY_SWEEP, NOW, SWEEP, _count_answer, _fake_overpass,
@@ -232,6 +233,10 @@ def test_the_reused_count_suffix_still_parses_as_an_area_line():
     assert m and m.group("area") == "Bremen" and m.group("toilets") == "3"
     assert AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3")
     assert not AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3 nonsense")
+    # A fallback is still an area line, and says it was one.
+    m = AREA_LINE.match("  Bremen: ct=3 play=1 toilets=3 (counted 9 d ago, recount failed)")
+    assert m and m.group("failed") and not AREA_LINE.match(
+        "  Bremen: ct=3 play=1 toilets=3 (counted 3 d ago)").group("failed")
 
 
 def test_an_empty_count_body_is_not_remembered(tmp_path, load_fixture):
@@ -332,3 +337,96 @@ def test_a_two_zero_count_answer_is_not_remembered(tmp_path, load_fixture):
                                      overpass_fetch=zero_counts))
     assert summary["toilets_total"] == 0
     assert not (tmp_path / "toilets_counts.json").exists()
+
+
+# ---- a recount that fails next to a full sweep keeps the cached count
+
+def _raise(exc):
+    raise exc
+
+
+FAILED_COUNTS = {
+    "raises": lambda: _raise(requests.ConnectionError("count timed out")),
+    "one count": lambda: _count_answer(5),
+    "empty body": lambda: {"elements": []},
+    "two zeros": lambda: _count_answer(0, 0),
+}
+
+
+def _failing_counts(load_fixture, answer):
+    inner = _fake_overpass(load_fixture)
+
+    def fetch(ql, **kwargs):
+        if '"amenity"="toilets"' in ql:
+            return answer()
+        return inner(ql, **kwargs)
+    fetch.areas_seen = inner.areas_seen
+    return fetch
+
+
+@pytest.mark.parametrize("failure", sorted(FAILED_COUNTS))
+def test_a_failed_recount_next_to_a_full_sweep_keeps_the_cached_count(
+        tmp_path, load_fixture, capsys, failure):
+    # The sweep proved the area resolved on its mirror, so the count is only
+    # a statistic tonight: last week's number beats "0 public toilets" — and
+    # beats failing the whole build over it.
+    path = tmp_path / "toilets_counts.json"
+    _seed(path, SWEEP, TODAY - timedelta(days=8), total=100, capacity=9)
+    before = path.read_text(encoding="utf-8")
+    fetch = _failing_counts(load_fixture, FAILED_COUNTS[failure])
+    summary = run_pipeline(**_kwargs(tmp_path, load_fixture, overpass_fetch=fetch,
+                                     sweep_rounds=1, sweep_pause_s=0))
+    assert summary["toilets_total"] == 100 * len(SWEEP)
+    assert path.read_text(encoding="utf-8") == before  # nothing re-dated
+    err = capsys.readouterr().err
+    assert "WARN Bremen: toilet count" in err and "from 8 d ago" in err
+    # The area line keeps the suffix the ops page parses.
+    assert "  Bremen: ct=9 play=4 toilets=100 (counted 8 d ago, recount failed)" in err
+    # Counted apart from the rota's reuse, so a persistent failure shows.
+    assert ("0 area(s) counted tonight, 0 reused from" in err
+            and "17 fell back after a failed recount" in err)
+    # The cache's four-period bound is stated where the warning is read.
+    assert "drops it after 28 d" in err
+
+
+def test_a_rota_reuse_is_not_counted_as_a_fallback(tmp_path, load_fixture, capsys):
+    _seed(tmp_path / "toilets_counts.json", SWEEP, TODAY - timedelta(days=3), total=100)
+    run_pipeline(**_kwargs(tmp_path, load_fixture,
+                           overpass_fetch=_fake_overpass(load_fixture)))
+    err = capsys.readouterr().err
+    assert "(counted 3 d ago)" in err and "recount failed" not in err
+    assert "after a failed recount" not in err and " reused from " in err
+
+
+def test_a_failed_recount_without_a_usable_cache_still_fails_the_area(
+        tmp_path, load_fixture):
+    path = tmp_path / "toilets_counts.json"
+    # Another level's count, another query's count, a zero, an undated entry
+    # and one past the cache's four periods (28 d at the default period of
+    # 7): none of them may stand in for tonight's.
+    undated = _entry(TODAY - timedelta(days=8), name="Hamburg")
+    del undated["date"]
+    toilet_counts.save(str(path), {
+        "Bremen": _entry(TODAY - timedelta(days=8), level="6"),
+        "Bayern": dict(_entry(TODAY - timedelta(days=8), name="Bayern"),
+                       query="0123456789ab"),
+        "Berlin": _entry(TODAY - timedelta(days=8), total=0, name="Berlin"),
+        "Hamburg": undated,
+        "Hessen": _entry(TODAY - timedelta(days=29), name="Hessen")})
+    fetch = _failing_counts(load_fixture, FAILED_COUNTS["raises"])
+    with pytest.raises(RuntimeError, match="sweep failed for") as err:
+        run_pipeline(**_kwargs(tmp_path, load_fixture, overpass_fetch=fetch,
+                               sweep_rounds=1, sweep_pause_s=0))
+    for name in ("Bremen", "Bayern", "Berlin", "Hamburg", "Hessen"):
+        assert name in str(err.value)
+
+
+def test_a_resting_service_on_the_recount_still_fails_the_round(tmp_path, load_fixture):
+    # OverpassUnavailable is not this area's problem; the round fails as one
+    # whatever the cache holds, as it always did.
+    _seed(tmp_path / "toilets_counts.json", SWEEP, TODAY - timedelta(days=8), total=100)
+    fetch = _failing_counts(load_fixture, lambda: _raise(
+        osm.OverpassUnavailable("every Overpass host is resting")))
+    with pytest.raises(RuntimeError, match="sweep failed for Baden-Württemberg"):
+        run_pipeline(**_kwargs(tmp_path, load_fixture, overpass_fetch=fetch,
+                               sweep_rounds=1, sweep_pause_s=0))

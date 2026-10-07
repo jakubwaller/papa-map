@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from pipeline import backfill, leaderboard, pages
+from pipeline import backfill, leaderboard, osm, pages
 from pipeline.config import changing_table_ids_ql
 
 
@@ -553,3 +553,56 @@ def test_the_rendered_page_carries_the_span_and_the_script_that_hides_it():
     assert '<span class="donate">' in html
     assert '<script src="../in-app.js"></script>' in html
     assert html.index("in-app.js") < html.index("<body>")
+
+
+def test_narrows_day_names_the_regions_a_same_day_entry_would_lose():
+    history = {"v": 1, "days": [day("2026-08-14", regions={
+        "Bayern": [1, 0, 0], "Belgium": [2, 0, 0], "Sweden": [0, 0, 0]})]}
+    assert leaderboard.narrows_day(history, "2026-08-14",
+                                   {"Bayern": [1, 0, 0]}) == ["Belgium", "Sweden"]
+    # Same regions or more, another date, or no history: nothing is lost.
+    assert leaderboard.narrows_day(history, "2026-08-14", {
+        "Bayern": [0, 0, 0], "Belgium": [0, 0, 0], "Sweden": [0, 0, 0],
+        "Poland": [0, 0, 0]}) == []
+    assert leaderboard.narrows_day(history, "2026-08-15", {}) == []
+    assert leaderboard.narrows_day({"v": 1, "days": []}, "2026-08-14", {}) == []
+
+
+def test_backfill_counts_no_key_locked_table(tmp_path):
+    # A build day counts only tables a dad can open; a table behind a Euro
+    # key is in the GeoJSON for the wheelchair chip and in no count. A
+    # backfilled day must count the same, or the week-over-week delta
+    # against it shows a drop nobody caused.
+    open_table = {"type": "node", "id": 1, "lat": 50.1, "lon": 8.7,
+                  "tags": {"changing_table": "yes",
+                           "changing_table:location": "unisex_toilet"}}
+    locked = {"type": "node", "id": 2, "lat": 50.1, "lon": 8.7,
+              "tags": {"changing_table": "yes", "access": "private",
+                       "changing_table:location": "wheelchair_toilet",
+                       "centralkey": "eurokey"}}
+
+    regions, _ = backfill.snapshot(
+        "2026-07-24", areas=[("Hessen", "4")], cities=[],
+        fetch=lambda ql: {"elements": [open_table, locked]},
+        pause_s=0, sleep=lambda s: None)
+    assert regions == {"Hessen": [1, 0, 0]}
+
+
+def test_backfill_asks_the_empty_answers_host_for_the_count():
+    # As in the nightly build: an empty attic sweep from one host is only
+    # believed on that host's own toilet count.
+    asked = []
+
+    def fetch(ql, urls=None):
+        if '"amenity"="toilets"' in ql:
+            asked.append(urls)
+            return {"elements": [
+                {"type": "count", "id": 0, "tags": {"total": "59"}},
+                {"type": "count", "id": 0, "tags": {"total": "0"}}]}
+        return {"elements": [], osm.ANSWERED_BY: "http://m2"}
+
+    regions, _ = backfill.snapshot(
+        "2026-07-24", areas=[("Northwest Territories", "4")], cities=[],
+        fetch=fetch, pause_s=0, sleep=lambda s: None)
+    assert regions == {"Northwest Territories": [0, 0, 0]}
+    assert asked == [["http://m2"]]

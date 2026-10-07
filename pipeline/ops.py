@@ -63,8 +63,10 @@ OPS_DELTA_STATE_PATH = os.environ.get(
 # The follower ticks every minute; half an hour without one at 07:30 means it
 # is stuck or dead.
 DELTA_STALE_AFTER_MIN = float(os.environ.get("PAPAMAP_OPS_DELTA_STALE_MIN", "30"))
-# After a nightly build writes a new stats.json the follower needs a tick to
-# rebase; a base mismatch inside this window is not an anomaly.
+# After a nightly build writes a new stats.json the follower needs a tick (or
+# a re-walk of the night's diffs) to rebase; a base mismatch inside this
+# window is not an anomaly. Timed from when stats.json was WRITTEN (its
+# mtime): generated_at is the build's start, ~105 min earlier.
 DELTA_REBASE_GRACE_MIN = 10
 VISITS_HISTORY_DAYS = 400
 # The per-day theme-changeset history, same idea as the visits history: kept
@@ -257,11 +259,13 @@ def delta_summary(delta, delta_state, stats, now) -> dict | None:
 
 
 def find_anomalies(stats, counts, last_counts, now, delta=None,
-                   delta_expected=False) -> list[str]:
+                   delta_expected=False, stats_written=None) -> list[str]:
     """Human-readable anomaly lines; empty list = healthy. `counts`/`stats`
     are None when the corresponding file is missing. `delta` is
     delta_summary()'s dict; with `delta_expected` a missing or stale
-    delta.json, or one based on an older dataset, is an anomaly too."""
+    delta.json, or one based on an older dataset, is an anomaly too.
+    `stats_written` is when stats.json was written (None = unknown, fall
+    back to generated_at)."""
     anomalies = []
     if stats is None:
         anomalies.append("stats.json is missing or unreadable")
@@ -310,7 +314,8 @@ def find_anomalies(stats, counts, last_counts, now, delta=None,
                 f"(limit {DELTA_STALE_AFTER_MIN:.0f} min) — follower stuck or "
                 "dead? (docker logs papamap-delta)")
         if delta is not None and delta["base_ok"] is False:
-            built = _parse_time((stats or {}).get("generated_at"))
+            built = (stats_written
+                     or _parse_time((stats or {}).get("generated_at")))
             try:
                 old = (built is None
                        or (now - built).total_seconds() / 60 > DELTA_REBASE_GRACE_MIN)
@@ -352,7 +357,7 @@ def render_report(counts, changes, history, anomalies, visits=None,
     week = history[-7:]
     if week:
         lines.append(
-            f"last {len(week)} days: "
+            f"last {len(week)} day{'s' if len(week) != 1 else ''}: "
             f"+{sum(e['changes']['new'] for e in week)} new, "
             f"{sum(e['changes']['to_accessible'] for e in week)} -> accessible, "
             f"{sum(e['changes']['to_female_only'] for e in week)} -> female-only")
@@ -670,6 +675,11 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     now = now or datetime.now(timezone.utc)
     state_path = Path(state_path or STATE_PATH)
     stats = load_json(stats_path or STATS_PATH)
+    try:
+        stats_written = datetime.fromtimestamp(
+            os.path.getmtime(stats_path or STATS_PATH), timezone.utc)
+    except OSError:
+        stats_written = None
     geojson = load_json(geojson_path or GEOJSON_PATH)
 
     state = load_json(state_path) or {"statuses": {}, "history": []}
@@ -693,7 +703,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
                              else None, stats, now)
                if delta_path else None)
     anomalies = find_anomalies(stats, counts, last_counts, now,
-                               delta=summary, delta_expected=bool(delta_path))
+                               delta=summary, delta_expected=bool(delta_path),
+                               stats_written=stats_written)
     weekly = now.weekday() == WEEKLY_DIGEST_WEEKDAY
     # Visits and edits every run, not just digest days: the page's per-day
     # charts are built run by run — the visits curve from figures Cloudflare
@@ -718,8 +729,15 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
                            else readers_ledger_path)
     readers_days = merge_readers(state.get("readers_days") or {},
                                  read_readers_ledger(readers_ledger_path))
+    # Tonight's entry goes into the mail's 7-day window too, as it does on the
+    # page (which is rendered after the append below) — otherwise a jump the
+    # alert says is counted there would be missing from it.
+    entry = ({"date": now.strftime("%Y-%m-%d"), "counts": counts,
+              "changes": changes or diff_statuses({}, {})}
+             if cur_statuses is not None else None)
     digest = anomalies or weekly
-    report = render_report(counts, changes, history, anomalies,
+    report = render_report(counts, changes,
+                           history + [entry] if entry else history, anomalies,
                            visits if digest else None, edits, delta=summary,
                            app_days=app_days if digest else None,
                            ratings=app_ratings if digest else None,
@@ -737,8 +755,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
         if "web_changesets" in edits:
             cached_edits["web_changesets"] = edits["web_changesets"]
     if cur_statuses is not None:
-        history.append({"date": now.strftime("%Y-%m-%d"), "counts": counts,
-                        "changes": changes or diff_statuses({}, {})})
+        history.append(entry)
         state = {"statuses": cur_statuses, "history": history[-HISTORY_DAYS:]}
         if cached_edits:
             state["edits"] = cached_edits
