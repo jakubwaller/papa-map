@@ -899,7 +899,8 @@ day-precise ranges within or across months (`Nov 01-Mar 15`, `Apr 1-Oct 31`),
 and single dates or lists of them (`Dec 25 off`, `Dec 25-26,Jan 01 closed`).
 A day-only continuation names a day in the *same* month, so `Dec 20-05`
 isn't read as a year-wrapping range (there's no month to wrap into) — it's
-`"unknown"`. A date selector obeys the same replace/add rules as a weekday
+`"unknown"`. So is a range that mixes a bare month with a month-and-day end
+(`Nov-Mar 24`): which day the bare month means is a guess. A date selector obeys the same replace/add rules as a weekday
 selector above, and a rule whose date doesn't match today simply doesn't
 apply that day; hours that spill past midnight from a date-restricted rule
 are checked against *yesterday's* date, not today's.
@@ -1300,7 +1301,7 @@ case where there genuinely is no copy to fall back to (a first launch): the down
 waiting for keeps running, and when it lands it is parsed and promoted anyway. Without it, a link
 merely *slow* rather than dead would abandon its download on every single launch and never
 actually finish one. The service worker's eight seconds make the same call — its timed-out request
-still stores the response it eventually gets. A file that does not parse is deleted instead, never
+still stores the response it eventually gets, but only when its validators differ from the stored copy (an unchanged dataset is not rewritten). A file that does not parse is deleted instead, never
 promoted, because `.new` is itself a file the loader reads. A first launch too slow for the twenty
 seconds it is given (`NET_MS`; the page's own fetch shares what is left of that same budget) draws
 an empty map once; the launch after it has the data.
