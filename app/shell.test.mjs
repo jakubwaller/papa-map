@@ -15,7 +15,18 @@ test("the app's shell has no donate link, and loses nothing else", () => {
   const preloads = page.match(/[ \t]*<link rel="preload" href="data\/[^"]*"[^>]*>\n/g) ?? [];
   assert.equal(page.length - out.length,
                page.match(/<span class="donate">[\s\S]*?<\/span>/)[0].length
-               + preloads.reduce((n, p) => n + p.length, 0));
+               + preloads.reduce((n, p) => n + p.length, 0)
+               - ", maximum-scale=1".length);
+});
+
+test("the website may be zoomed; the app's shell keeps maximum-scale=1", () => {
+  // WKWebView zooms on a double tap even with Capacitor's zoomEnabled off
+  // (ionic-team/capacitor#8226), and the app has no pinch to undo it.
+  assert.doesNotMatch(page, /maximum-scale/);
+  assert.match(appShell(page),
+    /<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"/);
+  assert.throws(() => appShell(page.replace('initial-scale=1, viewport-fit', 'initial-scale=1.0, viewport-fit')),
+                /viewport meta/);
 });
 
 test("the app's shell drops the website's dataset preloads, and keeps the rest of the head", () => {
