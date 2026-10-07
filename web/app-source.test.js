@@ -110,3 +110,23 @@ test("showPopupHTML restores the option even when setHTML throws", () => {
   assert.throws(() => show("x"), /boom/);
   assert.equal(popup.options.focusAfterOpen, true);
 });
+
+// A chip's visible words are its accessible name (WCAG 2.5.3): an aria-label
+// replaced "Mit Spielecke 12" with a sentence, so Voice Control's "Tap Mit
+// Spielecke" matched nothing. The explanation is the description instead.
+test("the filter chips are named by their text and described by describeBy", () => {
+  for (const name of ["blueChip", "highchairChip", "wheelchairChip"]) {
+    const start = src.indexOf(`function ${name}(`);
+    assert.ok(start > 0, name);
+    const body = src.slice(start, src.indexOf("\n}\n", start));
+    assert.ok(!/aria-label/.test(body), `${name} sets an aria-label`);
+    assert.ok(/describeBy\(b, /.test(body), `${name} does not describe itself`);
+  }
+  // Nor may the code that wraps or places them name them over again.
+  for (const name of ["playChip", "placesChip", "renderChips"]) {
+    const start = src.indexOf(`function ${name}(`);
+    assert.ok(start > 0, name);
+    const body = src.slice(start, src.indexOf("\n}\n", start));
+    assert.ok(!/aria-label/.test(body), `${name} sets an aria-label`);
+  }
+});

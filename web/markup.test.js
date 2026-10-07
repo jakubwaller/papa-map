@@ -123,3 +123,15 @@ test("the website's logo reloads the map in the language on screen", () => {
   assert.equal(langUrl("fr", "./"), "./?lang=fr");
   assert.match(appJs, /brand\?\.hasAttribute\("href"\)\) brand\.setAttribute\("href", langUrl\(lang, "\.\/"\)\)/);
 });
+
+test("no style.css rule takes a chip's label out of the accessibility tree", () => {
+  // The chip's svg is aria-hidden, so its .label is its name. On a phone the
+  // word may be hidden visually (clip), never with display:none/visibility:hidden.
+  const bad = [];
+  for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (!/display\s*:\s*none|visibility\s*:\s*hidden/.test(body)) continue;
+    for (const s of sel.split(",").map((x) => x.trim()))
+      if (/\.label\b/.test(s) && /(\.chip|\.wc|\.hc|#filter-bar)\b/.test(s)) bad.push(s);
+  }
+  assert.deepEqual(bad, []);
+});
