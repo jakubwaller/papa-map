@@ -23,8 +23,23 @@ test("one freshness rule, half an hour, the same as Android's", () => {
 });
 
 test("the widget measures only from a fresh fix it is allowed to use", () => {
-  assert.match(widget, /guard manager\.isAuthorizedForWidgetUpdates,\s+let loc = TableStore\.freshFix\(manager\.location\) else/);
+  assert.match(widget, /guard manager\.isAuthorizedForWidgetUpdates else/);
+  assert.match(widget, /guard let loc = TableStore\.freshFix\(manager\.location\) else/);
   assert.doesNotMatch(widget, /let loc = manager\.location/);
+});
+
+// With the half-hour rule "no fresh fix" is an ordinary state for a reader
+// who granted the permission: it must not read as a permission problem, and
+// its tap runs the map's own "nearest" button, as Android's widget does.
+test("a stale fix is not a missing permission: Android's words, the nearest link", () => {
+  assert.match(widget, /guard manager\.isAuthorizedForWidgetUpdates else \{\s+return NearestEntry\([^)]*state: \.noLocation/);
+  assert.match(widget, /guard let loc = TableStore\.freshFix\(manager\.location\) else \{\s+return NearestEntry\([^)]*state: \.staleFix/);
+  assert.match(widget, /state == \.staleFix \? "papamap:\/\/nearest" : "papamap:\/\/open"/);
+  assert.equal(widget.match(/\.widgetURL\(entry\.tapURL\)/g)?.length, 2, "home screen and lock screen");
+  assert.equal(widget.match(/L\.tapToFind\(lang: entry\.lang\)/g)?.length, 2);
+  const words = read("./App/App/Shared/TableStore.swift");
+  assert.match(words, /"Tippen, und PapaMap sucht ihn" : "Tap and PapaMap finds it"/);
+  assert.match(android, /"Tippen, und PapaMap sucht ihn" : "Tap and PapaMap finds it"/);
 });
 
 test("Siri's fallbacks drop a stale fix too", () => {

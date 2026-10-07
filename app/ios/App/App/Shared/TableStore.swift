@@ -198,6 +198,11 @@ public enum L {
         lang == "de" ? "Kein Standort — PapaMap braucht ihn nur auf dem Handy"
                      : "No location — PapaMap only needs it on the phone"
     }
+    // The widget with permission but no fix from the last half hour: the
+    // tap runs the map's own "nearest" button. Android's widget says the same.
+    public static func tapToFind(lang: String) -> String {
+        lang == "de" ? "Tippen, und PapaMap sucht ihn" : "Tap and PapaMap finds it"
+    }
     public static func title(lang: String) -> String {
         lang == "de" ? "Nächster Wickeltisch" : "Nearest changing table"
     }

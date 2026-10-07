@@ -149,11 +149,12 @@ export async function commitEdit(bearer, id, { fetch: f = fetch, ...retry } = {}
     throw e;
   }
   if (res.stopped) return applied();
-  if (!res.ok && lost) {
-    // The last answer was a 5xx: look the edit up once more. A 4xx on a
-    // re-send after a lost answer is Play refusing an edit it already closed.
-    if (retryable(res.status) ? await gone() : [400, 404, 409, 410].includes(res.status)) return applied();
-  }
+  // Whatever the last answer, after an earlier one that may have been
+  // applied only the edit itself can tell: gone means the commit went
+  // through. A 4xx on the re-send is not proof on its own — the lookup just
+  // before it found the edit still there, so it is more likely a real
+  // refusal (a release Play rejects), which must fail the run.
+  if (!res.ok && lost && await gone()) return applied();
   return parse(res, "POST", url);
 }
 

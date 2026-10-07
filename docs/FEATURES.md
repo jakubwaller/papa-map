@@ -1192,10 +1192,12 @@ layout, the build and the signing):
   as such in words on the widget and in Siri's sentence ("limited wheelchair access", the
   map's exclamation mark), never as a colour. Neither trusts an old position: the widget
   reads the phone's last fix and, like Android's, treats one older than half an hour as none
-  ("No location"), and Siri, which asks for a fresh fix, falls back to the last one only when
-  it is under half an hour old, rather than naming a table near where the phone was this
-  morning. Their distances round like the map's, to 10 m first, so 999.6 m reads "1 km"
-  everywhere, never "1000 m".
+  — with permission granted, that is an ordinary state, so it says "Tap and PapaMap finds it"
+  and the tap runs the map's own "nearest" button (`papamap://nearest`), as on Android; only a
+  widget without the permission says "No location". Siri, which asks for a fresh fix, falls back
+  to the last one only when it is under half an hour old, rather than naming a table near where
+  the phone was this morning. Their distances round like the map's, to 10 m first, so 999.6 m
+  reads "1.0 km" on the widget and in Siri ("1 km" on the map), never "1000 m".
 - **A button in Control Center** (iOS 18), which is also a Lock Screen button and the Action
   button: one tap on the nearest reachable table, no app to find first. It asks the same
   question as the shortcut — one lookup, `NearestLookup`, so the two cannot drift apart — from

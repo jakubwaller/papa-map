@@ -155,10 +155,18 @@ test("a 400 lookup that says something else does not", async () => {
   assert.deepEqual(seen, ["POST e1:commit", "GET e1", "POST e1:commit"]);
 });
 
-test("a 4xx on the re-sent commit after a 5xx reads as already applied", async () => {
-  const { f, seen } = fakePlay([503, 400], [200]);
+test("a 4xx on the re-sent commit counts as applied only when the edit is gone", async () => {
+  const { f, seen } = fakePlay([503, 400], [200, 404]);
   assert.deepEqual(await commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), { probablyCommitted: true });
-  assert.deepEqual(seen, ["POST e1:commit", "GET e1", "POST e1:commit"]);
+  assert.deepEqual(seen, ["POST e1:commit", "GET e1", "POST e1:commit", "GET e1"]);
+});
+
+test("a 4xx on the re-sent commit with the edit still there is a real refusal", async () => {
+  // A release Play rejects after a transient 503: CI must go red, not log
+  // "most likely applied" and exit 0.
+  const { f, seen } = fakePlay([503, 400], [200, 200]);
+  await assert.rejects(commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), /: 400 /);
+  assert.deepEqual(seen, ["POST e1:commit", "GET e1", "POST e1:commit", "GET e1"]);
 });
 
 test("a 403 on the re-send is still a failure", async () => {
