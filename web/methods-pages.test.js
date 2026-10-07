@@ -171,3 +171,16 @@ test("answers, new places and the play ring are not promised for the nightly bui
     assert.equal(m, null, `${f} still says "${m && text.slice(Math.max(0, m.index - 40), m.index + 30)}"`);
   }
 });
+
+test("the back link reopens the map in the page's own language", () => {
+  // A bare index.html dropped it: a reader who came by ?lang=fr with nothing
+  // stored landed back on a map in their browser's language.
+  for (const f of PAGES) {
+    const src = read(f);
+    const lang = langOf(f);
+    assert.ok(LANGS.includes(lang), `${f}: ${lang} is not a map language`);
+    assert.ok(src.includes(`<html lang="${lang}">`), `${f}: <html lang> is not ${lang}`);
+    const back = (src.match(/<p class="back"><a href="([^"]*)">/) || [])[1];
+    assert.equal(back, lang === DEFAULT_LANG ? "./" : `./?lang=${lang}`, f);
+  }
+});
