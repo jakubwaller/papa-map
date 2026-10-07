@@ -44,6 +44,7 @@ test("isSearchVenue: the list, plus any shop, amenity, tourism or leisure; toile
   assert.equal(isSearchVenue("highway", "bus_stop"), false);
   assert.equal(isSearchVenue("amenity", "parking"), false, "the supermarket's car park");
   assert.equal(isSearchVenue("leisure", "park"), false);
+  assert.equal(isSearchVenue("tourism", "camp_site"), true, "a place in its own right");
 });
 
 test("VENUE_SEARCH_EXCLUDE never takes back a place the list offers", () => {

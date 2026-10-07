@@ -56,9 +56,8 @@ export const VENUE_SEARCH_EXCLUDE = {
     "shelter", "telephone", "drinking_water", "fountain", "bicycle_rental", "car_sharing",
     "car_rental", "taxi", "grave_yard"],
   leisure: ["park", "garden", "pitch", "track", "nature_reserve", "playground", "dog_park",
-    "picnic_table", "slipway", "marina", "stadium", "golf_course"],
-  tourism: ["information", "viewpoint", "artwork", "picnic_site", "camp_site", "camp_pitch",
-    "caravan_site"],
+    "picnic_table", "slipway"],
+  tourism: ["information", "viewpoint", "artwork", "picnic_site", "camp_pitch"],
 };
 
 export function isSearchVenue(key, value) {
