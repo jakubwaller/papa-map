@@ -714,14 +714,22 @@ let popupHtmlShown = null;
 // folded again) and MapLibre focuses the card's first button, so a delta poll
 // with nothing new for this object must not do it at all, and one that does
 // must not take the focus from wherever the reader is typing (the search
-// field). Returns whether it redrew.
+// field). MapLibre's setDOMContent reads options.focusAfterOpen on every call,
+// so it is switched off for the redraw rather than undone afterwards: a blur
+// closes the search list, and iOS will not raise the keyboard again from a
+// focus() outside a gesture. A first open still focuses the card. Returns
+// whether it redrew.
 function showPopupHTML(html) {
   if (!popup || html === popupHtmlShown) return false;
   const active = document.activeElement;
   const elsewhere = active && active !== document.body && !popup.getElement()?.contains(active);
-  popup.setHTML(html);
+  const prev = popup.options.focusAfterOpen;
+  if (elsewhere) popup.options.focusAfterOpen = false;
+  try { popup.setHTML(html); }
+  finally { popup.options.focusAfterOpen = prev; }
   popupHtmlShown = html;
-  if (elsewhere && active.isConnected) active.focus({ preventScroll: true });
+  // Fallback for a MapLibre that moved focus anyway.
+  if (elsewhere && active.isConnected && document.activeElement !== active) active.focus({ preventScroll: true });
   return true;
 }
 

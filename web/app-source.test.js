@@ -43,3 +43,64 @@ test("answer() gives the live card its buttons back after the write", () => {
   assert.match(fin[1], /popup\?\.getElement\(\)\?\.querySelectorAll\("button\.ask-btn, button\.ask-more"\)/);
   assert.match(fin[1], /disabled = false/);
 });
+
+// A redraw that is really needed must not take the focus from the search
+// field either: MapLibre focuses the card's first button inside setHTML
+// (options.focusAfterOpen), the field blurs and its list closes, and iOS does
+// not bring the keyboard back from a later focus(). So the option is off for
+// the redraw when the focus sits outside the card, and back on afterwards.
+// The function is lifted out of the source and run against stand-ins.
+function loadShowPopupHTML(env) {
+  const m = src.match(/function showPopupHTML\(html\) \{[\s\S]*?\n\}\n/);
+  assert.ok(m, "showPopupHTML in app.js");
+  return new Function("env", `
+    let popup = env.popup, popupHtmlShown = env.shown; const document = env.document;
+    ${m[0]}
+    return { show: showPopupHTML, shown: () => popupHtmlShown };`)(env);
+}
+function fakePopup(document, cardFocus) {
+  const card = { contains: (n) => n === cardFocus };
+  const popup = {
+    options: { focusAfterOpen: true },
+    seen: [],
+    getElement: () => card,
+    setHTML() {
+      popup.seen.push(popup.options.focusAfterOpen);
+      // what MapLibre's _focusFirstElement does
+      if (popup.options.focusAfterOpen) document.activeElement = cardFocus;
+    },
+  };
+  return popup;
+}
+test("showPopupHTML keeps MapLibre from taking the focus off the search field", () => {
+  const field = { isConnected: true, focus() { throw new Error("must not need a restore"); } };
+  const button = {};
+  const document = { body: {}, activeElement: field };
+  const popup = fakePopup(document, button);
+  const { show, shown } = loadShowPopupHTML({ popup, document, shown: "old" });
+  assert.equal(show("new"), true);
+  assert.deepEqual(popup.seen, [false]);           // off during the redraw
+  assert.equal(popup.options.focusAfterOpen, true); // and back on after it
+  assert.equal(document.activeElement, field);
+  assert.equal(shown(), "new");
+  assert.equal(show("new"), false);                // unchanged markup: no redraw
+  assert.equal(popup.seen.length, 1);
+});
+test("showPopupHTML lets the card take the focus when nothing else holds it", () => {
+  const button = {};
+  const document = { body: {}, activeElement: null };
+  const popup = fakePopup(document, button);
+  const { show } = loadShowPopupHTML({ popup, document, shown: null });
+  show("first");
+  assert.deepEqual(popup.seen, [true]);
+  assert.equal(document.activeElement, button);
+});
+test("showPopupHTML restores the option even when setHTML throws", () => {
+  const field = { isConnected: true, focus() {} };
+  const document = { body: {}, activeElement: field };
+  const popup = fakePopup(document, {});
+  popup.setHTML = () => { throw new Error("boom"); };
+  const { show } = loadShowPopupHTML({ popup, document, shown: null });
+  assert.throws(() => show("x"), /boom/);
+  assert.equal(popup.options.focusAfterOpen, true);
+});

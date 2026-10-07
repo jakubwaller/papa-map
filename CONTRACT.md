@@ -1,5 +1,39 @@
 # papa-map — build contract (v0)
 
+> **v77 amendment (7 Oct 2026, a reader's own answers survive delta polls): no
+> data shape change; the override layer is documented as it now is.** The
+> `papamap-answer-overrides` entry in `localStorage` is
+> `{osm_url: {status?, men_only?, changing_table?, location_raw?,
+> play_answered?, highchair_answered?, t, version}}`: only `t` and `version`
+> are always there, every other field is optional. A reader's play, high-chair
+> and "none" answers are kept in it too (before, only a room answer with a
+> status was), so a delta poll that does not carry the edit yet no longer
+> brings the question back. Entries are **merged per object**
+> (`mergeAnswerOverride`): a room answer and a play answer on one place are two
+> writes and both stay, with `version` and `t` the latest write's, so
+> `pruneAnswerOverrides` clears the entry once the delta holds that write.
+> `applyAnswerOverrides` writes only the fields an entry carries and never
+> requires `status`: an entry without one (a play place's "none", a play or
+> high-chair answer, a room answer from a stats.json older than
+> `answer_status`) leaves the object in the collection it was in, while one with
+> a status promotes it to a table. Dropping status-less entries would bring
+> #62 back. A "none" answer redraws the place's ring dashed at once, before the
+> delta has it. `highchair_answered` and `play_answered` feed only
+> `highchair_recorded` / `play_recorded` and the popup's own row, never the
+> chip or the ring (those wait for the pipeline).
+> Around it: a delta whose `deltaFingerprint` (base and the four lists, never
+> `generated`, `seq` or `new_toilets_no_table`) equals the merged one is not
+> merged again; one whose `seq` is lower than the merged one's on the same or an
+> older base is dropped (`isDeltaOlder`), so a slow poll cannot undo a fresh
+> one; and the map features carry a numeric `gen` property (the dataset
+> generation) next to `idx`, so a tap on tiles from before a rebuild is ignored
+> instead of opening the wrong pin. An open popup is redrawn only when its
+> markup changed, with MapLibre's `focusAfterOpen` off for the redraw whenever
+> the focus sits outside the card (the search field keeps it), and a card whose
+> play place became a table stays open as the table. Shell pin: the lead bumps
+> it once when the batches are integrated; this change must not ship without
+> that bump (the new `datasource.js` exports would meet a stale cached module).
+
 > **v76 amendment (6 Oct 2026, the share icon centred in its bubble): no data
 > shape change.** The round share button in a pin's popup card showed its icon
 > a little right of centre (iPhone app, Android WebView). Cause: the
@@ -496,7 +530,9 @@
 > `answer_status` (above) rather than the delta — instantly, before any
 > delta or nightly build could possibly have it — and persisted in
 > `localStorage['papamap-answer-overrides']`
-> (`{osm_url: {status, changing_table, location_raw, t, version}}`, `version`
+> (`{osm_url: {status, changing_table, location_raw, t, version}}` in v39 — see
+> v77 for the shape since: every field but `t`/`version` optional, merged per
+> object; `version`
 > the OSM object version `writeTags` returned for this exact write) so a
 > reload keeps the colour. **Pruned by OSM version, primarily**: an entry is
 > dropped once a delta upsert for that `osm_url` carries an `osm_version` at
