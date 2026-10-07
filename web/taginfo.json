@@ -21,7 +21,7 @@
     {
       "key": "changing_table:location",
       "object_types": ["node", "way", "relation"],
-      "description": "Decides the colour of the pin. male_toilet, unisex_toilet, dedicated_room and outdoor are reachable by a father (green), female_toilet alone is not (red), and a missing value is the grey pin the map asks visitors to answer.",
+      "description": "Decides the colour of the pin. Any of male_toilet, unisex_toilet, dedicated_room, room, wheelchair_toilet, sales_area or outdoor is reachable by a father (green), female_toilet without any of them is not (red), and a missing, free-text or unrecognised value is the grey pin the map asks visitors to answer.",
       "doc_url": "https://papamap.de/methods-en.html"
     },
     {

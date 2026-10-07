@@ -53,14 +53,6 @@ _TRANSLIT = str.maketrans({
     "Ä": "Ae", "Ö": "Oe", "Ü": "Ue",
 })
 
-# The amenity tag is a controlled OSM vocabulary, so a lookup table can cover
-# it — one per page language in pages_l10n.py; this is the German one, kept
-# under its old name. Anything else falls back to the raw value with
-# underscores stripped — a page that reads half-translated is better than one
-# that silently drops the type. `null` (a shop, most often a dm or Rossmann)
-# has no amenity at all and renders as an em dash.
-AMENITY_DE = AMENITY["de"]
-
 # The pages sit one directory below the site root (PAGES_BASE_PATH), so this
 # reaches the map, the methods page and the legal pages. Relative on purpose:
 # only the canonical and the JSON-LD breadcrumb have to be absolute, and
@@ -113,8 +105,7 @@ def fmt_num(n, lang: str = "de") -> str:
 
 
 def de_num(n) -> str:
-    """The German pages' formatter, kept under its old name — the leaderboard
-    imports it too."""
+    """The German pages' formatter, used by render_index."""
     return fmt_num(n, "de")
 
 
@@ -135,6 +126,11 @@ def de_date(iso: str) -> str:
 
 
 def amenity_label(amenity, lang: str = "de") -> str:
+    # The amenity tag is a controlled OSM vocabulary, so a lookup table per
+    # page language (pages_l10n.AMENITY) can cover it. Anything else falls back
+    # to the raw value with underscores stripped — a page that reads
+    # half-translated is better than one that silently drops the type. `null`
+    # (a shop, most often a dm or Rossmann) has no amenity and renders as a dash.
     if not amenity:
         return "—"
     return AMENITY[lang].get(amenity, str(amenity).replace("_", " "))
@@ -724,11 +720,9 @@ def write_pages(summaries, out_dir: str, generated_at: str,
     return written
 
 
-def en_href(cc: str, lang: str, slug: str) -> str:
+def en_href(lang: str, slug: str) -> str:
     """Where the English reading of a country lives: the page itself when it
-    is written in English, otherwise its -en twin. Germany's twin is a page
-    of its own (deutschland-en.html) since its majority-language hub is the
-    directory index."""
+    is written in English, otherwise its -en twin."""
     if lang == "en":
         return f"{slug}.html"
     return f"{slug}-en.html"
@@ -833,7 +827,7 @@ def area_index(plan: dict, base_path: str = PAGES_BASE_PATH) -> list:
         cc, lang, s = e["cc"], e["lang"], e["summary"]
         en = None
         if lang != "en":
-            en = (en_href(cc, lang, s["slug"]), COUNTRY_FORMS_EN[cc][1])
+            en = (en_href(lang, s["slug"]), COUNTRY_FORMS_EN[cc][1])
         chunks = plan["region_entries"].get(cc)
         bbox = _union(x["summary"]["bbox"] for x in chunks) if chunks else s["bbox"]
         own = f"{s['slug']}.html"
@@ -879,7 +873,7 @@ def write_all_pages(areas, features, area_by_key, toilets_by_area,
     # The English twins navigate among themselves: a reader on one reads
     # English, so its country list leads to the English reading of each.
     countries_nav_en = [{"label": COUNTRY_FORMS_EN[e["cc"]][0],
-                         "href": en_href(e["cc"], e["lang"], e["summary"]["slug"]),
+                         "href": en_href(e["lang"], e["summary"]["slug"]),
                          "tables": e["summary"]["tables"]}
                         for e in country_entries]
     if german:
