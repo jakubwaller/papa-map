@@ -14,16 +14,16 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs,
-         zoneForFeature } from "./datasource.js?v=app80";
+         zoneForFeature } from "./datasource.js?v=app81";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app80";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app81";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app80";
+         writeTags } from "./osm.js?v=app81";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -31,7 +31,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app80";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app81";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -41,27 +41,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app80";
+         reviewTracker } from "./native.js?v=app81";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app80";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app81";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app80";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app81";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app80";
+import { isOpenNow } from "./opening-hours.js?v=app81";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         VENUE_MIN_ZOOM } from "./venues.js?v=app80";
-// The bundled shell's pin (`?v=app80`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app81";
+// The bundled shell's pin (`?v=app81`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -2888,11 +2888,13 @@ function openVenuePicker(c, z) {
 
 // One request at a time: a newer one (the reader typed on) aborts the last.
 // `cacheKey` only for the reverse list — a typed query is not worth keeping.
-async function loadVenues(url, cacheKey = null) {
+// `accept` is the row filter: the theme's list for the nearby places, any
+// shop or amenity for a name the reader typed (venues.js says why).
+async function loadVenues(url, cacheKey = null, accept = isVenue) {
   venueAbort?.abort();
   venueAbort = null;
   const cached = cacheKey && venueCache.get(cacheKey);
-  if (cached) { showVenues(cached); return; }
+  if (cached) { showVenues(cached, accept); return; }
   const ctl = venueAbort = new AbortController();
   renderVenueSkeleton();
   setVenueStatus("venueLoading");
@@ -2902,7 +2904,7 @@ async function loadVenues(url, cacheKey = null) {
     const json = await res.json();
     if (ctl.signal.aborted) return;
     if (cacheKey) venueCache.set(cacheKey, json);
-    showVenues(json);
+    showVenues(json, accept);
   } catch (err) {
     if (ctl.signal.aborted) return;
     renderVenueRows([]);
@@ -2916,8 +2918,8 @@ function showVenueRowsWithout(osmUrl) {
   setVenueStatus(rows.length ? null : "venueEmpty");
 }
 
-function showVenues(json) {
-  const rows = venueRows(json, { lat: venueCentre.lat, lon: venueCentre.lon, known: venueKnown });
+function showVenues(json, accept) {
+  const rows = venueRows(json, { lat: venueCentre.lat, lon: venueCentre.lon, known: venueKnown, accept });
   renderVenueRows(rows);
   setVenueStatus(rows.length ? null : "venueEmpty");
 }
@@ -2933,7 +2935,7 @@ venueSearch.addEventListener("input", () => {
     if (!venueCentre) return;
     if (q.length < PHOTON_MIN_CHARS)
       loadVenues(venueReverseUrl(venueCentre.lat, venueCentre.lon, { lang }), venueKey(venueCentre));
-    else loadVenues(venueSearchUrl(q, venueCentre.lat, venueCentre.lon, { lang }));
+    else loadVenues(venueSearchUrl(q, venueCentre.lat, venueCentre.lon, { lang }), null, isSearchVenue);
   }, PHOTON_DEBOUNCE_MS);
 });
 

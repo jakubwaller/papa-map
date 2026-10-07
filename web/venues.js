@@ -12,8 +12,8 @@
 // cannot filter on `changing_table`, which is why venueRows drops what the
 // map already has a pin for, and why writeTags' own re-read (web/osm.js)
 // stays the last word on whether the place is still unanswered.
-import { haversineKm } from "./datasource.js?v=app80";
-import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app80";
+import { haversineKm } from "./datasource.js?v=app81";
+import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app81";
 
 // The MapComplete theme's dad_venue layer, as tag lists: the same places the
 // theme offers for the same question. theme/papamap.theme.json is the source,
@@ -35,6 +35,43 @@ export const VENUE_TAGS = {
 
 export function isVenue(key, value) {
   return Boolean(VENUE_TAGS[key]?.includes(value));
+}
+
+// What the dialog's search box accepts: the list above, and anything else
+// under these keys. The nearby list stays on the theme's tags, since fifty
+// unasked-for places should be the likely ones. A name somebody typed is
+// different: they know the place, so a children's clothes shop or a bakery
+// (shop=clothes, Wohngeschwisterchen in the Schanze, 7 Oct 2026) is fair game.
+export const VENUE_SEARCH_KEYS = ["amenity", "shop", "tourism", "leisure"];
+
+// Except what shares a shop's name without being anywhere to change a nappy:
+// a row shows only name, street and distance, so "Edeka" would list the
+// supermarket and its car park alike, and the nearer one would take the tag.
+// Toilets are here too, they are the other button. Sent to Photon as
+// `!key:value` as well, so they do not use up the answer's fifteen rows.
+export const VENUE_SEARCH_EXCLUDE = {
+  amenity: ["toilets", "parking", "parking_entrance", "parking_space", "bicycle_parking",
+    "motorcycle_parking", "charging_station", "car_wash", "vending_machine", "atm",
+    "post_box", "parcel_locker", "recycling", "waste_basket", "waste_disposal", "bench",
+    "shelter", "telephone", "drinking_water", "fountain", "bicycle_rental", "car_sharing",
+    "car_rental", "taxi", "grave_yard"],
+  leisure: ["park", "garden", "pitch", "track", "nature_reserve", "playground", "dog_park",
+    "picnic_table", "slipway"],
+  tourism: ["information", "viewpoint", "artwork", "picnic_site", "camp_pitch"],
+};
+
+export function isSearchVenue(key, value) {
+  if (isVenue(key, value)) return true;
+  return VENUE_SEARCH_KEYS.includes(key) && !VENUE_SEARCH_EXCLUDE[key]?.includes(value);
+}
+
+// The search box's Photon filter: a bare key means every value under it, the
+// list's pairs under other keys (stations, terminals) stay pairs, and the
+// exclusions go as `!key:value`.
+export function venueSearchOsmTags() {
+  return [...VENUE_SEARCH_KEYS,
+    ...venueOsmTags().filter((t) => !VENUE_SEARCH_KEYS.includes(t.split(":")[0])),
+    ...Object.entries(VENUE_SEARCH_EXCLUDE).flatMap(([k, vs]) => vs.map((v) => `!${k}:${v}`))];
 }
 
 // Photon's own filter: one `osm_tag=key:value` per pair, ORed.
@@ -91,7 +128,7 @@ export function venueSearchUrl(query, lat, lon, { lang = null, endpoint = PHOTON
   });
   const l = photonLang(lang);
   if (l) p.set("lang", l);
-  for (const tag of venueOsmTags()) p.append("osm_tag", tag);
+  for (const tag of venueSearchOsmTags()) p.append("osm_tag", tag);
   return `${endpoint}?${p}`;
 }
 
@@ -100,12 +137,14 @@ const OSM_TYPE = { N: "node", W: "way", R: "relation" };
 // Photon's answer as rows the dialog can render, nearest first, or [] for
 // anything that is not a usable FeatureCollection (a throttled Photon can
 // answer an error body with a 200). Dropped: rows without a name (nobody
-// recognises "unnamed" from the street), anything not on the venue list (the
-// search box does not restrict by tag as strictly as reverse does), toilets
-// (they are the other button), duplicates (Photon indexes one object once
-// per matching tag), and whatever `known(osm_url)` says the map already has
-// a pin for — a table there is answered, the room question lives on its pin.
-export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_LIMIT } = {}) {
+// recognises "unnamed" from the street), anything `accept(key, value)` turns
+// down (isVenue for the nearby list, isSearchVenue for a typed name; Photon's
+// own filter is not trusted to be strict), toilets (they are the other
+// button), duplicates (Photon indexes one object once per matching tag), and
+// whatever `known(osm_url)` says the map already has a pin for — a table
+// there is answered, the room question lives on its pin.
+export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_LIMIT,
+                                  accept = isVenue } = {}) {
   const feats = Array.isArray(json?.features) ? json.features : [];
   const out = [], seen = new Set();
   for (const f of feats) {
@@ -114,7 +153,7 @@ export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_L
     const c = f?.geometry?.coordinates;
     if (!type || p.osm_id == null || !p.name) continue;
     if (!Array.isArray(c) || !Number.isFinite(c[0]) || !Number.isFinite(c[1])) continue;
-    if (!isVenue(p.osm_key, p.osm_value)) continue;
+    if (!accept(p.osm_key, p.osm_value)) continue;
     const osm_url = `https://www.openstreetmap.org/${type}/${p.osm_id}`;
     if (seen.has(osm_url) || known(osm_url)) continue;
     seen.add(osm_url);

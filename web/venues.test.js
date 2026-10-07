@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { VENUE_TAGS, isVenue, venueOsmTags, venueReverseUrl, venueSearchUrl, venueRows,
-         venueDistance, venueCentreKey, VENUE_LIMIT } from "./venues.js";
+import { VENUE_TAGS, isVenue, isSearchVenue, venueOsmTags, venueSearchOsmTags, venueReverseUrl,
+         venueSearchUrl, venueRows, venueDistance, venueCentreKey, VENUE_LIMIT,
+         VENUE_SEARCH_KEYS, VENUE_SEARCH_EXCLUDE } from "./venues.js";
 
 const feat = (props, coords = [9.9563, 53.5745]) =>
   ({ type: "Feature", geometry: { type: "Point", coordinates: coords }, properties: props });
@@ -33,6 +34,38 @@ test("isVenue: on the list, off the list, toilets never", () => {
   assert.equal(isVenue("nonsense", "cafe"), false);
 });
 
+test("isSearchVenue: the list, plus any shop, amenity, tourism or leisure; toilets never", () => {
+  assert.equal(isSearchVenue("amenity", "cafe"), true);
+  assert.equal(isSearchVenue("railway", "station"), true);
+  assert.equal(isSearchVenue("shop", "clothes"), true);
+  assert.equal(isSearchVenue("shop", "bakery"), true);
+  assert.equal(isSearchVenue("amenity", "toilets"), false);
+  assert.equal(isSearchVenue("railway", "halt"), false);
+  assert.equal(isSearchVenue("highway", "bus_stop"), false);
+  assert.equal(isSearchVenue("amenity", "parking"), false, "the supermarket's car park");
+  assert.equal(isSearchVenue("leisure", "park"), false);
+  assert.equal(isSearchVenue("tourism", "camp_site"), true, "a place in its own right");
+});
+
+test("VENUE_SEARCH_EXCLUDE never takes back a place the list offers", () => {
+  for (const [k, vs] of Object.entries(VENUE_SEARCH_EXCLUDE)) {
+    assert.ok(VENUE_SEARCH_KEYS.includes(k), k);
+    for (const v of vs) assert.equal(isVenue(k, v), false, `${k}=${v}`);
+  }
+});
+
+test("venueSearchOsmTags: bare keys, plus the list's pairs under any other key", () => {
+  const tags = venueSearchOsmTags();
+  for (const k of VENUE_SEARCH_KEYS) assert.ok(tags.includes(k), k);
+  assert.ok(tags.includes("railway:station"));
+  assert.ok(tags.includes("aeroway:terminal"));
+  assert.ok(tags.includes("!amenity:toilets"));
+  assert.ok(tags.includes("!amenity:parking"));
+  assert.ok(!tags.some((t) => !t.startsWith("!") && t.includes(":")
+                              && VENUE_SEARCH_KEYS.includes(t.split(":")[0])),
+            "no include pair a bare key already covers");
+});
+
 test("venueReverseUrl: centre rounded to ~100 m, radius, limit, one osm_tag per pair", () => {
   const u = new URL(venueReverseUrl(53.574512345, 9.956298765, { lang: "de" }));
   assert.equal(u.origin + u.pathname, "https://photon.komoot.io/reverse");
@@ -59,7 +92,7 @@ test("venueSearchUrl: query inside a box about a kilometre around the rounded ce
   assert.ok(w < 9.956 && e > 9.956 && s < 53.575 && n > 53.575);
   assert.ok(Math.abs((n - s) * 111 - 2) < 0.01, "about 2 km tall");
   assert.ok(Math.abs((e - w) * 111 * Math.cos(53.575 * Math.PI / 180) - 2) < 0.05, "about 2 km wide");
-  assert.ok(u.searchParams.getAll("osm_tag").length > 50);
+  assert.deepEqual(u.searchParams.getAll("osm_tag"), venueSearchOsmTags());
 });
 
 test("venueCentreKey: one key per ~100 m cell", () => {
@@ -102,6 +135,16 @@ test("venueRows: drops nameless, off-list, toilets, duplicates and what the map 
   const known = (u) => u === "https://www.openstreetmap.org/node/5";
   const rows = venueRows(json, { lat: 53.5745, lon: 9.9563, known });
   assert.deepEqual(rows.map((r) => r.name), ["Twice"]);
+});
+
+test("venueRows: a typed search keeps a shop off the nearby list, never toilets", () => {
+  const json = { features: [
+    feat({ osm_type: "N", osm_id: 4415681189, osm_key: "shop", osm_value: "clothes", name: "Kinderladen" }),
+    feat({ osm_type: "N", osm_id: 2, osm_key: "amenity", osm_value: "toilets", name: "WC" }),
+  ] };
+  assert.deepEqual(venueRows(json, { lat: 53.5745, lon: 9.9563 }), []);
+  const rows = venueRows(json, { lat: 53.5745, lon: 9.9563, accept: isSearchVenue });
+  assert.deepEqual(rows.map((r) => r.osm_url), ["https://www.openstreetmap.org/node/4415681189"]);
 });
 
 test("venueRows: anything but a FeatureCollection is no rows, not a crash", () => {

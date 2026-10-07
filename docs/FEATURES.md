@@ -679,7 +679,14 @@ from tagging one.
 
 The list is Photon's `/reverse`, 300 m around the map centre, filtered to the
 `dad_venue` layer's own tag list (`web/venues.js`; a test fails if the two
-drift). Photon cannot filter on `changing_table`, so the rows drop whatever the
+drift). The dialog's own search box is wider: a typed name matches any shop,
+amenity, tourism or leisure object, because someone who types a name knows
+the place, and a children's clothes shop or a bakery is no stranger to them
+(`isSearchVenue`, since 7 Oct 2026). Toilets stay out, and so does what shares
+a shop's name without being a place to change a nappy — "Edeka" would
+otherwise list the supermarket and its car park as two identical rows
+(`VENUE_SEARCH_EXCLUDE`). Photon cannot filter on
+`changing_table`, so the rows drop whatever the
 map already has a table pin for, and `writeTags` re-reads the object before
 writing anything — somebody else's answer since is reported, never overwritten.
 Chosen over Overpass and the OSM API by measurement (Eimsbüttel, 2 Oct 2026,

@@ -1,5 +1,19 @@
 # papa-map — build contract (v0)
 
+> **v82 amendment (7 Oct 2026, the add dialog's search box finds any shop):
+> no data shape change.** The nearby list in "+ Add a place" stays on the
+> theme's `dad_venue` tags, but a name typed into the dialog's own search box
+> now matches any `amenity`, `shop`, `tourism` or `leisure` object (plus the
+> list's stations and terminals), except toilets and the infrastructure that
+> shares a shop's name (car parks, charging points, ATMs, parks …:
+> `VENUE_SEARCH_EXCLUDE`, also sent to Photon as `!key:value`), since a row
+> shows no object kind and the nearer same-named car park would take the tag:
+> `isSearchVenue` and `venueSearchOsmTags` in `web/venues.js`, `venueRows`'
+> new `accept` filter. A
+> children's clothes shop (`shop=clothes`) was unreachable by its own name.
+> The answer path (`tablePatch` through `writeTags`) is unchanged.
+> Shell pin `app80` → `app81`; no `WHATS_NEW` entry.
+
 > **v81 amendment (7 Oct 2026, filter chips are named by their visible text): no
 > data shape change.** The wheelchair, play, places and high-chair chips in
 > `web/app.js` carried an `aria-label` that replaced "Mit Spielecke 12" with a
