@@ -17,8 +17,21 @@ from .config import (OVERPASS_BACKOFF_S, OVERPASS_HTTP_TIMEOUT,
 
 # Transient responses worth retrying: rate limiting (429), gateway/overload
 # (5xx), and the 406 the main balancer returns when its backends are saturated.
-# Anything else (e.g. 400 for a bad query) is our fault and no mirror will fix it.
+# 400, 413 and 414 are the query's fault and no mirror will fix them.
 _RETRY_STATUS = {406, 429, 500, 502, 503, 504}
+# A 4xx that is about the HOST, not the query: a block (401/403/451) or an
+# endpoint that moved or went away (404/410). Retrying it is knocking on a
+# door that was shut on purpose, and stopping the cascade there would let one
+# host's block end the build while the other mirrors are healthy — so the
+# host is rested on the spot, like a refused connection, and the query falls
+# over to the next one.
+_HOST_STATUS = {401, 403, 404, 410, 451}
+
+# Which host answered: fetch_overpass stamps it on every answer it returns,
+# so a follow-up query that must see the SAME area database (run.py's recount
+# of an empty sweep) can be pinned to it. A private key on the throwaway
+# answer dict — callers read `elements` and `osm3s` from it, never dump it.
+ANSWERED_BY = "_answered_by"
 
 
 def element_coords(el) -> tuple[float | None, float | None]:
@@ -139,10 +152,13 @@ def is_transient(exc: BaseException) -> bool:
     run.py's own checks on a mirror's answer (RuntimeError: an area that
     resolves to zero objects, a missing count). A mirror without an area
     database answers exactly that way, and the next round may reach a healthy
-    host. No for a non-retryable status (400: the query itself is wrong) and
-    for anything else, which is a bug in the pipeline."""
+    host. Also yes for a host-specific 4xx (403, 404, ...): that host is
+    rested, and the next round goes to the others. No for a status that says
+    the query itself is wrong (400) and for anything else, which is a bug in
+    the pipeline."""
     if isinstance(exc, requests.HTTPError):
-        return exc.response is not None and exc.response.status_code in _RETRY_STATUS
+        return (exc.response is not None
+                and exc.response.status_code in _RETRY_STATUS | _HOST_STATUS)
     return isinstance(exc, (requests.RequestException, RuntimeError))
 
 
@@ -241,11 +257,14 @@ def _fetch_once(url: str, ql: str) -> dict:
 def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
     """Fetch from Overpass, trying each mirror in turn and retrying transient
     failures (429/5xx/406, timeouts, transport errors) with exponential backoff.
-    A non-transient status (e.g. 400) raises at once — mirrors won't differ. A
+    A host-specific 4xx (403, 404, ...) rests that host and falls over to the
+    next one without a retry; any other non-transient status (e.g. 400)
+    raises at once — mirrors won't differ. A
     mirror answering from a stale database is not retried, and is rested
     through the breaker for OVERPASS_STALE_REST_S so later calls skip it
     outright. Only when every mirror is exhausted does the last transient
-    error propagate."""
+    error propagate. The answer carries the URL that gave it under
+    ANSWERED_BY."""
     urls = urls or OVERPASS_URLS
     retries = OVERPASS_RETRIES if retries is None else retries
     backoff = OVERPASS_BACKOFF_S if backoff is None else backoff
@@ -264,7 +283,12 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
             try:
                 data = _fetch_once(url, ql)
             except requests.HTTPError as exc:
-                if exc.response is None or exc.response.status_code not in _RETRY_STATUS:
+                code = exc.response.status_code if exc.response is not None else None
+                if code in _HOST_STATUS:
+                    last_exc = exc
+                    _trip(url, f"HTTP {code}")
+                    break
+                if code not in _RETRY_STATUS:
                     raise
                 last_exc = exc
             except StaleMirror as exc:
@@ -281,6 +305,7 @@ def fetch_overpass(ql: str, urls=None, retries=None, backoff=None) -> dict:
                     break
             else:
                 _recover(url)
+                data[ANSWERED_BY] = url
                 return data
             if attempt < retries - 1:
                 time.sleep(backoff * (2 ** attempt))

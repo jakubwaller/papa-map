@@ -167,7 +167,7 @@ def test_fetch_retries_transient_then_succeeds(monkeypatch):
     get, seen, _ = _fake_get([503, 200])
     monkeypatch.setattr(osm.requests, "get", get)
     monkeypatch.setattr(osm.time, "sleep", lambda s: None)
-    assert fetch_overpass("out;", urls=["http://m1"], retries=3, backoff=0) == {"elements": []}
+    assert fetch_overpass("out;", urls=["http://m1"], retries=3, backoff=0)["elements"] == []
     assert seen == ["http://m1", "http://m1"]  # retried the same mirror
 
 
@@ -176,7 +176,7 @@ def test_fetch_falls_over_to_next_mirror(monkeypatch):
     monkeypatch.setattr(osm.requests, "get", get)
     monkeypatch.setattr(osm.time, "sleep", lambda s: None)
     assert fetch_overpass("out;", urls=["http://m1", "http://m2"],
-                          retries=2, backoff=0) == {"elements": []}
+                          retries=2, backoff=0)["elements"] == []
     assert seen == ["http://m1", "http://m1", "http://m2"]  # m1 exhausted, then m2
 
 
@@ -184,7 +184,7 @@ def test_fetch_retries_transport_error(monkeypatch):
     get, seen, _ = _fake_get([requests.ConnectionError("reset"), 200])
     monkeypatch.setattr(osm.requests, "get", get)
     monkeypatch.setattr(osm.time, "sleep", lambda s: None)
-    assert fetch_overpass("out;", urls=["http://m1"], retries=2, backoff=0) == {"elements": []}
+    assert fetch_overpass("out;", urls=["http://m1"], retries=2, backoff=0)["elements"] == []
     assert seen == ["http://m1", "http://m1"]
 
 
@@ -373,7 +373,7 @@ def test_refused_connection_rests_the_host_without_retrying(monkeypatch, capsys)
     monkeypatch.setattr(osm.requests, "get", get)
     monkeypatch.setattr(osm.time, "sleep", lambda s: None)
     assert fetch_overpass("out;", urls=["http://m1", "http://m2"],
-                          retries=3, backoff=0) == {"elements": []}
+                          retries=3, backoff=0)["elements"] == []
     assert seen == ["http://m1", "http://m2"]  # one knock on m1, then straight to m2
     assert osm.is_tripped("http://m1") and not osm.is_tripped("http://m2")
     assert "WARN http://m1: resting it for 15 min" in capsys.readouterr().err
@@ -538,3 +538,52 @@ def test_stale_rest_logs_the_thirty_minutes(monkeypatch, capsys):
     with pytest.raises(osm.StaleMirror):
         fetch_overpass("out;", urls=["http://a"], retries=1, backoff=0)
     assert "resting it for 30 min" in capsys.readouterr().err
+
+
+# --- which host answered, and host-specific 4xx -------------------------------
+
+def test_fetch_stamps_the_host_that_answered(monkeypatch):
+    # run.py pins the recount of an empty sweep to the host that gave it, so
+    # the answer must say where it came from — after a fall-over too.
+    get, seen, _ = _fake_get([504, 504, 200])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    data = fetch_overpass("out;", urls=["http://m1", "http://m2"], retries=2, backoff=0)
+    assert data[osm.ANSWERED_BY] == "http://m2"
+
+
+def test_a_host_specific_4xx_rests_that_host_and_falls_over(monkeypatch, capsys):
+    # A 403 is one host shutting its door on us, not a bad query: the next
+    # mirror gets the query, and the blocking host is not knocked on again.
+    get, seen, _ = _fake_get([403, 200])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    data = fetch_overpass("out;", urls=["http://m1", "http://m2"], retries=3, backoff=0)
+    assert data[osm.ANSWERED_BY] == "http://m2"
+    assert seen == ["http://m1", "http://m2"]  # no retry against the block
+    assert osm.is_tripped("http://m1") and not osm.is_tripped("http://m2")
+    assert "WARN http://m1: resting it for 15 min (HTTP 403)" in capsys.readouterr().err
+
+
+def test_a_4xx_on_every_host_is_retryable_then_unavailable(monkeypatch):
+    get, seen, _ = _fake_get([404, 403])
+    monkeypatch.setattr(osm.requests, "get", get)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    urls = ["http://m1", "http://m2"]
+    with pytest.raises(requests.HTTPError) as err:
+        fetch_overpass("out;", urls=urls, retries=3, backoff=0)
+    # A later round may find a host that lets us in: not an unfixable error.
+    assert osm.is_transient(err.value)
+    assert seen == ["http://m1", "http://m2"]
+    with pytest.raises(osm.OverpassUnavailable):
+        fetch_overpass("out;", urls=urls, retries=3, backoff=0)
+    assert seen == ["http://m1", "http://m2"]  # both resting, nothing sent
+
+
+def test_only_query_faults_are_unfixable():
+    def http(status):
+        return requests.HTTPError(response=_resp(status, "http://m1"))
+    for status in (401, 403, 404, 410, 451):
+        assert osm.is_transient(http(status)), status
+    for status in (400, 413, 414):
+        assert not osm.is_transient(http(status)), status

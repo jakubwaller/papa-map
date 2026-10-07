@@ -1,5 +1,43 @@
 # papa-map — build contract (v0)
 
+> **v77 amendment (7 Oct 2026, the toilet-count fallback, the pinned recount
+> and the history guard): no data shape change** — these are pipeline rules
+> that amend what v20 and the leaderboard paragraph below promised.
+> (1) **A failed count no longer fails an area whose sweep has objects.** When
+> the recount is due and the sweep is non-empty, a count that raised, answered
+> **one** number, came back empty or came back as **two zeros** is replaced by
+> the cached entry for that area (same `level`, same `query` hash, non-zero
+> total), whatever its age: the sweep already proved the area resolved on its
+> mirror, so the count is a statistic tonight, not evidence. The entry is not
+> re-dated, so the fallback never refreshes itself. *Age bound:* none of its
+> own, but `toilet_counts.prune` drops an entry no build refreshed in four
+> periods (28 days; 4 days with `PAPAMAP_TOILETS_COUNTS_PERIOD_DAYS=1`), after
+> which a still-failing count fails the area again as before — so v20's "at
+> most seven days old" is now "at most 28". The fallback is visible: the area
+> line reads `(counted N d ago, recount failed)`, the summary line splits
+> `X counted tonight, Y reused, Z fell back after a failed recount`, a WARN
+> names the area and the bound, and the ops page tags the build and lists the
+> areas. With no usable entry nothing changes: the area fails the round
+> (publishing "0 toilets" instead was declined as a false statement).
+> `OverpassUnavailable` still fails the round as one.
+> (2) **v20's "an area with an empty sweep is recounted tonight" gains a
+> host.** The recount, and the attic recount in `pipeline.backfill`, is sent
+> only to the host that answered the sweep (`osm.ANSWERED_BY`, a private key on
+> the response that is never emitted); a count from another mirror cannot vouch
+> for an area database this one never had. An empty sweep with a positive
+> count from the *same* host is still accepted (the Northwest Territories). A
+> pinned host that is resting fails that area alone.
+> (3) **History:** a build writes a leaderboard day only when it swept all 16
+> Länder (as before), with the cities of the swept countries only — a
+> `PAPAMAP_COUNTRIES=de` run no longer files Wien — and never replaces a
+> same-date entry that holds regions it lacks (WARN, history and leaderboard
+> unchanged). A de-only run on a date with no nightly entry therefore still
+> writes a 16-region day, which can later be a week-over-week baseline; "partial
+> builds write no history" is true only of runs without all 16 Länder.
+> (4) A host-specific HTTP 401/403/404/410/451 rests that host (like a refused
+> connection) and the query falls over to the next mirror; 400/413/414 still
+> raise as query faults.
+
 > **v76 amendment (6 Oct 2026, the share icon centred in its bubble): no data
 > shape change.** The round share button in a pin's popup card showed its icon
 > a little right of centre (iPhone app, Android WebView). Cause: the
@@ -1943,7 +1981,10 @@
 > a cached number; and a count query answering one number instead of two
 > still fails the area. Only a two-count answer is written to the cache — the
 > empty body a mirror without an area database returns is (0, 0) for tonight,
-> as before, but is not remembered.
+> as before, but is not remembered. *(v77 amends this: next to a non-empty
+> sweep a failed, one-count, empty or two-zero count falls back to the cached
+> entry, up to 28 days old, and the empty-sweep recount is pinned to the
+> sweep's own host.)*
 > `PAPAMAP_TOILETS_COUNTS_PERIOD_DAYS=1` restores the every-night behaviour.
 > **The emitted shape does not change.** The reason: the count is the slower
 > of an area's two queries in the big areas (UK 45.2 s, Japan 49.7 s) and the
@@ -2317,8 +2358,9 @@
 > counts measure mapping thoroughness, and the Bundesland index explicitly
 > refuses to rank them. A same-date re-run replaces its history entry (builds
 > stay idempotent); city sweep failures degrade to a WARN and a city-less day,
-> never a failed build; partial builds (`PAPAMAP_AREA_NAME`, country subsets)
-> write no history at all. `python -m pipeline.backfill YYYY-MM-DD ...` seeds
+> never a failed build; builds without all 16 Länder (`PAPAMAP_AREA_NAME`,
+> most country subsets) write no history, and one with them never narrows a
+> same-date entry (v77). `python -m pipeline.backfill YYYY-MM-DD ...` seeds
 > past days from Overpass attic (`[date:...]`) queries through the same
 > classify/dedup path; it never overwrites an existing day.
 
