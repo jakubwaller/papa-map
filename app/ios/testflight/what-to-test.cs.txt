@@ -1,5 +1,6 @@
-– Novinka: mapa se pohybuje rychleji. Krátký přesun stále plynule klouže, dlouhý (třeba z pohledu na celou zemi k špendlíku) tam rovnou skočí místo několikavteřinového letu. Působí nějaký přesun příliš prudce nebo příliš pomalu?
-– Novinka: uložené místo (Moje PapaMap) a čerstvě přidaný špendlík teď nejdřív otevřou svou kartu a teprve potom pohnou mapou. Jak vyzkoušet: ulož si vzdálené místo a otevři ho z Moje PapaMap, přidej místo a sleduj, kam karta dopadne. Je karta někdy mimo obrazovku?
-– Novinka: otázky MapComplete u šedého špendlíku (tlačítko pro odpověď v MapComplete) jsou teď ve všech 32 jazycích. Přepni jazyk a jednu otevři.
-– Jako vždy: „Nejbližší přebalovací pult“, barvy u míst, která znáš, Siri, widget.
+– Opraveno: widget už neukazuje vzdálenost od místa, kde jsi byl před hodinami. Jak vyzkoušet: nech telefon na víc než 30 minut ležet, nebo na tu dobu vypni polohu, a pak se podívej na widget. Místo staré vzdálenosti by měl chtít čerstvou polohu („Tap and PapaMap finds it“, s vypnutou polohou „No location“). Najde pak klepnutí nejbližší pult od místa, kde jsi teď?
+– Opraveno: Siri („Nejbližší přebalovací pult“) stejně tak. Vyzkoušej to stejně: po víc než 30 minutách bez čerstvé polohy se zeptej Siri. Měla by tě najít znovu, nebo říct, že polohu nemá, ale nikdy nejmenovat pult u místa, kde jsi byl předtím.
+– Opraveno: odpověď v kartě šedého špendlíku se už nevrací zpátky jako otázka. Jak vyzkoušet: odpověz na otázku a nech kartu otevřenou 2–3 minuty, zatímco se mapa na pozadí obnovuje. Změní se tvoje odpověď někdy zpátky na otázku?
+– Opraveno: zelená tlačítka mají silnější kontrast. Jsou dobře čitelná, i venku?
+– Opraveno: tlačítka filtrů lépe fungují s VoiceOverem. Zapni VoiceOver a projdi filtry: přečte se každý srozumitelně a jde zapnout a vypnout?
 Cokoli je nejasné nebo nefunguje: udělej snímek obrazovky a pošli ho přes TestFlight.

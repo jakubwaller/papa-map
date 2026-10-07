@@ -1,5 +1,6 @@
-– Neu: Die Karte bewegt sich schneller. Ein kurzer Sprung gleitet weiter, ein langer (etwa von der Länderansicht zu einem Pin) springt direkt hin, statt sekundenlang zu fliegen. Fühlt sich eine Bewegung zu abrupt oder zu langsam an?
-– Neu: Ein gemerkter Ort (Mein PapaMap) und ein frisch hinzugefügter Pin öffnen jetzt zuerst ihre Karte und bewegen dann die Karte. Zum Testen: einen weit entfernten Ort merken, ihn über Mein PapaMap öffnen, und einen Ort hinzufügen und schauen, wo die Pin-Karte landet. Ist sie je außerhalb des Bildschirms?
-– Neu: Die MapComplete-Fragen hinter einem grauen Pin („Auf MapComplete beantworten“) gibt es jetzt in allen 32 Sprachen. Sprache wechseln und eine öffnen.
-– Wie immer: „Nächster Wickeltisch“, Farben bei Orten, die du kennst, Siri, Widget.
+– Behoben: Das Widget zeigt keine Entfernung mehr von dort, wo du vor Stunden warst. Zum Testen: das Handy über 30 Minuten liegen lassen oder den Standort so lange ausschalten, dann aufs Widget schauen. Es sollte nach einem frischen Standort fragen („Tippen, und PapaMap sucht ihn“, bei ausgeschaltetem Standort „Kein Standort“) statt eine alte Entfernung zu zeigen. Findet ein Tippen dann den nächsten Wickeltisch von dort aus, wo du jetzt bist?
+– Behoben: Siri („Nächster Wickeltisch“) ebenso. Genauso testen: nach über 30 Minuten ohne frischen Standort Siri fragen. Sie sollte dich neu orten oder sagen, dass sie keinen Standort hat, aber nie einen Tisch bei deinem Standort von vorhin nennen.
+– Behoben: Eine Antwort in der Pin-Karte eines grauen Pins kommt nicht mehr als Frage zurück. Zum Testen: eine Frage beantworten und die Pin-Karte 2–3 Minuten offen lassen, während sich die Karte im Hintergrund aktualisiert. Wird deine Antwort je wieder zur Frage?
+– Behoben: Die grünen Schaltflächen haben stärkeren Kontrast. Sind sie gut lesbar, auch draußen?
+– Behoben: Die Filter-Schaltflächen funktionieren besser mit VoiceOver. VoiceOver einschalten und die Filter durchgehen: Wird jeder verständlich vorgelesen, und lässt er sich an- und ausschalten?
 Alles, was unklar ist oder hakt: Screenshot machen und über TestFlight schicken.

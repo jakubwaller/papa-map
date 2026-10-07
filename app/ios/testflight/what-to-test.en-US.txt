@@ -1,5 +1,6 @@
-– New: the map now moves faster. A short hop still glides, a long one (say from a country view to a pin) jumps straight there instead of flying for seconds. Does any move feel too abrupt or too slow?
-– New: a saved place (My PapaMap) and a freshly added pin now open their card first and then move the map. Check: save a place far away, open it from My PapaMap, and add a place and watch where the card lands. Is the card ever off-screen?
-– New: the MapComplete questions behind a grey pin ("Answer on MapComplete") are now in all 32 languages. Switch the language and open one.
-– As always: "Nearest changing table", colours for places you know, Siri, the widget.
+– Fixed: the widget no longer shows a distance from where you were hours ago. Check: leave the phone still, or turn location off, for more than 30 minutes, then look at the widget. It should ask for a fresh location ("Tap and PapaMap finds it", or "No location" while location is off) instead of an old distance. Does a tap then find the nearest table from where you are now?
+– Fixed: Siri ("Nearest changing table") likewise. Check the same way: after more than 30 minutes without a fresh location, ask Siri. It should find you again or say it has no location, and never name a table near where you were earlier.
+– Fixed: an answer you give in a grey pin's card no longer comes back as a question. Check: answer a question, then keep the card open for 2–3 minutes while the map refreshes in the background. Does your answer ever turn back into the question?
+– Fixed: the green buttons have stronger contrast. Are they easy to read, outdoors too?
+– Fixed: the filter buttons work better with VoiceOver. Turn VoiceOver on and go through the filters: is each one read out clearly, and can you switch it on and off?
 Anything unclear or broken: take a screenshot and send it through TestFlight.
