@@ -40,8 +40,14 @@ test("statsMissing is HTML in every language and never escaped at a call site", 
 test("answer() gives the live card its buttons back after the write", () => {
   const fin = src.match(/\} finally \{\n\s+inFlight\.delete\(obj\.osm_url\);([\s\S]*?)\n  \}\n\}/);
   assert.ok(fin, "answer()'s finally block");
-  assert.match(fin[1], /popup\?\.getElement\(\)\?\.querySelectorAll\("button\.ask-btn, button\.ask-more"\)/);
-  assert.match(fin[1], /disabled = false/);
+  assert.match(fin[1], /\bwake\(\);/);
+  // wake() queries the card afresh (the one the answer was given on if it is
+  // still up, else this object's reopened card, never another pin's).
+  const wake = src.match(/const wake = \(\) => ([\s\S]*?);\n/);
+  assert.ok(wake, "answer()'s wake helper");
+  assert.match(wake[1], /here\(\)\?\.querySelectorAll\("button\.ask-btn, button\.ask-more"\)/);
+  assert.match(wake[1], /disabled = false/);
+  assert.match(src, /const here = \(\) => \(el\?\.isConnected \? el\n\s+: popupObj\?\.obj\?\.osm_url === obj\.osm_url/);
 });
 
 // A redraw that is really needed must not take the focus from the search
