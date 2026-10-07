@@ -117,6 +117,21 @@ def test_local_stats_counts_centralkey_locked_drops(load_fixture):
     assert local["unknown"] == 3  # the scoped one is a grey pin
 
 
+def test_centralkey_locked_ignores_junk_values_that_never_become_pins():
+    # A junk changing_table value is never a pin, key or no key, so it must
+    # not inflate the "dropped: locked behind a central key" count.
+    def el(i, value, lock):
+        return {"type": "node", "id": i, "lat": 53.5, "lon": 10.0,
+                "tags": {"changing_table": value, **lock}}
+    gated = {"centralkey": "eurokey", "access": "centralkey"}
+    ct = {"elements": [el(1, "02", {"centralkey": "eurokey"}), el(2, "", gated),
+                       el(3, "Yes", {"centralkey": "eurokey"}), el(4, "yes", gated)]}
+    local = stats.local_stats(ct, {})
+    assert local["ct_objects"] == 4
+    assert local["centralkey_locked"] == 1  # only the real "yes"
+    assert local["ct_yes"] == 0  # and that one is still not a feature
+
+
 def _taginfo_fetch(load_fixture):
     def fetch(url):
         if "key/stats" in url:

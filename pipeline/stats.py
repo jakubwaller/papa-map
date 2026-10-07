@@ -6,8 +6,8 @@ from pathlib import Path
 
 import requests
 
-from .classify import (centralkey_locked, classify, has_play_area, highchair_state, men_only,
-                       tokens)
+from .classify import (FEATURE_VALUES, centralkey_locked, classify, has_play_area,
+                       highchair_state, men_only, tokens)
 from .config import TAGINFO_STATS_URL, TAGINFO_VALUES_URL, USER_AGENT
 from .osm import element_coords
 
@@ -26,7 +26,8 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
     behind a central key — the same filters export.build_features applies — so
     the stats strip never claims more tables than the map has pins.
     centralkey_locked counts the key-locked drops that would otherwise be
-    pins.
+    pins — changing_table=yes/limited only, since a junk value ("02", "Yes")
+    is never a pin with or without the key.
 
     play_data is the sweep's play-only half (objects with an indoor play area
     and no changing_table tag); omit it and both play counters read 0.
@@ -52,6 +53,8 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
             continue
         if element_coords(el)[0] is None:
             continue  # build_features drops it, so we must not count it
+        if value not in FEATURE_VALUES:
+            continue  # junk ("02", "Yes"): classify() never makes it a pin
         if centralkey_locked(tags):
             locked += 1  # would be a pin, but the door needs a Euro key
             continue
