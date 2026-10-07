@@ -184,3 +184,15 @@ test("the back link reopens the map in the page's own language", () => {
     assert.equal(back, lang === DEFAULT_LANG ? "./" : `./?lang=${lang}`, f);
   }
 });
+
+test("no link anywhere on a translated page drops the language on the way home", () => {
+  // The in-body "home page" link (section on toilets:num_chambers) was a bare
+  // "./" in 29 pages, so a reader with another browser language landed on the
+  // map in that language instead of the page's own.
+  for (const f of PAGES) {
+    const lang = langOf(f);
+    if (lang === DEFAULT_LANG) continue;
+    const bare = read(f).match(/href="(\.\/|index\.html)"/);
+    assert.equal(bare, null, `${f} still links to the map without ?lang=${lang}`);
+  }
+});
