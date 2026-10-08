@@ -131,7 +131,6 @@ en blijft zo staan.</p>
   <li><a href="#mum-mode">De Papa/Mama-schakelaar</a></li>
   <li><a href="#play-area">De blauwe ring: speelhoek</a></li>
   <li><a href="#wheelchair">De chip Rolstoel</a></li>
-  <li><a href="#empty-rings">De lege blauwe ringen: speelplekken zonder antwoord</a></li>
   <li><a href="#high-chair">De chip Kinderstoel</a></li>
   <li><a href="#grey-pin">Hoe je een grijze pin repareert</a></li>
   <li><a href="#contribute">Hoe je een ontbrekende plek toevoegt</a></li>
@@ -143,14 +142,9 @@ en blijft zo staan.</p>
 </ul></nav>
 
 <h2 id="what">Wat deze kaart is. En wat niet.</h2>
-<p>PapaMap toont plekken in 44 Europese landen — van IJsland tot Cyprus, van Portugal tot
-Oekraïne, plus Australië, Nieuw-Zeeland, de Verenigde Staten, Canada en Japan — waar
-OpenStreetMap een verschoontafel kent (<code>changing_table=yes</code> of <code>limited</code>). Daarbij komen plekken met een speelhoek, getekend als een blauwe ring, met of zonder verschoontafel.
+<p>PapaMap toont plekken in Europa, Australië, Nieuw-Zeeland, de Verenigde Staten, Canada en Japan, waar OpenStreetMap een verschoontafel kent (<code>changing_table=yes</code> of <code>limited</code>). Daarbij komen plekken met een speelhoek, getekend als een blauwe ring, met of zonder verschoontafel.
 De kleur zegt of een papa bij de tafel kan. De kaart leest OSM. Antwoorden gaan rechtstreeks naar OSM onder je eigen OSM-account — vanaf de kaart zelf of via de links bij elke pin; PapaMap slaat niets op.
 De gegevens verbeter je op OSM zelf, via de links bij elke pin.</p>
-<p class="muted">Verschoontafel, luiertafel, babyverschooncommode &mdash; hetzelfde ding, ander
-woord per streek. In Vlaanderen is het doorgaans de <em>luiertafel</em>; deze pagina houdt het
-bij één woord.</p>
 <p>Het idee kwam tijdens het lezen van het boek <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> van Caroline Criado Perez.</p>
 <p>Een ranglijst van welke stad het beste toiletaanbod heeft, is dit niet. Waarom dat uit open
 data niet eerlijk kan, staat verderop.</p>
@@ -170,7 +164,7 @@ omgezet naar kleine letters, en elk deel wordt in zijn geheel vergeleken. Nooit 
   <li><span class="dot r"></span><strong>Rood:</strong> anders, als een van de delen
       <code>female_toilet</code> is. De tafel bestaat, maar alleen op het damestoilet.</li>
   <li><span class="dot u"></span><strong>Grijs:</strong> al het andere. Geen location-tag, of
-      alleen vrije tekst. Niemand heeft de ruimte vastgelegd. De grijze pins zijn de opdracht.</li>
+      alleen vrije tekst. Niemand heeft de ruimte vastgelegd.</li>
 </ul>
 <p>Een object met een <code>centralkey</code>-tag (behalve <code>no</code>) blijft van de kaart als de sleutel de hele deur afsluit: <code>access=centralkey</code>, een tafel in het invalidentoilet, of niets in de tags zegt dat de sleutel maar voor één cabine geldt. Een blok met open heren- en damestoilet en een afgesloten invalidencabine (<code>wheelchair:access=centralkey</code>, of <code>male=yes</code> en <code>female=yes</code>) blijft op de kaart, grijs tot iemand de ruimte invult. De eurosleutel krijg je alleen met een aangetoonde beperking, dus de meeste vaders komen niet door die deur. Onder de chip <em>Rolstoel</em> komen deze tafels terug, zie hieronder.</p>
 
@@ -200,60 +194,22 @@ apart, dus in mama-modus zijn ze rood en tellen ze niet mee in het getal hierbov
 van de app kunnen ze nog groen tonen totdat ze zijn bijgewerkt.</p>
 
 <h2 id="play-area">De blauwe ring: speelhoek</h2>
-<p>Een pin met een blauwe ring heeft ook een speelhoek &mdash; een plek waar je niet alleen
-verschoont, maar ook even blijft. Het filter <em>Met speelhoek</em> laat alleen die plekken zien.
-Een plek telt mee als een van deze dingen in OSM staat:</p>
+<p>Een pin met een blauwe ring heeft ook een speelhoek. De chip <em>Met speelhoek</em> toont alleen die. Een plek telt mee als een van deze tags in OSM staat:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> of <code>designated</code>
-      &mdash; de in de wiki gedocumenteerde manier om &ldquo;binnen&rdquo; te zeggen.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> of
-      <code>designated</code> &mdash; de speelhoek in het café, in het restaurant, bij de bakker.
-      De meest gebruikte tag, al laat die open of het binnen of buiten is.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; een commerciële
-      binnenspeeltuin.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> samen met
-      <code>indoor=yes</code> &mdash; hetzelfde, andersom getagd.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> of <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> of <code>designated</code> (de meestgebruikte tag, hij zegt niet of het binnen of buiten is)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> samen met <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> telt niet mee: de zandbak bij het terras is niet wat de ring belooft.
-<code>no</code> telt ook niet mee, en <code>limited</code> evenmin — de wiki definieert dat als
-&ldquo;er is speelgoed, maar geen eigen ruimte&rdquo;. Staat er ergens uitdrukkelijk
-<code>kids_area:indoor=no</code>, dan wint dat van een kaal <code>kids_area=yes</code>.</p>
-<p>Dit is een badge, geen vierde status. Een plek zonder deze tags heeft niet &ldquo;geen
-speelhoek&rdquo; &mdash; OSM zegt er gewoon niets over. Daarom is hier geen grijs.</p>
-<p>Daarom vraagt de popup ernaar. Bij elke pin waar OSM niets zegt over een speelhoek, ongeacht
-de kleur, staat één regel (onder de ruimtes, daar waar de pin ook naar de ruimte vraagt):
-<em>Speelhoek voor kinderen?</em>, met drie antwoorden. <em>binnen</em> schrijft
-<code>kids_area:indoor=yes</code> samen met <code>kids_area=yes</code>, <em>alleen buiten</em>
-schrijft <code>kids_area=yes</code> samen met <code>kids_area:indoor=no</code>, <em>geen</em>
-schrijft <code>kids_area=no</code> &mdash; onder je eigen OSM-account, in een eigen changeset,
-precies de tags die MapComplete voor dezelfde vraag schrijft. De vraag gaat over een speelhoek in
-het algemeen, niet alleen een binnen-speelhoek: <code>kids_area=no</code> betekent in OSM
-&ldquo;hier is nergens waar kinderen kunnen spelen&rdquo;, dus een bakker met een speeltuin in de
-tuin krijgt <em>alleen buiten</em> in plaats van een fout nee. De ring verschijnt (of blijft weg)
-een paar minuten later. Niemand wordt twee keer gevraagd: een al vastgelegde
-<code>kids_area</code> <em>of</em> <code>kids_area:indoor</code>, wat de waarde ook is, haalt de
-vraag weg. Bij een <code>leisure=playground</code> zonder <code>indoor=yes</code> wordt het nooit
-gevraagd &mdash; de plek <em>is</em> al een speelplek, alleen niet binnen.</p>
+<p><code>outdoor</code>, <code>no</code> en <code>limited</code> tellen niet mee. Een expliciete <code>kids_area:indoor=no</code> wint van een kale <code>kids_area=yes</code>.</p>
+<p>De ring is een badge, geen vierde kleur. Een plek zonder deze tags heeft niet «geen speelhoek»: OSM zegt er gewoon niets over, en dat geldt voor bijna alle plekken. Daarom is er hier geen grijs.</p>
+<p>Juist daarom vraagt de popup ernaar: bij elke pin waarover OSM niets zegt over een speelhoek, welke kleur hij ook heeft, staat één regel (onder de ruimtes, als de pin ook naar de ruimte vraagt): <em>Speelhoek voor kinderen?</em> met drie antwoorden. <em>binnen</em> schrijft <code>kids_area:indoor=yes</code> samen met <code>kids_area=yes</code>, <em>alleen buiten</em> schrijft <code>kids_area=yes</code> samen met <code>kids_area:indoor=no</code>, <em>geen</em> schrijft <code>kids_area=no</code> — onder je eigen OSM-account, in een eigen changeset, precies de tags die MapComplete voor dezelfde vraag schrijft. De vraag gaat over een speelmogelijkheid in het algemeen, niet alleen binnen: <code>kids_area=no</code> betekent in OSM «hier kunnen kinderen nergens spelen», en een bakkerij met een speeltuin in de tuin krijgt daarom <em>alleen buiten</em> in plaats van een valse nul. De ring verschijnt (of blijft weg) een paar minuten later. Wie al geantwoord heeft, krijgt de vraag niet opnieuw: een vastgelegde <code>kids_area</code> <em>of</em> <code>kids_area:indoor</code>, welke waarde ook, haalt de vraag weg. Op een <code>leisure=playground</code> zonder <code>indoor=yes</code> wordt hij helemaal niet gesteld: de plek <em>is</em> een plek om te spelen, alleen buiten.</p>
+<p>De regel geldt voor veel meer plekken dan er pins zijn. Slechts <span data-stat="play_tables">111</span> daarvan hebben een pin. Bij nog eens <span data-stat="play_places">701</span> heeft niemand de eerste vraag beantwoord: is hier een verschoontafel? Die kan de kaart niet inkleuren, dus krijgen ze een lege blauwe ring en een eigen chip, <em>Alleen speelhoek</em>, standaard aan. Wie er toch met een kind heen gaat, kent het antwoord. Een klik op de ring opent MapComplete precies bij die vraag.</p>
+<p>Een <em>gestippelde</em> ring betekent: speelhoek ja, verschoontafel nee (<code>changing_table=no</code>). Dat is geen pin en ook niet rood, want rood zou zeggen dat er een tafel is, alleen niet voor papa. Hier is er geen, voor niemand. De plek staat toch op de kaart, want met een kind ga je er graag heen, ook zonder tafel.</p>
 
 <h2 id="wheelchair">De chip Rolstoel</h2>
 <p>De chip <em>Rolstoel</em> toont plekken met <code>wheelchair=yes</code> of <code>wheelchair=limited</code> in OSM. <code>limited</code> betekent één drempel tot 7&nbsp;cm, of hulp nodig. Met de chip aan hebben deze plekken vanaf zoom 13 een uitroepteken, en de popup zegt <em>beperkt</em>. <code>toilets:wheelchair=yes</code> alleen is niet genoeg, maar staat wel in de popup, samen met <code>wheelchair:description</code>. Een plek zonder tag is niet ontoegankelijk, OSM zegt er gewoon niets over, dus de chip filtert alleen en kleurt niets. De blauwe ringen (plekken met een speelhoek) filtert en markeert de chip op dezelfde manier.</p>
 <p>Onder deze chip, en alleen daar, komen de tafels achter een eurosleutel terug, met een sleutel in de speld: wie de chip nodig heeft, heeft meestal de sleutel. Op de gewone kaart, in de cijfers en in de ranglijst blijven ze weg.</p>
-
-<h2 id="empty-rings">De lege blauwe ringen: speelplekken zonder antwoord</h2>
-<p>Dezelfde regel geldt voor veel meer plekken dan de kaart pins heeft. Slechts
-<span data-stat="play_tables">111</span> daarvan hebben een pin.
-Bij <span data-stat="play_places">701</span> andere heeft niemand de eerste vraag beantwoord: is
-hier een verschoontafel? Ja, nee, niemand weet het &mdash; OSM zegt er helemaal niets over.</p>
-<p>Die <span data-stat="play_places">701</span> kan de kaart niet inkleuren, want er is niets in te
-kleuren. Grijs zijn ze ook niet: grijs betekent &ldquo;de tafel bestaat, de ruimte ontbreekt&rdquo;,
-en dat geldt hier niet. Ze krijgen daarom een eigen chip, <em>Alleen speelhoek</em>, die standaard
-aan staat, en een lege blauwe ring in plaats van een gevulde pin.</p>
-<p>Een <em>gestippelde</em> ring betekent: speelhoek ja, verschoontafel nee (<code>changing_table=no</code>). Dat is geen pin en ook niet rood, want rood zou betekenen dat er wél een tafel is, alleen niet voor papa. Hier is er geen, voor niemand. De plek staat toch op de kaart, omdat je er met een kind ook zonder tafel graag heen gaat.</p>
-<p>Het zijn de meest kansrijke open vragen van de hele kaart. Een binnenspeeltuin, een café met
-ballenbak, een restaurant met speelkamer &mdash; een vader met een peuter gaat daar toch al heen, en
-als hij er is, weet hij het antwoord. Een klik op de ring opent MapComplete precies op die ene
-vraag. Wordt die beantwoord, dan is de ring binnen een paar minuten verdwenen en staat
-er een echte pin.</p>
 
 <h2 id="high-chair">De chip Kinderstoel</h2>
 <p>De chip <em>Kinderstoel</em> toont plekken waar OSM een kinderstoel vermeldt: <code>highchair=yes</code> of een getal boven 0. <code>highchair=no</code> of <code>0</code> is een vastgelegd nee. Een plek zonder de tag is geen plek zonder kinderstoel, OSM zegt er gewoon niets over, dus de chip laat hem weg zonder iets te beweren. Een waarde die de kaart niet kan lezen, zoals <code>ja</code> of <code>1+</code>, telt ook niet mee, en de popup toont er geen regel voor. De chip filtert pins en blauwe ringen en kleurt niets.</p>
@@ -266,7 +222,7 @@ een gratis OSM-account beantwoorden, ter plekke, in minder dan een minuut:</p>
   <li><strong>In de app (het snelst):</strong> Tik op de grijze pin. De popup vraagt <em>In welke ruimte staat de verschoontafel?</em> Tik op <em>Dames &amp; heren</em>, <em>Herentoilet</em>, <em>Damestoilet</em>, <em>Unisextoilet</em>, <em>Rolstoeltoilet</em> of <em>Aparte ruimte</em>. Andere ruimtes zitten achter <em>Meer ruimtes …</em>. In de weergave <em>Mama</em> ontbreken <em>Herentoilet</em> en <em>Dames &amp; heren</em>, omdat een moeder niet kan instaan voor het herentoilet. Je logt één keer in met OSM, het antwoord wordt onder je eigen account opgeslagen en de pin wordt binnen een paar minuten bijgewerkt. Tik je op de locatieknop binnen 75&nbsp;m van een grijze pin, dan vraagt een kaartje of je er nu bent; <em>Vraag beantwoorden</em> opent dezelfde popup.</li>
   <li><strong>MapComplete (elke telefoon, in de browser):</strong> &ldquo;Beantwoorden op
       MapComplete&rdquo; bij een grijze pin opent hetzelfde object in het eigen PapaMap-thema van
-      MapComplete &mdash; bij elke pin, zodat de bewerkingen herkenbaar van hier komen. MapComplete
+      MapComplete. MapComplete
       waarschuwt één keer voor een niet-officieel thema, dat is prima. Log in met je OSM-account en beantwoord de vragen
       over de verschoontafel, ook die over de ruimte. Het antwoord gaat
       rechtstreeks naar OpenStreetMap en is hier binnen een paar minuten te zien.</li>
@@ -275,8 +231,7 @@ een gratis OSM-account beantwoorden, ter plekke, in minder dan een minuut:</p>
       &ldquo;verschonen&rdquo; en vink hem aan. Hij vraagt alleen ja/nee. Voor de vraag over de
       ruimte bij een bestaande grijze pin gebruik je MapComplete.</li>
 </ul>
-<p class="muted">De bewerkingen lopen onder je eigen OSM-account en zijn van iedereen. Ze overleven
-deze website en helpen elke app die OpenStreetMap leest.</p>
+<p class="muted">De bewerkingen lopen onder je OSM-account en helpen elke app die OpenStreetMap leest, niet alleen deze.</p>
 
 <h2 id="contribute">Hoe je een ontbrekende plek toevoegt</h2>
 <p>PapaMap slaat zelf niets op. Een plek toevoegen betekent daarom altijd: OpenStreetMap bewerken.
@@ -329,11 +284,7 @@ er zou moeten zijn. Ken je de ruimte niet, dan is <code>changing_table=yes</code
 nuttig: de plek wordt een grijze pin, en de volgende papa beantwoordt de vraag over de ruimte.</p>
 
 <h2 id="no-ranking">Waarom een index van het toiletaanbod uit OSM niet werkt</h2>
-<p>Het voor de hand liggende, grotere project zou een verhouding zijn tussen het toiletaanbod voor
-mannen en dat voor vrouwen, per stad. Het getal waar het bij &ldquo;potty parity&rdquo; eigenlijk
-om draait. Uit OpenStreetMap valt het niet te berekenen. We hebben het vóór de bouw gecontroleerd,
-met een steekproef over acht binnensteden (Berlijn, Londen, Parijs, New York,
-Tokio&nbsp;23&nbsp;wijken, Amsterdam, Wenen, Melbourne; 26&nbsp;juli&nbsp;2026):</p>
+<p>Het voor de hand liggende grotere project zou de verhouding tussen herentoiletten en damestoiletten per stad zijn, het getal waar het «potty parity»-debat over gaat. Ik heb vóór het bouwen gecontroleerd of OSM dat getal kan geven. Dat kan het niet. Een steekproef over acht stadscentra van 26&nbsp;juli&nbsp;2026:</p>
 <table>
   <tr><th>Stad</th><th>Vastgelegde toiletten</th><th>Met geslachtstag</th><th>Beide M&nbsp;+&nbsp;V</th></tr>
   <tr><td>Berlijn</td><td>1.173</td><td>660</td><td>119</td></tr>
@@ -346,42 +297,11 @@ Tokio&nbsp;23&nbsp;wijken, Amsterdam, Wenen, Melbourne; 26&nbsp;juli&nbsp;2026):
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Alle</strong></td><td><strong>9.674</strong></td><td><strong>2.888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Slechts 29,9% van de vastgelegde toiletten heeft een geslachtstag, welke dan ook. Beide
-      (male en female): 8,5%.</li>
-  <li>De tags zijn pure ja/nee-vlaggen, nooit aantallen. Aantal hokjes per geslacht: nul in alle
-      acht steden. De enige capaciteitssleutel, <code>toilets:num_chambers</code> (~27k keer
-      gebruikt), maakt geen onderscheid naar geslacht en komt vrijwel volledig uit een oude
-      import. De varianten <code>:female</code> / <code>:male</code> worden wereldwijd elk 2 keer
-      gebruikt.</li>
-  <li>Hamburg, dezelfde dag gecontroleerd: 443 vastgelegde toiletten, geen enkele met een
-      <code>toilets:num_chambers*</code>-tag. De balk op de <a href="./?lang=nl">startpagina</a> rekent deze cijfers eens per week per gebied
-      opnieuw uit; de kaart zelf elke nacht.</li>
-  <li>En: taggingpercentages meten de gemeenschap van mappers, niet de steden. Toiletten voor één
-      persoon blijven terecht zonder geslachtstag. Een stedenranglijst zou een cijfer geven aan
-      OSM-bijdragers, niet aan de toiletrechtvaardigheid.</li>
-</ul>
-<p>Eerlijk is dus alleen dit: het aanbod zelf kun je vandaag niet uit open data meten. Deze website
-meet wat meetbaar is en maakt van de leemtes bijdragen.</p>
+<p>Slechts 29,9% van de vastgelegde toiletten heeft überhaupt een geslachtstag, 8,5% heeft beide. De tags zijn ja/nee-aanduidingen, geen tellingen, en aantallen cabines per geslacht bestaan in geen van de acht steden. En een tagpercentage meet de mapper-gemeenschap, niet de stad. Een ranglijst zou OSM-bijdragers beoordelen, niet toiletten. Daarom houdt de pagina zich aan wat te meten is.</p>
 
 <h2 id="where-tables">Het ene berekenbare feit: waar de tafels staan</h2>
-<p><code>changing_table:location</code> is voor zover wij weten het enige open vocabulaire dat
-vastlegt in welke ruimte een verschoontafel staat. Het is dun bezet:
-<span data-stat="location_total">3.659</span> van de <span data-stat="ct_total">77.000</span>
-<code>changing_table</code>-objecten wereldwijd, <span data-stat="share">4,8%</span>. Maar waar het
-bestaat, is het eenzijdig (taginfo, <span data-stat="date">26&nbsp;juli&nbsp;2026</span>):</p>
-<ul>
-  <li>Tafels alleen op het damestoilet: <strong data-stat="female_only">485</strong>.</li>
-  <li>Tafels alleen op het herentoilet: <strong data-stat="male_only">71</strong>. Grofweg
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> zijn in beide
-      ruimtes getagd, <span data-stat="male_any">410</span> vermelden in totaal een tafel op het
-      herentoilet. Wereldwijd.</li>
-</ul>
-<p>De steekproef is klein, en mappers bepalen zelf wat ze vastleggen. Hecht dus niet te veel
-waarde aan de exacte verhouding. De richting past wel bij wat allang elders is gedocumenteerd:
-verschoontafels hangen standaard op het damestoilet. Dat sluit papa&rsquo;s buiten, en het gaat er
-terloops van uit wie er voor de luiers zorgt. Deze kaart maakt de ontbrekende gegevens zichtbaar.
-En makkelijk te verbeteren.</p>
+<p><code>changing_table:location</code> is het enige open vocabulaire dat ik ken dat vastlegt in welke ruimte een verschoontafel staat. Het is zeldzaam: <span data-stat="location_total">3.659</span> van <span data-stat="ct_total">77.000</span> <code>changing_table</code>-objecten wereldwijd, <span data-stat="share">4,8%</span>. Waar het bestaat, is het scheef (taginfo, <span data-stat="date">26&nbsp;juli&nbsp;2026</span>): <strong data-stat="female_only">485</strong> tafels alleen in het damestoilet, <strong data-stat="male_only">71</strong> alleen in het herentoilet, grofweg <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> staan in beide ruimtes.</p>
+<p>De steekproef is klein en mappers kiezen zelf wat ze vastleggen, dus lees niet te veel in de exacte verhouding. De richting is overal dezelfde: verschoontafels hangen standaard in het damestoilet. Deze kaart laat zien waar de gegevens ontbreken, en elke grijze pin heeft een bewerkknop.</p>
 
 <h2 id="licence">Datalicentie &amp; bronvermelding</h2>
 <p>Alle kaartgegevens &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
@@ -392,20 +312,8 @@ De wereldwijde tagstatistieken komen van <a href="https://taginfo.openstreetmap.
 De code van de site zelf staat onder de MIT-licentie.</p>
 
 <h2 id="privacy">Privacy</h2>
-<p>Een statische website. Geen accounts, geen cookies, geen analytics, geen trackingscripts. De
-site slaat niets over je op en heeft geen database. De kaarttegels komen van de tileservers van
-OpenStreetMap; voor die verzoeken geldt het
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">privacybeleid van de OSMF</a>. Tik je in een pin op <em>Beantwoorden op MapComplete</em>, dan vraagt de pagina de volgende minuten ook een paar keer aan api.openstreetmap.org wat dat ene object nu zegt — voor die verzoeken geldt hetzelfde beleid. Vanaf het derde teken dat je in het zoekveld typt, en telkens als je <em>Plek toevoegen</em>
-opent, vraagt de pagina ook de plaatszoekfunctie Photon van komoot (photon.komoot.io). Die krijgt
-de getypte tekst en een afgerond middelpunt van de kaart en, zoals elke server, je IP-adres. Volg je een
-link naar MapComplete, StreetComplete of openstreetmap.org, dan ben je op hun sites en bewerk je
-onder je eigen OSM-account. Via ons loopt daarbij niets. Formele pagina&rsquo;s:
-<a href="impressum.html">Impressum</a> ·
+<p>Een statische website. Ze plaatst geen cookies en heeft geen analytics. De kaarttegels komen van de tegelservers van OpenStreetMap; voor die verzoeken geldt het <a href="https://osmfoundation.org/wiki/Privacy_Policy">privacybeleid van de OSMF</a>. Tik je in een pin op <em>Beantwoorden op MapComplete</em>, dan vraagt de pagina de volgende minuten ook een paar keer aan api.openstreetmap.org wat dat ene object nu zegt — voor die verzoeken geldt hetzelfde beleid. Vanaf het derde teken in het zoekveld en telkens als je <em>Plek toevoegen</em> opent, vraagt de pagina bovendien de plaatszoeker Photon van komoot (photon.komoot.io). Die krijgt de getypte tekst en een afgerond kaartmiddelpunt en, zoals elke server, je IP-adres. Links naar MapComplete, StreetComplete of openstreetmap.org leiden naar hun sites, waar je onder je eigen OSM-account bewerkt. Formeel: <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (Duits).</p>
-
-<p class="muted">Bronnen: Overpass-steekproef over 8 binnensteden (9.674 toiletten) van
-26&nbsp;juli&nbsp;2026 en de taginfo-cijfers voor die sleutel op de hierboven genoemde datum.
-De lokale cijfers komen uit dezelfde nachtelijke query die ook de kaart bouwt.</p>
 
 <h2 id="how-made">Hoe deze site tot stand komt</h2>
 <p>Bij het programmeren en bij het schrijven van de teksten helpt AI mij. Alles heb ik daarna wel

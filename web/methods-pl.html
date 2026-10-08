@@ -130,7 +130,6 @@ nocny build. Próbka z ośmiu centrów miast jest z 26&nbsp;lipca&nbsp;2026 i ta
   <li><a href="#mum-mode">Przełącznik tata/mama</a></li>
   <li><a href="#play-area">Niebieska obwódka: kącik zabaw</a></li>
   <li><a href="#wheelchair">Chip Wózek</a></li>
-  <li><a href="#empty-rings">Puste niebieskie obwódki: miejsca do zabawy bez odpowiedzi</a></li>
   <li><a href="#high-chair">Chip Krzesełko do karmienia</a></li>
   <li><a href="#grey-pin">Jak naprawić szarą pinezkę</a></li>
   <li><a href="#contribute">Jak dodać brakujące miejsce</a></li>
@@ -142,9 +141,7 @@ nocny build. Próbka z ośmiu centrów miast jest z 26&nbsp;lipca&nbsp;2026 i ta
 </ul></nav>
 
 <h2 id="what">Czym ta mapa jest. A czym nie jest.</h2>
-<p>PapaMap pokazuje miejsca w 44 krajach Europy — od Islandii po Cypr, od Portugalii po
-Ukrainę, a także Australia, Nowa Zelandia, USA, Kanada i Japonia — o których
-OpenStreetMap wie, że jest tam przewijak
+<p>PapaMap pokazuje miejsca w Europie, Australii, Nowej Zelandii, USA, Kanadzie i Japonii, o których OpenStreetMap wie, że jest tam przewijak
 (<code>changing_table=yes</code> albo <code>limited</code>). Do tego miejsca z kącikiem zabaw, rysowane jako niebieska obwódka, z przewijakiem lub bez. Kolor mówi, czy tata dotrze do
 przewijaka. Mapa czyta OSM. Odpowiedzi trafiają prosto do OSM na Twoim własnym koncie OSM — z samej mapy albo przez linki przy każdej pinezce; PapaMap niczego nie zapisuje. Dane poprawia się bezpośrednio
 w OSM, przez linki przy każdej pinezce.</p>
@@ -167,8 +164,7 @@ zamieniana na małe litery, a każda część jest porównywana w całości. Nig
   <li><span class="dot r"></span><strong>Czerwony:</strong> w przeciwnym razie, jeśli któraś z części
       to <code>female_toilet</code>. Przewijak jest, ale tylko w damskiej toalecie.</li>
   <li><span class="dot u"></span><strong>Szary:</strong> cała reszta. Brak tagu z lokalizacją albo
-      tylko dowolny tekst. Nikt nie zapisał pomieszczenia. Szare pinezki to zadanie do
-      zrobienia.</li>
+      tylko dowolny tekst. Nikt nie zapisał pomieszczenia.</li>
 </ul>
 <p>Obiekt z tagiem <code>centralkey</code> (innym niż <code>no</code>) zostaje poza mapą, gdy klucz zamyka całe drzwi: <code>access=centralkey</code>, przewijak w toalecie dla niepełnosprawnych, albo nic w tagach nie mówi, że klucz dotyczy tylko jednej kabiny. Obiekt z otwartą toaletą męską i damską oraz zamkniętą na klucz kabiną dla niepełnosprawnych (<code>wheelchair:access=centralkey</code>, albo <code>male=yes</code> i <code>female=yes</code>) zostaje na mapie, szary, dopóki ktoś nie wpisze pomieszczenia. Euroklucz dostaje się wyłącznie po okazaniu orzeczenia o niepełnosprawności, więc większość ojców przez te drzwi nie przejdzie. Pod chipem <em>Wózek</em> te przewijaki wracają, patrz niżej.</p>
 
@@ -197,61 +193,22 @@ trybie mamy są czerwone i nie liczą się do liczby powyżej. Starsze wersje ap
 pokazywać je jako zielone, dopóki nie zostaną zaktualizowane.</p>
 
 <h2 id="play-area">Niebieska obwódka: kącik zabaw</h2>
-<p>Pinezka z niebieską obwódką ma dodatkowo kącik zabaw &mdash; miejsce, w którym nie tylko się
-przewija, ale i zostaje na dłużej. Filtr <em>Z kącikiem zabaw</em> pokazuje na mapie tylko takie.
-Miejsce się liczy, jeśli w OSM jest którykolwiek z tych zapisów:</p>
+<p>Pinezka z niebieską obwódką ma dodatkowo kącik zabaw. Chip <em>Z kącikiem zabaw</em> pokazuje tylko je. Miejsce się liczy, jeśli w OSM jest jeden z tych tagów:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> albo <code>designated</code>
-      &mdash; udokumentowany w wiki zapis oznaczający &bdquo;w środku&rdquo;.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> albo
-      <code>designated</code> &mdash; kącik zabaw w kawiarni, w restauracji, u piekarza.
-      Najczęściej używany tag, choć nie rozstrzyga, czy w środku, czy na dworze.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; komercyjna sala
-      zabaw.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> razem z
-      <code>indoor=yes</code> &mdash; to samo, otagowane odwrotnie.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> albo <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> albo <code>designated</code> (najczęstszy tag, nie mówi, czy w środku, czy na zewnątrz)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> razem z <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> się nie liczy: piaskownica w ogródku piwnym to nie jest to, co obwódka
-obiecuje. <code>no</code> też nie i <code>limited</code> też nie — wiki definiuje je jako
-&bdquo;są zabawki, ale nie ma wydzielonego miejsca&rdquo;. Jeśli gdzieś jest wyraźne
-<code>kids_area:indoor=no</code>, ma ono pierwszeństwo przed samym <code>kids_area=yes</code>.</p>
-<p>To odznaka, a nie czwarty status. Jeśli miejsce nie ma tych tagów, to nie znaczy, że nie ma
-kącika zabaw — OSM po prostu nic o nim nie mówi. Dlatego nie ma tu szarości.</p>
-<p>Właśnie dlatego pyta o to popup. Na każdej pinezce, przy której OSM nic nie mówi o kąciku
-zabaw, niezależnie od jej koloru, pojawia się jedna linijka (pod pomieszczeniami, tam gdzie
-pinezka pyta też o pomieszczenie): <em>Kącik zabaw dla dzieci?</em>, z trzema odpowiedziami.
-<em>w środku</em> zapisuje <code>kids_area:indoor=yes</code> razem z <code>kids_area=yes</code>,
-<em>tylko na zewnątrz</em> zapisuje <code>kids_area=yes</code> razem z
-<code>kids_area:indoor=no</code>, <em>brak</em> zapisuje <code>kids_area=no</code> &mdash; pod
-Twoim własnym kontem OSM, w osobnym changesecie, dokładnie te same tagi, które dla tego samego
-pytania zapisuje MapComplete. Pytanie dotyczy kącika zabaw w ogóle, nie tylko wewnętrznego:
-<code>kids_area=no</code> w OSM znaczy &bdquo;nigdzie tu dzieci nie mogą się bawić&rdquo;, więc
-piekarnia z placem zabaw w ogródku dostaje <em>tylko na zewnątrz</em> zamiast fałszywego braku.
-Obwódka pojawi się (albo nie) kilka minut później. Nikt nie jest pytany dwa razy:
-zapisane <code>kids_area</code> <em>lub</em> <code>kids_area:indoor</code>, niezależnie od
-wartości, usuwa pytanie. Na <code>leisure=playground</code> bez <code>indoor=yes</code> pytanie w
-ogóle się nie pojawia &mdash; to miejsce <em>już jest</em> miejscem do zabawy, tylko nie w
-środku.</p>
+<p><code>outdoor</code>, <code>no</code> i <code>limited</code> się nie liczą. Wyraźne <code>kids_area:indoor=no</code> wygrywa z samym <code>kids_area=yes</code>.</p>
+<p>Obwódka to odznaka, nie czwarty kolor. Miejsce bez tych tagów nie ma „braku kącika zabaw“, OSM po prostu nic o tym nie mówi, a tak jest prawie w każdym miejscu. Dlatego nie ma tu szarego.</p>
+<p>Właśnie dlatego pyta okienko: przy każdej pinezce, o której OSM nic nie mówi w sprawie kącika zabaw, niezależnie od koloru, jest jeden wiersz (pod pomieszczeniami, jeśli pinezka pyta też o pomieszczenie): <em>Kącik zabaw dla dzieci?</em> z trzema odpowiedziami. <em>w środku</em> zapisuje <code>kids_area:indoor=yes</code> razem z <code>kids_area=yes</code>, <em>tylko na zewnątrz</em> zapisuje <code>kids_area=yes</code> razem z <code>kids_area:indoor=no</code>, <em>brak</em> zapisuje <code>kids_area=no</code> — na twoim własnym koncie OSM, w osobnym changesecie, dokładnie te tagi, które MapComplete zapisuje przy tym samym pytaniu. Pytanie dotyczy w ogóle miejsca do zabawy, nie tylko wewnątrz: <code>kids_area=no</code> znaczy w OSM „dzieci nie mają tu gdzie się bawić“, więc piekarnia z placem zabaw w ogrodzie dostaje <em>tylko na zewnątrz</em> zamiast fałszywego zera. Obwódka pojawia się (albo nie) kilka minut później. Kto już odpowiedział, nie jest pytany ponownie: zapisany <code>kids_area</code> <em>lub</em> <code>kids_area:indoor</code>, jakakolwiek wartość, usuwa pytanie. Przy <code>leisure=playground</code> bez <code>indoor=yes</code> pytanie w ogóle się nie pojawia: to miejsce <em>jest</em> miejscem do zabawy, tylko na zewnątrz.</p>
+<p>Reguła pasuje do znacznie większej liczby miejsc, niż jest pinezek. Tylko <span data-stat="play_tables">111</span> z nich ma pinezkę. Przy kolejnych <span data-stat="play_places">701</span> nikt nie odpowiedział na pierwsze pytanie: czy jest tu przewijak? Tych mapa nie może pokolorować, więc dostają pustą niebieską obwódkę i własny chip, <em>Tylko kącik zabaw</em>, domyślnie włączony. Kto i tak idzie tam z dzieckiem, zna odpowiedź. Kliknięcie obwódki otwiera MapComplete dokładnie przy tym pytaniu.</p>
+<p><em>Przerywana</em> obwódka znaczy: kącik zabaw tak, przewijak nie (<code>changing_table=no</code>). To nie pinezka i też nie czerwień, bo czerwień znaczyłaby, że przewijak jest, tylko nie dla taty. Tu nie ma żadnego, dla nikogo. Miejsce i tak jest na mapie, bo z dzieckiem chętnie się tam idzie także bez przewijaka.</p>
 
 <h2 id="wheelchair">Chip Wózek</h2>
 <p>Chip <em>Wózek</em> pokazuje miejsca z <code>wheelchair=yes</code> lub <code>wheelchair=limited</code> w OSM. <code>limited</code> oznacza jeden stopień do 7&nbsp;cm lub potrzebną pomoc. Przy włączonym chipie te miejsca mają od powiększenia 13 wykrzyknik, a w dymku stoi <em>ograniczony</em>. Samo <code>toilets:wheelchair=yes</code> nie wystarcza, ale i tak widać je w dymku, razem z <code>wheelchair:description</code>. Miejsce bez tagu nie jest niedostępne, OSM po prostu nic o nim nie mówi, więc chip tylko filtruje i niczego nie koloruje. Niebieskie kółka (miejsca z kącikiem zabaw) chip filtruje i oznacza tak samo.</p>
 <p>Pod tym chipem, i tylko tam, wracają przewijaki za eurokluczem, z kluczem w pinezce: kto potrzebuje chipa, zwykle ma klucz. Na zwykłej mapie, w liczbach i w rankingu pozostają poza.</p>
-
-<h2 id="empty-rings">Puste niebieskie obwódki: miejsca do zabawy bez odpowiedzi</h2>
-<p>Ta sama reguła pasuje do dużo większej liczby miejsc, niż mapa ma pinezek. Tylko
-<span data-stat="play_tables">111</span> z nich ma pinezkę. Przy
-kolejnych <span data-stat="play_places">701</span> nikt nie odpowiedział na pierwsze pytanie: czy
-jest tu przewijak? Tak, nie, nikt nie wie &mdash; w OSM nie ma o tym ani słowa.</p>
-<p>Tych <span data-stat="play_places">701</span> mapa nie może pokolorować, bo nie ma czego
-kolorować. Nie są też szare: szary znaczy &bdquo;przewijak istnieje, brakuje
-pomieszczenia&rdquo;, a to tutaj nie zachodzi. Dostają więc własny filtr, <em>Tylko kącik
-zabaw</em>, domyślnie włączony, i pustą niebieską obwódkę zamiast wypełnionej pinezki.</p>
-<p>Pierścień <em>przerywany</em> oznacza: kącik zabaw tak, przewijak nie (<code>changing_table=no</code>). To nie jest pinezka i nie jest czerwona, bo czerwień znaczyłaby, że przewijak jest, tylko nie dla taty. Tu nie ma go dla nikogo. Miejsce jest mimo to na mapie, bo z dzieckiem chętnie się tam idzie także bez przewijaka.</p>
-<p>To najbardziej obiecujące otwarte pytania na całej mapie. Sala zabaw, kawiarnia z basenem
-z kulkami, restauracja z pokojem zabaw &mdash; tata z małym dzieckiem i tak tam pójdzie, a kiedy
-już tam jest, zna odpowiedź. Kliknięcie w obwódkę otwiera MapComplete dokładnie na tym jednym
-pytaniu. Wystarczy odpowiedzieć, a w ciągu kilku minut obwódka zniknie i jej
-miejsce zajmie prawdziwa pinezka.</p>
 
 <h2 id="high-chair">Chip Krzesełko do karmienia</h2>
 <p>Chip <em>Krzesełko do karmienia</em> pokazuje miejsca, w których OSM odnotowuje krzesełko do karmienia: <code>highchair=yes</code> lub liczbę większą od 0. <code>highchair=no</code> lub <code>0</code> to zapisane &bdquo;nie&rdquo;. Miejsce bez tagu nie jest miejscem bez krzesełka, OSM po prostu nic o nim nie mówi, więc chip je pomija, niczego nie twierdząc. Wartość, której mapa nie umie odczytać, np. <code>ja</code> albo <code>1+</code>, też się nie liczy, a dymek nie pokazuje dla niej żadnej linijki. Chip filtruje pinezki i niebieskie obwódki i niczego nie koloruje.</p>
@@ -264,8 +221,7 @@ darmowe konto OSM, na miejscu, w niecałą minutę:</p>
   <li><strong>W aplikacji (najszybciej):</strong> dotknij szarej pinezki. Okienko pyta <em>W którym pomieszczeniu jest przewijak?</em> Wybierz <em>Damska i męska</em>, <em>Toaleta męska</em>, <em>Toaleta damska</em>, <em>WC unisex</em>, <em>WC dostępne</em> albo <em>Osobny pokój</em>. Inne pomieszczenia są pod <em>Więcej pokoi …</em>. W widoku <em>Mama</em> nie ma <em>Toaleta męska</em> ani <em>Damska i męska</em>, bo mama nie może ręczyć za toaletę męską. Logujesz się raz przez OSM, odpowiedź zapisuje się na twoim własnym koncie, a pinezka aktualizuje się w ciągu kilku minut. Jeśli dotkniesz przycisku lokalizacji w promieniu 75&nbsp;m od szarej pinezki, karta zapyta, czy właśnie tam jesteś; <em>Odpowiedz na pytanie</em> otwiera to samo okienko.</li>
   <li><strong>MapComplete (dowolny telefon, w przeglądarce):</strong> &bdquo;Odpowiedz
       w MapComplete&rdquo; przy szarej pinezce otwiera ten sam obiekt we własnym motywie PapaMap
-      dla MapComplete &mdash; przy każdej pinezce, żeby edycje dało się rozpoznać jako pochodzące
-      stąd. MapComplete ostrzega przy tym raz przed nieoficjalnym motywem, to normalne. Zaloguj
+      dla MapComplete. MapComplete ostrzega przy tym raz przed nieoficjalnym motywem, to normalne. Zaloguj
       się kontem OSM i odpowiedz na pytania o przewijak, także na to o pomieszczenie. Odpowiedź
       idzie prosto do OpenStreetMap i widać ją tutaj w ciągu kilku minut.</li>
   <li><strong>StreetComplete (Android):</strong> ma zadanie o przewijak, domyślnie wyłączone.
@@ -273,8 +229,7 @@ darmowe konto OSM, na miejscu, w niecałą minutę:</p>
       i zaznacz je. Pyta tylko tak/nie. Do pytania o pomieszczenie przy istniejącej szarej pinezce
       użyj MapComplete.</li>
 </ul>
-<p class="muted">Edycje są podpisane twoim własnym kontem OSM i należą do wszystkich. Przetrwają tę
-stronę i przydadzą się każdej aplikacji, która czyta OpenStreetMap.</p>
+<p class="muted">Edycje idą na twoje konto OSM i pomagają każdej aplikacji czytającej OpenStreetMap, nie tylko tej.</p>
 
 <h2 id="contribute">Jak dodać brakujące miejsce</h2>
 <p>PapaMap sam niczego nie przechowuje. Dodanie miejsca zawsze oznacza więc edycję
@@ -326,11 +281,7 @@ to, co być powinno. Jeśli nie znasz pomieszczenia, samo <code>changing_table=y
 przyda: miejsce staje się szarą pinezką, a kolejny tata odpowie na pytanie o pomieszczenie.</p>
 
 <h2 id="no-ranking">Dlaczego wskaźnik dostępności toalet z OSM nie wychodzi</h2>
-<p>Oczywistym większym projektem byłby stosunek dostępności toalet dla mężczyzn i dla kobiet
-w każdym mieście. Liczba, o którą tak naprawdę chodzi w sporze o &bdquo;potty parity&rdquo;.
-Z OpenStreetMap nie da się jej policzyć. Sprawdziliśmy to przed budową mapy, na próbce z ośmiu
-centrów miast (Berlin, Londyn, Paryż, Nowy Jork, Tokio&nbsp;(23&nbsp;dzielnice),
-Amsterdam, Wiedeń, Melbourne; 26&nbsp;lipca&nbsp;2026):</p>
+<p>Oczywistym większym projektem byłby stosunek toalet męskich do damskich w każdym mieście, liczba, o którą chodzi w debacie o „potty parity“. Przed budową sprawdziłem, czy OSM może taką liczbę dać. Nie może. Próba z ośmiu centrów miast z 26&nbsp;lipca&nbsp;2026:</p>
 <table>
   <tr><th>Miasto</th><th>Zapisane toalety</th><th>Jakikolwiek tag płci</th><th>Oba M&nbsp;+&nbsp;K</th></tr>
   <tr><td>Berlin</td><td>1&nbsp;173</td><td>660</td><td>119</td></tr>
@@ -343,40 +294,11 @@ Amsterdam, Wiedeń, Melbourne; 26&nbsp;lipca&nbsp;2026):</p>
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Razem</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Tylko 29,9% zapisanych toalet ma w ogóle jakikolwiek tag płci. Oba (male i female): 8,5%.</li>
-  <li>Tagi są czystymi wartościami tak/nie, nigdy liczbami. Liczba kabin dla każdej płci: we
-      wszystkich ośmiu miastach zero. Jedyny klucz o pojemności, <code>toilets:num_chambers</code>
-      (~27 tys. użyć), nie rozróżnia płci i pochodzi niemal w całości ze starego importu. Jego
-      warianty <code>:female</code> / <code>:male</code> mają po 2 użycia na całym świecie.</li>
-  <li>Hamburg, sprawdzony tego samego dnia: 443 zapisane toalety, żadna z tagiem
-      <code>toilets:num_chambers*</code>. Pasek na <a href="./?lang=pl">stronie głównej</a> przelicza te liczby raz w tygodniu dla każdego
-      obszaru; sama mapa każdej nocy.</li>
-  <li>I jeszcze to: wskaźniki otagowania mierzą społeczność mapperów, a nie miasta. Toalety
-      jednokabinowe słusznie zostają bez tagu płci. Ranking miast oceniałby osoby współtworzące
-      OSM, a nie sprawiedliwość toaletową.</li>
-</ul>
-<p>Uczciwe jest więc tylko jedno: samej dostępności nie da się dziś zmierzyć z otwartych danych.
-Ta strona mierzy to, co mierzalne, i zamienia braki w danych w konkretne poprawki.</p>
+<p>Tylko 29,9% zapisanych toalet ma w ogóle jakiś tag płci, 8,5% ma oba. Tagi to wartości tak/nie, nie liczby, a liczby kabin według płci nie istnieją w żadnym z ośmiu miast. A wskaźnik otagowania mierzy społeczność mapujących, nie miasto. Ranking oceniałby wkład w OSM, nie toalety. Dlatego strona trzyma się tego, co da się zmierzyć.</p>
 
 <h2 id="where-tables">Jedyny policzalny fakt: gdzie są przewijaki</h2>
-<p><code>changing_table:location</code> jest, o ile wiemy, jedynym otwartym słownikiem, który
-zapisuje, w jakim pomieszczeniu stoi przewijak. Wypełniany jest rzadko:
-<span data-stat="location_total">3&nbsp;659</span> z <span data-stat="ct_total">77&nbsp;000</span>
-obiektów <code>changing_table</code> na całym świecie, <span data-stat="share">4,8%</span>. Ale
-tam, gdzie się pojawia, jest jednostronny (taginfo,
-<span data-stat="date">26&nbsp;lipca&nbsp;2026</span>):</p>
-<ul>
-  <li>Przewijaki tylko w damskiej toalecie: <strong data-stat="female_only">485</strong>.</li>
-  <li>Przewijaki tylko w męskiej toalecie: <strong data-stat="male_only">71</strong>. Z grubsza
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> jest
-      otagowanych w obu pomieszczeniach, <span data-stat="male_any">410</span> odnotowuje w ogóle
-      przewijak w męskiej toalecie. Na całym świecie.</li>
-</ul>
-<p>Próbka jest mała, a mapperzy sami decydują, co zapisują. Dokładnej proporcji nie należy więc
-przeceniać. Kierunek zgadza się jednak z tym, co od dawna jest udokumentowane: przewijaki domyślnie
-wiszą w damskiej toalecie. To zamyka drzwi przed tatami i przy okazji z góry zakłada, kto odpowiada
-za przewijanie. Ta mapa pokazuje brakujące dane. I ułatwia ich naprawę.</p>
+<p><code>changing_table:location</code> to jedyne otwarte słownictwo, jakie znam, które zapisuje, w jakim pomieszczeniu jest przewijak. Jest rzadkie: <span data-stat="location_total">3&nbsp;659</span> z <span data-stat="ct_total">77&nbsp;000</span> obiektów <code>changing_table</code> na całym świecie, <span data-stat="share">4,8%</span>. Tam, gdzie istnieje, jest nierówne (taginfo, <span data-stat="date">26&nbsp;lipca&nbsp;2026</span>): <strong data-stat="female_only">485</strong> przewijaków tylko w toalecie damskiej, <strong data-stat="male_only">71</strong> tylko w męskiej, mniej więcej <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> jest w obu pomieszczeniach.</p>
+<p>Próba jest mała, a mapujący sami decydują, co zapisują, więc nie przeceniaj dokładnego stosunku. Kierunek jest taki sam jak wszędzie: przewijaki domyślnie wiszą w toalecie damskiej. Ta mapa pokazuje, gdzie brakuje danych, a każda szara pinezka ma przycisk edycji.</p>
 
 <h2 id="licence">Licencja danych i atrybucja</h2>
 <p>Wszystkie dane mapowe &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
@@ -387,20 +309,8 @@ Pliki GeoJSON i pliki statystyk, które udostępnia ta strona, pochodzą z OSM, 
 Własny kod strony jest na licencji MIT.</p>
 
 <h2 id="privacy">Prywatność</h2>
-<p>Statyczna strona. Żadnych kont, żadnych ciasteczek, żadnej analityki, żadnych skryptów
-śledzących. Strona nic o tobie nie zapisuje i nie ma bazy danych. Kafelki mapy pochodzą
-z serwerów OpenStreetMap; tych zapytań dotyczy
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">polityka prywatności OSMF</a>. Gdy w pinezce stukniesz <em>Odpowiedz w MapComplete</em>, strona przez kilka minut pyta też api.openstreetmap.org, co teraz mówi ten jeden obiekt — te zapytania podlegają tej samej polityce. Od trzeciego znaku wpisanego w pole wyszukiwania, a także za każdym razem, gdy otworzysz
-<em>Dodaj miejsce</em>, strona pyta też wyszukiwarkę miejsc Photon firmy komoot (photon.komoot.io).
-Dostaje ona wpisany tekst i zaokrąglony środek mapy oraz, jak każdy serwer, twój adres IP. Jeśli
-klikniesz link do MapComplete, StreetComplete albo openstreetmap.org, jesteś na ich stronach
-i edytujesz na własnym koncie OSM. Przez nas nic wtedy nie przechodzi. Formalności:
-<a href="impressum.html">Impressum</a> ·
+<p>Strona statyczna. Nie ustawia ciasteczek i nie ma analityki. Kafelki mapy pochodzą z serwerów OpenStreetMap; tych zapytań dotyczy <a href="https://osmfoundation.org/wiki/Privacy_Policy">polityka prywatności OSMF</a>. Jeśli w pinezce stukniesz <em>Odpowiedz w MapComplete</em>, przez kolejne minuty strona kilka razy pyta też api.openstreetmap.org, co ten jeden obiekt mówi teraz — tych zapytań dotyczy ta sama polityka. Od trzeciego znaku w polu wyszukiwania i za każdym razem, gdy otwierasz <em>Dodaj miejsce</em>, strona pyta dodatkowo wyszukiwarkę miejsc Photon firmy komoot (photon.komoot.io). Dostaje wpisany tekst i zaokrąglony środek mapy oraz, jak każdy serwer, twój adres IP. Linki do MapComplete, StreetComplete lub openstreetmap.org prowadzą na ich strony, gdzie edytujesz na własnym koncie OSM. Sprawy formalne: <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (po niemiecku).</p>
-
-<p class="muted">Źródła: próbka z Overpass po 8 centrach miast (9&nbsp;674 toalety) z
-26&nbsp;lipca&nbsp;2026 i statystyka kluczy z taginfo z podaną wyżej datą. Lokalne liczby pochodzą
-z tego samego nocnego zapytania, które buduje mapę.</p>
 
 <h2 id="how-made">Jak powstaje ta strona</h2>
 <p>Przy programowaniu i pisaniu tekstów pomaga mi AI. Wszystko i tak przechodzi przez moje

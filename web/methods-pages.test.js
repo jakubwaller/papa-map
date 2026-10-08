@@ -200,12 +200,12 @@ test("no link anywhere on a translated page drops the language on the way home",
 
 // The anchors other pages deep-link to (app footers, the leaderboard, the
 // native app's help link) and the ones the contents list uses. One id set for
-// every language, so a link written for one page works on all of them. Only the
-// "empty blue rings" section exists in some languages and not in others
-// (de, en and ja fold it into the blue-ring section).
+// every language, so a link written for one page works on all of them. There
+// are no optional sections: the old "empty blue rings" section is folded into
+// the blue-ring section in every language and must not come back.
 const H2_IDS = ["what", "colours", "mum-mode", "play-area", "wheelchair", "high-chair",
   "grey-pin", "contribute", "no-ranking", "where-tables", "licence", "privacy", "how-made"];
-const H2_IDS_OPTIONAL = ["empty-rings"];
+const H2_IDS_OPTIONAL = [];
 
 test("every h2 on a methods page has the same stable id in every language", () => {
   for (const f of PAGES) {
@@ -284,5 +284,39 @@ test("the grey-pin section names the first-screen room buttons, in the app's ord
       assert.ok(i > at, `${f}: ${k} label "${s[k]}" is missing or out of order in the grey-pin section`);
       at = i;
     }
+  }
+});
+
+// The German page is the reference for what each section says. Every other
+// page must carry the same sequence of block elements in each section (the
+// same paragraphs, lists with as many items, folds and tables), so a long
+// pre-cut translation cannot sit next to a short German original.
+const sectionsOf = (src) => {
+  const body = src.slice(src.indexOf("<body>"), src.indexOf("<script>"));
+  const out = {};
+  for (const part of body.split(/(?=<h2 id=")/)) {
+    const m = part.match(/^<h2 id="([^"]+)"/);
+    if (m) out[m[1]] = part;
+  }
+  return out;
+};
+const skeletonOf = (sec) => [...sec.replace(/<h2[^>]*>[\s\S]*?<\/h2>/, "")
+  .matchAll(/<(p|ul|ol|li|details|table)[\s>]/g)].map((m) => m[1]).join(" ");
+
+test("every section has the same block skeleton as the German page", () => {
+  const de = sectionsOf(read("methods.html"));
+  for (const f of PAGES) {
+    const sec = sectionsOf(read(f));
+    for (const id of H2_IDS)
+      assert.equal(skeletonOf(sec[id]), skeletonOf(de[id]), `${f}: section ${id} differs from the German skeleton`);
+  }
+});
+
+test("paragraphs are opened and closed in equal numbers", () => {
+  for (const f of PAGES) {
+    const src = bodyOf(read(f));
+    const open = (src.match(/<p[\s>]/g) || []).length;
+    const close = (src.match(/<\/p>/g) || []).length;
+    assert.equal(open, close, `${f}: ${open} <p> against ${close} </p>`);
   }
 });

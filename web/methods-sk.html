@@ -131,7 +131,6 @@ nezmenená.</p>
   <li><a href="#mum-mode">Prepínač Otec-Mama</a></li>
   <li><a href="#play-area">Modrý krúžok: detský kútik</a></li>
   <li><a href="#wheelchair">Čip Bezbariérové</a></li>
-  <li><a href="#empty-rings">Prázdne modré krúžky: miesta na hranie bez odpovede</a></li>
   <li><a href="#high-chair">Čip Detská stolička</a></li>
   <li><a href="#grey-pin">Ako opraviť sivý špendlík</a></li>
   <li><a href="#contribute">Ako pridať chýbajúce miesto</a></li>
@@ -143,8 +142,7 @@ nezmenená.</p>
 </ul></nav>
 
 <h2 id="what">Čo táto mapa je. A čo nie je.</h2>
-<p>PapaMap zobrazuje miesta v 44 európskych krajinách — od Islandu po Cyprus, od Portugalska po
-Ukrajinu, a k tomu Austrália, Nový Zéland, USA, Kanada a Japonsko —, o ktorých OpenStreetMap
+<p>PapaMap zobrazuje miesta v Európe, Austrálii, na Novom Zélande, v USA, Kanade a Japonsku, o ktorých OpenStreetMap
 vie, že sa tam nachádza prebaľovací
 pult (<code>changing_table=yes</code> alebo <code>limited</code>). K tomu miesta s detským kútikom, zakreslené ako modrý krúžok, s prebaľovacím pultom aj bez neho. Farba hovorí, či sa k pultu
 dostane aj otec. Mapa číta OSM. Odpovede idú rovno do OSM pod tvojím vlastným účtom OSM — priamo z mapy alebo cez odkazy pri každom špendlíku; PapaMap nič neukladá. Opraviť dáta môžeš priamo na OSM, cez odkazy
@@ -168,7 +166,7 @@ medzier, prevedie na malé písmená a každá časť sa porovnáva celá. Nikdy
   <li><span class="dot r"></span><strong>Červená:</strong> inak, ak je jedna z častí
       <code>female_toilet</code>. Pult existuje, ale len na dámskom WC.</li>
   <li><span class="dot u"></span><strong>Sivá:</strong> všetko ostatné. Žiadny location tag, alebo
-      len voľný text. Nikto nezaznamenal miestnosť. Sivé špendlíky sú tá úloha.</li>
+      len voľný text. Nikto nezaznamenal miestnosť.</li>
 </ul>
 <p>Objekt s tagom <code>centralkey</code> (iným ako <code>no</code>) zostane mimo mapy, keď kľúč zamyká celé dvere: <code>access=centralkey</code>, pult na bezbariérovom WC, alebo nič v tagoch nehovorí, že kľúč platí len pre jednu kabínku. Zariadenie s otvorenými pánskymi a dámskymi WC a zamknutou bezbariérovou kabínkou (<code>wheelchair:access=centralkey</code>, alebo <code>male=yes</code> a <code>female=yes</code>) na mape zostane, sivé, kým niekto nezapíše miestnosť. Eurokľúč sa vydáva len na základe preukazu zdravotného postihnutia, takže väčšina otcov cez tie dvere neprejde. Pod čipom <em>Bezbariérové</em> sa tieto pulty vracajú, pozri nižšie.</p>
 
@@ -195,59 +193,22 @@ Pipeline tieto pulty označuje osobitne, takže v režime Mama sú červené a n
 vyššie. Staršie verzie aplikácie ich môžu stále zobrazovať zelené, kým nie sú aktualizované.</p>
 
 <h2 id="play-area">Modrý krúžok: detský kútik</h2>
-<p>Špendlík s modrým krúžkom má navyše aj detský kútik &mdash; miesto, kde dieťa nielen prebalíš,
-ale kde sa dá aj chvíľu zdržať. Filter <em>S detským kútikom</em> zúži mapu len na tie. Miesto sa
-počíta, ak je v OSM zaznamenané aspoň jedno z tohto:</p>
+<p>Špendlík s modrým krúžkom má navyše detský kútik. Čip <em>S detským kútikom</em> ukáže len tie. Miesto sa počíta, ak je v OSM jeden z týchto tagov:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> alebo <code>designated</code>
-      &mdash; spôsob, akým wiki dokumentuje, že ide o vnútorný priestor.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> alebo
-      <code>designated</code> &mdash; detský kútik v kaviarni, reštaurácii, pekárni.
-      Najpoužívanejší tag, ktorý však nechá otvorené, či ide o vnútro, alebo exteriér.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; komerčné vnútorné
-      ihrisko.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> spolu s
-      <code>indoor=yes</code> &mdash; to isté, otagované opačne.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> alebo <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> alebo <code>designated</code> (najbežnejší tag, nehovorí, či vnútri, alebo vonku)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> spolu s <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> sa nepočíta: pieskovisko na záhradke pri krčme nie je to, čo krúžok sľubuje.
-Nepočíta sa ani <code>no</code>, ani <code>limited</code> — wiki tú hodnotu definuje ako
-&bdquo;hračky sú k dispozícii, ale bez vyhradenej plochy&ldquo;. Ak je niekde výslovne uvedené
-<code>kids_area:indoor=no</code>, má prednosť pred obyčajným <code>kids_area=yes</code>.</p>
-<p>Je to odznak, nie štvrtý stav. Miesto bez týchto tagov nemá &bdquo;žiadny detský
-kútik&ldquo; &mdash; OSM o ňom jednoducho nič nehovorí. Preto tu nie je žiadna sivá.</p>
-<p>Presne preto sa na to pýta popup. Pri každom pine, kde OSM nič nehovorí o detskom kútiku, nech
-má akúkoľvek farbu, je jeden riadok (pod miestnosťami, tam, kde sa pin pýta aj na miestnosť):
-<em>Detský kútik?</em> s tromi odpoveďami. <em>vnútri</em> zapíše
-<code>kids_area:indoor=yes</code> spolu s <code>kids_area=yes</code>, <em>len vonku</em> zapíše
-<code>kids_area=yes</code> spolu s <code>kids_area:indoor=no</code>, <em>žiadny</em> zapíše
-<code>kids_area=no</code> &mdash; pod tvojím vlastným účtom OSM, vo vlastnom changesete, presne
-tie isté tagy, ktoré pre rovnakú otázku zapisuje MapComplete. Otázka sa týka detského kútika
-vôbec, nielen vnútorného: <code>kids_area=no</code> v OSM znamená &bdquo;tu sa deti nemajú kde
-hrať&ldquo;, takže pekáreň s ihriskom na dvore dostane <em>len vonku</em> namiesto nesprávneho
-nie. Krúžok sa objaví (alebo zostane preč) o niekoľko minút neskôr. Nikto sa nepýta dvakrát:
-zaznamenané <code>kids_area</code> <em>alebo</em> <code>kids_area:indoor</code>, nech má
-akúkoľvek hodnotu, otázku odstráni. Pri <code>leisure=playground</code> bez
-<code>indoor=yes</code> sa nepýta vôbec &mdash; miesto <em>už je</em> miestom na hranie, len nie
-vnútri.</p>
+<p><code>outdoor</code>, <code>no</code> a <code>limited</code> sa nepočítajú. Výslovné <code>kids_area:indoor=no</code> vyhráva nad holým <code>kids_area=yes</code>.</p>
+<p>Krúžok je odznak, nie štvrtá farba. Miesto bez týchto tagov nemá „žiadny detský kútik“, OSM o tom jednoducho nič nehovorí, a to platí pre takmer všetky miesta. Preto tu nie je žiadna sivá.</p>
+<p>Práve preto sa pýta okno: Pri každom špendlíku, o ktorom OSM o detskom kútiku nič nehovorí, bez ohľadu na farbu, je jeden riadok (pod miestnosťami, ak sa špendlík pýta aj na miestnosť): <em>Detský kútik?</em> s tromi odpoveďami. <em>vnútri</em> zapíše <code>kids_area:indoor=yes</code> spolu s <code>kids_area=yes</code>, <em>len vonku</em> zapíše <code>kids_area=yes</code> spolu s <code>kids_area:indoor=no</code>, <em>žiadny</em> zapíše <code>kids_area=no</code> — pod tvojím vlastným účtom v OSM, v samostatnom changesete, presne tie tagy, ktoré pre rovnakú otázku zapisuje MapComplete. Otázka sa týka akejkoľvek možnosti hrať sa, nielen vnútri: <code>kids_area=no</code> znamená v OSM „deti sa tu nemajú kde hrať“, a pekáreň s ihriskom v záhrade preto dostane <em>len vonku</em> namiesto falošnej nuly. Krúžok sa objaví (alebo nie) o pár minút neskôr. Kto už odpovedal, toho sa to znova nepýta: zadaný <code>kids_area</code> <em>alebo</em> <code>kids_area:indoor</code>, nech má akúkoľvek hodnotu, otázku odstráni. Na <code>leisure=playground</code> bez <code>indoor=yes</code> sa nepýta vôbec: miesto <em>je</em> miestom na hranie, len vonku.</p>
+<p>Pravidlu vyhovuje oveľa viac miest, než koľko je špendlíkov. Len <span data-stat="play_tables">111</span> z nich má špendlík. Pri ďalších <span data-stat="play_places">701</span> nikto neodpovedal na prvú otázku: je tu prebaľovací pult? Tie mapa nevie zafarbiť, preto dostanú prázdny modrý krúžok a vlastný čip, <em>Len detský kútik</em>, ktorý je predvolene zapnutý. Kto tam aj tak chodí s dieťaťom, odpoveď pozná. Klepnutie na krúžok otvorí MapComplete priamo pri tejto otázke.</p>
+<p><em>Čiarkovaný</em> krúžok znamená: detský kútik áno, prebaľovací pult nie (<code>changing_table=no</code>). To nie je špendlík ani červená, lebo červená by hovorila, že pult existuje, len nie pre otca. Tu žiadny nie je, pre nikoho. Miesto je na mape napriek tomu, lebo s dieťaťom sa tam rado ide aj bez pultu.</p>
 
 <h2 id="wheelchair">Čip Bezbariérové</h2>
 <p>Čip <em>Bezbariérové</em> ukazuje miesta, ktoré majú v OSM <code>wheelchair=yes</code> alebo <code>wheelchair=limited</code>. <code>limited</code> znamená jeden schod do 7&nbsp;cm alebo potrebnú pomoc. So zapnutým čipom majú tieto miesta od priblíženia 13 výkričník a vo vyskakovacom okne stojí <em>obmedzene</em>. Samotné <code>toilets:wheelchair=yes</code> nestačí, ale aj tak sa zobrazí vo vyskakovacom okne spolu s <code>wheelchair:description</code>. Miesto bez tagu nie je neprístupné, OSM o ňom jednoducho nič nehovorí, takže čip len filtruje a nič nefarbí. Modré krúžky (miesta s detským kútikom) čip filtruje a označuje rovnako.</p>
 <p>Pod týmto čipom, a len tam, sa vracajú pulty za eurokľúčom, s kľúčom v špendlíku: kto čip potrebuje, zvyčajne kľúč má. Na bežnej mape, v číslach a v rebríčku zostávajú vonku.</p>
-
-<h2 id="empty-rings">Prázdne modré krúžky: miesta na hranie bez odpovede</h2>
-<p>To isté pravidlo sedí na oveľa viac miest, než koľko má mapa špendlíkov. Len
-<span data-stat="play_tables">111</span> z nich má špendlík. Pri
-ďalších <span data-stat="play_places">701</span> nikto neodpovedal na prvú otázku: je tu
-prebaľovací pult? Áno, nie, nikto nevie — OSM o tom nehovorí vôbec nič.</p>
-<p>Mapa tie <span data-stat="play_places">701</span> miest nedokáže obarviť, pretože nie je čo
-farbiť. Nie sú ani sivé: sivá znamená &bdquo;pult existuje, chýba miestnosť&ldquo;, a to sem
-nepatrí. Dostávajú preto vlastný filter <em>Len detský kútik</em>, ktorý je v predvolenom stave
-zapnutý, a namiesto plného špendlíka prázdny modrý krúžok.</p>
-<p><em>Čiarkovaný</em> krúžok znamená: detský kútik áno, prebaľovací pult nie (<code>changing_table=no</code>). Nie je to špendlík a nie je ani červený, lebo červená by znamenala, že pult existuje, len nie pre otca. Tu nie je žiadny, pre nikoho. Miesto je na mape aj tak, lebo s dieťaťom tam človek rád zájde aj bez pultu.</p>
-<p>Sú to najsľubnejšie otvorené otázky na celej mape. Vnútorné ihrisko, kaviareň s bazénom s
-loptičkami, reštaurácia s herňou &mdash; otec s batoľaťom tam aj tak ide, a keď tam už je, odpoveď
-pozná. Kliknutím na krúžok sa otvorí MapComplete presne na tejto jednej otázke. Keď na ňu
-odpovieš, krúžok o niekoľko minút zmizne a nahradí ho ozajstný špendlík.</p>
 
 <h2 id="high-chair">Čip Detská stolička</h2>
 <p>Čip <em>Detská stolička</em> ukazuje miesta, kde OSM eviduje detskú stoličku: <code>highchair=yes</code> alebo číslo väčšie ako 0. <code>highchair=no</code> alebo <code>0</code> je zaznamenané &bdquo;nie&ldquo;. Miesto bez tagu nie je miesto bez detskej stoličky, OSM o ňom jednoducho nič nehovorí, takže ho čip vynechá a nič netvrdí. Hodnota, ktorú mapa nevie prečítať, napríklad <code>ja</code> alebo <code>1+</code>, sa tiež nepočíta a vyskakovacie okno pre ňu neukáže žiadny riadok. Čip filtruje špendlíky a modré krúžky a nič nefarbí.</p>
@@ -260,7 +221,7 @@ bezplatným účtom na OSM, priamo na mieste, za menej ako minútu:</p>
   <li><strong>V aplikácii (najrýchlejšie):</strong> klepni na sivý špendlík. Okno sa pýta <em>V akej miestnosti je prebaľovací pult?</em> Klepni na <em>Dámske aj pánske</em>, <em>Pánske WC</em>, <em>Dámske WC</em>, <em>Unisex WC</em>, <em>Bezbariérové WC</em> alebo <em>Samostatná miestnosť</em>. Ďalšie miestnosti sú pod <em>Ďalšie miestnosti …</em>. V zobrazení <em>Mama</em> chýbajú <em>Pánske WC</em> a <em>Dámske aj pánske</em>, pretože mama nemôže ručiť za pánske WC. Raz sa prihlásiš cez OSM, odpoveď sa uloží pod tvojím vlastným účtom a špendlík sa do pár minút aktualizuje. Ak klepneš na tlačidlo polohy do 75&nbsp;m od sivého špendlíka, karta sa opýta, či tam práve si; <em>Odpovedať na otázku</em> otvorí to isté okno.</li>
   <li><strong>MapComplete (ktorýkoľvek telefón, v prehliadači):</strong> &bdquo;Odpovedať na
       MapComplete&ldquo; pri sivom špendlíku otvorí ten istý objekt vo vlastnej téme PapaMap pre
-      MapComplete &mdash; pri každom špendlíku, aby bolo poznať, že úpravy prichádzajú odtiaľto.
+      MapComplete.
       MapComplete pritom raz upozorní na neoficiálnu tému, to je v poriadku. Prihlás sa účtom na OSM a odpovedz na otázky o prebaľovacom pulte, aj na tú
       o miestnosti. Odpoveď ide priamo do OpenStreetMap a je tu vidieť o niekoľko
       minút.</li>
@@ -269,8 +230,7 @@ bezplatným účtom na OSM, priamo na mieste, za menej ako minútu:</p>
       vyhľadaj &bdquo;prebaľovací pult&ldquo; a zaškrtni ju. Pýta sa len áno/nie. Na otázku o
       miestnosti pri existujúcom sivom špendlíku použi MapComplete.</li>
 </ul>
-<p class="muted">Úpravy bežia pod tvojím vlastným účtom na OSM a patria všetkým. Prežijú tento web
-a pomôžu každej aplikácii, ktorá číta OpenStreetMap.</p>
+<p class="muted">Úpravy bežia pod tvojím účtom v OSM a pomáhajú každej aplikácii, ktorá číta OpenStreetMap, nielen tejto.</p>
 
 <h2 id="contribute">Ako pridať chýbajúce miesto</h2>
 <p>PapaMap sám nič neukladá. Pridanie miesta preto vždy znamená: upraviť OpenStreetMap. Tlačidlo
@@ -322,11 +282,7 @@ Ak miestnosť nepoznáš, aj samotné <code>changing_table=yes</code> je užito�
 sivý špendlík a na otázku o miestnosti odpovie ďalší otec.</p>
 
 <h2 id="no-ranking">Prečo rebríček vybavenosti z OSM nefunguje</h2>
-<p>Očividný väčší projekt by bol pomer vybavenosti toaletami pre mužov a ženy podľa miest. Číslo, o
-ktoré pri argumente &bdquo;potty parity&ldquo; v skutočnosti ide. Z OpenStreetMap ho spočítať
-nedá. Overili sme si to ešte pred stavbou mapy, na vzorke z ôsmich centier miest (Berlín, Londýn,
-Paríž, New York, Tokio&nbsp;23&nbsp;obvodov, Amsterdam, Viedeň, Melbourne;
-26.&nbsp;júla&nbsp;2026):</p>
+<p>Ponúkal by sa väčší projekt: pomer pánskych a dámskych toaliet podľa miest, číslo, o ktoré ide v debate o „potty parity“. Pred stavbou som overil, či OSM také číslo dá. Nedá. Vzorka z ôsmich mestských centier z 26.&nbsp;júla&nbsp;2026:</p>
 <table>
   <tr><th>Mesto</th><th>Zaznamenané toalety</th><th>Nejaký tag pohlavia</th><th>Oboje M&nbsp;+&nbsp;F</th></tr>
   <tr><td>Berlín</td><td>1&nbsp;173</td><td>660</td><td>119</td></tr>
@@ -339,40 +295,11 @@ Paríž, New York, Tokio&nbsp;23&nbsp;obvodov, Amsterdam, Viedeň, Melbourne;
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Spolu</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Nejaký tag pohlavia má len 29,9&nbsp;% zaznamenaných toaliet. Oboje (mužské aj ženské):
-      8,5&nbsp;%.</li>
-  <li>Tagy sú čisté áno/nie príznaky, nikdy počty. Počet kabínok podľa pohlavia: vo všetkých
-      ôsmich mestách nula. Jediný kľúč pre kapacitu, <code>toilets:num_chambers</code> (~27-tisíc
-      použití), nerozlišuje pohlavie a pochádza takmer výhradne zo starého importu. Jeho varianty
-      <code>:female</code> / <code>:male</code> majú celosvetovo po 2 použitia.</li>
-  <li>Hamburg, overený v ten istý deň: 443 zaznamenaných toaliet, ani jedna s tagom
-      <code>toilets:num_chambers*</code>. Lišta na <a href="./?lang=sk">úvodnej stránke</a> tieto čísla prepočítava raz týždenne pre každú
-      oblasť; samotná mapa každú noc.</li>
-  <li>A ešte: miera otagovania meria komunitu mapovačov, nie mestá. Jednomiestne toalety správne
-      zostávajú bez rozlíšenia pohlavia. Rebríček miest by hodnotil prispievateľov OSM, nie
-      rovnosť v prístupe k toaletám.</li>
-</ul>
-<p>Jediné poctivé konštatovanie teda znie: samotnú vybavenosť dnes z otvorených dát zmerať nedá.
-Tento web meria to, čo sa merať dá, a z medzier robí príspevky.</p>
+<p>Len 29,9% zmapovaných toaliet má vôbec nejaký tag pohlavia, 8,5% má oba. Tagy sú áno/nie, nie počty, a počty kabín podľa pohlavia neexistujú v žiadnom z ôsmich miest. A miera otagovania meria komunitu mapujúcich, nie mesto. Rebríček by známkoval prispievateľov OSM, nie toalety. Preto sa stránka drží toho, čo sa dá zmerať.</p>
 
 <h2 id="where-tables">Jediný spočítateľný fakt: kde sa pulty nachádzajú</h2>
-<p><code>changing_table:location</code> je, pokiaľ vieme, jediný otvorený slovník, ktorý
-zaznamenáva, v ktorej miestnosti sa prebaľovací pult nachádza. Je riedko obsadený:
-<span data-stat="location_total">3&nbsp;659</span> z <span data-stat="ct_total">77&nbsp;000</span>
-objektov <code>changing_table</code> na celom svete, <span data-stat="share">4,8%</span>. Ale tam,
-kde existuje, je jednostranný (taginfo, <span data-stat="date">26.&nbsp;júla&nbsp;2026</span>):</p>
-<ul>
-  <li>Pulty len na dámskom WC: <strong data-stat="female_only">485</strong>.</li>
-  <li>Pulty len na pánskom WC: <strong data-stat="male_only">71</strong>. Zhruba
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> je
-      otagovaných v oboch miestnostiach, <span data-stat="male_any">410</span> zaznamenáva vôbec
-      nejaký pult na pánskom WC. Celosvetovo.</li>
-</ul>
-<p>Vzorka je malá a mapovači si sami vyberajú, čo zaznamenajú. Presný pomer preto nepreceňuj. Smer
-sa však zhoduje s tým, čo je inde dávno zdokumentované: prebaľovacie pulty visia štandardne na
-dámskom WC. To otcom zatvára dvere a mlčky pritom predpokladá, kto má prebaľovanie na starosti.
-Táto mapa robí chýbajúce dáta viditeľnými. A ľahko opraviteľnými.</p>
+<p><code>changing_table:location</code> je jediný otvorený slovník, ktorý poznám, čo zaznamenáva, v ktorej miestnosti je prebaľovací pult. Je vzácny: <span data-stat="location_total">3&nbsp;659</span> z <span data-stat="ct_total">77&nbsp;000</span> objektov <code>changing_table</code> na celom svete, <span data-stat="share">4,8%</span>. Kde existuje, je nevyvážený (taginfo, <span data-stat="date">26.&nbsp;júla&nbsp;2026</span>): <strong data-stat="female_only">485</strong> pultov len na dámskom WC, <strong data-stat="male_only">71</strong> len na pánskom, zhruba <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> je v oboch miestnostiach.</p>
+<p>Vzorka je malá a mapujúci si sami vyberajú, čo zapíšu, takže sa na presný pomer nespoliehaj príliš. Smer je rovnaký ako všade: prebaľovacie pulty visia predvolene na dámskom WC. Táto mapa ukazuje, kde dáta chýbajú, a každý sivý špendlík má tlačidlo úprav.</p>
 
 <h2 id="licence">Licencia dát &amp; uvedenie zdroja</h2>
 <p>Všetky mapové dáta &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
@@ -383,21 +310,8 @@ Globálne štatistiky tagov pochádzajú zo služby <a href="https://taginfo.ope
 Vlastný kód webu je pod licenciou MIT.</p>
 
 <h2 id="privacy">Súkromie</h2>
-<p>Statický web. Žiadne účty, žiadne cookies, žiadna analytika, žiadne sledovacie skripty. Stránka
-o tebe nič neukladá a nemá databázu. Mapové dlaždice pochádzajú zo serverov OpenStreetMap, na tieto
-požiadavky sa vzťahujú
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">zásady ochrany súkromia OSMF</a>. Ak v pine klepneš na <em>Odpovedať na MapComplete</em>, stránka sa navyše v nasledujúcich minútach niekoľkokrát opýta api.openstreetmap.org, čo tento jeden objekt teraz hovorí — na tieto dopyty sa vzťahujú rovnaké zásady. Od tretieho znaku, ktorý napíšeš do vyhľadávacieho poľa, a vždy, keď otvoríš
-<em>Pridať miesto</em>, sa stránka pýta aj vyhľadávača miest Photon od spoločnosti komoot
-(photon.komoot.io). Ten dostane napísaný text, zaokrúhlený stred mapy a, ako každý server, tvoju
-IP adresu. Ak
-klikneš na odkaz na MapComplete, StreetComplete alebo openstreetmap.org, si na ich stránkach a
-upravuješ pod svojím vlastným účtom na OSM. Cez nás pritom nejde nič. Formálne stránky:
-<a href="impressum.html">Impressum</a> ·
+<p>Statický web. Nenastavuje cookies a nemá analytiku. Dlaždice mapy pochádzajú zo serverov OpenStreetMap, na tieto požiadavky sa vzťahujú <a href="https://osmfoundation.org/wiki/Privacy_Policy">zásady ochrany súkromia OSMF</a>. Keď v špendlíku klepneš na <em>Odpovedať na MapComplete</em>, pýta sa stránka v nasledujúcich minútach niekoľkokrát aj api.openstreetmap.org, čo ten jeden objekt hovorí teraz — na tieto požiadavky sa vzťahujú rovnaké zásady. Od tretieho znaku vo vyhľadávacom poli a zakaždým, keď otvoríš <em>Pridať miesto</em>, sa stránka navyše pýta vyhľadávania miest Photon od komootu (photon.komoot.io). Dostane napísaný text a zaokrúhlený stred mapy a, ako každý server, tvoju IP adresu. Odkazy na MapComplete, StreetComplete alebo openstreetmap.org vedú na ich stránky, kde upravuješ pod vlastným účtom v OSM. Formálne náležitosti: <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (po nemecky).</p>
-
-<p class="muted">Zdroje: vzorka z Overpassu naprieč 8 centrami miest (9&nbsp;674 toaliet) z
-26.&nbsp;júla&nbsp;2026 a štatistiky kľúčov zo služby taginfo k dátumu uvedenému vyššie. Miestne
-čísla pochádzajú z toho istého nočného dopytu, ktorý stavia aj mapu.</p>
 
 <h2 id="how-made">Ako táto stránka vzniká</h2>
 <p>Pri programovaní a písaní textov mi pomáha AI. Všetko si ale aj tak sám prečítam.</p>

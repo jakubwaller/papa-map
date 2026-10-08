@@ -131,7 +131,6 @@ vijnë nga ndërtimi i natës. Kampioni nga tetë qendra qytetesh është nga
   <li><a href="#mum-mode">Ndërruesi Baba-Nënë</a></li>
   <li><a href="#play-area">Rrethi blu: hapësirë lojërash</a></li>
   <li><a href="#wheelchair">Çipi Karrige me rrota</a></li>
-  <li><a href="#empty-rings">Rrathët blu bosh: vende loje, pa përgjigje</a></li>
   <li><a href="#high-chair">Çipi Karrige e lartë për fëmijë</a></li>
   <li><a href="#grey-pin">Si të rregullosh një shenjues gri</a></li>
   <li><a href="#contribute">Si të shtosh një vend që mungon</a></li>
@@ -143,8 +142,7 @@ vijnë nga ndërtimi i natës. Kampioni nga tetë qendra qytetesh është nga
 </ul></nav>
 
 <h2 id="what">Çfarë është kjo hartë. Dhe çfarë nuk është.</h2>
-<p>PapaMap tregon vendndodhjet në 44 vende evropiane — nga Islanda deri në Qipro, nga
-Portugalia deri në Ukrainë, si dhe Australia, Zelanda e Re, SHBA-ja, Kanadaja dhe Japonia — për të cilat OpenStreetMap
+<p>PapaMap tregon vendndodhjet në Evropë, Australi, Zelandën e Re, SHBA, Kanada dhe Japoni, për të cilat OpenStreetMap
 di se ka një tavolinë
 ndërrimi bebesh (<code>changing_table=yes</code> ose <code>limited</code>). Për më tepër, vende me hapësirë lojërash, të vizatuara si rreth blu, me ose pa tavolinë ndërrimi. Ngjyra tregon nëse
 një baba mund ta arrijë tavolinën. Harta lexon OSM. Përgjigjet shkojnë drejt e në OSM me llogarinë tënde të OSM — nga vetë harta ose përmes lidhjeve te çdo shenjues; PapaMap nuk ruan asgjë. Rregullimi i të dhënave bëhet në vetë OSM-në, përmes lidhjeve te çdo shenjues.</p>
@@ -167,8 +165,7 @@ si nënvarg, sepse <code>female_toilet</code> përmban <code>male</code>.</p>
   <li><span class="dot r"></span><strong>E kuqe:</strong> përndryshe, nëse një njësi është
       <code>female_toilet</code>. Tavolina ekziston, por vetëm te tualeti i grave.</li>
   <li><span class="dot u"></span><strong>Gri:</strong> gjithçka tjetër. Pa etiketë
-      vendndodhjeje, ose vetëm tekst i lirë. Askush nuk e ka regjistruar dhomën. Shenjuesit gri
-      janë puna që na mbetet.</li>
+      vendndodhjeje, ose vetëm tekst i lirë. Askush nuk e ka regjistruar dhomën.</li>
 </ul>
 <p>Një objekt me etiketën <code>centralkey</code> (të ndryshme nga <code>no</code>) mbetet jashtë hartës kur çelësi mbyll gjithë derën: <code>access=centralkey</code>, një tavolinë në tualetin për persona me aftësi të kufizuara, ose asgjë në etiketa nuk thotë se çelësi vlen vetëm për një kabinë. Një bllok me tualete për burra dhe gra të hapura dhe një kabinë të aksesueshme të mbyllur me çelës (<code>wheelchair:access=centralkey</code>, ose <code>male=yes</code> dhe <code>female=yes</code>) mbetet në hartë, gri derisa dikush të regjistrojë dhomën. Çelësi Euro jepet vetëm me dëshmi aftësie të kufizuar, kështu që shumica e baballarëve nuk e kalojnë dot atë derë. Nën çipin <em>Karrige me rrota</em> këto tavolina kthehen, shih më poshtë.</p>
 
@@ -197,61 +194,22 @@ veçmas, prandaj në modin Nënë ato janë të kuqe dhe nuk llogariten në numr
 të vjetra të aplikacionit mund t'i shfaqin ende të gjelbra, derisa të përditësohen.</p>
 
 <h2 id="play-area">Rrethi blu: hapësirë lojërash</h2>
-<p>Një shenjues me rreth blu ka gjithashtu edhe një hapësirë lojërash &mdash; një vend ku nuk
-vetëm ndërron fëmijën, por rri edhe pak. Filtri <em>Me hapësirë lojërash</em> ngushton hartën
-vetëm te këto vende. Një vend numërohet nëse OSM regjistron qoftë edhe një nga këto:</p>
+<p>Një shenjues me rreth blu ka edhe një hapësirë lojërash. Çipi <em>Me hapësirë lojërash</em> tregon vetëm ato. Një vend llogaritet nëse në OSM ka një nga këto etiketa:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> ose <code>designated</code>
-      &mdash; mënyra e dokumentuar në wiki për të thënë «brenda».</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> ose
-      <code>designated</code> &mdash; qoshja e lojërave në një kafene, restorant apo furrë buke.
-      Etiketa më e përdorur, edhe pse lë të hapur nëse është brenda apo jashtë.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; një fushë lojërash e
-      mbyllur, komerciale.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> së bashku me
-      <code>indoor=yes</code> &mdash; e njëjta gjë, e etiketuar në rend të kundërt.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> ose <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> ose <code>designated</code> (etiketa më e zakonshme, nuk thotë nëse është brenda apo jashtë)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> së bashku me <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> nuk numërohet: kutia me rërë e një kopshti birre nuk është ajo çfarë
-premton rrethi. Nuk numërohet as <code>no</code>, as <code>limited</code> — këtë të fundit wiki
-e përkufizon si «lodra ka, por hapësirë e caktuar jo». Kur ka të pranishme një
-<code>kids_area:indoor=no</code> të shprehur qartë, ajo mbizotëron mbi një
-<code>kids_area=yes</code> të thjeshtë.</p>
-<p>Kjo është një distinktiv, jo një status i katërt. Një vend pa këto etiketa nuk «nuk ka
-hapësirë lojërash» &mdash; OSM thjesht nuk thotë asgjë për të. Prandaj këtu s'ka gri.</p>
-<p>Pikërisht për këtë pyet dritarja kërcyese. Në çdo shenjues ku OSM nuk thotë asgjë për një
-hapësirë lojërash, cilado qoftë ngjyra e tij, ka një rresht (nën dhomat, atje ku shenjuesi pyet
-edhe për dhomën): <em>Hapësirë lojërash për fëmijë?</em>, me tri përgjigje. <em>brenda</em>
-shkruan <code>kids_area:indoor=yes</code> së bashku me <code>kids_area=yes</code>, <em>vetëm
-jashtë</em> shkruan <code>kids_area=yes</code> së bashku me <code>kids_area:indoor=no</code>,
-<em>asnjë</em> shkruan <code>kids_area=no</code> &mdash; nën llogarinë tënde OSM, në një
-changeset të vetin, saktësisht etiketat që MapComplete shkruan për të njëjtën pyetje. Pyetja ka
-të bëjë me hapësirën e lojërave në përgjithësi, jo vetëm të brendshme:
-<code>kids_area=no</code> në OSM do të thotë «këtu fëmijët nuk kanë ku të luajnë», kështu që një
-furrë buke me fushë lojërash në kopsht merr <em>vetëm jashtë</em> në vend të një jo të gabuar.
-Rrethi shfaqet (ose mbetet mungues) pak minuta më vonë. Askush nuk pyetet dy herë: një
-<code>kids_area</code> <em>ose</em> <code>kids_area:indoor</code> tashmë e regjistruar, cilado
-qoftë vlera, e heq pyetjen. Te një <code>leisure=playground</code> pa <code>indoor=yes</code>
-nuk pyetet kurrë &mdash; vendi <em>është</em> tashmë një vend për të luajtur, thjesht jo
-brenda.</p>
+<p><code>outdoor</code>, <code>no</code> dhe <code>limited</code> nuk llogariten. Një <code>kids_area:indoor=no</code> i shprehur ia kalon një <code>kids_area=yes</code> të zhveshur.</p>
+<p>Rrethi është një distinktiv, jo një ngjyrë e katërt. Një vend pa këto etiketa nuk është «pa hapësirë lojërash»: OSM thjesht nuk thotë asgjë për të, dhe kjo vlen për pothuajse të gjitha vendet. Prandaj këtu nuk ka gri.</p>
+<p>Pikërisht për këtë pyet dritarja: te çdo shenjues për të cilin OSM nuk thotë asgjë për hapësirë lojërash, çfarëdo ngjyre të jetë, ka një rresht (nën dhomat, nëse shenjuesi pyet edhe për dhomën): <em>Hapësirë lojërash për fëmijë?</em> me tri përgjigje. <em>brenda</em> shkruan <code>kids_area:indoor=yes</code> së bashku me <code>kids_area=yes</code>, <em>vetëm jashtë</em> shkruan <code>kids_area=yes</code> së bashku me <code>kids_area:indoor=no</code>, <em>asnjë</em> shkruan <code>kids_area=no</code> — me llogarinë tënde OSM, në një changeset më vete, saktësisht etiketat që MapComplete shkruan për të njëjtën pyetje. Pyetja ka të bëjë me çdo mundësi loje, jo vetëm brenda: <code>kids_area=no</code> në OSM do të thotë «këtu fëmijët nuk mund të luajnë askund», prandaj një furrë buke me lojëra në kopsht merr <em>vetëm jashtë</em> në vend të një zeroje të rreme. Rrethi shfaqet (ose jo) disa minuta më vonë. Kush ka dhënë tashmë përgjigje, nuk pyetet përsëri: një <code>kids_area</code> <em>ose</em> <code>kids_area:indoor</code> i regjistruar, çfarëdo vlere të ketë, e heq pyetjen. Te një <code>leisure=playground</code> pa <code>indoor=yes</code> nuk pyetet fare: vendi <em>është</em> një vend loje, thjesht jashtë.</p>
+<p>Rregulli vlen për shumë më tepër vende sesa ka shenjues. Vetëm <span data-stat="play_tables">111</span> prej tyre kanë një shenjues. Te <span data-stat="play_places">701</span> të tjerë askush nuk ka përgjigjur në pyetjen e parë: ka këtu një tavolinë ndërrimi? Ato harta nuk i ngjyros dot, prandaj marrin një rreth blu bosh dhe një çip të vetin, <em>Vetëm hapësirë lojërash</em>, të aktivizuar si parazgjedhje. Kush shkon atje gjithsesi me fëmijë, e di përgjigjen. Një klikim te rrethi hap MapComplete pikërisht te kjo pyetje.</p>
+<p>Një rreth <em>me vija të ndërprera</em> do të thotë: hapësirë lojërash po, tavolinë ndërrimi jo (<code>changing_table=no</code>). Nuk është shenjues dhe as i kuq, sepse e kuqja do të thoshte se ka tavolinë, vetëm jo për babain. Këtu nuk ka asnjë, për askënd. Vendi është gjithsesi në hartë, sepse me fëmijë shkohet me kënaqësi edhe pa tavolinë.</p>
 
 <h2 id="wheelchair">Çipi Karrige me rrota</h2>
 <p>Çipi <em>Karrige me rrota</em> tregon vendet me <code>wheelchair=yes</code> ose <code>wheelchair=limited</code> në OSM. <code>limited</code> do të thotë një shkallë deri 7&nbsp;cm, ose nevojitet ndihmë. Kur çipi është aktiv, këto vende kanë një pikëçudi nga zmadhimi 13, dhe dritarja thotë <em>i kufizuar</em>. <code>toilets:wheelchair=yes</code> vetëm nuk mjafton, por shfaqet gjithsesi në dritare, bashkë me <code>wheelchair:description</code>. Një vend pa etiketë nuk është i paaksesueshëm, OSM thjesht nuk thotë asgjë, kështu që çipi vetëm filtron dhe nuk ngjyros asgjë. Çipi i filtron dhe i shënon njësoj rrathët blu (vendet me kënd lojërash).</p>
 <p>Nën këtë çip, dhe vetëm aty, kthehen tavolinat pas çelësit Euro, me një çelës në gjilpërë: kush ka nevojë për çipin zakonisht e ka çelësin. Në hartën e zakonshme, në numra dhe në renditje mbeten jashtë.</p>
-
-<h2 id="empty-rings">Rrathët blu bosh: vende loje, pa përgjigje</h2>
-<p>I njëjti rregull përputhet me shumë më tepër vende sesa ka shenjues harta. Vetëm
-<span data-stat="play_tables">111</span> prej tyre kanë shenjues. Në <span data-stat="play_places">701</span> vende të tjera, askush nuk i është përgjigjur
-pyetjes së parë: a ka këtu tavolinë ndërrimi? Po, jo, askush s'e di — OSM nuk thotë asgjë fare.</p>
-<p>Harta nuk mund t'i ngjyrosë ato <span data-stat="play_places">701</span>, sepse s'ka gjë për
-t'u ngjyrosur. Nuk janë as gri: gri do të thotë «tavolina ekziston, mungon dhoma», dhe kjo nuk
-vlen këtu. Prandaj marrin filtrin e vet, <em>Vetëm hapësirë lojërash</em>, i aktivizuar si
-parazgjedhje, dhe një rreth blu bosh në vend të një shenjuesi të mbushur.</p>
-<p>Një unazë <em>me vija të ndërprera</em> do të thotë: hapësirë lojërash po, tavolinë ndërrimi jo (<code>changing_table=no</code>). Nuk është shenjues dhe as i kuq, sepse e kuqja do të thoshte se tavolina ekziston, vetëm jo për babin. Këtu nuk ka, për askënd. Vendi është gjithsesi në hartë, sepse me fëmijë shkohet me qejf atje edhe pa tavolinë.</p>
-<p>Janë pyetjet e hapura më premtuese në të gjithë hartën. Një fushë lojërash e mbyllur, një
-kafene me pishinë topash, një restorant me dhomë lojërash &mdash; një baba me një fëmijë të vogël
-do të shkojë atje sido që të jetë, dhe kur të jetë atje, e di përgjigjen. Klikimi mbi rrethin hap
-MapComplete pikërisht te ajo pyetje e vetme. Përgjigju dhe rrethi zhduket brenda pak minutash, i
-zëvendësuar nga një shenjues i vërtetë.</p>
 
 <h2 id="high-chair">Çipi Karrige e lartë për fëmijë</h2>
 <p>Çipi <em>Karrige e lartë për fëmijë</em> tregon vendet ku OSM shënon një karrige të lartë: <code>highchair=yes</code> ose një numër mbi 0. <code>highchair=no</code> ose <code>0</code> është një «jo» e regjistruar. Një vend pa etiketë nuk është vend pa karrige të lartë, OSM thjesht nuk thotë asgjë, kështu që çipi e lë jashtë pa pohuar asgjë. Një vlerë që harta nuk mund ta lexojë, si <code>ja</code> ose <code>1+</code>, nuk llogaritet as ajo, dhe dritarja nuk tregon asnjë rresht për të. Çipi filtron shenjuesit dhe rrathët blu dhe nuk ngjyros asgjë.</p>
@@ -264,7 +222,7 @@ llogari falas në OSM mund t'i përgjigjet kësaj, aty për aty, në më pak se 
   <li><strong>Në aplikacion (më shpejt):</strong> prek shenjuesin gri. Dritarja pyet <em>Në cilën dhomë është tavolina e ndërrimit?</em> Prek <em>Gra dhe burra</em>, <em>Tualeti i burrave</em>, <em>Tualeti i grave</em>, <em>Tualet i përbashkët</em>, <em>Tualet i aksesueshëm</em> ose <em>Dhomë e veçantë</em>. Hapësirat e tjera janë nën <em>Më shumë hapësira …</em>. Në pamjen <em>Nënë</em> mungojnë <em>Tualeti i burrave</em> dhe <em>Gra dhe burra</em>, sepse një nënë nuk mund të garantojë për tualetin e burrave. Hyn një herë me OSM, përgjigjja ruhet nën llogarinë tënde dhe shenjuesi përditësohet brenda pak minutash. Nëse prek butonin e vendndodhjes brenda 75&nbsp;m nga një shenjues gri, një kartë pyet nëse je atje tani; <em>Përgjigju pyetjes</em> hap të njëjtën dritare.</li>
   <li><strong>MapComplete (çdo telefon, në shfletues):</strong> «Përgjigju në
       MapComplete» te një shenjues gri hap të njëjtin objekt në temën e vet të PapaMap-it për
-      MapComplete &mdash; për çdo shenjues, që ndryshimet të njihen si të ardhura që këtu.
+      MapComplete.
       MapComplete paralajmëron një herë për temën jozyrtare, kjo është normale. Hyr me llogarinë tënde në OSM dhe përgjigju pyetjeve
       për tavolinën e ndërrimit, përfshirë atë për dhomën. Përgjigjja shkon drejt e në
       OpenStreetMap dhe shfaqet këtu brenda pak minutash.</li>
@@ -273,8 +231,7 @@ llogari falas në OSM mund t'i përgjigjet kësaj, aty për aty, në më pak se 
       dhe renditja e shfaqjes</em>, kërko «tavolinë ndërrimi» dhe shënoje. Pyet vetëm po/jo. Për
       pyetjen e dhomës te një shenjues gri ekzistues, përdor MapComplete.</li>
 </ul>
-<p class="muted">Ndryshimet bëhen nën llogarinë tënde në OSM dhe u përkasin të gjithëve. Jetojnë
-më gjatë se ky sajt dhe ndihmojnë çdo aplikacion që lexon OpenStreetMap.</p>
+<p class="muted">Redaktimet bëhen me llogarinë tënde OSM dhe i vlejnë çdo aplikacioni që lexon OpenStreetMap, jo vetëm këtij.</p>
 
 <h2 id="contribute">Si të shtosh një vend që mungon</h2>
 <p>PapaMap nuk ruan asgjë vetë. Shtimi i një vendi do të thotë gjithmonë: editimi i
@@ -326,11 +283,7 @@ atë çfarë duhet të jetë. Nëse nuk e di dhomën, vetëm <code>changing_tabl
 dobishëm: vendi bëhet shenjues gri, dhe babai tjetër i përgjigjet pyetjes së dhomës.</p>
 
 <h2 id="no-ranking">Pse një tregues vlerësimi i ofertës nga OSM nuk funksionon</h2>
-<p>Projekti më i madh që bie në sy do të ishte një raport ofertë tualetesh burra-gra për çdo
-qytet. Numri mbi të cilin mbështetet vërtet argumenti i «paritetit të banjove». Nuk mund të
-llogaritet nga OpenStreetMap. E kontrolluam këtë përpara se ta ndërtonim hartën, me një kampion
-nga tetë qendra qytetesh (Berlin, Londër, Paris, Nju Jork, Tokio&nbsp;23&nbsp;lagje, Amsterdam,
-Vjenë, Melburn; 26&nbsp;korr&nbsp;2026):</p>
+<p>Projekti më i madh i dukshëm do të ishte raporti i tualeteve të burrave me ato të grave për qytet, numri për të cilin flitet në debatin mbi «potty parity». Para se ta ndërtoja, kontrollova nëse OSM mund ta japë këtë numër. Nuk mundet. Një mostër nga tetë qendra qytetesh e 26&nbsp;korr&nbsp;2026:</p>
 <table>
   <tr><th>Qyteti</th><th>Tualete të hartëzuara</th><th>Ndonjë etiketë gjinie</th><th>Të dyja
       M&nbsp;+&nbsp;F</th></tr>
@@ -345,42 +298,11 @@ Vjenë, Melburn; 26&nbsp;korr&nbsp;2026):</p>
   <tr><td><strong>Të gjitha</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888
       (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Vetëm 29,9% e tualeteve të hartëzuara kanë ndonjë etiketë gjinie fare. Të dyja (mashkull
-      dhe femër): 8,5%.</li>
-  <li>Etiketat janë thjesht shenja po/jo, kurrë numra. Numri i kabinave për gjini: zero në të
-      gjitha tetë qytetet. Çelësi i vetëm i kapacitetit, <code>toilets:num_chambers</code>
-      (~27k përdorime), nuk ka gjini të përcaktuar dhe vjen pothuajse tërësisht nga një import i
-      vjetër. Variantet e tij <code>:female</code> / <code>:male</code> kanë nga 2 përdorime
-      secili, në mbarë botën.</li>
-  <li>Hamburgu, kontrolluar të njëjtën ditë: 443 tualete të hartëzuara, asnjë me etiketë
-      <code>toilets:num_chambers*</code>. Shiriti në <a href="./?lang=sq">faqen kryesore</a> i rillogarit këto shifra një herë në javë për
-      çdo zonë; vetë harta çdo natë.</li>
-  <li>Dhe: shkalla e etiketimit mat komunitetin e hartëzuesve, jo qytetet. Tualetet me një kabinë
-      të vetme mbeten me të drejtë pa gjini të përcaktuar. Një renditje qytetesh do të vlerësonte
-      kontribuesit e OSM-së, jo barazinë tualetesh.</li>
-</ul>
-<p>Pra, i vetmi pohim i ndershëm është: vetë oferta nuk mund të matet sot nga të dhëna të hapura.
-Ky sajt mat atë çfarë matet dot, dhe kthen boshllëqet në kontribute.</p>
+<p>Vetëm 29,9% e tualeteve të hartëzuara kanë fare ndonjë etiketë gjinie, 8,5% i kanë të dyja. Etiketat janë po/jo, jo numërime, dhe numri i kabinave sipas gjinisë nuk ekziston në asnjë nga tetë qytetet. Dhe një shkallë etiketimi mat komunitetin e hartëzuesve, jo qytetin. Një renditje do t'u jepte nota kontribuesve të OSM, jo tualeteve. Prandaj faqja mbetet te ajo që mund të matet.</p>
 
 <h2 id="where-tables">I vetmi fakt i llogaritshëm: ku ndodhen tavolinat</h2>
-<p>Për sa dimë, <code>changing_table:location</code> është fjalori i vetëm i hapur që regjistron
-në cilën dhomë ndodhet një tavolinë ndërrimi. Është i rrallë:
-<span data-stat="location_total">3&nbsp;659</span> nga <span data-stat="ct_total">77&nbsp;000</span>
-objekte <code>changing_table</code> në mbarë botën, <span data-stat="share">4,8%</span>. Por aty
-ku ekziston, është shumë i njëanshëm (taginfo, <span data-stat="date">26&nbsp;korr&nbsp;2026</span>):</p>
-<ul>
-  <li>Tavolina vetëm te tualeti i grave: <strong data-stat="female_only">485</strong>.</li>
-  <li>Tavolina vetëm te tualeti i burrave: <strong data-stat="male_only">71</strong>. Rreth
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> janë të
-      etiketuara në të dyja dhomat, <span data-stat="male_any">410</span> regjistrojnë çfarëdo
-      tavoline te tualeti i burrave. Në mbarë botën.</li>
-</ul>
-<p>Kampioni është i vogël, dhe hartëzuesit zgjedhin vetë çfarë regjistrojnë. Prandaj mos e lexo
-raportin e saktë si diçka absolute. Drejtimi përputhet me atë që është dokumentuar prej kohësh
-gjetiu: tavolinat e ndërrimit varen si parazgjedhje te tualeti i grave. Kjo ua mbyll derën
-baballarëve, dhe në heshtje supozon se kush merret me pelenat. Kjo hartë i bën të dukshme të
-dhënat që mungojnë. Dhe të lehta për t'u rregulluar.</p>
+<p><code>changing_table:location</code> është i vetmi fjalor i hapur që njoh që regjistron në cilën dhomë ndodhet një tavolinë ndërrimi. Është i rrallë: <span data-stat="location_total">3&nbsp;659</span> nga <span data-stat="ct_total">77&nbsp;000</span> objekte <code>changing_table</code> në mbarë botën, <span data-stat="share">4,8%</span>. Aty ku ekziston, është i anshëm (taginfo, <span data-stat="date">26&nbsp;korr&nbsp;2026</span>): <strong data-stat="female_only">485</strong> tavolina vetëm në tualetin e grave, <strong data-stat="male_only">71</strong> vetëm në atë të burrave, afërsisht <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> janë në të dyja dhomat.</p>
+<p>Mostra është e vogël dhe hartëzuesit vendosin vetë çfarë regjistrojnë, prandaj mos e lexo shumë raportin e saktë. Drejtimi është i njëjtë si kudo: tavolinat e ndërrimit varen si parazgjedhje në tualetin e grave. Kjo hartë tregon ku mungojnë të dhënat, dhe çdo shenjues gri ka një buton redaktimi.</p>
 
 <h2 id="licence">Licenca e të dhënave &amp; burimi</h2>
 <p>Të gjitha të dhënat e hartës &copy; <a href="https://www.openstreetmap.org/copyright">kontribuesit
@@ -392,21 +314,8 @@ janë gjithashtu ODbL. Statistikat botërore të etiketave vijnë nga
 MIT.</p>
 
 <h2 id="privacy">Privatësia</h2>
-<p>Një sajt statik. Pa llogari, pa cookie, pa analitikë, pa skripta ndjekjeje. Sajti nuk ruan
-asgjë për ty dhe nuk ka bazë të dhënash. Pllakëzat e hartës vijnë nga serverët e OpenStreetMap;
-ato kërkesa bien nën
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">politikën e privatësisë të OSMF-së</a>. Nëse prek <em>Përgjigju në MapComplete</em> në një shenjues, për disa minuta faqja pyet edhe api.openstreetmap.org se çfarë thotë tani ai objekt — ato kërkesa mbulohen nga e njëjta politikë. Që nga karakteri i tretë që shkruan në fushën e kërkimit, dhe sa herë që hap
-<em>Shto një vend</em>, faqja pyet edhe kërkimin e vendeve Photon të komoot (photon.komoot.io). Ai
-merr tekstin që shkrove dhe një qendër të rrumbullakosur të hartës dhe, si çdo server, adresën
-tënde IP.
-Nëse ndjek një lidhje drejt MapComplete, StreetComplete ose openstreetmap.org, je në sajtet e
-tyre, duke editiuar nën llogarinë tënde në OSM. Asgjë nuk kalon nëpër ne. Faqet zyrtare:
-<a href="impressum.html">Impressum</a> ·
+<p>Një faqe statike. Nuk vendos cookies dhe nuk ka analitikë. Pllakëzat e hartës vijnë nga serverët e pllakëzave të OpenStreetMap; ato kërkesa bien nën <a href="https://osmfoundation.org/wiki/Privacy_Policy">politikën e privatësisë të OSMF-së</a>. Nëse prek <em>Përgjigju në MapComplete</em> te një shenjues, në minutat e ardhshme faqja pyet disa herë edhe api.openstreetmap.org se çfarë thotë tani ai objekt — ato kërkesa bien nën të njëjtën politikë. Nga shkronja e tretë në fushën e kërkimit dhe sa herë që hap <em>Shto një vend</em>, faqja pyet gjithashtu kërkimin e vendeve Photon të komoot (photon.komoot.io). Ai merr tekstin e shkruar dhe një qendër të rrumbullakosur të hartës dhe, si çdo server, adresën tënde IP. Lidhjet drejt MapComplete, StreetComplete ose openstreetmap.org të çojnë në faqet e tyre, ku redakton me llogarinë tënde OSM. Formalitete: <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (në gjermanisht).</p>
-
-<p class="muted">Burimet: kampion nga Overpass në 8 qendra qytetesh (9&nbsp;674 tualete) nga
-26&nbsp;korr&nbsp;2026, si dhe statistikat e çelësave nga taginfo sipas datës së dhënë më lart.
-Shifrat vendore vijnë nga i njëjti kërkim nate që ndërton hartën.</p>
 
 <h2 id="how-made">Si është ndërtuar ky sajt</h2>
 <p>E përdor IA-në për të më ndihmuar me kodim dhe hartim tekstesh. Gjithsesi, gjithçka kalon nga

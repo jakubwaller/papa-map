@@ -131,7 +131,6 @@ recupera l'aggiornamento notturno. Il campione su otto centri urbani è del
   <li><a href="#mum-mode">Il selettore Papà / Mamma</a></li>
   <li><a href="#play-area">L'anello blu: l'angolo giochi</a></li>
   <li><a href="#wheelchair">Il chip Sedia a rotelle</a></li>
-  <li><a href="#empty-rings">Gli anelli blu vuoti: posti per giocare, nessuna risposta</a></li>
   <li><a href="#high-chair">Il chip Seggiolone</a></li>
   <li><a href="#grey-pin">Come riparare un pin grigio</a></li>
   <li><a href="#contribute">Come aggiungere un luogo che manca</a></li>
@@ -143,9 +142,7 @@ recupera l'aggiornamento notturno. Il campione su otto centri urbani è del
 </ul></nav>
 
 <h2 id="what">Che cos'è questa mappa. E che cosa non è.</h2>
-<p>PapaMap mostra i luoghi in 44 paesi europei — dall'Islanda a Cipro, dal Portogallo
-all'Ucraina, più Australia, Nuova Zelanda, Stati Uniti, Canada e Giappone — dove
-OpenStreetMap sa che c'è un fasciatoio
+<p>PapaMap mostra i luoghi in Europa, Australia, Nuova Zelanda, Stati Uniti, Canada e Giappone, dove OpenStreetMap sa che c'è un fasciatoio
 (<code>changing_table=yes</code> o <code>limited</code>). In più i luoghi con un angolo giochi, disegnati come anello blu, con o senza fasciatoio. Il colore dice se un papà riesce a
 raggiungerlo. La mappa legge OSM. Le risposte vanno direttamente su OSM con il tuo account OSM — dalla mappa stessa o tramite i link su ogni pin; PapaMap non salva nulla. I dati si correggono
 direttamente su OSM, tramite i link su ogni pin.</p>
@@ -168,8 +165,7 @@ spazi, messo in minuscolo, e ogni parte viene confrontata per intero. Mai come s
   <li><span class="dot r"></span><strong>Rosso:</strong> altrimenti, se una delle parti è
       <code>female_toilet</code>. Il fasciatoio c'è, ma solo nel bagno donne.</li>
   <li><span class="dot u"></span><strong>Grigio:</strong> tutto il resto. Nessun tag di posizione,
-      o solo testo libero. Nessuno ha registrato la stanza. I pin grigi sono il lavoro da
-      fare.</li>
+      o solo testo libero. Nessuno ha registrato la stanza.</li>
 </ul>
 <p>Un oggetto con un tag <code>centralkey</code> (diverso da <code>no</code>) resta fuori dalla mappa quando la chiave chiude tutta la porta: <code>access=centralkey</code>, un fasciatoio nel bagno disabili, o niente nei tag dice che la chiave vale solo per una cabina. Un blocco con bagni uomini e donne aperti e una cabina disabili chiusa a chiave (<code>wheelchair:access=centralkey</code>, oppure <code>male=yes</code> e <code>female=yes</code>) resta sulla mappa, grigio finché qualcuno non registra la stanza. La chiave europea si ottiene solo dimostrando una disabilità, quindi la maggior parte dei papà da quella porta non passa. Sotto il chip <em>Sedia a rotelle</em> questi fasciatoi tornano, vedi sotto.</p>
 
@@ -198,63 +194,22 @@ separatamente, quindi in modalità mamma sono rossi e non contano nel numero sop
 vecchie dell'app potrebbero ancora mostrarli verdi, finché non vengono aggiornate.</p>
 
 <h2 id="play-area">L'anello blu: l'angolo giochi</h2>
-<p>Un pin con l'anello blu ha anche un angolo giochi &mdash; un posto dove non si cambia soltanto
-il bambino, ci si ferma anche un po'. Il filtro <em>Con angolo giochi</em> mostra solo questi
-luoghi. Un luogo conta se in OSM c'è una di queste cose:</p>
+<p>Un pin con l'anello blu ha anche un angolo giochi. Il filtro <em>Con angolo giochi</em> mostra solo questi. Un luogo conta se in OSM c'è uno di questi tag:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> o <code>designated</code>
-      &mdash; il modo documentato nel wiki per dire &laquo;al chiuso&raquo;.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> o
-      <code>designated</code> &mdash; l'angolo giochi del bar, del ristorante, della panetteria.
-      Il tag più usato, che però lascia aperto se sia dentro o fuori.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; un parco giochi al
-      coperto a pagamento.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> insieme a
-      <code>indoor=yes</code> &mdash; la stessa cosa, taggata al contrario.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> o <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> o <code>designated</code> (il tag più diffuso, non dice se al chiuso o all'aperto)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> insieme a <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> non conta: la sabbiera nel giardino di una birreria non è quello che
-l'anello promette. Non contano nemmeno <code>no</code> e <code>limited</code> &mdash; il wiki
-definisce quest'ultimo come &laquo;ci sono dei giochi, ma nessuno spazio dedicato&raquo;. Se da
-qualche parte c'è un esplicito <code>kids_area:indoor=no</code>, quello vince su un semplice
-<code>kids_area=yes</code>.</p>
-<p>Questo è un distintivo, non un quarto stato. Di un luogo senza questi tag non si può dire che
-&laquo;non ha un angolo giochi&raquo; &mdash; in OSM semplicemente non c'è scritto niente al
-riguardo. Per questo qui non c'è il grigio.</p>
-<p>Proprio per questo lo chiede il popup. Su ogni pin dove OSM non dice nulla su un angolo
-giochi, qualunque sia il suo colore, c'è una riga (sotto le stanze, dove il pin chiede anche la
-stanza): <em>Angolo giochi per bambini?</em>, con tre risposte. <em>al chiuso</em> scrive
-<code>kids_area:indoor=yes</code> insieme a <code>kids_area=yes</code>, <em>solo
-all'aperto</em> scrive <code>kids_area=yes</code> insieme a <code>kids_area:indoor=no</code>,
-<em>nessuno</em> scrive <code>kids_area=no</code> &mdash; con il tuo account OSM, in un changeset
-a parte, esattamente gli stessi tag che scrive MapComplete per la stessa domanda. La domanda
-riguarda un angolo giochi in generale, non solo al chiuso: <code>kids_area=no</code> in OSM
-significa &laquo;qui non c'è da nessuna parte dove i bambini possano giocare&raquo;, quindi un
-panificio con un parco giochi in giardino riceve <em>solo all'aperto</em> invece di un no
-sbagliato. L'anello compare (o resta assente) pochi minuti dopo. A nessuno viene
-chiesto due volte: un <code>kids_area</code> <em>o</em> <code>kids_area:indoor</code> già
-registrato, qualunque sia il valore, toglie la domanda. Su un <code>leisure=playground</code>
-senza <code>indoor=yes</code> non viene mai chiesto &mdash; il posto <em>è</em> già un posto per
-giocare, solo non al chiuso.</p>
+<p><code>outdoor</code>, <code>no</code> e <code>limited</code> non contano. Un <code>kids_area:indoor=no</code> esplicito prevale su un semplice <code>kids_area=yes</code>.</p>
+<p>L'anello è un distintivo, non un quarto colore. Un luogo senza questi tag non «non ha un angolo giochi»: in OSM semplicemente non se ne dice nulla, e questo vale per quasi tutti i luoghi. Per questo qui non c'è il grigio.</p>
+<p>Proprio per questo il popup lo chiede: su ogni pin per cui OSM non dice nulla su un angolo giochi, di qualunque colore, c'è una riga (sotto le stanze, se il pin chiede anche la stanza): <em>Angolo giochi per bambini?</em>, con tre risposte. <em>al chiuso</em> scrive <code>kids_area:indoor=yes</code> insieme a <code>kids_area=yes</code>, <em>solo all'aperto</em> scrive <code>kids_area=yes</code> insieme a <code>kids_area:indoor=no</code>, <em>nessuno</em> scrive <code>kids_area=no</code> — con il tuo account OSM, in un changeset a parte, esattamente i tag che MapComplete scrive per la stessa domanda. La domanda riguarda un'area gioco in generale, non solo al chiuso: in OSM <code>kids_area=no</code> significa «qui i bambini non possono giocare da nessuna parte», e così una panetteria con un giardino giochi riceve <em>solo all'aperto</em> invece di un falso no. L'anello compare (o resta assente) pochi minuti dopo. A chi ha già risposto la domanda non viene fatta di nuovo: un <code>kids_area</code> <em>o</em> <code>kids_area:indoor</code> già registrato, qualunque sia il valore, toglie la domanda. Su un <code>leisure=playground</code> senza <code>indoor=yes</code> non viene mai posta: il luogo <em>è</em> già un posto dove giocare, solo all'aperto.</p>
+<p>La regola vale per molti più luoghi di quanti abbiano un pin. Solo <span data-stat="play_tables">111</span> di questi ne hanno uno. Per altri <span data-stat="play_places">701</span> nessuno ha risposto alla prima domanda: c'è un fasciatoio qui? La mappa non può colorarli, quindi ricevono un anello blu vuoto e un filtro tutto loro, <em>Solo angolo giochi</em>, attivo di default. Chi ci va comunque con un bambino sa la risposta. Un clic sull'anello apre MapComplete proprio su questa domanda.</p>
+<p>Un anello <em>tratteggiato</em> significa: angolo giochi sì, fasciatoio no (<code>changing_table=no</code>). Non è un pin e nemmeno rosso, perché il rosso direbbe che un fasciatoio c'è, solo non per il papà. Qui non ce n'è nessuno, per nessuno. Il luogo è comunque sulla mappa, perché con un bambino ci si va volentieri anche senza fasciatoio.</p>
 
 <h2 id="wheelchair">Il chip Sedia a rotelle</h2>
 <p>Il chip <em>Sedia a rotelle</em> mostra i luoghi con <code>wheelchair=yes</code> o <code>wheelchair=limited</code> in OSM. <code>limited</code> significa un gradino fino a 7&nbsp;cm, o aiuto necessario. Con il chip attivo questi luoghi hanno un punto esclamativo dallo zoom 13, e il popup dice <em>limitato</em>. <code>toilets:wheelchair=yes</code> da solo non basta, ma compare comunque nel popup, insieme a <code>wheelchair:description</code>. Un luogo senza il tag non è inaccessibile, OSM semplicemente non dice nulla: il chip filtra soltanto, non colora. Il chip filtra e segna allo stesso modo i cerchi blu (luoghi con area giochi).</p>
 <p>Sotto questo chip, e solo lì, tornano i fasciatoi dietro una chiave Euro, con una chiave disegnata nel segnaposto: chi ha bisogno del chip di solito ha la chiave. Sulla mappa normale, nei numeri e nella classifica restano fuori.</p>
-
-<h2 id="empty-rings">Gli anelli blu vuoti: posti per giocare, nessuna risposta</h2>
-<p>La stessa regola vale per molti più luoghi di quanti pin abbia la mappa. Solo
-<span data-stat="play_tables">111</span> di questi hanno un pin. Per
-altri <span data-stat="play_places">701</span> nessuno ha risposto alla prima domanda: qui c'è un
-fasciatoio? Sì, no, non lo sa nessuno — in OSM non c'è scritto proprio nulla.</p>
-<p>Questi <span data-stat="play_places">701</span> la mappa non può colorarli, perché non c'è
-niente da colorare. E non sono nemmeno grigi: grigio vuol dire &laquo;il fasciatoio esiste, manca
-la stanza&raquo;, e qui non è il caso. Hanno quindi un chip tutto loro, <em>Solo angolo
-giochi</em>, acceso di default, e un anello blu vuoto al posto di un pin pieno.</p>
-<p>Un anello <em>tratteggiato</em> significa: angolo giochi sì, fasciatoio no (<code>changing_table=no</code>). Non è un pin e non è nemmeno rosso, perché rosso vorrebbe dire che un fasciatoio c'è, solo non per papà. Qui non c'è, per nessuno. Il luogo resta comunque sulla mappa, perché con un bambino ci si va volentieri anche senza fasciatoio.</p>
-<p>Sono le domande aperte più promettenti di tutta la mappa. Un parco giochi al coperto, un bar
-con la piscina di palline, un ristorante con la sala giochi — un papà con un bambino piccolo ci
-va comunque, e una volta lì la risposta la sa. Un clic sull'anello apre MapComplete esattamente su
-quell'unica domanda. Se qualcuno risponde, entro pochi minuti l'anello sparisce
-e al suo posto compare un pin vero.</p>
 
 <h2 id="high-chair">Il chip Seggiolone</h2>
 <p>Il chip <em>Seggiolone</em> mostra i luoghi dove OSM registra un seggiolone: <code>highchair=yes</code> o un numero maggiore di 0. <code>highchair=no</code> o <code>0</code> è un no registrato. Un luogo senza il tag non è un luogo senza seggiolone, OSM semplicemente non dice nulla: il chip lo lascia fuori senza affermare niente. Un valore che la mappa non sa leggere, come <code>ja</code> o <code>1+</code>, non conta neppure, e il popup non ne mostra alcuna riga. Il chip filtra i pin e i cerchi blu e non colora nulla.</p>
@@ -266,8 +221,7 @@ account OSM gratuito, sul posto, in meno di un minuto:</p>
 <ul>
   <li><strong>Nell'app (il modo più rapido):</strong> tocca il pin grigio. Il popup chiede <em>In quale stanza si trova il fasciatoio?</em> Tocca <em>Donne &amp; uomini</em>, <em>Bagno uomini</em>, <em>Bagno donne</em>, <em>Bagno unisex</em>, <em>Bagno accessibile</em> oppure <em>Stanza separata</em>. Le altre stanze sono dietro <em>Altre stanze …</em>. Nella vista <em>Mamma</em> mancano <em>Bagno uomini</em> e <em>Donne &amp; uomini</em>, perché una mamma non può garantire per il bagno degli uomini. Accedi una sola volta con OSM, la risposta viene salvata con il tuo account e il pin si aggiorna entro pochi minuti. Se tocchi il pulsante di posizione a meno di 75&nbsp;m da un pin grigio, una scheda chiede se sei lì in questo momento; <em>Rispondi alla domanda</em> apre lo stesso popup.</li>
   <li><strong>MapComplete (qualsiasi telefono, nel browser):</strong> &laquo;Rispondi su
-      MapComplete&raquo; su un pin grigio apre lo stesso oggetto nel tema MapComplete di PapaMap
-      &mdash; su ogni pin, così le modifiche si riconoscono come arrivate da qui. MapComplete
+      MapComplete&raquo; su un pin grigio apre lo stesso oggetto nel tema MapComplete di PapaMap. MapComplete
       avvisa una volta che il tema non è ufficiale, va bene così. Accedi con il tuo account OSM e rispondi alle domande sul
       fasciatoio, anche a quella sulla stanza. La risposta va dritta in
       OpenStreetMap e si vede qui entro pochi minuti.</li>
@@ -276,8 +230,7 @@ account OSM gratuito, sul posto, in meno di un minuto:</p>
       &laquo;fasciatoio&raquo; e spunta la casella. Chiede solo sì/no. Per la domanda sulla stanza
       di un pin grigio già esistente, usa MapComplete.</li>
 </ul>
-<p class="muted">Le modifiche vengono salvate con il tuo account OSM e appartengono a tutti.
-Sopravvivono a questo sito e servono a ogni app che legge OpenStreetMap.</p>
+<p class="muted">Le modifiche vengono fatte con il tuo account OSM e servono a ogni app che legge OpenStreetMap, non solo a questa.</p>
 
 <h2 id="contribute">Come aggiungere un luogo che manca</h2>
 <p>PapaMap non salva niente di suo. Aggiungere un luogo vuol dire quindi sempre: modificare
@@ -330,11 +283,7 @@ che c'è, non quello che dovrebbe esserci. Se non sai in che stanza sia,
 prossimo papà risponde alla domanda sulla stanza.</p>
 
 <h2 id="no-ranking">Perché da OSM non si può ricavare un indice dell'offerta di bagni</h2>
-<p>Il progetto più grande e più ovvio sarebbe il rapporto tra i bagni per gli uomini e quelli per
-le donne, città per città. Il numero attorno a cui ruota davvero il discorso della
-&laquo;potty parity&raquo;. Da OpenStreetMap non si può calcolare. L'abbiamo verificato prima di
-costruire la mappa, con un campione su otto centri urbani (Berlino, Londra, Parigi, New York,
-Tokyo&nbsp;23&nbsp;quartieri, Amsterdam, Vienna, Melbourne; 26&nbsp;luglio&nbsp;2026):</p>
+<p>Il progetto più grande, quello ovvio, sarebbe il rapporto tra bagni per uomini e per donne in ogni città, il numero di cui parla il dibattito sulla «potty parity». Prima di costruire ho verificato se OSM può fornire quel numero. Non può. Un campione su otto centri città del 26&nbsp;lug&nbsp;2026:</p>
 <table>
   <tr><th>Città</th><th>Bagni registrati</th><th>Con un tag di genere</th><th>Entrambi M&nbsp;+&nbsp;F</th></tr>
   <tr><td>Berlino</td><td>1.173</td><td>660</td><td>119</td></tr>
@@ -347,42 +296,11 @@ Tokyo&nbsp;23&nbsp;quartieri, Amsterdam, Vienna, Melbourne; 26&nbsp;luglio&nbsp;
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Tutte</strong></td><td><strong>9.674</strong></td><td><strong>2.888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Solo il 29,9% dei bagni registrati ha anche solo un tag di genere. Entrambi (male e
-      female): 8,5%.</li>
-  <li>I tag sono semplici sì/no, mai conteggi. Numero di cabine per genere: zero in tutte e otto
-      le città. L'unica chiave sulla capienza, <code>toilets:num_chambers</code> (~27k utilizzi),
-      non distingue il genere e viene quasi interamente da un vecchio import. Le sue varianti
-      <code>:female</code> / <code>:male</code> hanno 2 utilizzi ciascuna in tutto il mondo.</li>
-  <li>Amburgo, controllata lo stesso giorno: 443 bagni registrati, nessuno con un tag
-      <code>toilets:num_chambers*</code>. La barra sulla <a href="./?lang=it">pagina iniziale</a> ricalcola questi numeri una volta alla
-      settimana per ogni area; la mappa stessa ogni notte.</li>
-  <li>E poi: i tassi di tagging misurano la comunità dei mapper, non le città. I bagni a cabina
-      singola restano giustamente senza tag di genere. Una classifica tra città darebbe un voto a
-      chi contribuisce a OSM, non all'equità dei bagni.</li>
-</ul>
-<p>L'unica cosa onesta da dire è quindi: l'offerta in sé, dai dati aperti, oggi non si può
-misurare. Questo sito misura quello che è misurabile e trasforma le lacune in contributi.</p>
+<p>Solo il 29,9% dei bagni mappati ha un tag di genere, il 8,5% li ha entrambi. I tag sono indicazioni sì/no, non conteggi, e il numero di cabine per genere non esiste in nessuna delle otto città. E un tasso di tagging misura la comunità dei mapper, non la città. Una classifica darebbe un voto ai contributori di OSM, non ai bagni. Per questo la pagina si limita a ciò che si può misurare.</p>
 
 <h2 id="where-tables">L'unico dato calcolabile: dove sono i fasciatoi</h2>
-<p><code>changing_table:location</code> è, per quanto ne sappiamo, l'unico vocabolario aperto che
-registra in quale stanza si trova un fasciatoio. È poco usato:
-<span data-stat="location_total">3.659</span> oggetti <code>changing_table</code> su
-<span data-stat="ct_total">77.000</span> in tutto il mondo,
-<span data-stat="share">4,8%</span>. Ma dove c'è, è sbilanciato
-(taginfo, <span data-stat="date">26&nbsp;lug&nbsp;2026</span>):</p>
-<ul>
-  <li>Fasciatoi solo nel bagno donne: <strong data-stat="female_only">485</strong>.</li>
-  <li>Fasciatoi solo nel bagno uomini: <strong data-stat="male_only">71</strong>. Grosso modo
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> sono
-      taggati in entrambe le stanze, <span data-stat="male_any">410</span> registrano comunque un
-      fasciatoio nel bagno uomini. In tutto il mondo.</li>
-</ul>
-<p>Il campione è piccolo, e sono i mapper a decidere che cosa registrare. Quindi il rapporto
-esatto non va sopravvalutato. La direzione però coincide con quello che è documentato da tempo:
-il fasciatoio, di norma, sta nel bagno delle donne. Questo taglia fuori i papà
-e, senza dirlo, dà per scontato a chi tocchi cambiare il pannolino. Questa mappa rende visibili i
-dati che mancano. E facili da sistemare.</p>
+<p><code>changing_table:location</code> è l'unico vocabolario aperto che conosco che registra in quale stanza si trova un fasciatoio. È raro: <span data-stat="location_total">3.659</span> su <span data-stat="ct_total">77.000</span> oggetti <code>changing_table</code> nel mondo, il <span data-stat="share">4,8%</span>. Dove esiste, è sbilanciato (taginfo, <span data-stat="date">26&nbsp;lug&nbsp;2026</span>): <strong data-stat="female_only">485</strong> fasciatoi solo nel bagno delle donne, <strong data-stat="male_only">71</strong> solo in quello degli uomini, all'incirca <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> sono in entrambe le stanze.</p>
+<p>Il campione è piccolo e i mapper decidono cosa registrare, quindi il rapporto esatto non va interpretato troppo. La direzione è la stessa ovunque: i fasciatoi stanno di default nel bagno delle donne. Questa mappa mostra dove mancano i dati, e ogni pin grigio ha un pulsante di modifica.</p>
 
 <h2 id="licence">Licenza dei dati &amp; attribuzione</h2>
 <p>Tutti i dati della mappa &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
@@ -393,17 +311,8 @@ ODbL. Le statistiche globali sui tag vengono da <a href="https://taginfo.openstr
 Il codice del sito è sotto licenza MIT.</p>
 
 <h2 id="privacy">Privacy</h2>
-<p>Un sito statico. Nessun account, nessun cookie, nessun sistema di analisi, nessuno script di
-tracciamento. Il sito non salva niente su di te e non ha un database. Le tessere della mappa
-arrivano dai tile server di OpenStreetMap; per quelle richieste vale l'<a href="https://osmfoundation.org/wiki/Privacy_Policy">informativa
-privacy della OSMF</a>. Se tocchi <em>Rispondi su MapComplete</em> in un pin, per qualche minuto la pagina chiede anche ad api.openstreetmap.org cosa dice ora quell'oggetto — quelle richieste rientrano nella stessa informativa. Dal terzo carattere che digiti nel campo di ricerca, e ogni volta che apri <em>Aggiungi luogo</em>, la pagina interroga anche la ricerca di luoghi Photon di komoot (photon.komoot.io). Riceve il testo digitato e un centro della mappa arrotondato e, come qualsiasi server, il tuo indirizzo IP. Se segui un link a MapComplete, StreetComplete o openstreetmap.org sei sui
-loro siti e modifichi con il tuo account OSM. Da noi non passa niente. Pagine formali:
-<a href="impressum.html">Impressum</a> ·
+<p>Un sito statico. Non imposta cookie e non ha analytics. Le tessere della mappa arrivano dai server di tessere di OpenStreetMap; per queste richieste vale l'<a href="https://osmfoundation.org/wiki/Privacy_Policy">informativa privacy della OSMF</a>. Se tocchi <em>Rispondi su MapComplete</em> in un pin, nei minuti successivi la pagina interroga alcune volte anche api.openstreetmap.org per sapere cosa dice ora quell'oggetto — vale la stessa informativa. Dal terzo carattere digitato nel campo di ricerca, e ogni volta che apri <em>Aggiungi luogo</em>, la pagina interroga anche la ricerca di luoghi Photon di komoot (photon.komoot.io). Riceve il testo digitato e un centro mappa arrotondato e, come ogni server, il tuo indirizzo IP. I link a MapComplete, StreetComplete o openstreetmap.org portano ai loro siti, dove modifichi con il tuo account OSM. Aspetti formali: <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (in tedesco).</p>
-
-<p class="muted">Fonti: campione Overpass su 8 centri urbani (9.674 bagni) del
-26&nbsp;luglio&nbsp;2026 e le statistiche taginfo sulle chiavi alla data indicata sopra. I numeri
-locali vengono dalla stessa query notturna che costruisce la mappa.</p>
 
 <h2 id="how-made">Come nasce questo sito</h2>
 <p>Per programmare e per scrivere i testi mi faccio aiutare dall'IA. Ma poi tutto lo ricontrollo

@@ -131,7 +131,6 @@ helst þannig.</p>
   <li><a href="#mum-mode">Rofinn: pabbi eða mamma</a></li>
   <li><a href="#play-area">Blái hringurinn: leiksvæði</a></li>
   <li><a href="#wheelchair">Flísin Hjólastóll</a></li>
-  <li><a href="#empty-rings">Auðu bláu hringirnir: staðir til að leika, ósvarað</a></li>
   <li><a href="#high-chair">Flísin Barnastóll</a></li>
   <li><a href="#grey-pin">Hvernig á að laga gráan punkt</a></li>
   <li><a href="#contribute">Hvernig á að bæta við stað sem vantar</a></li>
@@ -143,8 +142,7 @@ helst þannig.</p>
 </ul></nav>
 
 <h2 id="what">Hvað þetta kort er. Og hvað það er ekki.</h2>
-<p>PapaMap sýnir staði í 44 Evrópulöndum — frá Íslandi til Kýpur, frá Portúgal til Úkraínu, auk Ástralíu, Nýja-Sjálands, Bandaríkjanna, Kanada og Japans — þar
-sem OpenStreetMap veit um skiptiborð (<code>changing_table=yes</code> eða <code>limited</code>). Að auki staðir með leiksvæði, teiknaðir sem blár hringur, með eða án skiptiborðs.
+<p>PapaMap sýnir staði í Evrópu, Ástralíu, Nýja-Sjálandi, Bandaríkjunum, Kanada og Japan, þar sem OpenStreetMap veit um skiptiborð (<code>changing_table=yes</code> eða <code>limited</code>). Að auki staðir með leiksvæði, teiknaðir sem blár hringur, með eða án skiptiborðs.
 Liturinn segir til um hvort pabbi kemst að borðinu. Kortið les úr OSM. Svör fara beint inn í OSM undir þínum eigin OSM-reikningi — af kortinu sjálfu eða í gegnum tenglana við hvern punkt; PapaMap geymir ekkert.
 Gögnin eru löguð á OSM sjálfu, í gegnum tenglana við hvern punkt.</p>
 <p>Hugmyndin kviknaði við lestur bókarinnar <a href="https://en.wikipedia.org/wiki/Invisible_Women:_Exposing_Data_Bias_in_a_World_Designed_for_Men"><em>Invisible Women</em></a> eftir Caroline Criado Perez.</p>
@@ -166,7 +164,7 @@ inniheldur <code>male</code>.</p>
   <li><span class="dot r"></span><strong>Rautt:</strong> annars, ef eitt táknið er
       <code>female_toilet</code>. Borðið er til, en aðeins á kvennasalerni.</li>
   <li><span class="dot u"></span><strong>Grátt:</strong> allt annað. Engin staðsetningarmerking,
-      eða bara laus texti. Enginn hefur skráð rýmið. Gráu punktarnir eru verkefnið.</li>
+      eða bara laus texti. Enginn hefur skráð rýmið.</li>
 </ul>
 <p>Fyrirbæri með <code>centralkey</code>-merkingu (annarri en <code>no</code>) er haldið utan kortsins þegar lykillinn læsir allri hurðinni: <code>access=centralkey</code>, borð á salerni fyrir fatlaða, eða ekkert í merkingunum segir að lykillinn gildi aðeins um einn klefa. Aðstaða með opnum karla- og kvennasalernum og læstum klefa fyrir fatlaða (<code>wheelchair:access=centralkey</code>, eða <code>male=yes</code> og <code>female=yes</code>) er áfram á kortinu, grá þar til einhver skráir rýmið. Evrulykillinn fæst aðeins gegn vottorði um fötlun, svo flestir pabbar komast ekki í gegnum þær dyr. Undir flísinni <em>Hjólastóll</em> koma þessi borð aftur, sjá neðar.</p>
 
@@ -194,59 +192,22 @@ mömmu-stillingu eru þau rauð og teljast ekki með í tölunni hér að ofan. 
 forritsins kunna enn að sýna þau græn, þar til þær eru uppfærðar.</p>
 
 <h2 id="play-area">Blái hringurinn: leiksvæði</h2>
-<p>Punktur með bláum hring er líka með leiksvæði &mdash; stað þar sem þú skiptir ekki bara á
-barninu, heldur staldrar við. Flipinn <em>Með leiksvæði</em> takmarkar kortið við þá staði. Staður
-telst með ef OSM skráir eitthvað af þessu:</p>
+<p>Punktur með bláum hring er líka með leiksvæði. Flísin <em>Með leiksvæði</em> sýnir bara þá. Staður telst með ef eitt af þessum merkjum er í OSM:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> eða <code>designated</code>
-      &mdash; leiðin sem wiki-síðan skjalfestir til að tákna innandyra.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> eða
-      <code>designated</code> &mdash; leikhornið á kaffihúsi, veitingastað eða bakaríi. Mest
-      notaða merkingin, þó hún taki ekki afstöðu til þess hvort er innandyra eða utan.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; leikland innandyra,
-      rekið í atvinnuskyni.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> ásamt <code>indoor=yes</code>
-      &mdash; sama fyrirbæri, merkt á hinn veginn.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> eða <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> eða <code>designated</code> (algengasta merkið, það segir ekki hvort það er inni eða úti)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> ásamt <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> telur ekki: sandkassi í bjórgarði er ekki það sem hringurinn lofar. Það
-gera <code>no</code> og <code>limited</code> ekki heldur — wiki-síðan skilgreinir það síðarnefnda
-sem „leikföng eru til staðar, en ekkert afmarkað svæði". Þar sem <code>kids_area:indoor=no</code>
-er sett skýrt fram gildir það umfram bert <code>kids_area=yes</code>.</p>
-<p>Þetta er merki, ekki fjórða staðan. Staður án þessara merkinga er ekki þar með sagður „hafa
-ekkert leiksvæði" — OSM segir einfaldlega ekkert um það. Þess vegna er hér ekkert grátt.</p>
-<p>Þess vegna spyr sprettigluggi um það. Á hverjum punkti þar sem OSM segir ekkert um leiksvæði,
-sama hvaða lit hann hefur, er ein lína (undir herbergjunum, þar sem punkturinn spyr líka um
-herbergið): <em>Leiksvæði fyrir börn?</em>, með þremur svörum. <em>inni</em> skrifar
-<code>kids_area:indoor=yes</code> ásamt <code>kids_area=yes</code>, <em>aðeins úti</em> skrifar
-<code>kids_area=yes</code> ásamt <code>kids_area:indoor=no</code>, <em>ekkert</em> skrifar
-<code>kids_area=no</code> &mdash; undir þínum eigin OSM-aðgangi, í sérstökum changeset,
-nákvæmlega sömu merkingar og MapComplete skrifar fyrir sömu spurningu. Spurningin snýst um
-leiksvæði almennt, ekki bara innandyra: <code>kids_area=no</code> þýðir í OSM „hér er hvergi hægt
-fyrir börn að leika sér“, svo bakarí með leikvelli í garðinum fær <em>aðeins úti</em> í stað
-rangs nei. Hringurinn birtist (eða heldur áfram að vanta) nokkrum mínútum síðar. Enginn er
-spurður tvisvar: skráð <code>kids_area</code> <em>eða</em> <code>kids_area:indoor</code>, sama
-hvert gildið er, fjarlægir spurninguna. Á <code>leisure=playground</code> án
-<code>indoor=yes</code> er aldrei spurt &mdash; staðurinn <em>er</em> nú þegar staður til að leika
-sér, bara ekki innandyra.</p>
+<p><code>outdoor</code>, <code>no</code> og <code>limited</code> telja ekki. Skýrt <code>kids_area:indoor=no</code> vinnur gegn beru <code>kids_area=yes</code>.</p>
+<p>Hringurinn er merki, ekki fjórði liturinn. Staður án þessara merkja er ekki „án leiksvæðis“, OSM segir einfaldlega ekkert um það, og það gildir um næstum alla staði. Þess vegna er ekkert grátt hér.</p>
+<p>Einmitt þess vegna spyr sprettglugginn: Við hvern punkt þar sem OSM segir ekkert um leiksvæði, sama hvaða lit hann hefur, er ein lína (undir rýmunum, ef punkturinn spyr líka um rýmið): <em>Leiksvæði fyrir börn?</em> með þremur svörum. <em>inni</em> skrifar <code>kids_area:indoor=yes</code> ásamt <code>kids_area=yes</code>, <em>aðeins úti</em> skrifar <code>kids_area=yes</code> ásamt <code>kids_area:indoor=no</code>, <em>ekkert</em> skrifar <code>kids_area=no</code> — undir þínum eigin OSM-aðgangi, í sér breytingasetti, nákvæmlega þau merki sem MapComplete skrifar fyrir sömu spurningu. Spurningin snýst um leikaðstöðu yfirleitt, ekki bara inni: <code>kids_area=no</code> þýðir í OSM „hér geta börn hvergi leikið sér“, og bakarí með leikvöll í garðinum fær því <em>aðeins úti</em> frekar en rangt nei. Hringurinn birtist (eða ekki) nokkrum mínútum síðar. Sá sem hefur þegar svarað er ekki spurður aftur: skráð <code>kids_area</code> <em>eða</em> <code>kids_area:indoor</code>, hvert sem gildið er, fjarlægir spurninguna. Á <code>leisure=playground</code> án <code>indoor=yes</code> er hún aldrei spurð: Staðurinn <em>er</em> staður til að leika á, bara úti.</p>
+<p>Reglan á við um mun fleiri staði en hafa punkt. Aðeins <span data-stat="play_tables">111</span> þeirra eru með punkt. Hjá <span data-stat="play_places">701</span> til viðbótar hefur enginn svarað fyrstu spurningunni: Er skiptiborð hér? Kortið getur ekki litað þá, svo þeir fá tóman bláan hring og eigin flís, <em>Aðeins leiksvæði</em>, sem er sjálfgefið kveikt á. Sá sem fer þangað hvort sem er með barn veit svarið. Smellur á hringinn opnar MapComplete einmitt á þessari spurningu.</p>
+<p><em>Brotinn</em> hringur þýðir: leiksvæði já, skiptiborð nei (<code>changing_table=no</code>). Það er ekki punktur og ekki heldur rautt, því rautt segði að það sé borð, bara ekki fyrir pabba. Hér er ekkert, fyrir engan. Staðurinn er samt á kortinu, því með barn fer maður þangað gjarnan líka án borðs.</p>
 
 <h2 id="wheelchair">Flísin Hjólastóll</h2>
 <p>Flísin <em>Hjólastóll</em> sýnir staði með <code>wheelchair=yes</code> eða <code>wheelchair=limited</code> í OSM. <code>limited</code> þýðir eitt þrep allt að 7&nbsp;cm, eða aðstoð þarf. Þegar flísin er á hafa þessir staðir upphrópunarmerki frá aðdrætti 13, og sprettiglugginn segir <em>takmarkað</em>. <code>toilets:wheelchair=yes</code> eitt sér dugar ekki, en birtist samt í sprettiglugganum ásamt <code>wheelchair:description</code>. Staður án merkisins er ekki óaðgengilegur, OSM segir bara ekkert, svo flísin síar aðeins og litar ekkert. Flísin síar og merkir bláu hringina (staði með leikhorni) á sama hátt.</p>
 <p>Undir þessari flís, og aðeins þar, koma borðin bak við evrulykil aftur, með lykli í nálinni: sá sem þarf flísina hefur oftast lykilinn. Á venjulega kortinu, í tölunum og á stigatöflunni eru þau áfram utan.</p>
-
-<h2 id="empty-rings">Auðu bláu hringirnir: staðir til að leika, ósvarað</h2>
-<p>Sama reglan á við um miklu fleiri staði en kortið hefur punkta fyrir. Aðeins
-<span data-stat="play_tables">111</span> þeirra hafa punkt á kortinu. Hjá <span data-stat="play_places">701</span> til viðbótar hefur enginn svarað fyrstu
-spurningunni: er skiptiborð hér? Já, nei, enginn veit — OSM segir nákvæmlega ekkert.</p>
-<p>Kortið getur ekki litað þessa <span data-stat="play_places">701</span> staði, því það er ekkert
-til að lita. Þeir eru heldur ekki gráir: grátt þýðir „borðið er til, rýmið vantar", og það á ekki
-við hér. Þess vegna fá þeir sinn eigin flipa, <em>Aðeins leiksvæði</em>, virkan sjálfgefið, og
-auðan bláan hring í stað fyllts punkts.</p>
-<p><em>Strikaður</em> hringur þýðir: leiksvæði já, skiptiborð nei (<code>changing_table=no</code>). Það er ekki punktur og ekki heldur rauður, því rautt myndi þýða að skiptiborð sé til, bara ekki fyrir pabba. Hér er ekkert, fyrir neinn. Staðurinn er samt á kortinu, því með barn fer maður gjarnan þangað líka án skiptiborðs.</p>
-<p>Þeir eru vænlegustu opnu spurningarnar á öllu kortinu. Leikland innandyra, kaffihús með
-kúlulaug, veitingastaður með leikherbergi — pabbi með smábarn er hvort eð er að fara þangað, og um
-leið og hann er kominn þangað veit hann svarið. Að smella á hring opnar MapComplete með
-nákvæmlega þeirri einu spurningu. Svaraðu henni og hringurinn hverfur innan fárra mínútna,
-punktur kemur í staðinn.</p>
 
 <h2 id="high-chair">Flísin Barnastóll</h2>
 <p>Flísin <em>Barnastóll</em> sýnir staði þar sem OSM skráir barnastól: <code>highchair=yes</code> eða tölu yfir 0. <code>highchair=no</code> eða <code>0</code> er skráð „nei“. Staður án merkisins er ekki staður án barnastóls, OSM segir bara ekkert, svo flísin sleppir honum án þess að fullyrða neitt. Gildi sem kortið getur ekki lesið, eins og <code>ja</code> eða <code>1+</code>, telst ekki heldur með, og sprettiglugginn sýnir enga línu fyrir það. Flísin síar punkta og bláa hringi og litar ekkert.</p>
@@ -258,8 +219,7 @@ svarað því, á staðnum, á innan við mínútu:</p>
 <ul>
   <li><strong>Í appinu (fljótlegast):</strong> ýttu á gráa punktinn. Sprettiglugginn spyr <em>Í hvaða rými er skiptiborðið?</em> Ýttu á <em>Kvenna og karla</em>, <em>Karlasalerni</em>, <em>Kvennasalerni</em>, <em>Sameiginlegt salerni</em>, <em>Aðgengilegt salerni</em> eða <em>Sérherbergi</em>. Önnur rými eru undir <em>Fleiri rými …</em>. Í sýninni <em>Mamma</em> vantar <em>Karlasalerni</em> og <em>Kvenna og karla</em>, því mamma getur ekki ábyrgst karlasalernið. Þú skráir þig inn einu sinni með OSM, svarið vistast undir þínum eigin aðgangi og punkturinn uppfærist innan fárra mínútna. Ef þú ýtir á staðsetningarhnappinn innan 75&nbsp;m frá gráum punkti spyr kort hvort þú sért þar núna; <em>Svara spurningunni</em> opnar sama glugga.</li>
   <li><strong>MapComplete (hvaða síma sem er, í vafranum):</strong> „Svara á MapComplete" á gráum
-      punkti opnar sama fyrirbæri í eigin MapComplete-þema PapaMap &mdash; sama þema á hverjum
-      punkti, svo breytingarnar séu auðþekkjanlegar sem héðan komnar. MapComplete varar einu sinni
+      punkti opnar sama fyrirbæri í eigin MapComplete-þema PapaMap. MapComplete varar einu sinni
       við óopinberu þema, það er í lagi.
       Skráðu þig inn með OSM-aðgangnum þínum og svaraðu spurningunum um skiptiborðið, þar á meðal
       þeirri um rýmið. Svarið fer beint inn í OpenStreetMap og birtist hér innan fárra
@@ -269,8 +229,7 @@ svarað því, á staðnum, á innan við mínútu:</p>
       við. Það spyr aðeins já/nei. Fyrir spurninguna um rýmið á gráum punkti sem þegar er til,
       notaðu MapComplete.</li>
 </ul>
-<p class="muted">Breytingarnar fara fram undir þínum eigin OSM-aðgangi og tilheyra öllum. Þær lifa
-þessa vefsíðu af og gagnast öllum forritum sem lesa OpenStreetMap.</p>
+<p class="muted">Breytingarnar fara fram undir OSM-aðganginum þínum og gagnast hverju forriti sem les OpenStreetMap, ekki bara þessu.</p>
 
 <h2 id="contribute">Hvernig á að bæta við stað sem vantar</h2>
 <p>PapaMap geymir ekkert sjálft. Að bæta við stað þýðir því alltaf: að breyta OpenStreetMap.
@@ -321,11 +280,7 @@ sem ætti að vera. Ef þú veist ekki rýmið er <code>changing_table=yes</code
 gagnlegt: staðurinn verður að gráum punkti, og næsti pabbi svarar spurningunni um rýmið.</p>
 
 <h2 id="no-ranking">Af hverju stigatafla um framboð gengur ekki upp úr OSM</h2>
-<p>Augljósa, stærra verkefnið væri hlutfall karla- og kvennasalerna eftir borgum. Talan sem rökin
-um „salernisjafnrétti" (potty parity) snúast raunverulega um. Það er ekki hægt að reikna út frá
-OpenStreetMap. Við könnuðum það áður en smíðin hófst, með úrtaki úr átta borgarkjörnum (Berlín,
-Lundúnir, París, New York, Tókýó&nbsp;23&nbsp;hverfi, Amsterdam, Vín, Melbourne;
-26.&nbsp;júl.&nbsp;2026):</p>
+<p>Augljósa stærra verkefnið væri hlutfall karla- og kvennasalerna í hverri borg, talan sem „potty parity“-umræðan snýst um. Ég athugaði áður en ég smíðaði hvort OSM geti gefið þá tölu. Það getur það ekki. Úrtak úr átta miðborgum frá 26.&nbsp;júlí&nbsp;2026:</p>
 <table>
   <tr><th>Borg</th><th>Skráð salerni</th><th>Einhver kynjamerking</th><th>Bæði KK&nbsp;+&nbsp;KVK</th></tr>
   <tr><td>Berlín</td><td>1.173</td><td>660</td><td>119</td></tr>
@@ -338,41 +293,11 @@ Lundúnir, París, New York, Tókýó&nbsp;23&nbsp;hverfi, Amsterdam, Vín, Melb
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Samtals</strong></td><td><strong>9.674</strong></td><td><strong>2.888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Aðeins 29,9% skráðra salerna eru með einhverja kynjamerkingu. Bæði (karla og kvenna):
-      8,5%.</li>
-  <li>Merkingarnar eru einfaldir já/nei-rofar, aldrei tölur. Fjöldi klefa eftir kyni: núll í öllum
-      átta borgunum. Eini afkastalykillinn, <code>toilets:num_chambers</code> (~27 þús.
-      notkanir), er ókyngreindur og kemur nánast eingöngu frá gömlum innflutningi gagna. Afbrigði
-      hans <code>:female</code> / <code>:male</code> hafa 2 notkanir hvort á heimsvísu.</li>
-  <li>Hamborg, könnuð sama dag: 443 skráð salerni, ekkert með
-      <code>toilets:num_chambers*</code>-merkingu. Talnastikan á <a href="./?lang=is">forsíðunni</a> reiknar þessar tölur upp á nýtt einu sinni í
-      viku fyrir hvert svæði; kortið sjálft á hverri nóttu.</li>
-  <li>Og: hlutfall merkinga mælir kortagerðarsamfélagið, ekki borgirnar. Salerni fyrir einn
-      notanda eiga réttilega að vera ókyngreind. Röðun borga myndi gefa OSM-þátttakendum einkunn,
-      ekki salernisjafnrétti.</li>
-</ul>
-<p>Þess vegna er eina heiðarlega staðhæfingin þessi: framboðið sjálft er ekki hægt að mæla út frá
-opnum gögnum í dag. Þessi vefsíða mælir það sem er mælanlegt og breytir eyðunum í framlög.</p>
+<p>Aðeins 29,9% skráðra salerna hafa yfirleitt kynjamerki, 8,5% hafa bæði. Merkin eru já/nei-upplýsingar, ekki talningar, og fjöldi klefa eftir kyni er ekki til í neinni borganna átta. Og merkingarhlutfall mælir samfélag kortagerðarfólks, ekki borgina. Röðun myndi gefa framlagshöfum OSM einkunn, ekki salernum. Þess vegna heldur síðan sig við það sem hægt er að mæla.</p>
 
 <h2 id="where-tables">Eina útreiknanlega staðreyndin: hvar borðin eru</h2>
-<p><code>changing_table:location</code> er, eftir því sem við best vitum, eina opna
-orðaforðakerfið sem skráir í hvaða rými skiptiborð er. Það er af skornum skammti:
-<span data-stat="location_total">3.659</span> af <span data-stat="ct_total">77.000</span>
-<code>changing_table</code>-fyrirbærum á heimsvísu, <span data-stat="share">4,8%</span>. En þar
-sem það er til staðar, er það mjög skekkt (taginfo, <span data-stat="date">26.&nbsp;júlí&nbsp;2026</span>):</p>
-<ul>
-  <li>Borð aðeins á kvennasalerni: <strong data-stat="female_only">485</strong>.</li>
-  <li>Borð aðeins á karlasalerni: <strong data-stat="male_only">71</strong>. Um það bil
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> eru merkt
-      í báðum rýmum, <span data-stat="male_any">410</span> skrá eitthvert borð á karlasalerni
-      yfirhöfuð. Á heimsvísu.</li>
-</ul>
-<p>Úrtakið er lítið, og kortagerðarfólk velur sjálft hverju það skráir. Því skal ekki lesa of
-mikið út úr nákvæmu hlutfalli. Stefnan er í samræmi við það sem lengi hefur verið skjalfest annars
-staðar: skiptiborð hanga sjálfgefið á kvennasalerni. Það lokar pabba úti, og gerir hljóðlega ráð
-fyrir hver beri ábyrgð á bleyjuskiptum. Þetta kort gerir vantandi gögn sýnileg. Og auðveld í
-lagfæringu.</p>
+<p><code>changing_table:location</code> er eini opni orðaforðinn sem ég þekki sem skráir í hvaða rými skiptiborð er. Hann er sjaldgæfur: <span data-stat="location_total">3.659</span> af <span data-stat="ct_total">77.000</span> <code>changing_table</code>-hlutum um allan heim, <span data-stat="share">4,8%</span>. Þar sem hann er til er hann skakkur (taginfo, <span data-stat="date">26.&nbsp;júlí&nbsp;2026</span>): <strong data-stat="female_only">485</strong> borð aðeins á kvennasalerni, <strong data-stat="male_only">71</strong> aðeins á karlasalerni, um það bil <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> eru í báðum rýmum.</p>
+<p>Úrtakið er lítið og kortagerðarfólk ræður hvað það skráir, svo ekki lesa of mikið í nákvæmt hlutfall. Stefnan er sú sama og alls staðar: skiptiborð hanga sjálfgefið á kvennasalerni. Þetta kort sýnir hvar gögn vantar, og hver grár punktur er með breytingarhnapp.</p>
 
 <h2 id="licence">Notkunarleyfi gagna og heimildir</h2>
 <p>Öll kortagögn &copy; <a href="https://www.openstreetmap.org/copyright">framlagsaðilar
@@ -383,18 +308,8 @@ Alheimstölfræði um merkingar kemur frá <a href="https://taginfo.openstreetma
 Eigin kóði vefsíðunnar er MIT-leyfður.</p>
 
 <h2 id="privacy">Persónuvernd</h2>
-<p>Kyrrstæð vefsíða. Engir aðgangar, engar vefkökur, engin greiningartól, engin rakningarforrit.
-Vefsíðan geymir ekkert um þig og er ekki með gagnagrunn. Kortaflísarnar koma frá flísaþjónum
-OpenStreetMap; þær beiðnir falla undir
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">persónuverndarstefnu OSMF</a>. Ýtirðu á <em>Svara á MapComplete</em> í punkti spyr síðan auk þess api.openstreetmap.org nokkrum sinnum næstu mínúturnar hvað þetta eina fyrirbæri segir núna — sama stefna gildir um þær fyrirspurnir. Frá þriðja staf sem þú slærð inn í leitarreitinn, og í hvert sinn sem þú opnar <em>Bæta við stað</em>, spyr síðan líka staðaleit komoot, Photon (photon.komoot.io). Hún fær textann sem þú slóst inn og námundaða miðju kortsins og, eins og hver netþjónn, IP-töluna þína. Ef þú
-fylgir tengli á MapComplete, StreetComplete eða openstreetmap.org ertu kominn á þeirra vefsíður og
-breytir undir þínum eigin OSM-aðgangi. Ekkert fer í gegnum okkur. Formlegar síður:
-<a href="impressum.html">Impressum</a> ·
+<p>Kyrrstæð vefsíða. Hún setur engar vafrakökur og er ekki með neina greiningu. Kortaflísarnar koma frá flísaþjónum OpenStreetMap; þær beiðnir falla undir <a href="https://osmfoundation.org/wiki/Privacy_Policy">persónuverndarstefnu OSMF</a>. Ef þú ýtir á <em>Svara á MapComplete</em> í punkti spyr síðan næstu mínúturnar líka nokkrum sinnum api.openstreetmap.org hvað þessi eini hlutur segir núna — þær beiðnir falla undir sömu stefnu. Frá þriðja staf í leitarreitnum, og í hvert skipti sem þú opnar <em>Bæta við stað</em>, spyr síðan auk þess staðaleit komoot, Photon (photon.komoot.io). Hún fær textann sem þú skrifaðir og námundaða miðju kortsins og, eins og hver þjónn, IP-tölu þína. Tenglar á MapComplete, StreetComplete eða openstreetmap.org leiða á vefsíður þeirra, þar sem þú breytir undir þínum eigin OSM-aðgangi. Formlegt: <a href="impressum.html">Impressum</a> ·
 <a href="datenschutz.html">Datenschutzerklärung</a> (á þýsku).</p>
-
-<p class="muted">Heimildir: Overpass-úrtak úr 8 borgarkjörnum (9.674 salerni) frá
-26.&nbsp;júl.&nbsp;2026, og lykiltölfræði taginfo miðað við dagsetninguna hér að ofan. Staðbundnu
-tölurnar koma úr sömu næturfyrirspurn og byggir kortið.</p>
 
 <h2 id="how-made">Hvernig þessi vefsíða er gerð</h2>
 <p>Ég nota vissulega gervigreind til að hjálpa mér við forritun og textagerð. Allt fer þó í gegnum
