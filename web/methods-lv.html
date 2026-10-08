@@ -131,7 +131,6 @@ nemainīga.</p>
   <li><a href="#mum-mode">Tēta-mammas slēdzis</a></li>
   <li><a href="#play-area">Zilais gredzens: rotaļu stūrītis</a></li>
   <li><a href="#wheelchair">Čips Ratiņkrēsls</a></li>
-  <li><a href="#empty-rings">Tukšie zilie gredzeni: rotaļas vietas bez atbildes</a></li>
   <li><a href="#high-chair">Čips Bērnu krēsliņš</a></li>
   <li><a href="#grey-pin">Kā izlabot pelēku atzīmi</a></li>
   <li><a href="#contribute">Kā pievienot trūkstošu vietu</a></li>
@@ -143,8 +142,7 @@ nemainīga.</p>
 </ul></nav>
 
 <h2 id="what">Kas šī karte ir. Un kas tā nav.</h2>
-<p>PapaMap rāda vietas 44 Eiropas valstīs — no Islandes līdz Kiprai, no Portugāles līdz Ukrainai, kā arī Austrālija, Jaunzēlande, ASV, Kanāda un Japāna —
-kur OpenStreetMap
+<p>PapaMap rāda vietas Eiropā, Austrālijā, Jaunzēlandē, ASV, Kanādā un Japānā, kur OpenStreetMap
 zina par pārtinamo
 galdiņu (<code>changing_table=yes</code> vai <code>limited</code>). Papildus vietas ar rotaļu stūrīti, zīmētas kā zils gredzens, ar pārtinamo galdiņu vai bez tā. Krāsa parāda, vai tētis var
 galdiņam piekļūt. Karte lasa OSM. Atbildes nonāk tieši OSM ar tavu paša OSM kontu — no pašas kartes vai caur saitēm pie katras atzīmes; PapaMap neko neglabā. Datu labošana
@@ -168,8 +166,7 @@ jo <code>female_toilet</code> satur <code>male</code>.</p>
   <li><span class="dot r"></span><strong>Sarkans:</strong> citādi, ja viena no daļām ir
       <code>female_toilet</code>. Galdiņš eksistē, bet tikai sieviešu telpā.</li>
   <li><span class="dot u"></span><strong>Pelēks:</strong> viss pārējais. Nav atrašanās vietas birkas,
-      vai ir tikai brīvs teksts. Neviens nav atzīmējis telpu. Pelēkās atzīmes ir šis darāmais
-      darbs.</li>
+      vai ir tikai brīvs teksts. Neviens nav atzīmējis telpu.</li>
 </ul>
 <p>Objekts ar <code>centralkey</code> birku (izņemot <code>no</code>) paliek ārpus kartes, kad atslēga slēdz visas durvis: <code>access=centralkey</code>, galdiņš invalīdu tualetē, vai nekas birkās nesaka, ka atslēga attiecas tikai uz vienu kabīni. Komplekss ar atvērtām vīriešu un sieviešu tualetēm un aizslēgtu pieejamo kabīni (<code>wheelchair:access=centralkey</code>, vai <code>male=yes</code> un <code>female=yes</code>) paliek kartē, pelēks, līdz kāds ieraksta telpu. Eiroatslēgu izsniedz tikai pret invaliditātes apliecinājumu, tāpēc lielākā daļa tēvu pa tām durvīm netiek. Zem čipa <em>Ratiņkrēsls</em> šie galdi atgriežas, skat. zemāk.</p>
 
@@ -197,60 +194,22 @@ atsevišķi, tāpēc mammas režīmā tie ir sarkani un netiek ieskaitīti skait
 lietotnes versijas var joprojām tos rādīt zaļus, kamēr tās nav atjauninātas.</p>
 
 <h2 id="play-area">Zilais gredzens: rotaļu stūrītis</h2>
-<p>Atzīmei ar zilu gredzenu papildus ir arī rotaļu stūrītis &mdash; vieta, kur bērnu ne tikai
-pārtin, bet kur var arī kādu brīdi palikt. Filtrs <em>Ar rotaļu stūrīti</em> sašaurina karti tikai
-līdz tām. Vieta tiek ieskaitīta, ja OSM ir atzīmēts kaut kas no šī:</p>
+<p>Atzīmei ar zilu gredzenu ir arī rotaļu stūrītis. Čips <em>Ar rotaļu stūrīti</em> rāda tikai tās. Vieta tiek ieskaitīta, ja OSM ir kāda no šīm birkām:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> vai <code>designated</code>
-      &mdash; wiki dokumentētais veids, kā apzīmēt iekštelpas.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> vai
-      <code>designated</code> &mdash; rotaļu stūrītis kafejnīcā, restorānā, maiznīcā. Visbiežāk
-      lietotā birka, kaut arī tā neprecizē, vai tas ir iekštelpās, vai ārā.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; komerciāls iekštelpu
-      rotaļu laukums.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> kopā ar
-      <code>indoor=yes</code> &mdash; tas pats, tikai otrādi atzīmēts.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> vai <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> vai <code>designated</code> (visbiežākā birka, tā nesaka, vai iekštelpās vai ārā)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> kopā ar <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> neskaitās: alus dārza smilšu kaste nav tas, ko gredzens sola. Neskaitās arī
-<code>no</code>, ne <code>limited</code> — wiki to definē kā &bdquo;rotaļlietas ir pieejamas, bet
-nav īpaši norādītas vietas&ldquo;. Ja skaidri norādīts <code>kids_area:indoor=no</code>, tas ir
-svarīgāks par vienkāršu <code>kids_area=yes</code>.</p>
-<p>Šis ir nozīmīte, nevis ceturtais statuss. Vietai bez šīm birkām nav &bdquo;nekāda rotaļu
-stūrīša&ldquo; &mdash; OSM par to vienkārši neko nesaka. Tāpēc šeit nav pelēkas krāsas.</p>
-<p>Tieši tāpēc uznirstošais logs to jautā. Katrā atzīmē, kur OSM neko nesaka par rotaļu stūrīti,
-neatkarīgi no tās krāsas, ir viena rinda (zem telpām, tur, kur atzīme jautā arī par telpu):
-<em>Rotaļu stūrītis bērniem?</em>, ar trim atbildēm. <em>iekštelpās</em> pieraksta
-<code>kids_area:indoor=yes</code> kopā ar <code>kids_area=yes</code>, <em>tikai ārā</em>
-pieraksta <code>kids_area=yes</code> kopā ar <code>kids_area:indoor=no</code>, <em>nav</em>
-pieraksta <code>kids_area=no</code> &mdash; ar tavu paša OSM kontu, atsevišķā changeset, tieši
-tās pašas birkas, ko tam pašam jautājumam pieraksta MapComplete. Jautājums ir par rotaļu stūrīti
-vispār, ne tikai iekštelpu: <code>kids_area=no</code> OSM nozīmē &bdquo;šeit bērniem nekur nav
-kur spēlēties&ldquo;, tāpēc maiznīca ar rotaļu laukumu dārzā saņem <em>tikai ārā</em> nevis
-kļūdainu nē. Gredzens parādīsies (vai paliks bez tā) dažas minūtes vēlāk. Nevienam nejautā
-divreiz: reģistrēts <code>kids_area</code> <em>vai</em> <code>kids_area:indoor</code>,
-neatkarīgi no vērtības, noņem jautājumu. <code>leisure=playground</code> bez
-<code>indoor=yes</code> to nekad nejautā &mdash; vieta <em>jau ir</em> vieta, kur spēlēties, tikai
-ne iekštelpās.</p>
+<p><code>outdoor</code>, <code>no</code> un <code>limited</code> netiek ieskaitīti. Skaidrs <code>kids_area:indoor=no</code> uzvar kailu <code>kids_area=yes</code>.</p>
+<p>Gredzens ir nozīmīte, nevis ceturtā krāsa. Vietai bez šīm birkām nav „nav rotaļu stūrīša“, OSM par to vienkārši neko nesaka, un tas attiecas uz gandrīz visām vietām. Tāpēc šeit nav pelēkā.</p>
+<p>Tieši tāpēc uznirstošais logs jautā: pie katras atzīmes, par kuru OSM neko nesaka par rotaļu stūrīti, neatkarīgi no krāsas, ir viena rindiņa (zem telpām, ja atzīme jautā arī par telpu): <em>Rotaļu stūrītis bērniem?</em> ar trim atbildēm. <em>iekštelpās</em> ieraksta <code>kids_area:indoor=yes</code> kopā ar <code>kids_area=yes</code>, <em>tikai ārā</em> ieraksta <code>kids_area=yes</code> kopā ar <code>kids_area:indoor=no</code>, <em>nav</em> ieraksta <code>kids_area=no</code> — ar tavu paša OSM kontu, atsevišķā changeset, tieši tās birkas, ko MapComplete raksta tam pašam jautājumam. Jautājums attiecas uz jebkuru rotaļu iespēju, ne tikai iekštelpās: <code>kids_area=no</code> OSM nozīmē „bērni šeit nekur nevar rotaļāties“, tāpēc maiznīca ar rotaļu laukumu dārzā saņem <em>tikai ārā</em>, nevis nepatiesu nulli. Gredzens parādās (vai nē) pēc dažām minūtēm. Kas jau atbildējis, tam jautājumu vairs neuzdod: ierakstīts <code>kids_area</code> <em>vai</em> <code>kids_area:indoor</code>, lai kāda būtu vērtība, jautājumu noņem. Pie <code>leisure=playground</code> bez <code>indoor=yes</code> to neuzdod vispār: vieta <em>ir</em> vieta, kur rotaļāties, tikai ārā.</p>
+<p>Noteikums der daudz vairāk vietām, nekā ir atzīmju. Tikai <span data-stat="play_tables">111</span> no tām ir atzīme. Pie vēl <span data-stat="play_places">701</span> neviens nav atbildējis uz pirmo jautājumu: vai šeit ir pārtinamais galdiņš? Tās karte nevar iekrāsot, tāpēc tās saņem tukšu zilu gredzenu un savu čipu, <em>Tikai rotaļu stūrītis</em>, pēc noklusējuma ieslēgtu. Kas tur tāpat dodas ar bērnu, atbildi zina. Klikšķis uz gredzena atver MapComplete tieši pie šī jautājuma.</p>
+<p><em>Raustīts</em> gredzens nozīmē: rotaļu stūrītis ir, pārtinamā galdiņa nav (<code>changing_table=no</code>). Tā nav atzīme un arī nav sarkana, jo sarkanais nozīmētu, ka galdiņš ir, tikai ne tētim. Šeit tā nav nevienam. Vieta tomēr ir kartē, jo ar bērnu uz turieni labprāt dodas arī bez galdiņa.</p>
 
 <h2 id="wheelchair">Čips Ratiņkrēsls</h2>
 <p>Čips <em>Ratiņkrēsls</em> rāda vietas, kurām OSM ir <code>wheelchair=yes</code> vai <code>wheelchair=limited</code>. <code>limited</code> nozīmē vienu pakāpienu līdz 7&nbsp;cm vai nepieciešamu palīdzību. Ar ieslēgtu čipu šīm vietām no tālummaiņas 13 ir izsaukuma zīme, un uznirstošajā logā rakstīts <em>ierobežoti</em>. Vien <code>toilets:wheelchair=yes</code> nepietiek, bet tas tomēr parādās uznirstošajā logā kopā ar <code>wheelchair:description</code>. Vieta bez birkas nav nepieejama, OSM par to vienkārši neko nesaka, tāpēc čips tikai filtrē un neko nekrāso. Zilos apļus (vietas ar rotaļu stūrīti) čips filtrē un atzīmē tāpat.</p>
 <p>Zem šī čipa, un tikai tur, atgriežas galdi aiz eiroatslēgas, ar atslēgu spraudītē: kam čips vajadzīgs, tam parasti ir atslēga. Parastajā kartē, skaitļos un reitingā tie paliek ārpusē.</p>
-
-<h2 id="empty-rings">Tukšie zilie gredzeni: rotaļas vietas bez atbildes</h2>
-<p>Tas pats noteikums attiecas uz daudz vairāk vietām, nekā kartē ir atzīmju. Tikai
-<span data-stat="play_tables">111</span> no tām ir atzīme.
-Vēl <span data-stat="play_places">701</span> vietās neviens nav atbildējis uz pirmo jautājumu: vai
-šeit ir pārtinamais galdiņš? Jā, nē, neviens nezina — OSM par to nesaka pilnīgi neko.</p>
-<p>Šīs <span data-stat="play_places">701</span> vietas karte nevar iekrāsot, jo nav ko krāsot. Tās
-nav arī pelēkas: pelēks nozīmē &bdquo;galdiņš eksistē, trūkst telpas&ldquo;, un tas šeit neattiecas.
-Tāpēc tām ir savs filtrs, <em>Tikai rotaļu stūrītis</em>, pēc noklusējuma ieslēgts, un pilnas
-atzīmes vietā — tukšs zils gredzens.</p>
-<p><em>Pārtraukts</em> gredzens nozīmē: rotaļu stūrītis jā, pārtinamais galdiņš nē (<code>changing_table=no</code>). Tā nav atzīme un nav arī sarkana, jo sarkans nozīmētu, ka galdiņš ir, tikai ne tētim. Šeit tā nav nevienam. Vieta tomēr ir kartē, jo ar bērnu turp labprāt dodas arī bez galdiņa.</p>
-<p>Tie ir visdaudzsološākie atklātie jautājumi visā kartē. Iekštelpu rotaļu laukums, kafejnīca ar
-bumbiņu baseinu, restorāns ar spēļu istabu &mdash; tētis ar mazuli tik un tā tur dodas, un, kad
-viņš jau ir tur, viņš zina atbildi. Klikšķis uz gredzena atver MapComplete tieši uz šī viena
-jautājuma. Atbildi uz to, un dažu minūšu laikā gredzens pazūd, tā vietā parādās
-īsta atzīme.</p>
 
 <h2 id="high-chair">Čips Bērnu krēsliņš</h2>
 <p>Čips <em>Bērnu krēsliņš</em> rāda vietas, kurām OSM ir norādīts bērnu krēsliņš: <code>highchair=yes</code> vai skaitlis, lielāks par 0. <code>highchair=no</code> vai <code>0</code> ir reģistrēts &bdquo;nē&ldquo;. Vieta bez birkas nav vieta bez bērnu krēsliņa, OSM par to vienkārši neko nesaka, tāpēc čips to izlaiž, neko neapgalvojot. Vērtība, ko karte nevar nolasīt, piemēram, <code>ja</code> vai <code>1+</code>, arī netiek skaitīta, un uznirstošajā logā tai nav nevienas rindas. Čips filtrē atzīmes un zilos gredzenus un neko nekrāso.</p>
@@ -262,8 +221,7 @@ ikviens ar bezmaksas OSM kontu, uz vietas, mazāk nekā minūtē:</p>
 <ul>
   <li><strong>Lietotnē (visātrāk):</strong> pieskaries pelēkajai atzīmei. Uznirstošais logs jautā <em>Kurā telpā ir pārtinamais galdiņš?</em> Izvēlies: <em>Sieviešu un vīriešu</em>, <em>Vīriešu tualetē</em>, <em>Sieviešu tualetē</em>, <em>Kopējā tualetē</em>, <em>Pieejamā tualetē</em> vai <em>Atsevišķā telpā</em>. Citas telpas atrodas zem <em>Vairāk telpu …</em>. Skatā <em>Mamma</em> nav <em>Vīriešu tualetē</em> un <em>Sieviešu un vīriešu</em>, jo māmiņa nevar galvot par vīriešu tualeti. Tu vienreiz pieslēdzies ar OSM, atbilde tiek saglabāta zem tava paša konta, un atzīme atjaunojas dažu minūšu laikā. Ja pieskaries atrašanās vietas pogai 75&nbsp;m attālumā no pelēkas atzīmes, kartīte jautā, vai tu tur esi tieši tagad; <em>Atbildēt uz jautājumu</em> atver to pašu logu.</li>
   <li><strong>MapComplete (jebkurš telefons, pārlūkprogrammā):</strong> &bdquo;Atbildēt vietnē
-      MapComplete&ldquo; pie pelēkas atzīmes atver to pašu objektu PapaMap paša MapComplete tēmā
-      &mdash; pie katras atzīmes, lai labojumus varētu atpazīt kā nākušus no šejienes. MapComplete
+      MapComplete&ldquo; pie pelēkas atzīmes atver to pašu objektu PapaMap paša MapComplete tēmā. MapComplete
       vienreiz brīdina par neoficiālu tēmu, tas ir normāli. Pieslēdzies ar savu OSM kontu un atbildi uz jautājumiem par pārtinamo
       galdiņu, arī uz jautājumu par telpu. Atbilde nonāk tieši OpenStreetMap un šeit parādās
       dažu minūšu laikā.</li>
@@ -272,8 +230,7 @@ ikviens ar bezmaksas OSM kontu, uz vietas, mazāk nekā minūtē:</p>
       &bdquo;pārtinamais&ldquo; un atzīmē to. Tas jautā tikai jā/nē. Jautājumam par telpu esošai
       pelēkai atzīmei izmanto MapComplete.</li>
 </ul>
-<p class="muted">Labojumi notiek ar tavu paša OSM kontu un pieder visiem. Tie pārdzīvos šo
-mājaslapu un palīdz katrai lietotnei, kas lasa OpenStreetMap.</p>
+<p class="muted">Labojumi tiek veikti ar tavu OSM kontu un noder katrai lietotnei, kas lasa OpenStreetMap, ne tikai šai.</p>
 
 <h2 id="contribute">Kā pievienot trūkstošu vietu</h2>
 <p>PapaMap pati neko neuzglabā. Tāpēc vietas pievienošana vienmēr nozīmē: OpenStreetMap
@@ -325,11 +282,7 @@ kam vajadzētu būt. Ja telpu nezini, arī pats <code>changing_table=yes</code> 
 kļūst par pelēku atzīmi, un uz jautājumu par telpu atbildēs nākamais tētis.</p>
 
 <h2 id="no-ranking">Kāpēc no OSM nevar izveidot nodrošinājuma reitingu</h2>
-<p>Acīmredzamais lielākais projekts būtu vīriešu un sieviešu tualešu nodrošinājuma attiecība katrai
-pilsētai. Skaitlis, ap kuru patiesībā griežas &bdquo;potty parity&ldquo; arguments. No
-OpenStreetMap to aprēķināt nevar. Mēs to pārbaudījām, pirms sākām veidot karti, ar izlasi no
-astoņu pilsētu centriem (Berlīne, Londona, Parīze, Ņujorka, Tokija (23 rajoni), Amsterdama, Vīne,
-Melburna; 26.&nbsp;jūl.&nbsp;2026):</p>
+<p>Acīmredzamais lielākais projekts būtu vīriešu un sieviešu tualešu attiecība pa pilsētām, skaitlis, par kuru ir runa „potty parity“ diskusijā. Pirms būvēšanas es pārbaudīju, vai OSM var šo skaitli dot. Nevar. Astoņu pilsētu centru izlase uz 26.&nbsp;jūl.&nbsp;2026:</p>
 <table>
   <tr><th>Pilsēta</th><th>Kartētās tualetes</th><th>Jebkāda dzimuma birka</th><th>Abas —
       V&nbsp;+&nbsp;S</th></tr>
@@ -344,40 +297,11 @@ Melburna; 26.&nbsp;jūl.&nbsp;2026):</p>
   <tr><td><strong>Visas kopā</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888
       (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Jebkāda dzimuma birka ir tikai 29,9% kartēto tualešu. Abas (vīriešu un sieviešu): 8,5%.</li>
-  <li>Birkas ir tīri jā/nē karodziņi, nekad skaitļi. Kabīņu skaits pa dzimumiem: nulle visās
-      astoņās pilsētās. Vienīgā kapacitātes atslēga, <code>toilets:num_chambers</code>
-      (~27k lietojumu), nav sadalīta pa dzimumiem un gandrīz pilnībā nāk no seniem importa datiem.
-      Tās variantiem <code>:female</code> / <code>:male</code> ir pa 2 lietojumiem visā
-      pasaulē.</li>
-  <li>Hamburga, pārbaudīta tajā pašā dienā: 443 kartētas tualetes, nevienai nav
-      <code>toilets:num_chambers*</code> birkas. Josla <a href="./?lang=lv">sākumlapā</a> šos skaitļus pārrēķina reizi nedēļā katram apgabalam;
-      pati karte — katru nakti.</li>
-  <li>Un vēl: atzīmēšanas līmenis mēra kartētāju kopienu, nevis pilsētas. Vienvietīgas tualetes
-      pareizi paliek bez dzimuma birkas. Pilsētu reitings vērtētu OSM dalībniekus, nevis tualešu
-      taisnīgumu.</li>
-</ul>
-<p>Tātad vienīgais godīgais apgalvojums ir šāds: pašu nodrošinājumu šodien no atklātiem datiem
-izmērīt nevar. Šī lapa mēra to, ko var izmērīt, un pārvērš robus par ieguldījumiem.</p>
+<p>Tikai 29,9% no kartētajām tualetēm vispār ir kāda dzimuma birka, 8,5% ir abas. Birkas ir jā/nē atzīmes, nevis skaitļi, un kabīņu skaita pēc dzimuma nav nevienā no astoņām pilsētām. Un marķēšanas īpatsvars mēra kartētāju kopienu, nevis pilsētu. Reitings vērtētu OSM veidotājus, nevis tualetes. Tāpēc lapa paliek pie tā, ko var izmērīt.</p>
 
 <h2 id="where-tables">Vienīgais aprēķināmais fakts: kur atrodas galdiņi</h2>
-<p><code>changing_table:location</code> ir, cik zināms, vienīgais atklātais vārdu krājums, kas
-reģistrē, kurā telpā atrodas pārtinamais galdiņš. Tas ir izmantots reti:
-<span data-stat="location_total">3&nbsp;659</span> no <span data-stat="ct_total">77&nbsp;000</span>
-<code>changing_table</code> objektiem visā pasaulē, <span data-stat="share">4,8%</span>. Bet, kur
-tas ir, tas ir vienpusīgs (taginfo, <span data-stat="date">26.&nbsp;jūl.&nbsp;2026</span>):</p>
-<ul>
-  <li>Galdiņi tikai sieviešu telpā: <strong data-stat="female_only">485</strong>.</li>
-  <li>Galdiņi tikai vīriešu telpā: <strong data-stat="male_only">71</strong>. Aptuveni
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> ir atzīmēti
-      abās telpās, <span data-stat="male_any">410</span> reģistrē vispār kādu galdiņu vīriešu
-      telpā. Visā pasaulē.</li>
-</ul>
-<p>Izlase ir maza, un kartētāji paši izvēlas, ko reģistrēt. Tāpēc precīzo attiecību nevērtē par
-augstu. Virziens gan sakrīt ar to, kas citur jau sen dokumentēts: pārtinamie galdiņi pēc
-noklusējuma karājas sieviešu telpā. Tas tēviem aizver durvis un klusībā pieņem, kurš ir atbildīgs
-par autiņu maiņu. Šī karte padara trūkstošos datus redzamus. Un viegli izlabojamus.</p>
+<p><code>changing_table:location</code> ir vienīgā atvērtā vārdnīca, ko zinu, kas fiksē, kurā telpā atrodas pārtinamais galdiņš. Tā ir reta: <span data-stat="location_total">3&nbsp;659</span> no <span data-stat="ct_total">77&nbsp;000</span> <code>changing_table</code> objektiem pasaulē, <span data-stat="share">4,8%</span>. Kur tā ir, tā ir vienpusīga (taginfo, <span data-stat="date">26.&nbsp;jūl.&nbsp;2026</span>): <strong data-stat="female_only">485</strong> galdiņi tikai sieviešu tualetē, <strong data-stat="male_only">71</strong> tikai vīriešu, aptuveni <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> ir abās telpās.</p>
+<p>Izlase ir maza, un kartētāji paši izvēlas, ko fiksēt, tāpēc precīzo attiecību pārāk nevajag tulkot. Virziens ir tāds pats kā visur: pārtinamie galdiņi pēc noklusējuma karājas sieviešu tualetē. Šī karte rāda, kur trūkst datu, un katrai pelēkajai atzīmei ir rediģēšanas poga.</p>
 
 <h2 id="licence">Datu licence un atsauce</h2>
 <p>Visi kartes dati &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
@@ -388,19 +312,8 @@ Globālā birku statistika nāk no <a href="https://taginfo.openstreetmap.org/">
 pašas kods ir licencēts ar MIT licenci.</p>
 
 <h2 id="privacy">Privātums</h2>
-<p>Statiska lapa. Nav kontu, nav sīkdatņu, nav analītikas, nav izsekošanas skriptu. Lapa par tevi
-neko neuzglabā un tai nav datubāzes. Kartes flīzes nāk no OpenStreetMap flīžu serveriem; uz tiem
-pieprasījumiem attiecas <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privātuma
-politika</a>. Ja atzīmē pieskaries <em>Atbildēt vietnē MapComplete</em>, lapa nākamajās minūtēs vēl dažas reizes pavaicā api.openstreetmap.org, ko šis viens objekts tagad saka — uz šiem pieprasījumiem attiecas tā pati politika. Sākot no trešās rakstzīmes, ko ieraksti meklēšanas laukā, un ikreiz, kad atver
-<em>Pievienot vietu</em>, lapa vaicā arī komoot vietu meklētājam Photon (photon.komoot.io). Tas
-saņem ierakstīto tekstu un noapaļotu kartes centru un, tāpat kā jebkurš serveris, tavu IP adresi. Ja seko saitei uz MapComplete, StreetComplete vai openstreetmap.org, tu esi viņu
-lapās un rediģē ar savu OSM kontu. Nekas neiet caur mums. Formālās lapas:
-<a href="impressum.html">Impressum</a> ·
-<a href="datenschutz.html">Datenschutzerklärung</a> (vāciski).</p>
-
-<p class="muted">Avoti: Overpass izlase no 8 pilsētu centriem (9&nbsp;674 tualetes) no
-26.&nbsp;jūl.&nbsp;2026, un taginfo atslēgu statistika uz iepriekš norādīto datumu. Vietējie
-skaitļi nāk no tā paša nakts vaicājuma, kas veido karti.</p>
+<p>Statiska vietne. Tā neiestata sīkdatnes un nav analītikas. Kartes flīzes nāk no OpenStreetMap flīžu serveriem; uz tiem pieprasījumiem attiecas <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privātuma politika</a>. Ja atzīmē pieskaries <em>Atbildēt vietnē MapComplete</em>, nākamajās minūtēs lapa vairākas reizes jautā arī api.openstreetmap.org, ko šis objekts saka tagad — uz šiem pieprasījumiem attiecas tā pati politika. No trešās rakstzīmes meklēšanas laukā un katru reizi, kad atver <em>Pievienot vietu</em>, lapa papildus jautā komoot vietu meklētājam Photon (photon.komoot.io). Tas saņem ierakstīto tekstu un noapaļotu kartes centru un, kā jebkurš serveris, tavu IP adresi. Saites uz MapComplete, StreetComplete vai openstreetmap.org ved uz to vietnēm, kur rediģē ar savu OSM kontu. Formalitātes: <a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (vāciski).</p></p>
 
 <h2 id="how-made">Kā šī lapa top</h2>
 <p>Kodēšanā un tekstu rakstīšanā man palīdz mākslīgais intelekts. Bet viss iet caur manām paša

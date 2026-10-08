@@ -131,7 +131,6 @@
   <li><a href="#mum-mode">Tėčio-mamos jungiklis</a></li>
   <li><a href="#play-area">Mėlynas žiedas: žaidimų kampelis</a></li>
   <li><a href="#wheelchair">Žymė Vežimėlis</a></li>
-  <li><a href="#empty-rings">Tušti mėlyni žiedai: vietos žaisti be atsakymo</a></li>
   <li><a href="#high-chair">Žymė Maitinimo kėdutė</a></li>
   <li><a href="#grey-pin">Kaip pataisyti pilką smeigtuką</a></li>
   <li><a href="#contribute">Kaip pridėti trūkstamą vietą</a></li>
@@ -143,8 +142,7 @@
 </ul></nav>
 
 <h2 id="what">Kas yra šis žemėlapis. Ir kas jis nėra.</h2>
-<p>PapaMap rodo vietas 44 Europos šalyse — nuo Islandijos iki Kipro, nuo Portugalijos iki
-Ukrainos, taip pat Australija, Naujoji Zelandija, JAV, Kanada ir Japonija — kuriose OpenStreetMap
+<p>PapaMap rodo vietas Europoje, Australijoje, Naujojoje Zelandijoje, JAV, Kanadoje ir Japonijoje, kuriose OpenStreetMap
 žino apie kūdikių pervystymo
 stalą (<code>changing_table=yes</code> arba <code>limited</code>). Be to, vietos su žaidimų kampeliu, pažymėtos mėlynu žiedu, su kūdikių pervystymo stalu arba be jo. Spalva rodo, ar tėtis gali
 pasiekti stalą. Žemėlapis skaito OSM. Atsakymai keliauja tiesiai į OSM su tavo paties OSM paskyra — iš paties žemėlapio arba per nuorodas prie kiekvieno smeigtuko; PapaMap nieko nesaugo. Duomenys taisomi
@@ -168,7 +166,7 @@ mažosiomis raidėmis ir lyginama kaip visas žodis. Niekada kaip fragmentas, ne
   <li><span class="dot r"></span><strong>Raudona:</strong> priešingu atveju, jei vienas iš žodžių
       yra <code>female_toilet</code>. Stalas yra, bet tik moterų tualete.</li>
   <li><span class="dot u"></span><strong>Pilka:</strong> visa kita. Nėra vietos žymos, arba yra
-      tik laisvas tekstas. Niekas nepažymėjo patalpos. Pilki smeigtukai — tai ir yra darbas.</li>
+      tik laisvas tekstas. Niekas nepažymėjo patalpos.</li>
 </ul>
 <p>Objektas su <code>centralkey</code> žyma (kitokia nei <code>no</code>) lieka už žemėlapio ribų, kai raktas užrakina visas duris: <code>access=centralkey</code>, stalas neįgaliųjų tualete, arba niekas žymose nesako, kad raktas galioja tik vienai kabinai. Kompleksas su atvirais vyrų ir moterų tualetais ir užrakinta pritaikyta kabina (<code>wheelchair:access=centralkey</code>, arba <code>male=yes</code> ir <code>female=yes</code>) lieka žemėlapyje, pilkas, kol kas nors įrašys patalpą. Euro raktas išduodamas tik pateikus neįgalumą patvirtinantį dokumentą, tad dauguma tėčių pro tas duris nepateks. Po žyme <em>Vežimėlis</em> šie stalai grįžta, žr. žemiau.</p>
 
@@ -197,59 +195,22 @@ jie yra raudoni ir neįtraukiami į skaičių aukščiau. Senesnės programos ve
 rodyti žalius, kol nebus atnaujintos.</p>
 
 <h2 id="play-area">Mėlynas žiedas: žaidimų kampelis</h2>
-<p>Smeigtukas su mėlynu žiedu reiškia, kad ten yra ir žaidimų kampelis &mdash; vieta, kur ne tik
-pervystoma, bet ir pasiliekama ilgiau. Žyma <em>Su žaidimų kampeliu</em> susiaurina žemėlapį iki
-tokių vietų. Vieta skaičiuojama, jei OSM turi bent vieną iš šių žymų:</p>
+<p>Smeigtukas su mėlynu žiedu turi dar ir žaidimų kampelį. Žymė <em>Su žaidimų kampeliu</em> rodo tik tokius. Vieta skaičiuojama, jei OSM yra viena iš šių žymų:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> arba <code>designated</code>
-      &mdash; wiki dokumentuotas būdas pasakyti „viduje“.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> arba
-      <code>designated</code> &mdash; žaidimų kampelis kavinėje, restorane, kepykloje.
-      Dažniausiai naudojama žyma, nors ji nepasako, ar viduje, ar lauke.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; komercinė vidaus žaidimų
-      aikštelė.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> kartu su
-      <code>indoor=yes</code> &mdash; tas pats, pažymėtas kita tvarka.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> arba <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> arba <code>designated</code> (dažniausia žyma, ji nenurodo, ar viduje, ar lauke)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> kartu su <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> neskaičiuojamas: smėlio dėžė alaus sode nėra tai, ką žada žiedas. Neskaičiuojamas
-nei <code>no</code>, nei <code>limited</code> — wiki tai apibrėžia kaip „žaislų yra, bet nėra
-tam skirtos vietos“. Kur yra aiškiai nurodyta <code>kids_area:indoor=no</code>, ji nusveria plikas
-<code>kids_area=yes</code>.</p>
-<p>Tai ženkliukas, o ne ketvirtas statusas. Vieta be šių žymų nereiškia, kad joje „nėra žaidimų
-kampelio“ — OSM tiesiog apie tai nieko nesako. Todėl čia nėra pilkos spalvos.</p>
-<p>Būtent todėl apie tai klausia iššokantis langas. Prie kiekvienos smeigtuko, kur OSM nieko
-nesako apie žaidimų kampelį, nepriklausomai nuo jos spalvos, yra viena eilutė (po patalpomis, ten,
-kur smeigtukas klausia ir patalpos): <em>Žaidimų kampelis vaikams?</em>, su trimis atsakymais.
-<em>viduje</em> įrašo <code>kids_area:indoor=yes</code> kartu su <code>kids_area=yes</code>,
-<em>tik lauke</em> įrašo <code>kids_area=yes</code> kartu su <code>kids_area:indoor=no</code>,
-<em>nėra</em> įrašo <code>kids_area=no</code> &mdash; su tavo pačiu OSM paskyra, atskirame
-changeset'e, lygiai tas pačias žymas, kurias tam pačiam klausimui įrašo MapComplete. Klausimas
-yra apie žaidimų kampelį apskritai, ne tik vidinį: <code>kids_area=no</code> OSM reiškia „čia
-vaikams niekur nėra kur žaisti“, todėl kepykla su žaidimų aikštele sode gauna <em>tik lauke</em>
-vietoj klaidingo ne. Žiedas atsiras (arba liks nerodomas) po kelių minučių. Niekas
-neklausiamas du kartus: įrašytas <code>kids_area</code> <em>arba</em>
-<code>kids_area:indoor</code>, kad ir kokia būtų reikšmė, pašalina klausimą. Prie
-<code>leisure=playground</code> be <code>indoor=yes</code> jis niekada neklausiamas &mdash; vieta
-<em>jau yra</em> vieta žaisti, tik ne viduje.</p>
+<p><code>outdoor</code>, <code>no</code> ir <code>limited</code> neskaičiuojami. Aiškus <code>kids_area:indoor=no</code> nugali plikąjį <code>kids_area=yes</code>.</p>
+<p>Žiedas yra ženklelis, o ne ketvirta spalva. Vieta be šių žymų neturi „jokio žaidimų kampelio“, OSM apie tai tiesiog nieko nesako, ir tai tinka beveik visoms vietoms. Todėl čia nėra pilkos.</p>
+<p>Būtent todėl iškylantis langas klausia: prie kiekvieno smeigtuko, apie kurį OSM nieko nesako apie žaidimų kampelį, nesvarbu, kokios jis spalvos, yra viena eilutė (po patalpomis, jei smeigtukas klausia ir apie patalpą): <em>Žaidimų kampelis vaikams?</em> su trimis atsakymais. <em>viduje</em> įrašo <code>kids_area:indoor=yes</code> kartu su <code>kids_area=yes</code>, <em>tik lauke</em> įrašo <code>kids_area=yes</code> kartu su <code>kids_area:indoor=no</code>, <em>nėra</em> įrašo <code>kids_area=no</code> — po tavo paties OSM paskyra, atskirame changeset'e, būtent tas žymas, kurias MapComplete įrašo to paties klausimo atveju. Klausimas apie bet kokią žaidimo galimybę, ne tik viduje: <code>kids_area=no</code> OSM reiškia „vaikai čia niekur negali žaisti“, todėl kepyklėlė su žaidimų aikštele sode gauna <em>tik lauke</em>, o ne klaidingą nulį. Žiedas atsiranda (arba ne) po kelių minučių. Kas jau atsakė, to nebeklausiama: įrašytas <code>kids_area</code> <em>arba</em> <code>kids_area:indoor</code>, kad ir kokia reikšmė, klausimą pašalina. Prie <code>leisure=playground</code> be <code>indoor=yes</code> jis nekeliamas visai: vieta <em>yra</em> žaidimų vieta, tik lauke.</p>
+<p>Taisyklė tinka daug daugiau vietų, nei yra smeigtukų. Tik <span data-stat="play_tables">111</span> iš jų turi smeigtuką. Dar prie <span data-stat="play_places">701</span> niekas neatsakė į pirmąjį klausimą: ar čia yra pervystymo stalas? Jų žemėlapis nuspalvinti negali, todėl jie gauna tuščią mėlyną žiedą ir savo žymę, <em>Tik žaidimų kampelis</em>, pagal numatytuosius nustatymus įjungtą. Kas vis tiek ten eina su vaiku, atsakymą žino. Spustelėjus žiedą, MapComplete atsidaro būtent ties šiuo klausimu.</p>
+<p><em>Punktyrinis</em> žiedas reiškia: žaidimų kampelis taip, pervystymo stalo ne (<code>changing_table=no</code>). Tai ne smeigtukas ir ne raudona, nes raudona reikštų, kad stalas yra, tik ne tėčiui. Čia jo nėra, niekam. Vieta vis tiek yra žemėlapyje, nes su vaiku ten mielai einama ir be stalo.</p>
 
 <h2 id="wheelchair">Žymė Vežimėlis</h2>
 <p>Žymė <em>Vežimėlis</em> rodo vietas, kurios OSM turi <code>wheelchair=yes</code> arba <code>wheelchair=limited</code>. <code>limited</code> reiškia vieną laiptelį iki 7&nbsp;cm arba kad reikia pagalbos. Kai žymė įjungta, šios vietos nuo 13 mastelio turi šauktuką, o iššokančiame lange parašyta <em>ribotai</em>. Vien <code>toilets:wheelchair=yes</code> nepakanka, bet jis vis tiek rodomas iššokančiame lange kartu su <code>wheelchair:description</code>. Vieta be žymos nėra neprieinama, OSM apie ją tiesiog nieko nesako, todėl žymė tik filtruoja ir nieko nespalvina. Mėlynus apskritimus (vietas su žaidimų kampeliu) žymė filtruoja ir pažymi taip pat.</p>
 <p>Po šia žyme, ir tik ten, grįžta stalai už euro rakto, su raktu smeigtuke: kam reikia žymės, tas paprastai turi raktą. Įprastame žemėlapyje, skaičiuose ir reitinge jie lieka už ribų.</p>
-
-<h2 id="empty-rings">Tušti mėlyni žiedai: vietos žaisti be atsakymo</h2>
-<p>Ta pati taisyklė atitinka gerokai daugiau vietų, nei žemėlapyje yra smeigtukų. Tik
-<span data-stat="play_tables">111</span> iš jų turi smeigtuką.
-Dar <span data-stat="play_places">701</span> vietose niekas neatsakė į pirmą klausimą: ar čia yra
-pervystymo stalas? Taip, ne, niekas nežino — OSM apie tai nesako nieko.</p>
-<p>Šių <span data-stat="play_places">701</span> vietų žemėlapis nuspalvinti negali, nes nėra ko
-spalvinti. Jos nėra ir pilkos: pilka reiškia „stalas yra, trūksta patalpos“, o čia taip nėra.
-Todėl jos gauna savo žymą, <em>Tik žaidimų kampelis</em>, pagal nutylėjimą įjungtą, ir tuščią
-mėlyną žiedą vietoj užpildyto smeigtuko.</p>
-<p><em>Brūkšninis</em> žiedas reiškia: žaidimų kampelis taip, pervystymo stalas ne (<code>changing_table=no</code>). Tai ne smeigtukas ir ne raudona, nes raudona reikštų, kad stalas yra, tik ne tėčiui. Čia jo nėra niekam. Vieta vis tiek žemėlapyje, nes su vaiku ten mielai einama ir be stalo.</p>
-<p>Tai patys perspektyviausi atviri klausimai visame žemėlapyje. Vidaus žaidimų aikštelė, kavinė
-su kamuoliukų baseinu, restoranas su žaidimų kambariu — tėtis su mažyliu ten vis tiek eis, o kai
-nueis, jau žinos atsakymą. Paspaudus žiedą atsiveria MapComplete lygiai su tuo vienu klausimu.
-Atsakius žiedas per kelias minutes dings, o jo vietą užims tikras smeigtukas.</p>
 
 <h2 id="high-chair">Žymė Maitinimo kėdutė</h2>
 <p>Žymė <em>Maitinimo kėdutė</em> rodo vietas, kuriose OSM nurodyta maitinimo kėdutė: <code>highchair=yes</code> arba skaičius, didesnis už 0. <code>highchair=no</code> arba <code>0</code> yra užfiksuotas „ne“. Vieta be žymos nėra vieta be maitinimo kėdutės, OSM apie ją tiesiog nieko nesako, todėl žymė jos nerodo ir nieko netvirtina. Reikšmė, kurios žemėlapis negali perskaityti, pvz., <code>ja</code> ar <code>1+</code>, taip pat neskaičiuojama, o iššokančiame lange jai nerodoma jokia eilutė. Žymė filtruoja smeigtukus ir mėlynus žiedus ir nieko nespalvina.</p>
@@ -262,8 +223,7 @@ kiekvienas, turintis nemokamą OSM paskyrą, vietoje, per mažiau nei minutę:</
   <li><strong>Programėlėje (greičiausiai):</strong> palieski pilką smeigtuką. Iškylantis langas klausia <em>Kurioje patalpoje yra vystymo stalas?</em> Pasirink: <em>Moterų ir vyrų</em>, <em>Vyrų tualete</em>, <em>Moterų tualete</em>, <em>Bendrame tualete</em>, <em>Pritaikytame tualete</em> arba <em>Atskiroje patalpoje</em>. Kitos patalpos yra po <em>Daugiau patalpų …</em>. Rodinyje <em>Mama</em> nėra <em>Vyrų tualete</em> ir <em>Moterų ir vyrų</em>, nes mama negali pasakyti, kaip yra vyrų tualete. Prisijungi vieną kartą per OSM, atsakymas išsaugomas po tavo paties paskyra, o smeigtukas atsinaujina per kelias minutes. Jei paliesi vietos mygtuką ne toliau kaip 75&nbsp;m nuo pilko smeigtuko, kortelė paklaus, ar dabar esi ten; <em>Atsakyti į klausimą</em> atveria tą patį langą.</li>
   <li><strong>MapComplete (bet kuris telefonas, naršyklėje):</strong> mygtukas „Atsakyti per
       MapComplete“ prie pilko smeigtuko atveria tą patį objektą PapaMap nuosavoje MapComplete
-      temoje &mdash; prie kiekvieno smeigtuko, kad pataisymus būtų galima atpažinti kaip atėjusius
-      iš čia. MapComplete kartą įspėja apie neoficialią temą, tai normalu. Prisijunk savo OSM paskyra ir atsakyk į klausimus apie pervystymo
+      temoje. MapComplete kartą įspėja apie neoficialią temą, tai normalu. Prisijunk savo OSM paskyra ir atsakyk į klausimus apie pervystymo
       stalą, taip pat ir į klausimą apie patalpą. Atsakymas iškart patenka į OpenStreetMap ir čia
       pasirodo per kelias minutes.</li>
   <li><strong>StreetComplete (Android):</strong> turi pervystymo stalo užduotį, pagal nutylėjimą
@@ -271,8 +231,7 @@ kiekvienas, turintis nemokamą OSM paskyrą, vietoje, per mažiau nei minutę:</
       „changing table“ ir pažymėk. Ji klausia tik taip/ne. Dėl klausimo apie patalpą prie jau
       esančio pilko smeigtuko naudok MapComplete.</li>
 </ul>
-<p class="muted">Pataisymai daromi per tavo pačio OSM paskyrą ir priklauso visiems. Jie liks ir
-tada, kai šios svetainės nebebus, ir padės kiekvienai programai, kuri skaito OpenStreetMap.</p>
+<p class="muted">Pakeitimai daromi su tavo OSM paskyra ir naudingi kiekvienai programai, kuri skaito OpenStreetMap, ne tik šiai.</p>
 
 <h2 id="contribute">Kaip pridėti trūkstamą vietą</h2>
 <p>PapaMap pati nieko nesaugo. Todėl vietos pridėjimas visada reiškia: OpenStreetMap redagavimą.
@@ -323,11 +282,7 @@ turėtų būti. Jei nežinai patalpos, vien <code>changing_table=yes</code> vis 
 tampa pilku smeigtuku, o į klausimą apie patalpą atsako kitas tėtis.</p>
 
 <h2 id="no-ranking">Kodėl iš OSM nepavyksta sudaryti aprūpinimo rodiklio</h2>
-<p>Akivaizdus didesnis projektas būtų vyrų ir moterų tualetų aprūpinimo santykis kiekviename
-mieste. Skaičius, apie kurį iš tiesų sukasi „potty parity“ argumentas. Iš OpenStreetMap jo
-apskaičiuoti neįmanoma. Tai patikrinome prieš pradėdami kurti, imtimi iš aštuonių miestų centrų
-(Berlynas, Londonas, Paryžius, Niujorkas, Tokijas&nbsp;(23&nbsp;rajonai), Amsterdamas, Viena,
-Melburnas; 26&nbsp;liep.&nbsp;2026):</p>
+<p>Akivaizdus didesnis projektas būtų vyrų ir moterų tualetų santykis pagal miestą, skaičius, apie kurį kalbama „potty parity“ diskusijoje. Prieš kurdamas patikrinau, ar OSM gali jį duoti. Negali. Aštuonių miestų centrų imtis&nbsp;2026&nbsp;m.&nbsp;liepos&nbsp;26&nbsp;d.:</p>
 <table>
   <tr><th>Miestas</th><th>Pažymėti tualetai</th><th>Su lyties žyma</th><th>Abu (V&nbsp;+&nbsp;M)</th></tr>
   <tr><td>Berlynas</td><td>1&nbsp;173</td><td>660</td><td>119</td></tr>
@@ -340,42 +295,11 @@ Melburnas; 26&nbsp;liep.&nbsp;2026):</p>
   <tr><td>Melburnas</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Iš viso</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Tik 29,9% pažymėtų tualetų apskritai turi bet kokią lyties žymą. Abu (vyrų ir moterų):
-      8,5%.</li>
-  <li>Žymos yra grynos taip/ne vėliavėlės, niekada skaičiai. Kabinų skaičius pagal lytį: nulis
-      visuose aštuoniuose miestuose. Vienintelis talpos raktas, <code>toilets:num_chambers</code>
-      (~27 tūkst. panaudojimų), yra nesusietas su lytimi ir beveik ištisai kilęs iš seno importo.
-      Jo variantai <code>:female</code> / <code>:male</code> visame pasaulyje panaudoti po 2
-      kartus.</li>
-  <li>Hamburgas, patikrintas tą pačią dieną: 443 pažymėti tualetai, nė vienas su
-      <code>toilets:num_chambers*</code> žyma. Juosta <a href="./?lang=lt">pradiniame puslapyje</a> šiuos skaičius perskaičiuoja kartą per
-      savaitę kiekvienai teritorijai; pats žemėlapis – kas naktį.</li>
-  <li>Ir dar: žymėjimo rodikliai matuoja mapperių bendruomenę, o ne miestus. Vienvietis tualetas
-      teisingai lieka be lyties žymos. Miestų reitingas vertintų OSM prisidedančiuosius, o ne
-      tualetų lygybę.</li>
-</ul>
-<p>Taigi vienintelis sąžiningas teiginys yra toks: pats aprūpinimas šiandien iš atvirų duomenų
-neišmatuojamas. Ši svetainė matuoja tai, ką galima išmatuoti, ir spragas paverčia indėliais.</p>
+<p>Tik 29,9% pažymėtų tualetų apskritai turi bet kokią lyties žymą, 8,5% turi abi. Žymos yra taip/ne pažymos, o ne skaičiai, o kabinų skaičiaus pagal lytį nėra nė viename iš aštuonių miestų. O žymėjimo dažnis matuoja žemėlapio kūrėjų bendruomenę, o ne miestą. Reitingas vertintų OSM prisidedančiuosius, o ne tualetus. Todėl puslapis laikosi to, ką galima išmatuoti.</p>
 
 <h2 id="where-tables">Vienintelis apskaičiuojamas faktas: kur yra stalai</h2>
-<p><code>changing_table:location</code> yra, kiek žinome, vienintelis atviras žodynas, fiksuojantis,
-kurioje patalpoje stovi pervystymo stalas. Jis retas:
-<span data-stat="location_total">3&nbsp;659</span> iš <span data-stat="ct_total">77&nbsp;000</span>
-<code>changing_table</code> objektų visame pasaulyje, <span data-stat="share">4,8%</span>. Bet ten,
-kur jis yra, jis vienpusiškas (taginfo, <span data-stat="date">2026&nbsp;m.&nbsp;liepos&nbsp;26&nbsp;d.</span>):</p>
-<ul>
-  <li>Stalai tik moterų tualete: <strong data-stat="female_only">485</strong>.</li>
-  <li>Stalai tik vyrų tualete: <strong data-stat="male_only">71</strong>. Apytiksliai
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> pažymėti
-      abiejose patalpose, <span data-stat="male_any">410</span> fiksuoja bet kokį stalą vyrų
-      tualete. Visame pasaulyje.</li>
-</ul>
-<p>Imtis nedidelė, o mapperiai patys renkasi, ką fiksuoti. Todėl tikslaus santykio pervertinti
-nereikėtų. Kryptis sutampa su tuo, kas jau seniai užfiksuota kitur: pervystymo stalai pagal
-nutylėjimą kabo moterų tualete. Tai užrakina duris tėčiams ir kartu tyliai nusprendžia, kas
-atsako už sauskelnių keitimą. Šis žemėlapis parodo trūkstamus duomenis. Ir palengvina jų
-pataisymą.</p>
+<p><code>changing_table:location</code> yra vienintelis atviras žodynas, kurį žinau, kuris užfiksuoja, kurioje patalpoje stovi pervystymo stalas. Jis retas: <span data-stat="location_total">3&nbsp;659</span> iš <span data-stat="ct_total">77&nbsp;000</span> <code>changing_table</code> objektų visame pasaulyje, <span data-stat="share">4,8%</span>. Kur jis yra, jis šališkas (taginfo, <span data-stat="date">2026&nbsp;m.&nbsp;liepos&nbsp;26&nbsp;d.</span>): <strong data-stat="female_only">485</strong> stalų tik moterų tualete, <strong data-stat="male_only">71</strong> tik vyrų, maždaug <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> yra abiejose patalpose.</p>
+<p>Imtis maža, o žemėlapio kūrėjai patys renkasi, ką fiksuoti, todėl tikslaus santykio pernelyg nevertink. Kryptis ta pati kaip visur: pervystymo stalai pagal numatytuosius nustatymus kabo moterų tualete. Šis žemėlapis rodo, kur trūksta duomenų, o kiekvienas pilkas smeigtukas turi redagavimo mygtuką.</p>
 
 <h2 id="licence">Duomenų licencija ir atributas</h2>
 <p>Visi žemėlapio duomenys &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
@@ -387,20 +311,8 @@ saugomi ODbL licencija. Pasaulinė žymų statistika gaunama iš
 licencija.</p>
 
 <h2 id="privacy">Privatumas</h2>
-<p>Statinė svetainė. Jokių paskyrų, jokių slapukų, jokios analitikos, jokių sekimo skriptų.
-Svetainė apie tave nesaugo nieko ir neturi duomenų bazės. Žemėlapio kaladėlės ateina iš
-OpenStreetMap kaladėlių serverių; šioms užklausoms taikoma
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privatumo politika</a>. Jei smeigtuke paliesi <em>Atsakyti per MapComplete</em>, puslapis kelias minutes dar kelis kartus paklausia api.openstreetmap.org, ką dabar sako tas vienas objektas — tiems užklausimams galioja ta pati politika. Nuo trečio simbolio, kurį įvedi paieškos laukelyje, ir kaskart atidarius <em>Pridėti vietą</em>,
-puslapis dar kreipiasi į komoot vietų paiešką Photon (photon.komoot.io). Ji gauna įvestą tekstą
-ir suapvalintą žemėlapio centrą, o kaip ir bet kuris serveris, ir tavo IP adresą. Jei paseki
-nuorodą į MapComplete, StreetComplete ar openstreetmap.org, atsiduri jų svetainėse ir redaguoji
-per savo OSM paskyrą. Per mus tuomet nieko nepraeina. Formalūs puslapiai:
-<a href="impressum.html">Impressum</a> ·
-<a href="datenschutz.html">Datenschutzerklärung</a> (vokiečių kalba).</p>
-
-<p class="muted">Šaltiniai: Overpass imtis iš 8 miestų centrų (9&nbsp;674 tualetai) nuo
-26&nbsp;liep.&nbsp;2026, ir taginfo raktų statistika, kurios data nurodyta aukščiau. Vietiniai
-skaičiai gaunami iš tos pačios nakties užklausos, kuri sukuria žemėlapį.</p>
+<p>Statinė svetainė. Ji nenustato slapukų ir neturi analizės. Žemėlapio kaladėlės ateina iš OpenStreetMap kaladėlių serverių; šioms užklausoms taikoma <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privatumo politika</a>. Jei smeigtuke paliesi <em>Atsakyti per MapComplete</em>, kelias artimiausias minutes puslapis kelis kartus klausia ir api.openstreetmap.org, ką šis objektas sako dabar — šioms užklausoms taikoma ta pati politika. Nuo trečiojo ženklo paieškos lauke ir kaskart, kai atveri <em>Pridėti vietą</em>, puslapis papildomai klausia komoot vietų paieškos Photon (photon.komoot.io). Ji gauna įvestą tekstą ir suapvalintą žemėlapio centrą bei, kaip kiekvienas serveris, tavo IP adresą. Nuorodos į MapComplete, StreetComplete ar openstreetmap.org veda į jų svetaines, kur redaguoji su savo paties OSM paskyra. Formalumai: <a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (vokiečių kalba).</p></p>
 
 <h2 id="how-made">Kaip sukurta ši svetainė</h2>
 <p>Programuodamas ir rašydamas tekstus pasitelkiu DI pagalbą. Vis dėlto viskas pereina per mano

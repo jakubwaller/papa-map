@@ -131,7 +131,6 @@ eikä se muutu.</p>
   <li><a href="#mum-mode">Isä-äiti-kytkin</a></li>
   <li><a href="#play-area">Sininen rengas: leikkinurkka</a></li>
   <li><a href="#wheelchair">Pyörätuoli-nappi</a></li>
-  <li><a href="#empty-rings">Tyhjät siniset renkaat: leikkipaikkoja, ei vastausta</a></li>
   <li><a href="#high-chair">Syöttötuoli-nappi</a></li>
   <li><a href="#grey-pin">Näin korjaat harmaan nastan</a></li>
   <li><a href="#contribute">Näin lisäät puuttuvan paikan</a></li>
@@ -143,8 +142,7 @@ eikä se muutu.</p>
 </ul></nav>
 
 <h2 id="what">Mitä tämä kartta on. Ja mitä se ei ole.</h2>
-<p>PapaMap näyttää paikkoja 44 Euroopan maassa — Islannista Kyprokseen, Portugalista
-Ukrainaan, lisäksi Australia, Uusi-Seelanti, Yhdysvallat, Kanada ja Japani — joissa OpenStreetMap tietää olevan hoitopöydän
+<p>PapaMap näyttää paikkoja Euroopassa, Australiassa, Uudessa-Seelannissa, Yhdysvalloissa, Kanadassa ja Japanissa, joissa OpenStreetMap tietää olevan hoitopöydän
 (<code>changing_table=yes</code> tai <code>limited</code>). Lisäksi paikat, joissa on leikkinurkka, piirrettynä sinisenä renkaana, hoitopöydän kanssa tai ilman. Väri kertoo, pääseekö isä pöydälle.
 Kartta lukee OSM:ää. Vastaukset menevät suoraan OSM:ään omalla OSM-tililläsi — kartalta itseltään tai kunkin nastan linkkien kautta; PapaMap ei tallenna mitään. Tietojen korjaaminen tapahtuu OSM:ssä
 itsessään, kunkin nastan linkkien kautta.</p>
@@ -167,7 +165,7 @@ osamerkkijonona, sillä <code>female_toilet</code> sisältää sanan <code>male<
   <li><span class="dot r"></span><strong>Punainen:</strong> muutoin, jos yksi osista on
       <code>female_toilet</code>. Pöytä on olemassa, mutta vain naisten WC:ssä.</li>
   <li><span class="dot u"></span><strong>Harmaa:</strong> kaikki muu. Ei sijaintitagia, tai vain
-      vapaata tekstiä. Kukaan ei ole merkinnyt tilaa. Harmaat nastat ovat tehtävä.</li>
+      vapaata tekstiä. Kukaan ei ole merkinnyt tilaa.</li>
 </ul>
 <p>Kohde, jolla on <code>centralkey</code>-tagi (muu kuin <code>no</code>), jätetään pois kartalta, kun avain lukitsee koko oven: <code>access=centralkey</code>, pöytä inva-wc:ssä, tai mikään tageissa ei sano, että avain koskee vain yhtä koppia. Tilat, joissa on avoimet miesten ja naisten wc:t ja avaimella lukittu inva-koppi (<code>wheelchair:access=centralkey</code>, tai <code>male=yes</code> ja <code>female=yes</code>), pysyvät kartalla, harmaana kunnes joku kirjaa huoneen. Euro-avaimen saa vain vamman todistamista vastaan, joten useimmat isät eivät pääse siitä ovesta. <em>Pyörätuoli</em>-napin alla nämä pöydät palaavat, ks. alempana.</p>
 
@@ -195,60 +193,22 @@ eivätkä ne lasketa mukaan yllä olevaan lukuun. Sovelluksen vanhemmat versiot 
 ne vihreinä, kunnes ne päivitetään.</p>
 
 <h2 id="play-area">Sininen rengas: leikkinurkka</h2>
-<p>Nastalla, jossa on sininen rengas, on myös leikkinurkka &mdash; paikka, jossa ei vain vaihdeta
-vaippaa, vaan jäädään hetkeksi. <em>Leikkinurkalla</em>-suodatin rajaa kartan näihin paikkoihin.
-Paikka lasketaan mukaan, jos OSM:ssä on merkittynä jokin näistä:</p>
+<p>Nastalla, jossa on sininen rengas, on lisäksi leikkinurkka. Nappi <em>Leikkinurkalla</em> näyttää vain ne. Paikka lasketaan, jos OSM:ssä on jokin näistä tageista:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> tai <code>designated</code>
-      &mdash; wikin dokumentoitu tapa sanoa "sisätiloissa".</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> tai
-      <code>designated</code> &mdash; leikkinurkka kahvilassa, ravintolassa tai leipomossa. Eniten
-      käytetty tagi, vaikka se jättää auki, onko nurkka sisällä vai ulkona.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; kaupallinen
-      sisäleikkipuisto.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> yhdessä tagin
-      <code>indoor=yes</code> kanssa &mdash; sama asia, tagattuna toisin päin.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> tai <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> tai <code>designated</code> (yleisin tagi, se ei kerro, onko sisällä vai ulkona)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> yhdessä <code>indoor=yes</code>:n kanssa</li>
 </ul>
-<p><code>outdoor</code> ei laske mukaan: kesäravintolan hiekkalaatikko ei ole se, mitä rengas
-lupaa. Ei myöskään <code>no</code>, eikä <code>limited</code> — wiki määrittelee sen näin:
-"leluja on saatavilla, mutta ei omaa aluetta". Jos kohteessa on nimenomainen
-<code>kids_area:indoor=no</code>, se voittaa paljaan <code>kids_area=yes</code>-tagin.</p>
-<p>Tämä on tunnus, ei neljäs status. Paikka, jolta nämä tagit puuttuvat, ei tarkoita, ettei siellä
-olisi leikkinurkkaa — OSM ei vain sano siitä mitään. Siksi tässä ei ole harmaata.</p>
-<p>Juuri siksi ponnahdusikkuna kysyy sitä. Jokaisessa nastassa, jossa OSM ei kerro mitään
-leikkinurkasta, väristä riippumatta, on yksi rivi (huoneiden alla, siellä missä nasta kysyy myös
-huonetta): <em>Leikkinurkka lapsille?</em>, kolmella vastauksella. <em>sisällä</em> kirjoittaa
-<code>kids_area:indoor=yes</code> yhdessä <code>kids_area=yes</code>:n kanssa, <em>vain
-ulkona</em> kirjoittaa <code>kids_area=yes</code> yhdessä <code>kids_area:indoor=no</code>:n
-kanssa, <em>ei ole</em> kirjoittaa <code>kids_area=no</code> &mdash; omalla OSM-tililläsi, omassa
-changesetissa, täsmälleen samat tagit kuin MapComplete kirjoittaa samasta kysymyksestä. Kysymys
-koskee leikkinurkkaa ylipäätään, ei vain sisätiloissa olevaa: <code>kids_area=no</code> tarkoittaa
-OSM:ssä "täällä ei ole lapsille missään leikkipaikkaa", joten leipomo, jonka pihalla on
-leikkipuisto, saa vastaukseksi <em>vain ulkona</em> väärän ei:n sijaan. Rengas ilmestyy (tai jää
-pois) muutamaa minuuttia myöhemmin. Keneltäkään ei kysytä kahdesti: tallennettu
-<code>kids_area</code> <em>tai</em> <code>kids_area:indoor</code>, arvosta riippumatta, poistaa
-kysymyksen. <code>leisure=playground</code>-kohteessa ilman <code>indoor=yes</code>-tagia sitä ei
-kysytä lainkaan &mdash; paikka <em>on</em> jo leikkipaikka, ei vain sisällä.</p>
+<p><code>outdoor</code>, <code>no</code> ja <code>limited</code> eivät lasketa. Selvä <code>kids_area:indoor=no</code> voittaa paljaan <code>kids_area=yes</code>:n.</p>
+<p>Rengas on merkki, ei neljäs väri. Paikalla, jolla ei ole näitä tageja, ei ole „ei leikkinurkkaa“, OSM ei vain sano siitä mitään, ja tämä pätee lähes kaikkiin paikkoihin. Siksi tässä ei ole harmaata.</p>
+<p>Juuri siksi ikkuna kysyy: jokaisen nastan kohdalla, josta OSM ei kerro leikkinurkasta mitään, väristä riippumatta, on yksi rivi (huoneiden alla, jos nasta kysyy myös huonetta): <em>Leikkinurkka lapsille?</em> kolmella vastauksella. <em>sisällä</em> kirjoittaa <code>kids_area:indoor=yes</code> yhdessä <code>kids_area=yes</code>:n kanssa, <em>vain ulkona</em> kirjoittaa <code>kids_area=yes</code> yhdessä <code>kids_area:indoor=no</code>:n kanssa, <em>ei ole</em> kirjoittaa <code>kids_area=no</code> — omalla OSM-tunnuksellasi, erillisessä changesetissä, täsmälleen ne tagit, jotka MapComplete kirjoittaa samaan kysymykseen. Kysymys koskee leikkimahdollisuutta ylipäätään, ei vain sisällä: <code>kids_area=no</code> tarkoittaa OSM:ssä „lapset eivät voi leikkiä täällä missään“, joten leipomo, jonka pihalla on leikkipuisto, saa vastauksen <em>vain ulkona</em> väärän nollan sijaan. Rengas ilmestyy (tai jää ilmestymättä) muutaman minuutin kuluttua. Jo vastannutta ei kysytä uudelleen: tallennettu <code>kids_area</code> <em>tai</em> <code>kids_area:indoor</code>, arvosta riippumatta, poistaa kysymyksen. Kohteella <code>leisure=playground</code> ilman <code>indoor=yes</code>:ää sitä ei kysytä lainkaan: paikka <em>on</em> leikkipaikka, vain ulkona.</p>
+<p>Sääntö sopii paljon useampaan paikkaan kuin nastoja on. Vain <span data-stat="play_tables">111</span> niistä on nasta. Vielä <span data-stat="play_places">701</span>:n kohdalla kukaan ei ole vastannut ensimmäiseen kysymykseen: onko täällä hoitopöytä? Niitä kartta ei voi värittää, joten ne saavat tyhjän sinisen renkaan ja oman nappinsa, <em>Vain leikkinurkka</em>, joka on oletuksena päällä. Joka menee sinne joka tapauksessa lapsen kanssa, tietää vastauksen. Renkaan napsautus avaa MapCompleten juuri tähän kysymykseen.</p>
+<p><em>Katkoviivarengas</em> tarkoittaa: leikkinurkka kyllä, hoitopöytä ei (<code>changing_table=no</code>). Se ei ole nasta eikä punainen, koska punainen kertoisi, että pöytä on, mutta ei isälle. Täällä ei ole sellaista kenellekään. Paikka on silti kartalla, koska lapsen kanssa sinne mennään mielellään ilman pöytääkin.</p>
 
 <h2 id="wheelchair">Pyörätuoli-nappi</h2>
 <p><em>Pyörätuoli</em>-nappi näyttää paikat, joilla on OSM:ssä <code>wheelchair=yes</code> tai <code>wheelchair=limited</code>. <code>limited</code> tarkoittaa yhtä enintään 7&nbsp;cm:n porrasta tai avun tarvetta. Kun nappi on päällä, näillä paikoilla on huutomerkki zoomaustasosta 13 alkaen, ja ponnahdusikkunassa lukee <em>rajoitetusti</em>. Pelkkä <code>toilets:wheelchair=yes</code> ei riitä, mutta se näkyy silti ponnahdusikkunassa yhdessä <code>wheelchair:description</code>-tekstin kanssa. Paikka ilman tagia ei ole esteellinen, OSM ei vain sano mitään, joten nappi vain suodattaa eikä värjää mitään. Nappi suodattaa siniset renkaat (paikat, joissa on leikkinurkka) ja merkitsee ne samalla tavalla.</p>
 <p>Tämän napin alla, ja vain siellä, euroavaimen takana olevat pöydät palaavat, avain neulassa: se joka tarvitsee nappia, omistaa yleensä avaimen. Tavallisella kartalla, luvuissa ja listalla ne pysyvät poissa.</p>
-
-<h2 id="empty-rings">Tyhjät siniset renkaat: leikkipaikkoja, ei vastausta</h2>
-<p>Sama sääntö osuu paljon useampaan paikkaan kuin kartalla on nastoja. Vain
-<span data-stat="play_tables">111</span> niistä näkyy nastana.
-<span data-stat="play_places">701</span> muussa kukaan ei ole vastannut ensimmäiseen kysymykseen:
-onko täällä hoitopöytä? Kyllä, ei, ei tietoa — OSM ei kerro yhtään mitään.</p>
-<p>Kartta ei voi värittää niitä <span data-stat="play_places">701</span> paikkaa, koska ei ole
-mitä värittää. Ne eivät ole harmaitakaan: harmaa tarkoittaa "pöytä on olemassa, tila puuttuu",
-eikä se päde tässä. Siksi ne saavat oman suodattimensa, <em>Vain leikkinurkka</em>, joka on
-oletuksena päällä, ja tyhjän sinisen renkaan täytetyn nastan sijaan.</p>
-<p><em>Katkoviivainen</em> rengas tarkoittaa: leikkinurkka kyllä, hoitopöytä ei (<code>changing_table=no</code>). Se ei ole nasta eikä punainen, sillä punainen tarkoittaisi, että hoitopöytä on, mutta ei isälle. Täällä sitä ei ole kenellekään. Paikka on silti kartalla, koska lapsen kanssa sinne menee mielellään ilman hoitopöytääkin.</p>
-<p>Ne ovat koko kartan lupaavimmat avoimet kysymykset. Sisäleikkipuisto, kahvila jossa on
-pallomeri, ravintola jossa on leikkihuone — taaperon kanssa liikkuva isä menee sinne joka
-tapauksessa, ja kun hän on siellä, hän tietää vastauksen. Renkaan klikkaaminen avaa MapCompleten
-juuri siihen yhteen kysymykseen. Vastaa siihen, ja rengas katoaa muutamassa minuutissa, tilalle
-tulee oikea nasta.</p>
 
 <h2 id="high-chair">Syöttötuoli-nappi</h2>
 <p><em>Syöttötuoli</em>-nappi näyttää paikat, joihin OSM:ssä on merkitty syöttötuoli: <code>highchair=yes</code> tai lukua 0 suurempi luku. <code>highchair=no</code> tai <code>0</code> on kirjattu "ei". Paikka ilman tagia ei ole paikka ilman syöttötuolia, OSM ei vain sano mitään, joten nappi jättää sen pois väittämättä mitään. Arvoa, jota kartta ei osaa lukea, kuten <code>ja</code> tai <code>1+</code>, ei myöskään lasketa, eikä ponnahdusikkunassa näy sille riviä. Nappi suodattaa nastat ja siniset renkaat eikä värjää mitään.</p>
@@ -261,7 +221,7 @@ ilmainen OSM-tunnus, voi vastata siihen paikan päällä alle minuutissa:</p>
   <li><strong>Sovelluksessa (nopeimmin):</strong> napauta harmaata nastaa. Ponnahdusikkuna kysyy <em>Missä huoneessa hoitopöytä on?</em> Valitse: <em>Naisten ja miesten</em>, <em>Miesten wc</em>, <em>Naisten wc</em>, <em>Unisex-wc</em>, <em>Esteetön wc</em> tai <em>Erillinen huone</em>. Muut tilat löytyvät kohdan <em>Lisää tiloja …</em> takaa. Näkymässä <em>Äiti</em> <em>Miesten wc</em> ja <em>Naisten ja miesten</em> puuttuvat, koska äiti ei voi taata miesten wc:stä. Kirjaudut OSM:llä kerran, vastaus tallentuu omalle tilillesi ja nasta päivittyy muutaman minuutin kuluessa. Jos napautat sijaintipainiketta alle 75&nbsp;m päässä harmaasta nastasta, kortti kysyy, oletko siellä juuri nyt; <em>Vastaa kysymykseen</em> avaa saman ikkunan.</li>
   <li><strong>MapComplete (mikä tahansa puhelin, selaimessa):</strong> Harmaan nastan
       &ldquo;Vastaa MapCompletessa&rdquo; avaa saman kohteen PapaMapin omassa
-      MapComplete-teemassa &mdash; joka nastalla, jotta muokkaukset tunnistaa täältä tulleiksi.
+      MapComplete-teemassa.
       MapComplete varoittaa kerran epävirallisesta teemasta, se on ihan normaalia. Kirjaudu sisään OSM-tunnuksellasi ja vastaa
       hoitopöytäkysymyksiin, myös tilaa koskevaan. Vastaus menee suoraan OpenStreetMapiin ja näkyy
       täällä muutamassa minuutissa.</li>
@@ -270,8 +230,7 @@ ilmainen OSM-tunnus, voi vastata siihen paikan päällä alle minuutissa:</p>
       sanalla &ldquo;hoitopöytä&rdquo; ja rastita se. Se kysyy vain kyllä/ei. Tilaa koskevaan
       kysymykseen olemassa olevalla harmaalla nastalla käytä MapCompletea.</li>
 </ul>
-<p class="muted">Muokkaukset tehdään omalla OSM-tunnuksellasi ja kuuluvat kaikille. Ne elävät
-tämän sivuston jälkeenkin ja auttavat jokaista sovellusta, joka lukee OpenStreetMapia.</p>
+<p class="muted">Muokkaukset tehdään OSM-tunnuksellasi ja ne hyödyttävät jokaista sovellusta, joka lukee OpenStreetMapia, ei vain tätä.</p>
 
 <h2 id="contribute">Näin lisäät puuttuvan paikan</h2>
 <p>PapaMap ei tallenna itse mitään. Paikan lisääminen tarkoittaa siis aina: OpenStreetMapin
@@ -323,11 +282,7 @@ sitä, minkä pitäisi olla. Jos et tiedä tilaa, pelkkä <code>changing_table=y
 hyödyllinen: paikasta tulee harmaa nasta, ja seuraava isä vastaa tilaa koskevaan kysymykseen.</p>
 
 <h2 id="no-ranking">Miksi tarjonnan vertailu ei onnistu OSM:stä</h2>
-<p>Ilmeinen isompi projekti olisi mies&ndash;nais-vessatarjonnan suhde kaupungeittain. Luku, josta
-&ldquo;potty parity&rdquo; -argumentti oikeasti puhuu. Sitä ei voi laskea OpenStreetMapista.
-Tarkistimme tämän ennen rakentamista otoksella kahdeksasta kaupunkikeskustasta (Berliini, Lontoo,
-Pariisi, New York, Tokio&nbsp;23&nbsp;kaupunginosaa, Amsterdam, Wien, Melbourne;
-26.&nbsp;heinäkuuta&nbsp;2026):</p>
+<p>Ilmeinen suurempi hanke olisi miesten ja naisten vessojen suhde kaupungeittain, luku, josta „potty parity“ -keskustelussa puhutaan. Tarkistin ennen rakentamista, voiko OSM antaa tämän luvun. Ei voi. Otos kahdeksasta kaupunkikeskustasta 26.&nbsp;heinäkuuta&nbsp;2026:</p>
 <table>
   <tr><th>Kaupunki</th><th>Kartoitetut vessat</th><th>Jokin sukupuolitagi</th><th>Molemmat M&nbsp;+&nbsp;N</th></tr>
   <tr><td>Berliini</td><td>1&nbsp;173</td><td>660</td><td>119</td></tr>
@@ -340,42 +295,11 @@ Pariisi, New York, Tokio&nbsp;23&nbsp;kaupunginosaa, Amsterdam, Wien, Melbourne;
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Kaikki</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Vain 29,9&nbsp;%:lla kartoitetuista vessoista on ylipäätään sukupuolitagi. Molemmat (mies ja
-      nainen): 8,5&nbsp;%.</li>
-  <li>Tagit ovat puhtaita kyllä/ei-lippuja, eivät koskaan lukumääriä. WC-koppien määrä
-      sukupuolittain: nolla kaikissa kahdeksassa kaupungissa. Ainoa kapasiteettiavain,
-      <code>toilets:num_chambers</code> (~27&nbsp;000 käyttöä), on sukupuolineutraali ja tulee
-      lähes kokonaan vanhasta tuonnista. Sen muunnokset <code>:female</code> / <code>:male</code>
-      ovat käytössä 2 kertaa kumpikin koko maailmassa.</li>
-  <li>Hampuri, tarkistettu samana päivänä: 443 kartoitettua vessaa, ei yhtään
-      <code>toilets:num_chambers*</code>-tagilla. <a href="./?lang=fi">Etusivun</a> palkki laskee nämä luvut uudelleen kerran viikossa aluetta
-      kohden; itse kartta joka yö.</li>
-  <li>Ja: tagausasteet mittaavat kartoittajayhteisöä, eivät kaupunkeja. Yhden hengen vessat
-      pysyvät aivan oikein sukupuolittamattomina. Kaupunkiranking arvioisi OSM:n
-      käyttäjiä, ei vessojen tasa-arvoa.</li>
-</ul>
-<p>Ainoa rehellinen väite on siis tämä: itse tarjontaa ei voi tänä päivänä mitata avoimesta
-datasta. Tämä sivusto mittaa sen, mikä on mitattavissa, ja muuttaa aukot panoksiksi.</p>
+<p>Vain 29,9% kartoitetuista vessoista on ylipäätään jokin sukupuolitagi, 8,5%:ssa on molemmat. Tagit ovat kyllä/ei-tietoja, ei lukumääriä, eikä WC-koppien määrää sukupuolen mukaan ole yhdessäkään kahdeksasta kaupungista. Ja tagiprosentti mittaa kartoittajayhteisöä, ei kaupunkia. Ranking arvostelisi OSM:n tekijöitä, ei vessoja. Siksi sivu pitäytyy siinä, mitä voi mitata.</p>
 
 <h2 id="where-tables">Ainoa laskettavissa oleva fakta: missä pöydät ovat</h2>
-<p><code>changing_table:location</code> on meidän tietääksemme ainoa avoin sanasto, joka
-tallentaa, missä huoneessa hoitopöytä on. Se on harvinainen:
-<span data-stat="location_total">3&nbsp;659</span> / <span data-stat="ct_total">77&nbsp;000</span>
-<code>changing_table</code>-kohteesta maailmassa, <span data-stat="share">4,8%</span>. Mutta
-siellä missä se on, se on vino (taginfo, <span data-stat="date">26.&nbsp;heinäkuuta&nbsp;2026</span>):</p>
-<ul>
-  <li>Pöytiä vain naisten WC:ssä: <strong data-stat="female_only">485</strong>.</li>
-  <li>Pöytiä vain miesten WC:ssä: <strong data-stat="male_only">71</strong>. Karkeasti
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> on
-      tagattu molempiin tiloihin, <span data-stat="male_any">410</span> tallentaa jonkin
-      miesten-WC:n pöydän ylipäätään. Maailmanlaajuisesti.</li>
-</ul>
-<p>Otos on pieni, ja kartoittajat valitsevat itse, mitä he tallentavat. Älä siis lue tarkkaa
-suhdetta liian tarkasti. Suunta täsmää sen kanssa, mikä on kauan dokumentoitu muualla:
-hoitopöydät roikkuvat oletusarvoisesti naisten WC:ssä. Se sulkee isät ulos, ja se olettaa
-huomaamatta, kenen vastuulla vaipat ovat. Tämä kartta tekee puuttuvat tiedot näkyviksi. Ja
-helpoiksi korjata.</p>
+<p><code>changing_table:location</code> on ainoa avoin sanasto, jonka tunnen, joka kirjaa, missä huoneessa hoitopöytä on. Se on harvinainen: <span data-stat="location_total">3&nbsp;659</span> <span data-stat="ct_total">77&nbsp;000</span>:sta <code>changing_table</code>-kohteesta maailmanlaajuisesti, <span data-stat="share">4,8%</span>. Missä se on, se on yksipuolinen (taginfo, <span data-stat="date">26.&nbsp;heinäkuuta&nbsp;2026</span>): <strong data-stat="female_only">485</strong> pöytää vain naisten vessassa, <strong data-stat="male_only">71</strong> vain miesten, suunnilleen <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> on molemmissa huoneissa.</p>
+<p>Otos on pieni ja kartoittajat päättävät itse, mitä kirjaavat, joten tarkkaa suhdetta ei kannata tulkita liikaa. Suunta on sama kuin kaikkialla: hoitopöydät ovat oletuksena naisten vessassa. Tämä kartta näyttää, missä tiedot puuttuvat, ja jokaisella harmaalla nastalla on muokkausnappi.</p>
 
 <h2 id="licence">Datalisenssi &amp; tekijänoikeudet</h2>
 <p>Kaikki karttadata &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMapin
@@ -387,18 +311,8 @@ ODbL-lisensoituja. Maailmanlaajuiset tagitilastot tulevat palvelusta
 MIT-lisensoitu.</p>
 
 <h2 id="privacy">Tietosuoja</h2>
-<p>Staattinen sivusto. Ei tilejä, ei evästeitä, ei analytiikkaa, ei seurantaskriptejä. Sivusto ei
-tallenna sinusta mitään, eikä sillä ole tietokantaa. Karttalaatat tulevat OpenStreetMapin
-laattapalvelimilta; nämä pyynnöt kuuluvat
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF:n tietosuojakäytännön</a> piiriin. Kun napautat nastassa <em>Vastaa MapCompletessa</em>, sivu kysyy seuraavien minuuttien aikana lisäksi muutaman kerran osoitteesta api.openstreetmap.org, mitä tuo yksi kohde nyt sanoo — niihin pyyntöihin pätee sama käytäntö. Kolmannesta hakukenttään kirjoittamastasi merkistä alkaen, ja aina kun avaat näkymän <em>Lisää paikka</em>, sivu kysyy lisäksi komootin Photon-paikkahaulta (photon.komoot.io). Se saa kirjoittamasi tekstin ja pyöristetyn kartan keskipisteen sekä, kuten mikä tahansa palvelin, IP-osoitteesi.
-Jos seuraat linkkiä MapCompleteen, StreetCompleteen tai openstreetmap.orgiin, olet heidän
-sivustollaan ja muokkaat omalla OSM-tunnuksellasi. Mikään ei kulje meidän kauttamme. Viralliset
-sivut: <a href="impressum.html">Impressum</a> ·
-<a href="datenschutz.html">Datenschutzerklärung</a> (saksaksi).</p>
-
-<p class="muted">Lähteet: Overpass-otos 8 kaupunkikeskustasta (9&nbsp;674 vessaa) päivältä
-26.&nbsp;heinäkuuta&nbsp;2026, sekä taginfon avaintilastot yllä mainitulta päivältä. Paikalliset
-luvut tulevat samasta yöllisestä kyselystä, joka rakentaa kartan.</p>
+<p>Staattinen sivusto. Se ei aseta evästeitä eikä sisällä analytiikkaa. Karttalaatat tulevat OpenStreetMapin laattapalvelimilta; nämä pyynnöt kuuluvat <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF:n tietosuojakäytännön</a> piiriin. Jos napautat nastassa kohtaa <em>Vastaa MapCompletessa</em>, sivu kysyy seuraavien minuuttien aikana muutaman kerran myös api.openstreetmap.org:lta, mitä tämä yksi kohde nyt sanoo — nämä pyynnöt kuuluvat saman käytännön piiriin. Hakukentän kolmannesta merkistä alkaen ja aina kun avaat kohdan <em>Lisää paikka</em>, sivu kysyy lisäksi komootin paikkahakua Photon (photon.komoot.io). Se saa kirjoitetun tekstin ja pyöristetyn kartan keskipisteen sekä, kuten jokainen palvelin, IP-osoitteesi. Linkit MapCompleteen, StreetCompleteen tai openstreetmap.orgiin johtavat niiden sivuille, joilla muokkaat omalla OSM-tunnuksellasi. Viralliset tiedot: <a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (saksaksi).</p></p>
 
 <h2 id="how-made">Näin tämä sivusto tehdään</h2>
 <p>Käytän tekoälyä apuna koodauksessa ja tekstien luonnostelussa. Kaikki kulkee kuitenkin omien
