@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.classList.add("js");</script>
 <meta name="theme-color" content="#f2f5f3">
 <title>PapaMap als App</title>
 <meta name="description" content="Die iPhone-App ist im App Store, die Android-App in Arbeit. Ohne Store legt sich PapaMap auf den Homescreen und läuft dort wie eine App. Offline, der nächste Wickeltisch, Papa oder Mama, Antworten mit zwei Fingertipps.">
@@ -110,15 +111,32 @@
     box-shadow: var(--shot-shadow); background: var(--green-soft);
   }
 
-  .steps { margin: 3rem 0 0; }
+  /* The section bleeds 1 rem into the page's side padding, and pads it back
+     (so nothing inside moves): the route line below runs in that gutter, clear
+     of the text and the screens, and overflow-x: clip keeps a sliding screen
+     from ever making the page scroll sideways. */
+  .steps { position: relative; margin: 3rem -1rem 0; padding: 0 1rem; overflow-x: clip; }
   .steps > h2 { font-size: 1.45rem; line-height: 1.25; margin: 0 0 1.4rem; text-wrap: balance; }
   .step { display: grid; gap: 1.4rem; margin: 0 0 3.2rem; --shot-w: 15rem; }
   .step h3 { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.35rem; font-size: 1.4rem; line-height: 1.2; }
+  /* The step number is a map pin: a round head with a tail, and the digit in
+     its white eye (ink on the page colour reads at AA in both schemes, which
+     white on this green would not). The shape is the ::before, turned 45 degrees,
+     so the digit itself stays upright. Green, as the map draws a pin that has an
+     answer; with JavaScript it is grey until its step is revealed (see below). */
   .num {
-    flex: none; display: inline-grid; place-items: center; width: 2.1rem; height: 2.1rem;
-    border-radius: 50%; background: var(--green-strong); color: var(--on-green);
-    font-size: 1.05rem; font-weight: 700;
+    --pin: var(--green);
+    position: relative; isolation: isolate; flex: none;
+    display: inline-grid; place-items: center; width: 2.1rem; height: 2.1rem;
+    color: var(--ink); font-size: 0.95rem; font-weight: 700; line-height: 1;
+    transform-origin: 50% 115%;
   }
+  .num::before, .num::after { content: ""; position: absolute; z-index: -1; }
+  .num::before {
+    inset: 0; background: var(--pin); border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg); transition: background-color 0.3s ease-out;
+  }
+  .num::after { inset: 0.34rem; border-radius: 50%; background: var(--bg); }
   .tagline { margin: 0 0 0.5rem; font-size: 1.12rem; font-weight: 600; }
   .step ul { margin: 0; padding-left: 1.2rem; }
   .step li { margin: 0.45rem 0; }
@@ -142,6 +160,66 @@
   }
   @media (prefers-reduced-motion: no-preference) {
     .option a.cta { transition: background-color 0.15s ease; }
+  }
+
+  /* Motion. Only opacity and transform move, so nothing shifts the layout.
+     Everything that starts hidden is scoped under .js (set in the head by the
+     first script): without JavaScript the page is simply all there. */
+
+  /* The route: a dashed line down the gutter beside the steps. It is a plain
+     static line everywhere; where scroll-driven animations exist, a curtain in
+     the page colour sits over it and lifts as the section scrolls past, so the
+     line draws itself (the dashes stay the same size, which scaling the line
+     itself would not keep). */
+  .steps::before {
+    content: ""; position: absolute; left: calc(0.5rem - 1px); width: 2px; top: 3.4rem; bottom: 0.6rem;
+    background: repeating-linear-gradient(to bottom, var(--muted) 0 6px, transparent 6px 12px); opacity: 0.55;
+  }
+  @keyframes route-draw { from { transform: scaleY(1); } to { transform: scaleY(0); } }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .steps::after {
+        content: ""; position: absolute; left: calc(0.5rem - 4px); width: 8px; top: 3.4rem; bottom: 0.6rem;
+        background: var(--bg); transform-origin: bottom;
+        animation: route-draw linear both; animation-timeline: view(); animation-range: cover 0% cover 90%;
+      }
+    }
+  }
+
+  /* A step's text rises, then its screen slides in from the side it sits on
+     (the .flip steps have theirs on the left). Once, never undone. The pin
+     turns green with a short pop when its step arrives. */
+  .js .step > div:not(.media) { opacity: 0; transform: translateY(16px); }
+  .js .step > .media { opacity: 0; transform: translateX(24px); }
+  .js .step.flip > .media { transform: translateX(-24px); }
+  .js .step.in > div:not(.media), .js .step.in > .media {
+    opacity: 1; transform: none; transition: opacity 450ms ease-out, transform 450ms ease-out;
+  }
+  .js .step.in > .media { transition-delay: 120ms; }
+  .js .step:not(.in) .num { --pin: var(--muted); }
+  .js .step.in .num { animation: pop 350ms ease-out; }
+  @keyframes pop { 50% { transform: scale(1.18); } }
+
+  /* The top of the page: five blocks fade up 60 ms apart, 690 ms in all. A CSS
+     animation that ends on the normal state, so it needs no script. */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+  h1, .lead, .options, .free, body > .shot { animation: rise 450ms ease-out backwards; }
+  .lead { animation-delay: 60ms; }
+  .options { animation-delay: 120ms; }
+  .free { animation-delay: 180ms; }
+  body > .shot { animation-delay: 240ms; }
+
+  /* Less motion: no animation, no transition, everything there at once, the
+     pins already green and the route a plain line. The video does not start
+     by itself either (see the script). Printing shows everything too. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .js .step > div:not(.media), .js .step > .media { opacity: 1; transform: none; }
+    .js .step:not(.in) .num { --pin: var(--green); }
+  }
+  @media print {
+    .js .step > div:not(.media), .js .step > .media { opacity: 1; transform: none; }
+    .steps::after { display: none; }
   }
 
   p.foot { color: var(--muted); font-size: 0.9rem; }
@@ -232,7 +310,7 @@
     </ul>
   </div>
   <div class="media">
-    <video class="shot" width="540" height="1170" poster="img/app/loop-de.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Ein grauer Pin, die Frage „In welchem Raum ist der Wickeltisch?“, ein Fingertipp auf die Antwort, und der Pin wird grün.">
+    <video class="shot" width="540" height="1170" poster="img/app/loop-de.jpg" muted loop playsinline preload="none" aria-label="Ein grauer Pin, die Frage „In welchem Raum ist der Wickeltisch?“, ein Fingertipp auf die Antwort, und der Pin wird grün.">
       <source src="img/app/loop-de.webm" type="video/webm">
       <source src="img/app/loop-de.mp4" type="video/mp4">
       <img src="img/app/loop-de.jpg" width="540" height="1170" loading="lazy" alt="Ein grauer Pin, die Frage „In welchem Raum ist der Wickeltisch?“, ein Fingertipp auf die Antwort, und der Pin wird grün.">
@@ -263,9 +341,26 @@
 // Bis September 2026 stand hier eine Abstimmung, die ihren Fingertipp im Local
 // Storage gemerkt hat. Nichts liest den Schlüssel mehr, also weg damit.
 try { localStorage.removeItem("papamap-app"); } catch (e) { /* privater Modus */ }
-// Wer weniger Bewegung eingestellt hat, sieht das Standbild statt der Schleife.
-if (matchMedia("(prefers-reduced-motion: reduce)").matches)
-  document.querySelectorAll("video.shot").forEach((v) => { v.removeAttribute("autoplay"); v.pause(); });
+// Bewegung. Die Schritte blenden einmal ein; das Video läuft nur, solange es zur Hälfte im Bild ist.
+(() => {
+  const steps = document.querySelectorAll(".step"), videos = document.querySelectorAll("video.shot");
+  // Wer weniger Bewegung eingestellt hat: alles ist schon da (CSS), das Video startet nicht von selbst
+  // und zeigt den Raum-Dialog statt der Karte, mit Bedienleiste.
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    videos.forEach((v) => { v.poster = "img/app/room-" + document.documentElement.lang + ".webp"; v.controls = true; });
+    return;
+  }
+  const show = (s) => s.classList.add("in");
+  if (!("IntersectionObserver" in window)) return steps.forEach(show);
+  const once = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.intersectionRatio >= 0.25 || e.boundingClientRect.bottom < 0) { show(e.target); once.unobserve(e.target); }
+  }), { threshold: 0.25, rootMargin: "0px 0px -8% 0px" });
+  steps.forEach((s) => once.observe(s));
+  const inView = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.intersectionRatio >= 0.5) e.target.play().catch(() => {}); else e.target.pause();
+  }), { threshold: 0.5 });
+  videos.forEach((v) => inView.observe(v));
+})();
 </script>
 
 </body>

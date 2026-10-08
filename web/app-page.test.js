@@ -202,11 +202,12 @@ test("every image on the two pages is a local file with a size and alt text", ()
 });
 
 test("the loop in step 3 is a muted, local, sized video with a poster and a still fallback", () => {
-  // Browsers block autoplay unless the video is muted, and a phone plays it in
-  // the page rather than full screen only with playsinline. Files come from
-  // here like every picture (no third-party requests); the sizes keep the
-  // layout still before the poster arrives. A reader who asked for less motion
-  // gets the poster: the script below the page pauses the loop for them.
+  // A muted video is the only kind a browser plays without a tap, and a phone
+  // plays it in the page rather than full screen only with playsinline. Files
+  // come from here like every picture (no third-party requests); the sizes keep
+  // the layout still before the poster arrives. It has no autoplay and
+  // preload="none": nothing but the poster is fetched until the script plays
+  // it, when half of it is on screen.
   for (const f of PAGES) {
     const lang = f === "app.html" ? "de" : "en";
     const html = stripped(f);
@@ -216,6 +217,8 @@ test("the loop in step 3 is a muted, local, sized video with a poster and a stil
       const tag = `<video${open}>`;
       for (const flag of ["muted", "loop", "playsinline"])
         assert.ok(new RegExp(`\\s${flag}(?=[\\s>=])`).test(tag), `${f}: video lacks ${flag}`);
+      assert.ok(!/\sautoplay(?=[\s>=])/.test(tag), `${f}: video must not autoplay`);
+      assert.equal(attr(tag, "preload"), "none", `${f}: video preload`);
       assert.ok(/^\d+$/.test(attr(tag, "width") || "") && /^\d+$/.test(attr(tag, "height") || ""), `${f}: video has no size`);
       assert.ok((attr(tag, "aria-label") || "").trim().length > 10, `${f}: video has no aria-label`);
       const poster = attr(tag, "poster");
@@ -238,6 +241,93 @@ test("the loop in step 3 is a muted, local, sized video with a poster and a stil
       assert.ok((attr(img, "alt") || "").trim().length > 10, `${f}: fallback has no alt text`);
       assert.ok(/^\d+$/.test(attr(img, "width") || "") && /^\d+$/.test(attr(img, "height") || ""), `${f}: fallback has no size`);
     }
-    assert.ok(html.includes("(prefers-reduced-motion: reduce)") && html.includes("v.pause()"), `${f}: reduced motion`);
+    // The script plays it only while half of it is on screen and pauses it
+    // otherwise; a reader who asked for less motion gets the room dialog as the
+    // poster and the controls, and the file for it has to exist.
+    assert.ok(/intersectionRatio >= 0\.5\) e\.target\.play\(\)[^;]*; else e\.target\.pause\(\)/.test(html), `${f}: in-view playback`);
+    assert.ok(html.includes("(prefers-reduced-motion: reduce)") && html.includes("v.controls = true"), `${f}: reduced motion`);
+    assert.ok(html.includes('v.poster = "img/app/room-" + document.documentElement.lang + ".webp"'), `${f}: reduced-motion poster`);
+    assert.ok(existsSync(new URL(`img/app/room-${lang}.webp`, dir)), `${f}: room screenshot`);
+  }
+});
+
+// The page's <style> as a flat list of rules, each with the at-rules around it.
+function cssRules(f) {
+  const css = /<style>([\s\S]*?)<\/style>/.exec(read(f))[1].replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules = [], stack = [];
+  let buf = "";
+  for (const ch of css) {
+    if (ch === "{") {
+      if (stack.length) stack[stack.length - 1].kids++;
+      stack.push({ head: buf.trim(), kids: 0 });
+      buf = "";
+    } else if (ch === "}") {
+      const frame = stack.pop();
+      rules.push({ sel: frame.head, body: frame.kids ? "" : buf, ctx: stack.map((x) => x.head) });
+      buf = "";
+    } else buf += ch;
+  }
+  return rules.filter((r) => r.body);
+}
+
+test("the pages make no request of their own beyond local files", () => {
+  // The Datenschutz promises no third-party requests. Scripts are inline; the
+  // canonical and alternate links name pages, they are not fetched.
+  for (const f of PAGES) {
+    const html = stripped(f);
+    assert.ok(!/<script\b[^>]*\ssrc=/i.test(html), `${f}: a script is loaded from a file`);
+    for (const [tag] of html.matchAll(/<link\b[^>]*>/g)) {
+      if (/\srel="(?:canonical|alternate)"/.test(tag)) continue;
+      assert.ok(local(attr(tag, "href")), `${f}: ${tag} is not local`);
+    }
+    assert.ok(!/@import|url\(\s*["']?(?:[a-z]+:|\/\/)/i.test(/<style>([\s\S]*?)<\/style>/.exec(html)[1]), `${f}: the CSS fetches from outside`);
+  }
+});
+
+test("scroll animations: nothing starts hidden without the js class, and less motion switches them off", () => {
+  for (const f of PAGES) {
+    const html = read(f);
+    // The first script sets the class, before any style applies.
+    const head = html.slice(0, html.indexOf("<style>"));
+    assert.ok(head.includes('document.documentElement.classList.add("js")'), `${f}: js class`);
+    const rules = cssRules(f);
+    const inKeyframes = (r) => r.ctx.some((c) => c.startsWith("@keyframes"));
+    const hides = rules.filter((r) => !inKeyframes(r) && /(?:^|[;\s])(?:opacity:\s*0\s*(?:;|$)|transform:\s*translate[XY]?\()/.test(r.body.trim()));
+    assert.ok(hides.length >= 3, `${f}: ${hides.length} hiding rules`);
+    for (const r of hides)
+      for (const sel of r.sel.split(","))
+        assert.match(sel.trim(), /^\.js[\s.]/, `${f}: "${sel.trim()}" hides without .js`);
+    // Only opacity and transform move (and the pin's colour changes): no
+    // animation or transition on anything that would shift the layout.
+    for (const r of rules)
+      for (const [, prop] of r.body.matchAll(/transition:\s*([a-z-]+)/g))
+        assert.ok(["none", "opacity", "transform", "background-color"].includes(prop), `${f}: transition on ${prop}`);
+    // Less motion: every animation and transition off, every step there at once.
+    const calm = rules.filter((r) => r.ctx.includes("@media (prefers-reduced-motion: reduce)"));
+    assert.ok(calm.some((r) => /animation:\s*none/.test(r.body) && /transition:\s*none/.test(r.body)), `${f}: reduced motion keeps animating`);
+    for (const sel of [".js .step > div:not(.media)", ".js .step > .media"])
+      assert.ok(calm.some((r) => r.sel.split(",").map((x) => x.trim()).includes(sel) && /opacity:\s*1/.test(r.body)), `${f}: reduced motion hides ${sel}`);
+    // The route's curtain exists only where scroll-driven animations do, and
+    // never under reduced motion; without it the route is a plain line.
+    const curtain = rules.find((r) => r.sel === ".steps::after" && r.body.includes("animation-timeline"));
+    assert.deepEqual(curtain.ctx, ["@supports (animation-timeline: view())", "@media (prefers-reduced-motion: no-preference)"], f);
+    assert.ok(rules.some((r) => r.sel === ".steps::before" && r.ctx.length === 0), `${f}: the route line is plain CSS`);
+  }
+});
+
+test("the top of the page fades in within 700 ms, and the page's scripts stay small", () => {
+  for (const f of PAGES) {
+    const rules = cssRules(f);
+    const main = rules.find((r) => r.sel.startsWith("h1,") && r.body.includes("animation: rise"));
+    assert.ok(main && main.ctx.length === 0, `${f}: hero animation`);
+    const ms = Number(/animation: rise (\d+)ms/.exec(main.body)[1]);
+    const delays = rules.filter((r) => /^(?:\.lead|\.options|\.free|body > \.shot)$/.test(r.sel) && r.body.includes("animation-delay"))
+      .map((r) => Number(/animation-delay: (\d+)ms/.exec(r.body)[1]));
+    assert.equal(delays.length, 4, f);
+    assert.ok(ms + Math.max(...delays) < 700, `${f}: ${ms + Math.max(...delays)} ms`);
+    // The hero animation is CSS only and ends on the normal state (no fill forwards).
+    assert.ok(!/forwards|both/.test(main.body), f);
+    const lines = [...stripped(f).matchAll(/<script>([\s\S]*?)<\/script>/g)].reduce((n, m) => n + m[1].trim().split("\n").length, 0);
+    assert.ok(lines <= 60, `${f}: ${lines} script lines`);
   }
 });
