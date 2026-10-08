@@ -131,7 +131,6 @@ kvar oförändrat.</p>
   <li><a href="#mum-mode">Omkopplaren pappa/mamma</a></li>
   <li><a href="#play-area">Den blå ringen: lekhörna</a></li>
   <li><a href="#wheelchair">Chippet Rullstol</a></li>
-  <li><a href="#empty-rings">De tomma blå ringarna: lekställen utan svar</a></li>
   <li><a href="#high-chair">Chippet Barnstol</a></li>
   <li><a href="#grey-pin">Så fixar du en grå nål</a></li>
   <li><a href="#contribute">Så lägger du till en plats som saknas</a></li>
@@ -168,7 +167,7 @@ och varje del jämförs i sin helhet. Aldrig som delsträng, för <code>female_t
   <li><span class="dot r"></span><strong>Rött:</strong> annars, om en av delarna är
       <code>female_toilet</code>. Bordet finns, men bara på damtoaletten.</li>
   <li><span class="dot u"></span><strong>Grått:</strong> allt annat. Ingen location-tagg, eller
-      bara fritext. Ingen har registrerat rummet. De grå nålarna är uppgiften.</li>
+      bara fritext. Ingen har registrerat rummet.</li>
 </ul>
 <p>Ett objekt med en <code>centralkey</code>-tagg (utom <code>no</code>) hålls utanför kartan när nyckeln spärrar hela dörren: <code>access=centralkey</code>, ett bord i handikapptoaletten, eller inget i taggarna säger att nyckeln bara gäller en kabin. En anläggning med öppen herr- och damtoalett och en låst handikappkabin (<code>wheelchair:access=centralkey</code>, eller <code>male=yes</code> och <code>female=yes</code>) stannar på kartan, grå tills någon registrerar rummet. Euronyckeln får man bara mot styrkt funktionsnedsättning, så de flesta pappor kommer inte genom den dörren. Under chippet <em>Rullstol</em> kommer dessa skötbord tillbaka, se nedan.</p>
 
@@ -195,59 +194,22 @@ i mamma-läget är de röda och räknas inte med i siffran ovan. Äldre versione
 fortfarande visa dem gröna, tills de uppdateras.</p>
 
 <h2 id="play-area">Den blå ringen: lekhörna</h2>
-<p>En nål med blå ring har dessutom en lekhörna &mdash; en plats där man inte bara byter blöja utan
-också blir kvar en stund. Filtret <em>Med lekhörna</em> i filterraden visar bara dem. En plats räknas
-om något av det här står i OSM:</p>
+<p>En nål med blå ring har också en lekhörna. Chippet <em>Med lekhörna</em> visar bara dem. Ett ställe räknas om någon av dessa taggar finns i OSM:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> eller <code>designated</code>
-      &mdash; wikins dokumenterade sätt att säga &rdquo;inomhus&rdquo;.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> eller
-      <code>designated</code> &mdash; lekhörnan på caféet, på restaurangen, på bageriet. Den mest
-      använda taggen, men den lämnar öppet om det är inne eller ute.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; en kommersiell
-      inomhuslekplats.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> tillsammans med
-      <code>indoor=yes</code> &mdash; samma sak, taggat tvärtom.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> eller <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> eller <code>designated</code> (den vanligaste taggen, den säger inte om det är inomhus eller utomhus)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> tillsammans med <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> räknas inte: sandlådan på uteserveringen är inte det ringen lovar.
-<code>no</code> räknas inte, och inte <code>limited</code> heller — wikin definierar det som
-&rdquo;leksaker finns, men ingen egen yta&rdquo;. Står det någonstans uttryckligen
-<code>kids_area:indoor=no</code>, vinner det över ett ensamt <code>kids_area=yes</code>.</p>
-<p>Det här är ett märke, inte en fjärde status. En plats utan de här taggarna har inte &rdquo;ingen
-lekhörna&rdquo; — OSM säger helt enkelt ingenting om den. Därför finns här inget grått.</p>
-<p>Det är precis därför popup-fönstret frågar om det. Vid varje nål där OSM inte säger något om
-en lekhörna, oavsett färg, finns det en rad (under rummen, där nålen även frågar om rummet):
-<em>Lekhörna för barn?</em>, med tre svar. <em>inomhus</em> skriver
-<code>kids_area:indoor=yes</code> tillsammans med <code>kids_area=yes</code>, <em>bara
-utomhus</em> skriver <code>kids_area=yes</code> tillsammans med
-<code>kids_area:indoor=no</code>, <em>ingen</em> skriver <code>kids_area=no</code> &mdash; under
-ditt eget OSM-konto, i ett eget changeset, exakt samma taggar som MapComplete skriver för samma
-fråga. Frågan gäller en lekhörna överhuvudtaget, inte bara en inomhus:
-<code>kids_area=no</code> betyder i OSM &rdquo;här finns ingenstans för barn att leka&rdquo;, så
-ett bageri med en lekplats i trädgården får <em>bara utomhus</em> i stället för ett felaktigt nej.
-Ringen dyker upp (eller uteblir) några minuter senare. Ingen blir tillfrågad två gånger: ett
-registrerat <code>kids_area</code> <em>eller</em> <code>kids_area:indoor</code>, oavsett värde,
-tar bort frågan. På en <code>leisure=playground</code> utan <code>indoor=yes</code> ställs den
-aldrig &mdash; platsen <em>är</em> redan ett ställe att leka på, bara inte inomhus.</p>
+<p><code>outdoor</code>, <code>no</code> och <code>limited</code> räknas inte. Ett uttryckligt <code>kids_area:indoor=no</code> vinner över ett naket <code>kids_area=yes</code>.</p>
+<p>Ringen är en bricka, inte en fjärde färg. Ett ställe utan dessa taggar har inte »ingen lekhörna«, OSM säger bara ingenting om det, och det gäller nästan alla ställen. Därför finns det inget grått här.</p>
+<p>Just därför frågar popupen: Vid varje nål där OSM inte säger något om en lekhörna, oavsett färg, står en rad (under rummen, om nålen också frågar efter rummet): <em>Lekhörna för barn?</em> med tre svar. <em>inomhus</em> skriver <code>kids_area:indoor=yes</code> tillsammans med <code>kids_area=yes</code>, <em>bara utomhus</em> skriver <code>kids_area=yes</code> tillsammans med <code>kids_area:indoor=no</code>, <em>ingen</em> skriver <code>kids_area=no</code> — under ditt eget OSM-konto, i en egen changeset, exakt de taggar som MapComplete skriver för samma fråga. Frågan gäller lekmöjligheter över huvud taget, inte bara inomhus: <code>kids_area=no</code> betyder i OSM »här kan barn inte leka någonstans«, och ett bageri med lekplats i trädgården får därför <em>bara utomhus</em> i stället för en falsk nolla. Ringen kommer (eller uteblir) några minuter senare. Den som redan har svarat får inte frågan igen: En registrerad <code>kids_area</code> <em>eller</em> <code>kids_area:indoor</code>, vilket värde det än har, tar bort frågan. På en <code>leisure=playground</code> utan <code>indoor=yes</code> ställs den inte alls: Stället <em>är</em> en plats att leka på, bara utomhus.</p>
+<p>Regeln stämmer på många fler ställen än det finns nålar. Bara <span data-stat="play_tables">111</span> av dem har en nål. Vid ytterligare <span data-stat="play_places">701</span> har ingen besvarat den första frågan: Finns det ett skötbord här? Dem kan kartan inte färglägga, så de får en tom blå ring och ett eget chip, <em>Bara lekhörna</em>, som är på som standard. Den som ändå åker dit med ett barn vet svaret. Ett klick på ringen öppnar MapComplete precis vid den frågan.</p>
+<p>En <em>streckad</em> ring betyder: lekhörna ja, skötbord nej (<code>changing_table=no</code>). Det är ingen nål och inte heller rött, för rött skulle säga att det finns ett bord, bara inte för pappa. Här finns det inget, för ingen. Stället finns ändå på kartan, för med ett barn åker man gärna dit även utan bord.</p>
 
 <h2 id="wheelchair">Chippet Rullstol</h2>
 <p>Chippet <em>Rullstol</em> visar platser med <code>wheelchair=yes</code> eller <code>wheelchair=limited</code> i OSM. <code>limited</code> betyder ett steg på upp till 7&nbsp;cm, eller att hjälp behövs. Med chippet på har dessa platser ett utropstecken från zoom 13, och popupen säger <em>begränsat</em>. <code>toilets:wheelchair=yes</code> ensamt räcker inte, men står ändå i popupen tillsammans med <code>wheelchair:description</code>. En plats utan taggen är inte otillgänglig, OSM säger bara inget, så chippet filtrerar bara och färgar inget. De blå ringarna (platser med lekhörna) filtrerar och markerar chippet på samma sätt.</p>
 <p>Under detta chip, och bara där, kommer skötborden bakom eurokey tillbaka, med en nyckel i nålen: den som behöver chippet har oftast nyckeln. På den vanliga kartan, i siffrorna och i rankningen stannar de utanför.</p>
-
-<h2 id="empty-rings">De tomma blå ringarna: lekställen utan svar</h2>
-<p>Samma regel matchar långt fler platser än kartan har nålar. Bara
-<span data-stat="play_tables">111</span> av dem har en nål. På <span data-stat="play_places">701</span> till har ingen svarat
-på den första frågan: finns det ett skötbord här? Ja, nej, ingen vet — i OSM står det ingenting
-alls om det.</p>
-<p>De där <span data-stat="play_places">701</span> kan kartan inte färglägga, för det finns inget
-att färglägga. De är inte heller grå: grått betyder &rdquo;bordet finns, rummet saknas&rdquo;, och
-det gäller inte här. Därför får de ett eget filter, <em>Bara lekhörna</em>, som är påslaget som
-standard, och en tom blå ring i stället för en fylld nål.</p>
-<p>En <em>streckad</em> ring betyder: lekhörna ja, skötbord nej (<code>changing_table=no</code>). Det är ingen nål och inte heller röd, för rött skulle betyda att det finns ett skötbord, bara inte för pappa. Här finns det inget, för någon. Platsen är ändå med på kartan, eftersom man gärna går dit med barn även utan skötbord.</p>
-<p>Det är de mest lovande öppna frågorna på hela kartan. En inomhuslekplats, ett café med bollhav,
-en restaurang med lekrum — en pappa med ett litet barn går dit ändå, och väl på plats vet han
-svaret. Ett klick på ringen öppnar MapComplete direkt på just den frågan. Blir den besvarad
-försvinner ringen inom några minuter, och en riktig nål står där i stället.</p>
 
 <h2 id="high-chair">Chippet Barnstol</h2>
 <p>Chippet <em>Barnstol</em> visar platser där OSM anger en barnstol: <code>highchair=yes</code> eller ett tal över 0. <code>highchair=no</code> eller <code>0</code> är ett registrerat nej. En plats utan taggen är inte en plats utan barnstol, OSM säger bara inget, så chippet utelämnar den utan att påstå något. Ett värde som kartan inte kan läsa, som <code>ja</code> eller <code>1+</code>, räknas inte heller, och popupen visar ingen rad för det. Chippet filtrerar nålar och blå ringar och färgar inget.</p>
@@ -259,8 +221,7 @@ OSM-konto besvara, på plats, på under en minut:</p>
 <ul>
   <li><strong>I appen (snabbast):</strong> tryck på den grå nålen. Popup-rutan frågar <em>I vilket rum står skötbordet?</em> Tryck på <em>Dam &amp; herr</em>, <em>Herrtoalett</em>, <em>Damtoalett</em>, <em>Unisextoalett</em>, <em>Handikapptoalett</em> eller <em>Eget rum</em>. Andra rum finns under <em>Fler rum …</em>. I vyn <em>Mamma</em> utelämnas <em>Herrtoalett</em> och <em>Dam &amp; herr</em>, eftersom en mamma inte kan gå i god för herrtoaletten. Du loggar in en gång med OSM, svaret sparas under ditt eget konto och nålen uppdateras inom några minuter. Trycker du på platsknappen inom 75&nbsp;m från en grå nål frågar ett kort om du är där just nu; <em>Svara på frågan</em> öppnar samma ruta.</li>
   <li><strong>MapComplete (vilken mobil som helst, i webbläsaren):</strong> &rdquo;Svara på
-      MapComplete&rdquo; på en grå nål öppnar samma objekt i PapaMaps eget MapComplete-tema
-      &mdash; på varje nål, så att redigeringarna går att känna igen som gjorda härifrån.
+      MapComplete&rdquo; på en grå nål öppnar samma objekt i PapaMaps eget MapComplete-tema.
       MapComplete varnar en gång för ett inofficiellt tema, det är okej. Logga in med ditt OSM-konto och svara på skötbordsfrågorna,
       även den om rummet. Svaret går rakt in i
       OpenStreetMap och syns här inom några minuter.</li>
@@ -269,8 +230,7 @@ OSM-konto besvara, på plats, på under en minut:</p>
       &rdquo;skötbord&rdquo; och bocka i det. Det frågar bara ja/nej. För rumsfrågan på en
       befintlig grå nål tar du MapComplete.</li>
 </ul>
-<p class="muted">Redigeringarna görs under ditt eget OSM-konto och tillhör alla. De överlever den
-här webbplatsen och är till nytta för varje app som läser OpenStreetMap.</p>
+<p class="muted">Redigeringarna sker under ditt OSM-konto och hjälper varje app som läser OpenStreetMap, inte bara den här.</p>
 
 <h2 id="contribute">Så lägger du till en plats som saknas</h2>
 <p>PapaMap sparar ingenting själv. Att lägga till en plats betyder därför alltid: att redigera
@@ -322,11 +282,7 @@ borde finnas. Vet du inte vilket rum det är, är <code>changing_table=yes</code
 användbart: platsen blir en grå nål, och nästa pappa svarar på rumsfrågan.</p>
 
 <h2 id="no-ranking">Varför ett täckningsindex ur OSM inte går</h2>
-<p>Det närliggande, större projektet vore ett mått på tillgången till toaletter för män jämfört med
-kvinnor, stad för stad. Siffran som &rdquo;potty parity&rdquo; egentligen handlar om. Ur
-OpenStreetMap går den inte att räkna fram. Vi kontrollerade det innan vi byggde, med ett stickprov
-över åtta stadskärnor (Berlin, London, Paris, New York, Tokyo&nbsp;23&nbsp;stadsdelar, Amsterdam,
-Wien, Melbourne; 26&nbsp;juli&nbsp;2026):</p>
+<p>Det självklara större projektet vore förhållandet mellan herr- och damtoaletter per stad, siffran som »potty parity«-debatten handlar om. Jag kontrollerade innan jag byggde om OSM kan ge den siffran. Det kan det inte. Ett urval från åtta stadskärnor från 26&nbsp;juli&nbsp;2026:</p>
 <table>
   <tr><th>Stad</th><th>Registrerade toaletter</th><th>Någon könstagg alls</th><th>Både M&nbsp;+&nbsp;K</th></tr>
   <tr><td>Berlin</td><td>1&nbsp;173</td><td>660</td><td>119</td></tr>
@@ -339,40 +295,11 @@ Wien, Melbourne; 26&nbsp;juli&nbsp;2026):</p>
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Alla</strong></td><td><strong>9&nbsp;674</strong></td><td><strong>2&nbsp;888 (29,9&nbsp;%)</strong></td><td><strong>827 (8,5&nbsp;%)</strong></td></tr>
 </table>
-<ul>
-  <li>Bara 29,9&nbsp;% av de registrerade toaletterna har över huvud taget en könstagg. Båda
-      (male och female): 8,5&nbsp;%.</li>
-  <li>Taggarna är rena ja/nej-uppgifter, aldrig antal. Antal bås per kön: noll i alla åtta
-      städerna. Den enda kapacitetsnyckeln, <code>toilets:num_chambers</code> (~27k användningar),
-      saknar könsuppdelning och kommer nästan helt från en gammal import. Dess varianter
-      <code>:female</code> / <code>:male</code> har 2 användningar var i hela världen.</li>
-  <li>Hamburg, kontrollerat samma dag: 443 registrerade toaletter, ingen med en
-      <code>toilets:num_chambers*</code>-tagg. Raden på <a href="./?lang=sv">startsidan</a> räknar om de här talen en gång i veckan per område;
-      själva kartan varje natt.</li>
-  <li>Och: taggningsgrader mäter kartläggarna, inte städerna. Toaletter med ett enda bås
-      står korrekt utan könstagg. En jämförelse mellan städer skulle betygsätta OSM-bidragsgivare, inte
-      toalettjämlikhet.</li>
-</ul>
-<p>Det enda ärliga är alltså: själva tillgången går inte att mäta ur öppna data i dag. Den här
-webbplatsen mäter det som går att mäta och gör luckorna till bidrag.</p>
+<p>Bara 29,9&nbsp;% av de kartlagda toaletterna har över huvud taget en könstagg, 8,5&nbsp;% har båda. Taggarna är ja/nej-uppgifter, inte räkningar, och antal bås per kön finns inte i någon av de åtta städerna. Och en taggandel mäter kartläggarnas gemenskap, inte staden. En rankning skulle sätta betyg på OSM-bidragsgivare, inte på toaletter. Därför håller sig sidan till det som går att mäta.</p>
 
 <h2 id="where-tables">Det enda som går att räkna fram: var borden står</h2>
-<p><code>changing_table:location</code> är såvitt vi vet det enda öppna vokabulär som håller reda
-på vilket rum ett skötbord står i. Det är glest ifyllt:
-<span data-stat="location_total">3&nbsp;659</span> av <span data-stat="ct_total">77&nbsp;000</span>
-<code>changing_table</code>-objekt i hela världen, <span data-stat="share">4,8&nbsp;%</span>. Men
-där det finns är det ensidigt (taginfo, <span data-stat="date">26&nbsp;juli&nbsp;2026</span>):</p>
-<ul>
-  <li>Bord bara på damtoaletten: <strong data-stat="female_only">485</strong>.</li>
-  <li>Bord bara på herrtoaletten: <strong data-stat="male_only">71</strong>. Grovt räknat
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> är taggade
-      i båda rummen, <span data-stat="male_any">410</span> noterar över huvud taget ett bord på
-      herrtoaletten. I hela världen.</li>
-</ul>
-<p>Stickprovet är litet, och det är kartläggarna som avgör vad de registrerar. Övertolka alltså inte
-det exakta förhållandet. Riktningen stämmer ändå med det som länge varit dokumenterat: skötbord
-hänger som standard på damtoaletten. Det stänger ute pappor och antyder på köpet vem som har
-ansvaret för blöjbyten. Den här kartan gör de saknade uppgifterna synliga. Och lätta att fixa.</p>
+<p><code>changing_table:location</code> är det enda öppna ordförråd jag känner till som anger i vilket rum ett skötbord står. Det är ovanligt: <span data-stat="location_total">3&nbsp;659</span> av <span data-stat="ct_total">77&nbsp;000</span> <code>changing_table</code>-objekt i världen, <span data-stat="share">4,8&nbsp;%</span>. Där det finns är det ojämnt (taginfo, <span data-stat="date">26&nbsp;juli&nbsp;2026</span>): <strong data-stat="female_only">485</strong> bord bara på damtoaletten, <strong data-stat="male_only">71</strong> bara på herrtoaletten, ungefär <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> står i båda rummen.</p>
+<p>Urvalet är litet och kartläggarna väljer själva vad de registrerar, så läs inte in för mycket i det exakta förhållandet. Riktningen är densamma som överallt: Skötbord hänger som standard på damtoaletten. Den här kartan visar var uppgifterna saknas, och varje grå nål har en redigeringsknapp.</p>
 
 <h2 id="licence">Datalicens &amp; attribution</h2>
 <p>Alla kartdata &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
@@ -384,20 +311,8 @@ också ODbL. Den globala taggstatistiken kommer från
 Webbplatsens egen kod är MIT-licensierad.</p>
 
 <h2 id="privacy">Integritet</h2>
-<p>En statisk webbplats. Inga konton, inga kakor, ingen webbanalys, inga spårningsskript. Sidan sparar
-ingenting om dig och har ingen databas. Kartrutorna kommer från OpenStreetMaps tile-servrar; för
-de förfrågningarna gäller
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF:s integritetspolicy</a>. Trycker du på <em>Svara på MapComplete</em> i en nål frågar sidan dessutom api.openstreetmap.org några gånger under de följande minuterna vad just det objektet säger nu — de anropen omfattas av samma policy. Från det tredje tecknet du skriver i sökfältet, och varje gång du öppnar <em>Ny plats</em>, frågar
-sidan också komoots platssökning Photon (photon.komoot.io). Den får texten du skrev och en
-avrundad kartmittpunkt och, som varje server, din IP-adress. Följer du en
-länk till MapComplete, StreetComplete eller openstreetmap.org är du på deras sidor och redigerar
-under ditt eget OSM-konto. Ingenting går via oss. Formalia:
-<a href="impressum.html">Impressum</a> ·
-<a href="datenschutz.html">Datenschutzerklärung</a> (på tyska).</p>
-
-<p class="muted">Källor: Overpass-stickprov över 8 stadskärnor (9&nbsp;674 toaletter) från
-26&nbsp;juli&nbsp;2026 och taginfos nyckelstatistik med det datum som anges ovan. De lokala
-siffrorna kommer från samma nattliga fråga som bygger kartan.</p>
+<p>En statisk webbplats. Den sätter inga cookies och har ingen analys. Kartrutorna kommer från OpenStreetMaps rutservrar; för de förfrågningarna gäller <a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF:s integritetspolicy</a>. Trycker du på <em>Svara på MapComplete</em> i en nål frågar sidan de följande minuterna också några gånger api.openstreetmap.org vad just det objektet säger nu — för de förfrågningarna gäller samma policy. Från det tredje tecknet i sökfältet, och varje gång du öppnar <em>Ny plats</em>, frågar sidan dessutom komoots platssökning Photon (photon.komoot.io). Den får den inskrivna texten och ett avrundat kartcentrum och, som alla servrar, din IP-adress. Länkar till MapComplete, StreetComplete eller openstreetmap.org leder till deras webbplatser, där du redigerar under ditt eget OSM-konto. Formellt: <a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (på tyska).</p></p>
 
 <h2 id="how-made">Hur den här sidan blir till</h2>
 <p>När jag programmerar och skriver texterna får jag hjälp av AI. Men allt har jag ändå läst
