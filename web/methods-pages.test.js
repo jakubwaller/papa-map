@@ -311,3 +311,12 @@ test("every section has the same block skeleton as the German page", () => {
       assert.equal(skeletonOf(sec[id]), skeletonOf(de[id]), `${f}: section ${id} differs from the German skeleton`);
   }
 });
+
+test("paragraphs are opened and closed in equal numbers", () => {
+  for (const f of PAGES) {
+    const src = bodyOf(read(f));
+    const open = (src.match(/<p[\s>]/g) || []).length;
+    const close = (src.match(/<\/p>/g) || []).length;
+    assert.equal(open, close, `${f}: ${open} <p> against ${close} </p>`);
+  }
+});
