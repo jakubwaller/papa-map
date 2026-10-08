@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.classList.add("js");</script>
 <meta name="theme-color" content="#f2f5f3">
 <title>PapaMap as an app</title>
 <meta name="description" content="The iPhone app is on the App Store, the Android app in development. Without a store, PapaMap goes on your home screen and runs there like an app. Offline, the nearest changing table, dad or mum, answers in two taps.">
@@ -32,55 +33,195 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PapaMap">
 <style>
-  /* The map's palette (style.css), on a reading page: the install box is the
-     add button's green, so the page and the header pill read as one thing. */
+  /* The map's palette (style.css), on a reading page: the option cards are
+     the add button's green box, so the page and the header pill read as one
+     thing. --on-green is the text on a filled green control. */
   :root {
     --bg: #fbfdfc; --ink: #1c2b26; --muted: #64716b; --line: #d8ded9;
-    --green: #009e73; --green-strong: #00775a; --green-soft: #e9f6f0;
-    --link: #00775a;
+    --green: #009e73; --green-strong: #00775a; --green-press: #00614a; --green-soft: #e9f6f0;
+    --link: #00775a; --on-green: #ffffff;
+    --shot-shadow: 0 12px 32px rgba(28, 43, 38, .16);
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #161b19; --ink: #e8ede9; --muted: #9aa8a1; --line: #33403a;
-      --green: #009e73; --green-strong: #00775a; --green-soft: #1b2924;
-      --link: #5fd3ab;
+      --green: #009e73; --green-strong: #00775a; --green-press: #00614a; --green-soft: #1b2924;
+      --link: #5fd3ab; --on-green: #ffffff;
+      --shot-shadow: 0 12px 32px rgba(0, 0, 0, .45);
     }
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0 auto; max-width: 40rem; padding: 1.5rem 1rem 4rem;
+    margin: 0 auto; max-width: 52rem; padding: 1.5rem 1rem 4rem;
     background: var(--bg); color: var(--ink);
     font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     -webkit-text-size-adjust: 100%;
   }
   a { color: var(--link); }
   h1 { font-size: 1.85rem; line-height: 1.2; margin: 0.6rem 0 0.6rem; text-wrap: balance; }
-  h2 { font-size: 1.2rem; margin: 2rem 0 0.6rem; }
-  .lead { font-size: 1.12rem; color: var(--muted); margin: 0 0 1.4rem; }
+  .lead { font-size: 1.12rem; color: var(--muted); margin: 0 0 1.3rem; max-width: 38rem; }
   .back { font-size: 0.9rem; margin: 0 0 0.4rem; }
   .back.langs { color: var(--muted); }
   .back.langs strong { color: var(--ink); font-weight: 600; }
-
-  /* The store app is the green box now; until 2026-09-25 the home-screen
-     steps were, because they were the only thing that worked. */
-  .store {
-    margin: 1.2rem 0 1.6rem; padding: 1.1rem 1.2rem 1rem;
-    border: 1px solid var(--line); border-radius: 14px; background: var(--green-soft);
+  .vh {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
   }
-  .store h2 { margin: 0 0 0.6rem; font-size: 1.15rem; }
-  .store p { margin: 0.6rem 0; }
-  .store a.badge { font-size: 1.1rem; font-weight: 700; color: var(--link); }
 
-  /* Android until it ships, and the home-screen route for both: plain text
-     on the page's own background, so it doesn't compete with the store box. */
-  .aside { margin: 0 0 1.4rem; padding: 0 0 0 0.9rem; border-left: 3px solid var(--line); }
-  .aside h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
-  .aside p { margin: 0.45rem 0; }
-  .aside b { color: var(--ink); }
+  /* Three equal ways in: the App Store, Android (a mail until it ships),
+     and the home screen without a store. Stacked on a phone, one row from
+     760 px. Each card is the same box; only what sits in it differs. */
+  .options { display: grid; gap: 0.75rem; margin: 0 0 0.9rem; }
+  .option {
+    display: flex; flex-direction: column; gap: 0.4rem;
+    padding: 1rem 1.1rem 1.05rem; border: 1px solid var(--line); border-radius: 14px;
+    background: var(--green-soft); color: var(--ink);
+  }
+  .option h3 { margin: 0; font-size: 1.05rem; }
+  .option p { margin: 0; font-size: 0.95rem; }
+  .option a { color: var(--link); }
+  /* The badge's clear space is a quarter of its height (Apple's marketing
+     guidelines): 12 px around a 48 px badge, from the card's gap plus this
+     margin. 48 px also clears Apple's 40 px minimum. */
+  .option .slot { display: flex; align-items: center; min-height: 48px; margin: 0.35rem 0; }
+  .badge { display: inline-block; line-height: 0; border-radius: 8px; }
+  .badge img { display: block; width: auto; height: 48px; }
+  .option a.cta {
+    display: inline-flex; align-items: center; min-height: 48px; padding: 0 1.15rem;
+    border-radius: 10px; background: var(--green-strong); color: var(--on-green);
+    font-weight: 650; text-decoration: none;
+  }
+  .option a.cta:hover { background: var(--green-press); }
+  .badge:focus-visible, .option a.cta:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+  .option b { color: var(--ink); }
+  .free { color: var(--muted); margin: 0 0 1.8rem; }
 
-  ul.adds { padding-left: 1.2rem; margin: 0.6rem 0; }
-  ul.adds li { margin: 0.55rem 0; }
-  ul.adds b { color: var(--ink); }
+  /* App screens: the bare screen in a light phone frame, no device artwork.
+     The frame is the image's own border, so it hugs the picture at any size.
+     A screen is scaled, never cropped. Its width is the smallest of 15 rem,
+     68 % of the viewport's width and the width at which the screen is
+     --shot-cap of the viewport's height tall (every screen is 780 x 1688);
+     the height follows from the width/height attributes, so the space is
+     kept before a lazy file arrives. */
+  .shot {
+    --shot-cap: 55vh; --shot-ratio: 780 / 1688;
+    display: block; height: auto; margin: 0 auto;
+    width: min(15rem, 68vw, calc(var(--shot-cap) * var(--shot-ratio)));
+    border: 1px solid var(--line); border-radius: 1.6rem;
+    box-shadow: var(--shot-shadow); background: var(--green-soft);
+  }
+
+  /* The section bleeds 1 rem into the page's side padding, and pads it back
+     (so nothing inside moves): the route line below runs in that gutter, clear
+     of the text and the screens, and overflow-x: clip keeps a sliding screen
+     from ever making the page scroll sideways. */
+  .steps { position: relative; margin: 3rem -1rem 0; padding: 0 1rem; overflow-x: clip; }
+  .steps > h2 { font-size: 1.45rem; line-height: 1.25; margin: 0 0 1.4rem; text-wrap: balance; }
+  .step { display: grid; gap: 1.4rem; margin: 0 0 3.2rem; --shot-w: 15rem; }
+  .step h3 { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.35rem; font-size: 1.4rem; line-height: 1.2; }
+  /* The step number is a map pin: a round head with a tail, and the digit in
+     its white eye (ink on the page colour reads at AA in both schemes, which
+     white on this green would not). The shape is the ::before, turned 45 degrees,
+     so the digit itself stays upright. Green, as the map draws a pin that has an
+     answer; with JavaScript it is grey until its step is revealed (see below). */
+  .num {
+    --pin: var(--green);
+    position: relative; isolation: isolate; flex: none;
+    display: inline-grid; place-items: center; width: 2.1rem; height: 2.1rem;
+    color: var(--ink); font-size: 0.95rem; font-weight: 700; line-height: 1;
+    transform-origin: 50% 115%;
+  }
+  .num::before, .num::after { content: ""; position: absolute; z-index: -1; }
+  .num::before {
+    inset: 0; background: var(--pin); border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg); transition: background-color 0.3s ease-out;
+  }
+  .num::after { inset: 0.34rem; border-radius: 50%; background: var(--bg); }
+  .tagline { margin: 0 0 0.5rem; font-size: 1.12rem; font-weight: 600; }
+  .step ul { margin: 0; padding-left: 1.2rem; }
+  .step li { margin: 0.45rem 0; }
+  /* One picture per step, centred in its column. The Mitmachen step has two:
+     the room question is the pitch and gets the full size on every screen.
+     The add-a-place screen is secondary: from 760 px it stacks below the room
+     one, a size smaller; on a phone it stays out (display: none, and being
+     lazy it is not even fetched), which keeps the page short. */
+  .media { display: flex; flex-direction: column; align-items: center; gap: 1.4rem; }
+  .media .shot { margin: 0; }
+  .media .shot + .shot {
+    display: none; width: min(12rem, 54vw, calc(var(--shot-cap) * 0.8 * var(--shot-ratio))); border-radius: 1.3rem;
+  }
+
+  @media (min-width: 760px) {
+    .options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .step { grid-template-columns: minmax(0, 1fr) var(--shot-w); align-items: center; gap: 2.5rem; }
+    .step.flip { grid-template-columns: var(--shot-w) minmax(0, 1fr); }
+    .step.flip .media { order: -1; }
+    .media .shot + .shot { display: block; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .option a.cta { transition: background-color 0.15s ease; }
+  }
+
+  /* Motion. Only opacity and transform move, so nothing shifts the layout.
+     Everything that starts hidden is scoped under .js (set in the head by the
+     first script): without JavaScript the page is simply all there. */
+
+  /* The route: a dashed line down the gutter beside the steps. It is a plain
+     static line everywhere; where scroll-driven animations exist, a curtain in
+     the page colour sits over it and lifts as the section scrolls past, so the
+     line draws itself (the dashes stay the same size, which scaling the line
+     itself would not keep). */
+  .steps::before {
+    content: ""; position: absolute; left: calc(0.5rem - 1px); width: 2px; top: 3.4rem; bottom: 0.6rem;
+    background: repeating-linear-gradient(to bottom, var(--muted) 0 6px, transparent 6px 12px); opacity: 0.55;
+  }
+  @keyframes route-draw { from { transform: scaleY(1); } to { transform: scaleY(0); } }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .steps::after {
+        content: ""; position: absolute; left: calc(0.5rem - 4px); width: 8px; top: 3.4rem; bottom: 0.6rem;
+        background: var(--bg); transform-origin: bottom;
+        animation: route-draw linear both; animation-timeline: view(); animation-range: cover 0% cover 90%;
+      }
+    }
+  }
+
+  /* A step's text rises, then its screen slides in from the side it sits on
+     (the .flip steps have theirs on the left). Once, never undone. The pin
+     turns green with a short pop when its step arrives. */
+  .js .step > div:not(.media) { opacity: 0; transform: translateY(16px); }
+  .js .step > .media { opacity: 0; transform: translateX(1rem); }
+  .js .step.flip > .media { transform: translateX(-1rem); }
+  .js .step.in > div:not(.media), .js .step.in > .media {
+    opacity: 1; transform: none; transition: opacity 450ms ease-out, transform 450ms ease-out;
+  }
+  .js .step.in > .media { transition-delay: 120ms; }
+  .js .step:not(.in) .num { --pin: var(--muted); }
+  .js .step.in .num { animation: pop 350ms ease-out; }
+  @keyframes pop { 50% { transform: scale(1.18); } }
+
+  /* The top of the page: five blocks fade up 60 ms apart, 690 ms in all. A CSS
+     animation that ends on the normal state, so it needs no script. */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+  h1, .lead, .options, .free, body > .shot { animation: rise 450ms ease-out backwards; }
+  .lead { animation-delay: 60ms; }
+  .options { animation-delay: 120ms; }
+  .free { animation-delay: 180ms; }
+  body > .shot { animation-delay: 240ms; }
+
+  /* Less motion: no animation, no transition, everything there at once, the
+     pins already green and the route a plain line. The video does not start
+     by itself either (see the script). Printing shows everything too. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .js .step > div:not(.media), .js .step > .media { opacity: 1; transform: none; }
+    .js .step:not(.in) .num { --pin: var(--green); }
+  }
+  @media print {
+    .js .step > div:not(.media), .js .step > .media { opacity: 1; transform: none; }
+    .steps::after { display: none; }
+  }
+
   p.foot { color: var(--muted); font-size: 0.9rem; }
 </style>
 </head>
@@ -90,38 +231,109 @@
 <p class="back langs"><a href="app.html" hreflang="de" lang="de">Deutsch</a> &middot; <strong lang="en">English</strong></p>
 
 <h1>PapaMap as an app</h1>
-<p class="lead">On the App Store for iPhone. In development for Android; until then the map goes on your home screen without a store and runs there like an app.</p>
+<p class="lead">The same map, closer to hand: offline, the nearest table in one tap, and on the iPhone through Siri and a widget too.</p>
 
-<section class="store" aria-labelledby="store-h">
-  <h2 id="store-h">iPhone: on the App Store</h2>
-  <p><a class="badge" href="https://apps.apple.com/app/papamap/id6813376985">Get PapaMap on the App Store</a></p>
-  <p>Free, no ads, no account of its own.</p>
+<section class="options" aria-labelledby="get-h">
+  <h2 id="get-h" class="vh">How to get PapaMap on your phone</h2>
+
+  <div class="option">
+    <h3>iPhone</h3>
+    <p class="slot"><a class="badge" href="https://apps.apple.com/app/papamap/id6813376985"><img src="img/app-store-badge-en.svg" width="144" height="48" alt="Download on the App Store"></a></p>
+    <p>With Siri, a widget and city maps offline.</p>
+  </div>
+
+  <!-- A mailto, not a signup form: the site stores nothing, and the Datenschutz
+       already covers contact by e-mail. The iPhone line carried the same offer
+       until the app reached the store (2026-09-25); the launch mail to those
+       addresses goes out by hand from the inbox, and then they are deleted.
+       When the Android app reaches production, the Google Play badge (48 px
+       high, like the App Store one) replaces the mailto inside .slot and the
+       note under it changes; the card and the row stay as they are. -->
+  <div class="option">
+    <h3>Android</h3>
+    <p class="slot"><a class="cta" href="mailto:papamap@jakubwaller.eu?subject=Notify%20me%3A%20Android%20app">Tell me when it’s out</a></p>
+    <p>The app is in development. One e-mail when it’s ready, then the address is deleted.</p>
+  </div>
+
+  <div class="option">
+    <h3>Without a store</h3>
+    <p><b>iPhone:</b> the Share icon, then “Add to Home Screen”.</p>
+    <p><b>Android:</b> the browser menu, then “Install” or “Add to Home screen”.</p>
+    <p>Works in every browser, just not from inside Instagram or Bluesky.</p>
+  </div>
+</section>
+<p class="free">Free, no ads, no account of its own.</p>
+
+<img class="shot" src="img/app/map-en.webp" width="780" height="1688" decoding="async" alt="The app on an iPhone: the map of Hamburg with green, red and grey pins, Dad and Mum at the top, the “Nearest changing table” button at the bottom.">
+
+<section class="steps" aria-labelledby="steps-h">
+<h2 id="steps-h">What the app does</h2>
+
+<article class="step" aria-labelledby="find-h">
+  <div>
+    <h3 id="find-h"><span class="num">1</span> Find</h3>
+    <p class="tagline">The nearest changing table, one tap.</p>
+    <ul>
+      <li>The button at the bottom centre finds the nearest changing table you can actually reach.</li>
+      <li>With the distance as the crow flies, and opening hours where they are known.</li>
+      <li>Dad or mum: set once. As a dad, the map colours tables by whether you can get to them; as a mum, every table counts.</li>
+    </ul>
+  </div>
+  <div class="media">
+    <img class="shot" src="img/app/nearest-en.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The app after a tap on “Nearest changing table”: the popup for the nearest table a dad can reach, with its room, opening hours and the distance as the crow flies.">
+  </div>
+</article>
+
+<article class="step flip" aria-labelledby="go-h">
+  <div>
+    <h3 id="go-h"><span class="num">2</span> On the go</h3>
+    <p class="tagline">Works without a signal too.</p>
+    <ul>
+      <li>The changing tables live on the phone, in the car park, on the train and in the supermarket basement too.</li>
+      <li>The iPhone app also saves a whole city, map underneath included. Hamburg is 27 MB.</li>
+      <li>“Directions” opens your navigation app, for example Apple Maps, Google Maps or Organic Maps.</li>
+    </ul>
+  </div>
+  <div class="media">
+    <img class="shot" src="img/app/offline-en.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The “Save a city offline” dialog: a list of cities with their size in MB and a button to download each.">
+  </div>
+</article>
+
+<article class="step" aria-labelledby="help-h">
+  <div>
+    <h3 id="help-h"><span class="num">3</span> Contribute</h3>
+    <p class="tagline">Grey pin? Two taps.</p>
+    <ul>
+      <li>“Which room is the changing table in?” Your answer goes straight to OpenStreetMap, under your own account there.</li>
+      <li>A place missing? The app lists what OpenStreetMap already knows nearby, and you answer right there.</li>
+      <li>In within a minute, for everyone who comes after you.</li>
+    </ul>
+  </div>
+  <div class="media">
+    <video class="shot" width="540" height="1170" poster="img/app/loop-en.jpg" muted loop playsinline preload="none" aria-label="A grey pin, the question “Which room is the changing table in?”, one tap on the answer, and the pin turns green.">
+      <source src="img/app/loop-en.webm" type="video/webm">
+      <source src="img/app/loop-en.mp4" type="video/mp4">
+      <img src="img/app/loop-en.jpg" width="540" height="1170" loading="lazy" alt="A grey pin, the question “Which room is the changing table in?”, one tap on the answer, and the pin turns green.">
+    </video>
+    <img class="shot" src="img/app/add-en.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The “Add a missing place” dialog: places nearby that OpenStreetMap already knows, each with its distance.">
+  </div>
+</article>
+
+<article class="step flip" aria-labelledby="me-h">
+  <div>
+    <h3 id="me-h"><span class="num">4</span> Your PapaMap</h3>
+    <p class="tagline">Your city, your answers.</p>
+    <ul>
+      <li>My PapaMap shows your answers, the places you saved and how much of your city is answered already.</li>
+      <li>iPhone only: Siri, a widget and a Control Center control show the nearest table without opening the app.</li>
+    </ul>
+  </div>
+  <div class="media">
+    <img class="shot" src="img/app/me-en.webp" width="780" height="1688" loading="lazy" decoding="async" alt="“My PapaMap”: how many changing tables Hamburg has and how many have their room recorded, the OpenStreetMap login and the places you saved.">
+  </div>
+</article>
 </section>
 
-<!-- A mailto, not a signup form: the site stores nothing, and the Datenschutz
-     already covers contact by e-mail. The iPhone line carried the same offer
-     until the app reached the store (2026-09-25); the launch mail to those
-     addresses goes out by hand from the inbox, and then they are deleted. -->
-<section class="aside" aria-label="Android">
-  <p><b>Android:</b> the app is in development. <a href="mailto:papamap@jakubwaller.eu?subject=Notify%20me%3A%20Android%20app">Tell me when it’s out</a></p>
-  <p>One e-mail when it’s ready, then the address is deleted.</p>
-</section>
-
-<section class="aside" aria-labelledby="install-h">
-  <h2 id="install-h">Without a store: how to get the map on your phone</h2>
-  <p><b>iPhone:</b> the Share icon, then “Add to Home Screen”. Works in every browser, just not from inside Instagram or Bluesky.</p>
-  <p><b>Android:</b> the browser menu, then “Install” or “Add to Home screen”. Chrome, Firefox, Samsung Internet, all the others too.</p>
-</section>
-
-<h2>What the app does</h2>
-<ul class="adds">
-  <li><b>Offline.</b> The changing tables live on the phone, in the car park, on the train and in the supermarket basement too. Only the map underneath needs a signal.</li>
-  <li><b>The nearest table, one tap.</b> The app shows the nearest changing table you can actually reach, with the distance as the crow flies.</li>
-  <li><b>Dad or mum.</b> Set once. As a dad, the map colours tables by whether you can get to them; as a mum, every table counts.</li>
-  <li><b>Grey pin? Two taps.</b> “Which room is the table in?” Your answer goes straight to OpenStreetMap, under your own account there.</li>
-  <li><b>Add a table where you stand.</b> A missing changing table is in within a minute, for everyone who comes after you.</li>
-  <li><b>iPhone app only:</b> save a city offline, Hamburg is 27 MB, and the map underneath works without a signal too. Siri, a widget and a Control Center control show the nearest table without opening the app.</li>
-</ul>
 <p>Free, like the map. The data stays OpenStreetMap; the app has none of its own and collects none.</p>
 <p class="foot">Questions, ideas, a table that is missing? <a href="methods-en.html#contribute">Editing, step by step</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="https://jakubwaller.eu" rel="author">Made with ♥ in Hamburg by Jakub Waller</a></p>
 
@@ -129,6 +341,33 @@
 // Until September 2026 this page held a vote that remembered its tap in
 // local storage. Nothing reads that key any more, so it goes.
 try { localStorage.removeItem("papamap-app"); } catch (e) { /* private mode */ }
+// Motion. The steps fade in once; the video plays only while half of it is on screen.
+(() => {
+  const steps = document.querySelectorAll(".step"), videos = document.querySelectorAll("video.shot");
+  const rm = matchMedia("(prefers-reduced-motion: reduce)"), observers = [];
+  const show = (s) => s.classList.add("in");
+  // Less motion (set at load or later): everything is there at once, the video no longer plays by itself and
+  // shows the room dialog instead of the map, with controls. Switched off again, everything stays visible.
+  const calm = () => {
+    observers.forEach((o) => o.disconnect());
+    steps.forEach(show);
+    videos.forEach((v) => { v.pause(); v.poster = "img/app/room-" + document.documentElement.lang + ".webp"; v.controls = true; });
+  };
+  if (rm.matches) calm();
+  else if (!("IntersectionObserver" in window)) steps.forEach(show);
+  else {
+    const once = new IntersectionObserver((entries) => entries.forEach((e) => {
+      if (e.intersectionRatio >= 0.25 || e.boundingClientRect.bottom < 0) { show(e.target); once.unobserve(e.target); }
+    }), { threshold: 0.25, rootMargin: "0px 0px -8% 0px" });
+    steps.forEach((s) => once.observe(s));
+    const inView = new IntersectionObserver((entries) => entries.forEach((e) => {
+      if (e.intersectionRatio >= 0.5) e.target.play().catch(() => {}); else e.target.pause();
+    }), { threshold: 0.5 });
+    videos.forEach((v) => inView.observe(v));
+    observers.push(once, inView);
+  }
+  rm.addEventListener?.("change", (e) => e.matches && calm());
+})();
 </script>
 
 </body>

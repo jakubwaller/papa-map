@@ -45,6 +45,14 @@
 //   node shoot-store-screenshots.mjs ./out --compose-only      # compose only
 //   node shoot-store-screenshots.mjs ./out https://papamap.de  # app shell, live source
 //   node shoot-store-screenshots.mjs ./out http://localhost:8080 --web  # website chrome
+//   node shoot-store-screenshots.mjs ./out --canvas web        # install page images
+//
+// `--canvas web` is the one output that is not a store canvas: the bare app
+// screens (raw phase only, no headline) at an ordinary phone size, converted
+// to WebP straight into web/img/app/ for the install page (web/app.html and
+// web/app-en.html). Never part of a default run, so reshooting the store set
+// leaves the website's tracked images alone until you ask for them. With
+// --compose-only it re-encodes the raw PNGs already on disk. See WEB_PAGE.
 //
 // A raw shot that cannot be produced (element not found, timeout) is
 // skipped with a logged reason; the run does not abort for that. A failed
@@ -97,8 +105,9 @@
 // build-www.js already copies the whole vendor/ tree into app/www — no
 // extra wiring needed there either.
 import { chromium } from "playwright";
-import { mkdirSync, readFileSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const rawArgs = process.argv.slice(2);
 const SHOOT_WEB = rawArgs.includes("--web");
@@ -157,6 +166,15 @@ const DEVICES = {
     hasTouch: true,
     platform: "android",
   },
+  // The install page's screenshots (WEB_PAGE below): an ordinary phone, not a
+  // store size, as the iPhone app. Shot only with `--canvas web`.
+  web: {
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,        // -> 780x1688
+    isMobile: true,
+    hasTouch: true,
+    pageOnly: true,
+  },
 };
 
 // The composed canvas, per DESIGN.md's table: exact final pixel size, the
@@ -201,6 +219,19 @@ const STEMS = [
   { nn: "07", name: "offline" },
   { nn: "08", name: "me" },
 ];
+
+// The install page's images: which raw shots it shows, where they go, and the
+// weight each may have. The page's <img> tags carry the pixel size as
+// width/height, so an export of any other size throws rather than ship a
+// stretched frame. Quality steps down from 80 until a file fits maxBytes.
+// Needs cwebp (`brew install webp`).
+const WEB_PAGE = {
+  dir: fileURLToPath(new URL("../../web/img/app/", import.meta.url)),
+  shots: ["map", "nearest", "room", "offline", "add", "me"],
+  size: "780x1688",
+  maxBytes: 120 * 1024,
+  qualities: [80, 75, 70, 65, 60, 55, 50],
+};
 
 // Shots 9 and 10: Jakub's own iPhone screenshots, composed straight from
 // <out-dir>/phone/<name>.png when present. iPhone only, both languages
@@ -473,7 +504,7 @@ async function shootDevice(deviceName, device, langName, lang, outDir) {
   const results = [];
   const browser = await chromium.launch({ channel: "chrome", args: ["--no-sandbox"] });
   try {
-    const { platform = "ios", ...contextOptions } = device;
+    const { platform = "ios", pageOnly, ...contextOptions } = device;
     const context = await browser.newContext({
       ...contextOptions,
       geolocation: HAMBURG_RATHAUS,
@@ -866,13 +897,52 @@ function pixelSize(path) {
   return `${w}x${h}`;
 }
 
+// Raw PNG -> WebP for the install page, one file per shot and language,
+// named <stem>-<lang>.webp (e.g. nearest-de.webp).
+function exportWebPage(outDir) {
+  mkdirSync(WEB_PAGE.dir, { recursive: true });
+  const results = [];
+  for (const langName of Object.keys(LANGS)) {
+    for (const { nn, name } of STEMS.filter((s) => WEB_PAGE.shots.includes(s.name))) {
+      const rawPath = `${outDir}/raw/web-${langName}-${nn}-${name}.png`;
+      const outPath = `${WEB_PAGE.dir}${name}-${langName}.webp`;
+      if (!existsSync(rawPath)) {
+        results.push({ ok: false, path: outPath, reason: `missing raw shot ${rawPath}` });
+        continue;
+      }
+      const size = pixelSize(rawPath);
+      if (size !== WEB_PAGE.size) throw new Error(`${rawPath}: expected ${WEB_PAGE.size}, got ${size}`);
+      let quality, bytes;
+      for (quality of WEB_PAGE.qualities) {
+        try {
+          execFileSync("cwebp", ["-quiet", "-q", String(quality), "-m", "6", "-metadata", "none", rawPath, "-o", outPath]);
+        } catch (err) {
+          if (err.code === "ENOENT") throw new Error("cwebp not found: brew install webp");
+          throw err;
+        }
+        bytes = statSync(outPath).size;
+        if (bytes <= WEB_PAGE.maxBytes) break;
+      }
+      results.push({ ok: bytes <= WEB_PAGE.maxBytes, path: outPath, quality, bytes,
+        reason: bytes > WEB_PAGE.maxBytes ? `still ${bytes} bytes at q${quality}` : undefined });
+    }
+  }
+  console.log("\n---- install page (web/img/app) ----");
+  for (const r of results) {
+    if (r.ok) console.log(`OK   ${r.path}: ${Math.round(r.bytes / 1024)} KB at q${r.quality}`);
+    else console.log(`${r.bytes ? "OVER" : "SKIP"} ${r.path}: ${r.reason}`);
+  }
+}
+
 async function main() {
+  const WEB_ONLY = CANVAS_FILTER === "web";
   if (!COMPOSE_ONLY) {
     const summary = [];
     // With --canvas, only the raw device that canvas is composed from.
     const rawWanted = CANVAS_FILTER && (DEVICE_CANVAS[CANVAS_FILTER]?.rawDevice || CANVAS_FILTER);
     for (const [deviceName, device] of Object.entries(DEVICES)) {
       if (rawWanted && deviceName !== rawWanted) continue;
+      if (!rawWanted && device.pageOnly) continue;
       for (const [langName, lang] of Object.entries(LANGS)) {
         const results = await shootDevice(deviceName, device, langName, lang, OUT_DIR);
         summary.push(...results.map((r) => ({ device: deviceName, lang: langName, ...r })));
@@ -886,6 +956,9 @@ async function main() {
   } else {
     console.log(`--compose-only: skipping raw shots, composing from ${OUT_DIR}/raw and ${OUT_DIR}/phone`);
   }
+
+  // Not a store canvas: no headline, no frame, just the WebP export.
+  if (WEB_ONLY) return exportWebPage(OUT_DIR);
 
   const composeResults = await composeAll(OUT_DIR);
   console.log("\n---- composed (final) ----");
