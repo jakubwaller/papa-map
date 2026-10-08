@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { NUMBER_LOCALE, DEFAULT_LANG, LANGS, STRINGS } from "./i18n.js";
+import { roomChoices } from "./osm.js";
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const PAGES = fs.readdirSync(DIR)
@@ -263,5 +264,25 @@ test("the grey-pin section leads with the in-app question, in the app's own word
     const esc = (v) => v.replace(/&/g, "&amp;");
     for (const k of ["askRoom", "roomMale", "roomFemale", "roomBoth", "askMore", "roomCardOpen"])
       assert.ok(first.includes(`<em>${esc(s[k])}</em>`), `${f}: first item lacks the ${k} label "${s[k]}"`);
+  }
+});
+
+test("the grey-pin section names the first-screen room buttons, in the app's order", () => {
+  // roomChoices("papa") is the first screen of the popup. Each button's label
+  // is quoted from i18n.js, so renaming one in the app fails here instead of
+  // leaving the page describing a button that no longer exists.
+  const keys = roomChoices("papa").map((c) => "room" + c[0].toUpperCase() + c.slice(1));
+  assert.equal(keys.length, 6);
+  for (const f of PAGES) {
+    const s = STRINGS[langOf(f)];
+    const src = read(f);
+    const sec = src.slice(src.indexOf('<h2 id="grey-pin">'), src.indexOf('<h2 id="contribute">'));
+    const esc = (v) => v.replace(/&/g, "&amp;");
+    let at = -1;
+    for (const k of keys) {
+      const i = sec.indexOf(`<em>${esc(s[k])}</em>`, at + 1);
+      assert.ok(i > at, `${f}: ${k} label "${s[k]}" is missing or out of order in the grey-pin section`);
+      at = i;
+    }
   }
 });
