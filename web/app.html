@@ -83,7 +83,7 @@
   /* The badge's clear space is a quarter of its height (Apple's marketing
      guidelines): 12 px around a 48 px badge, from the card's gap plus this
      margin. 48 px also clears Apple's 40 px minimum. */
-  .slot { display: flex; align-items: center; min-height: 48px; margin: 0.35rem 0; }
+  .option .slot { display: flex; align-items: center; min-height: 48px; margin: 0.35rem 0; }
   .badge { display: inline-block; line-height: 0; border-radius: 8px; }
   .badge img { display: block; width: auto; height: 48px; }
   .option a.cta {
@@ -190,8 +190,8 @@
      (the .flip steps have theirs on the left). Once, never undone. The pin
      turns green with a short pop when its step arrives. */
   .js .step > div:not(.media) { opacity: 0; transform: translateY(16px); }
-  .js .step > .media { opacity: 0; transform: translateX(24px); }
-  .js .step.flip > .media { transform: translateX(-24px); }
+  .js .step > .media { opacity: 0; transform: translateX(1rem); }
+  .js .step.flip > .media { transform: translateX(-1rem); }
   .js .step.in > div:not(.media), .js .step.in > .media {
     opacity: 1; transform: none; transition: opacity 450ms ease-out, transform 450ms ease-out;
   }
@@ -267,7 +267,7 @@
 <img class="shot" src="img/app/map-de.webp" width="780" height="1688" decoding="async" alt="Die App auf dem iPhone: die Karte von Hamburg mit grünen, roten und grauen Pins, oben Papa und Mama, unten die Taste „Nächster Wickeltisch“.">
 
 <section class="steps" aria-labelledby="steps-h">
-<h2 id="steps-h">Was in der App dazukommt</h2>
+<h2 id="steps-h">Was die App kann</h2>
 
 <article class="step" aria-labelledby="find-h">
   <div>
@@ -344,22 +344,29 @@ try { localStorage.removeItem("papamap-app"); } catch (e) { /* privater Modus */
 // Bewegung. Die Schritte blenden einmal ein; das Video läuft nur, solange es zur Hälfte im Bild ist.
 (() => {
   const steps = document.querySelectorAll(".step"), videos = document.querySelectorAll("video.shot");
-  // Wer weniger Bewegung eingestellt hat: alles ist schon da (CSS), das Video startet nicht von selbst
-  // und zeigt den Raum-Dialog statt der Karte, mit Bedienleiste.
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    videos.forEach((v) => { v.poster = "img/app/room-" + document.documentElement.lang + ".webp"; v.controls = true; });
-    return;
-  }
+  const rm = matchMedia("(prefers-reduced-motion: reduce)"), observers = [];
   const show = (s) => s.classList.add("in");
-  if (!("IntersectionObserver" in window)) return steps.forEach(show);
-  const once = new IntersectionObserver((entries) => entries.forEach((e) => {
-    if (e.intersectionRatio >= 0.25 || e.boundingClientRect.bottom < 0) { show(e.target); once.unobserve(e.target); }
-  }), { threshold: 0.25, rootMargin: "0px 0px -8% 0px" });
-  steps.forEach((s) => once.observe(s));
-  const inView = new IntersectionObserver((entries) => entries.forEach((e) => {
-    if (e.intersectionRatio >= 0.5) e.target.play().catch(() => {}); else e.target.pause();
-  }), { threshold: 0.5 });
-  videos.forEach((v) => inView.observe(v));
+  // Weniger Bewegung (beim Laden oder später eingestellt): alles ist sofort da, das Video läuft nicht mehr von selbst
+  // und zeigt den Raum-Dialog statt der Karte, mit Bedienleiste. Wird es wieder ausgeschaltet, bleibt alles sichtbar.
+  const calm = () => {
+    observers.forEach((o) => o.disconnect());
+    steps.forEach(show);
+    videos.forEach((v) => { v.pause(); v.poster = "img/app/room-" + document.documentElement.lang + ".webp"; v.controls = true; });
+  };
+  if (rm.matches) calm();
+  else if (!("IntersectionObserver" in window)) steps.forEach(show);
+  else {
+    const once = new IntersectionObserver((entries) => entries.forEach((e) => {
+      if (e.intersectionRatio >= 0.25 || e.boundingClientRect.bottom < 0) { show(e.target); once.unobserve(e.target); }
+    }), { threshold: 0.25, rootMargin: "0px 0px -8% 0px" });
+    steps.forEach((s) => once.observe(s));
+    const inView = new IntersectionObserver((entries) => entries.forEach((e) => {
+      if (e.intersectionRatio >= 0.5) e.target.play().catch(() => {}); else e.target.pause();
+    }), { threshold: 0.5 });
+    videos.forEach((v) => inView.observe(v));
+    observers.push(once, inView);
+  }
+  rm.addEventListener?.("change", (e) => e.matches && calm());
 })();
 </script>
 

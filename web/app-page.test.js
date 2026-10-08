@@ -248,6 +248,11 @@ test("the loop in step 3 is a muted, local, sized video with a poster and a stil
     assert.ok(html.includes("(prefers-reduced-motion: reduce)") && html.includes("v.controls = true"), `${f}: reduced motion`);
     assert.ok(html.includes('v.poster = "img/app/room-" + document.documentElement.lang + ".webp"'), `${f}: reduced-motion poster`);
     assert.ok(existsSync(new URL(`img/app/room-${lang}.webp`, dir)), `${f}: room screenshot`);
+    // Reduce Motion switched on while the page is open does the same as at
+    // load (reveal every step, stop the in-view playback, pause the video);
+    // switched off again, nothing is hidden anew because every step is shown.
+    assert.ok(/const calm = \(\) => \{\s*observers\.forEach\(\(o\) => o\.disconnect\(\)\);\s*steps\.forEach\(show\);\s*videos\.forEach\(\(v\) => \{ v\.pause\(\);/.test(html), `${f}: calm()`);
+    assert.ok(/if \(rm\.matches\) calm\(\);/.test(html) && /rm\.addEventListener\?\.\("change", \(e\) => e\.matches && calm\(\)\)/.test(html), `${f}: reduce-motion change`);
   }
 });
 
@@ -297,6 +302,14 @@ test("scroll animations: nothing starts hidden without the js class, and less mo
     for (const r of hides)
       for (const sel of r.sel.split(","))
         assert.match(sel.trim(), /^\.js[\s.]/, `${f}: "${sel.trim()}" hides without .js`);
+    // Browsers older than Safari 16 ignore overflow-x: clip, so a screen waiting
+    // to slide in must not reach past the page's 1 rem side gutter on its own.
+    for (const r of hides)
+      for (const [, n, unit] of r.body.matchAll(/translateX\(-?([\d.]+)(rem|px)\)/g))
+        assert.ok(unit === "rem" ? n <= 1 : n <= 16, `${f}: slides ${n}${unit}`);
+    // The badge's clear space: .option p would win over a bare .slot.
+    assert.ok(rules.some((r) => r.sel === ".option .slot" && /margin:\s*0\.35rem 0/.test(r.body)), `${f}: .slot margin`);
+    assert.ok(!rules.some((r) => r.sel === ".slot"), `${f}: bare .slot loses to .option p`);
     // Only opacity and transform move (and the pin's colour changes): no
     // animation or transition on anything that would shift the layout.
     for (const r of rules)
