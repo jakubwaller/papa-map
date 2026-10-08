@@ -59,9 +59,10 @@ L = {
             "<p>Jede Antwort zählt, auch „nur im Damen-WC“ — die Karte lebt "
             "von ehrlichen Antworten, nicht von grünen Pins. Beantworten "
             "kannst du die Frage vor Ort in unter einer Minute: grauen Pin "
-            'auf der <a href="{up}">Karte</a> antippen und dem '
-            'MapComplete-Link folgen. <a href="{up}methods.html#contribute">'
-            "Schritt für Schritt</a>.</p>\n"),
+            "auf der <a href=\"{up}\">Karte</a> antippen und direkt im Popup "
+            "angeben, in welchem Raum der Wickeltisch ist, mit deinem eigenen "
+            "OSM-Konto. MapComplete bleibt als Ausweichweg. <a "
+            "href=\"{up}methods.html#grey-pin\">Schritt für Schritt</a>.</p>\n"),
         "fresh": ("<p>Die Aufzeichnung hat am {date} begonnen. Sobald es "
                   "einen Vergleichszeitpunkt gibt, steht hier, wer sich "
                   "bewegt hat.</p>\n"),
@@ -137,9 +138,11 @@ L = {
         "intro2": (
             "<p>Every answer counts, including “women's toilet only” — the "
             "map runs on honest answers, not on green pins. Answering takes "
-            'under a minute on site: tap a grey pin on the <a href="{up}">'
-            "map</a> and follow its MapComplete link. "
-            '<a href="{up}methods-en.html#contribute">Step by step</a>.</p>\n'),
+            "under a minute on site: tap a grey pin on the <a "
+            "href=\"{up}\">map</a> and say which room the changing table is in, "
+            "right in the popup, under your own OSM login. MapComplete is the "
+            "fallback. <a href=\"{up}methods-en.html#grey-pin\">Step by "
+            "step</a>.</p>\n"),
         "fresh": ("<p>Recording started on {date}. As soon as there is a "
                   "point of comparison, this page will show who moved.</p>\n"),
         "quiet": ("<p>Nothing has moved anywhere since {base}. The grey "
@@ -221,11 +224,12 @@ How things are counted and coloured: <a href="{up}methods-en.html">Methods</a> �
             "med et besvaret rumspørgsmål, og hvem der har løftet den mest "
             "på det seneste.</p>\n"),
         "intro2": (
-            "<p>Hvert svar tæller, også »kun på dametoilettet« — kortet "
-            "lever af ærlige svar, ikke af grønne nåle. At svare tager "
-            'under et minut på stedet: tryk på en grå nål på <a href="{up}">'
-            "kortet</a> og følg MapComplete-linket. "
-            '<a href="{up}methods-da.html#contribute">Trin for trin</a>.</p>\n'),
+            "<p>Hvert svar tæller, også »kun på dametoilettet« — kortet lever "
+            "af ærlige svar, ikke af grønne nåle. At svare tager under et "
+            "minut på stedet: tryk på en grå nål på <a href=\"{up}\">kortet</a> "
+            "og svar direkte i popuppen, i hvilket rum puslebordet er, med "
+            "dit eget OSM-login. MapComplete er reserveløsningen. <a "
+            "href=\"{up}methods-da.html#grey-pin\">Trin for trin</a>.</p>\n"),
         "fresh": ("<p>Registreringen begyndte den {date}. Så snart der er "
                   "et sammenligningstidspunkt, viser denne side, hvem der "
                   "har rykket sig.</p>\n"),
@@ -309,12 +313,13 @@ Sådan tælles og farvelægges der: <a href="{up}methods-da.html">Metode</a> ·
             "een beantwoorde ruimtevraag, en wie dat aandeel het laatst het "
             "sterkst heeft verhoogd.</p>\n"),
         "intro2": (
-            "<p>Elk antwoord telt, ook “alleen damestoilet” — "
-            "de kaart leeft van eerlijke antwoorden, niet van groene pins. "
-            "Beantwoorden kan ter plekke in minder dan een minuut: tik op "
-            "een grijze pin op de <a href=\"{up}\">kaart</a> en volg de "
-            "MapComplete-link. <a href=\"{up}methods-nl.html#contribute\">"
-            "Stap voor stap</a>.</p>\n"),
+            "<p>Elk antwoord telt, ook “alleen damestoilet” — de kaart leeft "
+            "van eerlijke antwoorden, niet van groene pins. Beantwoorden kan "
+            "ter plekke in minder dan een minuut: tik op een grijze pin op de "
+            "<a href=\"{up}\">kaart</a> en geef direct in de popup aan in welke "
+            "ruimte de verschoontafel zit, met je eigen OSM-login. "
+            "MapComplete is de reservemogelijkheid. <a "
+            "href=\"{up}methods-nl.html#grey-pin\">Stap voor stap</a>.</p>\n"),
         "fresh": ("<p>De registratie is begonnen op {date}. Zodra er een "
                   "vergelijkingsmoment is, laat deze pagina zien wie in "
                   "beweging is gekomen.</p>\n"),
@@ -401,11 +406,13 @@ Hoe geteld en gekleurd wordt: <a href="{up}methods-nl.html">Methode</a> ·
             "et qui l'a le plus fait progresser dernièrement.</p>\n"),
         "intro2": (
             "<p>Chaque réponse compte, même « uniquement WC femmes » — la "
-            "carte vit de réponses honnêtes, pas de marqueurs verts. Tu "
-            "peux répondre à la question sur place en moins d'une minute : "
-            'touche un marqueur gris sur la <a href="{up}">carte</a> et '
-            'suis son lien MapComplete. <a href="{up}methods-fr.html'
-            '#contribute">Éditer, pas à pas</a>.</p>\n'),
+            "carte vit de réponses honnêtes, pas de marqueurs verts. Tu peux "
+            "répondre sur place en moins d'une minute : touche un marqueur "
+            "gris sur la <a href=\"{up}\">carte</a> et indique, directement "
+            "dans la fenêtre, dans quelle pièce se trouve la table à langer, "
+            "avec ton propre compte OSM. MapComplete sert de solution de "
+            "secours. <a href=\"{up}methods-fr.html#grey-pin\">Pas à "
+            "pas</a>.</p>\n"),
         "fresh": ("<p>Le suivi a commencé le {date}. Dès qu'il y aura un "
                   "point de comparaison, cette page indiquera qui a "
                   "bougé.</p>\n"),
@@ -489,12 +496,13 @@ Comment le comptage et les couleurs fonctionnent : <a href="{up}methods-fr.html"
             "domanda sulla stanza risposta, e chi l'ha fatta crescere di "
             "più.</p>\n"),
         "intro2": (
-            "<p>Ogni risposta conta, anche «solo bagno donne» — la mappa "
-            "vive di risposte oneste, non di pin verdi. Rispondere richiede "
-            "meno di un minuto sul posto: tocca un pin grigio sulla "
-            '<a href="{up}">mappa</a> e segui il link a MapComplete. '
-            '<a href="{up}methods-it.html#contribute">Passo per passo</a>.'
-            "</p>\n"),
+            "<p>Ogni risposta conta, anche «solo bagno donne» — la mappa vive "
+            "di risposte oneste, non di pin verdi. Rispondere richiede meno "
+            "di un minuto sul posto: tocca un pin grigio sulla <a "
+            "href=\"{up}\">mappa</a> e indica, direttamente nel popup, in quale "
+            "stanza si trova il fasciatoio, con il tuo account OSM. "
+            "MapComplete resta la soluzione di riserva. <a "
+            "href=\"{up}methods-it.html#grey-pin\">Passo per passo</a>.</p>\n"),
         "fresh": ("<p>La registrazione è iniziata il {date}. Appena ci sarà "
                   "un punto di confronto, qui si vedrà chi si è mosso.</p>\n"),
         "quiet": ("<p>Dal {base} non si è mosso nulla da nessuna parte. I "
@@ -577,11 +585,12 @@ Come si conta e si colora: <a href="{up}methods-it.html">Metodo</a> ·
             "nejvíc.</p>\n"),
         "intro2": (
             "<p>Počítá se každá odpověď, i „jen dámské WC“ — mapa žije z "
-            "poctivých odpovědí, ne ze zelených špendlíků. Odpovědět na "
-            "místě zabere necelou minutu: ťukni na šedý špendlík na "
-            '<a href="{up}">mapě</a> a jdi podle jejího odkazu na '
-            'MapComplete. <a href="{up}methods-cs.html#contribute">Krok za '
-            "krokem</a>.</p>\n"),
+            "poctivých odpovědí, ne ze zelených špendlíků. Odpovědět na místě "
+            "zabere necelou minutu: ťukni na šedý špendlík na <a "
+            "href=\"{up}\">mapě</a> a přímo v okně odpověz, v jaké místnosti "
+            "přebalovací pult je, pod svým vlastním přihlášením do OSM. "
+            "MapComplete je záložní cesta. <a "
+            "href=\"{up}methods-cs.html#grey-pin\">Krok za krokem</a>.</p>\n"),
         "fresh": ("<p>Záznam začal {date}. Jakmile bude k dispozici bod "
                   "srovnání, ukáže se tu, kdo se pohnul.</p>\n"),
         "quiet": ("<p>Od {base} se nikde nic nehnulo. Šedé špendlíky "
@@ -664,10 +673,11 @@ Jak se tu počítá a barví: <a href="{up}methods-cs.html">Metody</a> ·
         "intro2": (
             "<p>Liczy się każda odpowiedź, także &bdquo;tylko damskie "
             "WC&rdquo; — mapa żyje z uczciwych odpowiedzi, nie z zielonych "
-            "pinezek. Odpowiedzieć można na miejscu w niecałą minutę: "
-            'stuknij szarą pinezkę na <a href="{up}">mapie</a> i podążaj za '
-            'linkiem do MapComplete. <a href="{up}methods-pl.html#contribute">'
-            "Krok po kroku</a>.</p>\n"),
+            "pinezek. Odpowiedzieć można na miejscu w niecałą minutę: stuknij "
+            "szarą pinezkę na <a href=\"{up}\">mapie</a> i odpowiedz wprost w "
+            "oknie, w którym pomieszczeniu jest przewijak, na własnym koncie "
+            "OSM. MapComplete to rozwiązanie awaryjne. <a "
+            "href=\"{up}methods-pl.html#grey-pin\">Krok po kroku</a>.</p>\n"),
         "fresh": ("<p>Zapisywanie zaczęło się {date}. Gdy tylko pojawi się "
                   "punkt porównania, ta strona pokaże, kto się poruszył.</p>\n"),
         "quiet": ("<p>Od {base} nigdzie nic się nie zmieniło. Szare pinezki "
@@ -749,9 +759,10 @@ Jak liczymy i kolorujemy: <a href="{up}methods-pl.html">Metody</a> ·
         "intro2": (
             "<p>Varje svar räknas, även ”bara damtoalett” — kartan lever av "
             "ärliga svar, inte av gröna nålar. Att svara tar under en minut "
-            'på plats: tryck på en grå nål på <a href="{up}">kartan</a> och '
-            'följ dess MapComplete-länk. <a href="{up}methods-sv.html#contribute">'
-            "Steg för steg</a>.</p>\n"),
+            "på plats: tryck på en grå nål på <a href=\"{up}\">kartan</a> och "
+            "svara direkt i popupen i vilket rum skötbordet står, med din "
+            "egen OSM-inloggning. MapComplete är reservvägen. <a "
+            "href=\"{up}methods-sv.html#grey-pin\">Steg för steg</a>.</p>\n"),
         "fresh": ("<p>Registreringen började {date}. Så snart det finns en "
                   "jämförelsepunkt visar den här sidan vem som har rört "
                   "sig.</p>\n"),
@@ -838,9 +849,11 @@ Hur saker räknas och färgläggs: <a href="{up}methods-sv.html">Metod</a> ·
             "<p>Svaki odgovor je važan, uključujući &bdquo;samo žensko "
             "WC&ldquo; — karta živi od iskrenih odgovora, ne od zelenih "
             "oznaka. Odgovoriti možeš na licu mjesta za manje od minute: "
-            'dodirni sivu oznaku na <a href="{up}">karti</a> i prati '
-            'MapComplete link. <a href="{up}methods-bs.html#contribute">'
-            "Korak po korak</a>.</p>\n"),
+            "dodirni sivu oznaku na <a href=\"{up}\">karti</a> i odgovori "
+            "direktno u skočnom prozoru u kojoj je prostoriji sto za "
+            "previjanje, sa svojom OSM prijavom. MapComplete je rezervna "
+            "opcija. <a href=\"{up}methods-bs.html#grey-pin\">Korak po "
+            "korak</a>.</p>\n"),
         "fresh": ("<p>Bilježenje je počelo {date}. Čim postoji tačka za "
                   "poređenje, ovdje će pisati ko se pomjerio.</p>\n"),
         "quiet": ("<p>Od {base} se nigdje ništa nije pomjerilo. Sive "
@@ -921,11 +934,13 @@ Kako se broji i boji: <a href="{up}methods-bs.html">Metode</a> ·
             "pàgina: la proporció de llocs amb la pregunta de la sala "
             "resposta, i qui l'ha augmentada més últimament.</p>\n"),
         "intro2": (
-            "<p>Cada resposta compta, també «només lavabo de dones» — el "
-            "mapa viu de respostes honestes, no de pins verds. Respondre "
-            "triga menys d'un minut, allà mateix: toca un pin gris al "
-            '<a href="{up}">mapa</a> i segueix l\'enllaç a MapComplete. '
-            '<a href="{up}methods-ca.html#contribute">Pas a pas</a>.</p>\n'),
+            "<p>Cada resposta compta, també «només lavabo de dones» — el mapa "
+            "viu de respostes honestes, no de pins verds. Respondre triga "
+            "menys d'un minut, allà mateix: toca un pin gris al <a "
+            "href=\"{up}\">mapa</a> i digues, directament al popup, en quin "
+            "espai és el canviador, amb el teu propi compte d'OSM. "
+            "MapComplete és la via alternativa. <a "
+            "href=\"{up}methods-ca.html#grey-pin\">Pas a pas</a>.</p>\n"),
         "fresh": ("<p>El registre va començar el {date}. Tan aviat com hi "
                   "hagi un punt de comparació, aquesta pàgina mostrarà qui "
                   "s'ha mogut.</p>\n"),
@@ -1008,12 +1023,13 @@ Com es compta i s'acoloreix: <a href="{up}methods-ca.html">Mètodes</a> ·
             "ruumi küsimusele on vastatud, ja kes on seda osakaalu "
             "viimasel ajal kõige rohkem kasvatanud.</p>\n"),
         "intro2": (
-            "<p>Iga vastus loeb, ka &bdquo;ainult naiste WC-s&ldquo; — "
-            "kaart toetub ausatele vastustele, mitte rohelistele "
-            "nõeltele. Vastamine võtab kohapeal alla minuti: puuduta "
-            'halli nõela <a href="{up}">kaardil</a> ja järgi selle '
-            "MapComplete'i linki. "
-            '<a href="{up}methods-et.html#contribute">Samm-sammult</a>.</p>\n'),
+            "<p>Iga vastus loeb, ka &bdquo;ainult naiste WC-s&ldquo; — kaart "
+            "toetub ausatele vastustele, mitte rohelistele nõeltele. "
+            "Vastamine võtab kohapeal alla minuti: puuduta halli nõela <a "
+            "href=\"{up}\">kaardil</a> ja vasta otse hüpikaknas, millises "
+            "ruumis mähkimislaud on, oma OSM-i kontoga. MapComplete on "
+            "varuvariant. <a "
+            "href=\"{up}methods-et.html#grey-pin\">Samm-sammult</a>.</p>\n"),
         "fresh": ("<p>Andmete kogumine algas {date}. Niipea kui on olemas "
                   "võrdluspunkt, näitab see leht, kes on liikunud.</p>\n"),
         "quiet": ("<p>Alates {base} pole midagi kuskil muutunud. Hallid "
@@ -1095,9 +1111,11 @@ Kuidas kohti loetakse ja värvitakse: <a href="{up}methods-et.html">Meetodid</a>
         "intro2": (
             "<p>Cada respuesta cuenta, incluso «solo baño de mujeres» — el "
             "mapa vive de respuestas honestas, no de pines verdes. Responder "
-            'lleva menos de un minuto, allí mismo: toca un pin gris en el '
-            '<a href="{up}">mapa</a> y sigue su enlace a MapComplete. '
-            '<a href="{up}methods-es.html#contribute">Paso a paso</a>.</p>\n'),
+            "lleva menos de un minuto, allí mismo: toca un pin gris en el <a "
+            "href=\"{up}\">mapa</a> y di, directamente en la ventana, en qué "
+            "sala está el cambiador, con tu propia cuenta de OSM. MapComplete "
+            "queda como alternativa. <a "
+            "href=\"{up}methods-es.html#grey-pin\">Paso a paso</a>.</p>\n"),
         "fresh": ("<p>El registro empezó el {date}. En cuanto haya un punto de "
                   "comparación, esta página mostrará quién se ha movido.</p>\n"),
         "quiet": ("<p>Nada se ha movido en ningún sitio desde el {base}. Los "
@@ -1180,12 +1198,13 @@ Cómo se cuenta y se colorea: <a href="{up}methods-es.html">Métodos</a> ·
             "odgovorenim pitanjem o prostoriji, i tko ga je posljednje "
             "najviše povećao.</p>\n"),
         "intro2": (
-            "<p>Svaki odgovor se broji, uključujući »samo žensko WC« — "
-            "karta živi od poštenih odgovora, a ne od zelenih pinova. "
-            "Odgovoriti na licu mjesta traje manje od minute: dodirni sivi "
-            'pin na <a href="{up}">karti</a> i slijedi njegovu MapComplete '
-            'poveznicu. <a href="{up}methods-hr.html#contribute">Korak po '
-            "korak</a>.</p>\n"),
+            "<p>Svaki odgovor se broji, uključujući »samo žensko WC« — karta "
+            "živi od poštenih odgovora, a ne od zelenih pinova. Odgovoriti na "
+            "licu mjesta traje manje od minute: dodirni sivi pin na <a "
+            "href=\"{up}\">karti</a> i odgovori izravno u skočnom prozoru u "
+            "kojoj je prostoriji stol za previjanje, sa svojom OSM prijavom. "
+            "MapComplete je rezervna opcija. <a "
+            "href=\"{up}methods-hr.html#grey-pin\">Korak po korak</a>.</p>\n"),
         "fresh": ("<p>Bilježenje je počelo {date}. Čim postoji točka za "
                   "usporedbu, ova će stranica pokazati tko se pomaknuo.</p>\n"),
         "quiet": ("<p>Od {base} se nigdje ništa nije pomaknulo. Sivi pinovi "
@@ -1265,12 +1284,13 @@ Kako se broji i boji: <a href="{up}methods-hr.html">Metode</a> ·
             "staða þar sem spurningunni um rýmið hefur verið svarað, og "
             "hver hefur hækkað það hlutfall mest.</p>\n"),
         "intro2": (
-            "<p>Sérhvert svar telur, líka „aðeins á kvennasalerni“ — "
-            "kortið lifir á heiðarlegum svörum, ekki grænum punktum. Að "
-            'svara tekur innan við mínútu á staðnum: ýttu á gráan punkt á '
-            '<a href="{up}">kortinu</a> og fylgdu MapComplete-tenglinum. '
-            '<a href="{up}methods-is.html#contribute">Skref fyrir '
-            "skref</a>.</p>\n"),
+            "<p>Sérhvert svar telur, líka „aðeins á kvennasalerni“ — kortið "
+            "lifir á heiðarlegum svörum, ekki grænum punktum. Að svara tekur "
+            "innan við mínútu á staðnum: ýttu á gráan punkt á <a "
+            "href=\"{up}\">kortinu</a> og svaraðu beint í sprettglugganum í "
+            "hvaða rými skiptiborðið er, með þinni eigin OSM-innskráningu. "
+            "MapComplete er varaleiðin. <a "
+            "href=\"{up}methods-is.html#grey-pin\">Skref fyrir skref</a>.</p>\n"),
         "fresh": ("<p>Skráning hófst þann {date}. Um leið og til er "
                   "samanburðarpunktur, sýnir þessi síða hver hefur "
                   "breyst.</p>\n"),
@@ -1356,9 +1376,10 @@ Hvernig talið er og litað: <a href="{up}methods-is.html">Aðferð</a> ·
             "<p>Katra atbilde ir svarīga, arī &bdquo;tikai sieviešu "
             "telpā&ldquo; — karte dzīvo no godīgām atbildēm, nevis no zaļām "
             "atzīmēm. Atbildēt var uz vietas, mazāk nekā minūtē: uzspied uz "
-            'pelēkas atzīmes <a href="{up}">kartē</a> un seko MapComplete '
-            'saitei. <a href="{up}methods-lv.html#contribute">Soli pa '
-            "solim</a>.</p>\n"),
+            "pelēkas atzīmes <a href=\"{up}\">kartē</a> un tieši uznirstošajā "
+            "logā norādi, kurā telpā atrodas pārtinamais galdiņš, ar savu OSM "
+            "kontu. MapComplete ir rezerves ceļš. <a "
+            "href=\"{up}methods-lv.html#grey-pin\">Soli pa solim</a>.</p>\n"),
         "fresh": ("<p>Pierakstīšana sākās {date}. Tiklīdz būs pieejams "
                   "salīdzinājuma datums, šeit būs redzams, kurš ir "
                   "virzījies uz priekšu.</p>\n"),
@@ -1443,12 +1464,13 @@ Kā tiek skaitīts un iekrāsots: <a href="{up}methods-lv.html">Metodika</a> ·
             "atsakyta į klausimą apie patalpą, dalį, ir kas ją pastaruoju "
             "metu labiausiai padidino.</p>\n"),
         "intro2": (
-            "<p>Kiekvienas atsakymas yra svarbus, net ir „tik moterų "
-            "tualete“ — žemėlapis gyvuoja iš sąžiningų atsakymų, o ne iš "
-            "žalių smeigtukų. Atsakyti gali vietoje, per mažiau nei "
-            'minutę: bakstelėk pilką smeigtuką <a href="{up}">žemėlapyje'
-            "</a> ir sek MapComplete nuorodą. "
-            '<a href="{up}methods-lt.html#contribute">Žingsnis po '
+            "<p>Kiekvienas atsakymas yra svarbus, net ir „tik moterų tualete“ "
+            "— žemėlapis gyvuoja iš sąžiningų atsakymų, o ne iš žalių "
+            "smeigtukų. Atsakyti gali vietoje, per mažiau nei minutę: "
+            "bakstelėk pilką smeigtuką <a href=\"{up}\">žemėlapyje</a> ir "
+            "tiesiai iškylančiame lange nurodyk, kurioje patalpoje yra "
+            "vystymo stalas, su savo OSM paskyra. MapComplete yra atsarginis "
+            "kelias. <a href=\"{up}methods-lt.html#grey-pin\">Žingsnis po "
             "žingsnio</a>.</p>\n"),
         "fresh": ("<p>Duomenų rinkimas prasidėjo {date}. Kai tik atsiras "
                   "palyginimo taškas, čia bus matyti, kas pajudėjo.</p>\n"),
@@ -1535,12 +1557,14 @@ Kaip skaičiuojama ir spalvinama: <a href="{up}methods-lt.html">Metodai</a> ·
             "megválaszolták a helyiség kérdését, és hogy ki növelte ezt "
             "legutóbb a legnagyobb mértékben.</p>\n"),
         "intro2": (
-            "<p>Minden válasz számít, akár az is, hogy „csak a női "
-            "mosdóban” — a térkép őszinte válaszokból él, nem zöld "
-            "jelölőkből. A válaszadás a helyszínen egy percnél is "
-            'kevesebb ideig tart: koppints egy szürke jelölőre a '
-            '<a href="{up}">térképen</a>, és kövesd a MapComplete-linket. '
-            '<a href="{up}methods-hu.html#contribute">Lépésről lépésre</a>.</p>\n'),
+            "<p>Minden válasz számít, akár az is, hogy „csak a női mosdóban” "
+            "— a térkép őszinte válaszokból él, nem zöld jelölőkből. A "
+            "válaszadás a helyszínen egy percnél is kevesebb ideig tart: "
+            "koppints egy szürke jelölőre a <a href=\"{up}\">térképen</a>, és "
+            "közvetlenül a felugró ablakban add meg, melyik helyiségben van a "
+            "pelenkázóasztal, a saját OSM-fiókoddal. A MapComplete a tartalék "
+            "megoldás. <a href=\"{up}methods-hu.html#grey-pin\">Lépésről "
+            "lépésre</a>.</p>\n"),
         "fresh": ("<p>A rögzítés kezdete: {date}. Amint lesz egy "
                   "összehasonlítási időpont, ez az oldal megmutatja, ki "
                   "mozdult.</p>\n"),
@@ -1622,12 +1646,12 @@ Hogyan számolunk és színezünk: <a href="{up}methods-hu.html">Módszertan</a>
             "siden teller — andelen steder med besvart romspørsmål, og hvem "
             "som har løftet den mest.</p>\n"),
         "intro2": (
-            "<p>Hvert svar teller, også «bare dametoalett» — kartet lever "
-            "av ærlige svar, ikke av grønne punkter. Å svare tar under et "
-            "minutt på stedet: trykk på et grått punkt på <a href=\"{up}\">"
-            "kartet</a> og følg MapComplete-lenken. "
-            "<a href=\"{up}methods-no.html#contribute\">Steg for steg</a>."
-            "</p>\n"),
+            "<p>Hvert svar teller, også «bare dametoalett» — kartet lever av "
+            "ærlige svar, ikke av grønne punkter. Å svare tar under et minutt "
+            "på stedet: trykk på et grått punkt på <a href=\"{up}\">kartet</a> "
+            "og svar rett i popupen hvilket rom stellebordet står i, med din "
+            "egen OSM-innlogging. MapComplete er reserveløsningen. <a "
+            "href=\"{up}methods-no.html#grey-pin\">Steg for steg</a>.</p>\n"),
         "fresh": ("<p>Registreringen startet {date}. Så snart det finnes et "
                   "sammenligningspunkt, viser denne siden hvem som har "
                   "beveget seg.</p>\n"),
@@ -1712,10 +1736,12 @@ Slik telles og fargelegges det: <a href="{up}methods-no.html">Metode</a> ·
             "mais a fez subir.</p>\n"),
         "intro2": (
             "<p>Toda a resposta conta, incluindo «só WC feminino» — o mapa "
-            "vive de respostas honestas, não de pins verdes. Responder "
-            "demora menos de um minuto no local: toca num pin cinzento no "
-            '<a href="{up}">mapa</a> e segue a ligação do MapComplete. '
-            '<a href="{up}methods-pt.html#contribute">Passo a passo</a>.</p>\n'),
+            "vive de respostas honestas, não de pins verdes. Responder demora "
+            "menos de um minuto no local: toca num pin cinzento no <a "
+            "href=\"{up}\">mapa</a> e indica, diretamente na janela, em que "
+            "espaço está o fraldário, com a tua própria conta OSM. O "
+            "MapComplete fica como alternativa. <a "
+            "href=\"{up}methods-pt.html#grey-pin\">Passo a passo</a>.</p>\n"),
         "fresh": ("<p>O registo começou a {date}. Assim que houver um ponto "
                   "de comparação, esta página mostra quem se mexeu.</p>\n"),
         "quiet": ("<p>Desde {base}, nada se mexeu em lado nenhum. Os pins "
@@ -1798,12 +1824,13 @@ Como se conta e colore: <a href="{up}methods-pt.html">Métodos</a> ·
             "— proporția locurilor cu întrebarea despre încăpere "
             "răspunsă, și cine a crescut-o cel mai mult.</p>\n"),
         "intro2": (
-            "<p>Fiecare răspuns contează, inclusiv „doar toaleta "
-            "femeilor” — harta trăiește din răspunsuri cinstite, nu din "
-            "marcaje verzi. Poți răspunde la întrebare chiar la fața "
-            'locului, în mai puțin de un minut: atinge un marcaj gri pe '
-            '<a href="{up}">hartă</a> și urmează linkul către '
-            'MapComplete. <a href="{up}methods-ro.html#contribute">Pas cu '
+            "<p>Fiecare răspuns contează, inclusiv „doar toaleta femeilor” — "
+            "harta trăiește din răspunsuri cinstite, nu din marcaje verzi. "
+            "Poți răspunde la întrebare chiar la fața locului, în mai puțin "
+            "de un minut: atinge un marcaj gri pe <a href=\"{up}\">hartă</a> și "
+            "spune, direct în fereastră, în ce încăpere se află masa de "
+            "înfășat, cu propriul tău cont OSM. MapComplete rămâne soluția de "
+            "rezervă. <a href=\"{up}methods-ro.html#grey-pin\">Pas cu "
             "pas</a>.</p>\n"),
         "fresh": ("<p>Înregistrarea a început la {date}. De îndată ce "
                   "apare un punct de comparație, această pagină va arăta "
@@ -1891,8 +1918,10 @@ Cum se numără și se colorează: <a href="{up}methods-ro.html">Metode</a> ·
             "<p>Çdo përgjigje ka vlerë, edhe „vetëm tualeti i grave” — harta "
             "jeton nga përgjigje të ndershme, jo nga shenjues të gjelbër. Të "
             "përgjigjesh zgjat më pak se një minutë, aty për aty: prek një "
-            'shenjues gri në <a href="{up}">hartë</a> dhe ndiq lidhjen për '
-            'MapComplete. <a href="{up}methods-sq.html#contribute">Hap pas '
+            "shenjues gri në <a href=\"{up}\">hartë</a> dhe thuaj drejtpërdrejt "
+            "në dritaren kërcyese në cilën hapësirë është tavolina e "
+            "ndërrimit, me llogarinë tënde OSM. MapComplete është rruga "
+            "rezervë. <a href=\"{up}methods-sq.html#grey-pin\">Hap pas "
             "hapi</a>.</p>\n"),
         "fresh": ("<p>Regjistrimi filloi më {date}. Sapo të ketë një pikë "
                   "krahasimi, kjo faqe do të tregojë kush ka lëvizur.</p>\n"),
@@ -1977,11 +2006,12 @@ Si numërohet dhe ngjyroset: <a href="{up}methods-sq.html">Metodologjia</a> ·
             "najviac.</p>\n"),
         "intro2": (
             "<p>Počíta sa každá odpoveď, aj „len dámske WC“ — mapa žije z "
-            "úprimných odpovedí, nie zo zelených špendlíkov. Odpovedať "
-            'môžeš priamo na mieste za menej ako minútu: ťukni na sivý '
-            'špendlík na <a href="{up}">mape</a> a nasleduj jeho odkaz na '
-            'MapComplete. <a href="{up}methods-sk.html#contribute">Krok za '
-            "krokom</a>.</p>\n"),
+            "úprimných odpovedí, nie zo zelených špendlíkov. Odpovedať môžeš "
+            "priamo na mieste za menej ako minútu: ťukni na sivý špendlík na "
+            "<a href=\"{up}\">mape</a> a priamo v okne odpovedz, v ktorej "
+            "miestnosti je prebaľovací pult, pod vlastným prihlásením do OSM. "
+            "MapComplete je záložná cesta. <a "
+            "href=\"{up}methods-sk.html#grey-pin\">Krok za krokom</a>.</p>\n"),
         "fresh": ("<p>Záznam sa začal {date}. Hneď ako bude k dispozícii "
                   "porovnávací bod, ukáže sa tu, kto sa pohol.</p>\n"),
         "quiet": ("<p>Od {base} sa nikde nič nepohlo. Sivé špendlíky "
@@ -2067,10 +2097,10 @@ Ako sa počíta a farbí: <a href="{up}methods-sk.html">Metódy</a> ·
             "<p>Šteje vsak odgovor, tudi &bdquo;samo v ženskem "
             "stranišču&ldquo; — zemljevid poganjajo pošteni odgovori, ne "
             "zelene bucke. Odgovoriti je mogoče na kraju samem v manj kot "
-            'minuti: tapni sivo bucko na <a href="{up}">zemljevidu</a> in '
-            'sledi njeni povezavi MapComplete. '
-            '<a href="{up}methods-sl.html#contribute">Korak za korakom</a>.'
-            '</p>\n'),
+            "minuti: tapni sivo bucko na <a href=\"{up}\">zemljevidu</a> in kar "
+            "v pojavnem oknu odgovori, v katerem prostoru je previjalna miza, "
+            "s svojo prijavo v OSM. MapComplete je rezervna pot. <a "
+            "href=\"{up}methods-sl.html#grey-pin\">Korak za korakom</a>.</p>\n"),
         "fresh": ("<p>Beleženje se je začelo {date}. Takoj ko bo na voljo "
                   "primerjalna točka, bo tu pisalo, kdo se je premaknil.</p>\n"),
         "quiet": ("<p>Od {base} se nikjer ni nič premaknilo. Sive bucke "
@@ -2155,9 +2185,10 @@ Kako se šteje in barva: <a href="{up}methods-sl.html">Metode</a> ·
             "<p>Jokainen vastaus lasketaan, myös ”vain naisten WC:ssä” — "
             "kartta elää rehellisistä vastauksista, ei vihreistä nastoista. "
             "Vastaaminen vie paikan päällä alle minuutin: napauta harmaata "
-            "nastaa <a href=\"{up}\">kartalla</a> ja seuraa sen "
-            "MapComplete-linkkiä. <a href=\"{up}methods-fi.html#contribute\">"
-            "Vaihe vaiheelta</a>.</p>\n"),
+            "nastaa <a href=\"{up}\">kartalla</a> ja vastaa suoraan ikkunassa, "
+            "missä tilassa hoitopöytä on, omalla OSM-tunnuksellasi. "
+            "MapComplete on varareitti. <a "
+            "href=\"{up}methods-fi.html#grey-pin\">Vaihe vaiheelta</a>.</p>\n"),
         "fresh": ("<p>Seuranta alkoi {date}. Heti kun vertailukohta on "
                   "olemassa, tällä sivulla näkyy, kuka on liikkunut.</p>\n"),
         "quiet": ("<p>{base} lähtien mikään ei ole liikkunut missään. "
@@ -2240,9 +2271,11 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
             "<p>Κάθε απάντηση μετράει, ακόμα και «μόνο στη γυναικεία "
             "τουαλέτα» — ο χάρτης ζει από ειλικρινείς απαντήσεις, όχι από "
             "πράσινες καρφίτσες. Μπορείς να απαντήσεις επιτόπου σε λιγότερο "
-            'από ένα λεπτό: πάτησε μια γκρι καρφίτσα στον <a href="{up}">'
-            "χάρτη</a> και ακολούθησε τον σύνδεσμο MapComplete. "
-            '<a href="{up}methods-el.html#contribute">Βήμα-βήμα</a>.</p>\n'),
+            "από ένα λεπτό: πάτησε μια γκρι καρφίτσα στον <a "
+            "href=\"{up}\">χάρτη</a> και πες απευθείας στο αναδυόμενο παράθυρο "
+            "σε ποιον χώρο είναι η αλλαξιέρα, με τον δικό σου λογαριασμό OSM. "
+            "Το MapComplete είναι η εναλλακτική. <a "
+            "href=\"{up}methods-el.html#grey-pin\">Βήμα-βήμα</a>.</p>\n"),
         "fresh": ("<p>Η καταγραφή ξεκίνησε στις {date}. Μόλις υπάρξει σημείο "
                   "σύγκρισης, αυτή η σελίδα θα δείξει ποιος κινήθηκε.</p>\n"),
         "quiet": ("<p>Τίποτα δεν έχει κινηθεί πουθενά από {base}. Οι γκρι "
@@ -2326,12 +2359,13 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
             "з адказаным пытаннем пра памяшканне і тых, хто павялічыў яе "
             "мацней за ўсіх.</p>\n"),
         "intro2": (
-            "<p>Мае значэнне кожны адказ, у тым ліку «толькі жаночы "
-            "туалет» — карта трымаецца на сумленных адказах, а не на "
-            "зялёных шпільках. Адказаць можна на месцы менш чым за "
-            'хвіліну: націсні на шэрую шпільку на <a href="{up}">карце</a> '
-            'і перайдзі па яе спасылцы MapComplete. <a href="{up}'
-            'methods-be.html#contribute">Крок за крокам</a>.</p>\n'),
+            "<p>Мае значэнне кожны адказ, у тым ліку «толькі жаночы туалет» — "
+            "карта трымаецца на сумленных адказах, а не на зялёных шпільках. "
+            "Адказаць можна на месцы менш чым за хвіліну: націсні на шэрую "
+            "шпільку на <a href=\"{up}\">карце</a> і проста ў акенку скажы, у "
+            "якім памяшканні дзіцячы стол для спавівання, пад сваім уліковым "
+            "запісам OSM. MapComplete — запасны шлях. <a "
+            "href=\"{up}methods-be.html#grey-pin\">Крок за крокам</a>.</p>\n"),
         "fresh": ("<p>Запіс пачаўся {date}. Як толькі з'явіцца пункт для "
                   "параўнання, гэтая старонка пакажа, хто зрушыўся з "
                   "месца.</p>\n"),
@@ -2416,9 +2450,10 @@ OpenStreetMap</a>, паводле <a href="https://opendatacommons.org/licenses/
             "<p>Всеки отговор има значение, включително „само в дамска "
             "тоалетна“ — картата се крепи на честни отговори, не на зелени "
             "маркери. Отговарянето отнема под минута на място: докосни сив "
-            'маркер на <a href="{up}">картата</a> и последвай връзката му '
-            'към MapComplete. <a href="{up}methods-bg.html#contribute">'
-            "Стъпка по стъпка</a>.</p>\n"),
+            "маркер на <a href=\"{up}\">картата</a> и кажи направо в прозореца "
+            "в коя стая е масата за повиване, с твоя собствен OSM акаунт. "
+            "MapComplete е резервният път. <a "
+            "href=\"{up}methods-bg.html#grey-pin\">Стъпка по стъпка</a>.</p>\n"),
         "fresh": ("<p>Записът започна на {date}. Щом се появи момент за "
                   "сравнение, тук ще пише кой се е раздвижил.</p>\n"),
         "quiet": ("<p>От {base} насам никъде нищо не се е променило. "
@@ -2501,11 +2536,12 @@ contributors</a>, под <a href="https://opendatacommons.org/licenses/odbl/">OD
             "просторијата, и кој најмногу го зголемил.</p>\n"),
         "intro2": (
             "<p>Секој одговор се брои, вклучително и „само во женскиот "
-            "тоалет“ — мапата живее од чесни одговори, а не од зелени "
-            "точки. Одговарањето на лице место трае под една минута: "
-            'допри сива точка на <a href="{up}">мапата</a> и следи го '
-            'нејзиниот MapComplete-линк. <a href="{up}methods-mk.html#contribute">'
-            "Чекор по чекор</a>.</p>\n"),
+            "тоалет“ — мапата живее од чесни одговори, а не од зелени точки. "
+            "Одговарањето на лице место трае под една минута: допри сива "
+            "точка на <a href=\"{up}\">мапата</a> и одговори директно во "
+            "прозорчето во која просторија е масата за пеленање, со твојата "
+            "сопствена OSM сметка. MapComplete е резервниот пат. <a "
+            "href=\"{up}methods-mk.html#grey-pin\">Чекор по чекор</a>.</p>\n"),
         "fresh": ("<p>Снимањето започна на {date}. Штом ќе има точка за "
                   "споредба, оваа страница ќе покаже кој се придвижил.</p>\n"),
         "quiet": ("<p>Никаде ништо не се придвижило од {base}. Сивите "
@@ -2590,10 +2626,11 @@ OpenStreetMap</a>, под лиценцата <a href="https://opendatacommons.or
         "intro2": (
             "<p>Сваки одговор се рачуна, укључујући „Само женски тоалет“ — "
             "мапа живи од искрених одговора, а не од зелених пинова. "
-            "Одговарање на лицу места траје мање од минута: додирни сиви "
-            'пин на <a href="{up}">мапи</a> и прати његов MapComplete '
-            'линк. <a href="{up}methods-sr.html#contribute">Корак по '
-            "кораку</a>.</p>\n"),
+            "Одговарање на лицу места траје мање од минута: додирни сиви пин "
+            "на <a href=\"{up}\">мапи</a> и одговори директно у искачућем "
+            "прозору у којој је просторији сто за превијање, са својом OSM "
+            "пријавом. MapComplete је резервна опција. <a "
+            "href=\"{up}methods-sr.html#grey-pin\">Корак по кораку</a>.</p>\n"),
         "fresh": ("<p>Праћење је почело {date}. Чим постоји тачка за "
                   "поређење, ова страница ће показати ко се померио.</p>\n"),
         "quiet": ("<p>Од {base} се нигде ништа није померило. Сиви пинови "
@@ -2674,12 +2711,13 @@ OpenStreetMap-а</a>, под лиценцом <a href="https://opendatacommons.o
             "столик. Саме це рахує ця сторінка — частку місць із відповіддю "
             "про приміщення й хто підняв її найбільше.</p>\n"),
         "intro2": (
-            "<p>Важлива кожна відповідь, навіть «лише в жіночому туалеті» "
-            "— карта тримається на чесних відповідях, а не на зелених "
+            "<p>Важлива кожна відповідь, навіть «лише в жіночому туалеті» — "
+            "карта тримається на чесних відповідях, а не на зелених "
             "позначках. Відповісти можна на місці менш ніж за хвилину: "
-            'торкнися сірої позначки на <a href="{up}">карті</a> і перейди '
-            'за посиланням MapComplete. <a href="{up}methods-uk.html#contribute">'
-            "Крок за кроком</a>.</p>\n"),
+            "торкнися сірої позначки на <a href=\"{up}\">карті</a> і просто у "
+            "вікні вкажи, у якому приміщенні пеленальний столик, зі своїм "
+            "обліковим записом OSM. MapComplete — запасний шлях. <a "
+            "href=\"{up}methods-uk.html#grey-pin\">Крок за кроком</a>.</p>\n"),
         "fresh": ("<p>Запис даних почався {date}. Щойно з'явиться точка для "
                   "порівняння, тут буде видно, хто зрушив з місця.</p>\n"),
         "quiet": ("<p>З {base} ніде нічого не змінилося. Сірі позначки "
@@ -2753,11 +2791,11 @@ OpenStreetMap</a>, за ліцензією <a href="https://opendatacommons.org/
                    "という質問に、最近どこで答えが付いたか。このページが数えるのは"
                    "それ — 部屋の質問に答えのある場所の割合と、それを最も伸ばしたのは"
                    "誰か — です。</p>\n"),
-        "intro2": ("<p>どの答えも数に入ります。「女性トイレのみ」も含めて — この地図は"
-                   "緑のピンではなく、正直な答えで動いています。答えるのはその場で"
-                   '1分以内: <a href="{up}">地図</a>で灰色のピンをタップし、MapComplete'
-                   'のリンクを開くだけです。<a href="{up}methods-ja.html#contribute">'
-                   "手順はこちら</a>。</p>\n"),
+        "intro2": (
+            "<p>どの答えも数に入ります。「女性トイレのみ」も含めて — "
+            "この地図は緑のピンではなく、正直な答えで動いています。答えるのはその場で1分以内です。<a "
+            "href=\"{up}\">地図</a>で灰色のピンをタップし、ポップアップでおむつ交換台がどの部屋にあるかを、ご自身のOSMアカウントでそのまま答えます。MapCompleteは代わりの手段です。<a "
+            "href=\"{up}methods-ja.html#grey-pin\">手順はこちら</a>。</p>\n"),
         "fresh": ("<p>記録は{date}に始まりました。比較の基準ができ次第、このページに"
                   "誰が動いたかが表示されます。</p>\n"),
         "quiet": "<p>{base}以降、どこも動いていません。灰色のピンが待っています。</p>\n",
