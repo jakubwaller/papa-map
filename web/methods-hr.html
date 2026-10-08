@@ -130,7 +130,6 @@ noćnog builda. Uzorak iz osam gradskih središta je od 26&nbsp;srp&nbsp;2026 i 
   <li><a href="#mum-mode">Prekidač tata-mama</a></li>
   <li><a href="#play-area">Plavi kružić: dječji kutak</a></li>
   <li><a href="#wheelchair">Čip Kolica</a></li>
-  <li><a href="#empty-rings">Prazni plavi kružići: mjesta za igru bez odgovora</a></li>
   <li><a href="#high-chair">Čip Hranilica</a></li>
   <li><a href="#grey-pin">Kako popraviti sivi pin</a></li>
   <li><a href="#contribute">Kako dodati mjesto koje nedostaje</a></li>
@@ -167,8 +166,7 @@ mala slova, a svaki se dio uspoređuje u cijelosti. Nikad kao podniz, jer <code>
   <li><span class="dot r"></span><strong>Crveno:</strong> inače, ako je jedan od dijelova
       <code>female_toilet</code>. Stol postoji, ali samo u ženskom WC-u.</li>
   <li><span class="dot u"></span><strong>Sivo:</strong> sve ostalo. Nema oznake prostorije, ili
-      samo slobodan tekst. Nitko nije zabilježio prostoriju. Sivi pinovi su posao koji treba
-      obaviti.</li>
+      samo slobodan tekst. Nitko nije zabilježio prostoriju.</li>
 </ul>
 <p>Objekt s oznakom <code>centralkey</code> (drugačijom od <code>no</code>) ostaje izvan karte kad ključ zaključava cijela vrata: <code>access=centralkey</code>, stol u WC-u za invalide, ili ništa u oznakama ne kaže da ključ vrijedi samo za jednu kabinu. Objekt s otvorenim muškim i ženskim WC-om i zaključanom kabinom za invalide (<code>wheelchair:access=centralkey</code>, ili <code>male=yes</code> i <code>female=yes</code>) ostaje na karti, siv dok netko ne upiše prostoriju. Euro ključ dobiva se samo uz dokaz invaliditeta, pa većina tata kroz ta vrata ne prolazi. Pod čipom <em>Kolica</em> ti se stolovi vraćaju, vidi dolje.</p>
 
@@ -196,59 +194,22 @@ pa su u mama-načinu crveni i ne ubrajaju se u broj gore. Starije verzije aplika
 prikazuju zeleno, dok se ne ažuriraju.</p>
 
 <h2 id="play-area">Plavi kružić: dječji kutak</h2>
-<p>Pin s plavim kružićem ima i dječji kutak &mdash; mjesto gdje se ne samo previja, nego se i može
-ostati neko vrijeme. Filtar <em>S dječjim kutkom</em> suzuje kartu samo na njih. Mjesto se broji ako
-OSM bilježi bilo što od ovoga:</p>
+<p>Pin s plavim kružićem ima i dječji kutak. Čip <em>S dječjim kutkom</em> prikazuje samo njih. Mjesto se računa ako je u OSM-u jedan od ovih tagova:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> ili <code>designated</code>
-      &mdash; način na koji wiki propisuje da se zapiše »u zatvorenom«.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> ili
-      <code>designated</code> &mdash; kutak za igru u kafiću, restoranu, pekarnici. Najčešće
-      korištena oznaka, iako ostavlja otvorenim je li u zatvorenom ili na otvorenom.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; komercijalno igralište u
-      zatvorenom prostoru.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> zajedno s
-      <code>indoor=yes</code> &mdash; isto, samo obrnuto označeno.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> ili <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> ili <code>designated</code> (najčešći tag, ne govori je li unutra ili vani)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> zajedno s <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> se ne broji: pješčanik u vrtu pivnice nije ono što kružić obećava. Ne broji
-se ni <code>no</code>, ni <code>limited</code> — wiki tu vrijednost definira kao »igračke su
-dostupne, ali nema određenog prostora«. Kad postoji izričit <code>kids_area:indoor=no</code>, on
-nadjačava goli <code>kids_area=yes</code>.</p>
-<p>Ovo je oznaka, a ne četvrti status. Mjesto bez ovih oznaka nema »nikakav dječji kutak« —
-OSM o njemu jednostavno ništa ne govori. Zato ovdje nema sive boje.</p>
-<p>Upravo zato skočni prozor pita o tome. Na svakom pinu gdje OSM ne govori ništa o dječjem
-kutku, bez obzira na boju, postoji jedan redak (ispod prostorija, tamo gdje pin pita i za
-prostoriju): <em>Dječji kutak?</em>, s tri odgovora. <em>unutra</em> upisuje
-<code>kids_area:indoor=yes</code> zajedno s <code>kids_area=yes</code>, <em>samo vani</em>
-upisuje <code>kids_area=yes</code> zajedno s <code>kids_area:indoor=no</code>, <em>nema</em>
-upisuje <code>kids_area=no</code> &mdash; pod tvojim vlastitim OSM računom, u vlastitom
-changesetu, točno one oznake koje MapComplete upisuje za isto pitanje. Pitanje se odnosi na
-dječji kutak općenito, ne samo zatvoreni: <code>kids_area=no</code> u OSM-u znači »ovdje djeca
-nemaju gdje igrati«, pa pekarnica s igralištem u vrtu dobiva <em>samo vani</em> umjesto krivog
-ne. Kružić se pojavljuje (ili ostaje odsutan) nekoliko minuta kasnije. Nitko se ne pita
-dvaput: upisan <code>kids_area</code> <em>ili</em> <code>kids_area:indoor</code>, bez obzira na
-vrijednost, uklanja pitanje. Na <code>leisure=playground</code> bez <code>indoor=yes</code>
-pitanje se uopće ne postavlja &mdash; mjesto <em>već je</em> mjesto za igru, samo ne u
-zatvorenom.</p>
+<p><code>outdoor</code>, <code>no</code> i <code>limited</code> se ne računaju. Izričiti <code>kids_area:indoor=no</code> pobjeđuje goli <code>kids_area=yes</code>.</p>
+<p>Kružić je značka, a ne četvrta boja. Mjesto bez ovih tagova nema „nikakav dječji kutak“, OSM o tome jednostavno ništa ne kaže, a to vrijedi za gotovo sva mjesta. Zato ovdje nema sive.</p>
+<p>Upravo zato popup pita: kod svakog pina o kojem OSM ne kaže ništa o dječjem kutku, bez obzira na boju, stoji jedan redak (ispod prostorija, ako pin pita i za prostoriju): <em>Dječji kutak?</em> s tri odgovora. <em>unutra</em> upisuje <code>kids_area:indoor=yes</code> zajedno s <code>kids_area=yes</code>, <em>samo vani</em> upisuje <code>kids_area=yes</code> zajedno s <code>kids_area:indoor=no</code>, <em>nema</em> upisuje <code>kids_area=no</code> — pod tvojim vlastitim OSM računom, u zasebnom changesetu, točno one tagove koje MapComplete upisuje za isto pitanje. Pitanje se odnosi na bilo kakvu mogućnost igre, ne samo unutra: <code>kids_area=no</code> u OSM-u znači „djeca se ovdje nigdje ne mogu igrati“, pa pekara s igralištem u vrtu zato dobiva <em>samo vani</em> umjesto lažne nule. Kružić se pojavi (ili ne) nekoliko minuta kasnije. Tko je već odgovorio, ne pita se ponovno: zabilježen <code>kids_area</code> <em>ili</em> <code>kids_area:indoor</code>, bez obzira na vrijednost, uklanja pitanje. Na <code>leisure=playground</code> bez <code>indoor=yes</code> pitanje se uopće ne postavlja: mjesto <em>jest</em> mjesto za igru, samo vani.</p>
+<p>Pravilo vrijedi za mnogo više mjesta nego što ima pinova. Samo <span data-stat="play_tables">111</span> njih ima pin. Kod još <span data-stat="play_places">701</span> nitko nije odgovorio na prvo pitanje: ima li ovdje stol za previjanje? Njih karta ne može obojiti, pa dobivaju prazan plavi kružić i vlastiti čip, <em>Samo dječji kutak</em>, koji je prema zadanim postavkama uključen. Tko ionako ide tamo s djetetom, zna odgovor. Klik na kružić otvara MapComplete točno kod tog pitanja.</p>
+<p><em>Isprekidani</em> kružić znači: dječji kutak da, stol za previjanje ne (<code>changing_table=no</code>). To nije pin, a nije ni crveno, jer bi crveno značilo da stol postoji, samo ne za tatu. Ovdje ga nema, ni za koga. Mjesto je ipak na karti, jer se s djetetom rado ide tamo i bez stola.</p>
 
 <h2 id="wheelchair">Čip Kolica</h2>
 <p>Čip <em>Kolica</em> prikazuje mjesta koja u OSM-u imaju <code>wheelchair=yes</code> ili <code>wheelchair=limited</code>. <code>limited</code> znači jedna stuba do 7&nbsp;cm ili potrebna pomoć. Uz uključen čip ta mjesta imaju uskličnik od zooma 13, a u skočnom prozoru piše <em>ograničeno</em>. Sam <code>toilets:wheelchair=yes</code> nije dovoljan, ali ipak stoji u skočnom prozoru, zajedno s <code>wheelchair:description</code>. Mjesto bez oznake nije nepristupačno, OSM o njemu jednostavno ništa ne kaže, pa čip samo filtrira i ništa ne boji. Plave kružiće (mjesta s kutićem za igru) čip filtrira i označava na isti način.</p>
 <p>Pod ovim čipom, i samo tu, vraćaju se stolovi iza euroključa, s ključem u pribadači: tko treba čip, obično ima ključ. Na običnoj karti, u brojkama i na ljestvici ostaju vani.</p>
-
-<h2 id="empty-rings">Prazni plavi kružići: mjesta za igru bez odgovora</h2>
-<p>Isto pravilo pogađa mnogo više mjesta nego što karta ima pinova. Samo
-<span data-stat="play_tables">111</span> njih ima pin.
-Na još <span data-stat="play_places">701</span> mjesto nitko nije odgovorio na prvo pitanje: postoji
-li tu stol za previjanje? Da, ne, nitko ne zna — OSM o tome ne govori baš ništa.</p>
-<p>Karta ne može obojiti tih <span data-stat="play_places">701</span>, jer nema što bojiti. Nisu ni
-siva: siva znači »stol postoji, prostorija nedostaje«, a to se ovdje ne primjenjuje. Zato dobivaju
-vlastiti filtar, <em>Samo dječji kutak</em>, uključen po zadanome, i prazan plavi kružić umjesto
-punog pina.</p>
-<p><em>Isprekidani</em> prsten znači: dječji kutak da, stol za previjanje ne (<code>changing_table=no</code>). To nije pin i nije crven, jer bi crveno značilo da stol postoji, samo ne za tatu. Ovdje ga nema, ni za koga. Mjesto je ipak na karti, jer se s djetetom rado ode onamo i bez stola.</p>
-<p>To su najperspektivnija otvorena pitanja na cijeloj karti. Igralište u zatvorenom prostoru, kafić
-s bazenom loptica, restoran s prostorijom za igru — tata s malim djetetom onamo ide svejedno, a kad
-već bude tamo, znat će odgovor. Klik na kružić otvara MapComplete točno na tom jednom pitanju.
-Odgovori na njega i kružić nestaje za nekoliko minuta, a zamjenjuje ga pravi pin.</p>
 
 <h2 id="high-chair">Čip Hranilica</h2>
 <p>Čip <em>Hranilica</em> prikazuje mjesta za koja je u OSM-u zabilježena hranilica: <code>highchair=yes</code> ili broj veći od 0. <code>highchair=no</code> ili <code>0</code> zabilježeni je »ne«. Mjesto bez oznake nije mjesto bez hranilice, OSM o njemu jednostavno ništa ne kaže, pa ga čip izostavlja i ništa ne tvrdi. Vrijednost koju karta ne može pročitati, primjerice <code>ja</code> ili <code>1+</code>, također se ne računa, a skočni prozor za nju ne prikazuje redak. Čip filtrira pinove i plave kružiće i ništa ne boji.</p>
@@ -260,8 +221,7 @@ besplatnim OSM računom, na licu mjesta, za manje od minute:</p>
 <ul>
   <li><strong>U aplikaciji (najbrže):</strong> dodirni sivi pin. Skočni prozor pita <em>U kojoj je prostoriji stol za previjanje?</em> Dodirni <em>Ženski i muški</em>, <em>Muški WC</em>, <em>Ženski WC</em>, <em>Unisex WC</em>, <em>Pristupačni WC</em> ili <em>Zasebna prostorija</em>. Ostale prostorije su iza <em>Više prostorija …</em>. U prikazu <em>Mama</em> nema <em>Muški WC</em> i <em>Ženski i muški</em>, jer majka ne može jamčiti za muški WC. Prijaviš se jednom putem OSM-a, odgovor se sprema pod tvojim vlastitim računom, a pin se ažurira unutar nekoliko minuta. Ako dodirneš gumb za lokaciju na manje od 75&nbsp;m od sivog pina, kartica pita jesi li sada ondje; <em>Odgovori na pitanje</em> otvara isti prozor.</li>
   <li><strong>MapComplete (bilo koji mobitel, u pregledniku):</strong> »Odgovori na
-      MapComplete« na sivom pinu otvara isti objekt u vlastitoj MapComplete temi PapaMapa
-      &mdash; kod svakog pina, kako bi se uređivanja prepoznala kao ona koja dolaze odavde.
+      MapComplete« na sivom pinu otvara isti objekt u vlastitoj MapComplete temi PapaMapa.
       MapComplete jednom upozori na neslužbenu temu, to je u redu. Prijavi se svojim OSM računom i odgovori na pitanja o stolu za previjanje,
       uključujući ono o prostoriji. Odgovor ide izravno u OpenStreetMap i ovdje se pojavljuje
       za nekoliko minuta.</li>
@@ -270,8 +230,7 @@ besplatnim OSM računom, na licu mjesta, za manje od minute:</p>
       »stol za previjanje« i označi ga. Pita samo da/ne. Za pitanje o prostoriji na postojećem
       sivom pinu koristi MapComplete.</li>
 </ul>
-<p class="muted">Uređivanja se izvode pod tvojim vlastitim OSM računom i pripadaju svima. Nadžive
-ovu stranicu i pomažu svakoj aplikaciji koja čita OpenStreetMap.</p>
+<p class="muted">Uređivanja idu pod tvojim OSM računom i koriste svakoj aplikaciji koja čita OpenStreetMap, ne samo ovoj.</p>
 
 <h2 id="contribute">Kako dodati mjesto koje nedostaje</h2>
 <p>PapaMap ništa sam ne pohranjuje. Dodavanje mjesta zato uvijek znači: uređivanje OpenStreetMapa.
@@ -322,11 +281,7 @@ ne ono što bi trebalo biti. Ako ne znaš prostoriju, i sam <code>changing_table
 koristan: mjesto postaje sivi pin, a na pitanje o prostoriji odgovorit će sljedeći tata.</p>
 
 <h2 id="no-ranking">Zašto ocjena opremljenosti iz OSM-a ne funkcionira</h2>
-<p>Očiti veći projekt bio bi omjer opremljenosti toaletama za muškarce i žene po gradu — broj o
-kojem se argument »potty parity« zapravo vrti. Iz OpenStreetMapa se ne može izračunati. Provjerili
-smo prije nego što smo krenuli graditi, uzorkom iz osam gradskih središta (Berlin, London, Pariz,
-New York, Tokio&nbsp;23&nbsp;okruga, Amsterdam, Beč, Melbourne;
-26&nbsp;srp&nbsp;2026):</p>
+<p>Očiti veći projekt bio bi omjer muških i ženskih WC-a po gradu, broj o kojem se radi u raspravi o „potty parity“. Prije gradnje provjerio sam može li OSM dati taj broj. Ne može. Uzorak iz osam gradskih središta od 26&nbsp;srp&nbsp;2026:</p>
 <table>
   <tr><th>Grad</th><th>Zabilježenih toaleta</th><th>Ikakva oznaka spola</th><th>Oboje M&nbsp;+&nbsp;Ž</th></tr>
   <tr><td>Berlin</td><td>1.173</td><td>660</td><td>119</td></tr>
@@ -339,40 +294,11 @@ New York, Tokio&nbsp;23&nbsp;okruga, Amsterdam, Beč, Melbourne;
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Ukupno</strong></td><td><strong>9.674</strong></td><td><strong>2.888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Samo 29,9% zabilježenih toaleta ima ikakvu oznaku spola. Oboje (muško i žensko): 8,5%.</li>
-  <li>Oznake su čiste da/ne zastavice, nikad brojevi. Broj kabina po spolu: nula u svih osam
-      gradova. Jedina oznaka kapaciteta, <code>toilets:num_chambers</code> (~27 tisuća uporaba), ne
-      razlikuje spol i gotovo u cijelosti dolazi iz starog uvoza podataka. Njezine varijante
-      <code>:female</code> / <code>:male</code> imaju po 2 uporabe u cijelom svijetu.</li>
-  <li>Hamburg, provjeren istog dana: 443 zabilježene toalete, nijedna s oznakom
-      <code>toilets:num_chambers*</code>. Traka na <a href="./?lang=hr">početnoj stranici</a> te brojeve preračunava jednom tjedno po
-      području; sama karta svake noći.</li>
-  <li>I još: stopa označavanja mjeri zajednicu koja mapira, ne gradove. Toalete s jednom kabinom
-      ispravno ostaju bez oznake spola. Ljestvica gradova ocjenjivala bi doprinositelje OSM-u, ne
-      ravnopravnost pri toaletima.</li>
-</ul>
-<p>Zato je jedina poštena tvrdnja: samu opremljenost danas nije moguće izmjeriti iz otvorenih
-podataka. Ova stranica mjeri ono što je moguće izmjeriti i praznine pretvara u doprinose.</p>
+<p>Samo 29,9% zabilježenih WC-a uopće ima neki tag spola, 8,5% ima oba. Tagovi su da/ne oznake, a ne brojevi, a broj kabina po spolu ne postoji ni u jednom od osam gradova. A stopa označenosti mjeri zajednicu mapera, a ne grad. Rang-lista ocjenjivala bi suradnike OSM-a, a ne WC-e. Zato se stranica drži onoga što se može izmjeriti.</p>
 
 <h2 id="where-tables">Jedina izračunljiva činjenica: gdje su stolovi</h2>
-<p><code>changing_table:location</code> je, koliko znamo, jedini otvoreni rječnik koji bilježi u
-kojoj se prostoriji nalazi stol za previjanje. Rijetko je popunjen:
-<span data-stat="location_total">3.659</span> od <span data-stat="ct_total">77.000</span>
-objekata <code>changing_table</code> u cijelom svijetu, <span data-stat="share">4,8%</span>. Ali
-tamo gdje postoji, jednostran je (taginfo, <span data-stat="date">26&nbsp;srp&nbsp;2026</span>):</p>
-<ul>
-  <li>Stolovi samo u ženskom WC-u: <strong data-stat="female_only">485</strong>.</li>
-  <li>Stolovi samo u muškom WC-u: <strong data-stat="male_only">71</strong>. Otprilike
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> ih je
-      označeno u obje prostorije, <span data-stat="male_any">410</span> bilježi ikakav stol u
-      muškom WC-u. U cijelom svijetu.</li>
-</ul>
-<p>Uzorak je malen, a osobe koje mapiraju same biraju što će zabilježiti. Zato ne pridavaj
-pretjeranu težinu točnom omjeru. Smjer se poklapa s onim što je odavno dokumentirano i drugdje:
-stolovi za previjanje po zadanome vise u ženskom WC-u. To tatama zatvara vrata, a tiho
-pretpostavlja i tko je zadužen za pelene. Ova karta čini nedostajuće podatke vidljivima. I lakima
-za popraviti.</p>
+<p><code>changing_table:location</code> jedini je otvoreni rječnik koji poznajem koji bilježi u kojoj se prostoriji nalazi stol za previjanje. Rijedak je: <span data-stat="location_total">3.659</span> od <span data-stat="ct_total">77.000</span> objekata <code>changing_table</code> u svijetu, <span data-stat="share">4,8%</span>. Gdje postoji, nesrazmjeran je (taginfo, <span data-stat="date">26&nbsp;srp&nbsp;2026</span>): <strong data-stat="female_only">485</strong> stolova samo u ženskom WC-u, <strong data-stat="male_only">71</strong> samo u muškom, otprilike <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> ih je u obje prostorije.</p>
+<p>Uzorak je malen, a maperi sami biraju što bilježe, pa točan omjer ne treba preozbiljno tumačiti. Smjer je isti kao svugdje: stolovi za previjanje prema zadanome vise u ženskom WC-u. Ova karta pokazuje gdje podaci nedostaju, a svaki sivi pin ima gumb za uređivanje.</p>
 
 <h2 id="licence">Licencija podataka i navođenje izvora</h2>
 <p>Svi podaci karte &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
@@ -383,18 +309,8 @@ pod ODbL licencijom. Globalna statistika oznaka dolazi s <a href="https://taginf
 Vlastiti kod stranice ima MIT licenciju.</p>
 
 <h2 id="privacy">Privatnost</h2>
-<p>Statična stranica. Nema računa, nema kolačića, nema analitike, nema skripti za praćenje.
-Stranica o tebi ništa ne pohranjuje i nema bazu podataka. Sličice karte dolaze s poslužitelja
-OpenStreetMapa; ti zahtjevi podliježu
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">pravilima privatnosti OSMF-a</a>. Dodirneš li u pinu <em>Odgovori na MapComplete</em>, stranica u sljedećim minutama nekoliko puta pita i api.openstreetmap.org što taj jedan objekt sada kaže — na te zahtjeve odnosi se ista politika. Od trećeg znaka koji upišeš u polje za pretraživanje, i svaki put kad otvoriš <em>Dodaj mjesto</em>, stranica pita i komootovu tražilicu mjesta Photon (photon.komoot.io). Ona dobiva upisani tekst i zaokruženo središte karte te, kao i svaki poslužitelj, tvoju IP adresu. Ako
-slijediš poveznicu na MapComplete, StreetComplete ili openstreetmap.org, na njihovoj si stranici i
-uređuješ pod vlastitim OSM računom. Ništa od toga ne prolazi preko nas. Formalne stranice:
-<a href="impressum.html">Impressum</a> ·
-<a href="datenschutz.html">Datenschutzerklärung</a> (na njemačkom).</p>
-
-<p class="muted">Izvori: Overpass uzorak iz 8 gradskih središta (9.674 toaleta) od
-26&nbsp;srp&nbsp;2026, i statistika oznaka s taginfa na datum naveden gore. Lokalni brojevi
-dolaze iz istog noćnog upita koji gradi kartu.</p>
+<p>Statična web-stranica. Ne postavlja kolačiće i nema analitiku. Pločice karte dolaze s OpenStreetMapovih poslužitelja; ti zahtjevi podliježu <a href="https://osmfoundation.org/wiki/Privacy_Policy">pravilima privatnosti OSMF-a</a>. Ako u pinu dodirneš <em>Odgovori na MapComplete</em>, stranica u sljedećim minutama nekoliko puta pita i api.openstreetmap.org što taj objekt sada kaže — ti zahtjevi podliježu istim pravilima. Od trećeg znaka u polju za pretraživanje i svaki put kad otvoriš <em>Dodaj mjesto</em>, stranica dodatno pita komootovu pretragu mjesta Photon (photon.komoot.io). Ona dobiva upisani tekst i zaokruženo središte karte te, kao svaki poslužitelj, tvoju IP adresu. Poveznice na MapComplete, StreetComplete ili openstreetmap.org vode na njihove stranice, gdje uređuješ pod vlastitim OSM računom. Formalnosti: <a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (na njemačkom).</p></p>
 
 <h2 id="how-made">Kako je nastala ova stranica</h2>
 <p>Za programiranje i pisanje tekstova doista koristim AI. Sve ipak prolazi kroz moje ljudske
