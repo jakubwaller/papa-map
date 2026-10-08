@@ -103,7 +103,7 @@
      the height follows from the width/height attributes, so the space is
      kept before a lazy file arrives. */
   .shot {
-    --shot-cap: 70vh; --shot-ratio: 780 / 1688;
+    --shot-cap: 55vh; --shot-ratio: 780 / 1688;
     display: block; height: auto; margin: 0 auto;
     width: min(15rem, 68vw, calc(var(--shot-cap) * var(--shot-ratio)));
     border: 1px solid var(--line); border-radius: 1.6rem;
@@ -123,17 +123,22 @@
   .step ul { margin: 0; padding-left: 1.2rem; }
   .step li { margin: 0.45rem 0; }
   /* One picture per step, centred in its column. The Mitmachen step has two:
-     the room question is the pitch and gets the full size; the add-a-place
-     screen follows below it, a size smaller, and never beside it. */
+     the room question is the pitch and gets the full size on every screen.
+     The add-a-place screen is secondary: from 760 px it stacks below the room
+     one, a size smaller; on a phone it stays out (display: none, and being
+     lazy it is not even fetched), which keeps the page short. */
   .media { display: flex; flex-direction: column; align-items: center; gap: 1.4rem; }
   .media .shot { margin: 0; }
-  .media .shot + .shot { width: min(12rem, 54vw, calc(var(--shot-cap) * 0.8 * var(--shot-ratio))); border-radius: 1.3rem; }
+  .media .shot + .shot {
+    display: none; width: min(12rem, 54vw, calc(var(--shot-cap) * 0.8 * var(--shot-ratio))); border-radius: 1.3rem;
+  }
 
   @media (min-width: 760px) {
     .options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .step { grid-template-columns: minmax(0, 1fr) var(--shot-w); align-items: center; gap: 2.5rem; }
     .step.flip { grid-template-columns: var(--shot-w) minmax(0, 1fr); }
     .step.flip .media { order: -1; }
+    .media .shot + .shot { display: block; }
   }
   @media (prefers-reduced-motion: no-preference) {
     .option a.cta { transition: background-color 0.15s ease; }
@@ -216,7 +221,7 @@
   </div>
 </article>
 
-<article class="step pair" aria-labelledby="help-h">
+<article class="step" aria-labelledby="help-h">
   <div>
     <h3 id="help-h"><span class="num">3</span> Mitmachen</h3>
     <p class="tagline">Grauer Pin? Zwei Fingertipps.</p>
