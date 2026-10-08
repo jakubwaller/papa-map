@@ -223,6 +223,21 @@ test("push refuses to create a version whose string already exists, and writes n
   assert.ok(calls.every((c) => c.method === "GET"));
 });
 
+test("push refuses a version in preparation that is not the project's MARKETING_VERSION, and writes nothing", async (t) => {
+  const calls = withFetch(t, [
+    appRoute,
+    { method: "GET", pattern: /^\/v1\/apps\/APP\/appStoreVersions/,
+      body: { data: [{ id: "V12", attributes: { versionString: "1.2", appVersionState: "METADATA_REJECTED" } }] } },
+  ]);
+  const dir = tmpListings({ en: LISTING }, "MARKETING_VERSION = 1.2.1;\nMARKETING_VERSION = 1.2.1;\n");
+  try {
+    await assert.rejects(() => pushFrom(dir), /version 1\.2 is being prepared \(METADATA_REJECTED\), but MARKETING_VERSION is 1\.2\.1/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  assert.ok(calls.every((c) => c.method === "GET"));
+});
+
 test("marketingVersion reads the one value Xcode repeats per configuration and refuses two", () => {
   const dir = tmpListings({}, "\t\t\t\tMARKETING_VERSION = 1.2;\n\t\t\t\tMARKETING_VERSION = 1.2;\n");
   try {
