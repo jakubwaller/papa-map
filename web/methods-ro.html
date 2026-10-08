@@ -131,7 +131,6 @@ nivel mondial, provin din build-ul nocturn. Eșantionul din opt centre urbane es
   <li><a href="#mum-mode">Comutatorul Tata / Mama</a></li>
   <li><a href="#play-area">Inelul albastru: zona de joacă</a></li>
   <li><a href="#wheelchair">Cipul Scaun rulant</a></li>
-  <li><a href="#empty-rings">Inelele albastre goale: locuri de joacă, fără răspuns</a></li>
   <li><a href="#high-chair">Cipul Scaun înalt pentru copii</a></li>
   <li><a href="#grey-pin">Cum repari un marcaj gri</a></li>
   <li><a href="#contribute">Cum adaugi un loc care lipsește</a></li>
@@ -168,7 +167,7 @@ spații și scrisă cu litere mici, apoi fiecare parte este comparată în într
   <li><span class="dot r"></span><strong>Roșu:</strong> altfel, dacă una dintre părți este
       <code>female_toilet</code>. Masa există, dar doar în toaleta femeilor.</li>
   <li><span class="dot u"></span><strong>Gri:</strong> orice altceva. Fără etichetă de locație, sau
-      doar text liber. Nimeni nu a înregistrat încăperea. Marcajele gri sunt treaba de făcut.</li>
+      doar text liber. Nimeni nu a înregistrat încăperea.</li>
 </ul>
 <p>Un obiect cu o etichetă <code>centralkey</code> (alta decât <code>no</code>) rămâne în afara hărții când cheia închide toată ușa: <code>access=centralkey</code>, o masă în toaleta pentru persoane cu dizabilități, sau nimic din etichete nu spune că cheia e doar pentru o cabină. Un bloc cu toalete pentru bărbați și femei deschise și o cabină accesibilă încuiată (<code>wheelchair:access=centralkey</code>, sau <code>male=yes</code> și <code>female=yes</code>) rămâne pe hartă, gri până când cineva înregistrează încăperea. Cheia euro se eliberează doar cu dovadă de dizabilitate, așa că majoritatea taților nu trec de ușa aceea. Sub cipul <em>Scaun rulant</em> aceste mese revin, vezi mai jos.</p>
 
@@ -198,62 +197,22 @@ marchează aceste mese separat, așa că în modul mama sunt roșii și nu sunt 
 mai sus. Versiunile mai vechi ale aplicației le pot arăta încă verzi, până sunt actualizate.</p>
 
 <h2 id="play-area">Inelul albastru: zona de joacă</h2>
-<p>Un marcaj cu inel albastru are și o zonă de joacă &mdash; un loc unde nu doar schimbi copilul,
-ci mai și rămâi o vreme. Filtrul <em>Cu zonă de joacă</em> reduce harta doar la acestea. Un loc
-contează dacă OSM înregistrează oricare dintre următoarele:</p>
+<p>Un marcaj cu inel albastru are și o zonă de joacă. Filtrul <em>Cu zonă de joacă</em> le arată doar pe acestea. Un loc contează dacă în OSM există una dintre aceste etichete:</p>
 <ul>
-  <li><span class="ring"></span><code>kids_area:indoor=yes</code> sau <code>designated</code>
-      &mdash; modul documentat de wiki de a spune interior.</li>
-  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> sau
-      <code>designated</code> &mdash; colțul de joacă dintr-o cafenea, un restaurant, o brutărie.
-      Eticheta cea mai folosită, deși lasă deschis dacă e interior sau exterior.</li>
-  <li><span class="ring"></span><code>leisure=indoor_play</code> &mdash; un loc de joacă comercial
-      de interior.</li>
-  <li><span class="ring"></span><code>leisure=playground</code> împreună cu
-      <code>indoor=yes</code> &mdash; același lucru, etichetat invers.</li>
+  <li><span class="ring"></span><code>kids_area:indoor=yes</code> sau <code>designated</code></li>
+  <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> sau <code>designated</code> (cea mai frecventă etichetă, nu spune dacă e în interior sau în exterior)</li>
+  <li><span class="ring"></span><code>leisure=indoor_play</code></li>
+  <li><span class="ring"></span><code>leisure=playground</code> împreună cu <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code> nu contează: groapa de nisip dintr-o grădină de bere nu e ceea ce promite
-inelul. Nici <code>no</code>, nici <code>limited</code> nu contează — wiki definește
-<code>limited</code> ca „există jucării, dar nu există o zonă dedicată”. Acolo unde apare explicit
-<code>kids_area:indoor=no</code>, aceasta are prioritate față de un simplu
-<code>kids_area=yes</code>.</p>
-<p>Aceasta e o insignă, nu o a patra stare. Un loc fără aceste etichete nu „nu are zonă de joacă”
-— OSM pur și simplu nu spune nimic despre asta. Deci aici nu există gri.</p>
-<p>Tocmai de aceea întreabă popup-ul despre asta. La fiecare marcaj unde OSM nu spune nimic
-despre o zonă de joacă, indiferent de culoare, apare o linie (sub camere, acolo unde marcajul
-întreabă și despre cameră): <em>Zonă de joacă pentru copii?</em>, cu trei răspunsuri. <em>în
-interior</em> scrie <code>kids_area:indoor=yes</code> împreună cu <code>kids_area=yes</code>,
-<em>doar afară</em> scrie <code>kids_area=yes</code> împreună cu
-<code>kids_area:indoor=no</code>, <em>niciuna</em> scrie <code>kids_area=no</code> &mdash; sub
-propriul tău cont OSM, într-un changeset separat, exact aceleași etichete pe care le scrie
-MapComplete pentru aceeași întrebare. Întrebarea se referă la o zonă de joacă în general, nu doar
-la una interioară: <code>kids_area=no</code> înseamnă în OSM „aici copiii nu au unde să se joace”,
-deci o brutărie cu un loc de joacă în curte primește <em>doar afară</em> în loc de un nu greșit.
-Inelul apare (sau rămâne absent) după câteva minute. Nimeni nu este
-întrebat de două ori: un <code>kids_area</code> <em>sau</em> <code>kids_area:indoor</code> deja
-înregistrat, indiferent de valoare, elimină întrebarea. La un <code>leisure=playground</code> fără
-<code>indoor=yes</code> nu se întreabă niciodată &mdash; locul <em>este</em> deja un loc de joacă,
-doar că nu interior.</p>
+<p><code>outdoor</code>, <code>no</code> și <code>limited</code> nu contează. Un <code>kids_area:indoor=no</code> explicit are prioritate față de un simplu <code>kids_area=yes</code>.</p>
+<p>Inelul este o insignă, nu o a patra culoare. Un loc fără aceste etichete nu are „nicio zonă de joacă”: în OSM pur și simplu nu scrie nimic despre asta, iar acest lucru e valabil pentru aproape toate locurile. De aceea aici nu există gri.</p>
+<p>Tocmai de aceea întreabă fereastra: la fiecare marcaj despre care OSM nu spune nimic în privința unei zone de joacă, indiferent de culoare, apare un rând (sub încăperi, când marcajul întreabă și încăperea): <em>Zonă de joacă pentru copii?</em>, cu trei răspunsuri. <em>în interior</em> scrie <code>kids_area:indoor=yes</code> împreună cu <code>kids_area=yes</code>, <em>doar afară</em> scrie <code>kids_area=yes</code> împreună cu <code>kids_area:indoor=no</code>, <em>niciuna</em> scrie <code>kids_area=no</code> — cu propriul tău cont OSM, într-un changeset separat, exact etichetele pe care le scrie MapComplete pentru aceeași întrebare. Întrebarea privește orice spațiu de joacă, nu doar pe cel din interior: în OSM, <code>kids_area=no</code> înseamnă „aici copiii nu au unde să se joace”, așa că o brutărie cu loc de joacă în grădină primește <em>doar afară</em>, nu un „nu” fals. Inelul apare (sau nu) după câteva minute. Cine a răspuns deja nu mai e întrebat: un <code>kids_area</code> <em>sau</em> <code>kids_area:indoor</code> înregistrat, oricare ar fi valoarea, scoate întrebarea. La un <code>leisure=playground</code> fără <code>indoor=yes</code> întrebarea nu apare deloc: locul <em>este</em> un loc de joacă, doar că în aer liber.</p>
+<p>Regula se potrivește pe mult mai multe locuri decât există marcaje. Doar <span data-stat="play_tables">111</span> dintre ele au un marcaj. La alte <span data-stat="play_places">701</span> nimeni nu a răspuns la prima întrebare: există aici o masă de înfășat? Harta nu le poate colora, așa că primesc un inel albastru gol și un filtru al lor, <em>Doar zonă de joacă</em>, activat implicit. Cine merge oricum acolo cu un copil știe răspunsul. Un clic pe inel deschide MapComplete exact la această întrebare.</p>
+<p>Un inel <em>punctat</em> înseamnă: zonă de joacă da, masă de înfășat nu (<code>changing_table=no</code>). Nu e un marcaj și nici roșu, pentru că roșu ar spune că există o masă, doar că nu pentru tată. Aici nu există niciuna, pentru nimeni. Locul e totuși pe hartă, pentru că cu un copil mergi bucuros acolo și fără masă.</p>
 
 <h2 id="wheelchair">Cipul Scaun rulant</h2>
 <p>Cipul <em>Scaun rulant</em> arată locurile cu <code>wheelchair=yes</code> sau <code>wheelchair=limited</code> în OSM. <code>limited</code> înseamnă o treaptă de cel mult 7&nbsp;cm sau că e nevoie de ajutor. Cu cipul activ, aceste locuri au un semn de exclamare de la zoom 13, iar fereastra spune <em>limitat</em>. <code>toilets:wheelchair=yes</code> singur nu ajunge, dar apare totuși în fereastră, împreună cu <code>wheelchair:description</code>. Un loc fără etichetă nu este inaccesibil, OSM pur și simplu nu spune nimic, așa că cipul doar filtrează și nu colorează nimic. Cipul filtrează și marchează la fel cercurile albastre (locuri cu colț de joacă).</p>
 <p>Sub acest cip, și numai acolo, revin mesele din spatele unei chei Euro, cu o cheie desenată în ac: cine are nevoie de cip are de obicei cheia. Pe harta obișnuită, în cifre și în clasament rămân în afară.</p>
-
-<h2 id="empty-rings">Inelele albastre goale: locuri de joacă, fără răspuns</h2>
-<p>Aceeași regulă se potrivește la mult mai multe locuri decât are harta marcaje. Doar
-<span data-stat="play_tables">111</span> dintre ele au un marcaj.
-La încă <span data-stat="play_places">701</span>, nimeni nu a răspuns la prima întrebare: există
-aici o masă de înfășat? Da, nu, nimeni nu știe — OSM nu spune absolut nimic.</p>
-<p>Harta nu poate colora acele <span data-stat="play_places">701</span>, pentru că nu are ce
-colora. Nu sunt nici gri: gri înseamnă „masa există, lipsește încăperea”, iar asta nu se aplică
-aici. Așa că primesc propriul filtru, <em>Doar zonă de joacă</em>, activat implicit, și un inel
-albastru gol în loc de un marcaj plin.</p>
-<p>Un inel <em>punctat</em> înseamnă: zonă de joacă da, masă de înfășat nu (<code>changing_table=no</code>). Nu este un marcaj și nici roșu, pentru că roșu ar însemna că există o masă, doar că nu pentru tată. Aici nu există, pentru nimeni. Locul rămâne totuși pe hartă, pentru că cu un copil mergi acolo cu plăcere și fără masă.</p>
-<p>Sunt cele mai promițătoare întrebări deschise de pe toată harta. Un loc de joacă de interior, o
-cafenea cu piscină cu bile, un restaurant cu o cameră de joacă — un tată cu un copil mic merge
-oricum acolo, iar odată ajuns, știe răspunsul. Un clic pe inel deschide MapComplete exact la acea
-întrebare. Răspunde la ea și inelul dispare în câteva minute, înlocuit de
-un marcaj adevărat.</p>
 
 <h2 id="high-chair">Cipul Scaun înalt pentru copii</h2>
 <p>Cipul <em>Scaun înalt pentru copii</em> arată locurile unde OSM înregistrează un scaun înalt pentru copii: <code>highchair=yes</code> sau un număr mai mare decât 0. <code>highchair=no</code> sau <code>0</code> este un „nu” înregistrat. Un loc fără etichetă nu este un loc fără scaun înalt, OSM pur și simplu nu spune nimic, așa că cipul îl lasă deoparte fără să afirme ceva. O valoare pe care harta nu o poate citi, cum ar fi <code>ja</code> sau <code>1+</code>, nu contează nici ea, iar fereastra nu arată niciun rând pentru ea. Cipul filtrează marcajele și inelele albastre și nu colorează nimic.</p>
@@ -266,7 +225,7 @@ poate răspunde, la fața locului, în mai puțin de un minut:</p>
   <li><strong>În aplicație (cel mai rapid):</strong> atinge marcajul gri. Fereastra întreabă <em>În ce încăpere este masa de înfășat?</em> Atinge <em>Femei și bărbați</em>, <em>Toaleta bărbaților</em>, <em>Toaleta femeilor</em>, <em>Toaletă unisex</em>, <em>Toaletă accesibilă</em> sau <em>Cameră separată</em>. Celelalte spații sunt în spatele lui <em>Mai multe spații …</em>. În vizualizarea <em>Mama</em> lipsesc <em>Toaleta bărbaților</em> și <em>Femei și bărbați</em>, pentru că o mamă nu poate garanta pentru toaleta bărbaților. Te autentifici o singură dată cu OSM, răspunsul se salvează pe contul tău și marcajul se actualizează în câteva minute. Dacă atingi butonul de localizare la mai puțin de 75&nbsp;m de un marcaj gri, un card te întreabă dacă ești acolo chiar acum; <em>Răspunde la întrebare</em> deschide aceeași fereastră.</li>
   <li><strong>MapComplete (orice telefon, din browser):</strong> „Răspunde pe
       MapComplete” de pe un marcaj gri deschide același obiect în tema proprie PapaMap pentru
-      MapComplete &mdash; la fiecare marcaj, ca să se recunoască editările venite de aici.
+      MapComplete.
       MapComplete avertizează o dată că e o temă neoficială, e în regulă. Autentifică-te cu contul tău OSM și răspunde la întrebările
       despre masa de înfășat, inclusiv la cea despre încăpere. Răspunsul merge direct în
       OpenStreetMap și apare aici în câteva minute.</li>
@@ -275,8 +234,7 @@ poate răspunde, la fața locului, în mai puțin de un minut:</p>
       „masă de înfășat” și bifeaz-o. Întreabă doar da/nu. Pentru întrebarea despre încăpere la un
       marcaj gri deja existent, folosește MapComplete.</li>
 </ul>
-<p class="muted">Editările se fac sub contul tău OSM și aparțin tuturor. Supraviețuiesc acestui
-site și ajută orice aplicație care citește OpenStreetMap.</p>
+<p class="muted">Editările se fac cu contul tău OSM și ajută orice aplicație care citește OpenStreetMap, nu doar aceasta.</p>
 
 <h2 id="contribute">Cum adaugi un loc care lipsește</h2>
 <p>PapaMap nu stochează nimic. Deci adăugarea unui loc înseamnă mereu: editarea OpenStreetMap.
@@ -328,11 +286,7 @@ trebui să fie. Dacă nu știi încăperea, doar <code>changing_table=yes</code>
 devine un marcaj gri, iar următorul tată răspunde la întrebarea despre încăpere.</p>
 
 <h2 id="no-ranking">De ce un indice al ofertei de toalete din OSM nu funcționează</h2>
-<p>Proiectul mai amplu, evident, ar fi un raport dintre oferta de toalete pentru bărbați și cea
-pentru femei, pe fiecare oraș. Cifra de care depinde de fapt argumentul „egalității la toaletă”.
-Nu poate fi calculată din OpenStreetMap. Am verificat înainte să construim harta, cu un eșantion
-din opt centre urbane (Berlin, Londra, Paris, New York, Tokio (23 de cartiere), Amsterdam, Viena,
-Melbourne; 26&nbsp;iul.&nbsp;2026):</p>
+<p>Proiectul mai mare, cel evident, ar fi raportul dintre toaletele pentru bărbați și cele pentru femei pe oraș, cifra la care se referă dezbaterea despre „potty parity”. Înainte de construcție am verificat dacă OSM poate da această cifră. Nu poate. Un eșantion din opt centre de oraș din 26&nbsp;iul.&nbsp;2026:</p>
 <table>
   <tr><th>Oraș</th><th>Toalete înregistrate</th><th>Orice etichetă de gen</th><th>Ambele
       M&nbsp;+&nbsp;F</th></tr>
@@ -346,41 +300,11 @@ Melbourne; 26&nbsp;iul.&nbsp;2026):</p>
   <tr><td>Melbourne</td><td>418</td><td>142</td><td>35</td></tr>
   <tr><td><strong>Total</strong></td><td><strong>9.674</strong></td><td><strong>2.888 (29,9%)</strong></td><td><strong>827 (8,5%)</strong></td></tr>
 </table>
-<ul>
-  <li>Doar 29,9% din toaletele înregistrate au vreo etichetă de gen. Ambele (masculin și feminin):
-      8,5%.</li>
-  <li>Etichetele sunt simple marcaje da/nu, niciodată numărători. Numărul de cabine pe gen: zero
-      în toate cele opt orașe. Singura cheie de capacitate, <code>toilets:num_chambers</code>
-      (~27k utilizări), nu are gen și provine aproape în întregime dintr-un import vechi.
-      Variantele ei <code>:female</code> / <code>:male</code> au fiecare câte 2 utilizări la
-      nivel mondial.</li>
-  <li>Hamburg, verificat în aceeași zi: 443 de toalete înregistrate, niciuna cu vreo etichetă
-      <code>toilets:num_chambers*</code>. Bara de pe <a href="./?lang=ro">pagina principală</a> recalculează aceste cifre o dată pe
-      săptămână pentru fiecare zonă; harta în sine, în fiecare noapte.</li>
-  <li>Și: ratele de etichetare măsoară comunitatea de contribuitori, nu orașele. Toaletele cu o
-      singură cabină rămân, pe bună dreptate, fără gen specificat. Un clasament al orașelor ar
-      evalua contribuitorii OSM, nu echitatea la toaletă.</li>
-</ul>
-<p>Așa că singura afirmație cinstită este: oferta în sine nu poate fi măsurată azi din date
-deschise. Acest site măsoară ce se poate măsura și transformă lacunele în contribuții.</p>
+<p>Doar 29,9% dintre toaletele cartografiate au vreo etichetă de gen, iar 8,5% le au pe amândouă. Etichetele sunt indicații da/nu, nu numărători, iar numărul de cabine pe gen nu există în niciunul dintre cele opt orașe. Iar o rată de etichetare măsoară comunitatea cartografilor, nu orașul. Un clasament ar nota contribuitorii OSM, nu toaletele. De aceea pagina rămâne la ce se poate măsura.</p>
 
 <h2 id="where-tables">Singurul fapt calculabil: unde sunt mesele</h2>
-<p><code>changing_table:location</code> este, din câte știm, singurul vocabular deschis care
-înregistrează în ce încăpere se află o masă de înfășat. E folosit rar:
-<span data-stat="location_total">3.659</span> din <span data-stat="ct_total">77.000</span> de
-obiecte <code>changing_table</code> la nivel mondial, <span data-stat="share">4,8%</span>. Dar
-acolo unde există, e dezechilibrat (taginfo, <span data-stat="date">26&nbsp;iul.&nbsp;2026</span>):</p>
-<ul>
-  <li>Mese doar în toaleta femeilor: <strong data-stat="female_only">485</strong>.</li>
-  <li>Mese doar în toaleta bărbaților: <strong data-stat="male_only">71</strong>. Aproximativ
-      <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> sunt
-      înregistrate în ambele încăperi, <span data-stat="male_any">410</span> înregistrează vreo
-      masă în toaleta bărbaților. La nivel mondial.</li>
-</ul>
-<p>Eșantionul e mic, iar cei care contribuie la hărți aleg ce înregistrează. Așa că nu citi prea
-mult în raportul exact. Direcția se potrivește cu ce s-a documentat de multă vreme în altă parte:
-mesele de înfășat atârnă implicit în toaleta femeilor. Asta îi ține pe tați afară și presupune
-tacit cine se ocupă de scutece. Această hartă face vizibile datele lipsă. Și ușor de corectat.</p>
+<p><code>changing_table:location</code> este singurul vocabular deschis pe care îl cunosc care notează în ce încăpere se află o masă de înfășat. Este rar: <span data-stat="location_total">3.659</span> din <span data-stat="ct_total">77.000</span> obiecte <code>changing_table</code> din lume, adică <span data-stat="share">4,8%</span>. Acolo unde există, e dezechilibrat (taginfo, <span data-stat="date">26&nbsp;iul.&nbsp;2026</span>): <strong data-stat="female_only">485</strong> mese doar în toaleta femeilor, <strong data-stat="male_only">71</strong> doar în cea a bărbaților, aproximativ <span data-stat="ratio">7:1</span>. <span data-stat="male_and_female">289</span> sunt în ambele încăperi.</p>
+<p>Eșantionul e mic, iar cartografii decid ce notează, deci raportul exact nu trebuie interpretat prea departe. Direcția e aceeași ca peste tot: mesele de înfășat stau implicit în toaleta femeilor. Harta aceasta arată unde lipsesc datele, iar fiecare marcaj gri are un buton de editare.</p>
 
 <h2 id="licence">Licența datelor și atribuire</h2>
 <p>Toate datele hărții &copy; <a href="https://www.openstreetmap.org/copyright">contribuitorii
@@ -392,20 +316,8 @@ urmare, tot ODbL. Statisticile globale despre etichete provin de la
 licențiat MIT.</p>
 
 <h2 id="privacy">Confidențialitate</h2>
-<p>Un site static. Fără conturi, fără cookie-uri, fără analiză de trafic, fără scripturi de
-urmărire. Site-ul nu stochează nimic despre tine și nu are bază de date. Plăcuțele hărții vin de
-la serverele de tile ale OpenStreetMap; acele cereri intră sub incidența
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">politicii de confidențialitate a
-OSMF</a>. Dacă atingi <em>Răspunde pe MapComplete</em> într-un marcaj, în minutele următoare pagina întreabă de câteva ori și api.openstreetmap.org ce spune acum acel obiect — acele cereri intră sub aceeași politică. De la al treilea caracter tastat în câmpul de căutare, și ori de câte ori deschizi
-<em>Adaugă un loc</em>, pagina întreabă și căutarea de locuri Photon a komoot (photon.komoot.io).
-Aceasta primește textul tastat și un centru rotunjit al hărții și, ca orice server, adresa ta IP. Dacă urmezi un link către MapComplete, StreetComplete sau openstreetmap.org, ești pe
-site-urile lor, editând cu propriul tău cont OSM. Nimic nu trece prin noi. Pagini oficiale:
-<a href="impressum.html">Impressum</a> ·
-<a href="datenschutz.html">Datenschutzerklärung</a> (în germană).</p>
-
-<p class="muted">Surse: eșantion Overpass din 8 centre urbane (9.674 toalete) din
-26&nbsp;iul.&nbsp;2026, și statisticile de chei taginfo la data indicată mai sus. Cifrele locale
-provin din aceeași interogare nocturnă care construiește harta.</p>
+<p>Un site static. Nu setează cookie-uri și nu are analytics. Dalele hărții vin de la serverele de dale ale OpenStreetMap; aceste cereri intră sub incidența <a href="https://osmfoundation.org/wiki/Privacy_Policy">politicii de confidențialitate a OSMF</a>. Dacă atingi <em>Răspunde pe MapComplete</em> într-un marcaj, în minutele următoare pagina interoghează de câteva ori și api.openstreetmap.org, ca să afle ce spune acum obiectul respectiv — se aplică aceeași politică. De la al treilea caracter tastat în câmpul de căutare, și de fiecare dată când deschizi <em>Adaugă un loc</em>, pagina interoghează și căutarea de locuri Photon de la komoot (photon.komoot.io). Primește textul tastat și un centru de hartă rotunjit și, ca orice server, adresa ta IP. Linkurile către MapComplete, StreetComplete sau openstreetmap.org duc pe site-urile lor, unde editezi cu propriul tău cont OSM. Date formale: <a href="impressum.html">Impressum</a> ·
+<a href="datenschutz.html">Datenschutzerklärung</a> (în germană).</p></p>
 
 <h2 id="how-made">Cum e făcut acest site</h2>
 <p>Chiar folosesc AI ca să mă ajute la scris cod și la redactarea textelor. Totul trece însă prin
