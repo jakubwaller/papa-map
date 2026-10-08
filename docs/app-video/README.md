@@ -26,9 +26,18 @@ changeset and the element write are all answered locally, and the reader
 
 ## Run
 
-```
-cd ../../app && npm ci && npm run build && (cd www && python3 -m http.server 8099 --bind 127.0.0.1)
+Two terminals, both starting in the repo root.
 
+Terminal 1 builds the shell and serves it, and stays up while recording:
+
+```
+(cd app && npm ci && npm run build)
+python3 -m http.server 8099 --bind 127.0.0.1 --directory app/www
+```
+
+Terminal 2 records and encodes:
+
+```
 cd docs/app-video
 npm i playwright && npx playwright install ffmpeg      # once; uses the installed Google Chrome
 node record-app-video.mjs ./out --profile store  --lang de
@@ -41,7 +50,10 @@ node record-app-video.mjs ./out --profile loop   --lang en
 
 `--debug` logs the page's console and every request that leaves the shell.
 `--served-dir` points at the folder the shell is served from, when it is not
-`app/www`.
+`app/www`; the recorder writes its composer page there for the run and
+removes it after. The recorder exits non-zero if the two-tap room answer does
+not go through (no green pin, or the app's "could not save" line), and
+`encode.sh` exits non-zero if a store take runs outside 15–30 s.
 
 ## What to check before uploading
 
