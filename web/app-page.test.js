@@ -172,17 +172,23 @@ test("the option cards read at AA contrast in both colour schemes", () => {
   }
 });
 
+// The page source without comments. The loop's fallback <img> sits inside its
+// <video>; stripping the videos leaves the pictures the page shows on its own.
+const stripped = (f) => read(f).replace(/<!--[\s\S]*?-->/g, "");
+const withoutVideos = (f) => stripped(f).replace(/<video\b[\s\S]*?<\/video>/g, "");
+const attr = (tag, name) => (new RegExp(`\\s${name}="([^"]*)"`).exec(tag) || [])[1];
+const local = (src) => src && !/^(?:[a-z]+:|\/\/)/i.test(src);
+
 test("every image on the two pages is a local file with a size and alt text", () => {
   // The Datenschutz promises no third-party requests, so Apple's badge is
   // served from here, never hotlinked. Width and height keep the layout still
   // while the screenshots load; everything below the hero loads lazily.
   for (const f of PAGES) {
-    const imgs = [...read(f).replace(/<!--[\s\S]*?-->/g, "").matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);
-    assert.ok(imgs.length >= 7, `${f}: ${imgs.length} images`);
-    const attr = (tag, name) => (new RegExp(`\\s${name}="([^"]*)"`).exec(tag) || [])[1];
+    const imgs = [...withoutVideos(f).matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);
+    assert.ok(imgs.length >= 6, `${f}: ${imgs.length} images`);
     imgs.forEach((tag, i) => {
       const src = attr(tag, "src");
-      assert.ok(src && !/^(?:[a-z]+:|\/\/)/i.test(src), `${f}: ${src} is not a local file`);
+      assert.ok(local(src), `${f}: ${src} is not a local file`);
       assert.ok(existsSync(new URL(src, dir)), `${f}: ${src} is missing`);
       assert.ok(/^\d+$/.test(attr(tag, "width") || "") && /^\d+$/.test(attr(tag, "height") || ""), `${f}: ${src} has no size`);
       assert.ok((attr(tag, "alt") || "").trim().length > 10, `${f}: ${src} has no alt text`);
@@ -192,5 +198,46 @@ test("every image on the two pages is a local file with a size and alt text", ()
     assert.ok(imgs[0].includes(`img/app-store-badge-${f === "app.html" ? "de" : "en"}.svg`), `${f}: badge language`);
     for (const tag of imgs.slice(1))
       assert.ok(attr(tag, "src").endsWith(f === "app.html" ? "-de.webp" : "-en.webp"), `${f}: ${attr(tag, "src")}`);
+  }
+});
+
+test("the loop in step 3 is a muted, local, sized video with a poster and a still fallback", () => {
+  // Browsers block autoplay unless the video is muted, and a phone plays it in
+  // the page rather than full screen only with playsinline. Files come from
+  // here like every picture (no third-party requests); the sizes keep the
+  // layout still before the poster arrives. A reader who asked for less motion
+  // gets the poster: the script below the page pauses the loop for them.
+  for (const f of PAGES) {
+    const lang = f === "app.html" ? "de" : "en";
+    const html = stripped(f);
+    const videos = [...html.matchAll(/<video\b([^>]*)>([\s\S]*?)<\/video>/g)];
+    assert.ok(videos.length >= 1, `${f}: no video`);
+    for (const [, open, inner] of videos) {
+      const tag = `<video${open}>`;
+      for (const flag of ["muted", "loop", "playsinline"])
+        assert.ok(new RegExp(`\\s${flag}(?=[\\s>=])`).test(tag), `${f}: video lacks ${flag}`);
+      assert.ok(/^\d+$/.test(attr(tag, "width") || "") && /^\d+$/.test(attr(tag, "height") || ""), `${f}: video has no size`);
+      assert.ok((attr(tag, "aria-label") || "").trim().length > 10, `${f}: video has no aria-label`);
+      const poster = attr(tag, "poster");
+      const sources = [...inner.matchAll(/<source\b[^>]*>/g)].map((m) => m[0]);
+      assert.ok(sources.length >= 1, `${f}: video has no source`);
+      const files = [poster, ...sources.map((t) => attr(t, "src"))];
+      for (const src of files) {
+        assert.ok(local(src) && src.startsWith("img/"), `${f}: ${src} is not a local file under img/`);
+        assert.ok(existsSync(new URL(src, dir)), `${f}: ${src} is missing`);
+        assert.ok(src.includes(`-${lang}.`), `${f}: ${src} is not the ${lang} loop`);
+      }
+      for (const t of sources) {
+        const src = attr(t, "src");
+        assert.equal(attr(t, "type"), src.endsWith(".webm") ? "video/webm" : "video/mp4", `${f}: ${src} type`);
+      }
+      // What a browser without video support shows: the poster, with alt text.
+      const img = /<img\b[^>]*>/.exec(inner)?.[0];
+      assert.ok(img, `${f}: video has no fallback image`);
+      assert.equal(attr(img, "src"), poster, `${f}: fallback is not the poster`);
+      assert.ok((attr(img, "alt") || "").trim().length > 10, `${f}: fallback has no alt text`);
+      assert.ok(/^\d+$/.test(attr(img, "width") || "") && /^\d+$/.test(attr(img, "height") || ""), `${f}: fallback has no size`);
+    }
+    assert.ok(html.includes("(prefers-reduced-motion: reduce)") && html.includes("v.pause()"), `${f}: reduced motion`);
   }
 });

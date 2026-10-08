@@ -232,7 +232,11 @@
     </ul>
   </div>
   <div class="media">
-    <img class="shot" src="img/app/room-en.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The popup for a grey pin, asking “Which room is the changing table in?”, with a button for each kind of room.">
+    <video class="shot" width="540" height="1170" poster="img/app/loop-en.jpg" autoplay muted loop playsinline preload="metadata" aria-label="A grey pin, the question “Which room is the changing table in?”, one tap on the answer, and the pin turns green.">
+      <source src="img/app/loop-en.webm" type="video/webm">
+      <source src="img/app/loop-en.mp4" type="video/mp4">
+      <img src="img/app/loop-en.jpg" width="540" height="1170" loading="lazy" alt="A grey pin, the question “Which room is the changing table in?”, one tap on the answer, and the pin turns green.">
+    </video>
     <img class="shot" src="img/app/add-en.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The “Add a missing place” dialog: places nearby that OpenStreetMap already knows, each with its distance.">
   </div>
 </article>
@@ -259,6 +263,9 @@
 // Until September 2026 this page held a vote that remembered its tap in
 // local storage. Nothing reads that key any more, so it goes.
 try { localStorage.removeItem("papamap-app"); } catch (e) { /* private mode */ }
+// Readers who asked for less motion get the still image instead of the loop.
+if (matchMedia("(prefers-reduced-motion: reduce)").matches)
+  document.querySelectorAll("video.shot").forEach((v) => { v.removeAttribute("autoplay"); v.pause(); });
 </script>
 
 </body>

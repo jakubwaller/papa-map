@@ -232,7 +232,11 @@
     </ul>
   </div>
   <div class="media">
-    <img class="shot" src="img/app/room-de.webp" width="780" height="1688" loading="lazy" decoding="async" alt="Das Popup zu einem grauen Pin mit der Frage „In welchem Raum ist der Wickeltisch?“ und einer Taste für jede Art von Raum.">
+    <video class="shot" width="540" height="1170" poster="img/app/loop-de.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Ein grauer Pin, die Frage „In welchem Raum ist der Wickeltisch?“, ein Fingertipp auf die Antwort, und der Pin wird grün.">
+      <source src="img/app/loop-de.webm" type="video/webm">
+      <source src="img/app/loop-de.mp4" type="video/mp4">
+      <img src="img/app/loop-de.jpg" width="540" height="1170" loading="lazy" alt="Ein grauer Pin, die Frage „In welchem Raum ist der Wickeltisch?“, ein Fingertipp auf die Antwort, und der Pin wird grün.">
+    </video>
     <img class="shot" src="img/app/add-de.webp" width="780" height="1688" loading="lazy" decoding="async" alt="Der Dialog „Fehlenden Ort hinzufügen“: Orte in der Nähe, die OpenStreetMap schon kennt, jeweils mit Entfernung.">
   </div>
 </article>
@@ -259,6 +263,9 @@
 // Bis September 2026 stand hier eine Abstimmung, die ihren Fingertipp im Local
 // Storage gemerkt hat. Nichts liest den Schlüssel mehr, also weg damit.
 try { localStorage.removeItem("papamap-app"); } catch (e) { /* privater Modus */ }
+// Wer weniger Bewegung eingestellt hat, sieht das Standbild statt der Schleife.
+if (matchMedia("(prefers-reduced-motion: reduce)").matches)
+  document.querySelectorAll("video.shot").forEach((v) => { v.removeAttribute("autoplay"); v.pause(); });
 </script>
 
 </body>
