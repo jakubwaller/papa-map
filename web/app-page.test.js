@@ -137,9 +137,10 @@ test("both privacy pages cover the Android app, and the manifest keeps their thr
   }
 });
 
-test("the store link reads at AA contrast in both colour schemes", () => {
-  // In dark mode the badge kept the light scheme's #00775a on the box's dark
-  // green, 2.7:1. It takes the page's link colour, which each scheme sets.
+test("the option cards read at AA contrast in both colour schemes", () => {
+  // In dark mode the old text badge kept the light scheme's #00775a on the
+  // box's dark green, 2.7:1. The store link is Apple's badge now; what is left
+  // to hold is the cards' own text and the Android button, in each scheme.
   const lum = (hex) => {
     const c = hex.match(/[0-9a-f]{2}/gi).map((h) => parseInt(h, 16) / 255)
       .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
@@ -151,13 +152,45 @@ test("the store link reads at AA contrast in both colour schemes", () => {
   };
   for (const f of PAGES) {
     const src = read(f);
-    const color = src.match(/\.store a\.badge \{[^}]*color: var\((--[a-z-]+)\)/)[1];
+    const rule = (sel) => src.match(new RegExp(`${sel} \\{([^}]*)\\}`))[1];
+    const ref = (body, prop) => body.match(new RegExp(`(?:^|[\\s;])${prop}: var\\((--[a-z-]+)\\)`))[1];
+    const card = rule("\\.option"), link = rule("\\.option a"), cta = rule("\\.option a\\.cta");
+    const pairs = [
+      ["--ink", ref(card, "background")],
+      [ref(link, "color"), ref(card, "background")],
+      [ref(cta, "color"), ref(cta, "background")],
+    ];
     const roots = [...src.matchAll(/:root \{([^}]*)\}/g)].map((m) => m[1]);
     assert.equal(roots.length, 2, `${f}: expected a light and a dark :root`);
     for (const root of roots) {
       const v = (name) => root.match(new RegExp(`${name}: (#[0-9a-f]{6})`, "i"))[1];
-      const ratio = contrast(v(color), v("--green-soft"));
-      assert.ok(ratio >= 4.5, `${f}: ${color} on --green-soft is ${ratio.toFixed(2)}:1`);
+      for (const [fg, bg] of pairs) {
+        const ratio = contrast(v(fg), v(bg));
+        assert.ok(ratio >= 4.5, `${f}: ${fg} on ${bg} is ${ratio.toFixed(2)}:1`);
+      }
     }
+  }
+});
+
+test("every image on the two pages is a local file with a size and alt text", () => {
+  // The Datenschutz promises no third-party requests, so Apple's badge is
+  // served from here, never hotlinked. Width and height keep the layout still
+  // while the screenshots load; everything below the hero loads lazily.
+  for (const f of PAGES) {
+    const imgs = [...read(f).replace(/<!--[\s\S]*?-->/g, "").matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);
+    assert.ok(imgs.length >= 7, `${f}: ${imgs.length} images`);
+    const attr = (tag, name) => (new RegExp(`\\s${name}="([^"]*)"`).exec(tag) || [])[1];
+    imgs.forEach((tag, i) => {
+      const src = attr(tag, "src");
+      assert.ok(src && !/^(?:[a-z]+:|\/\/)/i.test(src), `${f}: ${src} is not a local file`);
+      assert.ok(existsSync(new URL(src, dir)), `${f}: ${src} is missing`);
+      assert.ok(/^\d+$/.test(attr(tag, "width") || "") && /^\d+$/.test(attr(tag, "height") || ""), `${f}: ${src} has no size`);
+      assert.ok((attr(tag, "alt") || "").trim().length > 10, `${f}: ${src} has no alt text`);
+      // The badge and the hero screenshot are the first two; the rest wait.
+      assert.equal(attr(tag, "loading") === "lazy", i >= 2, `${f}: ${src} loading`);
+    });
+    assert.ok(imgs[0].includes(`img/app-store-badge-${f === "app.html" ? "de" : "en"}.svg`), `${f}: badge language`);
+    for (const tag of imgs.slice(1))
+      assert.ok(attr(tag, "src").endsWith(f === "app.html" ? "-de.webp" : "-en.webp"), `${f}: ${attr(tag, "src")}`);
   }
 });

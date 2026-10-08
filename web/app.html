@@ -32,55 +32,106 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PapaMap">
 <style>
-  /* The map's palette (style.css), on a reading page: the install box is the
-     add button's green, so the page and the header pill read as one thing. */
+  /* The map's palette (style.css), on a reading page: the option cards are
+     the add button's green box, so the page and the header pill read as one
+     thing. --on-green is the text on a filled green control. */
   :root {
     --bg: #fbfdfc; --ink: #1c2b26; --muted: #64716b; --line: #d8ded9;
-    --green: #009e73; --green-strong: #00775a; --green-soft: #e9f6f0;
-    --link: #00775a;
+    --green: #009e73; --green-strong: #00775a; --green-press: #00614a; --green-soft: #e9f6f0;
+    --link: #00775a; --on-green: #ffffff;
+    --shot-shadow: 0 12px 32px rgba(28, 43, 38, .16);
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #161b19; --ink: #e8ede9; --muted: #9aa8a1; --line: #33403a;
-      --green: #009e73; --green-strong: #00775a; --green-soft: #1b2924;
-      --link: #5fd3ab;
+      --green: #009e73; --green-strong: #00775a; --green-press: #00614a; --green-soft: #1b2924;
+      --link: #5fd3ab; --on-green: #ffffff;
+      --shot-shadow: 0 12px 32px rgba(0, 0, 0, .45);
     }
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0 auto; max-width: 40rem; padding: 1.5rem 1rem 4rem;
+    margin: 0 auto; max-width: 52rem; padding: 1.5rem 1rem 4rem;
     background: var(--bg); color: var(--ink);
     font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     -webkit-text-size-adjust: 100%;
   }
   a { color: var(--link); }
   h1 { font-size: 1.85rem; line-height: 1.2; margin: 0.6rem 0 0.6rem; text-wrap: balance; }
-  h2 { font-size: 1.2rem; margin: 2rem 0 0.6rem; }
-  .lead { font-size: 1.12rem; color: var(--muted); margin: 0 0 1.4rem; }
+  .lead { font-size: 1.12rem; color: var(--muted); margin: 0 0 1.3rem; max-width: 38rem; }
   .back { font-size: 0.9rem; margin: 0 0 0.4rem; }
   .back.langs { color: var(--muted); }
   .back.langs strong { color: var(--ink); font-weight: 600; }
-
-  /* The store app is the green box now; until 2026-09-25 the home-screen
-     steps were, because they were the only thing that worked. */
-  .store {
-    margin: 1.2rem 0 1.6rem; padding: 1.1rem 1.2rem 1rem;
-    border: 1px solid var(--line); border-radius: 14px; background: var(--green-soft);
+  .vh {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
   }
-  .store h2 { margin: 0 0 0.6rem; font-size: 1.15rem; }
-  .store p { margin: 0.6rem 0; }
-  .store a.badge { font-size: 1.1rem; font-weight: 700; color: var(--link); }
 
-  /* Android until it ships, and the home-screen route for both: plain text
-     on the page's own background, so it doesn't compete with the store box. */
-  .aside { margin: 0 0 1.4rem; padding: 0 0 0 0.9rem; border-left: 3px solid var(--line); }
-  .aside h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
-  .aside p { margin: 0.45rem 0; }
-  .aside b { color: var(--ink); }
+  /* Three equal ways in: the App Store, Android (a mail until it ships),
+     and the home screen without a store. Stacked on a phone, one row from
+     760 px. Each card is the same box; only what sits in it differs. */
+  .options { display: grid; gap: 0.75rem; margin: 0 0 0.9rem; }
+  .option {
+    display: flex; flex-direction: column; gap: 0.4rem;
+    padding: 1rem 1.1rem 1.05rem; border: 1px solid var(--line); border-radius: 14px;
+    background: var(--green-soft); color: var(--ink);
+  }
+  .option h3 { margin: 0; font-size: 1.05rem; }
+  .option p { margin: 0; font-size: 0.95rem; }
+  .option a { color: var(--link); }
+  /* The badge's clear space is a quarter of its height (Apple's marketing
+     guidelines): 12 px around a 48 px badge, from the card's gap plus this
+     margin. 48 px also clears Apple's 40 px minimum. */
+  .slot { display: flex; align-items: center; min-height: 48px; margin: 0.35rem 0; }
+  .badge { display: inline-block; line-height: 0; border-radius: 8px; }
+  .badge img { display: block; width: auto; height: 48px; }
+  .option a.cta {
+    display: inline-flex; align-items: center; min-height: 48px; padding: 0 1.15rem;
+    border-radius: 10px; background: var(--green-strong); color: var(--on-green);
+    font-weight: 650; text-decoration: none;
+  }
+  .option a.cta:hover { background: var(--green-press); }
+  .badge:focus-visible, .option a.cta:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+  .option b { color: var(--ink); }
+  .free { color: var(--muted); margin: 0 0 1.8rem; }
 
-  ul.adds { padding-left: 1.2rem; margin: 0.6rem 0; }
-  ul.adds li { margin: 0.55rem 0; }
-  ul.adds b { color: var(--ink); }
+  /* App screens: the bare screen in a light phone frame, no device artwork.
+     Every screenshot carries width and height, so its space is kept before
+     the file arrives. */
+  .shot {
+    display: block; width: min(15rem, 68vw); height: auto; margin: 0 auto;
+    border: 1px solid var(--line); border-radius: 1.6rem;
+    box-shadow: var(--shot-shadow); background: var(--green-soft);
+  }
+
+  .steps { margin: 3rem 0 0; }
+  .steps > h2 { font-size: 1.45rem; line-height: 1.25; margin: 0 0 1.4rem; text-wrap: balance; }
+  .step { display: grid; gap: 1.4rem; margin: 0 0 3.2rem; --shot-w: 15rem; }
+  .step h3 { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.35rem; font-size: 1.4rem; line-height: 1.2; }
+  .num {
+    flex: none; display: inline-grid; place-items: center; width: 2.1rem; height: 2.1rem;
+    border-radius: 50%; background: var(--green-strong); color: var(--on-green);
+    font-size: 1.05rem; font-weight: 700;
+  }
+  .tagline { margin: 0 0 0.5rem; font-size: 1.12rem; font-weight: 600; }
+  .step ul { margin: 0; padding-left: 1.2rem; }
+  .step li { margin: 0.45rem 0; }
+  .media { display: flex; justify-content: center; gap: 0.75rem; }
+  .media .shot { margin: 0; }
+  .pair .media .shot { width: calc(50% - 0.375rem); max-width: 12rem; border-radius: 1.1rem; }
+
+  @media (min-width: 760px) {
+    .options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .step { grid-template-columns: minmax(0, 1fr) var(--shot-w); align-items: center; gap: 2.5rem; }
+    .step.flip { grid-template-columns: var(--shot-w) minmax(0, 1fr); }
+    .step.flip .media { order: -1; }
+    .step.pair { --shot-w: 24.75rem; }
+    .media .shot { width: 100%; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .option a.cta { transition: background-color 0.15s ease; }
+  }
+
   p.foot { color: var(--muted); font-size: 0.9rem; }
 </style>
 </head>
@@ -90,38 +141,105 @@
 <p class="back langs"><strong lang="de">Deutsch</strong> &middot; <a href="app-en.html" hreflang="en" lang="en">English</a></p>
 
 <h1>PapaMap als App</h1>
-<p class="lead">Für das iPhone im App Store. Für Android in Arbeit; bis dahin legt sich die Karte ohne Store auf den Homescreen und läuft dort wie eine App.</p>
+<p class="lead">Dieselbe Karte, nur schneller zur Hand: offline, der nächste Tisch mit einem Fingertipp, auf dem iPhone auch über Siri und Widget.</p>
 
-<section class="store" aria-labelledby="store-h">
-  <h2 id="store-h">iPhone: im App Store</h2>
-  <p><a class="badge" href="https://apps.apple.com/de/app/papamap/id6813376985">PapaMap im App Store laden</a></p>
-  <p>Kostenlos, ohne Werbung, ohne eigenes Konto.</p>
+<section class="options" aria-labelledby="get-h">
+  <h2 id="get-h" class="vh">So kommt PapaMap aufs Handy</h2>
+
+  <div class="option">
+    <h3>iPhone</h3>
+    <p class="slot"><a class="badge" href="https://apps.apple.com/de/app/papamap/id6813376985"><img src="img/app-store-badge-de.svg" width="144" height="48" alt="Laden im App Store"></a></p>
+    <p>Mit Siri, Widget und Stadtplänen offline.</p>
+  </div>
+
+  <!-- A mailto, not a signup form: the site stores nothing, and the Datenschutz
+       already covers contact by e-mail. The iPhone line carried the same offer
+       until the app reached the store (2026-09-25); the launch mail to those
+       addresses goes out by hand from the inbox, and then they are deleted.
+       When the Android app reaches production, the Google Play badge (48 px
+       high, like the App Store one) replaces the mailto inside .slot and the
+       note under it changes; the card and the row stay as they are. -->
+  <div class="option">
+    <h3>Android</h3>
+    <p class="slot"><a class="cta" href="mailto:papamap@jakubwaller.eu?subject=Bescheid%20geben%3A%20Android-App">Bescheid geben</a></p>
+    <p>Die App ist in Arbeit. Eine E-Mail, wenn es so weit ist, danach wird die Adresse gelöscht.</p>
+  </div>
+
+  <div class="option">
+    <h3>Ohne Store</h3>
+    <p><b>iPhone:</b> Teilen-Symbol, dann „Zum Home-Bildschirm“.</p>
+    <p><b>Android:</b> Browsermenü, dann „Installieren“ oder „Zum Startbildschirm hinzufügen“.</p>
+    <p>Geht in jedem Browser, nur nicht aus Instagram oder Bluesky heraus.</p>
+  </div>
+</section>
+<p class="free">Kostenlos, ohne Werbung, ohne eigenes Konto.</p>
+
+<img class="shot" src="img/app/map-de.webp" width="780" height="1688" decoding="async" alt="Die App auf dem iPhone: die Karte von Hamburg mit grünen, roten und grauen Pins, oben Papa und Mama, unten die Taste „Nächster Wickeltisch“.">
+
+<section class="steps" aria-labelledby="steps-h">
+<h2 id="steps-h">Was in der App dazukommt</h2>
+
+<article class="step" aria-labelledby="find-h">
+  <div>
+    <h3 id="find-h"><span class="num">1</span> Finden</h3>
+    <p class="tagline">Der nächste Wickeltisch, ein Fingertipp.</p>
+    <ul>
+      <li>Die Taste unten in der Mitte findet den nächsten Wickeltisch, den du auch erreichst.</li>
+      <li>Mit Entfernung in Luftlinie, und mit Öffnungszeiten, wo sie bekannt sind.</li>
+      <li>Papa oder Mama: einmal einstellen. Als Papa färbt die Karte die Tische danach ein, ob du an sie herankommst; als Mama zählt jeder Tisch.</li>
+    </ul>
+  </div>
+  <div class="media">
+    <img class="shot" src="img/app/nearest-de.webp" width="780" height="1688" loading="lazy" decoding="async" alt="Die App nach einem Fingertipp auf „Nächster Wickeltisch“: das Popup zum nächsten Tisch, den ein Papa erreicht, mit Raum, Öffnungszeiten und der Entfernung in Luftlinie.">
+  </div>
+</article>
+
+<article class="step flip" aria-labelledby="go-h">
+  <div>
+    <h3 id="go-h"><span class="num">2</span> Unterwegs</h3>
+    <p class="tagline">Geht auch ohne Netz.</p>
+    <ul>
+      <li>Die Wickeltische liegen auf dem Handy, auch im Parkhaus, in der S-Bahn und im Untergeschoss vom Supermarkt.</li>
+      <li>Die iPhone-App speichert dazu eine ganze Stadt samt Karte darunter. Hamburg sind 27 MB.</li>
+      <li>„Route“ öffnet deine Navi-App, zum Beispiel Apple Maps, Google Maps oder Organic Maps.</li>
+    </ul>
+  </div>
+  <div class="media">
+    <img class="shot" src="img/app/offline-de.webp" width="780" height="1688" loading="lazy" decoding="async" alt="Der Dialog „Stadt offline speichern“: eine Liste von Städten mit ihrer Größe in MB und je einer Taste zum Laden.">
+  </div>
+</article>
+
+<article class="step pair" aria-labelledby="help-h">
+  <div>
+    <h3 id="help-h"><span class="num">3</span> Mitmachen</h3>
+    <p class="tagline">Grauer Pin? Zwei Fingertipps.</p>
+    <ul>
+      <li>„In welchem Raum ist der Wickeltisch?“ Deine Antwort geht direkt nach OpenStreetMap, mit deinem eigenen Konto dort.</li>
+      <li>Ein Ort fehlt? Die App zeigt, was OpenStreetMap in deiner Nähe schon kennt, und du antwortest gleich dort.</li>
+      <li>In einer Minute drin, für alle, die nach dir kommen.</li>
+    </ul>
+  </div>
+  <div class="media">
+    <img class="shot" src="img/app/room-de.webp" width="780" height="1688" loading="lazy" decoding="async" alt="Das Popup zu einem grauen Pin mit der Frage „In welchem Raum ist der Wickeltisch?“ und einer Taste für jede Art von Raum.">
+    <img class="shot" src="img/app/add-de.webp" width="780" height="1688" loading="lazy" decoding="async" alt="Der Dialog „Fehlenden Ort hinzufügen“: Orte in der Nähe, die OpenStreetMap schon kennt, jeweils mit Entfernung.">
+  </div>
+</article>
+
+<article class="step flip" aria-labelledby="me-h">
+  <div>
+    <h3 id="me-h"><span class="num">4</span> Dein PapaMap</h3>
+    <p class="tagline">Deine Stadt, deine Antworten.</p>
+    <ul>
+      <li>Mein PapaMap zeigt deine Antworten, deine gemerkten Orte und wie viel in deiner Stadt schon beantwortet ist.</li>
+      <li>Nur auf dem iPhone: Siri, Widget und Kontrollzentrum zeigen den nächsten Wickeltisch, ohne dass du die App öffnest.</li>
+    </ul>
+  </div>
+  <div class="media">
+    <img class="shot" src="img/app/me-de.webp" width="780" height="1688" loading="lazy" decoding="async" alt="„Mein PapaMap“: wie viele Wickeltische es in Hamburg gibt und bei wie vielen der Raum erfasst ist, die Anmeldung bei OpenStreetMap und die gemerkten Orte.">
+  </div>
+</article>
 </section>
 
-<!-- A mailto, not a signup form: the site stores nothing, and the Datenschutz
-     already covers contact by e-mail. The iPhone line carried the same offer
-     until the app reached the store (2026-09-25); the launch mail to those
-     addresses goes out by hand from the inbox, and then they are deleted. -->
-<section class="aside" aria-label="Android">
-  <p><b>Android:</b> die App ist in Arbeit. <a href="mailto:papamap@jakubwaller.eu?subject=Bescheid%20geben%3A%20Android-App">Bescheid geben, wenn sie da ist</a></p>
-  <p>Eine E-Mail, wenn es so weit ist, danach wird die Adresse gelöscht.</p>
-</section>
-
-<section class="aside" aria-labelledby="install-h">
-  <h2 id="install-h">Ohne Store: so kommt die Karte aufs Handy</h2>
-  <p><b>iPhone:</b> Teilen-Symbol, dann „Zum Home-Bildschirm“. Geht in jedem Browser, nur nicht aus Instagram oder Bluesky heraus.</p>
-  <p><b>Android:</b> Browsermenü, dann „Installieren“ oder „Zum Startbildschirm hinzufügen“. Chrome, Firefox, Samsung Internet, alle anderen auch.</p>
-</section>
-
-<h2>Was die App kann</h2>
-<ul class="adds">
-  <li><b>Offline.</b> Die Wickeltische liegen auf dem Handy, auch im Parkhaus, in der S-Bahn und im Untergeschoss vom Supermarkt. Nur die Karte darunter braucht Netz.</li>
-  <li><b>Der nächste Tisch, ein Fingertipp.</b> Die App zeigt den nächsten Wickeltisch, den du auch erreichst, mit Entfernung in Luftlinie.</li>
-  <li><b>Papa oder Mama.</b> Einmal einstellen. Als Papa färbt die Karte die Tische danach ein, ob du an sie herankommst; als Mama zählt jeder Tisch.</li>
-  <li><b>Grauer Pin? Zwei Fingertipps.</b> „In welchem Raum steht der Tisch?“ Deine Antwort geht direkt nach OpenStreetMap, mit deinem eigenen Konto dort.</li>
-  <li><b>Tisch eintragen, wo du stehst.</b> Ein fehlender Wickeltisch ist in einer Minute drin, für alle, die nach dir kommen.</li>
-  <li><b>Nur in der iPhone-App:</b> Stadt offline speichern, Hamburg sind 27 MB, dann geht auch die Karte darunter ohne Netz. Siri, Widget und Kontrollzentrum zeigen den nächsten Wickeltisch, ohne dass du die App öffnest.</li>
-</ul>
 <p>Kostenlos, wie die Karte. Die Daten bleiben OpenStreetMap; die App hat keine eigenen und sammelt keine.</p>
 <p class="foot">Fragen, Ideen, ein Wickeltisch, der fehlt? <a href="methods.html#contribute">Editieren, Schritt für Schritt</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="https://jakubwaller.eu" rel="author">Made with ♥ in Hamburg by Jakub Waller</a></p>
 
