@@ -932,6 +932,13 @@ function exportWebPage(outDir) {
     if (r.ok) console.log(`OK   ${r.path}: ${Math.round(r.bytes / 1024)} KB at q${r.quality}`);
     else console.log(`${r.bytes ? "OVER" : "SKIP"} ${r.path}: ${r.reason}`);
   }
+  // An over-budget or missing file is printed above and still written, but the
+  // run must not pass for one: exit 1 once every row is out.
+  const bad = results.filter((r) => !r.ok).length;
+  if (bad) {
+    console.error(`\n${bad} install-page file(s) over ${WEB_PAGE.maxBytes} bytes or missing`);
+    process.exitCode = 1;
+  }
 }
 
 async function main() {

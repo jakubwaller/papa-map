@@ -243,6 +243,30 @@ async function settle(frame, ms = 400) {
   await frame.waitForFunction(() => !window._papamap.isMoving() && !window._papamap.isZooming(), null, { timeout: 15000 }).catch(() => {});
   await sleep(ms);
 }
+// The pin whose popup is open, read off the sign marker the app stands on it
+// (web/app.js, updateSignMarker: anchor "bottom", no offset, so the bottom
+// centre of `.sign-pin-marker` is the pin's point) rather than off the tap: a
+// tap between two close pins opens whichever one the app picks, and the answer
+// lands on that one. Snapped to the nearest rendered table within 4 px; null
+// when there is no marker or nothing that close. Call it with the map at rest.
+async function openedPinLngLat(frame) {
+  return frame.evaluate(() => {
+    const el = document.querySelector(".sign-pin-marker");
+    if (!el) return null;
+    const map = window._papamap;
+    // project() is relative to the map's container, the rect to the frame.
+    const r = el.getBoundingClientRect(), c = map.getContainer().getBoundingClientRect();
+    const x = r.left + r.width / 2 - c.left, y = r.bottom - c.top;
+    let best = null;
+    for (const f of map.queryRenderedFeatures(undefined, { layers: ["tables"] })) {
+      const p = map.project(f.geometry.coordinates);
+      const d = Math.hypot(p.x - x, p.y - y);
+      if (!best || d < best.d) best = { d, ll: f.geometry.coordinates };
+    }
+    return best && best.d < 4 ? best.ll : null;
+  });
+}
+
 // `d` is the pin's distance from the map's centre in the frame's CSS pixels.
 // The centre is the map's own (project(getCenter())), not the viewport's: with
 // a caption band the app frame is shorter than the viewport.
@@ -424,6 +448,11 @@ async function main() {
       if (!opened) throw new Error("no open room question found in three tries");
       mark("room-question");
       await sleep(1500);
+      // The popup has panned into view by now; check the pin it belongs to,
+      // not the one the tap aimed at.
+      const openedLL = await openedPinLngLat(frame);
+      if (openedLL) tapped = { ...tapped, lngLat: openedLL };
+      else if (DEBUG) console.log("  [answer] no sign marker on the open pin; checking the tapped one");
       // "Both" is the first choice and the one that turns the pin green.
       const c = await centreOf(frame.locator('.maplibregl-popup .ask .ask-btn[data-room="both"]'));
       await tap(c.x, c.y);

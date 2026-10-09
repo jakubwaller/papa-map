@@ -252,7 +252,15 @@ test("the loop in step 3 is a muted, local, sized video with a poster and a stil
     // load (reveal every step, stop the in-view playback, pause the video);
     // switched off again, nothing is hidden anew because every step is shown.
     assert.ok(/const calm = \(\) => \{\s*observers\.forEach\(\(o\) => o\.disconnect\(\)\);\s*steps\.forEach\(show\);\s*videos\.forEach\(\(v\) => \{ v\.pause\(\);/.test(html), `${f}: calm()`);
-    assert.ok(/if \(rm\.matches\) calm\(\);/.test(html) && /rm\.addEventListener\?\.\("change", \(e\) => e\.matches && calm\(\)\)/.test(html), `${f}: reduce-motion change`);
+    assert.ok(/if \(rm\.matches\) calm\(\);/.test(html) && /const onChange = \(e\) => e\.matches && calm\(\);/.test(html), `${f}: reduce-motion change`);
+    // Safari before 14 has only addListener on a media query list.
+    assert.ok(html.includes('if (rm.addEventListener) rm.addEventListener("change", onChange); else if (rm.addListener) rm.addListener(onChange);'),
+      `${f}: reduce-motion listener with the addListener fallback`);
+    // The steps start hidden under .js and only this script reveals them, so
+    // the script has to parse everywhere the page is read: optional chaining
+    // and ?? are syntax errors before Safari 13.1 (iOS 13.0-13.3).
+    const inline = html.slice(html.lastIndexOf("<script>"), html.lastIndexOf("</script>"));
+    assert.ok(inline.includes("calm") && !/\?\.|\?\?/.test(inline), `${f}: inline script uses ?. or ??`);
   }
 });
 

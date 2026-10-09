@@ -366,7 +366,10 @@ try { localStorage.removeItem("papamap-app"); } catch (e) { /* private mode */ }
     videos.forEach((v) => inView.observe(v));
     observers.push(once, inView);
   }
-  rm.addEventListener?.("change", (e) => e.matches && calm());
+  // Safari before 14 has only addListener on a media query list; and optional chaining here
+  // is a syntax error before Safari 13.1, which stops the whole script and leaves every step hidden.
+  const onChange = (e) => e.matches && calm();
+  if (rm.addEventListener) rm.addEventListener("change", onChange); else if (rm.addListener) rm.addListener(onChange);
 })();
 </script>
 
