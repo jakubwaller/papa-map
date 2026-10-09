@@ -57,6 +57,13 @@ not go through (no green pin, or the app's "could not save" line), and
 
 ## What to check before uploading
 
+- Bitrate: the spec lists 10–12 Mbit/s, and a real store take comes out
+  at about 7.7 Mbit/s. This UI is mostly flat colour, so the encoder needs
+  less than the 11 Mbit/s target, and `encode.sh` does not pad it up
+  (no `-minrate`). Read it with
+  `ffprobe -v error -show_entries format=bit_rate -of default=nw=1:nk=1 <file>`.
+  If App Store Connect refuses an upload over the bitrate, that is the
+  knob to turn.
 - Store: 886×1920, 15–30 s, H.264 High 4.0, 30 fps, a silent stereo AAC
   track (App Store Connect's app preview specification; the spec asks for
   stereo audio and says nothing about silence — previews without sound are
