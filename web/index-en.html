@@ -186,7 +186,7 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app82" />
+  <link rel="stylesheet" href="style.css?v=app83" />
 
   <!-- The two big dataset files, asked for while the scripts still download
        and parse: boot() only gets to its fetch() once maplibre-gl.js and the
@@ -204,7 +204,7 @@
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app82"></script>
+  <script src="in-app.js?v=app83"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -479,8 +479,11 @@
       <a id="me-feedback-link" href="mailto:papamap@jakubwaller.eu?subject=PapaMap">papamap@jakubwaller.eu</a></p>
     <!-- Store app only: app.js moves the header's links and the language
          picker in here (bootNative), so the app's first screen is the brand,
-         the chips and the map. Empty on the website. -->
-    <div id="me-about" class="me-about" hidden></div>
+         the chips and the map, followed by the way back to the intro. Hidden
+         on the website, which has no intro. -->
+    <div id="me-about" class="me-about" hidden>
+      <button id="me-intro" type="button" class="linkish" data-i18n="meIntroAgain">Einführung noch einmal zeigen</button>
+    </div>
     <button id="me-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
   </dialog>
 
@@ -499,6 +502,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app82"></script>
+  <script type="module" src="app.js?v=app83"></script>
 </body>
 </html>

@@ -1,5 +1,14 @@
 # papa-map — build contract (v0)
 
+> **v84 amendment (9 Oct 2026, the intro can be opened again): no data shape
+> change.** The store app's first-launch intro (v58) shows once, and a tester
+> who tapped it away by reflex had no way back. Mein PapaMap now ends with
+> "Einführung noch einmal zeigen" (`#me-intro`, inside `#me-about`, so the
+> website, which has no intro, never shows it), which closes the dialog and
+> opens the intro through `showIntro`, split out of `maybeShowIntro`. The
+> `papamap-intro` key is not touched. One i18n key (`meIntroAgain`) in all 32
+> languages. Shell pin `app82` → `app83`; no `WHATS_NEW` entry.
+
 > **v83 amendment (9 Oct 2026, location services off on the phone): no data
 > shape change.** In the store app, a phone whose location services are off
 > made the Geolocation plugin reject `checkPermissions()` with

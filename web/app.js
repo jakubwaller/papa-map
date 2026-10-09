@@ -14,16 +14,16 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs,
-         zoneForFeature } from "./datasource.js?v=app82";
+         zoneForFeature } from "./datasource.js?v=app83";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app82";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app83";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app82";
+         writeTags } from "./osm.js?v=app83";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -31,7 +31,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, introTips } from "./me.js?v=app82";
+         INTRO_KEY, introKind, introTips } from "./me.js?v=app83";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -41,27 +41,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app82";
+         reviewTracker } from "./native.js?v=app83";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app82";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app83";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app82";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app83";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app82";
+import { isOpenNow } from "./opening-hours.js?v=app83";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app82";
-// The bundled shell's pin (`?v=app82`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app83";
+// The bundled shell's pin (`?v=app83`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -3814,7 +3814,7 @@ function bootNative() {
   // behind these links carry every one of its numbers in more depth.
   document.documentElement.classList.add("native");
   const about = document.getElementById("me-about");
-  about.append(document.querySelector(".header-actions"));
+  about.prepend(document.querySelector(".header-actions"));   // above "show the intro again"
   about.hidden = false;
   // The count stands in the header, off the scrolling chip row.
   document.querySelector("header").append(countEl);
@@ -4632,7 +4632,14 @@ function maybeShowIntro() {
   }
   // A widget tap opened a pin at boot: it shows at the next launch instead.
   if (document.querySelector("dialog[open]") || popup?.isOpen()) return;
-  const news = r.kind === "news";
+  showIntro(r.kind === "news", r.keys);
+  try {
+    localStorage.setItem(INTRO_KEY, SHELL_PIN);
+    localStorage.removeItem("papamap-tip-seen");   // the toast's key (v42), which the privacy pages no longer list
+  } catch { /* shown again next launch */ }
+}
+
+function showIntro(news, keys) {
   introNews = news;
   document.getElementById("intro-title").dataset.i18n = news ? "whatsNewTitle" : "introTitle";
   document.getElementById("intro-ok").dataset.i18n = news ? "whatsNewOk" : "introStart";
@@ -4640,13 +4647,16 @@ function maybeShowIntro() {
   document.querySelector(".intro-lang").hidden = news;
   introLangSelect.value = lang;
   applyI18n();
-  fillIntroList(news ? r.keys : introTips(platform(), lang));
+  fillIntroList(news ? keys : introTips(platform(), lang));
   introDialog.showModal();
-  try {
-    localStorage.setItem(INTRO_KEY, SHELL_PIN);
-    localStorage.removeItem("papamap-tip-seen");   // the toast's key (v42), which the privacy pages no longer list
-  } catch { /* shown again next launch */ }
 }
+
+// The intro shows once, and a tester tapped it away by reflex before reading
+// it (2026-10-09): Mein PapaMap keeps the way back. The stored key is untouched.
+document.getElementById("me-intro").addEventListener("click", () => {
+  meDialog.close();
+  showIntro(false);
+});
 
 function renderMeDialog() {
   renderMeSentence();
