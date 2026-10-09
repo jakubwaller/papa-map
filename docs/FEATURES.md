@@ -357,8 +357,12 @@ browser remembers a dismissed prompt and never asks again, and a page cannot
 re-prompt, so the words are the fix: on the page the toast says to allow the
 location in the browser's or the phone's settings (a code-1 refusal also comes
 when the OS blocks the browser itself), in the store app to turn it on
-in the phone's settings (7 s instead of 4). Any other failure keeps the generic
-"couldn't get your location".
+in the phone's settings (7 s instead of 4). In the store app, location services
+switched off for the whole phone get a third wording, "Location is off on this
+phone" (`toastGeoOffApp`, also 7 s): the Geolocation plugin rejects with
+`OS-PLUG-GLOC-0007` on iOS and Android, and pointing that reader at PapaMap's
+own permission would send them to a switch that is already on. Any other
+failure keeps the generic "couldn't get your location".
 
 Three things it deliberately does not do:
 

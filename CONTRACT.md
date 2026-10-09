@@ -1,5 +1,14 @@
 # papa-map — build contract (v0)
 
+> **v83 amendment (9 Oct 2026, location services off on the phone): no data
+> shape change.** In the store app, a phone whose location services are off
+> made the Geolocation plugin reject `checkPermissions()` with
+> `OS-PLUG-GLOC-0007` (iOS and Android alike), which fell through to the
+> generic `toastGeoFail`. `geoFailKey` now maps that code, in the app only,
+> to `toastGeoOffApp` ("Location is off on this phone. Turn it on in the
+> settings, then tap again."), shown 7 s like the other refusal. One i18n key
+> in all 32 languages. Shell pin `app81` → `app82`.
+
 > **v82 amendment (7 Oct 2026, the add dialog's search box finds any shop):
 > no data shape change.** The nearby list in "+ Add a place" stays on the
 > theme's `dad_venue` tags, but a name typed into the dialog's own search box
