@@ -1192,6 +1192,11 @@ language switch.
   screen for, and is written when the dialog is *shown*, not closed: a hint that
   returns until it is obeyed is an advert. It replaces the one-time toast
   (`toastTip`, `papamap-tip-seen`), which is gone.
+- **The way back** (CONTRACT v84): "Einführung noch einmal zeigen" under the
+  links in Mein PapaMap closes that dialog and opens the intro again, without
+  touching the key. A Czech tester tapped the intro away by reflex before
+  reading it and asked where to find it (2026-10-09); there was no answer short
+  of clearing the app's data.
 - **What's new**: after an update the same dialog lists the release's notes,
   but only when `WHATS_NEW` (`web/me.js`) has an entry whose `since` is newer
   than the acknowledged pin. A release with something to say adds one entry

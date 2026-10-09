@@ -815,6 +815,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .me-about { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .me-about[hidden] { display: none; }
 .me-about .header-actions { order: 0; flex: none; justify-content: flex-start; flex-wrap: wrap; gap: 8px 14px; }
+#me-dialog .me-about .linkish { display: inline-block; margin-top: 12px; font-size: 13px; }
 .me-saved h4 { margin: 4px 0 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
 .me-feedback { margin: 14px 0 0; font-size: 12.5px; color: var(--muted-2); }
 #me-dialog .me-feedback { margin-bottom: 0; }
