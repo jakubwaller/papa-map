@@ -186,7 +186,7 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app84" />
+  <link rel="stylesheet" href="style.css?v=app85" />
 
   <!-- The two big dataset files, asked for while the scripts still download
        and parse: boot() only gets to its fetch() once maplibre-gl.js and the
@@ -204,7 +204,7 @@
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app84"></script>
+  <script src="in-app.js?v=app85"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -415,11 +415,11 @@
     <p class="venue-elsewhere" data-i18n="dlgElsewhere">Nicht in der Liste, oder fehlt eine öffentliche Toilette? Dann in MapComplete, dem Editor von OpenStreetMap:</p>
     <a id="add-toilet-link" class="btn" href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json" target="_blank" rel="noopener">
       <span data-i18n="dlgToilet">Eine öffentliche Toilette fehlt</span>
-      <span class="hint" data-i18n="dlgToiletHint">Öffnet MapComplete am aktuellen Kartenausschnitt — Toilette hinzufügen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OSM-Login.</span>
+      <span class="hint" data-i18n="dlgToiletHint">Öffnet MapComplete am aktuellen Kartenausschnitt — Toilette hinzufügen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OpenStreetMap-Login.</span>
     </a>
     <a id="add-venue-link" class="btn" href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json&z=17" target="_blank" rel="noopener">
       <span data-i18n="dlgVenue">Ein Café / Laden / Restaurant hat einen Tisch</span>
-      <span class="hint" data-i18n-html="dlgVenueHint">Öffnet MapComplete am aktuellen Kartenausschnitt — den Ort antippen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OSM-Login. Ort nicht dabei? Siehe Methoden.</span>
+      <span class="hint" data-i18n-html="dlgVenueHint">Öffnet MapComplete am aktuellen Kartenausschnitt — den Ort antippen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OpenStreetMap-Login. Ort nicht dabei? Siehe Methoden.</span>
     </a>
     <p class="dialog-foot" data-i18n-html="dlgFoot"><a href="methods.html#contribute">Editieren, Schritt für Schritt</a></p>
     <button id="add-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
@@ -502,6 +502,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app84"></script>
+  <script type="module" src="app.js?v=app85"></script>
 </body>
 </html>

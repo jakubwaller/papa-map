@@ -589,6 +589,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   bottom: calc(24px + var(--safe-bottom));
   transform: translateX(-50%) translateY(8px);
   z-index: 30;
+  /* left: 50% leaves shrink-to-fit half the screen: long toasts wrapped at 160 px on a 320 px phone */
+  width: max-content;
   max-width: min(92vw, 420px);
   padding: 10px 16px;
   border-radius: 10px;

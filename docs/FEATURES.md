@@ -1171,12 +1171,9 @@ wherever the reader last stood.
 
 ### The first-launch intro and what's new
 
-The Control Center control, the home-screen widget and the Siri phrase (iOS),
-the widget and the launcher shortcut (Android) are all reached from the phone's
-own screens, never from the map, so a reader who is not told never finds them
-(the owner, on TestFlight build 24: "I'd probably never guess from such an
-app"). The first answer was no onboarding: it stands between a parent and the
-map on the first launch. **On 2026-09-28 the owner reversed that** after two
+A new reader is not told what the colours mean, that a grey pin can be
+answered or that a city can be saved offline. The first answer was no
+onboarding: it stands between a parent and the map on the first launch. **On 2026-09-28 the owner reversed that** after two
 testers asked for an intro independently, one of whom also could not find the
 language switch.
 

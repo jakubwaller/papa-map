@@ -1,5 +1,17 @@
 # papa-map — build contract (v0)
 
+> **v86 amendment (10 Oct 2026, OpenStreetMap written out in the UI): no data
+> shape change.** A tester who had never heard of OpenStreetMap was thrown by
+> the abbreviation "OSM" in the app's texts, while the intro already wrote the
+> name in full. Sixteen i18n keys (`metaPlaces`, `popupViewOSM`,
+> `meLoginInvite`, `newsHighchair`, `newsAddPlace`, `editLooking`,
+> `editFound`, `editFoundPlain`, `toastToiletNoTable`, `editNone`,
+> `askLoginHint`, `askSaving`, `askFailed`, `loginFailed`, `dlgToiletHint`,
+> `dlgVenueHint`; plus Czech `dlgIntro`, "jde na" → "jde do") now say "OpenStreetMap" in all 32 languages, with the case
+> suffixes that language's community uses, and the static German fallback in
+> `index.html` / `index-en.html` follows. `i18n.test.js` fails on any string
+> value containing the word "OSM". Shell pin `app84` → `app85`.
+
 > **v85 amendment (10 Oct 2026, the intro drops the phone's own tips): no
 > data shape change.** The store app's intro (v58) closed with the phone's
 > own features: Control Center, widget and Siri on iOS, widget and launcher
