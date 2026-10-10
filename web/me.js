@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app83";
-import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app83";
+import { CREATED_BY } from "./osm.js?v=app84";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app84";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -401,26 +401,6 @@ export function reopenGap(before, oldWatermark, previousBackfill) {
   return { oldest_scanned: before, done: false, floor: previousBackfill?.done ? oldWatermark : null };
 }
 
-// ---- The phone's own tips: what nobody would guess a map app has ----
-// The Control Center control, the home-screen widget and the Siri phrase (iOS),
-// the home-screen widget and the launcher shortcut (Android) are all reached
-// from the phone's own screens, never from this one, so a reader who is not
-// told never finds them. The store apps only: the website has none of them.
-// The Siri line only where the app ships phrases
-// (app/ios/App/App/de.lproj/AppShortcuts.strings, and English in the intent
-// itself) — Siri answers in the phone's language, and a phrase it was never
-// given is a promise that fails out loud. Shown closing the first-launch intro
-// (introTips, below) — the "Mehr aus der App" block Mein PapaMap carried until
-// CONTRACT v60 is gone; the dialog is the reader's, the intro is the phone's.
-// Returns i18n keys, in order.
-export const SIRI_LANGS = ["de", "en"];
-
-export function appTips(platform, lang) {
-  if (platform === "android") return ["tipWidgetAndroid", "tipShortcutAndroid"];
-  if (platform !== "ios") return [];
-  return ["tipControl", "tipWidget", ...(SIRI_LANGS.includes(lang) ? ["tipSiri"] : [])];
-}
-
 // ---- The first-launch intro and what's new (store app only) ----
 // The one device key holds the shell pin (`app70`) the reader last saw the
 // start screen for. Nothing stored: the intro. An older pin: the notes of the
@@ -453,11 +433,10 @@ export function introKind(stored, current, notes = WHATS_NEW) {
   return keys.length ? { kind: "news", keys } : null;
 }
 
-// What the intro lists: the features nobody guesses, then the phone's own.
+// What the intro lists: the features nobody guesses. The phone's own (widget,
+// Control Center, Siri, launcher shortcut) left it in v85: a tester found the
+// intro too long, and the phone's own galleries list them.
 export const INTRO_FEATURES = ["introNearest", "introMode", "introAnswer", "introOffline", "introMe"];
-export function introTips(platform, lang) {
-  return [...INTRO_FEATURES, ...appTips(platform, lang)];
-}
 
 // ---- Saved places (device only, papamap-saved) ----
 // A bounded list, not a bag that grows forever on someone's phone: 200 is

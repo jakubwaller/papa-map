@@ -1169,7 +1169,7 @@ first, with tonight's pin colour when the place is
 still on the map and a plain dot when it is not, and the distance from
 wherever the reader last stood.
 
-### The first-launch intro, what's new, and the phone's own tips
+### The first-launch intro and what's new
 
 The Control Center control, the home-screen widget and the Siri phrase (iOS),
 the widget and the launcher shortcut (Android) are all reached from the phone's
@@ -1183,8 +1183,8 @@ language switch.
 - **The intro, store app only** (`maybeShowIntro`, `web/app.js`; the pure part
   in `web/me.js`): one dialog on the first launch, once. One sentence on what
   the app is, then the features nobody guesses (nearest table, Papa/Mama,
-  answering a grey pin, offline cities, Mein PapaMap) followed by the phone's
-  own (`introTips`), and a language picker that drives the header's own. It
+  answering a grey pin, offline cities, Mein PapaMap; `INTRO_FEATURES`), and a
+  language picker that drives the header's own. It
   waits for the boot's location fix to settle, so the camera has landed and nothing
   moves under it, and it never opens over another dialog or a pin a widget tap opened (it then
   shows at the next launch). The website shows none of it.
@@ -1203,14 +1203,12 @@ language switch.
   and translates its keys in all 32 languages; a release without one shows
   nothing, and the key is caught up silently so the next release's notes are
   measured from here. A downgrade or a seeded key shows nothing.
-- **The tips themselves** (`appTips`): plain lines, shown by the intro.
-  German and English name the phone's own buttons; the other 30 languages stay
-  general and quote them by the English name they carry there. The Siri line
-  shows in German and English alone: Siri answers in the phone's language, and
-  the app ships phrases in those two (`SIRI_LANGS`, tied by a test to the
-  `.lproj` folders). Until CONTRACT v60 the same lines also stood at the foot
-  of "Mein PapaMap" ("Mehr aus der App"); they left when that dialog became
-  the reader's own, and the intro is where a phone's features belong.
+- **The phone's own tips are gone** (CONTRACT v85): the widget, Control Center,
+  Siri and launcher-shortcut lines closed the intro until 2026-10-10. A Czech
+  tester said they did not belong there, and testers had already found the
+  first screens too wordy. The phone's own widget and control galleries list
+  PapaMap, and the store listings name them. They left "Mein PapaMap" earlier
+  (CONTRACT v60, "Mehr aus der App"), so the app no longer explains them anywhere.
 - **The store screenshots carry the rest**: one feature per picture.
 
 ## The store app
