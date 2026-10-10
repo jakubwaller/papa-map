@@ -357,8 +357,12 @@ browser remembers a dismissed prompt and never asks again, and a page cannot
 re-prompt, so the words are the fix: on the page the toast says to allow the
 location in the browser's or the phone's settings (a code-1 refusal also comes
 when the OS blocks the browser itself), in the store app to turn it on
-in the phone's settings (7 s instead of 4). Any other failure keeps the generic
-"couldn't get your location".
+in the phone's settings (7 s instead of 4). In the store app, location services
+switched off for the whole phone get a third wording, "Location is off on this
+phone" (`toastGeoOffApp`, also 7 s): the Geolocation plugin rejects with
+`OS-PLUG-GLOC-0007` on iOS and Android, and pointing that reader at PapaMap's
+own permission would send them to a switch that is already on. Any other
+failure keeps the generic "couldn't get your location".
 
 Three things it deliberately does not do:
 
@@ -679,7 +683,14 @@ from tagging one.
 
 The list is Photon's `/reverse`, 300 m around the map centre, filtered to the
 `dad_venue` layer's own tag list (`web/venues.js`; a test fails if the two
-drift). Photon cannot filter on `changing_table`, so the rows drop whatever the
+drift). The dialog's own search box is wider: a typed name matches any shop,
+amenity, tourism or leisure object, because someone who types a name knows
+the place, and a children's clothes shop or a bakery is no stranger to them
+(`isSearchVenue`, since 7 Oct 2026). Toilets stay out, and so does what shares
+a shop's name without being a place to change a nappy — "Edeka" would
+otherwise list the supermarket and its car park as two identical rows
+(`VENUE_SEARCH_EXCLUDE`). Photon cannot filter on
+`changing_table`, so the rows drop whatever the
 map already has a table pin for, and `writeTags` re-reads the object before
 writing anything — somebody else's answer since is reported, never overwritten.
 Chosen over Overpass and the OSM API by measurement (Eimsbüttel, 2 Oct 2026,
@@ -1158,22 +1169,19 @@ first, with tonight's pin colour when the place is
 still on the map and a plain dot when it is not, and the distance from
 wherever the reader last stood.
 
-### The first-launch intro, what's new, and the phone's own tips
+### The first-launch intro and what's new
 
-The Control Center control, the home-screen widget and the Siri phrase (iOS),
-the widget and the launcher shortcut (Android) are all reached from the phone's
-own screens, never from the map, so a reader who is not told never finds them
-(the owner, on TestFlight build 24: "I'd probably never guess from such an
-app"). The first answer was no onboarding: it stands between a parent and the
-map on the first launch. **On 2026-09-28 the owner reversed that** after two
+A new reader is not told what the colours mean, that a grey pin can be
+answered or that a city can be saved offline. The first answer was no
+onboarding: it stands between a parent and the map on the first launch. **On 2026-09-28 the owner reversed that** after two
 testers asked for an intro independently, one of whom also could not find the
 language switch.
 
 - **The intro, store app only** (`maybeShowIntro`, `web/app.js`; the pure part
   in `web/me.js`): one dialog on the first launch, once. One sentence on what
   the app is, then the features nobody guesses (nearest table, Papa/Mama,
-  answering a grey pin, offline cities, Mein PapaMap) followed by the phone's
-  own (`introTips`), and a language picker that drives the header's own. It
+  answering a grey pin, offline cities, Mein PapaMap; `INTRO_FEATURES`), and a
+  language picker that drives the header's own. It
   waits for the boot's location fix to settle, so the camera has landed and nothing
   moves under it, and it never opens over another dialog or a pin a widget tap opened (it then
   shows at the next launch). The website shows none of it.
@@ -1181,20 +1189,23 @@ language switch.
   screen for, and is written when the dialog is *shown*, not closed: a hint that
   returns until it is obeyed is an advert. It replaces the one-time toast
   (`toastTip`, `papamap-tip-seen`), which is gone.
+- **The way back** (CONTRACT v84): "Einführung noch einmal zeigen" under the
+  links in Mein PapaMap closes that dialog and opens the intro again, without
+  touching the key. A Czech tester tapped the intro away by reflex before
+  reading it and asked where to find it (2026-10-09); there was no answer short
+  of clearing the app's data.
 - **What's new**: after an update the same dialog lists the release's notes,
   but only when `WHATS_NEW` (`web/me.js`) has an entry whose `since` is newer
   than the acknowledged pin. A release with something to say adds one entry
   and translates its keys in all 32 languages; a release without one shows
   nothing, and the key is caught up silently so the next release's notes are
   measured from here. A downgrade or a seeded key shows nothing.
-- **The tips themselves** (`appTips`): plain lines, shown by the intro.
-  German and English name the phone's own buttons; the other 30 languages stay
-  general and quote them by the English name they carry there. The Siri line
-  shows in German and English alone: Siri answers in the phone's language, and
-  the app ships phrases in those two (`SIRI_LANGS`, tied by a test to the
-  `.lproj` folders). Until CONTRACT v60 the same lines also stood at the foot
-  of "Mein PapaMap" ("Mehr aus der App"); they left when that dialog became
-  the reader's own, and the intro is where a phone's features belong.
+- **The phone's own tips are gone** (CONTRACT v85): the widget, Control Center,
+  Siri and launcher-shortcut lines closed the intro until 2026-10-10. A Czech
+  tester said they did not belong there, and testers had already found the
+  first screens too wordy. The phone's own widget and control galleries list
+  PapaMap, and the store listings name them. They left "Mein PapaMap" earlier
+  (CONTRACT v60, "Mehr aus der App"), so the app no longer explains them anywhere.
 - **The store screenshots carry the rest**: one feature per picture.
 
 ## The store app

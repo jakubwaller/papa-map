@@ -697,13 +697,17 @@ L = {
                         "auflisten. Filialen einer Kette sind zu einer Zeile zusammengefasst."),
         "th_place": "Ort", "th_kind": "Art", "th_count": "Orte",
         "help_h2": "Wie du hier hilfst",
-        "help": ("Ein grauer Pin heißt: den Wickeltisch gibt es, aber niemand hat erfasst, in "
-                 "welchem Raum er steht. Genau diese Antwort fehlt Vätern. Beantworten kann sie "
-                 "jeder mit einem kostenlosen OpenStreetMap-Konto, vor Ort, in unter einer "
-                 "Minute — der Link am Pin öffnet MapComplete direkt am richtigen Objekt. Die "
-                 "Antwort landet in OpenStreetMap, gehört allen und ist nach dem nächsten "
-                 'nächtlichen Update hier zu sehen. <a href="{up}{methods}#contribute">'
-                 "Schritt für Schritt</a>."),
+        "help": (
+            "Ein grauer Pin heißt: den Wickeltisch gibt es, aber niemand hat "
+            "erfasst, in welchem Raum er steht. Genau diese Antwort fehlt "
+            "Vätern. Beantworten kann sie jeder mit einem kostenlosen "
+            "OpenStreetMap-Konto, vor Ort, in unter einer Minute: tippe auf "
+            "den Pin und gib direkt im Popup an, in welchem Raum der "
+            "Wickeltisch ist, mit deinem eigenen OSM-Konto. MapComplete "
+            "bleibt als Ausweichweg. Die Antwort landet in OpenStreetMap, "
+            "gehört allen und ist nach dem nächsten nächtlichen Update hier "
+            "zu sehen. <a href=\"{up}{methods}#grey-pin\">Schritt für "
+            "Schritt</a>."),
         "siblings_h2": "Andere Bundesländer",
         "countries_h2": "PapaMap in anderen Ländern",
         "places_unit": "Orte",
@@ -769,14 +773,16 @@ Wie gezählt und eingefärbt wird: <a href="{up}methods.html">Methoden</a> ·
                         "chain are folded into one row."),
         "th_place": "Place", "th_kind": "Type", "th_count": "Places",
         "help_h2": "How you help here",
-        "help": ("A grey pin means: the changing table exists, but nobody "
-                 "has recorded which room it is in. That answer is exactly "
-                 "what dads are missing. Anyone with a free OpenStreetMap "
-                 "account can give it, on site, in under a minute — the link "
-                 "on the pin opens MapComplete right at the correct object. "
-                 "The answer lands in OpenStreetMap, belongs to everyone and "
-                 "shows up here after the next nightly update. "
-                 '<a href="{up}{methods}#contribute">Step by step</a>.'),
+        "help": (
+            "A grey pin means: the changing table exists, but nobody has "
+            "recorded which room it is in. That answer is exactly what dads "
+            "are missing. Anyone with a free OpenStreetMap account can give "
+            "it, on site, in under a minute: tap the pin and say which room "
+            "the changing table is in, right in the popup, under your own OSM "
+            "login. MapComplete is the fallback. The answer lands in "
+            "OpenStreetMap, belongs to everyone and shows up here after the "
+            "next nightly update. <a href=\"{up}{methods}#grey-pin\">Step by "
+            "step</a>."),
         "countries_h2": "PapaMap in other countries",
         "places_unit": "places",
         "footer": """\
@@ -838,14 +844,15 @@ How things are counted and coloured: <a href="{up}methods-en.html">Methods</a> �
                         "kæde er samlet i én række."),
         "th_place": "Sted", "th_kind": "Type", "th_count": "Steder",
         "help_h2": "Sådan hjælper du",
-        "help": ("En grå nål betyder: puslebordet findes, men ingen har "
-                 "registreret, hvilket rum det står i. Præcis det svar "
-                 "mangler fædrene. Alle med en gratis OpenStreetMap-konto "
-                 "kan give det, på stedet, på under et minut — linket på "
-                 "nålen åbner MapComplete direkte ved det rigtige objekt. "
-                 "Svaret lander i OpenStreetMap, tilhører alle og kan ses "
-                 "her efter næste natlige opdatering. "
-                 '<a href="{up}{methods}#contribute">Trin for trin</a>.'),
+        "help": (
+            "En grå nål betyder: puslebordet findes, men ingen har "
+            "registreret, hvilket rum det står i. Præcis det svar mangler "
+            "fædrene. Alle med en gratis OpenStreetMap-konto kan give det, på "
+            "stedet, på under et minut: tryk på nålen og svar direkte i "
+            "popuppen, i hvilket rum puslebordet er, med dit eget OSM-login. "
+            "MapComplete er reserveløsningen. Svaret lander i OpenStreetMap, "
+            "tilhører alle og kan ses her efter næste natlige opdatering. <a "
+            "href=\"{up}{methods}#grey-pin\">Trin for trin</a>."),
         "countries_h2": "PapaMap i andre lande",
         "places_unit": "steder",
         "footer": """\
@@ -910,15 +917,16 @@ Sådan tælles og farvelægges der: <a href="{up}methods-da.html">Metode</a> ·
                         "een keten zijn samengevoegd tot één regel."),
         "th_place": "Plek", "th_kind": "Soort", "th_count": "Plekken",
         "help_h2": "Zo help je mee",
-        "help": ("Een grijze pin betekent: de verschoontafel bestaat, maar "
-                 "niemand heeft vastgelegd in welke ruimte hij hangt. "
-                 "Precies dat antwoord missen papa's. Iedereen met een "
-                 "gratis OpenStreetMap-account kan het geven, ter plekke, in "
-                 "nog geen minuut — de link bij de pin opent MapComplete "
-                 "meteen bij het juiste object. Het antwoord belandt in "
-                 "OpenStreetMap, is van iedereen en staat hier na de "
-                 "volgende nachtelijke update. "
-                 '<a href="{up}{methods}#contribute">Stap voor stap</a>.'),
+        "help": (
+            "Een grijze pin betekent: de verschoontafel bestaat, maar niemand "
+            "heeft vastgelegd in welke ruimte hij hangt. Precies dat antwoord "
+            "missen papa's. Iedereen met een gratis OpenStreetMap-account kan "
+            "het geven, ter plekke, in nog geen minuut: tik op de pin en geef "
+            "direct in de popup aan in welke ruimte de verschoontafel zit, "
+            "met je eigen OSM-login. MapComplete is de reservemogelijkheid. "
+            "Het antwoord belandt in OpenStreetMap, is van iedereen en staat "
+            "hier na de volgende nachtelijke update. <a "
+            "href=\"{up}{methods}#grey-pin\">Stap voor stap</a>."),
         "countries_h2": "PapaMap in andere landen",
         "places_unit": "plekken",
         "footer": """\
@@ -984,16 +992,17 @@ Hoe er geteld en gekleurd wordt: <a href="{up}methods-nl.html">Methoden</a> ·
                         "ligne."),
         "th_place": "Lieu", "th_kind": "Type", "th_count": "Lieux",
         "help_h2": "Comment aider",
-        "help": ("Un marqueur gris veut dire : la table à langer existe, "
-                 "mais personne n'a noté dans quelle pièce elle se trouve. "
-                 "C'est exactement la réponse qui manque aux papas. "
-                 "N'importe qui, avec un compte OpenStreetMap gratuit, peut "
-                 "la donner, sur place, en moins d'une minute — le lien du "
-                 "marqueur ouvre MapComplete directement sur le bon objet. "
-                 "La réponse atterrit dans OpenStreetMap, appartient à tout "
-                 "le monde et apparaît ici après la prochaine mise à jour "
-                 'nocturne. <a href="{up}{methods}#contribute">Pas à '
-                 "pas</a>."),
+        "help": (
+            "Un marqueur gris veut dire : la table à langer existe, mais "
+            "personne n'a noté dans quelle pièce elle se trouve. C'est "
+            "exactement la réponse qui manque aux papas. N'importe qui, avec "
+            "un compte OpenStreetMap gratuit, peut la donner, sur place, en "
+            "moins d'une minute : touche le marqueur et indique, directement "
+            "dans la fenêtre, dans quelle pièce se trouve la table à langer, "
+            "avec ton propre compte OSM. MapComplete sert de solution de "
+            "secours. La réponse atterrit dans OpenStreetMap, appartient à "
+            "tout le monde et apparaît ici après la prochaine mise à jour "
+            "nocturne. <a href=\"{up}{methods}#grey-pin\">Pas à pas</a>."),
         "countries_h2": "PapaMap dans les autres pays",
         "places_unit": "lieux",
         "footer": """\
@@ -1055,14 +1064,15 @@ Comment on compte et colore&nbsp;: <a href="{up}methods-fr.html">Méthodes</a> �
                         "Pobočky řetězce jsou sloučené do jednoho řádku."),
         "th_place": "Místo", "th_kind": "Typ", "th_count": "Místa",
         "help_h2": "Jak pomůžeš",
-        "help": ("Šedý špendlík znamená: přebalovací pult existuje, ale "
-                 "nikdo nezaznamenal, ve které místnosti je. Přesně tahle "
-                 "odpověď tátům chybí. Dát ji může kdokoli s bezplatným "
-                 "účtem OpenStreetMap, na místě, za necelou minutu — odkaz "
-                 "u špendlíku otevře MapComplete rovnou na správném "
-                 "objektu. Odpověď skončí v OpenStreetMap, patří všem a po "
-                 "příští noční aktualizaci bude vidět tady. "
-                 '<a href="{up}{methods}#contribute">Krok za krokem</a>.'),
+        "help": (
+            "Šedý špendlík znamená: přebalovací pult existuje, ale nikdo "
+            "nezaznamenal, ve které místnosti je. Přesně tahle odpověď tátům "
+            "chybí. Dát ji může kdokoli s bezplatným účtem OpenStreetMap, na "
+            "místě, za necelou minutu: ťukni na špendlík a přímo v okně "
+            "odpověz, v jaké místnosti přebalovací pult je, pod svým vlastním "
+            "přihlášením do OSM. MapComplete je záložní cesta. Odpověď skončí "
+            "v OpenStreetMap, patří všem a po příští noční aktualizaci bude "
+            "vidět tady. <a href=\"{up}{methods}#grey-pin\">Krok za krokem</a>."),
         "countries_h2": "PapaMap v dalších zemích",
         "places_unit": "míst",
         "footer": """\
@@ -1127,15 +1137,16 @@ Jak se počítá a barví: <a href="{up}methods-cs.html">Metody</a> ·
                         "w jeden wiersz."),
         "th_place": "Miejsce", "th_kind": "Rodzaj", "th_count": "Miejsca",
         "help_h2": "Jak możesz pomóc",
-        "help": ("Szara pinezka znaczy: przewijak istnieje, ale nikt nie "
-                 "zapisał, w którym pomieszczeniu jest. Właśnie tej "
-                 "odpowiedzi brakuje tatom. Może jej udzielić każdy z "
-                 "bezpłatnym kontem OpenStreetMap, na miejscu, w niecałą "
-                 "minutę — link przy pinezce otwiera MapComplete od razu na "
-                 "właściwym obiekcie. Odpowiedź trafia do OpenStreetMap, "
-                 "należy do wszystkich i po najbliższej nocnej aktualizacji "
-                 "będzie widoczna tutaj. "
-                 '<a href="{up}{methods}#contribute">Krok po kroku</a>.'),
+        "help": (
+            "Szara pinezka znaczy: przewijak istnieje, ale nikt nie zapisał, "
+            "w którym pomieszczeniu jest. Właśnie tej odpowiedzi brakuje "
+            "tatom. Może jej udzielić każdy z bezpłatnym kontem "
+            "OpenStreetMap, na miejscu, w niecałą minutę: stuknij pinezkę i "
+            "odpowiedz wprost w oknie, w którym pomieszczeniu jest przewijak, "
+            "na własnym koncie OSM. MapComplete to rozwiązanie awaryjne. "
+            "Odpowiedź trafia do OpenStreetMap, należy do wszystkich i po "
+            "najbliższej nocnej aktualizacji będzie widoczna tutaj. <a "
+            "href=\"{up}{methods}#grey-pin\">Krok po kroku</a>."),
         "countries_h2": "PapaMap w innych krajach",
         "places_unit": "miejsc",
         "footer": """\
@@ -1198,14 +1209,15 @@ Jak liczymy i kolorujemy: <a href="{up}methods-pl.html">Metody</a> ·
                         "kedja är hopslagna till en rad."),
         "th_place": "Plats", "th_kind": "Typ", "th_count": "Platser",
         "help_h2": "Så hjälper du till",
-        "help": ("En grå nål betyder: skötbordet finns, men ingen har "
-                 "registrerat vilket rum det står i. Precis det svaret "
-                 "saknar papporna. Vem som helst med ett gratis "
-                 "OpenStreetMap-konto kan ge det, på plats, på under en "
-                 "minut — länken på nålen öppnar MapComplete direkt vid "
-                 "rätt objekt. Svaret hamnar i OpenStreetMap, tillhör alla "
-                 "och syns här efter nästa nattliga uppdatering. "
-                 '<a href="{up}{methods}#contribute">Steg för steg</a>.'),
+        "help": (
+            "En grå nål betyder: skötbordet finns, men ingen har registrerat "
+            "vilket rum det står i. Precis det svaret saknar papporna. Vem "
+            "som helst med ett gratis OpenStreetMap-konto kan ge det, på "
+            "plats, på under en minut: tryck på nålen och svara direkt i "
+            "popupen i vilket rum skötbordet står, med din egen "
+            "OSM-inloggning. MapComplete är reservvägen. Svaret hamnar i "
+            "OpenStreetMap, tillhör alla och syns här efter nästa nattliga "
+            "uppdatering. <a href=\"{up}{methods}#grey-pin\">Steg för steg</a>."),
         "countries_h2": "PapaMap i andra länder",
         "places_unit": "platser",
         "footer": """\
@@ -1267,14 +1279,15 @@ Hur det räknas och färgläggs: <a href="{up}methods-sv.html">Metod</a> ·
                         "kjede er slått sammen til én rad."),
         "th_place": "Sted", "th_kind": "Type", "th_count": "Steder",
         "help_h2": "Slik hjelper du her",
-        "help": ("Et grått punkt betyr: stellebordet finnes, men ingen har "
-                 "registrert hvilket rom det står i. Akkurat det svaret "
-                 "mangler pappaer. Alle med en gratis OpenStreetMap-konto "
-                 "kan gi det, på stedet, på under et minutt — lenken ved "
-                 "punktet åpner MapComplete rett på riktig objekt. Svaret "
-                 "havner i OpenStreetMap, tilhører alle og vises her etter "
-                 "neste nattlige oppdatering. "
-                 '<a href="{up}{methods}#contribute">Steg for steg</a>.'),
+        "help": (
+            "Et grått punkt betyr: stellebordet finnes, men ingen har "
+            "registrert hvilket rom det står i. Akkurat det svaret mangler "
+            "pappaer. Alle med en gratis OpenStreetMap-konto kan gi det, på "
+            "stedet, på under et minutt: trykk på punktet og svar rett i "
+            "popupen hvilket rom stellebordet står i, med din egen "
+            "OSM-innlogging. MapComplete er reserveløsningen. Svaret havner i "
+            "OpenStreetMap, tilhører alle og vises her etter neste nattlige "
+            "oppdatering. <a href=\"{up}{methods}#grey-pin\">Steg for steg</a>."),
         "countries_h2": "PapaMap i andre land",
         "places_unit": "steder",
         "footer": """\
@@ -1338,15 +1351,16 @@ Slik telles og fargelegges det: <a href="{up}methods-no.html">Metode</a> ·
                         "on yhdistetty yhdelle riville."),
         "th_place": "Paikka", "th_kind": "Tyyppi", "th_count": "Paikat",
         "help_h2": "Näin autat",
-        "help": ("Harmaa nasta tarkoittaa: hoitopöytä on olemassa, mutta "
-                 "kukaan ei ole merkinnyt, missä huoneessa se on. Juuri "
-                 "sitä vastausta isät kaipaavat. Sen voi antaa kuka tahansa, "
-                 "jolla on ilmainen OpenStreetMap-tili, paikan päällä, alle "
-                 "minuutissa — nastan linkki avaa MapCompleten suoraan "
-                 "oikeassa kohteessa. Vastaus tallentuu OpenStreetMapiin, "
-                 "kuuluu kaikille ja näkyy täällä seuraavan yöllisen "
-                 "päivityksen jälkeen. "
-                 '<a href="{up}{methods}#contribute">Vaihe vaiheelta</a>.'),
+        "help": (
+            "Harmaa nasta tarkoittaa: hoitopöytä on olemassa, mutta kukaan ei "
+            "ole merkinnyt, missä huoneessa se on. Juuri sitä vastausta isät "
+            "kaipaavat. Sen voi antaa kuka tahansa, jolla on ilmainen "
+            "OpenStreetMap-tili, paikan päällä, alle minuutissa: napauta "
+            "nastaa ja vastaa suoraan ikkunassa, missä tilassa hoitopöytä on, "
+            "omalla OSM-tunnuksellasi. MapComplete on varareitti. Vastaus "
+            "tallentuu OpenStreetMapiin, kuuluu kaikille ja näkyy täällä "
+            "seuraavan yöllisen päivityksen jälkeen. <a "
+            "href=\"{up}{methods}#grey-pin\">Vaihe vaiheelta</a>."),
         "countries_h2": "PapaMap muissa maissa",
         "places_unit": "paikkaa",
         "footer": """\
@@ -1412,15 +1426,16 @@ Näin laskenta ja väritys toimivat: <a href="{up}methods-fi.html">Menetelmät</
                         "Útibú sömu keðju eru sameinuð í eina línu."),
         "th_place": "Staður", "th_kind": "Tegund", "th_count": "Staðir",
         "help_h2": "Svona hjálpar þú hér",
-        "help": ("Grár punktur þýðir: skiptiborðið er til, en enginn "
-                 "hefur skráð í hvaða rými það er. Þetta svar vantar "
-                 "pabba nákvæmlega. Hver sem er með ókeypis "
-                 "OpenStreetMap-aðgang getur svarað því, á staðnum, á "
-                 "innan við mínútu — tengillinn á punktinum opnar "
-                 "MapComplete beint á réttum hlut. Svarið endar í "
-                 "OpenStreetMap, tilheyrir öllum og sést hér eftir næstu "
-                 'næturuppfærslu. <a href="{up}{methods}#contribute">'
-                 "Skref fyrir skref</a>."),
+        "help": (
+            "Grár punktur þýðir: skiptiborðið er til, en enginn hefur skráð í "
+            "hvaða rými það er. Þetta svar vantar pabba nákvæmlega. Hver sem "
+            "er með ókeypis OpenStreetMap-aðgang getur svarað því, á staðnum, "
+            "á innan við mínútu: ýttu á punktinn og svaraðu beint í "
+            "sprettglugganum í hvaða rými skiptiborðið er, með þinni eigin "
+            "OSM-innskráningu. MapComplete er varaleiðin. Svarið endar í "
+            "OpenStreetMap, tilheyrir öllum og sést hér eftir næstu "
+            "næturuppfærslu. <a href=\"{up}{methods}#grey-pin\">Skref fyrir "
+            "skref</a>."),
         "countries_h2": "PapaMap í öðrum löndum",
         "places_unit": "staðir",
         "footer": """\
@@ -1484,15 +1499,15 @@ Hvernig talið er og litað: <a href="{up}methods-is.html">Aðferð</a> ·
                         "liidetud üheks reaks."),
         "th_place": "Koht", "th_kind": "Liik", "th_count": "Kohad",
         "help_h2": "Kuidas sina saad aidata",
-        "help": ("Hall nõel tähendab: mähkimislaud on olemas, aga keegi "
-                 "pole märkinud, millises ruumis see asub. Just seda "
-                 "vastust isadel vaja on. Selle saab anda igaüks, kellel "
-                 "on tasuta OpenStreetMapi konto, kohapeal, alla "
-                 "minutiga — nõela juures olev link avab MapComplete'i "
-                 "otse õigel objektil. Vastus jõuab OpenStreetMapi, "
-                 "kuulub kõigile ja on siin näha pärast järgmist öist "
-                 'uuendust. <a href="{up}{methods}#contribute">'
-                 "Samm-sammult</a>."),
+        "help": (
+            "Hall nõel tähendab: mähkimislaud on olemas, aga keegi pole "
+            "märkinud, millises ruumis see asub. Just seda vastust isadel "
+            "vaja on. Selle saab anda igaüks, kellel on tasuta OpenStreetMapi "
+            "konto, kohapeal, alla minutiga: puuduta nõela ja vasta otse "
+            "hüpikaknas, millises ruumis mähkimislaud on, oma OSM-i kontoga. "
+            "MapComplete on varuvariant. Vastus jõuab OpenStreetMapi, kuulub "
+            "kõigile ja on siin näha pärast järgmist öist uuendust. <a "
+            "href=\"{up}{methods}#grey-pin\">Samm-sammult</a>."),
         "countries_h2": "PapaMap teistes riikides",
         "places_unit": "kohta",
         "footer": """\
@@ -1558,15 +1573,16 @@ Kuidas kohti loetakse ja värvitakse: <a href="{up}methods-et.html">Meetodid</a>
                         "vienā rindā."),
         "th_place": "Vieta", "th_kind": "Veids", "th_count": "Vietas",
         "help_h2": "Kā vari palīdzēt",
-        "help": ("Pelēks punkts nozīmē: pārtinamais galdiņš eksistē, bet "
-                 "neviens nav ierakstījis, kurā telpā tas atrodas. Tieši "
-                 "šīs atbildes tētiem trūkst. To var sniegt ikviens ar "
-                 "bezmaksas OpenStreetMap kontu, uz vietas, ātrāk nekā "
-                 "minūtē — saite pie punkta atver MapComplete tieši pie "
-                 "pareizā objekta. Atbilde nonāk OpenStreetMap, pieder "
-                 "visiem un pēc nākamās nakts atjaunināšanas būs redzama "
-                 'šeit. <a href="{up}{methods}#contribute">Soli pa '
-                 "solim</a>."),
+        "help": (
+            "Pelēks punkts nozīmē: pārtinamais galdiņš eksistē, bet neviens "
+            "nav ierakstījis, kurā telpā tas atrodas. Tieši šīs atbildes "
+            "tētiem trūkst. To var sniegt ikviens ar bezmaksas OpenStreetMap "
+            "kontu, uz vietas, ātrāk nekā minūtē: uzspied uz punkta un tieši "
+            "uznirstošajā logā norādi, kurā telpā atrodas pārtinamais "
+            "galdiņš, ar savu OSM kontu. MapComplete ir rezerves ceļš. "
+            "Atbilde nonāk OpenStreetMap, pieder visiem un pēc nākamās nakts "
+            "atjaunināšanas būs redzama šeit. <a "
+            "href=\"{up}{methods}#grey-pin\">Soli pa solim</a>."),
         "countries_h2": "PapaMap citās valstīs",
         "places_unit": "vietas",
         "footer": """\
@@ -1632,16 +1648,17 @@ Kā tiek skaitīts un iekrāsots: <a href="{up}methods-lv.html">Metodika</a> ·
                         "sujungti į vieną eilutę."),
         "th_place": "Vieta", "th_kind": "Tipas", "th_count": "Vietos",
         "help_h2": "Kaip padėti",
-        "help": ("Pilkas smeigtukas reiškia: pervystymo stalas yra, bet "
-                 "niekas nepažymėjo, kurioje patalpoje jis stovi. Būtent "
-                 "šio atsakymo tėčiams ir trūksta. Jį gali duoti bet kas "
-                 "su nemokama OpenStreetMap paskyra, vietoje, per mažiau "
-                 "nei minutę — nuoroda prie smeigtuko atidaro MapComplete "
-                 "tiesiai ties reikiamu objektu. Atsakymas atsiduria "
-                 "OpenStreetMap, priklauso visiems ir čia pasirodo po "
-                 "kito nakties atnaujinimo. "
-                 '<a href="{up}{methods}#contribute">Žingsnis po '
-                 "žingsnio</a>."),
+        "help": (
+            "Pilkas smeigtukas reiškia: pervystymo stalas yra, bet niekas "
+            "nepažymėjo, kurioje patalpoje jis stovi. Būtent šio atsakymo "
+            "tėčiams ir trūksta. Jį gali duoti bet kas su nemokama "
+            "OpenStreetMap paskyra, vietoje, per mažiau nei minutę: bakstelėk "
+            "smeigtuką ir tiesiai iškylančiame lange nurodyk, kurioje "
+            "patalpoje yra pervystymo stalas, su savo OSM paskyra. "
+            "MapComplete yra atsarginis kelias. Atsakymas atsiduria "
+            "OpenStreetMap, priklauso visiems ir čia pasirodo po kito nakties "
+            "atnaujinimo. <a href=\"{up}{methods}#grey-pin\">Žingsnis po "
+            "žingsnio</a>."),
         "countries_h2": "PapaMap kitose šalyse",
         "places_unit": "vietos",
         "footer": """\
@@ -1706,15 +1723,16 @@ Kaip skaičiuojama ir spalvinama: <a href="{up}methods-lt.html">Metodai</a> ·
                         "una cadena se agrupan en una sola fila."),
         "th_place": "Lugar", "th_kind": "Tipo", "th_count": "Lugares",
         "help_h2": "Cómo ayudas aquí",
-        "help": ("Un pin gris significa: el cambiador existe, pero nadie ha "
-                 "registrado en qué sala está. Esa es exactamente la "
-                 "respuesta que les falta a los papás. Cualquiera con una "
-                 "cuenta gratuita de OpenStreetMap puede darla, in situ, en "
-                 "menos de un minuto — el enlace del pin abre MapComplete "
-                 "directamente en el objeto correcto. La respuesta llega a "
-                 "OpenStreetMap, es de todos y se ve aquí después de la "
-                 "próxima actualización nocturna. "
-                 '<a href="{up}{methods}#contribute">Paso a paso</a>.'),
+        "help": (
+            "Un pin gris significa: el cambiador existe, pero nadie ha "
+            "registrado en qué sala está. Esa es exactamente la respuesta que "
+            "les falta a los papás. Cualquiera con una cuenta gratuita de "
+            "OpenStreetMap puede darla, in situ, en menos de un minuto: toca "
+            "el pin y di, directamente en la ventana, en qué sala está el "
+            "cambiador, con tu propia cuenta de OSM. MapComplete queda como "
+            "alternativa. La respuesta llega a OpenStreetMap, es de todos y "
+            "se ve aquí después de la próxima actualización nocturna. <a "
+            "href=\"{up}{methods}#grey-pin\">Paso a paso</a>."),
         "countries_h2": "PapaMap en otros países",
         "places_unit": "lugares",
         "footer": """\
@@ -1779,15 +1797,16 @@ Cómo se cuenta y se colorea: <a href="{up}methods-es.html">Métodos</a> ·
                         "juntas numa só linha."),
         "th_place": "Local", "th_kind": "Tipo", "th_count": "Locais",
         "help_h2": "Como ajudas aqui",
-        "help": ("Um pin cinzento significa: o fraldário existe, mas "
-                 "ninguém registou em que sala fica. É exatamente essa "
-                 "resposta que falta aos pais. Qualquer pessoa com uma "
-                 "conta gratuita no OpenStreetMap pode dá-la, no local, "
-                 "em menos de um minuto — a ligação no pin abre o "
-                 "MapComplete diretamente no objeto certo. A resposta "
-                 "fica no OpenStreetMap, pertence a todos e aparece aqui "
-                 "depois da próxima atualização noturna. "
-                 '<a href="{up}{methods}#contribute">Passo a passo</a>.'),
+        "help": (
+            "Um pin cinzento significa: o fraldário existe, mas ninguém "
+            "registou em que sala fica. É exatamente essa resposta que falta "
+            "aos pais. Qualquer pessoa com uma conta gratuita no "
+            "OpenStreetMap pode dá-la, no local, em menos de um minuto: toca "
+            "no pin e indica, diretamente na janela, em que espaço está o "
+            "fraldário, com a tua própria conta OSM. O MapComplete fica como "
+            "alternativa. A resposta fica no OpenStreetMap, pertence a todos "
+            "e aparece aqui depois da próxima atualização noturna. <a "
+            "href=\"{up}{methods}#grey-pin\">Passo a passo</a>."),
         "countries_h2": "O PapaMap noutros países",
         "places_unit": "locais",
         "footer": """\
@@ -1853,16 +1872,17 @@ Como se conta e colore: <a href="{up}methods-pt.html">Métodos</a> ·
                         "catena sono raggruppate in una sola riga."),
         "th_place": "Luogo", "th_kind": "Tipo", "th_count": "Luoghi",
         "help_h2": "Come puoi aiutare",
-        "help": ("Un pin grigio significa: il fasciatoio esiste, ma "
-                 "nessuno ha registrato in quale stanza si trova. È "
-                 "esattamente questa la risposta che manca ai papà. "
-                 "Chiunque abbia un account OpenStreetMap gratuito può "
-                 "darla, sul posto, in meno di un minuto — il link sul "
-                 "pin apre MapComplete direttamente sull'oggetto giusto. "
-                 "La risposta finisce su OpenStreetMap, appartiene a "
-                 "tutti e compare qui dopo il prossimo aggiornamento "
-                 "notturno. "
-                 '<a href="{up}{methods}#contribute">Passo per passo</a>.'),
+        "help": (
+            "Un pin grigio significa: il fasciatoio esiste, ma nessuno ha "
+            "registrato in quale stanza si trova. È esattamente questa la "
+            "risposta che manca ai papà. Chiunque abbia un account "
+            "OpenStreetMap gratuito può darla, sul posto, in meno di un "
+            "minuto: tocca il pin e indica, direttamente nel popup, in quale "
+            "stanza si trova il fasciatoio, con il tuo account OSM. "
+            "MapComplete resta la soluzione di riserva. La risposta finisce "
+            "su OpenStreetMap, appartiene a tutti e compare qui dopo il "
+            "prossimo aggiornamento notturno. <a "
+            "href=\"{up}{methods}#grey-pin\">Passo per passo</a>."),
         "countries_h2": "PapaMap negli altri paesi",
         "places_unit": "luoghi",
         "footer": """\
@@ -1928,16 +1948,17 @@ Come si conta e si colora: <a href="{up}methods-it.html">Metodo</a> ·
                         "γραμμή."),
         "th_place": "Μέρος", "th_kind": "Είδος", "th_count": "Μέρη",
         "help_h2": "Πώς βοηθάς εδώ",
-        "help": ("Μια γκρι καρφίτσα σημαίνει: η αλλαξιέρα υπάρχει, αλλά "
-                 "κανείς δεν έχει καταγράψει σε ποιον χώρο βρίσκεται. "
-                 "Ακριβώς αυτή την απάντηση χρειάζονται οι μπαμπάδες. "
-                 "Οποιοσδήποτε με έναν δωρεάν λογαριασμό OpenStreetMap "
-                 "μπορεί να τη δώσει, επιτόπου, σε λιγότερο από ένα λεπτό "
-                 "— ο σύνδεσμος στην καρφίτσα ανοίγει το MapComplete "
-                 "ακριβώς στο σωστό αντικείμενο. Η απάντηση καταλήγει στο "
-                 "OpenStreetMap, ανήκει σε όλους και εμφανίζεται εδώ μετά "
-                 "την επόμενη νυχτερινή ενημέρωση. "
-                 '<a href="{up}{methods}#contribute">Βήμα-βήμα</a>.'),
+        "help": (
+            "Μια γκρι καρφίτσα σημαίνει: η αλλαξιέρα υπάρχει, αλλά κανείς δεν "
+            "έχει καταγράψει σε ποιον χώρο βρίσκεται. Ακριβώς αυτή την "
+            "απάντηση χρειάζονται οι μπαμπάδες. Οποιοσδήποτε με έναν δωρεάν "
+            "λογαριασμό OpenStreetMap μπορεί να τη δώσει, επιτόπου, σε "
+            "λιγότερο από ένα λεπτό: πάτησε την καρφίτσα και πες απευθείας "
+            "στο αναδυόμενο παράθυρο σε ποιον χώρο είναι η αλλαξιέρα, με τον "
+            "δικό σου λογαριασμό OSM. Το MapComplete είναι η εναλλακτική. Η "
+            "απάντηση καταλήγει στο OpenStreetMap, ανήκει σε όλους και "
+            "εμφανίζεται εδώ μετά την επόμενη νυχτερινή ενημέρωση. <a "
+            "href=\"{up}{methods}#grey-pin\">Βήμα-βήμα</a>."),
         "countries_h2": "Το PapaMap σε άλλες χώρες",
         "places_unit": "μέρη",
         "footer": """\
@@ -2005,15 +2026,16 @@ Come si conta e si colora: <a href="{up}methods-it.html">Metodo</a> ·
                         "združene v eno vrstico."),
         "th_place": "Kraj", "th_kind": "Vrsta", "th_count": "Kraji",
         "help_h2": "Kako lahko pomagaš",
-        "help": ("Siva bucka pomeni: previjalna miza obstaja, a nihče ni "
-                 "zabeležil, v katerem prostoru je. Prav ta odgovor "
-                 "očetom manjka. Da ga lahko kdorkoli z brezplačnim "
-                 "računom OpenStreetMap, na kraju samem, v manj kot "
-                 "minuti — povezava pri bucki odpre MapComplete naravnost "
-                 "na pravem objektu. Odgovor pristane v OpenStreetMap, "
-                 "pripada vsem in je viden tukaj po naslednji nočni "
-                 'posodobitvi. <a href="{up}{methods}#contribute">Korak '
-                 "za korakom</a>."),
+        "help": (
+            "Siva bucka pomeni: previjalna miza obstaja, a nihče ni "
+            "zabeležil, v katerem prostoru je. Prav ta odgovor očetom manjka. "
+            "Da ga lahko kdorkoli z brezplačnim računom OpenStreetMap, na "
+            "kraju samem, v manj kot minuti: tapni bucko in kar v pojavnem "
+            "oknu odgovori, v katerem prostoru je previjalna miza, s svojo "
+            "prijavo v OSM. MapComplete je rezervna pot. Odgovor pristane v "
+            "OpenStreetMap, pripada vsem in je viden tukaj po naslednji nočni "
+            "posodobitvi. <a href=\"{up}{methods}#grey-pin\">Korak za "
+            "korakom</a>."),
         "countries_h2": "PapaMap v drugih državah",
         "places_unit": "krajev",
         "footer": """\
@@ -2078,15 +2100,16 @@ Kako se šteje in barva: <a href="{up}methods-sl.html">Metode</a> ·
                         "jedného riadku."),
         "th_place": "Miesto", "th_kind": "Typ", "th_count": "Miesta",
         "help_h2": "Ako pomôžeš",
-        "help": ("Sivý špendlík znamená: prebaľovací pult existuje, ale "
-                 "nikto nezaznamenal, v ktorej miestnosti je. Presne táto "
-                 "odpoveď otcom chýba. Dať ju môže ktokoľvek s bezplatným "
-                 "účtom OpenStreetMap, na mieste, za menej ako minútu — "
-                 "odkaz pri špendlíku otvorí MapComplete rovno na "
-                 "správnom objekte. Odpoveď skončí v OpenStreetMap, patrí "
-                 "všetkým a po najbližšej nočnej aktualizácii bude vidieť "
-                 'tu. <a href="{up}{methods}#contribute">Krok za '
-                 "krokom</a>."),
+        "help": (
+            "Sivý špendlík znamená: prebaľovací pult existuje, ale nikto "
+            "nezaznamenal, v ktorej miestnosti je. Presne táto odpoveď otcom "
+            "chýba. Dať ju môže ktokoľvek s bezplatným účtom OpenStreetMap, "
+            "na mieste, za menej ako minútu: ťukni na špendlík a priamo v "
+            "okne odpovedz, v ktorej miestnosti je prebaľovací pult, pod "
+            "vlastným prihlásením do OSM. MapComplete je záložná cesta. "
+            "Odpoveď skončí v OpenStreetMap, patrí všetkým a po najbližšej "
+            "nočnej aktualizácii bude vidieť tu. <a "
+            "href=\"{up}{methods}#grey-pin\">Krok za krokom</a>."),
         "countries_h2": "PapaMap v ďalších krajinách",
         "places_unit": "miest",
         "footer": """\
@@ -2153,16 +2176,16 @@ Ako sa počíta a farbí: <a href="{up}methods-sk.html">Metódy</a> ·
                         "őket. Egy lánc üzleteit egy sorba vontuk össze."),
         "th_place": "Hely", "th_kind": "Típus", "th_count": "Helyek",
         "help_h2": "Így segíthetsz",
-        "help": ("Egy szürke jelölő azt jelenti: a pelenkázóasztal "
-                 "létezik, de senki nem jegyezte fel, melyik helyiségben "
-                 "van. Pontosan ez a válasz hiányzik az apáknak. Bárki "
-                 "megadhatja egy ingyenes OpenStreetMap-fiókkal, a "
-                 "helyszínen, egy percen belül — a jelölőnél lévő link "
-                 "egyenesen a megfelelő objektumnál nyitja meg a "
-                 "MapCompletet. A válasz az OpenStreetMapbe kerül, "
-                 "mindenkié, és a következő éjszakai frissítés után itt "
-                 'is látszik. <a href="{up}{methods}#contribute">'
-                 "Lépésről lépésre</a>."),
+        "help": (
+            "Egy szürke jelölő azt jelenti: a pelenkázóasztal létezik, de "
+            "senki nem jegyezte fel, melyik helyiségben van. Pontosan ez a "
+            "válasz hiányzik az apáknak. Bárki megadhatja egy ingyenes "
+            "OpenStreetMap-fiókkal, a helyszínen, egy percen belül: koppints "
+            "a jelölőre, és közvetlenül a felugró ablakban add meg, melyik "
+            "helyiségben van a pelenkázóasztal, a saját OSM-fiókoddal. A "
+            "MapComplete a tartalék megoldás. A válasz az OpenStreetMapbe "
+            "kerül, mindenkié, és a következő éjszakai frissítés után itt is "
+            "látszik. <a href=\"{up}{methods}#grey-pin\">Lépésről lépésre</a>."),
         "countries_h2": "PapaMap más országokban",
         "places_unit": "hely",
         "footer": """\
@@ -2225,15 +2248,16 @@ Hogyan számolunk és színezünk: <a href="{up}methods-hu.html">Módszertan</a>
                         "Podružnice jednog lanca sažete su u jedan redak."),
         "th_place": "Mjesto", "th_kind": "Vrsta", "th_count": "Mjesta",
         "help_h2": "Kako ovdje pomažeš",
-        "help": ("Sivi pin znači: stol za previjanje postoji, ali nitko "
-                 "nije zabilježio u kojoj je prostoriji. Upravo taj odgovor "
-                 "tatama nedostaje. Dati ga može bilo tko s besplatnim "
-                 "OpenStreetMap računom, na licu mjesta, za manje od minute "
-                 "— poveznica na pinu otvara MapComplete izravno na "
-                 "ispravnom objektu. Odgovor završava u OpenStreetMap, "
-                 "pripada svima i vidljiv je ovdje nakon sljedeće noćne "
-                 'nadogradnje. <a href="{up}{methods}#contribute">Korak po '
-                 "korak</a>."),
+        "help": (
+            "Sivi pin znači: stol za previjanje postoji, ali nitko nije "
+            "zabilježio u kojoj je prostoriji. Upravo taj odgovor tatama "
+            "nedostaje. Dati ga može bilo tko s besplatnim OpenStreetMap "
+            "računom, na licu mjesta, za manje od minute: dodirni pin i "
+            "odgovori izravno u skočnom prozoru u kojoj je prostoriji stol za "
+            "previjanje, sa svojom OSM prijavom. MapComplete je rezervna "
+            "opcija. Odgovor završava u OpenStreetMap, pripada svima i "
+            "vidljiv je ovdje nakon sljedeće noćne nadogradnje. <a "
+            "href=\"{up}{methods}#grey-pin\">Korak po korak</a>."),
         "countries_h2": "PapaMap u drugim zemljama",
         "places_unit": "mjesta",
         "footer": """\
@@ -2299,15 +2323,16 @@ Kako se broji i boji: <a href="{up}methods-hr.html">Metode</a> ·
                         "sunt strânse într-un singur rând."),
         "th_place": "Loc", "th_kind": "Tip", "th_count": "Locuri",
         "help_h2": "Cum ajuți",
-        "help": ("Un marcaj gri înseamnă: masa de înfășat există, dar "
-                 "nimeni nu a înregistrat în ce încăpere se află. Exact "
-                 "acest răspuns le lipsește taților. Îl poate da oricine "
-                 "are un cont OpenStreetMap gratuit, la fața locului, în "
-                 "mai puțin de un minut — linkul de la marcaj deschide "
-                 "MapComplete direct la obiectul corect. Răspunsul ajunge "
-                 "în OpenStreetMap, aparține tuturor și apare aici după "
-                 "următoarea actualizare de peste noapte. "
-                 '<a href="{up}{methods}#contribute">Pas cu pas</a>.'),
+        "help": (
+            "Un marcaj gri înseamnă: masa de înfășat există, dar nimeni nu a "
+            "înregistrat în ce încăpere se află. Exact acest răspuns le "
+            "lipsește taților. Îl poate da oricine are un cont OpenStreetMap "
+            "gratuit, la fața locului, în mai puțin de un minut: atinge "
+            "marcajul și spune, direct în fereastră, în ce încăpere se află "
+            "masa de înfășat, cu propriul tău cont OSM. MapComplete rămâne "
+            "soluția de rezervă. Răspunsul ajunge în OpenStreetMap, aparține "
+            "tuturor și apare aici după următoarea actualizare de peste "
+            "noapte. <a href=\"{up}{methods}#grey-pin\">Pas cu pas</a>."),
         "countries_h2": "PapaMap în alte țări",
         "places_unit": "locuri",
         "footer": """\
@@ -2371,15 +2396,16 @@ Cum se numără și se colorează: <a href="{up}methods-ro.html">Metode</a> ·
                         "един ред."),
         "th_place": "Място", "th_kind": "Вид", "th_count": "Места",
         "help_h2": "Как да помогнеш",
-        "help": ("Сив маркер означава: масата за повиване съществува, но "
-                 "никой не е отбелязал в коя стая е. Точно този отговор "
-                 "липсва на татковците. Може да го даде всеки с безплатен "
-                 "акаунт в OpenStreetMap, на място, за по-малко от минута "
-                 "— връзката при маркера отваря MapComplete директно на "
-                 "правилния обект. Отговорът отива в OpenStreetMap, "
-                 "принадлежи на всички и се вижда тук след следващата "
-                 'нощна актуализация. <a href="{up}{methods}#contribute">'
-                 "Стъпка по стъпка</a>."),
+        "help": (
+            "Сив маркер означава: масата за повиване съществува, но никой не "
+            "е отбелязал в коя стая е. Точно този отговор липсва на "
+            "татковците. Може да го даде всеки с безплатен акаунт в "
+            "OpenStreetMap, на място, за по-малко от минута: докосни маркера "
+            "и кажи направо в прозореца в коя стая е масата за повиване, с "
+            "твоя собствен OSM акаунт. MapComplete е резервният път. "
+            "Отговорът отива в OpenStreetMap, принадлежи на всички и се вижда "
+            "тук след следващата нощна актуализация. <a "
+            "href=\"{up}{methods}#grey-pin\">Стъпка по стъпка</a>."),
         "countries_h2": "PapaMap в други държави",
         "places_unit": "места",
         "footer": """\
@@ -2447,14 +2473,16 @@ contributors</a>, под <a href="https://opendatacommons.org/licenses/odbl/">OD
                         "ред."),
         "th_place": "Место", "th_kind": "Врста", "th_count": "Места",
         "help_h2": "Како можеш да помогнеш",
-        "help": ("Сиви пин значи: сто за превијање постоји, али нико није "
-                 "забележио у којој је просторији. Управо тај одговор "
-                 "недостаје татама. Може га дати свако ко има бесплатан "
-                 "OpenStreetMap налог, на лицу места, за мање од минута — "
-                 "линк на пину отвара MapComplete тачно на том објекту. "
-                 "Одговор иде у OpenStreetMap, припада свима и појављује "
-                 "се овде после следећег ноћног ажурирања. "
-                 '<a href="{up}{methods}#contribute">Корак по корак</a>.'),
+        "help": (
+            "Сиви пин значи: сто за превијање постоји, али нико није "
+            "забележио у којој је просторији. Управо тај одговор недостаје "
+            "татама. Може га дати свако ко има бесплатан OpenStreetMap налог, "
+            "на лицу места, за мање од минута: додирни пин и одговори "
+            "директно у искачућем прозору у којој је просторији сто за "
+            "превијање, са својом OSM пријавом. MapComplete је резервна "
+            "опција. Одговор иде у OpenStreetMap, припада свима и појављује "
+            "се овде после следећег ноћног ажурирања. <a "
+            "href=\"{up}{methods}#grey-pin\">Корак по корак</a>."),
         "countries_h2": "PapaMap у другим земљама",
         "places_unit": "места",
         "footer": """\
@@ -2517,15 +2545,16 @@ OpenStreetMap-а</a>, под лиценцом <a href="https://opendatacommons.o
                         "Poslovnice jednog lanca su spojene u jedan red."),
         "th_place": "Mjesto", "th_kind": "Vrsta", "th_count": "Mjesta",
         "help_h2": "Kako pomažeš",
-        "help": ("Siva oznaka znači: sto za previjanje postoji, ali niko "
-                 "nije zabilježio u kojoj je prostoriji. Baš taj odgovor "
-                 "tatama nedostaje. Da ga da može bilo ko sa besplatnim "
-                 "OpenStreetMap nalogom, na licu mjesta, za manje od "
-                 "minute — link na oznaci otvara MapComplete tačno na "
-                 "pravom objektu. Odgovor ide u OpenStreetMap, pripada "
-                 "svima i pojavljuje se ovdje poslije sljedećeg noćnog "
-                 'ažuriranja. <a href="{up}{methods}#contribute">Korak po '
-                 "korak</a>."),
+        "help": (
+            "Siva oznaka znači: sto za previjanje postoji, ali niko nije "
+            "zabilježio u kojoj je prostoriji. Baš taj odgovor tatama "
+            "nedostaje. Da ga da može bilo ko sa besplatnim OpenStreetMap "
+            "nalogom, na licu mjesta, za manje od minute: dodirni oznaku i "
+            "odgovori direktno u skočnom prozoru u kojoj je prostoriji sto za "
+            "previjanje, sa svojom OSM prijavom. MapComplete je rezervna "
+            "opcija. Odgovor ide u OpenStreetMap, pripada svima i pojavljuje "
+            "se ovdje poslije sljedećeg noćnog ažuriranja. <a "
+            "href=\"{up}{methods}#grey-pin\">Korak po korak</a>."),
         "countries_h2": "PapaMap u drugim zemljama",
         "places_unit": "mjesta",
         "footer": """\
@@ -2590,15 +2619,17 @@ Kako se broji i boji: <a href="{up}methods-bs.html">Metode</a> ·
                         "zinxhiri bashkohen në një rresht të vetëm."),
         "th_place": "Vendi", "th_kind": "Lloji", "th_count": "Vende",
         "help_h2": "Si ndihmon këtu",
-        "help": ("Një shenjues gri do të thotë: tavolina e ndërrimit "
-                 "ekziston, por askush nuk ka shënuar në cilën dhomë "
-                 "ndodhet. Pikërisht kjo përgjigje u mungon baballarëve. "
-                 "Këdo me një llogari falas OpenStreetMap mund ta japë, në "
-                 "vend, për më pak se një minutë — lidhja te shenjuesi hap "
-                 "MapComplete pikërisht te objekti i saktë. Përgjigja "
-                 "përfundon në OpenStreetMap, i përket të gjithëve dhe "
-                 "shfaqet këtu pas përditësimit të ardhshëm të natës. "
-                 '<a href="{up}{methods}#contribute">Hap pas hapi</a>.'),
+        "help": (
+            "Një shenjues gri do të thotë: tavolina e ndërrimit ekziston, por "
+            "askush nuk ka shënuar në cilën dhomë ndodhet. Pikërisht kjo "
+            "përgjigje u mungon baballarëve. Këdo me një llogari falas "
+            "OpenStreetMap mund ta japë, në vend, për më pak se një minutë: "
+            "prek shenjuesin dhe thuaj drejtpërdrejt në dritaren kërcyese në "
+            "cilën hapësirë është tavolina e ndërrimit, me llogarinë tënde "
+            "OSM. MapComplete është rruga rezervë. Përgjigja përfundon në "
+            "OpenStreetMap, i përket të gjithëve dhe shfaqet këtu pas "
+            "përditësimit të ardhshëm të natës. <a "
+            "href=\"{up}{methods}#grey-pin\">Hap pas hapi</a>."),
         "countries_h2": "PapaMap në vende të tjera",
         "places_unit": "vende",
         "footer": """\
@@ -2663,15 +2694,16 @@ Si numërohet dhe ngjyroset: <a href="{up}methods-sq.html">Metodologjia</a> ·
                         "споени во еден ред."),
         "th_place": "Место", "th_kind": "Тип", "th_count": "Места",
         "help_h2": "Како помагаш тука",
-        "help": ("Сива точка значи: масата за пеленање постои, но никој не "
-                 "запишал во која просторија е. Токму тој одговор им "
-                 "недостасува на татковците. Може да го даде секој со "
-                 "бесплатна сметка на OpenStreetMap, на лице место, за "
-                 "помалку од минута — линкот на точката ги отвора "
-                 "MapComplete точно на вистинскиот објект. Одговорот "
-                 "завршува во OpenStreetMap, им припаѓа на сите и се "
-                 "прикажува тука по следната ноќна надградба. "
-                 '<a href="{up}{methods}#contribute">Чекор по чекор</a>.'),
+        "help": (
+            "Сива точка значи: масата за пеленање постои, но никој не запишал "
+            "во која просторија е. Токму тој одговор им недостасува на "
+            "татковците. Може да го даде секој со бесплатна сметка на "
+            "OpenStreetMap, на лице место, за помалку од минута: допри ја "
+            "точката и одговори директно во прозорчето во која просторија е "
+            "масата за пеленање, со твојата сопствена OSM сметка. MapComplete "
+            "е резервниот пат. Одговорот завршува во OpenStreetMap, им "
+            "припаѓа на сите и се прикажува тука по следната ноќна надградба. "
+            "<a href=\"{up}{methods}#grey-pin\">Чекор по чекор</a>."),
         "countries_h2": "PapaMap во други земји",
         "places_unit": "места",
         "footer": """\
@@ -2739,15 +2771,16 @@ OpenStreetMap</a>, под лиценцата <a href="https://opendatacommons.or
                         "один рядок."),
         "th_place": "Місце", "th_kind": "Тип", "th_count": "Місця",
         "help_h2": "Як ти можеш допомогти",
-        "help": ("Сіра позначка означає: пеленальний столик існує, але "
-                 "ніхто не зафіксував, у якому приміщенні він "
-                 "розташований. Саме цієї відповіді бракує татам. Дати її "
-                 "може будь-хто з безкоштовним акаунтом OpenStreetMap, на "
-                 "місці, менш ніж за хвилину — посилання біля позначки "
-                 "одразу відкриває MapComplete на потрібному об'єкті. "
-                 "Відповідь потрапляє в OpenStreetMap, належить усім і "
-                 "з'явиться тут після наступного нічного оновлення. "
-                 '<a href="{up}{methods}#contribute">Крок за кроком</a>.'),
+        "help": (
+            "Сіра позначка означає: пеленальний столик існує, але ніхто не "
+            "зафіксував, у якому приміщенні він розташований. Саме цієї "
+            "відповіді бракує татам. Дати її може будь-хто з безкоштовним "
+            "акаунтом OpenStreetMap, на місці, менш ніж за хвилину: торкнися "
+            "позначки і просто у вікні вкажи, у якому приміщенні пеленальний "
+            "столик, зі своїм обліковим записом OSM. MapComplete — запасний "
+            "шлях. Відповідь потрапляє в OpenStreetMap, належить усім і "
+            "з'явиться тут після наступного нічного оновлення. <a "
+            "href=\"{up}{methods}#grey-pin\">Крок за кроком</a>."),
         "countries_h2": "PapaMap в інших країнах",
         "places_unit": "місць",
         "footer": """\
@@ -2812,15 +2845,16 @@ OpenStreetMap</a>, за ліцензією <a href="https://opendatacommons.org/
                         "адзін радок."),
         "th_place": "Месца", "th_kind": "Тып", "th_count": "Месцы",
         "help_h2": "Як ты можаш дапамагчы",
-        "help": ("Шэрая шпілька азначае: стол для спавівання ёсць, але "
-                 "ніхто не пазначыў, у якім ён памяшканні. Менавіта гэтага "
-                 "адказу не хапае бацькам. Даць яго можа кожны з бясплатным "
-                 "акаўнтам OpenStreetMap, на месцы, менш чым за хвіліну — "
-                 "спасылка на шпільцы адкрывае MapComplete адразу на "
-                 "патрэбным аб'екце. Адказ трапляе ў OpenStreetMap, "
-                 "належыць усім і з'яўляецца тут пасля наступнага начнога "
-                 'абнаўлення. <a href="{up}{methods}#contribute">Крок за '
-                 "крокам</a>."),
+        "help": (
+            "Шэрая шпілька азначае: стол для спавівання ёсць, але ніхто не "
+            "пазначыў, у якім ён памяшканні. Менавіта гэтага адказу не хапае "
+            "бацькам. Даць яго можа кожны з бясплатным акаўнтам "
+            "OpenStreetMap, на месцы, менш чым за хвіліну: націсні на шпільку "
+            "і проста ў акенку скажы, у якім памяшканні стол для спавівання, "
+            "пад сваім уліковым запісам OSM. MapComplete — запасны шлях. "
+            "Адказ трапляе ў OpenStreetMap, належыць усім і з'яўляецца тут "
+            "пасля наступнага начнога абнаўлення. <a "
+            "href=\"{up}{methods}#grey-pin\">Крок за крокам</a>."),
         "countries_h2": "PapaMap у іншых краінах",
         "places_unit": "месцаў",
         "footer": """\
@@ -2884,15 +2918,16 @@ OpenStreetMap</a>, паводле <a href="https://opendatacommons.org/licenses/
                         "junten en una sola fila."),
         "th_place": "Lloc", "th_kind": "Tipus", "th_count": "Llocs",
         "help_h2": "Com pots ajudar",
-        "help": ("Un pin gris vol dir: el canviador existeix, però ningú no "
-                 "ha registrat en quina sala és. Aquesta resposta és "
-                 "exactament el que els pares troben a faltar. Qualsevol "
-                 "persona amb un compte gratuït d'OpenStreetMap la pot "
-                 "donar, in situ, en menys d'un minut — l'enllaç del pin "
-                 "obre MapComplete directament a l'objecte correcte. La "
-                 "resposta queda a OpenStreetMap, és de tothom i es veurà "
-                 "aquí després de la propera actualització nocturna. "
-                 '<a href="{up}{methods}#contribute">Pas a pas</a>.'),
+        "help": (
+            "Un pin gris vol dir: el canviador existeix, però ningú no ha "
+            "registrat en quina sala és. Aquesta resposta és exactament el "
+            "que els pares troben a faltar. Qualsevol persona amb un compte "
+            "gratuït d'OpenStreetMap la pot donar, in situ, en menys d'un "
+            "minut: toca el pin i digues, directament al popup, en quin espai "
+            "és el canviador, amb el teu propi compte d'OSM. MapComplete és "
+            "la via alternativa. La resposta queda a OpenStreetMap, és de "
+            "tothom i es veurà aquí després de la propera actualització "
+            "nocturna. <a href=\"{up}{methods}#grey-pin\">Pas a pas</a>."),
         "countries_h2": "PapaMap en altres països",
         "places_unit": "llocs",
         "footer": """\
@@ -2955,13 +2990,9 @@ Com es compta i s'acoloreix: <a href="{up}methods-ca.html">Mètodes</a> ·
         "th_kind": "種類",
         "th_count": "件数",
         "help_h2": "ここでできること",
-        "help": ("灰色のピンは、おむつ交換台はあるけれど、どの部屋にあるか誰も"
-                 "記録していないという意味です。その答えこそ、パパたちに欠けている"
-                 "ものです。無料のOpenStreetMapアカウントがあれば誰でも、その場で"
-                 "1分以内に答えられます。ピンのリンクを開くと、MapCompleteが該当する"
-                 "対象をそのまま表示します。答えはOpenStreetMapに保存され、みんなの"
-                 "ものになり、次の夜間更新のあとここに表示されます。"
-                 "<a href=\"{up}{methods}#contribute\">手順はこちら</a>。"),
+        "help": (
+            "灰色のピンは、おむつ交換台はあるけれど、どの部屋にあるか誰も記録していないという意味です。その答えこそ、パパたちに欠けているものです。無料のOpenStreetMapアカウントがあれば誰でも、その場で1分以内に答えられます。ピンをタップし、ポップアップでおむつ交換台がどの部屋にあるかを、ご自身のOSMアカウントでそのまま答えます。MapCompleteは代わりの手段です。答えはOpenStreetMapに保存され、みんなのものになり、次の夜間更新のあとここに表示されます。<a "
+            "href=\"{up}{methods}#grey-pin\">手順はこちら</a>。"),
         "countries_h2": "他の国のPapaMap",
         "places_unit": "か所",
         "footer": """<h2>データとライセンス</h2>

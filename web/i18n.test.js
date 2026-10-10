@@ -29,6 +29,15 @@ test("no language block declares a key twice", () => {
   }
 });
 
+test("no string abbreviates OpenStreetMap as OSM", () => {
+  // A tester who had never heard of OpenStreetMap was lost at "OSM".
+  for (const lang of LANGS) {
+    for (const [key, value] of Object.entries(STRINGS[lang])) {
+      assert.doesNotMatch(String(value), /\bOSM\b/, `${lang}.${key}`);
+    }
+  }
+});
+
 test("every template carries the same tokens in every language", () => {
   for (const key of Object.keys(STRINGS[DEFAULT_LANG])) {
     for (const lang of LANGS) {

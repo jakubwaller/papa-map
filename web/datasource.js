@@ -1287,8 +1287,14 @@ export function selectAddedPlace(deltaJson, watch) {
 
 // Which toast a failed position gets. A denial has its own words because the
 // browser never asks twice: the reader has to know where the switch is, and it
-// is in a different place on the page than in the store app.
+// is in a different place on the page than in the store app. Location
+// services switched off for the whole phone are a different switch again:
+// the Geolocation plugin rejects checkPermissions() with OS-PLUG-GLOC-0007 on
+// both iOS and Android (@capacitor/geolocation 8.2.2, GeolocationErrors.kt /
+// GeolocationError.swift), and PapaMap's own permission may be fine.
+const GEO_SERVICES_OFF = "OS-PLUG-GLOC-0007";
 export function geoFailKey(err, native) {
+  if (native && err?.code === GEO_SERVICES_OFF) return "toastGeoOffApp";
   if (err?.code === 1 || err?.message === "denied") {
     return native ? "toastGeoDeniedApp" : "toastGeoDenied";
   }

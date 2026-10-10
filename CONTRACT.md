@@ -1,5 +1,60 @@
 # papa-map — build contract (v0)
 
+> **v86 amendment (10 Oct 2026, OpenStreetMap written out in the UI): no data
+> shape change.** A tester who had never heard of OpenStreetMap was thrown by
+> the abbreviation "OSM" in the app's texts, while the intro already wrote the
+> name in full. Sixteen i18n keys (`metaPlaces`, `popupViewOSM`,
+> `meLoginInvite`, `newsHighchair`, `newsAddPlace`, `editLooking`,
+> `editFound`, `editFoundPlain`, `toastToiletNoTable`, `editNone`,
+> `askLoginHint`, `askSaving`, `askFailed`, `loginFailed`, `dlgToiletHint`,
+> `dlgVenueHint`; plus Czech `dlgIntro`, "jde na" → "jde do") now say "OpenStreetMap" in all 32 languages, with the case
+> suffixes that language's community uses, and the static German fallback in
+> `index.html` / `index-en.html` follows. `i18n.test.js` fails on any string
+> value containing the word "OSM". Shell pin `app84` → `app85`.
+
+> **v85 amendment (10 Oct 2026, the intro drops the phone's own tips): no
+> data shape change.** The store app's intro (v58) closed with the phone's
+> own features: Control Center, widget and Siri on iOS, widget and launcher
+> shortcut on Android. A Czech tester said they did not belong in the intro,
+> and testers had already found the first screens too wordy. The intro lists
+> `INTRO_FEATURES` alone; `appTips`, `introTips` and `SIRI_LANGS` are gone from
+> `web/me.js`, and the five keys `tipControl`, `tipWidget`, `tipSiri`,
+> `tipWidgetAndroid`, `tipShortcutAndroid` from all 32 languages. Nothing in the
+> app names those features now; the phone's own galleries and the store
+> listings do. Shell pin `app83` → `app84`; no `WHATS_NEW` entry.
+
+> **v84 amendment (9 Oct 2026, the intro can be opened again): no data shape
+> change.** The store app's first-launch intro (v58) shows once, and a tester
+> who tapped it away by reflex had no way back. Mein PapaMap now ends with
+> "Einführung noch einmal zeigen" (`#me-intro`, inside `#me-about`, so the
+> website, which has no intro, never shows it), which closes the dialog and
+> opens the intro through `showIntro`, split out of `maybeShowIntro`. The
+> `papamap-intro` key is not touched. One i18n key (`meIntroAgain`) in all 32
+> languages. Shell pin `app82` → `app83`; no `WHATS_NEW` entry.
+
+> **v83 amendment (9 Oct 2026, location services off on the phone): no data
+> shape change.** In the store app, a phone whose location services are off
+> made the Geolocation plugin reject `checkPermissions()` with
+> `OS-PLUG-GLOC-0007` (iOS and Android alike), which fell through to the
+> generic `toastGeoFail`. `geoFailKey` now maps that code, in the app only,
+> to `toastGeoOffApp` ("Location is off on this phone. Turn it on in the
+> settings, then tap again."), shown 7 s like the other refusal. One i18n key
+> in all 32 languages. Shell pin `app81` → `app82`.
+
+> **v82 amendment (7 Oct 2026, the add dialog's search box finds any shop):
+> no data shape change.** The nearby list in "+ Add a place" stays on the
+> theme's `dad_venue` tags, but a name typed into the dialog's own search box
+> now matches any `amenity`, `shop`, `tourism` or `leisure` object (plus the
+> list's stations and terminals), except toilets and the infrastructure that
+> shares a shop's name (car parks, charging points, ATMs, parks …:
+> `VENUE_SEARCH_EXCLUDE`, also sent to Photon as `!key:value`), since a row
+> shows no object kind and the nearer same-named car park would take the tag:
+> `isSearchVenue` and `venueSearchOsmTags` in `web/venues.js`, `venueRows`'
+> new `accept` filter. A
+> children's clothes shop (`shop=clothes`) was unreachable by its own name.
+> The answer path (`tablePatch` through `writeTags`) is unchanged.
+> Shell pin `app80` → `app81`; no `WHATS_NEW` entry.
+
 > **v81 amendment (7 Oct 2026, filter chips are named by their visible text): no
 > data shape change.** The wheelchair, play, places and high-chair chips in
 > `web/app.js` carried an `aria-label` that replaced "Mit Spielecke 12" with a

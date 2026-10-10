@@ -1,6 +1,5 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync, existsSync } from "node:fs";
 import { CREATED_BY } from "./osm.js";
 import { haversineKm } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
@@ -8,7 +7,7 @@ import {
   answeredPercent, areaAnswered, areaPercent,
   buildFeatureGrid, answerArea, answersInArea, totalAnswers,
   sentenceParts, yoursParts, greyNearby, circleBounds,
-  MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, appTips, SIRI_LANGS, pinNumber, introKind, introTips, INTRO_FEATURES, WHATS_NEW, changesetAnswer, extractAnswers,
+  MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, pinNumber, introKind, INTRO_FEATURES, WHATS_NEW, changesetAnswer, extractAnswers,
   mergeAnswers, newestClosedAt, oldestClosedAt,
   EPOCH, changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap,
   SAVED_MAX, isSaved, addSaved, removeSaved, refreshApplies,
@@ -505,16 +504,6 @@ test("refreshApplies: only when the generation has not moved since the refresh b
   assert.equal(refreshApplies(0, 0), true);
 });
 
-test("appTips: both apps, Siri only on iOS where the app ships phrases", () => {
-  assert.deepEqual(appTips("ios", "de"), ["tipControl", "tipWidget", "tipSiri"]);
-  assert.deepEqual(appTips("ios", "en"), ["tipControl", "tipWidget", "tipSiri"]);
-  // Siri answers in the phone's language; a French phrase was never registered.
-  assert.deepEqual(appTips("ios", "fr"), ["tipControl", "tipWidget"]);
-  // The website has no control, widget or shortcut; Android has a widget and a launcher shortcut.
-  assert.deepEqual(appTips("web", "de"), []);
-  assert.deepEqual(appTips("android", "de"), ["tipWidgetAndroid", "tipShortcutAndroid"]);
-});
-
 test("pinNumber: the integer of a shell pin, else null", () => {
   assert.equal(pinNumber("app60"), 60);
   assert.equal(pinNumber("app"), null);
@@ -553,18 +542,3 @@ test("introKind: the app74 release adds the add-a-place note", () => {
   assert.equal(introKind("app74", "app74"), null);
 });
 
-test("introTips: the features, then whatever the phone has", () => {
-  assert.deepEqual(introTips("ios", "de"), [...INTRO_FEATURES, "tipControl", "tipWidget", "tipSiri"]);
-  assert.deepEqual(introTips("ios", "fr"), [...INTRO_FEATURES, "tipControl", "tipWidget"]);
-  assert.deepEqual(introTips("android", "de"), [...INTRO_FEATURES, "tipWidgetAndroid", "tipShortcutAndroid"]);
-  assert.deepEqual(introTips("web", "de"), INTRO_FEATURES);
-});
-
-test("SIRI_LANGS is exactly the languages the app has App Shortcut phrases in", () => {
-  // English lives in the intent itself; every other language is a .lproj folder.
-  const dir = new URL("../app/ios/App/App/", import.meta.url);
-  const shipped = readdirSync(dir)
-    .filter((d) => d.endsWith(".lproj") && existsSync(new URL(`${d}/AppShortcuts.strings`, dir)))
-    .map((d) => d.replace(".lproj", ""));
-  assert.deepEqual([...SIRI_LANGS].sort(), [...new Set(["en", ...shipped])].sort());
-});

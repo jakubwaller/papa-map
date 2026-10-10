@@ -1957,6 +1957,17 @@ test("geoFailKey: a refusal names where to re-allow, other failures stay generic
   assert.equal(geoFailKey(null, true), "toastGeoFail");
 });
 
+test("geoFailKey: location services off for the whole phone get their own app toast", () => {
+  const off = Object.assign(new Error("Location services are not enabled."), { code: "OS-PLUG-GLOC-0007" });
+  assert.equal(geoFailKey(off, true), "toastGeoOffApp");
+  // The page never sees the plugin's code; if it did, it is not a refusal.
+  assert.equal(geoFailKey(off, false), "toastGeoFail");
+  // The plugin's other codes stay generic: a refusal reaches geoFailKey as
+  // Error("denied") from locateNative, never as the plugin's 0003.
+  assert.equal(geoFailKey({ code: "OS-PLUG-GLOC-0003" }, true), "toastGeoFail");
+  assert.equal(geoFailKey({ code: "OS-PLUG-GLOC-0002" }, true), "toastGeoFail");
+});
+
 test("flightLength: a pure zoom is the zoom change in log space over ρ", () => {
   assert.ok(Math.abs(flightLength(844, 0, 12) - 12 * Math.LN2 / 1.42) < 1e-9);
 });

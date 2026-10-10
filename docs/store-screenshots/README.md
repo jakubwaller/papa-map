@@ -99,6 +99,17 @@ phone shots are iPhone-only and always land under `final/iphone69-*`
 regardless of canvas, so they're skipped when `--canvas` names anything but
 `iphone69`.
 
+## The install page (`--canvas web`)
+
+`node shoot-store-screenshots.mjs ./out --canvas web` shoots the same bare app
+screens (raw phase only, no headline, no frame) at 390 × 844 @2x and writes six
+of them per language as WebP, at most 120 KB each, to
+`web/img/app/<stem>-<lang>.webp`: the images `web/app.html` and
+`web/app-en.html` show beside their steps (needs `cwebp`, `brew install webp`).
+A default run never touches them, so run this after a store reshoot to keep
+the page and the listing showing the same app; `--compose-only --canvas web`
+re-encodes the raw PNGs already on disk.
+
 ## Texts
 
 `texts.json`, next to this script, holds every headline and subline in
