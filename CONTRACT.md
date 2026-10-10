@@ -1,5 +1,16 @@
 # papa-map — build contract (v0)
 
+> **v85 amendment (10 Oct 2026, the intro drops the phone's own tips): no
+> data shape change.** The store app's intro (v58) closed with the phone's
+> own features: Control Center, widget and Siri on iOS, widget and launcher
+> shortcut on Android. A Czech tester said they did not belong in the intro,
+> and testers had already found the first screens too wordy. The intro lists
+> `INTRO_FEATURES` alone; `appTips`, `introTips` and `SIRI_LANGS` are gone from
+> `web/me.js`, and the five keys `tipControl`, `tipWidget`, `tipSiri`,
+> `tipWidgetAndroid`, `tipShortcutAndroid` from all 32 languages. Nothing in the
+> app names those features now; the phone's own galleries and the store
+> listings do. Shell pin `app83` → `app84`; no `WHATS_NEW` entry.
+
 > **v84 amendment (9 Oct 2026, the intro can be opened again): no data shape
 > change.** The store app's first-launch intro (v58) shows once, and a tester
 > who tapped it away by reflex had no way back. Mein PapaMap now ends with
