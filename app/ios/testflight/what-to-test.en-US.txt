@@ -4,4 +4,7 @@
 – Fixed: the green buttons have stronger contrast. Are they easy to read, outdoors too?
 – Fixed: the filter buttons work better with VoiceOver and Voice Control. Turn VoiceOver on and go through the filters: is each one read by its name and count, and can you switch it on and off? Then, with Voice Control on, call a filter button that shows a word, or the Dad/Mum switch, by the words you see on it (say "Tap" and the name). Does it react?
 – Fixed: the search in "+ Add a place" finds any shop by its name, not only the kinds the list nearby shows. Check: zoom in on a street you know, tap "+ Add a place" and type the name of a shop that is not in the list, a clothes shop or a bakery, say. Does it come up? A car park or a cash machine of the same name should not. You don't have to answer: picking it and going back is enough.
+– Fixed: with Location Services switched off for the whole phone, PapaMap now says so. Check: turn off Settings → Privacy & Security → Location Services, then tap the location button in PapaMap. It should say that location is off on this phone and that you can turn it on in the settings, not show a general error. Turn Location Services back on afterwards.
+– New: the intro is shorter, and My PapaMap can show it again. Check: open My PapaMap and tap "Show the intro again". Does the intro open, and does it make clear what the map shows?
+– New: "OpenStreetMap" is written out instead of "OSM". If you still see "OSM" anywhere in the app, send a screenshot.
 Anything unclear or broken: take a screenshot and send it through TestFlight.
