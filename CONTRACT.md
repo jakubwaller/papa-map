@@ -7,7 +7,7 @@
 > `meLoginInvite`, `newsHighchair`, `newsAddPlace`, `editLooking`,
 > `editFound`, `editFoundPlain`, `toastToiletNoTable`, `editNone`,
 > `askLoginHint`, `askSaving`, `askFailed`, `loginFailed`, `dlgToiletHint`,
-> `dlgVenueHint`) now say "OpenStreetMap" in all 32 languages, with the case
+> `dlgVenueHint`; plus Czech `dlgIntro`, "jde na" → "jde do") now say "OpenStreetMap" in all 32 languages, with the case
 > suffixes that language's community uses, and the static German fallback in
 > `index.html` / `index-en.html` follows. `i18n.test.js` fails on any string
 > value containing the word "OSM". Shell pin `app84` → `app85`.

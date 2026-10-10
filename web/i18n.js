@@ -1247,7 +1247,7 @@ export const STRINGS = {
     whatsNewTitle: "Nouveautés de PapaMap",
     whatsNewOk: "Compris",
     newsHighchair: "Nouveau : le filtre « Chaise haute » montre les cafés et restaurants avec une chaise haute — et la fiche du lieu pose la question là où OpenStreetMap ne le sait pas encore.",
-    newsAddPlace: "Nouveau : « + Ajouter un lieu » liste désormais les lieux proches que OpenStreetMap connaît déjà — choisissez-en un et répondez directement dans l’app.",
+    newsAddPlace: "Nouveau : « + Ajouter un lieu » liste désormais les lieux proches qu'OpenStreetMap connaît déjà — choisissez-en un et répondez directement dans l’app.",
     statsUpdated: "Mis à jour le {date}.",
 
     toastNoGeo: "La géolocalisation n'est pas disponible dans ce navigateur.",
@@ -6144,7 +6144,7 @@ export const STRINGS = {
     whatsNewTitle: "Τι νέο υπάρχει στο PapaMap",
     whatsNewOk: "Κατάλαβα",
     newsHighchair: "Νέο: το φίλτρο «Παιδικό καρεκλάκι» δείχνει καφέ και εστιατόρια με παιδικό καρεκλάκι — και το αναδυόμενο παράθυρο ρωτά όπου το OpenStreetMap δεν το ξέρει ακόμη.",
-    newsAddPlace: "Νέο: το «+ Προσθήκη μέρους» εμφανίζει τώρα κοντινά μέρη που το OpenStreetMap γνωρίζει ήδη — διάλεξε ένα και απάντησε κατευθείαν στην εφαρμογу.",
+    newsAddPlace: "Νέο: το «+ Προσθήκη μέρους» εμφανίζει τώρα κοντινά μέρη που το OpenStreetMap γνωρίζει ήδη — διάλεξε ένα και απάντησε κατευθείαν στην εφαρμογή.",
     statsUpdated: "Ενημερώθηκε στις {date}.",
 
     toastNoGeo: "Ο εντοπισμός τοποθεσίας δεν είναι διαθέσιμος σε αυτό το πρόγραμμα περιήγησης.",
