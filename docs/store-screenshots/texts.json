@@ -95,7 +95,7 @@
       },
       "06": {
         "headline": "*Barrierefrei*, Spielecke",
-        "subline": "Die Karte zeigt nur, was du brauchst."
+        "subline": "Auch Hochstühle. Die Karte zeigt nur, was du brauchst."
       }
     },
     "en": {
@@ -109,7 +109,7 @@
       },
       "06": {
         "headline": "*Accessible*, play corner",
-        "subline": "The map shows only what you need."
+        "subline": "High chairs too. The map shows only what you need."
       }
     }
   },
@@ -117,13 +117,13 @@
     "de": {
       "06": {
         "headline": "*Barrierefrei*, Spielecke",
-        "subline": "Die Karte zeigt nur, was du brauchst."
+        "subline": "Auch Hochstühle. Die Karte zeigt nur, was du brauchst."
       }
     },
     "en": {
       "06": {
         "headline": "*Accessible*, play corner",
-        "subline": "The map shows only what you need."
+        "subline": "High chairs too. The map shows only what you need."
       }
     }
   }
