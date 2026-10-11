@@ -661,9 +661,10 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   font-family: var(--ui);
   color: var(--ink);
   /* The browser's own cap (100% - 2em) ignores the notch: a long dialog in
-     the store app reached under the iPhone's status bar, and its × with it. */
-  max-height: calc(100vh - var(--safe-top) - var(--safe-bottom) - 32px);
-  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px);
+     the store app reached under the iPhone's status bar, and its × with it.
+     100% is the viewport a modal dialog sits in; unlike 100vh it shrinks
+     with a browser's toolbar, so it stands in where dvh is unknown. */
+  max-height: calc(100% - var(--safe-top) - var(--safe-bottom) - 32px);
 }
 #add-dialog::backdrop, #offline-dialog::backdrop, #route-dialog::backdrop, #me-dialog::backdrop, #intro-dialog::backdrop { background: rgba(15, 25, 20, .45); }
 #add-dialog h3, #offline-dialog h3, #route-dialog h3, #me-dialog h3, #intro-dialog h3 { margin: 0 0 6px; font-size: 17px; padding-right: 30px; }
@@ -803,7 +804,14 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #me-dialog .btn.primary:active, #intro-dialog .btn.primary:active { background: var(--green-press); border-color: var(--green-press); }
 .intro-lang { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: 13px; color: var(--muted-2); }
 #intro-dialog h4 { margin: 0 0 6px; font-size: 13.5px; }
-#intro-dialog { max-height: 88vh; max-height: min(88vh, calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px)); }
+#intro-dialog { max-height: min(88vh, calc(100% - var(--safe-top) - var(--safe-bottom) - 32px)); }
+/* dvh only under @supports: a value with var() in it always parses, so a plain
+   second declaration won the cascade and turned into `none` where dvh is
+   unknown (WebView before Chrome 108), and long dialogs ran off both ends. */
+@supports (height: 100dvh) {
+  #add-dialog, #offline-dialog, #route-dialog, #me-dialog { max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px); }
+  #intro-dialog { max-height: min(88vh, calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px)); }
+}
 #intro-dialog[open] { display: flex; flex-direction: column; }
 #intro-dialog .tips-list { font-size: 13px; color: var(--ink); flex: 1 1 auto; min-height: 0; overflow: auto; }
 #intro-dialog .btn.primary { width: 100%; margin-top: 4px; }

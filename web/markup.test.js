@@ -135,3 +135,13 @@ test("no style.css rule takes a chip's label out of the accessibility tree", () 
   }
   assert.deepEqual(bad, []);
 });
+
+test("dvh appears in style.css only under @supports (height: 100dvh)", () => {
+  // A value with var() always parses, so `100vh; 100dvh` is no fallback: where
+  // dvh is unknown (WebView before Chrome 108) the second declaration wins and
+  // computes to `none`, and the dialogs ran off a Honor 9's screen.
+  const outside = css.replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/@supports \(height: 100dvh\) \{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, "");
+  assert.doesNotMatch(outside, /\d(dvh|svh|lvh)\b/);
+  assert.match(css, /@supports \(height: 100dvh\) \{[^@]*#add-dialog[^}]*100dvh/);
+});
