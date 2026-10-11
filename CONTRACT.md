@@ -1,5 +1,16 @@
 # papa-map — build contract (v0)
 
+> **v87 amendment (11 Oct 2026, dialogs fit an old WebView): no data shape
+> change.** The five dialogs' height cap was `100vh` followed by `100dvh` as a
+> plain second declaration. A value with `var()` in it always parses, so where
+> `dvh` is unknown (WebView before Chrome 108; a Honor 9 on Android 9 runs 101)
+> the second line won the cascade and computed to `none`: "Add a place" with
+> its venue list ran off both ends of the screen, × included. The fallback is
+> now `100%` (the viewport a modal dialog sits in, which also shrinks with a
+> browser's toolbar), and `100dvh` applies only under
+> `@supports (height: 100dvh)`. `markup.test.js` fails on any `dvh` outside
+> that block. Shell pin `app85` → `app86`.
+
 > **v86 amendment (10 Oct 2026, OpenStreetMap written out in the UI): no data
 > shape change.** A tester who had never heard of OpenStreetMap was thrown by
 > the abbreviation "OSM" in the app's texts, while the intro already wrote the
