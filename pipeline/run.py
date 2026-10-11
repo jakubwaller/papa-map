@@ -4,6 +4,7 @@ import sys
 import time
 from datetime import datetime, timezone
 
+from .classify import is_place
 from . import delta, export, leaderboard, osm, pages, stats, timezones, toilet_counts
 from .room_choices import answer_men_only_table, answer_status_table
 from .config import (AREA_COUNTRY, AREAS_PATH, BUNDESLAENDER, CITY_AREAS,
@@ -12,7 +13,7 @@ from .config import (AREA_COUNTRY, AREAS_PATH, BUNDESLAENDER, CITY_AREAS,
                      SWEEP_DEADLINE_S, SWEEP_PAUSE_S, SWEEP_ROUNDS,
                      TOILETS_COUNTS_PATH,
                      TOILETS_COUNTS_PERIOD_DAYS, changing_table_ids_ql,
-                     display_area as configured_area, sweep_areas, sweep_ql,
+                     display_area as configured_area, highchair_ql, sweep_areas, sweep_ql,
                      toilets_counts_ql)
 
 
@@ -321,6 +322,13 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                         f"area {area_name!r} resolved to zero objects on this "
                         "mirror (stale area database or typo'd "
                         "PAPAMAP_AREA_NAME?)")
+                # Its own query, after everything else succeeded (see
+                # config.highchair_ql); a failure fails the area like the rest.
+                hc_answer = overpass_fetch(highchair_ql(area_name, admin_level))
+                _note_base(hc_answer)
+                hc = [el for el in hc_answer.get("elements", ())
+                      if "changing_table" not in (el.get("tags") or {})
+                      and is_place(el.get("tags") or {})]
             except osm.OverpassUnavailable as exc:
                 # Nothing was contacted and nothing will be until the rest is
                 # over: the remaining areas fail as one, silently.
@@ -343,6 +351,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             ct, play = osm.split_sweep(sweep["elements"])
             ct_elements.extend(ct)
             play_elements.extend(play)
+            play_elements.extend(hc)
             toilets_by_area[area_name] = toilets_total
             toilets_capacity_by_area[area_name] = capacity_total
             if remember:
@@ -354,14 +363,14 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                 counts_reused += 1
             for el in ct:
                 ct_area.setdefault((el.get("type"), el.get("id")), area_name)
-            for el in play:
+            for el in play + hc:
                 play_area.setdefault((el.get("type"), el.get("id")), area_name)
             # The suffix ops_page.AREA_LINE expects whenever the published
             # number is not tonight's: the rota's reuse, or a fallback.
             counted = ("" if recount and fallback is None else
                        f" (counted {toilet_counts.age_days(counts_cache[area_name], today)} d ago"
                        f"{', recount failed' if fallback is not None else ''})")
-            print(f"  {area_name}: ct={len(ct)} play={len(play)} "
+            print(f"  {area_name}: ct={len(ct)} play={len(play)} hc={len(hc)} "
                   f"toilets={toilets_total}{counted}", file=sys.stderr)
         failed_cities = []
         for i, (display, area_name, admin_level) in enumerate(remaining_cities):

@@ -5,7 +5,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from .classify import (central_key, classify, has_play_area, highchair_state, men_only,
+from .classify import (central_key, classify, has_play_area, highchair_state, is_place, men_only,
                        play_state, wheelchair_state)
 from .osm import element_coords
 from .timezones import tz_override
@@ -124,8 +124,8 @@ KIND_KEYS = ("leisure", "amenity", "shop", "tourism", "healthcare")
 
 def build_play_features(play_data: dict, ct_data: dict | None = None,
                         area_by_key: dict | None = None) -> list[dict]:
-    """GeoJSON features for places that record an indoor play area and are not
-    pins — the prospecting list, and a strictly different dataset from the
+    """GeoJSON features for places that record an indoor play area or a high
+    chair (v88) and are not pins — the prospecting list, and a strictly different dataset from the
     pins.
 
     These are not a fourth status. A pin is a place where a table is *known* to
@@ -157,7 +157,7 @@ def build_play_features(play_data: dict, ct_data: dict | None = None,
         value = (tags.get("changing_table") or "").strip()
         # The key's presence decides, not the stripped value: a blank
         # `changing_table=` is somebody's tag, not an open question.
-        if ("changing_table" in tags and value != "no") or not has_play_area(tags):
+        if ("changing_table" in tags and value != "no") or not is_place(tags):
             continue
         lat, lon = element_coords(el)
         if lat is None:
@@ -173,6 +173,8 @@ def build_play_features(play_data: dict, ct_data: dict | None = None,
                 "kind": next((tags[k] for k in KIND_KEYS if tags.get(k)), None),
                 # "no" or None — see the docstring; never anything else.
                 "changing_table": value or None,
+                # Told apart from a high-chair-only place (v88) by the popup.
+                "play_area": has_play_area(tags),
                 # As on the pins (v26), so the wheelchair chip can narrow the
                 # rings by the same rule (v28). Same free tags, no new query.
                 "wheelchair": wheelchair_state(tags),

@@ -381,7 +381,7 @@ def test_a_failed_recount_next_to_a_full_sweep_keeps_the_cached_count(
     err = capsys.readouterr().err
     assert "WARN Bremen: toilet count" in err and "from 8 d ago" in err
     # The area line keeps the suffix the ops page parses.
-    assert "  Bremen: ct=9 play=4 toilets=100 (counted 8 d ago, recount failed)" in err
+    assert "  Bremen: ct=9 play=4 hc=0 toilets=100 (counted 8 d ago, recount failed)" in err
     # Counted apart from the rota's reuse, so a persistent failure shows.
     assert ("0 area(s) counted tonight, 0 reused from" in err
             and "17 fell back after a failed recount" in err)

@@ -183,3 +183,11 @@ def test_men_only_never_matches_female_toilet_by_substring():
     # "female_toilet" contains "male_toilet" — the same trap classify guards.
     assert not men_only("female_toilet")
     assert not men_only("female_toilet;baby_room")
+
+
+def test_is_place_is_a_play_area_or_a_positive_highchair():
+    from pipeline.classify import is_place
+    assert is_place({"kids_area": "yes"})
+    assert is_place({"highchair": "yes"}) and is_place({"highchair": "2"})
+    assert not is_place({"highchair": "no"}) and not is_place({"highchair": "0"})
+    assert not is_place({"highchair": "limited"}) and not is_place({"amenity": "cafe"})

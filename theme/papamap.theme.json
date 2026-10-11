@@ -3573,7 +3573,8 @@
                     "leisure=playground",
                     "indoor=yes"
                   ]
-                }
+                },
+                "highchair~i~^(yes|[1-9][0-9]*)$"
               ]
             },
             "changing_table!~*",
@@ -3584,39 +3585,39 @@
       "minzoom": 12,
       "title": {
         "render": {
-          "en": "Place to play",
-          "de": "Spielort",
-          "da": "Legested",
-          "nl": "Plek om te spelen",
-          "fr": "Lieu de jeu",
-          "it": "Posto dove giocare",
-          "cs": "Místo ke hraní",
-          "pl": "Miejsce do zabawy",
-          "sv": "Plats att leka på",
-          "bs": "Mjesto za igru",
-          "ca": "Lloc per jugar",
-          "et": "Koht mängimiseks",
-          "es": "Lugar para jugar",
-          "hr": "Mjesto za igru",
-          "is": "Leikstaður",
-          "lv": "Vieta rotaļām",
-          "lt": "Vieta žaisti",
-          "hu": "Játszóhely",
-          "nb_NO": "Sted å leke",
-          "no": "Sted å leke",
-          "pt": "Local para brincar",
-          "ro": "Loc de joacă",
-          "sq": "Vend për lojë",
-          "sk": "Miesto na hranie",
-          "sl": "Kraj za igro",
-          "fi": "Leikkipaikka",
-          "el": "Μέρος για παιχνίδι",
-          "be": "Месца для гульняў",
-          "bg": "Място за игра",
-          "mk": "Место за игра",
-          "sr": "Место за игру",
-          "uk": "Місце для ігор",
-          "ja": "遊べる場所"
+          "en": "Place with a high chair",
+          "de": "Ort mit Hochstuhl",
+          "da": "Sted med højstol",
+          "nl": "Plek met kinderstoel",
+          "fr": "Lieu avec chaise haute",
+          "it": "Posto con seggiolone",
+          "cs": "Místo s dětskou židličkou",
+          "pl": "Miejsce z krzesełkiem do karmienia",
+          "sv": "Plats med barnstol",
+          "bs": "Mjesto s hranilicom",
+          "ca": "Lloc amb trona",
+          "et": "Koht lastetooliga",
+          "es": "Lugar con trona",
+          "hr": "Mjesto s hranilicom",
+          "is": "Staður með barnastól",
+          "lv": "Vieta ar bērnu krēsliņu",
+          "lt": "Vieta su maitinimo kėdute",
+          "hu": "Etetőszékes hely",
+          "nb_NO": "Sted med barnestol",
+          "no": "Sted med barnestol",
+          "pt": "Local com cadeira de papa",
+          "ro": "Loc cu scaun înalt",
+          "sq": "Vend me karrige të lartë",
+          "sk": "Miesto so stoličkou",
+          "sl": "Kraj z otroškim stolčkom",
+          "fi": "Paikka, jossa on syöttötuoli",
+          "el": "Μέρος με παιδικό καρεκλάκι",
+          "be": "Месца з дзіцячым крэслам",
+          "bg": "Място с детско столче",
+          "mk": "Место со детско столче",
+          "sr": "Место са хранилицом",
+          "uk": "Місце з дитячим стільчиком",
+          "ja": "ベビーチェアのある場所"
         },
         "mappings": [
           {
@@ -3656,6 +3657,57 @@
               "uk": "{name}",
               "ja": "{name}"
             }
+          },
+          {
+            "if": {
+              "or": [
+                "kids_area~i~^(yes|indoor|designated)$",
+                "kids_area:indoor~i~^(yes|indoor|designated)$",
+                "leisure=indoor_play",
+                {
+                  "and": [
+                    "leisure=playground",
+                    "indoor=yes"
+                  ]
+                },
+                "highchair~i~^(yes|[1-9][0-9]*)$"
+              ]
+            },
+            "then": {
+              "en": "Place to play",
+              "de": "Spielort",
+              "da": "Legested",
+              "nl": "Plek om te spelen",
+              "fr": "Lieu de jeu",
+              "it": "Posto dove giocare",
+              "cs": "Místo ke hraní",
+              "pl": "Miejsce do zabawy",
+              "sv": "Plats att leka på",
+              "bs": "Mjesto za igru",
+              "ca": "Lloc per jugar",
+              "et": "Koht mängimiseks",
+              "es": "Lugar para jugar",
+              "hr": "Mjesto za igru",
+              "is": "Leikstaður",
+              "lv": "Vieta rotaļām",
+              "lt": "Vieta žaisti",
+              "hu": "Játszóhely",
+              "nb_NO": "Sted å leke",
+              "no": "Sted å leke",
+              "pt": "Local para brincar",
+              "ro": "Loc de joacă",
+              "sq": "Vend për lojë",
+              "sk": "Miesto na hranie",
+              "sl": "Kraj za igro",
+              "fi": "Leikkipaikka",
+              "el": "Μέρος για παιχνίδι",
+              "be": "Месца для гульняў",
+              "bg": "Място за игра",
+              "mk": "Место за игра",
+              "sr": "Место за игру",
+              "uk": "Місце для ігор",
+              "ja": "遊べる場所"
+            }
           }
         ]
       },
@@ -3681,39 +3733,39 @@
         {
           "id": "dad-status",
           "render": {
-            "en": "<b style='color:#0072b2'>Children can play here — but nobody has recorded whether there is a changing table.</b> You are standing in front of it: answer the question below.",
-            "de": "<b style='color:#0072b2'>Hier können Kinder spielen — aber niemand hat eingetragen, ob es einen Wickeltisch gibt.</b> Du stehst davor: beantworte unten die Frage.",
-            "da": "<b style='color:#0072b2'>Børn kan lege her — men ingen har registreret, om der er et puslebord.</b> Du står foran det: besvar spørgsmålet nedenfor.",
-            "nl": "<b style='color:#0072b2'>Kinderen kunnen hier spelen — maar niemand heeft ingevuld of er een luiertafel is.</b> Je staat er nu voor: beantwoord de vraag hieronder.",
-            "fr": "<b style='color:#0072b2'>Les enfants peuvent jouer ici — mais personne n’a indiqué s’il y a une table à langer.</b> Vous êtes devant : répondez à la question ci-dessous.",
-            "it": "<b style='color:#0072b2'>I bambini possono giocare qui — ma nessuno ha indicato se c’è un fasciatoio.</b> Ci sei davanti: rispondi alla domanda qui sotto.",
-            "cs": "<b style='color:#0072b2'>Děti si tu mohou hrát — ale nikdo nezapsal, jestli je tu přebalovací pult.</b> Stojíš před ním: odpověz na otázku níže.",
-            "pl": "<b style='color:#0072b2'>Dzieci mogą się tu bawić — ale nikt nie zapisał, czy jest przewijak.</b> Stoisz przed nim: odpowiedz na pytanie poniżej.",
-            "sv": "<b style='color:#0072b2'>Barn kan leka här — men ingen har skrivit in om det finns ett skötbord.</b> Du står framför platsen: svara på frågan nedan.",
-            "bs": "<b style='color:#0072b2'>Djeca se ovdje mogu igrati — ali niko nije upisao ima li stola za previjanje.</b> Stojiš ispred njega: odgovori na pitanje ispod.",
-            "ca": "<b style='color:#0072b2'>Aquí els nens poden jugar — però ningú no ha registrat si hi ha canviador.</b> Hi ets al davant: respon la pregunta de sota.",
-            "et": "<b style='color:#0072b2'>Lapsed saavad siin mängida — aga keegi pole märkinud, kas mähkimislaud on olemas.</b> Sa seisad selle ees: vasta allolevale küsimusele.",
-            "es": "<b style='color:#0072b2'>Aquí los niños pueden jugar — pero nadie ha registrado si hay cambiador.</b> Estás delante: responde a la pregunta de abajo.",
-            "hr": "<b style='color:#0072b2'>Djeca se ovdje mogu igrati — ali nitko nije upisao ima li stola za previjanje.</b> Stojiš ispred njega: odgovori na pitanje u nastavku.",
-            "is": "<b style='color:#0072b2'>Börn geta leikið sér hér — en enginn hefur skráð hvort skiptiborð er til.</b> Þú stendur fyrir framan staðinn: svaraðu spurningunni hér fyrir neðan.",
-            "lv": "<b style='color:#0072b2'>Bērni šeit var rotaļāties — bet neviens nav atzīmējis, vai ir pārtinamais galdiņš.</b> Tu stāvi tai priekšā: atbildi uz jautājumu zemāk.",
-            "lt": "<b style='color:#0072b2'>Vaikai čia gali žaisti — bet niekas nenurodė, ar yra pervystymo stalas.</b> Stovi priešais ją: atsakyk į toliau pateiktą klausimą.",
-            "hu": "<b style='color:#0072b2'>Itt a gyerekek játszhatnak — de senki sem jegyezte fel, hogy van-e pelenkázóasztal.</b> Előtte állsz: válaszolj az alábbi kérdésre.",
-            "nb_NO": "<b style='color:#0072b2'>Barn kan leke her — men ingen har registrert om det finnes stellebord.</b> Du står foran stedet: svar på spørsmålet nedenfor.",
-            "no": "<b style='color:#0072b2'>Barn kan leke her — men ingen har registrert om det finnes stellebord.</b> Du står foran stedet: svar på spørsmålet nedenfor.",
-            "pt": "<b style='color:#0072b2'>As crianças podem brincar aqui — mas ninguém registou se há fraldário.</b> Está mesmo à frente: responda à pergunta abaixo.",
-            "ro": "<b style='color:#0072b2'>Copiii se pot juca aici — dar nimeni nu a notat dacă există masă de înfășat.</b> Ești chiar în fața lui: răspunde la întrebarea de mai jos.",
-            "sq": "<b style='color:#0072b2'>Fëmijët mund të luajnë këtu — por askush nuk ka shënuar nëse ka tavolinë ndërrimi.</b> Je pikërisht përpara tij: përgjigju pyetjes më poshtë.",
-            "sk": "<b style='color:#0072b2'>Deti sa tu môžu hrať — ale nikto nezapísal, či je tu prebaľovací pult.</b> Stojíš pred ním: odpovedz na otázku nižšie.",
-            "sl": "<b style='color:#0072b2'>Otroci se tu lahko igrajo — a nihče ni zapisal, ali je previjalna miza.</b> Stojiš pred njim: odgovori na spodnje vprašanje.",
-            "fi": "<b style='color:#0072b2'>Lapset voivat leikkiä täällä — mutta kukaan ei ole merkinnyt, onko hoitopöytää.</b> Seisot sen edessä: vastaa alla olevaan kysymykseen.",
-            "el": "<b style='color:#0072b2'>Τα παιδιά μπορούν να παίξουν εδώ — αλλά κανείς δεν έχει καταγράψει αν υπάρχει αλλαξιέρα.</b> Βρίσκεσαι μπροστά του: απάντησε στην ερώτηση παρακάτω.",
-            "be": "<b style='color:#0072b2'>Дзеці могуць тут гуляць — але ніхто не адзначыў, ці ёсць стол для спавівання.</b> Ты стаіш перад ім: адкажы на пытанне ніжэй.",
-            "bg": "<b style='color:#0072b2'>Децата могат да играят тук — но никой не е отбелязал дали има маса за повиване.</b> Стоиш пред него: отговори на въпроса по-долу.",
-            "mk": "<b style='color:#0072b2'>Децата можат да си играат овде — но никој не забележал дали има маса за пеленање.</b> Стоиш пред него: одговори на прашањето подолу.",
-            "sr": "<b style='color:#0072b2'>Деца се овде могу играти — али нико није уписао да ли има стола за превијање.</b> Стојиш испред њега: одговори на питање испод.",
-            "uk": "<b style='color:#0072b2'>Діти можуть тут гратися — але ніхто не позначив, чи є пеленальний столик.</b> Ти стоїш перед ним: дай відповідь на запитання нижче.",
-            "ja": "<b style='color:#0072b2'>ここは子どもが遊べますが、おむつ交換台があるか誰も記録していません。</b> 目の前にいるなら、下の質問に答えてください。"
+            "en": "<b style='color:#0072b2'>A high chair is recorded here — but nobody has recorded whether there is a changing table.</b> You are standing in front of it: answer the question below.",
+            "de": "<b style='color:#0072b2'>Hochstuhl erfasst — aber niemand hat eingetragen, ob es einen Wickeltisch gibt.</b> Du stehst davor: beantworte unten die Frage.",
+            "da": "<b style='color:#0072b2'>Her er der registreret en højstol — men ingen har registreret, om der er et puslebord.</b> Du står foran det: besvar spørgsmålet nedenfor.",
+            "nl": "<b style='color:#0072b2'>Hier is een kinderstoel vastgelegd — maar niemand heeft ingevuld of er een luiertafel is.</b> Je staat er nu voor: beantwoord de vraag hieronder.",
+            "fr": "<b style='color:#0072b2'>Une chaise haute est renseignée ici — mais personne n’a indiqué s’il y a une table à langer.</b> Vous êtes devant : répondez à la question ci-dessous.",
+            "it": "<b style='color:#0072b2'>Qui è registrato un seggiolone — ma nessuno ha indicato se c’è un fasciatoio.</b> Ci sei davanti: rispondi alla domanda qui sotto.",
+            "cs": "<b style='color:#0072b2'>Je tu zaznamenaná dětská židlička — ale nikdo nezapsal, jestli je tu přebalovací pult.</b> Stojíš před ním: odpověz na otázku níže.",
+            "pl": "<b style='color:#0072b2'>Krzesełko do karmienia jest zapisane — ale nikt nie zapisał, czy jest przewijak.</b> Stoisz przed nim: odpowiedz na pytanie poniżej.",
+            "sv": "<b style='color:#0072b2'>Här finns en barnstol registrerad — men ingen har skrivit in om det finns ett skötbord.</b> Du står framför platsen: svara på frågan nedan.",
+            "bs": "<b style='color:#0072b2'>Ovdje je zabilježena hranilica — ali niko nije upisao ima li stola za previjanje.</b> Stojiš ispred njega: odgovori na pitanje ispod.",
+            "ca": "<b style='color:#0072b2'>Aquí hi ha una trona registrada — però ningú no ha registrat si hi ha canviador.</b> Hi ets al davant: respon la pregunta de sota.",
+            "et": "<b style='color:#0072b2'>Siin on registreeritud lastetool — aga keegi pole märkinud, kas mähkimislaud on olemas.</b> Sa seisad selle ees: vasta allolevale küsimusele.",
+            "es": "<b style='color:#0072b2'>Aquí hay una trona registrada — pero nadie ha registrado si hay cambiador.</b> Estás delante: responde a la pregunta de abajo.",
+            "hr": "<b style='color:#0072b2'>Ovdje je zabilježena hranilica — ali nitko nije upisao ima li stola za previjanje.</b> Stojiš ispred njega: odgovori na pitanje u nastavku.",
+            "is": "<b style='color:#0072b2'>Hér er skráður barnastóll — en enginn hefur skráð hvort skiptiborð er til.</b> Þú stendur fyrir framan staðinn: svaraðu spurningunni hér fyrir neðan.",
+            "lv": "<b style='color:#0072b2'>Šeit ir atzīmēts bērnu krēsliņš — bet neviens nav atzīmējis, vai ir pārtinamais galdiņš.</b> Tu stāvi tai priekšā: atbildi uz jautājumu zemāk.",
+            "lt": "<b style='color:#0072b2'>Čia pažymėta maitinimo kėdutė — bet niekas nenurodė, ar yra pervystymo stalas.</b> Stovi priešais ją: atsakyk į toliau pateiktą klausimą.",
+            "hu": "<b style='color:#0072b2'>Itt egy etetőszék van rögzítve — de senki sem jegyezte fel, hogy van-e pelenkázóasztal.</b> Előtte állsz: válaszolj az alábbi kérdésre.",
+            "nb_NO": "<b style='color:#0072b2'>Her er det registrert en barnestol — men ingen har registrert om det finnes stellebord.</b> Du står foran stedet: svar på spørsmålet nedenfor.",
+            "no": "<b style='color:#0072b2'>Her er det registrert en barnestol — men ingen har registrert om det finnes stellebord.</b> Du står foran stedet: svar på spørsmålet nedenfor.",
+            "pt": "<b style='color:#0072b2'>Aqui há uma cadeira de papa registada — mas ninguém registou se há fraldário.</b> Está mesmo à frente: responda à pergunta abaixo.",
+            "ro": "<b style='color:#0072b2'>Aici este înregistrat un scaun înalt pentru copii — dar nimeni nu a notat dacă există masă de înfășat.</b> Ești chiar în fața lui: răspunde la întrebarea de mai jos.",
+            "sq": "<b style='color:#0072b2'>Këtu është regjistruar një karrige e lartë për fëmijë — por askush nuk ka shënuar nëse ka tavolinë ndërrimi.</b> Je pikërisht përpara tij: përgjigju pyetjes më poshtë.",
+            "sk": "<b style='color:#0072b2'>Je tu zaznamenaná detská stolička — ale nikto nezapísal, či je tu prebaľovací pult.</b> Stojíš pred ním: odpovedz na otázku nižšie.",
+            "sl": "<b style='color:#0072b2'>Tukaj je zabeležen otroški stolček — a nihče ni zapisal, ali je previjalna miza.</b> Stojiš pred njim: odgovori na spodnje vprašanje.",
+            "fi": "<b style='color:#0072b2'>Täällä on merkitty syöttötuoli — mutta kukaan ei ole merkinnyt, onko hoitopöytää.</b> Seisot sen edessä: vastaa alla olevaan kysymykseen.",
+            "el": "<b style='color:#0072b2'>Εδώ είναι καταγεγραμμένο ένα παιδικό καρεκλάκι — αλλά κανείς δεν έχει καταγράψει αν υπάρχει αλλαξιέρα.</b> Βρίσκεσαι μπροστά του: απάντησε στην ερώτηση παρακάτω.",
+            "be": "<b style='color:#0072b2'>Тут адзначана дзіцячае крэсла — але ніхто не адзначыў, ці ёсць стол для спавівання.</b> Ты стаіш перад ім: адкажы на пытанне ніжэй.",
+            "bg": "<b style='color:#0072b2'>Тук е отбелязано детско столче — но никой не е отбелязал дали има маса за повиване.</b> Стоиш пред него: отговори на въпроса по-долу.",
+            "mk": "<b style='color:#0072b2'>Тука е забележано детско столче — но никој не забележал дали има маса за пеленање.</b> Стоиш пред него: одговори на прашањето подолу.",
+            "sr": "<b style='color:#0072b2'>Овде је забележена хранилица — али нико није уписао да ли има стола за превијање.</b> Стојиш испред њега: одговори на питање испод.",
+            "uk": "<b style='color:#0072b2'>Тут зафіксовано дитячий стільчик — але ніхто не позначив, чи є пеленальний столик.</b> Ти стоїш перед ним: дай відповідь на запитання нижче.",
+            "ja": "<b style='color:#0072b2'>ここにはベビーチェアが記録されていますが、おむつ交換台があるか誰も記録していません。</b> 目の前にいるなら、下の質問に答えてください。"
           },
           "mappings": [
             {
@@ -3891,6 +3943,57 @@
                 "sr": "Овде нема стола за превијање.",
                 "uk": "Тут немає пеленального столика.",
                 "ja": "ここにおむつ交換台はありません。"
+              }
+            },
+            {
+              "if": {
+                "or": [
+                  "kids_area~i~^(yes|indoor|designated)$",
+                  "kids_area:indoor~i~^(yes|indoor|designated)$",
+                  "leisure=indoor_play",
+                  {
+                    "and": [
+                      "leisure=playground",
+                      "indoor=yes"
+                    ]
+                  },
+                  "highchair~i~^(yes|[1-9][0-9]*)$"
+                ]
+              },
+              "then": {
+                "en": "<b style='color:#0072b2'>Children can play here — but nobody has recorded whether there is a changing table.</b> You are standing in front of it: answer the question below.",
+                "de": "<b style='color:#0072b2'>Hier können Kinder spielen — aber niemand hat eingetragen, ob es einen Wickeltisch gibt.</b> Du stehst davor: beantworte unten die Frage.",
+                "da": "<b style='color:#0072b2'>Børn kan lege her — men ingen har registreret, om der er et puslebord.</b> Du står foran det: besvar spørgsmålet nedenfor.",
+                "nl": "<b style='color:#0072b2'>Kinderen kunnen hier spelen — maar niemand heeft ingevuld of er een luiertafel is.</b> Je staat er nu voor: beantwoord de vraag hieronder.",
+                "fr": "<b style='color:#0072b2'>Les enfants peuvent jouer ici — mais personne n’a indiqué s’il y a une table à langer.</b> Vous êtes devant : répondez à la question ci-dessous.",
+                "it": "<b style='color:#0072b2'>I bambini possono giocare qui — ma nessuno ha indicato se c’è un fasciatoio.</b> Ci sei davanti: rispondi alla domanda qui sotto.",
+                "cs": "<b style='color:#0072b2'>Děti si tu mohou hrát — ale nikdo nezapsal, jestli je tu přebalovací pult.</b> Stojíš před ním: odpověz na otázku níže.",
+                "pl": "<b style='color:#0072b2'>Dzieci mogą się tu bawić — ale nikt nie zapisał, czy jest przewijak.</b> Stoisz przed nim: odpowiedz na pytanie poniżej.",
+                "sv": "<b style='color:#0072b2'>Barn kan leka här — men ingen har skrivit in om det finns ett skötbord.</b> Du står framför platsen: svara på frågan nedan.",
+                "bs": "<b style='color:#0072b2'>Djeca se ovdje mogu igrati — ali niko nije upisao ima li stola za previjanje.</b> Stojiš ispred njega: odgovori na pitanje ispod.",
+                "ca": "<b style='color:#0072b2'>Aquí els nens poden jugar — però ningú no ha registrat si hi ha canviador.</b> Hi ets al davant: respon la pregunta de sota.",
+                "et": "<b style='color:#0072b2'>Lapsed saavad siin mängida — aga keegi pole märkinud, kas mähkimislaud on olemas.</b> Sa seisad selle ees: vasta allolevale küsimusele.",
+                "es": "<b style='color:#0072b2'>Aquí los niños pueden jugar — pero nadie ha registrado si hay cambiador.</b> Estás delante: responde a la pregunta de abajo.",
+                "hr": "<b style='color:#0072b2'>Djeca se ovdje mogu igrati — ali nitko nije upisao ima li stola za previjanje.</b> Stojiš ispred njega: odgovori na pitanje u nastavku.",
+                "is": "<b style='color:#0072b2'>Börn geta leikið sér hér — en enginn hefur skráð hvort skiptiborð er til.</b> Þú stendur fyrir framan staðinn: svaraðu spurningunni hér fyrir neðan.",
+                "lv": "<b style='color:#0072b2'>Bērni šeit var rotaļāties — bet neviens nav atzīmējis, vai ir pārtinamais galdiņš.</b> Tu stāvi tai priekšā: atbildi uz jautājumu zemāk.",
+                "lt": "<b style='color:#0072b2'>Vaikai čia gali žaisti — bet niekas nenurodė, ar yra pervystymo stalas.</b> Stovi priešais ją: atsakyk į toliau pateiktą klausimą.",
+                "hu": "<b style='color:#0072b2'>Itt a gyerekek játszhatnak — de senki sem jegyezte fel, hogy van-e pelenkázóasztal.</b> Előtte állsz: válaszolj az alábbi kérdésre.",
+                "nb_NO": "<b style='color:#0072b2'>Barn kan leke her — men ingen har registrert om det finnes stellebord.</b> Du står foran stedet: svar på spørsmålet nedenfor.",
+                "no": "<b style='color:#0072b2'>Barn kan leke her — men ingen har registrert om det finnes stellebord.</b> Du står foran stedet: svar på spørsmålet nedenfor.",
+                "pt": "<b style='color:#0072b2'>As crianças podem brincar aqui — mas ninguém registou se há fraldário.</b> Está mesmo à frente: responda à pergunta abaixo.",
+                "ro": "<b style='color:#0072b2'>Copiii se pot juca aici — dar nimeni nu a notat dacă există masă de înfășat.</b> Ești chiar în fața lui: răspunde la întrebarea de mai jos.",
+                "sq": "<b style='color:#0072b2'>Fëmijët mund të luajnë këtu — por askush nuk ka shënuar nëse ka tavolinë ndërrimi.</b> Je pikërisht përpara tij: përgjigju pyetjes më poshtë.",
+                "sk": "<b style='color:#0072b2'>Deti sa tu môžu hrať — ale nikto nezapísal, či je tu prebaľovací pult.</b> Stojíš pred ním: odpovedz na otázku nižšie.",
+                "sl": "<b style='color:#0072b2'>Otroci se tu lahko igrajo — a nihče ni zapisal, ali je previjalna miza.</b> Stojiš pred njim: odgovori na spodnje vprašanje.",
+                "fi": "<b style='color:#0072b2'>Lapset voivat leikkiä täällä — mutta kukaan ei ole merkinnyt, onko hoitopöytää.</b> Seisot sen edessä: vastaa alla olevaan kysymykseen.",
+                "el": "<b style='color:#0072b2'>Τα παιδιά μπορούν να παίξουν εδώ — αλλά κανείς δεν έχει καταγράψει αν υπάρχει αλλαξιέρα.</b> Βρίσκεσαι μπροστά του: απάντησε στην ερώτηση παρακάτω.",
+                "be": "<b style='color:#0072b2'>Дзеці могуць тут гуляць — але ніхто не адзначыў, ці ёсць стол для спавівання.</b> Ты стаіш перад ім: адкажы на пытанне ніжэй.",
+                "bg": "<b style='color:#0072b2'>Децата могат да играят тук — но никой не е отбелязал дали има маса за повиване.</b> Стоиш пред него: отговори на въпроса по-долу.",
+                "mk": "<b style='color:#0072b2'>Децата можат да си играат овде — но никој не забележал дали има маса за пеленање.</b> Стоиш пред него: одговори на прашањето подолу.",
+                "sr": "<b style='color:#0072b2'>Деца се овде могу играти — али нико није уписао да ли има стола за превијање.</b> Стојиш испред њега: одговори на питање испод.",
+                "uk": "<b style='color:#0072b2'>Діти можуть тут гратися — але ніхто не позначив, чи є пеленальний столик.</b> Ти стоїш перед ним: дай відповідь на запитання нижче.",
+                "ja": "<b style='color:#0072b2'>ここは子どもが遊べますが、おむつ交換台があるか誰も記録していません。</b> 目の前にいるなら、下の質問に答えてください。"
               }
             }
           ]
