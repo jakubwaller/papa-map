@@ -35,7 +35,7 @@ The first three show in search results, so map, nearest and the grey-pin questio
 | 3 | `03-room` | popup on a grey pin with the room question | Grauer Pin? Sag, in welchem *Raum* der Tisch ist | Die Antwort geht direkt nach OpenStreetMap. |
 | 4 | `04-route` | green pin's popup with the Route button visible, no dialog | *Route* zum Wickeltisch | Öffnet deine Navi-App: Apple Maps, Google Maps, Waze oder Organic Maps. |
 | 5 | `05-add` | "+ Ort hinzufügen" dialog at zoom 16, list of nearby places OSM already knows | Fehlenden *Ort* eintragen | Orte in deiner Nähe, die OpenStreetMap schon kennt. Antworte gleich in der App. |
-| 6 | `06-filters` | wheelchair chip on, chip bar scrolled to it; iPad shows wheelchair, play corner and high chair with labels, iPhone only wheelchair + play corner (labels hide below 640 px, the bar is too narrow) | iPad: *Hochstuhl*, Spielecke, Barrierefrei; iPhone (`phone` block in texts.json): *Barrierefrei*, Spielecke | iPad: Die Karte zeigt nur, was du brauchst.; iPhone: the same |
+| 6 | `06-filters` | wheelchair chip on, chip bar scrolled to it; iPad shows wheelchair, play corner and high chair with labels, iPhone only wheelchair + play corner (labels hide below 640 px, the bar is too narrow) | iPad: *Hochstuhl*, Spielecke, Barrierefrei; iPhone (`phone` block in texts.json): *Barrierefrei*, Spielecke | iPad: Die Karte zeigt nur, was du brauchst.; iPhone and Play: Auch Hochstühle. Die Karte zeigt nur, was du brauchst. (the bar hides the high chair, so the subline names it) |
 | 7 | `07-offline` | offline dialog open (the download button in the map controls) | Stadt *offline* speichern | Hamburg sind 27 MB. Dann geht die Karte auch ohne Netz. |
 | 8 | `08-me` | Mein PapaMap panel open | *Mein* PapaMap | Deine Antworten, gemerkte Orte, und wie viel in deiner Stadt schon beantwortet ist. |
 | 9 | `09-widget` | Jakub's phone: home screen with the PapaMap widget | Der nächste Tisch auf dem *Homescreen* | Widget für Home- und Sperrbildschirm. |
@@ -48,7 +48,7 @@ The first three show in search results, so map, nearest and the grey-pin questio
 | 3 | Grey pin? Say which *room* the table is in | Your answer goes straight to OpenStreetMap. |
 | 4 | *Route* to the table | Opens your navigation app: Apple Maps, Google Maps, Waze or Organic Maps. |
 | 5 | Add a missing *place* | Places nearby that OpenStreetMap already knows. Answer right in the app. |
-| 6 | iPad: *High chair*, play corner, accessible; phones (`phone`/`android` blocks): *Accessible*, play corner | The map shows only what you need. |
+| 6 | iPad: *High chair*, play corner, accessible; phones (`phone`/`android` blocks): *Accessible*, play corner | iPad: The map shows only what you need.; phones: High chairs too. The map shows only what you need. |
 | 7 | Save a city *offline* | Hamburg is 27 MB. The map then works without a connection. |
 | 8 | *My* PapaMap | Your answers, saved places, and how much of your city is answered already. |
 | 9 | The nearest table on your *home screen* | Widget for the home and lock screen. |
