@@ -1064,8 +1064,9 @@ function placeHTML(p) {
     // the play-place card was the one that still did not fit.)
     rows.push(`<div class="status play ask-ctx">${esc(t(p.play_area === false ? "metaPlacesHc" : "metaPlaces"))}</div>`);
   // Between the headline and the question, where a pin's popup has them.
-  // The high-chair line only — a place is never asked (v65).
-  rows.push(...highchairRows(p));
+  // The high-chair line only — a place is never asked (v65). Not under the
+  // high-chair headline (v88), which already says it.
+  if (p.changing_table || p.play_area !== false) rows.push(...highchairRows(p));
   rows.push(...wheelchairRows(p));
   if (!p.changing_table) rows.push(askHTML("askTable", inFlight.has(p.osm_url)));
   if (p.opening_hours)
