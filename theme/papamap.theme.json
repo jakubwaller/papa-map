@@ -3573,7 +3573,8 @@
                     "leisure=playground",
                     "indoor=yes"
                   ]
-                }
+                },
+                "highchair~i~^(yes|[1-9][0-9]*)$"
               ]
             },
             "changing_table!~*",

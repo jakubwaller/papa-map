@@ -1,6 +1,6 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
-import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus, countPlay,
+import { loadFeatures, loadPlaces, placeFeatures, splitPlaces, filterFeatures, countsByStatus, countPlay,
          chipKeys, chipKey, chipView, MEN_ONLY_CHIP,
          countWheelchair, countHighchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
@@ -14,16 +14,16 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs,
-         zoneForFeature } from "./datasource.js?v=app86";
+         zoneForFeature } from "./datasource.js?v=app87";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app86";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app87";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app86";
+         writeTags } from "./osm.js?v=app87";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -31,7 +31,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app86";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app87";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -41,27 +41,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app86";
+         reviewTracker } from "./native.js?v=app87";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app86";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app87";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app86";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app87";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app86";
+import { isOpenNow } from "./opening-hours.js?v=app87";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app86";
-// The bundled shell's pin (`?v=app86`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app87";
+// The bundled shell's pin (`?v=app87`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -493,6 +493,7 @@ let wheelchairOnly = (() => {
   try { return pickWheelchair(localStorage.getItem(WHEELCHAIR_KEY)); } catch { return false; }
 })();
 let placesOn = true;                                      // add the prospects (on by default since 2026-09-10)
+let placesHcOn = true;                                    // and the high-chair-only ones (v88), likewise not remembered
 
 const statsEl = document.getElementById("stats");
 const filterBar = document.getElementById("filter-bar");
@@ -722,10 +723,13 @@ function refreshPins() {
   const total = pinFeatures(allFeatures, wheelchairOnly).length;
   // The places narrow under the wheelchair chip like the tables (v28), and
   // under the high-chair chip the same way (v65).
-  const places = placesOn ? placeFeatures(allPlaces, wheelchairOnly, highchairOnly) : [];
+  const places = splitPlaces(placeFeatures(allPlaces, wheelchairOnly, highchairOnly), placesOn, placesHcOn);
+  const nHc = places.filter((p) => p.play_area === false).length;
+  const nPlay = places.length - nHc;
   countEl.textContent = total
     ? t("countShown", { shown: shown.length, total })
-      + (places.length ? t("countPlaces", { n: places.length }) : "")
+      + (nPlay ? t("countPlaces", { n: nPlay }) : "")
+      + (nHc ? t("countPlacesHc", { n: nHc }) : "")
     : t("countNoData");
   // In the app the count shows only when there is nothing to count.
   countEl.classList.toggle("nodata", !total);
@@ -1058,7 +1062,7 @@ function placeHTML(p) {
     // with the .ask block. No styling of its own. ("Been here? Then you know"
     // used to stand between the two; the question says it, and on a 12 mini
     // the play-place card was the one that still did not fit.)
-    rows.push(`<div class="status play ask-ctx">${esc(t("metaPlaces"))}</div>`);
+    rows.push(`<div class="status play ask-ctx">${esc(t(p.play_area === false ? "metaPlacesHc" : "metaPlaces"))}</div>`);
   // Between the headline and the question, where a pin's popup has them.
   // The high-chair line only — a place is never asked (v65).
   rows.push(...highchairRows(p));
@@ -1283,7 +1287,10 @@ function panPopupIntoView() {
 
 // ---- Status chips: legend, count badges and filter toggles in one ----
 // Three status chips (on by default, each one subtracts when switched off),
-// then two blue ones. The first is off by default and, switched on, narrows
+// then wheelchair and two blue ones. (Since v88 the order is status,
+// wheelchair, play corner, high chair, then the two rings: "Play area only"
+// and "High chair only", both on by default, hollow blue, not remembered.)
+// The first blue one is off by default and, switched on, narrows
 // to the pins with a recorded play corner; the second is on by default (since
 // 10 Sep 2026) and, switched off, takes away the places that have a play
 // corner and no changing-table answer at all. Neither is a status: rendering
@@ -1322,8 +1329,11 @@ function renderChips() {
   }
   frag.appendChild(wheelchairChip(countWheelchair(allFeatures)));
   frag.appendChild(playChip(countPlay(pinFeatures(allFeatures, wheelchairOnly))));
-  frag.appendChild(placesChip(placeFeatures(allPlaces, wheelchairOnly).length));
   frag.appendChild(highchairChip(countHighchair(pinFeatures(allFeatures, wheelchairOnly))));
+  // The two rings last (v88), after the high-chair chip.
+  const ringable = placeFeatures(allPlaces, wheelchairOnly);
+  frag.appendChild(placesChip(splitPlaces(ringable, true, false).length));
+  frag.appendChild(placesHcChip(splitPlaces(ringable, false, true).length));
   // Not firstChild: the mode toggle is static markup and holds that slot, so
   // the generated chips go in front of the spacer instead.
   filterBar.insertBefore(frag, filterBar.querySelector(".spacer"));
@@ -1378,7 +1388,15 @@ function placesChip(count) {
   });
 }
 
-// The high-chair chip (v65), last in the strip after the blue chips (v66),
+function placesHcChip(count) {
+  return blueChip({
+    label: "stPlacesHc", aria: "ariaPlacesHc", count, on: placesHcOn, hollow: true,
+    toggle: () => (placesHcOn = !placesHcOn),
+  });
+}
+
+// The high-chair chip (v65), after the blue chips (v66), before the two
+// rings (v88),
 // off by default and not remembered: switched on it narrows the table pins
 // and the play-place rings to those with a recorded high chair. It subtracts,
 // never adds — a silent OSM is unrecorded, not "no high chair". Ink, like the
@@ -1959,9 +1977,9 @@ function clearSearch() {
 // The prospects chip may be switched off, and flying to a place the reader
 // then cannot see would read as a broken tap — ensureVisible's reasoning, for
 // the one filter it does not cover.
-function ensurePlacesVisible() {
-  if (placesOn) return;
-  placesOn = true;
+function ensurePlacesVisible(f) {
+  if (f.play_area === false ? placesHcOn : placesOn) return;
+  if (f.play_area === false) placesHcOn = true; else placesOn = true;
   renderChips();
   refreshPins();
 }
@@ -1987,7 +2005,7 @@ function pickSearchRow(row) {
   }
   const f = row.hit.obj;
   if (row.hit.kind === "table") { ensureVisible(f); openPopup(f); }
-  else { ensurePlacesVisible(); openPlacePopup(f); }
+  else { ensurePlacesVisible(f); openPlacePopup(f); }
   // Exactly what the nearest button does with its own answer: fly, and fit the
   // card to the view it lands in once the flight is over.
   flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }, panPopupIntoView);
@@ -2486,7 +2504,7 @@ async function sharePin(kind, obj) {
   // else — the open question, or a recorded "no" — gets sharePlaceText, which
   // names the place, not a table it does not have.
   const hasTable = kind === "table" || obj.changing_table === "yes";
-  const text = t(hasTable ? "shareText" : "sharePlaceText", { name: title });
+  const text = t(hasTable ? "shareText" : obj.play_area === false ? "sharePlaceHcText" : "sharePlaceText", { name: title });
   if (navigator.share) {
     try { await navigator.share({ title, text, url }); return; }
     // AbortError: the reader closed the OS share sheet without picking

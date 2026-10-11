@@ -783,6 +783,18 @@ and the layer's first question is "does this place have a baby changing table?"
 The sweep pays nothing for them: one union Overpass query per area returns both
 halves, and `osm.split_sweep()` sorts them apart by tag.
 
+### High-chair-only rings
+
+Since v88 the places file also holds objects that record a high chair
+(`highchair` = yes or a number) and no changing-table answer, with or without a
+play area. Each place carries `play_area`; the frontend reads a missing one as
+true, so an older dataset still shows only play places. The rings have two
+chips at the end of the strip, "Play area only" and "High chair only" (both on
+by default, not remembered, `splitPlaces` in `web/datasource.js`); a place with
+both is a play place. The popup headline, share text and count line say "high
+chair" instead of "play area" for the second kind, and the `dad_play_place`
+MapComplete layer selects them too, so the answer button works on their rings.
+
 ## Wheelchair access
 
 Every feature carries the place's wheelchair tags as recorded, and nothing
