@@ -160,6 +160,12 @@ def wheelchair_state(tags: dict, key: str = "wheelchair") -> str | None:
     return value if value in WHEELCHAIR_VALUES else None
 
 
+def is_place(tags: dict) -> bool:
+    """True when an object without a changing-table answer belongs in the places
+    file: an indoor play area (has_play_area) or a recorded high chair."""
+    return has_play_area(tags) or highchair_state(tags) is True
+
+
 def highchair_state(tags: dict) -> bool | str | None:
     """True / False / "unreadable" / None for a high chair, from `highchair=*` (v65).
 

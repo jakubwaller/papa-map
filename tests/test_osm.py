@@ -587,3 +587,16 @@ def test_only_query_faults_are_unfixable():
         assert osm.is_transient(http(status)), status
     for status in (400, 413, 414):
         assert not osm.is_transient(http(status)), status
+
+
+def test_highchair_ql_prefilter_accepts_every_true_highchair_value():
+    import re
+    from pipeline.classify import highchair_state
+    ql = config.highchair_ql("Hamburg", "4")
+    assert ql.count("out tags center;") == 1 and ql.count("area[") == 1
+    assert '[!"changing_table"]' in ql
+    rx = re.search(r'\["highchair"~"([^"]+)",i\]', ql).group(1)
+    for value in ["yes", "Yes", "YES", " yes ", "1", "2", "10", "007", "no", "0", "00",
+                  "limited", "1+", "", "ja", "\u0663"]:
+        if highchair_state({"highchair": value}) is True:
+            assert re.search(rx, value, re.I), value

@@ -1109,19 +1109,37 @@ def _spy():
 def test_no_lookup_for_a_way_that_can_never_become_an_event():
     # is_relevant_tags lets every one of these through, but no builder would
     # keep any of them: an outdoor playground, a wheelchair-only shop, a
-    # toilet edited at v4 with no table, a highchair-only restaurant.
+    # toilet edited at v4 with no table, a highchair=no restaurant.
     changes = delta.parse_osc(__import__("io").BytesIO(_osc(
         _way("modify", 11, 7, "2026-09-23T10:00:00Z", {"leisure": "playground"}),
         _way("modify", 12, 3, "2026-09-23T10:00:00Z",
              {"building": "yes", "shop": "bakery", "wheelchair": "yes"}),
         _way("modify", 13, 4, "2026-09-23T10:00:00Z", {"amenity": "toilets"}),
         _way("modify", 14, 2, "2026-09-23T10:00:00Z",
-             {"amenity": "restaurant", "highchair": "yes"}))))
+             {"amenity": "restaurant", "highchair": "no"}))))
     fetch, calls = _spy()
     dropped = []
     events = delta.process_changes(changes, _empty_dataset(), coord_fetch=fetch, dropped=dropped)
     assert calls == []
     assert events == [] and dropped == []
+
+
+def test_highchair_only_object_becomes_a_place_and_loses_it_with_the_tag():
+    tags = {"amenity": "restaurant", "highchair": "yes"}
+    created = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("create", 31, 1, "2026-09-23T10:00:00Z", tags))))
+    fetch, calls = _spy()
+    events = delta.process_changes(created, _empty_dataset(), coord_fetch=fetch)
+    assert [(u.rsplit("/", 1)[1], kind) for u, kind, _ in events] == [("31", "place")]
+    feat = events[0][2]
+    assert feat["properties"]["play_area"] is False
+    assert feat["properties"]["highchair"] is True
+    base = _empty_dataset()
+    base["places"][feat["properties"]["osm_url"]] = feat
+    gone = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("modify", 31, 2, "2026-09-23T11:00:00Z", {"amenity": "restaurant"}))))
+    events = delta.process_changes(gone, base, coord_fetch=fetch)
+    assert [(u.rsplit("/", 1)[1], kind, f) for u, kind, f in events] == [("31", "place", None)]
 
 
 def test_lookup_still_made_for_ways_that_can_become_an_event():

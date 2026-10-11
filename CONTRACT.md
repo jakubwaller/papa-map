@@ -1,5 +1,21 @@
 # papa-map — build contract (v0)
 
+> **v88 amendment (11 Oct 2026, high-chair places join the places file):
+> `play_places.geojson` now also holds places that record a high chair
+> (`highchair` = yes or a positive number) and carry no `changing_table` key
+> (or `changing_table=no`, like a play place): the same open question, "is
+> there a changing table?". `highchair=no` and unreadable values never
+> qualify; no venue-type filter. New boolean property `play_area` on every
+> place (`has_play_area(tags)`), so the popup can tell a play place from a
+> high-chair-only place. `stats.local.play_places` still counts play-area
+> prospects only; the new `stats.local.highchair_places` counts prospects with
+> a high chair and no play area. The objects come from a separate small
+> Overpass query per sweep area (`config.highchair_ql`), not a clause in
+> `sweep_ql`: measured on the UK, a highchair clause in the union costs 4-11 s
+> and pushes the sweep to ~45 s, at the `[timeout:55]` safety line. The area
+> log line gains `hc=N`; a failing high-chair query fails the area like any
+> other and it is retried.
+
 > **v87 amendment (11 Oct 2026, dialogs fit an old WebView): no data shape
 > change.** The five dialogs' height cap was `100vh` followed by `100dvh` as a
 > plain second declaration. A value with `var()` in it always parses, so where
