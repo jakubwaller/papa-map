@@ -1409,7 +1409,7 @@ test("shareDataset marks a limited place only under the chip", () => {
 
 test("shareDataset reads men_only strictly and defaults name and url", () => {
   const p = fakeShare();
-  const bare = { lat: 1, lon: 2, status: "unknown" };
+  const bare = { lat: 1, lon: 2, status: "female_only" };
   withShare(p, () => shareDataset([bare, { ...bare, men_only: "yes" }, { ...bare, men_only: true }], true));
   const rows = p.written[0];
   assert.equal(rows[0][5], false);
@@ -1417,6 +1417,12 @@ test("shareDataset reads men_only strictly and defaults name and url", () => {
   assert.equal(rows[2][5], true);
   assert.equal(rows[0][3], "");
   assert.equal(rows[0][4], "");
+});
+
+test("shareDataset leaves grey pins out, the widget can never use them", () => {
+  const p = fakeShare();
+  withShare(p, () => shareDataset([SHARED, { ...SHARED, status: "unknown" }]));
+  assert.equal(p.written[0].length, 1);
 });
 
 test("shareDataset without a plugin does nothing and does not throw", () => {

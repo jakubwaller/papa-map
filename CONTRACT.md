@@ -1,6 +1,6 @@
 # papa-map — build contract (v0)
 
-> **v90 amendment (12 Oct 2026, a stray auth link, a double tap and a slow save
+> **v92 amendment (12 Oct 2026, a stray auth link, a double tap and a slow save
 > no longer break an answer): no data shape change.** **(1)** While a login
 > waits for its return (`loginPending`), the app ignores a warm `papamap://auth`
 > (`appUrlOpen`) whose state is not that login's (`awaitingReturn`) and leaves
@@ -18,7 +18,23 @@
 > pin recolours as for any answer; Mein PapaMap's local count adds nothing and
 > waits for the changesets list to bring the first save; the add dialog's watch
 > starts a second before that save (`addWatchSince`), so its pin is still
-> flown to. Shell pin `app88` → `app89`.
+> flown to. Shell pin `app89` → `app90`.
+
+> **v91 amendment (12 Oct 2026, the widget is handed only usable tables): no
+> shipped file changes.** `shareDataset` used to write every table to the
+> widget and the Siri shortcut, grey pins included, 23,003 of 26,541 rows. A
+> grey pin (`status: "unknown"`) is never usable in either reading (`Table.usable`,
+> `Tables.usable`), so those rows are now left out of the compact copy; the
+> nearest usable table is the same, the file about eight times smaller. Shell
+> pin `app88` → `app89`. A `papamap-saved` record gains an optional
+> `toilets: true` (an unnamed amenity=toilets starred from now on), so the
+> list can say "Toilets" rather than "Unnamed place" without the dataset.
+
+> **v90 amendment (12 Oct 2026, a new building's live pin sits where the nightly build puts it): no data shape change.**
+> A way or relation created since the nightly build gets its coordinate from the OSM API's
+> outline (`fetch_osm_full_centroid`). That used the mean of the outline's points, while the
+> nightly build's `out center` is the middle of the bounding box, so the pin jumped by up to
+> tens of metres overnight. Both now use the bounding-box centre.
 
 > **v89 amendment (12 Oct 2026, the app retries the moment a slow download
 > lands): no data shape change.** On a first launch over a slow link the app

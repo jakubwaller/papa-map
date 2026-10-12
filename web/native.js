@@ -18,8 +18,8 @@
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
 // nothing is sent that the website does not send: a download is a GET.
 
-import { isWheelchairLimited } from "./datasource.js?v=app89";
-import { awaitingReturn, loginPending } from "./osm.js?v=app89";
+import { isWheelchairLimited, haversineKm } from "./datasource.js?v=app90";
+import { awaitingReturn, loginPending } from "./osm.js?v=app90";
 
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";
@@ -899,7 +899,9 @@ export function onBrowserFinished(onReturn) {
 export function shareDataset(features, markLimited = false) {
   const p = plugin("PapaMapShare");
   if (!p) return;
-  const rows = features.map((f) => [
+  // Grey pins are never usable in either mode (Table.usable, Tables.java), so
+  // they stay out: 23,003 of 26,541 rows, and a widget extension's memory is tight.
+  const rows = features.filter((f) => f.status !== "unknown").map((f) => [
     +f.lat.toFixed(5), +f.lon.toFixed(5), f.status, f.name || "", f.osm_url || "",
     f.men_only === true, markLimited && isWheelchairLimited(f),
   ]);
@@ -1155,13 +1157,6 @@ export function cityLayers(slug, lang) {
     .map((l) => ({ ...l, id: `city-${slug}-${l.id}` }));
 }
 
-// Great-circle distance in km, for sorting the catalogue by the map's centre.
-export function kmBetween(lat1, lon1, lat2, lon2) {
-  const R = 6371, d = Math.PI / 180;
-  const a = Math.sin((lat2 - lat1) * d / 2) ** 2
-    + Math.cos(lat1 * d) * Math.cos(lat2 * d) * Math.sin((lon2 - lon1) * d / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
 export const bboxCentre = ([w, s, e, n]) => ({ lat: (s + n) / 2, lon: (w + e) / 2 });
 
 // Which saved cities to hold in memory for a view: the ones whose extract the
@@ -1174,7 +1169,7 @@ export function citiesToMount(saved, [w, s, e, n], centre, zoom) {
   if (zoom < MOUNT_ZOOM) return null;
   return saved
     .filter(({ bbox: [cw, cs, ce, cn] }) => cw <= e && ce >= w && cs <= n && cn >= s)
-    .map((c) => ({ c, km: kmBetween(centre.lat, centre.lon, bboxCentre(c.bbox).lat, bboxCentre(c.bbox).lon) }))
+    .map((c) => ({ c, km: haversineKm(centre.lat, centre.lon, bboxCentre(c.bbox).lat, bboxCentre(c.bbox).lon) }))
     .sort((a, b) => a.km - b.km)
     .slice(0, MAX_MOUNTED)
     .map(({ c }) => c);

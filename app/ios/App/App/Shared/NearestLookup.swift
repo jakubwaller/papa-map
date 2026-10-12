@@ -16,8 +16,8 @@ import CoreLocation
 // Only the fix is on the main actor, and only because LocationOnce has to be:
 // CLLocationManager delivers its delegate calls on the run loop of the thread
 // that made it. The parse and the scan stay off it, as they were before they
-// moved here. They are two megabytes of JSON and a CLLocation built per row,
-// some 26,000 of them, and the control's tap lands in the middle of the app
+// moved here. They are some 3,500 usable rows of JSON (grey pins are not shared)
+// and a CLLocation built per row, and the control's tap lands in the middle of the app
 // launching, beside the WebView coming up: holding the main thread there
 // stutters the very screen the tap asked for.
 public enum NearestLookup {

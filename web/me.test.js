@@ -542,3 +542,10 @@ test("introKind: the app74 release adds the add-a-place note", () => {
   assert.equal(introKind("app74", "app74"), null);
 });
 
+
+test("addSaved keeps the toilets flag, only when true", () => {
+  const base = { osm: "https://www.openstreetmap.org/node/9", name: "", lon: 10, lat: 53 };
+  assert.equal(addSaved([], { ...base, toilets: true })[0].toilets, true);
+  assert.equal("toilets" in addSaved([], { ...base, toilets: false })[0], false);
+  assert.equal("toilets" in addSaved([], base)[0], false);
+});

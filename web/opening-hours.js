@@ -589,14 +589,6 @@ function parseAlt(text) {
   return groups;
 }
 
-// Parses a full opening_hours value into the ordered list of ;-groups for
-// its *first* "||" alternative (see isOpenNow for how the others come into
-// play at evaluation time), or null if that alternative can't be
-// confidently parsed.
-export function parseOpeningHours(value) {
-  if (!value || typeof value !== "string") return null;
-  return parseAlt(value.split("||")[0].trim());
-}
 
 // -------------------------------------------------------------------------
 // Evaluation

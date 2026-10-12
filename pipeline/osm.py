@@ -100,7 +100,7 @@ def slot_wait_s(url: str, get=None) -> float:
     gets a 429 for two of every three queries; asking first is both quicker
     and politer than colliding. Hosts without that page (the mirrors) and any
     failure to read it answer 0 — the fetch then just tries."""
-    host = url.split("/")[2] if "//" in url else ""
+    host = _host(url)
     if host not in OVERPASS_STATUS_HOSTS:
         return 0
     try:
