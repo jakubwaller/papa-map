@@ -1,5 +1,17 @@
 # papa-map — build contract (v0)
 
+> **v89 amendment (12 Oct 2026, the app retries the moment a slow download
+> lands): no data shape change.** On a first launch over a slow link the app
+> stops waiting for the tables after 20 s but lets the download run on. The
+> retry only came on its timer, so on a Honor 9 at 25 KB/s the header said
+> "Couldn't load" for about a minute after the tables were already on the
+> phone (download done ~79 s, pins at 139 s). While such a download is still
+> running the count line now says "Loading…", and the retry runs as soon as it
+> lands; one that fails leaves the timer to try again. That retry still loads
+> any other file that never arrived alongside the tables, so a failed
+> `play_places` can hold the pins back by up to 40 s more (a wait on its own
+> download, then a fresh one). Shell pin `app87` → `app88`.
+
 > **v88 amendment (12 Oct 2026, a failed data download retries): no data shape
 > change.** The tables file was fetched once per page load; one dropped
 > connection or 5xx left an empty map under "No table data yet — run the

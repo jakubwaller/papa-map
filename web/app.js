@@ -14,16 +14,16 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs,
-         zoneForFeature } from "./datasource.js?v=app87";
+         zoneForFeature } from "./datasource.js?v=app88";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app87";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app88";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app87";
+         writeTags } from "./osm.js?v=app88";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -31,37 +31,37 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app87";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app88";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         cityRowState, latestOnly,
+         cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app87";
+         reviewTracker } from "./native.js?v=app88";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app87";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app88";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app87";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app88";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app87";
+import { isOpenNow } from "./opening-hours.js?v=app88";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app87";
-// The bundled shell's pin (`?v=app87`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app88";
+// The bundled shell's pin (`?v=app88`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -735,7 +735,7 @@ function refreshPins() {
   } else {
     // Never disabled or re-inserted while up: either drops a keyboard user's focus.
     // retryDataset itself ignores a second tap while one is in flight.
-    retryBtn.textContent = t(retrying ? "dataLoading" : "dataFailed");
+    retryBtn.textContent = t(retrying || awaitingLate ? "dataLoading" : "dataFailed");
     // On the website the count ends the scrolling chip row, off-screen at any width: scroll
     // the row to its end. (The app's count sits in the header, outside the row.)
     if (countEl.firstChild !== retryBtn) {
@@ -3704,7 +3704,7 @@ const DATA_URLS = [
 ];
 const dataMissing = () => dataReady && !allFeatures.length;
 let lastJsons = [];   // the last-loaded jsons, so a retry that gets only some files keeps the rest
-let retrying = false, retryTimer = null, retryDelay = 30000;
+let retrying = false, retryTimer = null, retryDelay = 30000, awaitingLate = false;
 
 function openQueuedPin() {
   if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
@@ -3714,6 +3714,13 @@ function scheduleRetry() {
   clearTimeout(retryTimer);
   retryTimer = setTimeout(() => { if (!document.hidden) retryDataset(); }, retryDelay);
   retryDelay = Math.min(retryDelay * 2, 300000);
+  // In the app, a tables download that outran native.js's 20 s may still be arriving: say
+  // so, and draw the moment it lands. One that fails leaves the timer above to try again.
+  const late = lateDownload(DATA_URLS[0]);
+  if (!late) return;
+  awaitingLate = true;
+  refreshPins();
+  late.then((landed) => { awaitingLate = false; if (landed) retryDataset(); else refreshPins(); });
 }
 
 // The tables file is fetched once per load; without this one failure left the map empty for good.
