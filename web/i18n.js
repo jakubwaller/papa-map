@@ -241,7 +241,8 @@ export const STRINGS = {
 
     countShown: "{shown} von {total} Wickeltischen",
     countPlaces: " + {n} Spielorte",
-    countNoData: "Noch keine Daten — Pipeline ausführen",
+    dataLoading: "Wickeltische werden geladen …",
+    dataFailed: "Wickeltische nicht geladen — erneut versuchen",
 
     popupTable: "Wickeltisch",
     popupRoom: "Raum",
@@ -482,7 +483,8 @@ export const STRINGS = {
 
     countShown: "{shown} of {total} tables",
     countPlaces: " + {n} play places",
-    countNoData: "No table data yet — run the pipeline",
+    dataLoading: "Loading changing tables…",
+    dataFailed: "Couldn't load the changing tables — try again",
 
     popupTable: "Changing table",
     popupRoom: "room",
@@ -720,7 +722,8 @@ export const STRINGS = {
 
     countShown: "{shown} af {total} pusleborde",
     countPlaces: " + {n} legesteder",
-    countNoData: "Ingen data endnu — kør pipelinen",
+    dataLoading: "Henter pusleborde …",
+    dataFailed: "Pusleborde kunne ikke hentes — prøv igen",
 
     popupTable: "Puslebord",
     popupRoom: "rum",
@@ -956,7 +959,8 @@ export const STRINGS = {
 
     countShown: "{shown} van {total} verschoontafels",
     countPlaces: " + {n} speelplekken",
-    countNoData: "Nog geen gegevens — pipeline uitvoeren",
+    dataLoading: "Verschoontafels laden …",
+    dataFailed: "Verschoontafels niet geladen — probeer opnieuw",
 
     popupTable: "Verschoontafel",
     popupRoom: "ruimte",
@@ -1190,7 +1194,8 @@ export const STRINGS = {
 
     countShown: "{shown} tables sur {total}",
     countPlaces: " + {n} lieux de jeu",
-    countNoData: "Pas encore de données — lance le pipeline",
+    dataLoading: "Chargement des tables…",
+    dataFailed: "Tables non chargées — réessayer",
 
     popupTable: "Table à langer",
     popupRoom: "pièce",
@@ -1424,7 +1429,8 @@ export const STRINGS = {
 
     countShown: "{shown} di {total} fasciatoi",
     countPlaces: " + {n} luoghi con giochi",
-    countNoData: "Ancora nessun dato — esegui la pipeline",
+    dataLoading: "Caricamento dei fasciatoi …",
+    dataFailed: "Fasciatoi non caricati — riprova",
 
     popupTable: "Fasciatoio",
     popupRoom: "stanza",
@@ -1658,7 +1664,8 @@ export const STRINGS = {
 
     countShown: "{shown} z {total} přebalovacích pultů",
     countPlaces: " + {n} míst s koutkem",
-    countNoData: "Zatím žádná data — spusť pipeline",
+    dataLoading: "Načítání přebalovacích pultů …",
+    dataFailed: "Přebalovací pulty se nenačetly — zkusit znovu",
 
     popupTable: "Přebalovací pult",
     popupRoom: "místnost",
@@ -1892,7 +1899,8 @@ export const STRINGS = {
 
     countShown: "{shown} z {total} przewijaków",
     countPlaces: " + {n} miejsc do zabawy",
-    countNoData: "Jeszcze brak danych — uruchom pipeline",
+    dataLoading: "Wczytywanie przewijaków …",
+    dataFailed: "Nie wczytano przewijaków — spróbuj ponownie",
 
     popupTable: "Przewijak",
     popupRoom: "pomieszczenie",
@@ -2126,7 +2134,8 @@ export const STRINGS = {
 
     countShown: "{shown} av {total} skötbord",
     countPlaces: " + {n} lekställen",
-    countNoData: "Inga data ännu — kör pipelinen",
+    dataLoading: "Skötbord laddas …",
+    dataFailed: "Skötborden kunde inte laddas — försök igen",
 
     popupTable: "Skötbord",
     popupRoom: "rum",
@@ -2359,7 +2368,8 @@ export const STRINGS = {
 
     countShown: "{shown} od {total} stolova za previjanje",
     countPlaces: " + {n} mjesta za igru",
-    countNoData: "Još nema podataka — pokreni pipeline",
+    dataLoading: "Učitavanje stolova za previjanje …",
+    dataFailed: "Stolovi za previjanje nisu učitani — pokušaj ponovo",
 
     popupTable: "Sto za previjanje",
     popupRoom: "prostorija",
@@ -2592,7 +2602,8 @@ export const STRINGS = {
 
     countShown: "{shown} de {total} canviadors",
     countPlaces: " + {n} llocs de joc",
-    countNoData: "Encara no hi ha dades — executa el pipeline",
+    dataLoading: "Carregant canviadors …",
+    dataFailed: "No s'han pogut carregar els canviadors — torna-ho a provar",
 
     popupTable: "Canviador",
     popupRoom: "sala",
@@ -2825,7 +2836,8 @@ export const STRINGS = {
 
     countShown: "{shown} mähkimislauda {total}-st",
     countPlaces: " + {n} mängukohta",
-    countNoData: "Andmeid veel pole — käivita pipeline",
+    dataLoading: "Mähkimislaudu laaditakse …",
+    dataFailed: "Mähkimislaudu ei saanud laadida — proovi uuesti",
 
     popupTable: "Mähkimislaud",
     popupRoom: "ruum",
@@ -3058,7 +3070,8 @@ export const STRINGS = {
 
     countShown: "{shown} de {total} cambiadores",
     countPlaces: " + {n} lugares de juego",
-    countNoData: "Todavía no hay datos — ejecuta el pipeline",
+    dataLoading: "Cargando cambiadores …",
+    dataFailed: "No se pudieron cargar los cambiadores — reintentar",
 
     popupTable: "Cambiador",
     popupRoom: "sala",
@@ -3291,7 +3304,8 @@ export const STRINGS = {
 
     countShown: "{shown} od {total} stolova",
     countPlaces: " + {n} mjesta s kutkom",
-    countNoData: "Još nema podataka — pokreni pipeline",
+    dataLoading: "Učitavanje stolova …",
+    dataFailed: "Stolovi nisu učitani — pokušaj ponovo",
 
     popupTable: "Stol za previjanje",
     popupRoom: "prostorija",
@@ -3524,7 +3538,8 @@ export const STRINGS = {
 
     countShown: "{shown} af {total} skiptiborðum",
     countPlaces: " + {n} leikstaðir",
-    countNoData: "Engin gögn enn — keyrðu keyrsluferlið",
+    dataLoading: "Skiptiborð eru að hlaðast …",
+    dataFailed: "Tókst ekki að hlaða skiptiborðum — reyndu aftur",
 
     popupTable: "Skiptiborð",
     popupRoom: "rými",
@@ -3757,7 +3772,8 @@ export const STRINGS = {
 
     countShown: "{shown} no {total} galdiņiem",
     countPlaces: " + {n} spēļu vietas",
-    countNoData: "Vēl nav datu par galdiņiem — palaid pipeline",
+    dataLoading: "Galdiņi tiek ielādēti …",
+    dataFailed: "Galdiņus neizdevās ielādēt — mēģini vēlreiz",
 
     popupTable: "Pārtinamais galdiņš",
     popupRoom: "telpa",
@@ -3990,7 +4006,8 @@ export const STRINGS = {
 
     countShown: "{shown} iš {total} stalų",
     countPlaces: " + {n} vietos žaisti",
-    countNoData: "Duomenų apie stalus dar nėra — paleisk pipeline",
+    dataLoading: "Įkeliami stalai …",
+    dataFailed: "Nepavyko įkelti stalų — bandyk dar kartą",
 
     popupTable: "Pervystymo stalas",
     popupRoom: "patalpa",
@@ -4223,7 +4240,8 @@ export const STRINGS = {
 
     countShown: "{shown}/{total} pelenkázóasztal",
     countPlaces: " + {n} játszóhely",
-    countNoData: "Még nincs adat — futtasd le a pipeline-t",
+    dataLoading: "Pelenkázóasztalok betöltése …",
+    dataFailed: "A pelenkázóasztalok nem töltődtek be — próbáld újra",
 
     popupTable: "Pelenkázóasztal",
     popupRoom: "helyiség",
@@ -4456,7 +4474,8 @@ export const STRINGS = {
 
     countShown: "{shown} av {total} stellebord",
     countPlaces: " + {n} lekesteder",
-    countNoData: "Ingen data ennå — kjør pipelinen",
+    dataLoading: "Laster stellebord …",
+    dataFailed: "Kunne ikke laste stellebord — prøv igjen",
 
     popupTable: "Stellebord",
     popupRoom: "rom",
@@ -4689,7 +4708,8 @@ export const STRINGS = {
 
     countShown: "{shown} de {total} fraldários",
     countPlaces: " + {n} locais para brincar",
-    countNoData: "Ainda sem dados de fraldários — corre o pipeline",
+    dataLoading: "A carregar fraldários …",
+    dataFailed: "Não foi possível carregar os fraldários — tenta de novo",
 
     popupTable: "Fraldário",
     popupRoom: "sala",
@@ -4922,7 +4942,8 @@ export const STRINGS = {
 
     countShown: "{shown} din {total} mese",
     countPlaces: " + {n} locuri de joacă",
-    countNoData: "Încă nu există date — rulează pipeline-ul",
+    dataLoading: "Se încarcă mesele …",
+    dataFailed: "Mesele nu s-au încărcat — încearcă din nou",
 
     popupTable: "Masă de înfășat",
     popupRoom: "încăpere",
@@ -5155,7 +5176,8 @@ export const STRINGS = {
 
     countShown: "{shown} nga {total} tavolina",
     countPlaces: " + {n} vende loje",
-    countNoData: "Ende pa të dhëna — nis pipeline-in",
+    dataLoading: "Po ngarkohen tavolinat …",
+    dataFailed: "Tavolinat nuk u ngarkuan — provo përsëri",
 
     popupTable: "Tavolinë ndërrimi",
     popupRoom: "dhoma",
@@ -5388,7 +5410,8 @@ export const STRINGS = {
 
     countShown: "{shown} z {total} prebaľovacích pultov",
     countPlaces: " + {n} miest s kútikom",
-    countNoData: "Zatiaľ žiadne dáta — spusti pipeline",
+    dataLoading: "Načítavajú sa prebaľovacie pulty …",
+    dataFailed: "Prebaľovacie pulty sa nenačítali — skús znova",
 
     popupTable: "Prebaľovací pult",
     popupRoom: "miestnosť",
@@ -5621,7 +5644,8 @@ export const STRINGS = {
 
     countShown: "{shown} od {total} previjalnih miz",
     countPlaces: " + {n} krajev za igro",
-    countNoData: "Še ni podatkov o mizah — zaženi pipeline",
+    dataLoading: "Nalaganje previjalnih miz …",
+    dataFailed: "Previjalnih miz ni bilo mogoče naložiti — poskusi znova",
 
     popupTable: "Previjalna miza",
     popupRoom: "prostor",
@@ -5854,7 +5878,8 @@ export const STRINGS = {
 
     countShown: "{shown}/{total} hoitopöytää",
     countPlaces: " + {n} leikkipaikkaa",
-    countNoData: "Ei vielä tietoja — aja pipeline",
+    dataLoading: "Ladataan hoitopöytiä …",
+    dataFailed: "Hoitopöytiä ei voitu ladata — yritä uudelleen",
 
     popupTable: "Hoitopöytä",
     popupRoom: "tila",
@@ -6087,7 +6112,8 @@ export const STRINGS = {
 
     countShown: "{shown} από {total} αλλαξιέρες",
     countPlaces: " + {n} μέρη παιχνιδιού",
-    countNoData: "Δεν υπάρχουν ακόμα δεδομένα — τρέξε το pipeline",
+    dataLoading: "Φόρτωση αλλαξιέρων …",
+    dataFailed: "Οι αλλαξιέρες δεν φορτώθηκαν — δοκίμασε ξανά",
 
     popupTable: "Αλλαξιέρα",
     popupRoom: "χώρος",
@@ -6320,7 +6346,8 @@ export const STRINGS = {
 
     countShown: "{shown} з {total} сталоў для спавівання",
     countPlaces: " + {n} месцаў для гульняў",
-    countNoData: "Дадзеных пакуль няма — запусці pipeline",
+    dataLoading: "Загрузка сталоў для спавівання …",
+    dataFailed: "Сталы для спавівання не загрузіліся — паспрабуй яшчэ раз",
 
     popupTable: "Стол для спавівання",
     popupRoom: "памяшканне",
@@ -6553,7 +6580,8 @@ export const STRINGS = {
 
     countShown: "{shown} от {total} маси",
     countPlaces: " + {n} места за игра",
-    countNoData: "Все още няма данни — стартирай пайплайна",
+    dataLoading: "Зареждане на масите …",
+    dataFailed: "Масите не се заредиха — опитай отново",
 
     popupTable: "Маса за повиване",
     popupRoom: "стая",
@@ -6786,7 +6814,8 @@ export const STRINGS = {
 
     countShown: "{shown} од {total} маси",
     countPlaces: " + {n} места за игра",
-    countNoData: "Сè уште нема податоци за масите — изврши го pipeline-от",
+    dataLoading: "Се вчитуваат масите …",
+    dataFailed: "Масите не се вчитаа — обиди се повторно",
 
     popupTable: "Маса за пеленање",
     popupRoom: "просторија",
@@ -7019,7 +7048,8 @@ export const STRINGS = {
 
     countShown: "{shown} од {total} столова",
     countPlaces: " + {n} играоница",
-    countNoData: "Још нема података о столовима — покрени pipeline",
+    dataLoading: "Учитавање столова …",
+    dataFailed: "Столови нису учитани — покушај поново",
 
     popupTable: "Сто за превијање",
     popupRoom: "просторија",
@@ -7252,7 +7282,8 @@ export const STRINGS = {
 
     countShown: "{shown} з {total} столиків",
     countPlaces: " + {n} ігрових місць",
-    countNoData: "Ще немає даних — запусти пайплайн",
+    dataLoading: "Завантаження столиків …",
+    dataFailed: "Столики не завантажилися — спробуй ще раз",
 
     popupTable: "Пеленальний столик",
     popupRoom: "приміщення",
@@ -7489,7 +7520,8 @@ export const STRINGS = {
 
     countShown: "{total}台のうち{shown}台",
     countPlaces: " + 遊び場{n}か所",
-    countNoData: "交換台のデータがまだありません — パイプラインを実行してください",
+    dataLoading: "交換台を読み込み中…",
+    dataFailed: "交換台を読み込めませんでした — もう一度試す",
 
     popupTable: "おむつ交換台",
     popupRoom: "部屋",

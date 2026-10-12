@@ -1,5 +1,17 @@
 # papa-map — build contract (v0)
 
+> **v88 amendment (12 Oct 2026, a failed data download retries): no data shape
+> change.** The tables file was fetched once per page load; one dropped
+> connection or 5xx left an empty map under "No table data yet — run the
+> pipeline" (a developer message, in every language), a shared `?osm=` link
+> toasted "no longer on the map" and lost its parameter, and nothing retried.
+> Now an empty dataset after load retries by itself (30 s, doubling to 5 min),
+> on `online` and when the tab becomes visible, and the count line is a button
+> ("Couldn't load the changing tables — try again") that retries on tap. A
+> queued shared pin waits for the data. `countNoData` is replaced by
+> `dataLoading` and `dataFailed`; `i18n.test.js` fails on any string that says
+> "pipeline". Shell pin `app86` → `app87`.
+
 > **v87 amendment (11 Oct 2026, dialogs fit an old WebView): no data shape
 > change.** The five dialogs' height cap was `100vh` followed by `100dvh` as a
 > plain second declaration. A value with `var()` in it always parses, so where

@@ -38,6 +38,12 @@ test("no string abbreviates OpenStreetMap as OSM", () => {
   }
 });
 
+test("no string tells the reader to run the pipeline", () => {
+  for (const [lang, dict] of Object.entries(STRINGS))
+    for (const [k, v] of Object.entries(dict))
+      assert.ok(!/pipeline/i.test(String(v)), `${lang}.${k}`);
+});
+
 test("every template carries the same tokens in every language", () => {
   for (const key of Object.keys(STRINGS[DEFAULT_LANG])) {
     for (const lang of LANGS) {

@@ -106,7 +106,8 @@ test("the popup's star is a 24px target held clear of the ×", () => {
 test("the dataset preloads are exactly what boot() fetches first", () => {
   // A preload the fetch does not match is a second download, not a head start.
   const preloads = tags(index, "link").filter((l) => l.rel === "preload");
-  const boot = appJs.match(/await loadDataset\(\[([^\]]*)\]\)/)[1];
+  assert.match(appJs, /await loadDataset\(DATA_URLS\)/);
+  const boot = appJs.match(/const DATA_URLS = \[([^\]]*)\]/)[1];
   const urls = [...boot.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual(preloads.map((l) => l.href), urls.slice(0, 2));
   for (const l of preloads) {
