@@ -445,9 +445,13 @@ def find_start_seq(base_iso: str, fetch_state=fetch_state, max_backoff: int = 8,
             break
         seq = max(1, seq - backoff_step)
     else:
-        print(f"  WARN delta: still after the base {base_iso} at seq {seq} "
-              f"after {max_backoff} steps back — edits between may not be replayed",
-              file=sys.stderr)
+        # The loop stepped back once after its last check; that seq is the
+        # one returned, so only warn if it too is still after the base.
+        ts = fetch_state(seq).get("timestamp")
+        if ts and _parse_iso(ts) > base_dt:
+            print(f"  WARN delta: still after the base {base_iso} at seq {seq} "
+                  f"after {max_backoff} steps back — edits between may not be replayed",
+                  file=sys.stderr)
     return seq
 
 
