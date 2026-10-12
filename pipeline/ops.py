@@ -566,10 +566,32 @@ def merge_edits(kept: dict, edits: dict | None, key: str = "by_day") -> dict:
     return dict(sorted(merged.items())[-EDITS_HISTORY_DAYS:])
 
 
-def save_state(state_path: Path, state: dict) -> None:
-    tmp = state_path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(state))
-    tmp.replace(state_path)
+def load_state(state_path) -> dict:
+    """The saved state; a missing file is a first run. A file that exists but
+    cannot be read or has the wrong shape raises ValueError — treating it as
+    a first run would overwrite 400 days of history with today."""
+    try:
+        with open(state_path) as fh:
+            state = json.load(fh)
+    except FileNotFoundError:
+        return {"statuses": {}, "history": []}
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"{state_path}: unreadable ({_short_exc(exc)})") from exc
+    if not (isinstance(state, dict) and isinstance(state.get("statuses"), dict)
+            and isinstance(state.get("history"), list)):
+        raise ValueError(f"{state_path}: not a state file (wrong shape)")
+    return state
+
+
+def merge_same_day(history: list) -> list:
+    """One entry per date: consecutive entries sharing a date (left by
+    same-day re-runs) collapse, changes summed, counts from the last."""
+    out: list = []
+    for e in history:
+        if out and out[-1].get("date") == e.get("date"):
+            e = {**e, "changes": ops_page._sum_changes([out.pop(), e])}
+        out.append(e)
+    return out
 
 
 def backfill_edits(days: int, state_path=None, now=None,
@@ -589,7 +611,7 @@ def backfill_edits(days: int, state_path=None, now=None,
         return None
     if edits.get("error"):
         return edits  # osmcha_edits already said so on stderr
-    state = load_json(state_path) or {"statuses": {}, "history": []}
+    state = load_state(state_path)
     before = state.get("edits_days") or {}
     merged = merge_edits(before, edits)
     # The answers given on the map itself are a second series, filled the
@@ -603,7 +625,7 @@ def backfill_edits(days: int, state_path=None, now=None,
     if web_merged != web_before:
         state["web_edits_days"] = web_merged
     if merged != before or web_merged != web_before:
-        save_state(state_path, state)
+        write_text_atomic(json.dumps(state), str(state_path))
     when = (now or datetime.now(timezone.utc)).strftime("%Y-%m-%d")
     print(f"{edits['changesets']} changesets in the {days} days to {when}; "
           + _merge_summary(before, merged))
@@ -682,18 +704,31 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
         stats_written = None
     geojson = load_json(geojson_path or GEOJSON_PATH)
 
-    state = load_json(state_path) or {"statuses": {}, "history": []}
-    prev_statuses, history = state["statuses"], state["history"]
+    state_ok = True
+    try:
+        state = load_state(state_path)
+    except ValueError as exc:
+        state_ok = False
+        state = {"statuses": {}, "history": []}
+        state_error = str(exc)
+    prev_statuses, history = state["statuses"], merge_same_day(state["history"])
     # The last OSMCha count that actually arrived, dated — the fetch can fail
     # for days (their metadata scan times out), and a number without its date
     # would read as today's.
     cached_edits = state.get("edits")
-    last_counts = history[-1]["counts"] if history else None
+    today = now.strftime("%Y-%m-%d")
 
     cur_statuses = feature_statuses(geojson) if geojson else None
     counts = counts_of(cur_statuses) if cur_statuses is not None else None
     changes = (diff_statuses(prev_statuses, cur_statuses)
                if cur_statuses is not None and prev_statuses else None)
+    if cur_statuses is not None and history and history[-1].get("date") == today:
+        # A same-day re-run updates today's entry: its changes plus what moved
+        # since run 1, and the anomaly baseline is yesterday, not run 1.
+        first = history.pop()
+        changes = ops_page._sum_changes(
+            [first, {"changes": changes or diff_statuses({}, {})}])
+    last_counts = history[-1]["counts"] if history else None
 
     delta_path = OPS_DELTA_PATH if delta_path is None else delta_path
     delta_state_path = (OPS_DELTA_STATE_PATH if delta_state_path is None
@@ -705,6 +740,9 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     anomalies = find_anomalies(stats, counts, last_counts, now,
                                delta=summary, delta_expected=bool(delta_path),
                                stats_written=stats_written)
+    if not state_ok:
+        anomalies.append(f"ops-state.json unreadable ({state_error}) — "
+                         "left untouched, today not recorded")
     weekly = now.weekday() == WEEKLY_DIGEST_WEEKDAY
     # Visits and edits every run, not just digest days: the page's per-day
     # charts are built run by run — the visits curve from figures Cloudflare
@@ -732,7 +770,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     # Tonight's entry goes into the mail's 7-day window too, as it does on the
     # page (which is rendered after the append below) — otherwise a jump the
     # alert says is counted there would be missing from it.
-    entry = ({"date": now.strftime("%Y-%m-%d"), "counts": counts,
+    entry = ({"date": today, "counts": counts,
               "changes": changes or diff_statuses({}, {})}
              if cur_statuses is not None else None)
     digest = anomalies or weekly
@@ -754,7 +792,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
                         "as_of": now.strftime("%Y-%m-%d")}
         if "web_changesets" in edits:
             cached_edits["web_changesets"] = edits["web_changesets"]
-    if cur_statuses is not None:
+    if cur_statuses is not None and state_ok:
         history.append(entry)
         state = {"statuses": cur_statuses, "history": history[-HISTORY_DAYS:]}
         if cached_edits:
@@ -771,7 +809,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
             state["app_days"] = app_days
         if app_ratings:
             state["app_ratings"] = app_ratings
-        save_state(state_path, state)
+        write_text_atomic(json.dumps(state), str(state_path))
 
     html_path = OPS_HTML_PATH if html_path is None else html_path
     private_path = (OPS_PRIVATE_HTML_PATH if private_html_path is None

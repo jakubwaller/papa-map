@@ -313,6 +313,35 @@ def test_run_is_idempotent(tmp_path, load_fixture):
     assert [d["date"] for d in history["days"]] == ["2026-07-26"]
 
 
+@pytest.mark.parametrize("text", ["", "{not json"])
+def test_unreadable_history_is_left_alone_and_the_build_succeeds(
+        tmp_path, load_fixture, capsys, text):
+    history_path = tmp_path / "history.json"
+    history_path.write_text(text, encoding="utf-8")
+    run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+        history_path=str(history_path),
+        overpass_fetch=_fake_overpass(load_fixture),
+        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+    assert "WARN: history.json unreadable" in capsys.readouterr().err
+    assert history_path.read_text(encoding="utf-8") == text
+    assert (tmp_path / "ct.geojson").exists()
+
+
+def test_missing_history_is_a_cold_start(tmp_path, load_fixture):
+    history_path = tmp_path / "history.json"
+    run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+        history_path=str(history_path),
+        overpass_fetch=_fake_overpass(load_fixture),
+        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+    assert len(json.loads(history_path.read_text(encoding="utf-8"))["days"]) == 1
+
+
 def test_taginfo_down_keeps_previous_global_block(tmp_path, load_fixture, capsys):
     stats = tmp_path / "stats.json"
     old_global = {"ct_total": 70000, "source": "taginfo", "data_until": "2026-07-01"}

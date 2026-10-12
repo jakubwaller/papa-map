@@ -259,7 +259,7 @@ The OSMCha line can read `UNKNOWN — query failed (…). Not zero.` That is the
 timing out, not a week without edits. Its cost swings unpredictably — the same query took 21.9 s
 on 2026-08-13, over 150 s on 2026-08-18 and 0.5 s on 2026-08-19 — so `OSMCHA_TIMEOUT_S` is set
 to 300 s, well above any measurement, and overridable with `PAPAMAP_OSMCHA_TIMEOUT_S`. If the
-line says UNKNOWN, re-run the check before believing anything about that week.
+line says UNKNOWN, re-run the check before believing anything about that week. A re-run on the same day updates that day's entry instead of adding a second one.
 
 The OSMCha window is fetched on **every** run, not just digest days: the ops page draws a
 per-day chart of theme changesets, and that series only exists in `ops-state.json`
