@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app88";
-import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app88";
+import { CREATED_BY } from "./osm.js?v=app89";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app89";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -451,6 +451,7 @@ export function isSaved(list, osm) {
 export function addSaved(list, place) {
   const rest = (list ?? []).filter((r) => r.osm !== place.osm);
   return [{ osm: place.osm, name: place.name ?? "", lon: place.lon, lat: place.lat,
+            ...(place.toilets === true && { toilets: true }),   // the unnamed fallback label, with no dataset needed
             saved_at: place.saved_at ?? new Date().toISOString() }, ...rest].slice(0, SAVED_MAX);
 }
 

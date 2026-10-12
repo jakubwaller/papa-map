@@ -9,7 +9,7 @@ import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
-         pinColorExpression, viewOf, localAnswered, usableStatuses, haversineKm,
+         pinColorExpression, viewOf, localAnswered, haversineKm,
          nearestUsable, formatDistance, geoUri, webRouteHref, webRouteChoices, PAPAMAP_THEME_URL, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
@@ -668,15 +668,16 @@ test("localAnswered: tables partitions into known and unknown, the pipeline's ow
 // ---- Nearest usable table ----
 
 test("usable means what the reading already calls good, nothing new", () => {
-  // A father can only use the open room. A mother can use both — and the
-  // difference is read out of VIEW, not written down a second time here.
-  assert.deepEqual(usableStatuses("papa"), ["accessible"]);
-  assert.deepEqual(usableStatuses("mama"), ["accessible", "female_only"]);
+  // A father can only use the open room; a mother can use both. "unknown" is
+  // never usable in either reading: nobody has recorded the room, so sending a
+  // parent there is a guess dressed up as an answer.
+  const at = (status, lon) => ({ status, lat: 53, lon });
+  const fs = [at("unknown", 10.0), at("female_only", 10.001), at("accessible", 10.002)];
+  assert.equal(nearestUsable(fs, 53, 10, "papa").feature.status, "accessible");
+  assert.equal(nearestUsable(fs, 53, 10, "mama").feature.status, "female_only");
   // Junk degrades to the father's reading, like every other mode lookup.
-  assert.deepEqual(usableStatuses("nonsense"), ["accessible"]);
-  // "unknown" is never usable in either reading: nobody has recorded the room,
-  // so sending a parent there is a guess dressed up as an answer.
-  for (const m of MODES) assert.ok(!usableStatuses(m).includes("unknown"));
+  assert.equal(nearestUsable(fs, 53, 10, "nonsense").feature.status, "accessible");
+  for (const m of MODES) assert.equal(nearestUsable([at("unknown", 10)], 53, 10, m), null);
 });
 
 test("haversineKm measures a known distance", () => {

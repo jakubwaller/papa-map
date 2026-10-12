@@ -9,7 +9,7 @@
 // the world, from a geocoder — because a parent planning a trip wants to look
 // at Lisbon before they are standing in it, and this map has no street index
 // of its own.
-import { haversineKm } from "./datasource.js?v=app88";
+import { haversineKm } from "./datasource.js?v=app89";
 
 // ---- The geocoder ----
 // Photon (komoot), not Nominatim. Nominatim's usage policy forbids
@@ -87,6 +87,18 @@ export function normalise(s) {
     .replace(/[ßøæœłđðþı]/g, (c) => FOLD[c]);
 }
 
+// normalise() of 26k names on every keystroke cost ~9 ms on a laptop. Cached
+// per object, keyed on the raw name too, so a delta merge or a retry that
+// hands in new objects (or renames one) recomputes by itself.
+const folded = new WeakMap();
+function foldedName(obj) {
+  const c = folded.get(obj);
+  if (c?.name === obj.name) return c.norm;
+  const norm = normalise(obj.name);
+  folded.set(obj, { name: obj.name, norm });
+  return norm;
+}
+
 // The map's own places, nearest to the map centre first. `tables` are the pins
 // (they carry a status and get a bucket-coloured dot), `places` the play-area
 // prospects (no status — web/app.js draws them in the play blue). Substring,
@@ -99,7 +111,7 @@ export function matchLocal(tables, places, query, centre, limit = LOCAL_LIMIT) {
   const scan = (list, kind) => {
     for (const obj of list ?? []) {
       if (!obj?.name || !Number.isFinite(obj.lat) || !Number.isFinite(obj.lon)) continue;
-      if (!normalise(obj.name).includes(q)) continue;
+      if (!foldedName(obj).includes(q)) continue;
       hits.push({ kind, obj, km: haversineKm(centre.lat, centre.lon, obj.lat, obj.lon) });
     }
   };
