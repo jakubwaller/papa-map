@@ -6,7 +6,9 @@
 > grey pin (`status: "unknown"`) is never usable in either reading (`Table.usable`,
 > `Tables.usable`), so those rows are now left out of the compact copy; the
 > nearest usable table is the same, the file about eight times smaller. Shell
-> pin `app88` → `app89`.
+> pin `app88` → `app89`. A `papamap-saved` record gains an optional
+> `toilets: true` (an unnamed amenity=toilets starred from now on), so the
+> list can say "Toilets" rather than "Unnamed place" without the dataset.
 
 > **v89 amendment (12 Oct 2026, the app retries the moment a slow download
 > lands): no data shape change.** On a first launch over a slow link the app

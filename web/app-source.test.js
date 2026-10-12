@@ -138,12 +138,24 @@ test("the filter chips are named by their text and described by describeBy", () 
 // here until it is escaped or deliberately added to the list.
 test("popupHTML and placeHTML interpolate only escaped text or known markup", () => {
   const SAFE = [
-    /^esc\(.*\)$/, /^rows\.join\(""\)$/, /^parts\.join\(" · "\)$/, /^links\.join\(""\)$/,
-    /^sub$/, /^s\.cls$/, /^asks \? " ask-ctx" : ""$/, /^starHTML\(.*\)$/,
-    /^svgIcon\(.*\)$/, /^tableRowHTML\(.*\)$/, /^shareButtonHTML\(\)$/,
+    /^rows\.join\(""\)$/, /^parts\.join\(" · "\)$/, /^links\.join\(""\)$/,
+    /^sub$/, /^s\.cls$/, /^asks \? " ask-ctx" : ""$/, /^shareButtonHTML\(\)$/,
     /^!mcOnly && \(asks \|\| !f\.play_recorded \|\| asksHc\) \? "" : " primary"$/,
     /^p\.changing_table \? " primary" : ""$/,
   ];
+  // `fn(...)` whose opening paren closes at the very last character, so a
+  // call followed by `+ f.raw` does not pass as "one esc call".
+  const wholeCall = (expr) => {
+    const open = expr.indexOf("(");
+    if (!/^\w+$/.test(expr.slice(0, open)) || !expr.endsWith(")")) return false;
+    let d = 0;
+    for (let k = open; k < expr.length; k++) {
+      d += expr[k] === "(" ? 1 : expr[k] === ")" ? -1 : 0;
+      if (d === 0) return k === expr.length - 1;
+    }
+    return false;
+  };
+  const CALLS = new Set(["esc", "starHTML", "svgIcon", "tableRowHTML"]);
   for (const name of ["popupHTML", "placeHTML"]) {
     const m = src.match(new RegExp(`\\nfunction ${name}\\(.*?\\n\\}\\n`, "s"));
     assert.ok(m, name);
@@ -153,7 +165,7 @@ test("popupHTML and placeHTML interpolate only escaped text or known markup", ()
       let depth = 1, j = i + 2;
       while (depth && j < body.length) depth += body[j] === "{" ? 1 : body[j] === "}" ? -1 : 0, j++;
       const expr = body.slice(i + 2, j - 1).trim();
-      if (!SAFE.some((re) => re.test(expr))) bad.push(expr);
+      if (!(CALLS.has(expr.split("(")[0]) && wholeCall(expr)) && !SAFE.some((re) => re.test(expr))) bad.push(expr);
       // Skip over the expression: its own nested ${} are inside esc(...) etc.
       i = j - 2;
     }

@@ -4268,7 +4268,8 @@ function toggleStar(btn) {
   else {
     const obj = featuresByOsmUrl.get(osm) || placesByOsmUrl.get(osm);
     if (!obj) return;
-    next = addSaved(savedPlaces, { osm, name: btn.dataset.name || "", lon: obj.lon, lat: obj.lat });
+    next = addSaved(savedPlaces, { osm, name: btn.dataset.name || "", lon: obj.lon, lat: obj.lat,
+      toilets: obj.amenity === "toilets" });
   }
   if (!writeSavedRaw(next)) { toast(t("meSaveFailed")); return; }
   savedPlaces = next;
@@ -4316,8 +4317,7 @@ function renderSavedList() {
   for (const row of savedPlaces) {
     const li = document.createElement("li");
     li.className = "saved-row";
-    const name = row.name
-      || t(featuresByOsmUrl.get(row.osm)?.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
+    const name = row.name || t(row.toilets ? "popupToilets" : "popupUnnamed");
     const dist = lastFix ? formatDistance(haversineKm(lastFix.lat, lastFix.lon, row.lat, row.lon)) : null;
     const open = document.createElement("button");
     open.type = "button";

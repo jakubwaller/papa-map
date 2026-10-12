@@ -451,6 +451,7 @@ export function isSaved(list, osm) {
 export function addSaved(list, place) {
   const rest = (list ?? []).filter((r) => r.osm !== place.osm);
   return [{ osm: place.osm, name: place.name ?? "", lon: place.lon, lat: place.lat,
+            ...(place.toilets === true && { toilets: true }),   // the unnamed fallback label, with no dataset needed
             saved_at: place.saved_at ?? new Date().toISOString() }, ...rest].slice(0, SAVED_MAX);
 }
 
