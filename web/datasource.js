@@ -1276,6 +1276,16 @@ export function selectAddedPlace(deltaJson, watch) {
   return null;
 }
 
+// The `t` of the add dialog's osm_url watch: `before`, the moment before its
+// write — unless writeTags found the answer on OSM already (changeset null),
+// saved by an earlier tap that timed out. The delta carries that earlier edit,
+// whose edited_at is before `before`, so the watch starts a second before the
+// save's own timestamp (OSM stamps whole seconds) or it never fires.
+export function addWatchSince(before, out) {
+  const at = Date.parse(out?.timestamp);
+  return out?.changeset || !Number.isFinite(at) ? before : new Date(at - 1000).toISOString();
+}
+
 // Which toast a failed position gets. A denial has its own words because the
 // browser never asks twice: the reader has to know where the switch is, and it
 // is in a different place on the page than in the store app. Location

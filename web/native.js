@@ -18,8 +18,8 @@
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
 // nothing is sent that the website does not send: a download is a GET.
 
-import { isWheelchairLimited, haversineKm } from "./datasource.js?v=app89";
-import { awaitingReturn } from "./osm.js?v=app89";
+import { isWheelchairLimited, haversineKm } from "./datasource.js?v=app90";
+import { awaitingReturn, loginPending } from "./osm.js?v=app90";
 
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";
@@ -810,8 +810,10 @@ export async function followRoute(url, web, launcher = plugin("AppLauncher"), ex
 // app cannot read into, so the password never passes through a WebView of
 // ours) and how the code comes back (the papamap://auth URL, which the OS
 // routes to the app; App's appUrlOpen delivers it here).
+// The promise is the Browser's own: on iOS it settles once the sheet is up
+// over the page, which is how long startLogin holds off a second tap.
 export function nativeNavigate(url) {
-  plugin("Browser").open({ url });
+  return plugin("Browser").open({ url });
 }
 
 // One listener for every URL the OS hands the app: the OAuth return, the
@@ -824,6 +826,13 @@ export function onAppUrl({ auth, table, nearest = () => {}, awaiting = awaitingR
   app.addListener("appUrlOpen", ({ url }) => {
     if (!url) return;
     if (url.startsWith(AUTH_REDIRECT)) {
+      // Any app or web page can open a papamap://auth link. While a login
+      // waits for another state, a stray one is ignored: handed to auth it
+      // would use up the PKCE record the real return is checked against, and
+      // close the sheet the reader is logging in on. With no login waiting at
+      // all (none started, or its hour ran out) there is nothing to protect,
+      // and it goes on as ever, so the reader hears the login failed.
+      if (loginPending() && !awaiting(url)) return;
       plugin("Browser")?.close?.().catch?.(() => {});
       auth(url);
     } else if (url.startsWith("papamap://table")) {

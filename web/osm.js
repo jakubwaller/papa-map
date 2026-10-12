@@ -87,16 +87,22 @@ export const ROUND_TRIP_MS = 60 * 60 * 1000;
 const fresh = (rec) => (rec && !(roundTripLocal && Date.now() - (rec.at ?? Date.now()) > ROUND_TRIP_MS)
   ? rec : null);
 
+// The fresh PKCE record of the login under way, or null. Read only.
+const pendingPkce = () => {
+  try { return fresh(JSON.parse(roundTrip().getItem(PKCE_KEY) || "null")); } catch { return null; }
+};
+
+// Whether any login is waiting for its return, whatever its state.
+export const loginPending = () => !!pendingPkce();
+
 // Whether `href` is the return of a login this app is still waiting for: a
 // fresh PKCE record exists and its state is the URL's. Read only, nothing is
 // consumed. The app asks it of the launch URL, which Android's Bridge keeps
 // for the Activity's whole life: after a cold start from papamap://auth every
 // later recreation hands the same, already-used URL back.
 export function awaitingReturn(href) {
-  try {
-    const pkce = fresh(JSON.parse(roundTrip().getItem(PKCE_KEY) || "null"));
-    return !!pkce && pkce.state === new URL(href).searchParams.get("state");
-  } catch { return false; }
+  const pkce = pendingPkce();
+  try { return !!pkce && pkce.state === new URL(href).searchParams.get("state"); } catch { return false; }
 }
 
 // Of two returns that arrived before the data did, the one still awaited
@@ -173,8 +179,19 @@ export function authorizeUrl(cfg, { state, challenge }) {
   return u.href;
 }
 
-// Leaves the page. `intent` is what to do once the reader is back.
+// When the login now opening began, 0 for none. A second tap before the
+// first one's browser is up would replace the record that browser's return
+// is checked against, and iOS keeps the first sheet: the return then fails
+// as a mismatch. Held until navigate settles (the sheet is up, the page is
+// leaving, or it failed), and never past LOGIN_OPEN_MS, so a browser that
+// never answers cannot keep the reader from logging in.
+let goingSince = 0;
+const LOGIN_OPEN_MS = 5000;
+
+// Leaves the page. `intent` is what to do once the reader is back. True when
+// a login is under way: this one, or the one already opening.
 export async function startLogin(cfg, intent, navigate = (url) => location.assign(url)) {
+  if (Date.now() - goingSince < LOGIN_OPEN_MS) return true;
   const verifier = randomToken(48), state = randomToken(16);
   try {
     const at = Date.now();
@@ -184,7 +201,10 @@ export async function startLogin(cfg, intent, navigate = (url) => location.assig
     if (intent) roundTrip().setItem(INTENT_KEY, JSON.stringify({ ...intent, at }));
     else roundTrip().removeItem(INTENT_KEY);
   } catch { /* no session storage: the return cannot be verified, so no login */ return false; }
-  navigate(authorizeUrl(cfg, { state, challenge: await pkceChallenge(verifier) }));
+  // Its own stamp: one that settles past the limit must not clear a newer login's.
+  const mine = goingSince = Date.now();
+  try { await navigate(authorizeUrl(cfg, { state, challenge: await pkceChallenge(verifier) })); }
+  finally { if (goingSince === mine) goingSince = 0; }
   return true;
 }
 
@@ -503,11 +523,12 @@ export function changesetXml(tags) {
 }
 
 // The API's single-object JSON, kept whole: a way must be written back with
-// its nodes and a relation with its members, or the PUT deletes them.
+// its nodes and a relation with its members, or the PUT deletes them. The
+// timestamp is when that version was saved, for writeTags' answer-already-there.
 export function elementFromApi(json) {
   const el = json?.elements?.[0];
   if (!el || !Number.isFinite(el.version) || !["node", "way", "relation"].includes(el.type)) return null;
-  return { type: el.type, id: el.id, version: el.version, tags: el.tags ?? {},
+  return { type: el.type, id: el.id, version: el.version, timestamp: el.timestamp, tags: el.tags ?? {},
            lat: el.lat, lon: el.lon, nodes: el.nodes ?? [], members: el.members ?? [] };
 }
 
@@ -528,7 +549,9 @@ function httpError(status, step) {
 
 // One answer, one changeset: read the object as OSM holds it now, open a
 // changeset, write the object back with the patch on top of its tags, close.
-// Returns what OSM holds afterwards. A 409 means the object moved on between
+// Returns what OSM holds afterwards and the changeset, null when OSM held
+// this answer already (and then the `timestamp` of the save that put it
+// there). A 409 means the object moved on between
 // the read and the write — someone else edited it — and the caller says so
 // rather than retrying over their work. A 401 means the token is dead.
 export async function writeTags(cfg, token, ref, patch, comment, fetchFn = fetch) {
@@ -543,12 +566,19 @@ export async function writeTags(cfg, token, ref, patch, comment, fetchFn = fetch
   if (!read.ok) throw httpError(read.status, "read");
   const el = elementFromApi(await read.json());
   if (!el) throw httpError(read.status, "read");
+  // Already exactly this answer, and nothing else under the guarded keys: the
+  // reader's own earlier save, which OSM applied after the page had given up
+  // on it (a timeout). A success with no changeset of its own — not a
+  // stranger's conflict.
+  const keys = guardKeys(patch);
+  if (keys.every((k) => el.tags[k] === patch[k]))
+    return { version: el.version, tags: el.tags, changeset: null, timestamp: el.timestamp };
   // The popup's gate saw a snapshot up to a day old. If somebody has answered
   // since — a room on the live object, a changing_table on the play place,
   // either kids_area key under a play answer — that answer is theirs, and this
   // tap does not write over it (CONTRACT.md v25). Reported as the conflict it
   // is, before any changeset is opened.
-  if (guardKeys(patch).some((k) => el.tags[k])) throw httpError(409, "taken");
+  if (keys.some((k) => el.tags[k])) throw httpError(409, "taken");
 
   const open = await fetchFn(`${cfg.api}/changeset/create`,
     { method: "PUT", headers: xml, body: changesetXml(changesetTags(comment, cfg.host ?? cfg.redirect)), signal: bounded() });

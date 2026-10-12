@@ -1050,6 +1050,31 @@ test("the OSM login's return leg is not mistaken for a table", () => {
   assert.deepEqual([back.length, opened.length], [1, 0]);
 });
 
+// Any app or web page can open papamap://auth while the reader is logging
+// in. While a login waits for another state, a stray one must not reach auth,
+// which would use up the record the real return is checked against, nor close
+// the reader's sheet. With no login waiting it goes on as ever.
+test("a warm auth URL is ignored only while a login waits for another state", () => {
+  const app = fakeApp();
+  const back = [];
+  let closed = 0;
+  const before = globalThis.Capacitor;
+  globalThis.Capacitor = { isNativePlatform: () => true,
+    Plugins: { App: app.plugin, Browser: { close: async () => { closed++; } } } };
+  globalThis.sessionStorage = { getItem: () => JSON.stringify({ verifier: "v", state: "real", at: Date.now() }) };
+  try {
+    onAppUrl({ auth: (u) => back.push(u), table: () => {} });
+    app.open(`${AUTH_REDIRECT}?code=x&state=stray`);
+    assert.deepEqual([back.length, closed], [0, 0]);
+    app.open(`${AUTH_REDIRECT}?code=c&state=real`);
+    assert.deepEqual([back, closed], [[`${AUTH_REDIRECT}?code=c&state=real`], 1]);
+    // None started, or its hour ran out: the page gets it and says the login failed.
+    globalThis.sessionStorage = { getItem: () => null };
+    app.open(`${AUTH_REDIRECT}?code=c&state=late`);
+    assert.deepEqual([back.length, closed], [2, 2]);
+  } finally { globalThis.Capacitor = before; delete globalThis.sessionStorage; }
+});
+
 // Android killed the app while OSM's login was up: the return cold-starts it,
 // and the URL only arrives through getLaunchUrl.
 test("a cold start from the OSM login's return completes the login", async () => {

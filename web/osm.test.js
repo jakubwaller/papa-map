@@ -201,6 +201,51 @@ test("preferReturn: of two early returns the awaited one wins, whichever came la
   } finally { keepRoundTripAcrossRestarts(false); }
 });
 
+// A double tap while logged out: the second must not replace the record the
+// first one's browser will come back with — iOS keeps showing that one.
+test("startLogin ignores a second login while the first one's browser is opening", async () => {
+  keepRoundTripAcrossRestarts(true);
+  try {
+    globalThis.localStorage = fakeSession();
+    const went = [];
+    // navigate runs after pkceChallenge's crypto.subtle digest, which takes one
+    // tick on some Node versions and several on others: wait for the call.
+    const tick = () => new Promise((r) => setTimeout(r, 0));
+    const until = async (ok) => { for (let i = 0; i < 200 && !ok(); i++) await tick(); };
+    let opened;
+    const first = startLogin(LIVE, { kind: "table", osm_url: "u", choice: "male" },
+      (u) => { went.push(u); return new Promise((r) => { opened = r; }); });
+    assert.equal(await startLogin(LIVE, { kind: "table", osm_url: "u", choice: "both" }, (u) => went.push(u)), true);
+    await until(() => went.length >= 1);
+    assert.equal(went.length, 1);
+    assert.equal(awaitingReturn(`papamap://auth?code=c&state=${stateOf(went[0])}`), true);
+    assert.equal(takeIntent().choice, "male");
+    // Once the sheet is up the next login goes ahead: nobody is locked out.
+    opened();
+    assert.equal(await first, true);
+    await startLogin(LIVE, null, (u) => went.push(u));
+    assert.equal(went.length, 2);
+    // A browser that never answers holds it 5 s at most, and its late answer
+    // does not release the newer login's hold.
+    let late, newer;
+    startLogin(LIVE, null, () => new Promise((r) => { late = r; }));
+    await until(() => late);
+    const realNow = Date.now;
+    Date.now = () => realNow() + 6000;
+    try {
+      startLogin(LIVE, null, (u) => { went.push(u); return new Promise((r) => { newer = r; }); });
+      await until(() => newer);
+      assert.equal(went.length, 3);
+      late();
+      await tick();
+      await startLogin(LIVE, null, (u) => went.push(u));
+      assert.equal(went.length, 3);
+      newer();
+      await tick();
+    } finally { Date.now = realNow; }
+  } finally { keepRoundTripAcrossRestarts(false); }
+});
+
 // A trip abandoned in the Custom Tab leaves the verifier and the answer in
 // the app's localStorage; nothing else would ever remove them.
 test("dropStaleRoundTrip removes an abandoned trip's records once stale, not before", async () => {
@@ -476,8 +521,10 @@ test("xml escaping covers the four characters a tag value can carry", () => {
 });
 
 test("elementFromApi keeps what a write-back needs, and rejects the rest", () => {
-  assert.deepEqual(elementFromApi({ elements: [{ type: "node", id: 1, version: 3, lat: 53.5, lon: 9.9, tags: { a: "b" } }] }),
-    { type: "node", id: 1, version: 3, tags: { a: "b" }, lat: 53.5, lon: 9.9, nodes: [], members: [] });
+  assert.deepEqual(elementFromApi({ elements: [{ type: "node", id: 1, version: 3, timestamp: "2026-10-12T10:04:00Z",
+                                                 lat: 53.5, lon: 9.9, tags: { a: "b" }, user: "someone" }] }),
+    { type: "node", id: 1, version: 3, timestamp: "2026-10-12T10:04:00Z", tags: { a: "b" }, lat: 53.5, lon: 9.9,
+      nodes: [], members: [] });
   assert.equal(elementFromApi({ elements: [{ type: "node", id: 1 }] }), null, "no version");
   assert.equal(elementFromApi({ elements: [{ type: "area", id: 1, version: 1 }] }), null);
   assert.equal(elementFromApi({}), null);
@@ -616,6 +663,26 @@ test("writeTags: a room somebody tagged since last night's build is theirs — 4
   await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, tablePatch("unisex"), "c", api.fetchFn),
     (e) => e.status === 409 && e.step === "taken");
   assert.equal(api.calls.length, 1);
+});
+
+// A save that outlived the page's timeout but landed on OSM: the reader's
+// second tap reads their own answer back, and it is theirs, not a stranger's.
+test("writeTags: the same answer already on OSM is a success with no changeset", async () => {
+  let api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 6, lat: 1, lon: 2, timestamp: "2026-10-12T10:04:00Z",
+                                        tags: { amenity: "cafe", changing_table: "yes", "changing_table:location": "female_toilet" } }] } },
+  ]);
+  const out = await writeTags(SANDBOX, "tok", { type: "node", id: "42" }, tablePatch("female"), "c", api.fetchFn);
+  assert.deepEqual(out, { version: 6, changeset: null, timestamp: "2026-10-12T10:04:00Z",
+    tags: { amenity: "cafe", changing_table: "yes", "changing_table:location": "female_toilet" } });
+  assert.equal(api.calls.length, 1, "nothing after the read: no changeset was opened");
+  // A guarded key the patch does not write is still somebody else's.
+  api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 6, lat: 1, lon: 2,
+                                        tags: { kids_area: "no", "kids_area:indoor": "yes" } }] } },
+  ]);
+  await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, playPatch("play_no"), "c", api.fetchFn),
+    (e) => e.status === 409 && e.step === "taken");
 });
 
 test("writeTags: a play answer is refused by the other kids_area key too", async () => {
