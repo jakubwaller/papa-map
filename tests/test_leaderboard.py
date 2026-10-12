@@ -16,12 +16,15 @@ def day(date, regions=None, cities=None, source="build"):
 def test_load_history_cold_start(tmp_path):
     assert leaderboard.load_history(tmp_path / "missing.json") == {
         "v": 1, "days": []}
-    broken = tmp_path / "broken.json"
-    broken.write_text("{not json", encoding="utf-8")
-    assert leaderboard.load_history(broken) == {"v": 1, "days": []}
-    wrong_shape = tmp_path / "wrong.json"
-    wrong_shape.write_text('{"days": "nope"}', encoding="utf-8")
-    assert leaderboard.load_history(wrong_shape) == {"v": 1, "days": []}
+
+
+def test_load_history_refuses_an_unreadable_file(tmp_path):
+    for name, text in (("empty", ""), ("broken", "{not json"),
+                       ("wrong", '{"days": "nope"}')):
+        f = tmp_path / f"{name}.json"
+        f.write_text(text, encoding="utf-8")
+        with pytest.raises(ValueError, match=f"{name}.json"):
+            leaderboard.load_history(f)
 
 
 def test_append_day_replaces_same_date_and_keeps_order():

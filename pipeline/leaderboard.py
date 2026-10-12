@@ -36,15 +36,18 @@ WINDOW_DAYS = 7
 # ---- History ---------------------------------------------------------------
 
 def load_history(path) -> dict:
-    """{'v': 1, 'days': [...]} — a missing, unreadable or malformed file is a
-    cold start, not an error: the first build simply writes day one."""
+    """{'v': 1, 'days': [...]} — a missing file is a cold start; one that
+    exists but is unreadable or malformed raises ValueError, because writing
+    day one over it would erase the history."""
     try:
         with open(path) as fh:
             data = json.load(fh)
-    except (OSError, ValueError):
+    except FileNotFoundError:
         return {"v": 1, "days": []}
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"{path}: unreadable ({exc})") from exc
     if not isinstance(data, dict) or not isinstance(data.get("days"), list):
-        return {"v": 1, "days": []}
+        raise ValueError(f"{path}: not a history file (wrong shape)")
     return data
 
 

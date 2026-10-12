@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 
+import pytest
 import requests
 
 from pipeline import ops
@@ -39,7 +40,7 @@ def fresh_delta(stats, now, minutes=2):
 
 
 def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None,
-        delta="fresh", delta_state=None, stats_mtime=None):
+        delta="fresh", delta_state=None, stats_mtime=None, history_path=None):
     """`stats_mtime` dates the stats.json write; default is when it is
     written here, i.e. the real clock, not `now`."""
     state_path = tmp_path / "state.json"
@@ -71,7 +72,9 @@ def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None,
         edits_fetch=lambda **kw: None,
         html_path=str(tmp_path / "ops.html"),
         private_html_path=str(tmp_path / "private-ops.html"),
-        delta_path=delta_path, delta_state_path=delta_state_path)
+        delta_path=delta_path, delta_state_path=delta_state_path,
+        # Never the real history.json: an unreadable one is an anomaly now.
+        history_path=history_path or str(tmp_path / "history.json"))
     return anomalies, report, sent, state_path
 
 
@@ -140,7 +143,8 @@ def test_history_capped(tmp_path):
              "counts": {"total": 1, "accessible": 0, "female_only": 0,
                         "unknown": 1},
              "changes": ops.diff_statuses({}, {})}
-    state = {"statuses": {}, "history": [dict(entry) for _ in range(ops.HISTORY_DAYS + 20)]}
+    state = {"statuses": {}, "history": [dict(entry, date=f"d{i}")
+                         for i in range(ops.HISTORY_DAYS + 20)]}
     _, _, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY),
                               now=TUESDAY, state=state,
                               gj=geojson([("node", 1, "unknown")]))
@@ -660,7 +664,8 @@ def test_mail_week_line_counts_tonight(tmp_path):
                         "unknown": 1},
              "changes": dict(ops.diff_statuses({}, {}), new=2)}
     state = {"statuses": {"node/1": "unknown"},
-             "history": [dict(entry) for _ in range(3)]}
+             "history": [dict(entry, date=f"2026-07-{29 + i}")
+                         for i in range(3)]}
     _, report, _, _ = run(
         tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, state=state,
         gj=geojson([("node", 1, "accessible"), ("node", 2, "unknown")]))
@@ -687,3 +692,122 @@ def test_mail_week_line_includes_a_jump(tmp_path):
         gj=geojson([("node", i, "unknown") for i in range(1, 11)]))
     assert any("jumped 2 -> 10" in a for a in anomalies)
     assert "last 2 days: +8 new" in report
+
+
+# ---- state safety and same-day re-runs --------------------------------------
+
+def entry(date, total=3, acc=0, to_acc=0):
+    c = ops.diff_statuses({}, {})
+    c["to_accessible"] = to_acc
+    return {"date": date, "changes": c,
+            "counts": {"total": total, "accessible": acc, "female_only": 0,
+                       "unknown": total - acc}}
+
+
+def tables(n, status):
+    return [("node", i, status) for i in range(n)]
+
+
+def test_missing_state_is_a_first_run_and_saved(tmp_path):
+    _, _, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+                              gj=geojson(tables(2, "unknown")))
+    assert len(json.loads(state_path.read_text())["history"]) == 1
+
+
+@pytest.mark.parametrize("text", ["", "{not json", "[]",
+                                  '{"statuses": {}, "history": "x"}'])
+def test_unreadable_state_is_never_overwritten(tmp_path, text):
+    (tmp_path / "state.json").write_text(text)
+    anomalies, report, sent, state_path = run(
+        tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+        gj=geojson(tables(2, "unknown")))
+    assert any("ops-state" in a for a in anomalies)
+    assert sent and report
+    assert state_path.read_text() == text
+
+
+def test_unreadable_history_mails_an_anomaly(tmp_path):
+    # The build only WARNs and freezes the leaderboard; the ops check must say so.
+    history = tmp_path / "history.json"
+    history.write_text("{not json")
+    anomalies, _, sent, _ = run(
+        tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+        gj=geojson(tables(2, "unknown")), history_path=str(history))
+    assert any("history.json" in a for a in anomalies)
+    assert sent
+
+
+def test_backfill_edits_refuses_a_corrupt_state(tmp_path):
+    state_path = tmp_path / "state.json"
+    state_path.write_text("{not json")
+    with pytest.raises(ValueError, match="state.json"):
+        ops.backfill_edits(
+            31, state_path=str(state_path), now=NOW,
+            fetch=lambda days, now: {"days": days, "changesets": 1,
+                                     "by_day": {"2026-08-01": 1}})
+    assert state_path.read_text() == "{not json"
+
+
+def yesterday_state(n_unknown=5):
+    return {"statuses": {f"node/{i}": "unknown" for i in range(n_unknown)},
+            "history": [entry("2026-08-03", total=n_unknown)]}
+
+
+def test_same_day_rerun_updates_the_day(tmp_path):
+    gj = geojson(tables(5, "accessible"))
+    run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, gj=gj,
+        state=yesterday_state())
+    _, report, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY),
+                                   now=TUESDAY, gj=gj)
+    history = json.loads(state_path.read_text())["history"]
+    assert [e["date"] for e in history] == ["2026-08-03", "2026-08-04"]
+    assert history[-1]["changes"]["to_accessible"] == 5
+    assert "5 -> accessible" in report
+
+
+def test_rerun_adds_what_moved_between_the_runs(tmp_path):
+    run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+        gj=geojson(tables(5, "accessible") + tables(7, "unknown")[5:]),
+        state=yesterday_state(7))
+    _, _, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+                              gj=geojson(tables(7, "accessible")))
+    history = json.loads(state_path.read_text())["history"]
+    assert len(history) == 2 and history[-1]["changes"]["to_accessible"] == 7
+
+
+def test_next_day_diffs_against_the_rerun(tmp_path):
+    gj = geojson(tables(5, "accessible"))
+    run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, gj=gj,
+        state=yesterday_state())
+    run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, gj=gj)
+    wed = TUESDAY + timedelta(days=1)
+    _, _, _, state_path = run(
+        tmp_path, stats=fresh_stats(wed), now=wed,
+        gj=geojson(tables(4, "accessible") + [("node", 4, "female_only")]))
+    history = json.loads(state_path.read_text())["history"]
+    dates = [e["date"] for e in history]
+    assert dates == sorted(set(dates)) and len(dates) == 3
+    assert history[-1]["changes"]["to_accessible"] == 0
+    assert history[-1]["changes"]["to_female_only"] == 1
+
+
+def test_duplicate_dates_already_saved_are_healed(tmp_path):
+    state = {"statuses": {"node/0": "accessible"},
+             "history": [entry("2026-08-01"), entry("2026-08-02", to_acc=5),
+                         entry("2026-08-02", total=9, to_acc=0)]}
+    _, _, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+                              gj=geojson(tables(1, "accessible")), state=state)
+    history = json.loads(state_path.read_text())["history"]
+    assert [e["date"] for e in history] == ["2026-08-01", "2026-08-02",
+                                            "2026-08-04"]
+    assert history[1]["changes"]["to_accessible"] == 5
+    assert history[1]["counts"]["total"] == 9
+
+
+def test_rerun_still_reports_the_drop_against_yesterday(tmp_path):
+    state = {"statuses": {}, "history": [entry("2026-08-03", total=1000)]}
+    gj = geojson(tables(790, "unknown"))
+    a1, _, _, _ = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+                      gj=gj, state=state)
+    a2, _, _, _ = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, gj=gj)
+    assert any("dropped" in a for a in a1) and any("dropped" in a for a in a2)

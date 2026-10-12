@@ -259,7 +259,7 @@ The OSMCha line can read `UNKNOWN — query failed (…). Not zero.` That is the
 timing out, not a week without edits. Its cost swings unpredictably — the same query took 21.9 s
 on 2026-08-13, over 150 s on 2026-08-18 and 0.5 s on 2026-08-19 — so `OSMCHA_TIMEOUT_S` is set
 to 300 s, well above any measurement, and overridable with `PAPAMAP_OSMCHA_TIMEOUT_S`. If the
-line says UNKNOWN, re-run the check before believing anything about that week.
+line says UNKNOWN, re-run the check before believing anything about that week. A re-run on the same day updates that day's entry instead of adding a second one.
 
 The OSMCha window is fetched on **every** run, not just digest days: the ops page draws a
 per-day chart of theme changesets, and that series only exists in `ops-state.json`
@@ -312,11 +312,11 @@ sending a mail, run against a copy of the state with the SMTP host blanked:
 ```bash
 cd ~/papa-map && cp ops-data/ops-state.json ops-data/preview.json && \
   docker compose run --build --rm -e PAPAMAP_OPS_STATE_PATH=/ops-data/preview.json \
-    -e PAPAMAP_SMTP_HOST= ops; rm -f ops-data/preview.json ops-data/preview.tmp
+    -e PAPAMAP_SMTP_HOST= ops; rm -f ops-data/preview.json
 ```
 
-(The copy gains a second entry for today, so the page's "since yesterday" row reads zeros
-until the next 07:30 run regenerates it from the real state.)
+(A preview after the 07:30 run updates today's entry in the copy the way a re-run does, so the
+page shows the day's real changes; the real state is not touched.)
 
 The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
 the report as a page in the order the numbers are read (redesigned 2026-10-06): a status

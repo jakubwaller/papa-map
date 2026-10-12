@@ -506,9 +506,17 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             open_features, ct_area, city_by_key,
             region_names=[name for name, _ in areas],
             city_names=list(city_ids))
-        history = leaderboard.load_history(history_path)
-        narrower = leaderboard.narrows_day(history, generated_at[:10], region_counts)
-        if narrower:
+        try:
+            history = leaderboard.load_history(history_path)
+        except (ValueError, OSError) as exc:
+            history, narrower = None, None
+            print(f"  WARN: history.json unreadable ({exc}) — history and "
+                  "leaderboard left unchanged", file=sys.stderr)
+        else:
+            narrower = leaderboard.narrows_day(history, generated_at[:10], region_counts)
+        if history is None:
+            pass
+        elif narrower:
             # A same-day re-run over fewer countries (an operator checking a
             # German fix with PAPAMAP_COUNTRIES=de) would replace the night's
             # full entry and drop every other region from the leaderboard.
