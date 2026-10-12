@@ -6,9 +6,11 @@
 > retry only came on its timer, so on a Honor 9 at 25 KB/s the header said
 > "Couldn't load" for about a minute after the tables were already on the
 > phone (download done ~79 s, pins at 139 s). While such a download is still
-> running the count line now says "Loading…", and the map draws as soon as it
-> lands; one that fails leaves the timer to try again. Shell pin `app87` →
-> `app88`.
+> running the count line now says "Loading…", and the retry runs as soon as it
+> lands; one that fails leaves the timer to try again. That retry still loads
+> any other file that never arrived alongside the tables, so a failed
+> `play_places` can hold the pins back by one more 20 s wait. Shell pin
+> `app87` → `app88`.
 
 > **v88 amendment (12 Oct 2026, a failed data download retries): no data shape
 > change.** The tables file was fetched once per page load; one dropped
