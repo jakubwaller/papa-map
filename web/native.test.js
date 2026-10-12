@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { locateNative, loadJSONNative, loadDatasetNative, budget,
+import { locateNative, loadJSONNative, loadDatasetNative, lateDownload, budget,
          checkLocationPermissionNative, locateNativeCoarse, downloadInto,
          parseReview, localDay, afterPinOpen, afterAnswer, reviewDue, reviewTracker,
          requestReview, REVIEW_KEY } from "./native.js";
@@ -359,6 +359,38 @@ test("no copy: a retry still waiting on that download when its own clock runs ou
   assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
   assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
   assert.equal(io.log.filter((l) => l.startsWith("download")).length, 1);
+});
+
+// The page redraws the moment the let-go download lands (app.js scheduleRetry),
+// not on its next retry tick: a minute later, on a Honor 9 at 25 KB/s.
+test("no copy: lateDownload hands the page the let-go download, true once its copy is on the phone", async () => {
+  const io = fakeIO();
+  let finish, calls = 0;
+  io.download = async (url, path) => {
+    if (++calls === 1) await new Promise((r) => { finish = r; });
+    io.files[path] = { n: 2 };
+  };
+  const url = "data/changing_tables.geojson?v=1";
+  assert.equal(lateDownload(url, io), undefined, "nothing let go of yet");
+  assert.equal(await loadJSONNative(url, io, BRIEF), null);
+  const late = lateDownload(url, io);
+  finish();
+  assert.equal(await late, true);
+  assert.deepEqual(io.files, { [COPY]: { n: 2 } });
+  await loadJSONNative(url, io, BRIEF);
+  assert.equal(lateDownload(url, io), undefined, "taken by the load after it");
+  assert.equal(lateDownload(url), undefined, "on the website there is no app io at all");
+});
+
+test("no copy: a let-go download that fails settles false, and leaves the phone alone", async () => {
+  const io = fakeIO();
+  let drop;
+  io.download = async () => { await new Promise((r) => { drop = r; }); throw new Error("connection reset"); };
+  assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
+  const late = lateDownload("data/changing_tables.geojson", io);
+  drop();
+  assert.equal(await late, false);
+  assert.deepEqual(io.files, {});
 });
 
 test("no copy, offline: null, not a throw", async () => {

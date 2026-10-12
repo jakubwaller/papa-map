@@ -18,8 +18,8 @@
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
 // nothing is sent that the website does not send: a download is a GET.
 
-import { isWheelchairLimited } from "./datasource.js?v=app87";
-import { awaitingReturn } from "./osm.js?v=app87";
+import { isWheelchairLimited } from "./datasource.js?v=app88";
+import { awaitingReturn } from "./osm.js?v=app88";
 
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";
@@ -127,13 +127,21 @@ function promoteLate(io, running, fresh, path) {
   const done = running.then(
     async () => {
       try { await io.read(fresh); }
-      catch { await io.remove(fresh); return; }   // this launch wrote it, and it is not JSON
+      catch { await io.remove(fresh); return false; }   // this launch wrote it, and it is not JSON
       await io.replace(fresh, path);
+      return true;
     },
-    () => {},   // the download failed: whatever was already on the phone is left alone
-  ).catch(() => {});
+    () => false,   // the download failed: whatever was already on the phone is left alone
+  ).catch(() => false);
   (io.late ??= new Map()).set(fresh, done);
 }
+
+// The download of `url` a load let go of, until a later load takes it: settles
+// true once its copy is on the phone. The page (app.js) redraws the moment it
+// does rather than on its next retry tick, which on a Honor 9 at 25 KB/s was a
+// minute after the tables had landed.
+export const lateDownload = (url, io = appIOCache) =>
+  io?.late?.get(`${DATA_PATH}/${url.split("/").pop().split("?")[0]}.new`);
 
 // The background refresh a stored copy starts once it has already drawn (see
 // loadJSONNative below): runs on its own time and settles into exactly one of
