@@ -201,7 +201,7 @@ def test_region_rows_delta_against_a_week_ago():
                         "Italy": [7, 0, 40]},
          {"Berlin": [13, 1, 298]}),
     ])
-    r = ops_page.region_rows(h, window_days=7)
+    r = ops_page.region_rows(h)
     assert r["date"] == "2026-08-22" and r["base_date"] == "2026-08-15"
     by = {row["name"]: row for row in r["regions"]}
     assert by["Bayern"]["delta"] == 10 and by["Danmark"]["delta"] == -1
