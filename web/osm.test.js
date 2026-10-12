@@ -208,11 +208,15 @@ test("startLogin ignores a second login while the first one's browser is opening
   try {
     globalThis.localStorage = fakeSession();
     const went = [];
+    // navigate runs after pkceChallenge's crypto.subtle digest, which takes one
+    // tick on some Node versions and several on others: wait for the call.
+    const tick = () => new Promise((r) => setTimeout(r, 0));
+    const until = async (ok) => { for (let i = 0; i < 200 && !ok(); i++) await tick(); };
     let opened;
     const first = startLogin(LIVE, { kind: "table", osm_url: "u", choice: "male" },
       (u) => { went.push(u); return new Promise((r) => { opened = r; }); });
     assert.equal(await startLogin(LIVE, { kind: "table", osm_url: "u", choice: "both" }, (u) => went.push(u)), true);
-    await new Promise((r) => setTimeout(r, 0));
+    await until(() => went.length >= 1);
     assert.equal(went.length, 1);
     assert.equal(awaitingReturn(`papamap://auth?code=c&state=${stateOf(went[0])}`), true);
     assert.equal(takeIntent().choice, "male");
@@ -223,15 +227,14 @@ test("startLogin ignores a second login while the first one's browser is opening
     assert.equal(went.length, 2);
     // A browser that never answers holds it 5 s at most, and its late answer
     // does not release the newer login's hold.
-    const tick = () => new Promise((r) => setTimeout(r, 0));
     let late, newer;
     startLogin(LIVE, null, () => new Promise((r) => { late = r; }));
-    await tick();
+    await until(() => late);
     const realNow = Date.now;
     Date.now = () => realNow() + 6000;
     try {
       startLogin(LIVE, null, (u) => { went.push(u); return new Promise((r) => { newer = r; }); });
-      await tick();
+      await until(() => newer);
       assert.equal(went.length, 3);
       late();
       await tick();
