@@ -312,11 +312,11 @@ sending a mail, run against a copy of the state with the SMTP host blanked:
 ```bash
 cd ~/papa-map && cp ops-data/ops-state.json ops-data/preview.json && \
   docker compose run --build --rm -e PAPAMAP_OPS_STATE_PATH=/ops-data/preview.json \
-    -e PAPAMAP_SMTP_HOST= ops; rm -f ops-data/preview.json ops-data/preview.tmp
+    -e PAPAMAP_SMTP_HOST= ops; rm -f ops-data/preview.json
 ```
 
-(The copy gains a second entry for today, so the page's "since yesterday" row reads zeros
-until the next 07:30 run regenerates it from the real state.)
+(A preview after the 07:30 run updates today's entry in the copy the way a re-run does, so the
+page shows the day's real changes; the real state is not touched.)
 
 The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
 the report as a page in the order the numbers are read (redesigned 2026-10-06): a status

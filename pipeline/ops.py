@@ -31,7 +31,7 @@ from pathlib import Path
 
 import requests
 
-from . import appstats, ops_page
+from . import appstats, leaderboard, ops_page
 from .config import GEOJSON_PATH, STATS_PATH
 from .export import PAPAMAP_THEME_URL, write_text_atomic
 
@@ -743,6 +743,13 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     if not state_ok:
         anomalies.append(f"ops-state.json unreadable ({state_error}) — "
                          "left untouched, today not recorded")
+    # The build leaves an unreadable history.json alone and the leaderboard
+    # frozen, with only a WARN in its log; this check is the one that mails.
+    try:
+        leaderboard.load_history(history_path or OPS_HISTORY_PATH)
+    except ValueError as exc:
+        anomalies.append(f"history.json unreadable ({_short_exc(exc)}) — "
+                         "leaderboard frozen until it is fixed")
     weekly = now.weekday() == WEEKLY_DIGEST_WEEKDAY
     # Visits and edits every run, not just digest days: the page's per-day
     # charts are built run by run — the visits curve from figures Cloudflare

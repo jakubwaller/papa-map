@@ -40,7 +40,7 @@ def fresh_delta(stats, now, minutes=2):
 
 
 def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None,
-        delta="fresh", delta_state=None, stats_mtime=None):
+        delta="fresh", delta_state=None, stats_mtime=None, history_path=None):
     """`stats_mtime` dates the stats.json write; default is when it is
     written here, i.e. the real clock, not `now`."""
     state_path = tmp_path / "state.json"
@@ -72,7 +72,8 @@ def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None,
         edits_fetch=lambda **kw: None,
         html_path=str(tmp_path / "ops.html"),
         private_html_path=str(tmp_path / "private-ops.html"),
-        delta_path=delta_path, delta_state_path=delta_state_path)
+        delta_path=delta_path, delta_state_path=delta_state_path,
+        history_path=history_path)
     return anomalies, report, sent, state_path
 
 
@@ -722,6 +723,17 @@ def test_unreadable_state_is_never_overwritten(tmp_path, text):
     assert any("ops-state" in a for a in anomalies)
     assert sent and report
     assert state_path.read_text() == text
+
+
+def test_unreadable_history_mails_an_anomaly(tmp_path):
+    # The build only WARNs and freezes the leaderboard; the ops check must say so.
+    history = tmp_path / "history.json"
+    history.write_text("{not json")
+    anomalies, _, sent, _ = run(
+        tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+        gj=geojson(tables(2, "unknown")), history_path=str(history))
+    assert any("history.json" in a for a in anomalies)
+    assert sent
 
 
 def test_backfill_edits_refuses_a_corrupt_state(tmp_path):
