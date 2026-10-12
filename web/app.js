@@ -1315,8 +1315,8 @@ function renderChips() {
   // The rebuild removes the chip that has the focus, which would drop a keyboard
   // or screen-reader reader onto <body> on every background redraw (the delta
   // poll). Status chips carry data-chip, the others a distinct title.
-  const chipKey = (el) => el?.dataset.chip || el?.title;
-  const focused = document.activeElement?.closest?.(".chip") ? chipKey(document.activeElement) : null;
+  const focusKey = (el) => el?.dataset.chip || el?.title;
+  const focused = document.activeElement?.closest?.(".chip") ? focusKey(document.activeElement) : null;
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
   const frag = document.createDocumentFragment();
   for (const key of chipKeys(mode)) {
@@ -1349,7 +1349,7 @@ function renderChips() {
   // Not firstChild: the mode toggle is static markup and holds that slot, so
   // the generated chips go in front of the spacer instead.
   filterBar.insertBefore(frag, filterBar.querySelector(".spacer"));
-  if (focused) [...filterBar.querySelectorAll(".chip")].find((el) => chipKey(el) === focused)?.focus();
+  if (focused) [...filterBar.querySelectorAll(".chip")].find((el) => focusKey(el) === focused)?.focus();
   updateBarFade();
 }
 
@@ -1452,6 +1452,9 @@ function wheelchairChip(count) {
     // The strip is rebuilt, not toggled: the status badges count over the
     // chip's universe, so they change with it (renderChips reads the state).
     renderChips();
+    // WebKit (Safari, the app's WKWebView, VoiceOver) does not focus a tapped
+    // button, so renderChips found nothing focused to restore.
+    filterBar.querySelector(".chip.wc")?.focus();
     refreshPins();
   });
   return b;
@@ -4313,7 +4316,8 @@ function renderSavedList() {
   for (const row of savedPlaces) {
     const li = document.createElement("li");
     li.className = "saved-row";
-    const name = row.name || t("popupUnnamed");
+    const name = row.name
+      || t(featuresByOsmUrl.get(row.osm)?.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
     const dist = lastFix ? formatDistance(haversineKm(lastFix.lat, lastFix.lon, row.lat, row.lon)) : null;
     const open = document.createElement("button");
     open.type = "button";

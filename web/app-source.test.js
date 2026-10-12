@@ -138,9 +138,9 @@ test("the filter chips are named by their text and described by describeBy", () 
 // here until it is escaped or deliberately added to the list.
 test("popupHTML and placeHTML interpolate only escaped text or known markup", () => {
   const SAFE = [
-    /^esc\(/, /^rows\.join\(""\)$/, /^parts\.join\(" · "\)$/, /^links\.join\(""\)$/,
-    /^sub$/, /^s\.cls$/, /^asks \? " ask-ctx" : ""$/, /^starHTML\(/,
-    /^svgIcon\(/, /^tableRowHTML\(/, /^shareButtonHTML\(\)$/,
+    /^esc\(.*\)$/, /^rows\.join\(""\)$/, /^parts\.join\(" · "\)$/, /^links\.join\(""\)$/,
+    /^sub$/, /^s\.cls$/, /^asks \? " ask-ctx" : ""$/, /^starHTML\(.*\)$/,
+    /^svgIcon\(.*\)$/, /^tableRowHTML\(.*\)$/, /^shareButtonHTML\(\)$/,
     /^!mcOnly && \(asks \|\| !f\.play_recorded \|\| asksHc\) \? "" : " primary"$/,
     /^p\.changing_table \? " primary" : ""$/,
   ];
