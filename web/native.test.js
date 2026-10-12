@@ -311,6 +311,33 @@ test("no copy, online: the download becomes the copy, and the map is drawn from 
                             `read ${COPY}.new`, `replace ${COPY}`]);
 });
 
+// The page's retry (app.js) loads the same file again while a download the
+// clock let go of may still be writing `.new`; on Android the downloader
+// writes in place, so a second one would truncate the first.
+test("no copy: a retry waits for the download the clock let go of, never a second one into the same file", async () => {
+  const io = fakeIO();
+  let finish, calls = 0;
+  io.download = async (url, path) => {
+    io.log.push(`download ${path}`);
+    if (++calls === 1) await new Promise((r) => { finish = r; });   // slower than the budget
+    io.files[path] = { n: 2 };
+  };
+  assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
+  const retry = loadJSONNative("data/changing_tables.geojson", io, { netMs: 1000 });
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(io.log.filter((l) => l.startsWith("download")).length, 1, "no second download while the first runs");
+  finish();
+  const r = await retry;
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 2 }, fromStore: true });
+});
+
+test("no copy: a retry still waiting on that download when its own clock runs out is null, still one download", async () => {
+  const io = fakeIO({ hangs: ["download"] });
+  assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
+  assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
+  assert.equal(io.log.filter((l) => l.startsWith("download")).length, 1);
+});
+
 test("no copy, offline: null, not a throw", async () => {
   assert.equal(await loadJSONNative("data/stats.json", fakeIO({ net: false })), null);
 });

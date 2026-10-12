@@ -3688,8 +3688,9 @@ function watchDeltaForVersion(osmUrl, minVersion, attemptsLeft = 20) {
 async function watchRefresh(loaded) {
   const results = await Promise.all(loaded.map((l) => l.refreshed));
   if (results.some((r) => r?.json != null)) {
-    const [fc, places, stats, areas] = results.map((r, i) => r?.json ?? loaded[i].json);
-    applyDataset(fc, places, stats, areas);
+    // lastJsons, not boot's own: a retry may have filled a file boot came back without.
+    lastJsons = results.map((r, i) => r?.json ?? lastJsons[i]);
+    applyDataset(...lastJsons);
     pollDelta();
   }
   if (allFeatures.length && results.every((r) => !r || r.ok === false)) toast(t("toastOffline"));
@@ -3721,10 +3722,13 @@ async function retryDataset() {
   clearTimeout(retryTimer);
   retrying = true;
   refreshPins();
-  const loaded = await loadDataset(DATA_URLS);
+  // Only the files that never arrived: in the app the others have a background
+  // refresh writing their own `.new` already, and a second one would race it.
+  const missing = DATA_URLS.flatMap((u, i) => (lastJsons[i] == null ? [i] : []));
+  const loaded = await loadDataset(missing.map((i) => DATA_URLS[i]));
   retrying = false;
-  if (loaded[0]?.json) {
-    lastJsons = loaded.map((r, i) => r?.json ?? lastJsons[i]);
+  missing.forEach((i, k) => { lastJsons[i] = loaded[k]?.json ?? lastJsons[i]; });
+  if (lastJsons[0]) {
     applyDataset(...lastJsons);
     pollDelta();
     openQueuedPin();
