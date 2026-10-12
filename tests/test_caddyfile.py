@@ -31,3 +31,14 @@ def test_service_worker_is_revalidated_every_time():
     text = CADDYFILE.read_text(encoding="utf-8")
     assert re.search(r"^\t@sw path /sw\.js$", text, re.M)
     assert re.search(r'^\theader @sw Cache-Control "no-cache"$', text, re.M)
+
+
+def test_private_page_has_no_second_public_address():
+    # web-data/private sits inside the /data mount, so the ops page also lives
+    # at /data/private/. Only this block hides it, and the 404 in /private/*
+    # must stay behind the snippet's file_server as the last thing to run.
+    text = CADDYFILE.read_text(encoding="utf-8")
+    data = _block(text, "handle /data/private/* {")
+    assert [ln.strip() for ln in data.splitlines()[1:] if ln.strip()] == ["respond 404"]
+    route = _block(text, "route /private/* {")
+    assert [ln.strip() for ln in route.splitlines() if ln.strip()][-1] == "respond 404"

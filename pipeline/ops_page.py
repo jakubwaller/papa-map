@@ -34,6 +34,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from .appstats import APP_STORE_LIVE_SINCE
 from .export import THEME_LIVE_SINCE
+from .leaderboard import _baseline
 from .pages import ICON, STYLE, esc
 
 # What `python -m pipeline.run` prints, line by line (pipeline/run.py). The
@@ -347,10 +348,10 @@ def group_warns(warns: list[str], limit: int = 40) -> list[tuple[int, str]]:
 
 # ---- history.json ----------------------------------------------------------
 
-def region_rows(history: dict | None, window_days: int = 7) -> dict:
+def region_rows(history: dict | None) -> dict:
     """Per-region and per-city rows from the leaderboard's history: today's
     triple [accessible, female_only, unknown] and the accessible delta against
-    the newest day at least `window_days` older — or the oldest day there is,
+    the newest day at least a week older — or the oldest day there is,
     when the history is younger than the window. {'date', 'base_date',
     'regions': [...], 'cities': [...]}, rows sorted by accessible desc."""
     days = (history or {}).get("days") or []
@@ -358,13 +359,9 @@ def region_rows(history: dict | None, window_days: int = 7) -> dict:
         return {"date": None, "base_date": None, "regions": [], "cities": []}
     last = days[-1]
     try:
-        cutoff = (datetime.fromisoformat(last["date"]).timestamp()
-                  - window_days * 86400)
-        older = [d for d in days[:-1]
-                 if datetime.fromisoformat(d["date"]).timestamp() <= cutoff]
+        base = _baseline(days, last["date"])
     except (TypeError, ValueError):
-        older = []
-    base = older[-1] if older else (days[0] if len(days) > 1 else None)
+        base = None
 
     def rows(kind: str) -> list[dict]:
         out = []

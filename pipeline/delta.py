@@ -166,9 +166,11 @@ def fetch_osm_full_centroid(osm_type: str, osm_id: int, get=None) -> tuple[float
              and "lat" in el and "lon" in el]
     if not nodes:
         return None
-    lat = sum(n["lat"] for n in nodes) / len(nodes)
-    lon = sum(n["lon"] for n in nodes) / len(nodes)
-    return lat, lon
+    # The middle of the outline's bounding box, which is what Overpass's
+    # `out center` gives the nightly build — the mean of the points would
+    # put the pin tens of metres off by morning.
+    lats, lons = [n["lat"] for n in nodes], [n["lon"] for n in nodes]
+    return (min(lats) + max(lats)) / 2, (min(lons) + max(lons)) / 2
 
 
 # A way/relation with no coordinate reachable any other way is rare ("a few
@@ -442,6 +444,10 @@ def find_start_seq(base_iso: str, fetch_state=fetch_state, max_backoff: int = 8,
         if not st.get("timestamp") or _parse_iso(st["timestamp"]) <= base_dt:
             break
         seq = max(1, seq - backoff_step)
+    else:
+        print(f"  WARN delta: still after the base {base_iso} at seq {seq} "
+              f"after {max_backoff} steps back — edits between may not be replayed",
+              file=sys.stderr)
     return seq
 
 
