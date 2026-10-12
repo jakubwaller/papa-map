@@ -120,8 +120,9 @@ const appIO = () => (appIOCache ??= nativeIO());
 // Validated before it is promoted, because `.new` is itself a file the loader
 // reads: one that does not parse must never stand in for a good copy. Nothing
 // here is awaited; the pins were drawn from the phone seconds ago.
-// Kept on `io` by `.new` path until it settles: a later load of the same file
-// (the page's retry, app.js) waits for it rather than download into that file.
+// Kept on `io` by `.new` path until the next load of the same file (the page's
+// retry, app.js) takes it: that load waits for it rather than download into
+// the same file, and finds its copy fresh rather than download it again.
 function promoteLate(io, running, fresh, path) {
   const done = running.then(
     async () => {
@@ -131,9 +132,7 @@ function promoteLate(io, running, fresh, path) {
     },
     () => {},   // the download failed: whatever was already on the phone is left alone
   ).catch(() => {});
-  const late = (io.late ??= new Map());
-  late.set(fresh, done);
-  done.then(() => { if (late.get(fresh) === done) late.delete(fresh); });
+  (io.late ??= new Map()).set(fresh, done);
 }
 
 // The background refresh a stored copy starts once it has already drawn (see
@@ -320,12 +319,15 @@ export async function loadJSONNative(url, io = appIO(), { note = {}, netMs = NET
   Object.assign(note, { file: name, step: "none", ms: 0, bytes: null });
   const step = (s) => { note.step = s; note.ms = Date.now() - began; };
   // A download an earlier load let go of may still be writing `.new` (Android
-  // writes in place): wait for its promotion, within the same budget, and
+  // writes in place): wait for its promotion, within a budget of its own, and
   // never start a second one beside it — still running means nothing yet.
   const earlier = io.late?.get(fresh);
   if (earlier) {
     try { await budget(netMs)(earlier); } catch { return null; }
+    io.late.delete(fresh);
   }
+  // A copy that download promoted is as fresh as the network has: asking again
+  // at once would be the same megabytes twice over the same slow link.
 
   // `path` first, `.new` only when `path` is missing or will not parse — the
   // same order a late promotion has to respect, and for the same reason: a
@@ -348,7 +350,8 @@ export async function loadJSONNative(url, io = appIO(), { note = {}, netMs = NET
     return {
       json: hit.json,
       fromStore: true,
-      refreshed: backgroundRefresh(io, SITE + url, hit.text, path, fresh, hit.copy, { gate, hold }),
+      refreshed: earlier ? Promise.resolve({ ok: true, json: null })
+        : backgroundRefresh(io, SITE + url, hit.text, path, fresh, hit.copy, { gate, hold }),
     };
   }
 

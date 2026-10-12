@@ -329,6 +329,29 @@ test("no copy: a retry waits for the download the clock let go of, never a secon
   finish();
   const r = await retry;
   assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 2 }, fromStore: true });
+  assert.deepEqual(await r.refreshed, { ok: true, json: null }, "just downloaded: nothing to refresh");
+  assert.equal(io.log.filter((l) => l.startsWith("download")).length, 1, "the same megabytes once, not twice");
+});
+
+test("no copy: a retry after that download has landed reads its copy, and does not download it again", async () => {
+  const io = fakeIO();
+  let finish, calls = 0;
+  io.download = async (url, path) => {
+    io.log.push(`download ${path}`);
+    if (++calls === 1) await new Promise((r) => { finish = r; });
+    io.files[path] = { n: 2 };
+  };
+  assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
+  finish();
+  await new Promise((r) => setTimeout(r, 10));   // landed and promoted before the retry asks
+  const r = await loadJSONNative("data/changing_tables.geojson", io, BRIEF);
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 2 }, fromStore: true });
+  assert.deepEqual(await r.refreshed, { ok: true, json: null });
+  assert.equal(io.log.filter((l) => l.startsWith("download")).length, 1, "seen on a Honor 9 at 25 KB/s: the copy downloaded twice");
+  // Taken once: the load after that is an ordinary one again, refresh and all.
+  const next = await loadJSONNative("data/changing_tables.geojson", io, BRIEF);
+  await next.refreshed;
+  assert.equal(io.log.filter((l) => l.startsWith("download")).length, 2);
 });
 
 test("no copy: a retry still waiting on that download when its own clock runs out is null, still one download", async () => {

@@ -3722,17 +3722,20 @@ async function retryDataset() {
   clearTimeout(retryTimer);
   retrying = true;
   refreshPins();
-  // Only the files that never arrived: in the app the others have a background
-  // refresh writing their own `.new` already, and a second one would race it.
-  const missing = DATA_URLS.flatMap((u, i) => (lastJsons[i] == null ? [i] : []));
+  // The tables (empty is why we are here) and any other file that never
+  // arrived: in the app the rest have a background refresh writing their own
+  // `.new` already, and a second one would race it.
+  const missing = DATA_URLS.flatMap((u, i) => (i === 0 || lastJsons[i] == null ? [i] : []));
   const loaded = await loadDataset(missing.map((i) => DATA_URLS[i]));
   retrying = false;
   missing.forEach((i, k) => { lastJsons[i] = loaded[k]?.json ?? lastJsons[i]; });
-  if (lastJsons[0]) {
+  if (loaded[0]?.json) {
     applyDataset(...lastJsons);
     pollDelta();
     openQueuedPin();
-  } else {
+  }
+  // Still nothing to draw, a tables file with no features included: try again later.
+  if (dataMissing()) {
     refreshPins();
     scheduleRetry();
   }
