@@ -13,7 +13,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
-         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs,
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
          zoneForFeature } from "./datasource.js?v=app89";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app89";
@@ -2584,7 +2584,9 @@ function rememberView() {
 // verifiable (storage blocked: some privacy settings, some webviews) the
 // login does not start, and the reader is told rather than left with a
 // button that does nothing.
-const goLogin = (intent) => startLogin(osm, intent, isNative() ? nativeNavigate : undefined).then((went) => { if (!went) toast(t("loginFailed")); });
+// A browser that would not open (Browser.open rejecting) is a failed login too.
+const goLogin = (intent) => startLogin(osm, intent, isNative() ? nativeNavigate : undefined)
+  .catch(() => false).then((went) => { if (!went) toast(t("loginFailed")); });
 
 // Answers on their way to OSM, by object. A pin closed and reopened during
 // the round trip renders its question again; it must not take a second
@@ -3003,7 +3005,8 @@ async function answerVenue(venue, choice, freshToken = null) {
   btns.forEach((b) => { b.disabled = true; });
   setVenueNote("askSaving", "looking");
   // Taken before the write: OSM's edited_at on the delta's upsert is the
-  // server's time DURING the write, and the watch must be older than that.
+  // server's time DURING the write, and the watch must be older than that
+  // (addWatchSince moves it back when an earlier tap's save was the write).
   const since = new Date().toISOString();
   try {
     const ref = osmRef(venue.osm_url);
@@ -3017,7 +3020,7 @@ async function answerVenue(venue, choice, freshToken = null) {
     venueAskEl.querySelector(".ask")?.remove();
     setVenueNote(choice === "none" ? "venueSavedNone" : "venueSaved", "found");
     if (choice !== "none") {
-      writeAddWatch({ t: since, osm_url: venue.osm_url, zoom: Math.max(map.getZoom(), VENUE_MIN_ZOOM),
+      writeAddWatch({ t: addWatchSince(since, out), osm_url: venue.osm_url, zoom: Math.max(map.getZoom(), VENUE_MIN_ZOOM),
         bbox: [venue.lon, venue.lat, venue.lon, venue.lat] });
     }
     review?.answered();

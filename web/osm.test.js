@@ -221,6 +221,25 @@ test("startLogin ignores a second login while the first one's browser is opening
     assert.equal(await first, true);
     await startLogin(LIVE, null, (u) => went.push(u));
     assert.equal(went.length, 2);
+    // A browser that never answers holds it 5 s at most, and its late answer
+    // does not release the newer login's hold.
+    const tick = () => new Promise((r) => setTimeout(r, 0));
+    let late, newer;
+    startLogin(LIVE, null, () => new Promise((r) => { late = r; }));
+    await tick();
+    const realNow = Date.now;
+    Date.now = () => realNow() + 6000;
+    try {
+      startLogin(LIVE, null, (u) => { went.push(u); return new Promise((r) => { newer = r; }); });
+      await tick();
+      assert.equal(went.length, 3);
+      late();
+      await tick();
+      await startLogin(LIVE, null, (u) => went.push(u));
+      assert.equal(went.length, 3);
+      newer();
+      await tick();
+    } finally { Date.now = realNow; }
   } finally { keepRoundTripAcrossRestarts(false); }
 });
 
@@ -499,8 +518,10 @@ test("xml escaping covers the four characters a tag value can carry", () => {
 });
 
 test("elementFromApi keeps what a write-back needs, and rejects the rest", () => {
-  assert.deepEqual(elementFromApi({ elements: [{ type: "node", id: 1, version: 3, lat: 53.5, lon: 9.9, tags: { a: "b" } }] }),
-    { type: "node", id: 1, version: 3, tags: { a: "b" }, lat: 53.5, lon: 9.9, nodes: [], members: [] });
+  assert.deepEqual(elementFromApi({ elements: [{ type: "node", id: 1, version: 3, timestamp: "2026-10-12T10:04:00Z",
+                                                 lat: 53.5, lon: 9.9, tags: { a: "b" }, user: "someone" }] }),
+    { type: "node", id: 1, version: 3, timestamp: "2026-10-12T10:04:00Z", tags: { a: "b" }, lat: 53.5, lon: 9.9,
+      nodes: [], members: [] });
   assert.equal(elementFromApi({ elements: [{ type: "node", id: 1 }] }), null, "no version");
   assert.equal(elementFromApi({ elements: [{ type: "area", id: 1, version: 1 }] }), null);
   assert.equal(elementFromApi({}), null);
@@ -645,11 +666,11 @@ test("writeTags: a room somebody tagged since last night's build is theirs — 4
 // second tap reads their own answer back, and it is theirs, not a stranger's.
 test("writeTags: the same answer already on OSM is a success with no changeset", async () => {
   let api = scriptedApi([
-    { status: 200, json: { elements: [{ type: "node", id: 42, version: 6, lat: 1, lon: 2,
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 6, lat: 1, lon: 2, timestamp: "2026-10-12T10:04:00Z",
                                         tags: { amenity: "cafe", changing_table: "yes", "changing_table:location": "female_toilet" } }] } },
   ]);
   const out = await writeTags(SANDBOX, "tok", { type: "node", id: "42" }, tablePatch("female"), "c", api.fetchFn);
-  assert.deepEqual(out, { version: 6, changeset: null,
+  assert.deepEqual(out, { version: 6, changeset: null, timestamp: "2026-10-12T10:04:00Z",
     tags: { amenity: "cafe", changing_table: "yes", "changing_table:location": "female_toilet" } });
   assert.equal(api.calls.length, 1, "nothing after the read: no changeset was opened");
   // A guarded key the patch does not write is still somebody else's.

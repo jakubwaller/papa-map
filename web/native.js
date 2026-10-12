@@ -19,7 +19,7 @@
 // nothing is sent that the website does not send: a download is a GET.
 
 import { isWheelchairLimited } from "./datasource.js?v=app89";
-import { awaitingReturn } from "./osm.js?v=app89";
+import { awaitingReturn, loginPending } from "./osm.js?v=app89";
 
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";
@@ -826,11 +826,13 @@ export function onAppUrl({ auth, table, nearest = () => {}, awaiting = awaitingR
   app.addListener("appUrlOpen", ({ url }) => {
     if (!url) return;
     if (url.startsWith(AUTH_REDIRECT)) {
-      // Only a return a login is waiting for, as on a cold start below: any
-      // app or web page can open a papamap://auth link, and a stray one handed
-      // to auth would use up the PKCE record the real return is checked
-      // against. Nor does it close the sheet the reader is logging in on.
-      if (!awaiting(url)) return;
+      // Any app or web page can open a papamap://auth link. While a login
+      // waits for another state, a stray one is ignored: handed to auth it
+      // would use up the PKCE record the real return is checked against, and
+      // close the sheet the reader is logging in on. With no login waiting at
+      // all (none started, or its hour ran out) there is nothing to protect,
+      // and it goes on as ever, so the reader hears the login failed.
+      if (loginPending() && !awaiting(url)) return;
       plugin("Browser")?.close?.().catch?.(() => {});
       auth(url);
     } else if (url.startsWith("papamap://table")) {

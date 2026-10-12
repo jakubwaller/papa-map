@@ -18,7 +18,7 @@ import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces,
          shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
          applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
-         isNewlyCreated, selectAddedPlace, mapCompleteObjectUrl, zoneForFeature } from "./datasource.js";
+         isNewlyCreated, selectAddedPlace, addWatchSince, mapCompleteObjectUrl, zoneForFeature } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -1737,6 +1737,21 @@ test("selectAddedPlace: an osm_url watch takes that object's upsert, created or 
   assert.equal(selectAddedPlace({ tables: { upsert: [up(url, "2026-09-23T09:59:00Z")] } }, watch), null);
   // And other objects never answer an osm_url watch, however new.
   assert.equal(selectAddedPlace({ tables: { upsert: [delta.tables.upsert[0]] } }, watch), null);
+});
+
+// The add dialog's answer found saved already by an earlier, timed-out tap:
+// the delta carries that earlier edit, and the watch must still take it.
+test("addWatchSince: a write's own moment, or a second before the save it found", () => {
+  const url = "https://www.openstreetmap.org/node/42";
+  const before = "2026-09-23T10:05:30.000Z";
+  assert.equal(addWatchSince(before, { changeset: "1234", timestamp: "2026-09-23T10:00:00Z" }), before);
+  assert.equal(addWatchSince(before, { changeset: null }), before);   // no timestamp to go by
+  const t = addWatchSince(before, { changeset: null, timestamp: "2026-09-23T10:04:00Z" });
+  assert.equal(t, "2026-09-23T10:03:59.000Z");
+  const delta = { tables: { upsert: [{ type: "Feature", geometry: { type: "Point", coordinates: [10, 53.55] },
+                                       properties: { osm_url: url, edited_at: "2026-09-23T10:04:00Z" } }] } };
+  assert.equal(selectAddedPlace(delta, { ...WATCH, osm_url: url, t: before }), null);
+  assert.equal(selectAddedPlace(delta, { ...WATCH, osm_url: url, t }).feature.properties.osm_url, url);
 });
 
 test("selectAddedPlace returns null with no watch or no delta", () => {
