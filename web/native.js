@@ -18,8 +18,8 @@
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
 // nothing is sent that the website does not send: a download is a GET.
 
-import { isWheelchairLimited } from "./datasource.js?v=app86";
-import { awaitingReturn } from "./osm.js?v=app86";
+import { isWheelchairLimited } from "./datasource.js?v=app87";
+import { awaitingReturn } from "./osm.js?v=app87";
 
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";
@@ -101,6 +101,11 @@ export function budget(ms, now = Date.now) {
   return race;
 }
 
+// One io for the app's whole run, so a later load (the page's retry) sees the
+// downloads an earlier one let go of (promoteLate).
+let appIOCache = null;
+const appIO = () => (appIOCache ??= nativeIO());
+
 // A download the clock let go of, finished on its own time — only reachable
 // from the no-copy path below, where the download itself is the only thing
 // that will ever become tomorrow's stored copy.
@@ -115,8 +120,11 @@ export function budget(ms, now = Date.now) {
 // Validated before it is promoted, because `.new` is itself a file the loader
 // reads: one that does not parse must never stand in for a good copy. Nothing
 // here is awaited; the pins were drawn from the phone seconds ago.
+// Kept on `io` by `.new` path until the next load of the same file (the page's
+// retry, app.js) takes it: that load waits for it rather than download into
+// the same file, and finds its copy fresh rather than download it again.
 function promoteLate(io, running, fresh, path) {
-  running.then(
+  const done = running.then(
     async () => {
       try { await io.read(fresh); }
       catch { await io.remove(fresh); return; }   // this launch wrote it, and it is not JSON
@@ -124,6 +132,7 @@ function promoteLate(io, running, fresh, path) {
     },
     () => {},   // the download failed: whatever was already on the phone is left alone
   ).catch(() => {});
+  (io.late ??= new Map()).set(fresh, done);
 }
 
 // The background refresh a stored copy starts once it has already drawn (see
@@ -300,7 +309,7 @@ function nativeIO(fs = plugin("Filesystem")) {
 // an out-parameter rather than a return value so that the { json, fromStore }
 // contract app.js reads — and the `null` that means "nothing anywhere" —
 // are exactly what they were.
-export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = NET_MS, gate = null, hold = false } = {}) {
+export async function loadJSONNative(url, io = appIO(), { note = {}, netMs = NET_MS, gate = null, hold = false } = {}) {
   const name = url.split("/").pop().split("?")[0];
   const path = `${DATA_PATH}/${name}`;
   const fresh = `${path}.new`;
@@ -309,6 +318,16 @@ export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = 
   // whole row from the moment the load starts.
   Object.assign(note, { file: name, step: "none", ms: 0, bytes: null });
   const step = (s) => { note.step = s; note.ms = Date.now() - began; };
+  // A download an earlier load let go of may still be writing `.new` (Android
+  // writes in place): wait for its promotion, within a budget of its own, and
+  // never start a second one beside it — still running means nothing yet.
+  const earlier = io.late?.get(fresh);
+  if (earlier) {
+    try { await budget(netMs)(earlier); } catch { return null; }
+    io.late.delete(fresh);
+  }
+  // A copy that download promoted is as fresh as the network has: asking again
+  // at once would be the same megabytes twice over the same slow link.
 
   // `path` first, `.new` only when `path` is missing or will not parse — the
   // same order a late promotion has to respect, and for the same reason: a
@@ -331,7 +350,8 @@ export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = 
     return {
       json: hit.json,
       fromStore: true,
-      refreshed: backgroundRefresh(io, SITE + url, hit.text, path, fresh, hit.copy, { gate, hold }),
+      refreshed: earlier ? Promise.resolve({ ok: true, json: null })
+        : backgroundRefresh(io, SITE + url, hit.text, path, fresh, hit.copy, { gate, hold }),
     };
   }
 
@@ -446,7 +466,7 @@ async function hasStoredCopy(io, path, fresh) {
 // copy that went missing) — means nothing here applies: every file, stats
 // included, loads exactly as loadJSONNative alone always has, none of them
 // waiting on any of the others.
-export async function loadDatasetNative(urls, io = nativeIO(), opts = {}) {
+export async function loadDatasetNative(urls, io = appIO(), opts = {}) {
   const statsAt = urls.findIndex((u) => u.split("/").pop().split("?")[0] === "stats.json");
   if (statsAt === -1) return Promise.all(urls.map((u) => loadJSONNative(u, io, opts)));
 

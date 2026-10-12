@@ -14,16 +14,16 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs,
-         zoneForFeature } from "./datasource.js?v=app86";
+         zoneForFeature } from "./datasource.js?v=app87";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app86";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app87";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app86";
+         writeTags } from "./osm.js?v=app87";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -31,7 +31,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app86";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app87";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -41,27 +41,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app86";
+         reviewTracker } from "./native.js?v=app87";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app86";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app87";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app86";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app87";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app86";
+import { isOpenNow } from "./opening-hours.js?v=app87";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app86";
-// The bundled shell's pin (`?v=app86`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app87";
+// The bundled shell's pin (`?v=app87`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -711,6 +711,12 @@ function addTableLayer() {
   });
 }
 
+// The count line when the dataset is empty: a retry button, not a developer message.
+const retryBtn = document.createElement("button");
+retryBtn.type = "button";
+retryBtn.className = "count-retry";
+retryBtn.addEventListener("click", () => retryDataset());
+
 function refreshPins() {
   if (!dataReady) return;
   const shown = filterFeatures(allFeatures, visible, playOnly, wheelchairOnly, mode, highchairOnly);
@@ -723,10 +729,20 @@ function refreshPins() {
   // The places narrow under the wheelchair chip like the tables (v28), and
   // under the high-chair chip the same way (v65).
   const places = placesOn ? placeFeatures(allPlaces, wheelchairOnly, highchairOnly) : [];
-  countEl.textContent = total
-    ? t("countShown", { shown: shown.length, total })
-      + (places.length ? t("countPlaces", { n: places.length }) : "")
-    : t("countNoData");
+  if (total) {
+    countEl.textContent = t("countShown", { shown: shown.length, total })
+      + (places.length ? t("countPlaces", { n: places.length }) : "");
+  } else {
+    // Never disabled or re-inserted while up: either drops a keyboard user's focus.
+    // retryDataset itself ignores a second tap while one is in flight.
+    retryBtn.textContent = t(retrying ? "dataLoading" : "dataFailed");
+    // On the website the count ends the scrolling chip row, off-screen at any width: scroll
+    // the row to its end. (The app's count sits in the header, outside the row.)
+    if (countEl.firstChild !== retryBtn) {
+      countEl.replaceChildren(retryBtn);
+      if (filterBar.contains(countEl)) filterBar.scrollLeft = filterBar.scrollWidth;
+    }
+  }
   // In the app the count shows only when there is nothing to count.
   countEl.classList.toggle("nodata", !total);
   updateBarFade();   // on the website the count is the row's last item: its width moves the edge
@@ -1751,7 +1767,8 @@ function syncNearestBtn() {
 }
 nearestBtn.addEventListener("click", (e) => {
   if (!hasGeo()) { toast(t("toastNoGeo")); return; }
-  if (!dataReady) { toast(t("countNoData")); return; }
+  if (!dataReady) { toast(t("dataLoading")); return; }
+  if (dataMissing()) { toast(t("dataFailed")); retryDataset(); return; }
   locateFrom(e.currentTarget).then(
     (coords) => {
       const { latitude: lat, longitude: lon } = coords;
@@ -3424,7 +3441,8 @@ function runNearest() {
 }
 function openPin(osmUrl) {
   if (!osmUrl) return;
-  if (!dataReady) { pendingPin = osmUrl; return; }
+  // An empty dataset queues too: the link must survive until a retry fills it.
+  if (!dataReady || !allFeatures.length) { pendingPin = osmUrl; return; }
   const f = featuresByOsmUrl.get(osmUrl);
   if (f) {
     map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
@@ -3670,11 +3688,57 @@ function watchDeltaForVersion(osmUrl, minVersion, attemptsLeft = 20) {
 async function watchRefresh(loaded) {
   const results = await Promise.all(loaded.map((l) => l.refreshed));
   if (results.some((r) => r?.json != null)) {
-    const [fc, places, stats, areas] = results.map((r, i) => r?.json ?? loaded[i].json);
-    applyDataset(fc, places, stats, areas);
+    // lastJsons, not boot's own: a retry may have filled a file boot came back without.
+    lastJsons = results.map((r, i) => r?.json ?? lastJsons[i]);
+    applyDataset(...lastJsons);
     pollDelta();
   }
   if (allFeatures.length && results.every((r) => !r || r.ok === false)) toast(t("toastOffline"));
+}
+
+const DATA_URLS = [
+  "data/changing_tables.geojson",
+  "data/play_places.geojson",
+  "data/stats.json",
+  "data/areas.json",
+];
+const dataMissing = () => dataReady && !allFeatures.length;
+let lastJsons = [];   // the last-loaded jsons, so a retry that gets only some files keeps the rest
+let retrying = false, retryTimer = null, retryDelay = 30000;
+
+function openQueuedPin() {
+  if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
+}
+
+function scheduleRetry() {
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(() => { if (!document.hidden) retryDataset(); }, retryDelay);
+  retryDelay = Math.min(retryDelay * 2, 300000);
+}
+
+// The tables file is fetched once per load; without this one failure left the map empty for good.
+async function retryDataset() {
+  if (retrying || !dataMissing()) return;
+  clearTimeout(retryTimer);
+  retrying = true;
+  refreshPins();
+  // The tables (empty is why we are here) and any other file that never
+  // arrived: in the app the rest have a background refresh writing their own
+  // `.new` already, and a second one would race it.
+  const missing = DATA_URLS.flatMap((u, i) => (i === 0 || lastJsons[i] == null ? [i] : []));
+  const loaded = await loadDataset(missing.map((i) => DATA_URLS[i]));
+  retrying = false;
+  missing.forEach((i, k) => { lastJsons[i] = loaded[k]?.json ?? lastJsons[i]; });
+  if (loaded[0]?.json) {
+    applyDataset(...lastJsons);
+    pollDelta();
+    openQueuedPin();
+  }
+  // Still nothing to draw, a tables file with no features included: try again later.
+  if (dataMissing()) {
+    refreshPins();
+    scheduleRetry();
+  }
 }
 
 async function boot() {
@@ -3696,18 +3760,17 @@ async function boot() {
   // or a fast fix would open on the reader only for fitHome to undo it a
   // moment later.
   const locationFix = openAtLocationFix();
-  const loaded = await loadDataset([
-    "data/changing_tables.geojson",
-    "data/play_places.geojson",
-    "data/stats.json",
-    "data/areas.json",
-  ]);
+  const loaded = await loadDataset(DATA_URLS);
+  lastJsons = loaded.map((l) => l.json);
   // dataReady before applyDataset, not after: its own refreshPins() call
   // reads the flag, and finding it still false here would skip the very
   // first paint — the count text included, not only the pins.
   dataReady = true;
   map.on("moveend", updateRegionsLink);   // registered once, here — applyDataset never does
-  applyDataset(...loaded.map((l) => l.json));
+  applyDataset(...lastJsons);
+  window.addEventListener("online", retryDataset);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) retryDataset(); });
+  if (dataMissing()) scheduleRetry();
   // Only the topbar's rendered height, which applyDataset's own
   // renderChips()/positionZoomCtrl() have already settled by the time it
   // returns — applyDataset itself never calls this, so a later background
@@ -3757,7 +3820,7 @@ async function boot() {
   // Whatever queued a pin above the data — the app's own deep link (bootNative,
   // an appUrlOpen already fired) or this load's own ?osm= — opens it now that
   // there is a dataset to look it up in. jumpTo overrides fitHome's view.
-  if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
+  openQueuedPin();
   if (pendingNearest) { pendingNearest = false; runNearest(); }
   // A return from OSM's consent screen lands here with ?code= and ?state=,
   // or, in the app, as the papamap://auth URL that cold-started it (bootNative).
