@@ -1,5 +1,20 @@
 # papa-map — build contract (v0)
 
+> **v90 amendment (12 Oct 2026, a stray auth link, a double tap and a slow save
+> no longer break an answer): no data shape change.** **(1)** The app routes a
+> warm `papamap://auth` (`appUrlOpen`) only when `awaitingReturn` says a login
+> is waiting for that state, as v78 already did for the cold start; any other
+> one is ignored and does not close the login sheet, because handing it on used
+> up the PKCE record the real return is checked against. **(2)** `startLogin`
+> ignores a second call while the first one's browser is still opening (until
+> its `navigate` settles, at most 5 s), so a double tap logged out no longer
+> replaces the record the first sheet comes back with. **(3)** The `writeTags`
+> re-read (v25) reports success with `changeset: null`, not "taken", when every
+> guarded key already holds exactly what the patch writes: that is the reader's
+> own save, which OSM applied after the page's 15 s timeout. The pin recolours
+> as for any answer; Mein PapaMap's local count adds nothing and waits for the
+> changesets list to bring the first save. Shell pin `app88` → `app89`.
+
 > **v89 amendment (12 Oct 2026, the app retries the moment a slow download
 > lands): no data shape change.** On a first launch over a slow link the app
 > stops waiting for the tables after 20 s but lets the download run on. The

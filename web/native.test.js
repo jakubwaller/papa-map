@@ -1045,9 +1045,28 @@ test("a caller without a nearest callback survives the link", () => {
 test("the OSM login's return leg is not mistaken for a table", () => {
   const app = fakeApp();
   const back = [], opened = [];
-  withApp(app.plugin, () => onAppUrl({ auth: (u) => back.push(u), table: (osm) => opened.push(osm) }));
+  withApp(app.plugin, () => onAppUrl({ auth: (u) => back.push(u), table: (osm) => opened.push(osm), awaiting: () => true }));
   app.open(`${AUTH_REDIRECT}?code=abc&state=xyz`);
   assert.deepEqual([back.length, opened.length], [1, 0]);
+});
+
+// Any app or web page can open papamap://auth while the reader is logging
+// in. One no login is waiting for must not reach auth, which would use up the
+// record the real return is checked against, nor close the reader's sheet.
+test("a warm auth URL no login is waiting for never calls auth", () => {
+  const app = fakeApp();
+  const back = [];
+  let closed = 0;
+  const before = globalThis.Capacitor;
+  globalThis.Capacitor = { isNativePlatform: () => true,
+    Plugins: { App: app.plugin, Browser: { close: async () => { closed++; } } } };
+  try {
+    onAppUrl({ auth: (u) => back.push(u), table: () => {}, awaiting: (u) => u.endsWith("state=real") });
+    app.open(`${AUTH_REDIRECT}?code=x&state=stray`);
+    assert.deepEqual([back.length, closed], [0, 0]);
+    app.open(`${AUTH_REDIRECT}?code=c&state=real`);
+    assert.deepEqual([back, closed], [[`${AUTH_REDIRECT}?code=c&state=real`], 1]);
+  } finally { globalThis.Capacitor = before; }
 });
 
 // Android killed the app while OSM's login was up: the return cold-starts it,

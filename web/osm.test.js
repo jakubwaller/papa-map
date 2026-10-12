@@ -201,6 +201,29 @@ test("preferReturn: of two early returns the awaited one wins, whichever came la
   } finally { keepRoundTripAcrossRestarts(false); }
 });
 
+// A double tap while logged out: the second must not replace the record the
+// first one's browser will come back with — iOS keeps showing that one.
+test("startLogin ignores a second login while the first one's browser is opening", async () => {
+  keepRoundTripAcrossRestarts(true);
+  try {
+    globalThis.localStorage = fakeSession();
+    const went = [];
+    let opened;
+    const first = startLogin(LIVE, { kind: "table", osm_url: "u", choice: "male" },
+      (u) => { went.push(u); return new Promise((r) => { opened = r; }); });
+    assert.equal(await startLogin(LIVE, { kind: "table", osm_url: "u", choice: "both" }, (u) => went.push(u)), true);
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(went.length, 1);
+    assert.equal(awaitingReturn(`papamap://auth?code=c&state=${stateOf(went[0])}`), true);
+    assert.equal(takeIntent().choice, "male");
+    // Once the sheet is up the next login goes ahead: nobody is locked out.
+    opened();
+    assert.equal(await first, true);
+    await startLogin(LIVE, null, (u) => went.push(u));
+    assert.equal(went.length, 2);
+  } finally { keepRoundTripAcrossRestarts(false); }
+});
+
 // A trip abandoned in the Custom Tab leaves the verifier and the answer in
 // the app's localStorage; nothing else would ever remove them.
 test("dropStaleRoundTrip removes an abandoned trip's records once stale, not before", async () => {
@@ -616,6 +639,26 @@ test("writeTags: a room somebody tagged since last night's build is theirs — 4
   await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, tablePatch("unisex"), "c", api.fetchFn),
     (e) => e.status === 409 && e.step === "taken");
   assert.equal(api.calls.length, 1);
+});
+
+// A save that outlived the page's timeout but landed on OSM: the reader's
+// second tap reads their own answer back, and it is theirs, not a stranger's.
+test("writeTags: the same answer already on OSM is a success with no changeset", async () => {
+  let api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 6, lat: 1, lon: 2,
+                                        tags: { amenity: "cafe", changing_table: "yes", "changing_table:location": "female_toilet" } }] } },
+  ]);
+  const out = await writeTags(SANDBOX, "tok", { type: "node", id: "42" }, tablePatch("female"), "c", api.fetchFn);
+  assert.deepEqual(out, { version: 6, changeset: null,
+    tags: { amenity: "cafe", changing_table: "yes", "changing_table:location": "female_toilet" } });
+  assert.equal(api.calls.length, 1, "nothing after the read: no changeset was opened");
+  // A guarded key the patch does not write is still somebody else's.
+  api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 6, lat: 1, lon: 2,
+                                        tags: { kids_area: "no", "kids_area:indoor": "yes" } }] } },
+  ]);
+  await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, playPatch("play_no"), "c", api.fetchFn),
+    (e) => e.status === 409 && e.step === "taken");
 });
 
 test("writeTags: a play answer is refused by the other kids_area key too", async () => {
