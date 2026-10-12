@@ -1,6 +1,6 @@
 # papa-map — build contract (v0)
 
-> **v90 amendment (12 Oct 2026, the widget is handed only usable tables): no
+> **v91 amendment (12 Oct 2026, the widget is handed only usable tables): no
 > shipped file changes.** `shareDataset` used to write every table to the
 > widget and the Siri shortcut, grey pins included, 23,003 of 26,541 rows. A
 > grey pin (`status: "unknown"`) is never usable in either reading (`Table.usable`,
@@ -9,6 +9,12 @@
 > pin `app88` → `app89`. A `papamap-saved` record gains an optional
 > `toilets: true` (an unnamed amenity=toilets starred from now on), so the
 > list can say "Toilets" rather than "Unnamed place" without the dataset.
+
+> **v90 amendment (12 Oct 2026, a new building's live pin sits where the nightly build puts it): no data shape change.**
+> A way or relation created since the nightly build gets its coordinate from the OSM API's
+> outline (`fetch_osm_full_centroid`). That used the mean of the outline's points, while the
+> nightly build's `out center` is the middle of the bounding box, so the pin jumped by up to
+> tens of metres overnight. Both now use the bounding-box centre.
 
 > **v89 amendment (12 Oct 2026, the app retries the moment a slow download
 > lands): no data shape change.** On a first launch over a slow link the app

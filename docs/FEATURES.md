@@ -1027,7 +1027,7 @@ answered share in percentage points against a snapshot at least a week back,
 never the absolute counts: levels measure mapping thoroughness, movement
 measures people answering the room question, and only the latter is an honest
 race. A same-date re-run replaces its history entry, unless it swept fewer
-regions than the entry it would replace (then history is left alone). A build
+regions or cities than the entry it would replace (then history is left alone). A build
 without all 16 Länder writes no history; one with them files only the cities of
 the countries it swept, so a `PAPAMAP_COUNTRIES=de` run on a day with no nightly
 entry still writes a 16-region day.

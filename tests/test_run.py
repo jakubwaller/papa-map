@@ -1213,3 +1213,68 @@ def test_a_partial_rerun_neither_queries_foreign_cities_nor_narrows_history(
     assert len(fake.areas_seen) == 16 + len(_city_sweep(("de",)))
     assert json.loads((tmp_path / "history.json").read_text(encoding="utf-8")) == full
     assert "history and leaderboard left unchanged" in capsys.readouterr().err
+
+
+def _run(tmp_path, load_fixture, fetch, **kw):
+    return run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        overpass_fetch=fetch, taginfo_fetch=_fake_taginfo(load_fixture),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+        history_path=str(tmp_path / "history.json"), now=NOW,
+        sweep_pause_s=0, **kw)
+
+
+def test_an_outage_mid_sweep_requeues_every_area_after_it(tmp_path, load_fixture):
+    # All hosts rest on the second area: the third to the last must wait for
+    # the next round with it, not be dropped — a night that "succeeds" with
+    # whole countries missing publishes a map with holes and no error.
+    inner = _fake_overpass(load_fixture)
+    down = [True]
+
+    def flaky(ql, **kwargs):
+        if down and '"Bayern"' in ql:
+            down.clear()
+            raise osm.OverpassUnavailable("every Overpass host is resting")
+        return inner(ql, **kwargs)
+
+    _run(tmp_path, load_fixture, flaky)
+    swept = {name for name, _ in inner.areas_seen}
+    assert swept >= {name for name, _ in SWEEP}
+
+
+def test_data_base_is_the_oldest_answer_of_the_night(tmp_path, load_fixture):
+    # pipeline.delta replays from data_base: the newest answer would skip
+    # edits that the oldest-served area has not seen.
+    inner = _fake_overpass(load_fixture)
+    stamps = iter(["2026-07-26T02:30:00Z", "2026-07-26T01:10:00Z"])
+
+    def stamped(ql, **kwargs):
+        out = dict(inner(ql, **kwargs))
+        ts = next(stamps, "2026-07-26T02:50:00Z")
+        out["osm3s"] = {"timestamp_osm_base": ts}
+        return out
+
+    _run(tmp_path, load_fixture, stamped)
+    stats = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))
+    assert stats["data_base"] == "2026-07-26T01:10:00Z"
+
+
+def test_a_city_that_answers_empty_is_retried(tmp_path, load_fixture):
+    # An empty ids answer means the area did not resolve on that mirror, not
+    # that the city has no tables: it must not land in the history as zero.
+    inner = _fake_overpass(load_fixture)
+    # Not Berlin or Hamburg: those names are also swept as Länder.
+    city, level = next((a, l) for a, l in CITY_SWEEP if a not in dict(SWEEP))
+    empty = [True]
+
+    def flaky(ql, **kwargs):
+        if (empty and '"kids_area"' not in ql and '"amenity"="toilets"' not in ql
+                and f'"{city}"' in ql):
+            empty.clear()
+            return {"elements": []}
+        return inner(ql, **kwargs)
+
+    _run(tmp_path, load_fixture, flaky)
+    assert not empty  # the empty answer was served ...
+    assert inner.areas_seen.count((city, level)) == 1  # ... so only the retry reached the fixture

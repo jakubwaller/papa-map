@@ -513,14 +513,15 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             print(f"  WARN: history.json unreadable ({exc}) — history and "
                   "leaderboard left unchanged", file=sys.stderr)
         else:
-            narrower = leaderboard.narrows_day(history, generated_at[:10], region_counts)
+            narrower = leaderboard.narrows_day(history, generated_at[:10], region_counts,
+                                              city_counts)
         if history is None:
             pass
         elif narrower:
             # A same-day re-run over fewer countries (an operator checking a
             # German fix with PAPAMAP_COUNTRIES=de) would replace the night's
             # full entry and drop every other region from the leaderboard.
-            print(f"  WARN: this build swept fewer regions than today's "
+            print(f"  WARN: this build swept fewer regions or cities than today's "
                   f"history entry ({', '.join(narrower[:5])}"
                   f"{' ...' if len(narrower) > 5 else ''} missing) — history "
                   "and leaderboard left unchanged", file=sys.stderr)
