@@ -73,7 +73,8 @@ def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None,
         html_path=str(tmp_path / "ops.html"),
         private_html_path=str(tmp_path / "private-ops.html"),
         delta_path=delta_path, delta_state_path=delta_state_path,
-        history_path=history_path)
+        # Never the real history.json: an unreadable one is an anomaly now.
+        history_path=history_path or str(tmp_path / "history.json"))
     return anomalies, report, sent, state_path
 
 
