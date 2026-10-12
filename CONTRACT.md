@@ -1,5 +1,13 @@
 # papa-map — build contract (v0)
 
+> **v90 amendment (12 Oct 2026, the widget is handed only usable tables): no
+> shipped file changes.** `shareDataset` used to write every table to the
+> widget and the Siri shortcut, grey pins included, 23,003 of 26,541 rows. A
+> grey pin (`status: "unknown"`) is never usable in either reading (`Table.usable`,
+> `Tables.usable`), so those rows are now left out of the compact copy; the
+> nearest usable table is the same, the file about eight times smaller. Shell
+> pin `app88` → `app89`.
+
 > **v89 amendment (12 Oct 2026, the app retries the moment a slow download
 > lands): no data shape change.** On a first launch over a slow link the app
 > stops waiting for the tables after 20 s but lets the download run on. The

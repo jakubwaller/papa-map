@@ -507,15 +507,6 @@ export function pinColorExpression(mode) {
 }
 
 // ---- Nearest usable table ----
-// "Usable" is the reading's own verdict, not a second classification: a status
-// counts when the view already buckets it "good". So a father searches the
-// green pins and a mother searches green and red together, both fall out of
-// the same VIEW table the colours come from, and neither one re-derives
-// anything from the raw tags. Add a mode to VIEW and this follows for free.
-export function usableStatuses(mode) {
-  return STATUSES.filter((s) => viewFor(s, mode).bucket === "good");
-}
-
 const EARTH_KM = 6371;
 const rad = (deg) => (deg * Math.PI) / 180;
 

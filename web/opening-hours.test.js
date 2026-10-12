@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isOpenNow, parseOpeningHours, wallClock } from "./opening-hours.js";
+import { isOpenNow, wallClock } from "./opening-hours.js";
 
 // The module reads the clock in the device's timezone and assumes it is the
 // place's. The sun tests use Berlin coordinates with Berlin wall-clock times,
@@ -111,9 +111,8 @@ test("garbage, empty, and missing values are unknown", () => {
   assert.equal(isOpenNow("nonsense value"), "unknown");
 });
 
-test("parseOpeningHours exposes the parsed rules for the unparseable case", () => {
-  assert.equal(parseOpeningHours("Mo-Fr 08:00-18:00").length, 1);
-  assert.equal(parseOpeningHours("week 1-20 Mo-Fr 08:00-18:00"), null);
+test("a week selector is unparseable, so unknown", () => {
+  assert.equal(isOpenNow("week 1-20 Mo-Fr 08:00-18:00", at(3, 9, 0)), "unknown");
 });
 
 test("a , between rules adds a day range rather than overriding", () => {
@@ -160,7 +159,6 @@ test("overlapping , rules on a shared weekday simply union, not ambiguous", () =
   // (redundant) hours on top of Sunday's.
   const oh = "Mo-Su 11:00-23:00, Su 12:00-20:00";
   assert.equal(isOpenNow(oh, at(7, 13, 0)), "open");
-  assert.notEqual(parseOpeningHours(oh), null);
 });
 
 test("PH mixed into a day selector keeps the weekdays", () => {
@@ -511,7 +509,6 @@ test('|| stops at an alternative that can\'t be evaluated, rather than trying a 
 test("an off with more than one comma-joined time span is unknown, not a full-day close", () => {
   const oh = "Mo-Fr 08:00-18:00, 12:00-13:00 off";
   assert.equal(isOpenNow(oh, at(3, 9, 0)), "unknown");
-  assert.equal(parseOpeningHours(oh), null);
 });
 
 // A comma-joined whole-day "off" closes the day outright, including
