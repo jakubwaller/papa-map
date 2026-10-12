@@ -733,9 +733,15 @@ function refreshPins() {
     countEl.textContent = t("countShown", { shown: shown.length, total })
       + (places.length ? t("countPlaces", { n: places.length }) : "");
   } else {
+    // Never disabled or re-inserted while up: either drops a keyboard user's focus.
+    // retryDataset itself ignores a second tap while one is in flight.
     retryBtn.textContent = t(retrying ? "dataLoading" : "dataFailed");
-    retryBtn.disabled = retrying;
-    countEl.replaceChildren(retryBtn);
+    // On the website the count ends the scrolling chip row, off-screen at any width: scroll
+    // the row to its end. (The app's count sits in the header, outside the row.)
+    if (countEl.firstChild !== retryBtn) {
+      countEl.replaceChildren(retryBtn);
+      if (filterBar.contains(countEl)) filterBar.scrollLeft = filterBar.scrollWidth;
+    }
   }
   // In the app the count shows only when there is nothing to count.
   countEl.classList.toggle("nodata", !total);
