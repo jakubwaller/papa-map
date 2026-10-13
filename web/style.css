@@ -700,8 +700,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #add-dialog a.btn code { font-size: 11px; }
 #add-dialog .dialog-foot { margin: 4px 0 0; font-size: 12.5px; }
 /* The place list (CONTRACT.md v62): a search box, then one row per place —
-   name over street and distance — in a box that scrolls on its own, so the
-   MapComplete links below stay on screen on a phone. */
+   name over street and distance. The list runs in flow: the dialog is capped
+   and scrolls (#268), so the card scrolls once, not a box inside a box. */
 #venue-search {
   width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 9px 11px;
   border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 16px;
@@ -710,7 +710,6 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #add-dialog .venue-status { margin: 0 0 10px; }
 .venue-list {
   list-style: none; margin: 0 0 12px; padding: 0;
-  max-height: min(40vh, 300px); overflow-y: auto;
   border-top: 1px solid var(--line-soft);
 }
 .venue-list:empty { display: none; }
@@ -925,6 +924,11 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 /* `contain` keeps the scroll from chaining out to the page at either end. */
 .maplibregl-popup-content > .popup { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* A card that scrolls says so: a fade at the foot while there is more below. */
+.maplibregl-popup-content > .popup.more-down {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
 .maplibregl-popup-close-button {
   font-size: 18px;
   padding: 2px 8px;

@@ -1,5 +1,14 @@
 # papa-map — build contract (v0)
 
+> **v94 amendment (13 Oct 2026, a card says it scrolls; Add a place scrolls once): no
+> shipped file changes.** The place card scrolls inside itself since v68 and
+> nothing showed it, so the answer buttons could sit below the fold unseen.
+> `updatePopupFade` now toggles `.popup.more-down`, a mask fade at the foot,
+> while there is more below; `fitPopup`, the scroll of the card and the
+> edit-note row call it. "Add a place" scrolled twice on a short phone: the
+> capped dialog and the venue list inside it. The list now runs in flow and
+> the dialog is the one scroller. Shell pin `app91` → `app92`.
+
 > **v93 amendment (13 Oct 2026, the app paints its shell before the data): no
 > data shape change.** On a first launch the app drew nothing above the map —
 > no chips, no count line, the zoom column still under the header — until
