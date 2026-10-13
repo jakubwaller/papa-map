@@ -197,13 +197,16 @@ those. A place counts if OSM has one of these tags:</p>
 <ul>
   <li><span class="ring"></span><code>kids_area:indoor=yes</code> or <code>designated</code></li>
   <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> or
-      <code>designated</code> (the most common tag, it doesn't say indoor or outdoor)</li>
+      <code>designated</code> (the most common tag, it doesn't say indoor or outdoor, and both count)</li>
+  <li><span class="ring"></span><code>kids_area=outdoor</code>, or <code>kids_area:outdoor=yes</code> or
+      <code>designated</code></li>
   <li><span class="ring"></span><code>leisure=indoor_play</code></li>
   <li><span class="ring"></span><code>leisure=playground</code> together with
       <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code>, <code>no</code> and <code>limited</code> don't count. An explicit
-<code>kids_area:indoor=no</code> beats a bare <code>kids_area=yes</code>.</p>
+<p>So the play area can be indoors or outdoors, as long as it belongs to the place. <code>no</code> and
+<code>limited</code> don't count, and a public playground (<code>leisure=playground</code> without
+<code>indoor=yes</code>) doesn't count on its own, not even with an outdoor tag.</p>
 <p>The ring is a badge, not a fourth colour. A place without these tags doesn't "have no play
 area", OSM just says nothing about it, and that is true for almost every place. So there is no
 grey here.</p>

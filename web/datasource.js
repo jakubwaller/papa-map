@@ -98,7 +98,8 @@ export function loadFeatures(fc) {
   return out;
 }
 
-// play_places.geojson — places that record an indoor play area and are not
+// play_places.geojson — places that record a play area (indoors or a venue's
+// outdoor one) and are not
 // pins: no changing_table tag at all (the open question), or, since v27,
 // `changing_table=no` (answered, and the answer was no). A separate dataset,
 // not a fourth status: neither has an answer to colour — red would promise a

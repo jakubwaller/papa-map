@@ -148,13 +148,13 @@ def test_play_area_recognizes_all_three_tagging_patterns():
     assert play({"kids_area:indoor": "designated"}) is True
     assert play({"leisure": "indoor_play"}) is True
     assert play({"leisure": "playground", "indoor": "yes"}) is True
-    # an outdoor sandpit is not the promise the badge makes
-    assert play({"kids_area": "outdoor"}) is False
+    # a venue's outdoor play area counts too (v97)
+    assert play({"kids_area": "outdoor"}) is True
     assert play({"kids_area": "no"}) is False
     assert play({"kids_area": "limited"}) is False         # "toys, but no area"
     assert play({"kids_area:indoor": "no"}) is False
-    # explicit beats ambiguous: kids_area=yes doesn't say indoor, :indoor=no does
-    assert play({"kids_area": "yes", "kids_area:indoor": "no"}) is False
+    # v97: :indoor=no no longer overrules kids_area=yes, it only says outdoors
+    assert play({"kids_area": "yes", "kids_area:indoor": "no"}) is True
     assert play({"kids_area": "yes", "kids_area:outdoor": "yes"}) is True
     assert play({"kids_area": "no", "kids_area:indoor": "yes"}) is True
     # a plain outdoor playground stays out of the ring, indoor= is what makes
@@ -182,7 +182,8 @@ def test_play_is_tri_state_so_an_answered_no_is_not_asked_again():
     # the popup's "outdoors only" (v31): the theme's own pair for "there is a
     # play area, but outdoors". Answered, no indoor corner, no ring, never
     # asked again — and, unlike a bare kids_area=no, true about the garden.
-    assert play({"kids_area": "yes", "kids_area:indoor": "no"}) is False
+    # Since v97 it earns the ring too.
+    assert play({"kids_area": "yes", "kids_area:indoor": "no"}) is True
     # a blank value is somebody's tag, the same reading build_play_features
     # gives a blank changing_table=
     assert play({"kids_area": ""}) is False

@@ -44,10 +44,9 @@
       "lat": 53.5502,
       "lon": 9.9903,
       "tags": {
-        "amenity": "restaurant",
-        "name": "Gasthof Sandkasten",
-        "kids_area": "yes",
-        "kids_area:indoor": "no"
+        "leisure": "playground",
+        "name": "Spielplatz Sandkasten",
+        "kids_area:outdoor": "yes"
       }
     },
     {

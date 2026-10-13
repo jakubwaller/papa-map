@@ -29,7 +29,7 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
     pins — changing_table=yes/limited only, since a junk value ("02", "Yes")
     is never a pin with or without the key.
 
-    play_data is the sweep's play-only half (objects with an indoor play area
+    play_data is the sweep's play-only half (objects with a play area
     and no changing_table tag); omit it and both play counters read 0.
 
     toilets_counts is {"total", "capacity_tagged"} — two integers Overpass

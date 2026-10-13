@@ -81,18 +81,24 @@ def _v(tags: dict, key: str) -> str:
 
 
 def has_play_area(tags: dict) -> bool:
-    """True when the object also offers an indoor place for the kid to play,
-    by any of the four ways OSM records one:
+    """True when the object offers a place for the kid to play, indoors or in
+    the venue's own outdoor area, by any of the ways OSM records one:
 
       * `kids_area:indoor` in PLAY_AREA_VALUES — the wiki's documented way to
-        say indoor, and the one that settles the question outright;
+        say indoor;
       * `kids_area` in PLAY_AREA_VALUES — the play corner of a cafe, restaurant,
-        bakery or shop, which is the most-used tag by a distance. The value
-        alone doesn't say indoor or outdoor, so an explicit
-        `kids_area:indoor=no` overrules it;
+        bakery or shop, the most-used tag by a distance. `kids_area:indoor=no`
+        no longer overrules it: it only says the area is outdoors, which counts
+        too (v74);
+      * `kids_area=outdoor` and `kids_area:outdoor` in PLAY_AREA_VALUES — the
+        outdoor spellings;
       * `leisure=indoor_play` — a commercial indoor playground;
       * `leisure=playground` + `indoor=yes` — the same thing, mapped the other
         way round.
+
+    One exception: outdoor-only evidence (the outdoor spellings, or a bare
+    `kids_area=yes` with `kids_area:indoor=no`) never counts on an outdoor
+    `leisure=playground`. A public playground is not a venue's play area.
 
     This is a badge, never a status: an object without any of these tags is
     *unrecorded*, not "has no play area", so there is no third state to render
@@ -100,15 +106,21 @@ def has_play_area(tags: dict) -> bool:
     can honestly show a grey pin because the object is known to have a table;
     here the silence covers ~13k pins and means nothing."""
     indoor_sub = _v(tags, "kids_area:indoor")
+    kids = _v(tags, "kids_area")
     if indoor_sub in PLAY_AREA_VALUES:
         return True
-    # An explicit "the kids' area is not indoors" beats the ambiguous bare tag.
-    if _v(tags, "kids_area") in PLAY_AREA_VALUES and indoor_sub != "no":
+    if kids in PLAY_AREA_VALUES and indoor_sub != "no":
         return True
     leisure = _v(tags, "leisure")
     if leisure == "indoor_play":
         return True
-    return leisure == "playground" and _v(tags, "indoor") == "yes"
+    if leisure == "playground":
+        if _v(tags, "indoor") == "yes":
+            return True
+        # Public playground: only a bare kids_area=yes (handled above) counts.
+        return False
+    return kids == "outdoor" or _v(tags, "kids_area:outdoor") in PLAY_AREA_VALUES or (
+        kids in PLAY_AREA_VALUES)
 
 
 # The two keys a reader answers with, in the popup or in the theme. `leisure`
@@ -122,7 +134,7 @@ def play_state(tags: dict) -> bool | None:
     """True / False / None for the play corner, the way `wheelchair_state` is
     tri-state: True when `has_play_area` passes, False when somebody has
     answered on one of PLAY_KEYS and the answer does not pass (`kids_area=no`,
-    `kids_area:indoor=no`, `limited`), None when nobody has answered at all.
+    `limited`), None when nobody has answered at all.
 
     The False and the None render the same — no blue ring either way, because
     neither is a table and a missing play corner is not a state worth drawing.

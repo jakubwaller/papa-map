@@ -198,12 +198,12 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
 <ul>
   <li><span class="ring"></span><code>kids_area:indoor=yes</code> または <code>designated</code></li>
   <li><span class="ring"></span><code>kids_area=yes</code>、<code>indoor</code> または <code>designated</code>
-      （最もよく使われるタグで、屋内か屋外かは示しません）</li>
+      （最もよく使われるタグで、屋内か屋外かは示しません。屋内でも屋外でも数えます）</li>
+  <li><span class="ring"></span><code>kids_area=outdoor</code>、<code>kids_area:outdoor=yes</code> または <code>designated</code></li>
   <li><span class="ring"></span><code>leisure=indoor_play</code></li>
   <li><span class="ring"></span><code>leisure=playground</code> と <code>indoor=yes</code> の組み合わせ</li>
 </ul>
-<p><code>outdoor</code>、<code>no</code>、<code>limited</code> は数えません。明示的な
-<code>kids_area:indoor=no</code> は、単なる <code>kids_area=yes</code> より優先します。</p>
+<p>つまり、遊び場はその場所に属していれば屋内でも屋外でも構いません。<code>no</code> と <code>limited</code> は数えません。また、公共の遊び場（<code>indoor=yes</code> のない <code>leisure=playground</code>）は、それだけでは屋外タグがあっても数えません。</p>
 <p>輪はバッジであって、4つ目の色ではありません。これらのタグのない場所は「遊び場がない」のではなく、OSMがそれについて
 何も言っていないだけで、ほとんどすべての場所がそうです。だからここに灰色はありません。</p>
 <p>だからこそ、ポップアップがそれを尋ねます。OSMが遊び場について何も記録していないピンでは、色にかかわらず(部屋を

@@ -76,12 +76,13 @@ def split_sweep(elements) -> tuple[list, list]:
 
       * objects carrying a `changing_table` tag — any value, since `no` and
         junk like "02" still feed the stats;
-      * objects that carry none but do record an indoor play area.
+      * objects that carry none but do record a play area, indoors or a venue's outdoor one.
 
     An object with both belongs to the first list only: it is already a pin,
     and its play corner rides along as the feature's `play` property. Anything
     in neither list is the Overpass prefilter being looser than has_play_area
-    (`kids_area:indoor=no` over a bare `kids_area=yes`) and is dropped."""
+    (an outdoor `leisure=playground` carrying `kids_area:outdoor=yes`) and is
+    dropped."""
     ct, play = [], []
     for el in elements:
         tags = el.get("tags") or {}

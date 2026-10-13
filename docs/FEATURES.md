@@ -740,13 +740,15 @@ instead, the same word the play-corner card itself uses.
 ## Play corners
 
 Every feature carries a tri-state `play`: true when the object also records an
-indoor place for the kid to play (`kids_area:indoor` or `kids_area` =
-`yes|indoor|designated`, `leisure=indoor_play`, or `leisure=playground` +
-`indoor=yes`), false when somebody has answered on one of the `kids_area` keys
-and the answer does not pass — or when the object is an outdoor
-`leisure=playground`, which answers the question by being one (v31) — null when
-nobody has answered at all. `outdoor`,
-`no` and `limited` are excluded, and an explicit `kids_area:indoor=no`
+place for the kid to play, indoors or the venue's own outdoor one
+(`kids_area:indoor`, `kids_area` = `yes|indoor|designated|outdoor`,
+`kids_area:outdoor` = `yes|designated`, `leisure=indoor_play`, or
+`leisure=playground` + `indoor=yes`), false when somebody has answered on one
+of the `kids_area` keys and the answer does not pass — or when the object is an
+outdoor `leisure=playground`, which answers the question by being one (v31) —
+null when nobody has answered at all. `no` and `limited` are excluded, and
+outdoor-only evidence never counts on a public playground (v97; a playground
+with a bare `kids_area=yes` still does). `kids_area:indoor=no` no longer
 overrules a bare `kids_area=yes`. False and null draw the same — nothing — and
 differ only in whether the popup asks the question (CONTRACT v30). The map draws it as a
 blue halo under the pin and the chip bar gains a filter that narrows to those

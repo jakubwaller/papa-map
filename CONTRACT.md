@@ -1,5 +1,22 @@
 # papa-map — build contract (v0)
 
+> **v97 amendment (13 Oct 2026, `play` covers a venue's outdoor play area): the
+> property keeps its shape, its meaning widens.** `play` was "an *indoor* play
+> area is recorded", so the popup's own "outdoors only" answer
+> (`kids_area=yes` + `kids_area:indoor=no`) turned into `play=false`: no blue
+> halo, not under "With play area", although neither the chip nor the popup
+> line says indoor. Now `play` is true for `kids_area:indoor`, `kids_area` in
+> `yes|indoor|designated` (a `kids_area:indoor=no` no longer overrules it),
+> `kids_area=outdoor`, `kids_area:outdoor` in `yes|designated`,
+> `leisure=indoor_play`, and `leisure=playground` + `indoor=yes`. One
+> exception: outdoor-only evidence never counts on an outdoor
+> `leisure=playground` (a public playground is not a venue's play area); a
+> playground with a bare `kids_area=yes` counts as before. `PLAY_KEYS` is
+> still the two keys a reader answers with, so a lone `kids_area:outdoor=no`
+> stays `null` and the question is asked. The Overpass sweep fetches
+> `kids_area=outdoor` and `kids_area:outdoor`; Python re-applies the rule.
+> `web/methods*.html` state it in every language. No shell change.
+>
 > **v96 amendment (13 Oct 2026, more map on a phone): no data shape change.** On
 > a Honor 9 (360 × 560) the chrome above the map took 220 px, 39 % of the screen: the area
 > link's long label pushed the language picker onto a fourth header row, and the
@@ -1941,7 +1958,7 @@
 
 > **v30 amendment (17 Sep 2026, the popup asks about the play corner too):**
 > `play` on a `changing_tables.geojson` feature becomes **tri-state** —
-> `true` (an indoor play corner is recorded, the v9 rule unchanged), `false`
+> `true` (a play area is recorded; indoor in v9, a venue's outdoor one too since v97), `false`
 > (somebody has answered on `kids_area` or `kids_area:indoor` and the answer
 > does not pass: `no`, `limited`, `outdoor`, a blank, junk) and `null` (nobody
 > has answered). Key presence decides the false, not the value, the same
@@ -2736,7 +2753,7 @@ Overpass `out center`). Feature `properties`:
   "changing_table": "yes|limited",
   "location_raw": "raw changing_table:location value or null",
   "status": "accessible|female_only|unknown",
-  "play": "true|false|null — indoor play area recorded (v9); false is an answered 'none' or an outdoor leisure=playground (v30, v31), null is unanswered",
+  "play": "true|false|null — a play area recorded, indoors or a venue's outdoor one (v9, v97); false is an answered 'none' or an outdoor leisure=playground (v30, v31), null is unanswered",
   "wheelchair": "yes|limited|no|null — the place's wheelchair tag verbatim (v26); null also means unrecorded",
   "toilets_wheelchair": "yes|limited|no|null — toilets:wheelchair verbatim (v26)",
   "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",

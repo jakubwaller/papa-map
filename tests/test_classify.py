@@ -1,6 +1,6 @@
 import pytest
 
-from pipeline.classify import (ACCESSIBLE_TOKENS, central_key, classify, highchair_state,
+from pipeline.classify import (has_play_area, ACCESSIBLE_TOKENS, central_key, classify, highchair_state,
                                men_only, play_state, tokens, wheelchair_state)
 
 
@@ -183,3 +183,33 @@ def test_men_only_never_matches_female_toilet_by_substring():
     # "female_toilet" contains "male_toilet" — the same trap classify guards.
     assert not men_only("female_toilet")
     assert not men_only("female_toilet;baby_room")
+
+
+PG = {"leisure": "playground"}
+
+
+@pytest.mark.parametrize("tags,has,state", [
+    ({"kids_area": "yes"}, True, True),
+    ({"kids_area": "yes", "kids_area:indoor": "no"}, True, True),
+    ({"kids_area": "outdoor"}, True, True),
+    ({"kids_area": " Outdoor "}, True, True),
+    ({"kids_area:outdoor": "yes"}, True, True),
+    ({"kids_area:outdoor": "designated"}, True, True),
+    ({"kids_area:outdoor": "supervised"}, False, None),
+    ({"kids_area:outdoor": "no"}, False, None),
+    ({"kids_area:indoor": "no"}, False, False),
+    ({"kids_area": "no"}, False, False),
+    ({"kids_area": "limited"}, False, False),
+    ({"kids_area": "no", "kids_area:outdoor": "yes"}, True, True),
+    (PG, False, False),
+    ({**PG, "kids_area:outdoor": "yes"}, False, False),
+    ({**PG, "kids_area": "outdoor"}, False, False),
+    ({**PG, "kids_area": "yes", "kids_area:indoor": "no"}, False, False),
+    ({**PG, "kids_area": "yes"}, True, True),
+    ({**PG, "indoor": "yes", "kids_area:outdoor": "yes"}, True, True),
+    ({"leisure": "indoor_play"}, True, True),
+])
+def test_a_venues_outdoor_play_area_counts_a_public_playground_does_not(tags, has, state):
+    # v97
+    assert has_play_area(tags) is has
+    assert play_state(tags) is state
