@@ -1115,15 +1115,19 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
      below. Without this the button drops to a row of its own — 132px of header
      on a 375px phone instead of 100. */
   .wordmark .city { display: none; }
-  /* The row scrolls sideways like the chip bar instead of wrapping: the area
-     link names wherever the map is ("Changing tables in Baden-Württemberg"),
-     and at 360px, the commonest Android width, it pushed the language picker
-     onto a row of its own (2026-10-13). header-scoped: the store app moves
-     this nav into the Mein PapaMap dialog, where it wraps. */
+  /* One row, never wrapping: the area link names wherever the map is
+     ("Changing tables in Baden-Württemberg"), and at 360px, the commonest
+     Android width, it pushed the language picker onto a row of its own
+     (2026-10-13). The area link gives way with an ellipsis instead; the other
+     three keep their full width, so the picker is never off screen.
+     header-scoped: the store app moves this nav into the Mein PapaMap
+     dialog, where it wraps. min-width: 0 on the row too, or it grows to its
+     full text and Android Chrome zooms the whole page out to fit it. */
   header .header-actions {
     order: 3; flex: 1 0 100%; justify-content: flex-start; gap: 6px 12px;
-    flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+    flex-wrap: nowrap; white-space: nowrap; min-width: 0;
   }
+  header #regions-link { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   /* 13px, like the add button's 12: with the select sized to its value the
      German nav needs ~306 of 347px, the English ~333, the Bosnian ~341 —
      the last two only at this size. */
