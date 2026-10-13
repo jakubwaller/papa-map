@@ -9,7 +9,7 @@ import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
          parseBbox, pickArea, areaLink, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
-         pinColorExpression, viewOf, localAnswered, haversineKm,
+         pinColorExpression, nearestFeature, viewOf, localAnswered, haversineKm,
          nearestUsable, formatDistance, geoUri, webRouteHref, webRouteChoices, PAPAMAP_THEME_URL, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
@@ -2068,4 +2068,10 @@ test("zoneForFeature: the feature's own tz, else its area's default, else null",
   assert.equal(zoneForFeature({ tz: null, area: "Australia" }, areaTz), "Australia/Sydney");
   assert.equal(zoneForFeature({ tz: null, area: "Atlantis" }, areaTz), null);
   assert.equal(zoneForFeature({ tz: null, area: "Australia" }, undefined), null);
+});
+
+test("nearestFeature picks the pin closest to the tap, or null", () => {
+  const fs = [{ id: "far", x: 30, y: 0 }, { id: "near", x: 12, y: 5 }, { id: "dup", x: 12, y: 5 }];
+  assert.equal(nearestFeature({ x: 15, y: 5 }, fs, (f) => f).id, "near");
+  assert.equal(nearestFeature({ x: 0, y: 0 }, [], (f) => f), null);
 });

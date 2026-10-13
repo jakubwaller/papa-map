@@ -1,5 +1,11 @@
 # papa-map — build contract (v0)
 
+> **v95 amendment (13 Oct 2026, pins are finger-sized to tap): no data shape
+> change.** MapLibre hit-tests a tap against the drawn circle only (7 px radius at
+> zoom 14), far under a fingertip. One map-wide click handler now queries a 40 px
+> box around the tap and opens the nearest pin (`nearestFeature`, `web/datasource.js`).
+> No clustering. Shell pin `app92` → `app93`.
+
 > **v94 amendment (13 Oct 2026, a card says it scrolls; Add a place scrolls once): no
 > shipped file changes.** The place card scrolls inside itself since v68 and
 > nothing showed it, so the answer buttons could sit below the fold unseen.
