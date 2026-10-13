@@ -65,7 +65,9 @@ def is_relevant_tags(tags: dict) -> bool:
     *removal* (the key vanishes from `tags` entirely) is still caught."""
     if any(k == "changing_table" or k.startswith("changing_table:") for k in tags):
         return True
-    if any(k in tags for k in PLAY_KEYS):
+    # kids_area:outdoor is evidence for has_play_area (v97) but not an answer
+    # the popup writes, so it is not in PLAY_KEYS.
+    if any(k in tags for k in PLAY_KEYS) or "kids_area:outdoor" in tags:
         return True
     if tags.get("leisure") in ("indoor_play", "playground"):
         return True

@@ -437,9 +437,9 @@ export function tablePatch(choice) {
 //                   about the corner *indoors* and wrote the answer to the
 //                   whole place (issue #119).
 //
-// All three are values `pipeline/classify.py` already reads: the first passes
-// has_play_area and draws the blue ring at the next build, the other two do
-// not and never will.
+// All three are values `pipeline/classify.py` already reads: the first two
+// pass has_play_area and draw the blue ring at the next build (outdoors only
+// since v97), the third does not.
 export const PLAY_CHOICES = ["play_yes", "play_outdoor", "play_no"];
 export const isPlayChoice = (choice) => PLAY_CHOICES.includes(choice);
 

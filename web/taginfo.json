@@ -49,7 +49,12 @@
     {
       "key": "kids_area",
       "object_types": ["node", "way", "relation"],
-      "description": "Badges a place as having somewhere for the child to play. An explicit kids_area:indoor=no overrules it."
+      "description": "Badges a place as having somewhere for the child to play, indoors or in the venue's own outdoor area (kids_area=outdoor counts too). Outdoor-only evidence never badges a public leisure=playground."
+    },
+    {
+      "key": "kids_area:outdoor",
+      "object_types": ["node", "way", "relation"],
+      "description": "A venue's outdoor play area; badges the place like kids_area, except on a public leisure=playground."
     },
     {
       "key": "kids_area:indoor",

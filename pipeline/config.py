@@ -973,14 +973,16 @@ def changing_table_ql(area_name: str = "Deutschland", admin_level: str = "2",
 
 
 # Overpass prefilter for classify.has_play_area. Deliberately looser than the
-# rule — QL can't express "an explicit kids_area:indoor=no overrules a bare
-# kids_area=yes" — so Python re-applies has_play_area to whatever comes back;
-# the regex is only here to keep the payload small. The values come from
-# PLAY_AREA_VALUES so the query and the rule cannot drift apart.
-_PLAY_VALUES_RE = "^(" + "|".join(sorted(PLAY_AREA_VALUES)) + ")$"
+# rule — QL can't express "an outdoor leisure=playground never counts on
+# outdoor-only evidence" — so Python re-applies has_play_area to whatever comes
+# back; the regex is only here to keep the payload small. The values come from
+# PLAY_AREA_VALUES (plus `outdoor` on kids_area) so the query and the rule
+# cannot drift apart.
+_PLAY_VALUES_RE = "^(" + "|".join(sorted(PLAY_AREA_VALUES | {"outdoor"})) + ")$"
 PLAY_AREA_CLAUSES = (
     f'nwr["kids_area"~"{_PLAY_VALUES_RE}"](area.a);'
     f'nwr["kids_area:indoor"~"{_PLAY_VALUES_RE}"](area.a);'
+    f'nwr["kids_area:outdoor"~"{_PLAY_VALUES_RE}"](area.a);'
     'nwr["leisure"="indoor_play"](area.a);'
     'nwr["leisure"="playground"]["indoor"="yes"](area.a);'
 )
@@ -989,7 +991,7 @@ PLAY_AREA_CLAUSES = (
 def sweep_ql(area_name: str = "Deutschland", admin_level: str = "2",
              date: str | None = None) -> str:
     """The nightly build's object query: everything carrying a changing_table
-    tag, unioned with everything recording an indoor play area. One query
+    tag, unioned with everything recording a play area. One query
     rather than two, because a second one would cost a whole ~40 s Overpass
     slot per area for a handful of objects — measured on Hamburg, the union
     answers 237 elements / 147 kB where the changing_table half alone answers

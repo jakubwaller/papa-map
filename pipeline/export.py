@@ -124,7 +124,7 @@ KIND_KEYS = ("leisure", "amenity", "shop", "tourism", "healthcare")
 
 def build_play_features(play_data: dict, ct_data: dict | None = None,
                         area_by_key: dict | None = None) -> list[dict]:
-    """GeoJSON features for places that record an indoor play area and are not
+    """GeoJSON features for places that record a play area (indoors or a venue's outdoor one) and are not
     pins — the prospecting list, and a strictly different dataset from the
     pins.
 

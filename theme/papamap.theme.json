@@ -3567,6 +3567,17 @@
               "or": [
                 "kids_area~i~^(yes|indoor|designated)$",
                 "kids_area:indoor~i~^(yes|indoor|designated)$",
+                {
+                  "and": [
+                    "leisure!=playground",
+                    {
+                      "or": [
+                        "kids_area~i~^outdoor$",
+                        "kids_area:outdoor~i~^(yes|indoor|designated)$"
+                      ]
+                    }
+                  ]
+                },
                 "leisure=indoor_play",
                 {
                   "and": [
@@ -5051,8 +5062,9 @@
             },
             "changing_table!~*",
             "amenity!=toilets",
-            "kids_area!~^(yes|indoor|designated)$",
+            "kids_area!~^(yes|indoor|designated|outdoor)$",
             "kids_area:indoor!~^(yes|indoor|designated)$",
+            "kids_area:outdoor!~^(yes|indoor|designated)$",
             "leisure!=indoor_play"
           ]
         }
