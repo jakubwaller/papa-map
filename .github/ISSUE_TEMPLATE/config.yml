@@ -2,4 +2,4 @@ blank_issues_enabled: true
 contact_links:
   - name: Wrong or missing changing table
     url: https://papamap.de/
-    about: The data comes from OpenStreetMap. Tap the pin on the map and answer the question there, or add the table in the app. It cannot be fixed in this repository.
+    about: The data comes from OpenStreetMap. Tap the pin and answer the question there, or correct the room through the pin's MapComplete link. If a pin disagrees with what OpenStreetMap says, that is a bug, report it below.
