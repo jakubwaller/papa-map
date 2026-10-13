@@ -1,5 +1,13 @@
 # papa-map — build contract (v0)
 
+> **v96 amendment (13 Oct 2026, more map on a phone): no data shape change.** At
+> 360 × 560 the chrome above the map took 237 px, 42 % of the screen: the area
+> link's long label pushed the language picker onto a fourth header row, and the
+> tagline took a third. Under 640 px the nav row now scrolls sideways instead of
+> wrapping, and the tagline (the page's `<h1>`) is visually hidden, kept for
+> screen readers and search. The header is two rows, the chrome 196 px. CSS only;
+> the store app's header is unchanged. Shell pin `app93` → `app94`.
+
 > **v95 amendment (13 Oct 2026, pins are finger-sized to tap): no data shape
 > change.** MapLibre hit-tests a tap against the drawn circle only (7 px radius at
 > zoom 14), far under a fingertip. One map-wide click handler now queries a 40 px
