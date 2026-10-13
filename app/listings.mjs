@@ -42,6 +42,8 @@ export const PLAY_LOCALES = {
 // comma-separated string. `whatsNew` (App Store) and `playWhatsNew` (Play's
 // release notes) are the optional fields: they belong to a version, not to the
 // app, so a file may leave them out and the store keeps what it has.
+// `playWhatsNew` maps a versionName to its notes ({"1.3.3": "…"}), so notes
+// left over from one release are never sent with the next.
 export const LIMITS = {
   name: 30,
   subtitle: 30,
@@ -71,16 +73,26 @@ export function validate(listing, file = "listing") {
     if (!(key in LIMITS)) throw new Error(`${file}: unknown field "${key}"`);
   }
   for (const [key, limit] of Object.entries(LIMITS)) {
-    const text = listing[key];
-    if (text === undefined) {
+    const value = listing[key];
+    if (value === undefined) {
       if (OPTIONAL.has(key)) continue;
       throw new Error(`${file}: missing "${key}"`);
     }
-    if (typeof text !== "string" || !text.trim()) throw new Error(`${file}: "${key}" must be a non-empty string`);
-    if (text !== text.trim()) throw new Error(`${file}: "${key}" starts or ends with whitespace`);
-    if (text.length > limit) throw new Error(`${file}: "${key}" is ${text.length} characters, over the ${limit} limit`);
+    if (key !== "playWhatsNew") { checkText(file, key, value, limit); continue; }
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      throw new Error(`${file}: "playWhatsNew" must map a version to its notes, like {"1.3.3": "…"}`);
+    for (const [version, text] of Object.entries(value)) {
+      if (!/^\d+(\.\d+)*$/.test(version)) throw new Error(`${file}: "playWhatsNew" key "${version}" is not a version`);
+      checkText(file, `playWhatsNew.${version}`, text, limit);
+    }
   }
   return listing;
+}
+
+function checkText(file, key, text, limit) {
+  if (typeof text !== "string" || !text.trim()) throw new Error(`${file}: "${key}" must be a non-empty string`);
+  if (text !== text.trim()) throw new Error(`${file}: "${key}" starts or ends with whitespace`);
+  if (text.length > limit) throw new Error(`${file}: "${key}" is ${text.length} characters, over the ${limit} limit`);
 }
 
 // listings/<lang>.json → [{ lang, file, ...fields }], sorted by language, every
@@ -129,12 +141,13 @@ export function playListingBody(l, existing = null) {
   return body;
 }
 
-// The release notes `play.mjs upload` hands the release, one per Play language
-// whose file has `playWhatsNew`; a language without one falls back to en-US.
-export function playReleaseNotes(listings) {
+// The release notes `play.mjs upload` hands a release of `version`, one per
+// Play language whose file has notes for exactly that version; a language
+// without them falls back to en-US.
+export function playReleaseNotes(listings, version) {
   return listings
-    .filter((l) => PLAY_LOCALES[l.lang] && l.playWhatsNew !== undefined)
-    .map((l) => ({ language: PLAY_LOCALES[l.lang], text: l.playWhatsNew }));
+    .filter((l) => PLAY_LOCALES[l.lang] && l.playWhatsNew?.[version] !== undefined)
+    .map((l) => ({ language: PLAY_LOCALES[l.lang], text: l.playWhatsNew[version] }));
 }
 
 // True when every key `want` carries reads the same in `have` — extra keys in

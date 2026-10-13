@@ -70,18 +70,26 @@ test("the two stores' existing locales keep their codes", () => {
 test("validate accepts a complete listing and whatsNew may be left out", () => {
   assert.deepEqual(validate({ ...GOOD }), GOOD);
   assert.ok(validate({ ...GOOD, whatsNew: "New in 1.2: …" }));
-  assert.ok(validate({ ...GOOD, playWhatsNew: "x".repeat(500) }));
-  assert.throws(() => validate({ ...GOOD, playWhatsNew: "x".repeat(501) }, "xx.json"),
-                /"playWhatsNew" is 501 characters, over the 500 limit/);
+  assert.ok(validate({ ...GOOD, playWhatsNew: { "1.3.3": "x".repeat(500) } }));
+  assert.throws(() => validate({ ...GOOD, playWhatsNew: { "1.3.3": "x".repeat(501) } }, "xx.json"),
+                /"playWhatsNew\.1\.3\.3" is 501 characters, over the 500 limit/);
+  assert.throws(() => validate({ ...GOOD, playWhatsNew: "Neu" }, "xx.json"), /must map a version to its notes/);
+  assert.throws(() => validate({ ...GOOD, playWhatsNew: { "v1.3": "Neu" } }, "xx.json"), /key "v1\.3" is not a version/);
+  assert.throws(() => validate({ ...GOOD, playWhatsNew: { "1.3.3": " Neu" } }, "xx.json"),
+                /"playWhatsNew\.1\.3\.3" starts or ends with whitespace/);
 });
 
-test("Play release notes: one per Play language that has them, none for a language Play lacks", () => {
-  assert.deepEqual(playReleaseNotes([
-    { lang: "bs", ...GOOD, playWhatsNew: "Novo" },
-    { lang: "de", ...GOOD, playWhatsNew: "Neu" },
+test("Play release notes: only the version being uploaded, one per Play language that has them", () => {
+  const listings = [
+    { lang: "bs", ...GOOD, playWhatsNew: { "1.3.3": "Novo" } },
+    { lang: "de", ...GOOD, playWhatsNew: { "1.3.2": "Alt", "1.3.3": "Neu" } },
     { lang: "en", ...GOOD },
-    { lang: "fi", ...GOOD, playWhatsNew: "Uutta" },
-  ]), [{ language: "de-DE", text: "Neu" }, { language: "fi-FI", text: "Uutta" }]);
+    { lang: "fi", ...GOOD, playWhatsNew: { "1.3.3": "Uutta" } },
+    { lang: "it", ...GOOD, playWhatsNew: { "1.3.2": "Vecchio" } },
+  ];
+  assert.deepEqual(playReleaseNotes(listings, "1.3.3"),
+                   [{ language: "de-DE", text: "Neu" }, { language: "fi-FI", text: "Uutta" }]);
+  assert.deepEqual(playReleaseNotes(listings, "1.3.4"), [], "last release's notes are never sent with the next");
 });
 
 test("validate refuses a missing field, an unknown one, an over-limit one and stray whitespace", () => {
@@ -130,8 +138,8 @@ test("the record bodies carry exactly the store's fields", () => {
     language: "de-DE", title: "PapaMap", shortDescription: GOOD.shortDescription, fullDescription: GOOD.playDescription,
   });
   assert.equal(playListingBody(l, { video: "https://youtu.be/x" }).video, "https://youtu.be/x");
-  assert.ok(!("playWhatsNew" in ascVersionAttributes({ ...l, playWhatsNew: "x" })));
-  assert.deepEqual(playListingBody({ ...l, playWhatsNew: "x" }), playListingBody(l));
+  assert.ok(!("playWhatsNew" in ascVersionAttributes({ ...l, playWhatsNew: { "1.3.3": "x" } })));
+  assert.deepEqual(playListingBody({ ...l, playWhatsNew: { "1.3.3": "x" } }), playListingBody(l));
 });
 
 test("same() ignores fields the store added and treats a missing one as empty", () => {

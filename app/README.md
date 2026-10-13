@@ -208,11 +208,13 @@ part of this: both stores show the primary language's screenshots to a locale wi
 A version's "What's New" is per locale too (`whatsNew` in the file, optional): before a version
 with the new locales is submitted, every one of them needs it, or Apple refuses the submission.
 
-Play's release notes are a separate field, `playWhatsNew` (optional, 500 characters — Play's
-limit, where `whatsNew` may run to 4000). They are not part of `listings-push`: the `play`
-task's upload hands them to the release it creates, one per Play language that has them, and a
-language without them shows the en-US text. They belong to one release, so update or drop them
-with the next one, or the next upload repeats them.
+Play's release notes are a separate field, `playWhatsNew`, keyed by version:
+`{"1.3.3": "…"}` (optional, 500 characters per text — Play's limit, where `whatsNew` may run to
+4000). They are not part of `listings-push`: the `play` task's upload reads the bundle's
+`versionName` from `android/app/build.gradle` and hands the release the notes written for
+exactly that version, one per Play language that has them; a language without them shows the
+en-US text. Notes for an older version are never sent with a newer one, so a release without
+fresh notes simply goes out without any, and old entries can be deleted at leisure.
 
 The app itself speaks all 32 languages in any case (it is the website's shell); what the plist's
 `CFBundleLocalizations` and the listings add is the store page and the Settings → PapaMap →
