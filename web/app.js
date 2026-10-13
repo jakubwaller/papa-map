@@ -14,16 +14,16 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature } from "./datasource.js?v=app90";
+         zoneForFeature } from "./datasource.js?v=app91";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app90";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app91";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app90";
+         writeTags } from "./osm.js?v=app91";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -31,7 +31,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app90";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app91";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -41,27 +41,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app90";
+         reviewTracker } from "./native.js?v=app91";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app90";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app91";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app90";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app91";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app90";
+import { isOpenNow } from "./opening-hours.js?v=app91";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app90";
-// The bundled shell's pin (`?v=app90`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app91";
+// The bundled shell's pin (`?v=app91`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -3513,8 +3513,8 @@ function applyFeatureSets(fc, places) {
   placesByOsmUrl = new Map();
   for (const p of allPlaces) if (p.osm_url) placesByOsmUrl.set(p.osm_url, p);
   renderChips();
-  positionZoomCtrl();   // topbar height depends on the rendered strip
   refreshPins();
+  positionZoomCtrl();   // topbar height depends on the rendered strip, and on whether the count line shows
   if (isNative()) shareTables();   // the widget and the shortcut search this same data
   if (popupObj) {
     // Either kind: a room answer (or a delta) that promotes a play place to a
@@ -3897,7 +3897,22 @@ function bootNative() {
   about.hidden = false;
   // The count stands in the header, off the scrolling chip row.
   document.querySelector("header").append(countEl);
-  positionZoomCtrl();   // applyI18n placed the column under the taller header a moment ago
+  // The shell before the data: the chips at zero before the load starts. A
+  // first launch waits on the download for up to native.js's 20 s — longer on
+  // a network that hangs rather than fails — and until then the app showed a
+  // bare header over an empty map (2026-10-13). refreshPins takes the line
+  // over once the data has answered.
+  renderChips();
+  // The line itself only after a second without data: a launch with a stored
+  // copy reads it in less, and the line makes the header a second row that
+  // would then jump away. Plain text, not retryBtn: nothing to retry yet.
+  setTimeout(() => {
+    if (dataReady) return;
+    countEl.textContent = t("dataLoading");
+    countEl.classList.add("nodata");
+    positionZoomCtrl();   // the second header row
+  }, 1000);
+  positionZoomCtrl();   // the taller header (applyI18n) and the chip strip just rendered both add to the topbar
   offlineBtn.hidden = false;
   // A login's return before the data is here (a cold start) waits for it,
   // like a pin: the answer it files needs its object to land on.

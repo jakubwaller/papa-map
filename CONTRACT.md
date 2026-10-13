@@ -1,5 +1,19 @@
 # papa-map — build contract (v0)
 
+> **v93 amendment (13 Oct 2026, the app paints its shell before the data): no
+> data shape change.** On a first launch the app drew nothing above the map —
+> no chips, no count line, the zoom column still under the header — until
+> `loadDataset` had answered, which on a network that hangs rather than fails
+> (Airplane Mode behind an auto-connect VPN profile) is the full 20 s of
+> `NET_MS`. `bootNative` now renders the chips at zero and positions the zoom
+> column before the load starts, and after one second still without data puts
+> "Loading changing tables…" (`dataLoading`) in the header's count line as
+> plain text — a launch that reads its stored copy faster never shows it, and
+> the line makes the header a second row; `refreshPins` replaces the line once
+> the data has answered, and `applyFeatureSets` positions the zoom column after
+> `refreshPins` rather than before, so it is measured against the header as it
+> will stay. The website is unchanged. Shell pin `app90` → `app91`.
+
 > **v92 amendment (12 Oct 2026, a stray auth link, a double tap and a slow save
 > no longer break an answer): no data shape change.** **(1)** While a login
 > waits for its return (`loginPending`), the app ignores a warm `papamap://auth`

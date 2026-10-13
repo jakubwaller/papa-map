@@ -1359,7 +1359,7 @@ actually finish one. The service worker's eight seconds make the same call — i
 still stores the response it eventually gets, but only when its validators differ from the stored copy (an unchanged dataset is not rewritten). A file that does not parse is deleted instead, never
 promoted, because `.new` is itself a file the loader reads. A first launch too slow for the twenty
 seconds it is given (`NET_MS`; the page's own fetch shares what is left of that same budget) draws
-an empty map once; the launch after it has the data.
+an empty map once; the launch after it has the data. Those twenty seconds are not blank, since 1.3.2: `bootNative` renders the chips at zero before the load starts and, a second later if the data is still out, puts "Loading changing tables…" in the header, so a waiting first launch looks like an app loading rather than an app with nothing in it — on a phone whose network hangs rather than fails (Airplane Mode behind an auto-connect VPN profile), the only sign of life for the whole wait.
 
 The known rough edge this removes: a reader on a slow-but-working link used to be told "Offline —
 the map is showing stored data" on every visit that happened to read the copy, which was not wrong
