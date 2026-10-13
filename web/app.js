@@ -2908,6 +2908,9 @@ function renderVenueSkeleton() {
 function showVenueStep(step) {
   venuePick.hidden = step !== "pick";
   venueAskEl.hidden = step !== "ask";
+  // The dialog is the scroller (v94): a row picked deep in the list would
+  // otherwise open step two with its heading above the fold.
+  addDialog.scrollTop = 0;
 }
 
 function openVenuePicker(c, z) {
