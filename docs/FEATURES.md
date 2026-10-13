@@ -200,6 +200,9 @@ since its JavaScript is bundled; the methods pages say so.
 
 ### The selected-place marker
 
+A tap lands on the nearest pin within 20 px, not only on the drawn circle (a pin is
+14-26 px wide, a fingertip about 40); clustering was considered and rejected.
+
 The ~26k pins stay WebGL circles at every zoom — a pictogram needs about
 30 px to read, which would double a pin's footprint and collide with the
 play halo and the key glyph drawn on top of them. Instead, exactly one pin

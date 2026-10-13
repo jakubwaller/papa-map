@@ -1337,3 +1337,14 @@ export function flightMs(length, p = FLIGHT) {
   if (ms > p.jumpAboveMs) return null;
   return Math.min(Math.max(Math.round(ms), p.minMs), p.maxMs);
 }
+
+// The rendered feature whose projected pixel is nearest `point` (null if none),
+// for a finger-sized tap box. `project` maps a feature to {x, y}.
+export function nearestFeature(point, features, project) {
+  let best = null, bestD = Infinity;
+  for (const f of features) {
+    const p = project(f), d = Math.hypot(p.x - point.x, p.y - point.y);
+    if (d < bestD) { best = f; bestD = d; }
+  }
+  return best;
+}
