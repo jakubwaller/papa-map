@@ -70,6 +70,7 @@ struct NearestProvider: TimelineProvider {
 struct NearestView: View {
     let entry: NearestEntry
     @Environment(\.widgetFamily) var family
+    @Environment(\.colorScheme) var scheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -100,7 +101,9 @@ struct NearestView: View {
         }
         .padding(family == .systemSmall ? 2 : 4)
         .widgetURL(entry.tapURL)
-        .containerBackground(for: .widget) { Color(hex: "#f2f5f3") }
+        // The text follows the system, so the card has to as well: the Android
+        // widget's day and night pair (widget_colors.xml in values-night).
+        .containerBackground(for: .widget) { Color(hex: scheme == .dark ? "#1e2321" : "#f2f5f3") }
     }
 }
 
