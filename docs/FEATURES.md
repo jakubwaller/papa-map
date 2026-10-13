@@ -329,7 +329,7 @@ wheelchair note made a card taller than a phone's band, so a pan could keep
 its status line clear of the search field or its buttons clear of the
 attribution, never both. `fitPopup()` (`web/app.js`) sets the card's maximum
 height from the same band the pan uses (`popupMaxHeight`, never under 160 px
-for a landscape phone), and a longer card scrolls inside itself; the map's
+for a landscape phone), and a longer card scrolls inside itself, its foot fading while there is more below (v94); the map's
 gestures listen on the canvas, which the card is not inside, so a swipe or
 wheel over the card scrolls the card and never the map. The wheelchair note
 clamps to three lines with a "more …" link where the clamp cut something. The
