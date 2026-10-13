@@ -64,6 +64,7 @@ def test_parse_osc_way_has_no_coordinates():
     {"changing_table:location": "male_toilet"},
     {"kids_area": "yes"},
     {"kids_area:indoor": "yes"},
+    {"kids_area:outdoor": "yes"},
     {"leisure": "indoor_play"},
     {"leisure": "playground"},
     {"amenity": "toilets"},

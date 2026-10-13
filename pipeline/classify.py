@@ -12,11 +12,12 @@ FEMALE_TOKEN = "female_toilet"
 # "02") count only in stats.
 FEATURE_VALUES = {"yes", "limited"}
 
-# Values that affirm a kids' area, on `kids_area` or on its `:indoor` sub-key.
+# Values that affirm a kids' area, on `kids_area` or on its `:indoor` and
+# `:outdoor` sub-keys (`kids_area=outdoor` counts too, see has_play_area).
 # The wiki defines kids_area as "Kids' area or Children's corner", `yes` as "an
 # area where kids can play" and `designated` as a purpose-built one; `limited`
 # is explicitly "toys are available, but no designated area", so it stays out
-# along with `no`, `outdoor` and anything unrecognized.
+# along with `no` and anything unrecognized.
 PLAY_AREA_VALUES = {"yes", "indoor", "designated"}
 
 # The three values the wheelchair tags can honestly carry (wiki: Key:wheelchair).

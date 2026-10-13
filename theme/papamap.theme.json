@@ -3565,8 +3565,9 @@
           "and": [
             {
               "or": [
-                "kids_area~i~^(yes|indoor|designated)$",
+                "kids_area~i~^(yes|indoor|designated|outdoor)$",
                 "kids_area:indoor~i~^(yes|indoor|designated)$",
+                "kids_area:outdoor~i~^(yes|indoor|designated)$",
                 "leisure=indoor_play",
                 {
                   "and": [
