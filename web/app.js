@@ -3513,8 +3513,8 @@ function applyFeatureSets(fc, places) {
   placesByOsmUrl = new Map();
   for (const p of allPlaces) if (p.osm_url) placesByOsmUrl.set(p.osm_url, p);
   renderChips();
-  positionZoomCtrl();   // topbar height depends on the rendered strip
   refreshPins();
+  positionZoomCtrl();   // topbar height depends on the rendered strip, and on whether the count line shows
   if (isNative()) shareTables();   // the widget and the shortcut search this same data
   if (popupObj) {
     // Either kind: a room answer (or a delta) that promotes a play place to a
@@ -3897,17 +3897,21 @@ function bootNative() {
   about.hidden = false;
   // The count stands in the header, off the scrolling chip row.
   document.querySelector("header").append(countEl);
-  // The shell before the data: the chips at zero and the header line reading
-  // "Loading changing tables…" from the first frame. A first launch waits on
-  // the download for up to native.js's 20 s — longer on a network that hangs
-  // rather than fails — and until then the app showed a bare header over an
-  // empty map (2026-10-13). refreshPins takes the line over once the data
-  // has answered; a tap on it before then is a no-op (retryDataset reads
-  // dataMissing, false until dataReady).
+  // The shell before the data: the chips at zero before the load starts. A
+  // first launch waits on the download for up to native.js's 20 s — longer on
+  // a network that hangs rather than fails — and until then the app showed a
+  // bare header over an empty map (2026-10-13). refreshPins takes the line
+  // over once the data has answered.
   renderChips();
-  retryBtn.textContent = t("dataLoading");
-  countEl.replaceChildren(retryBtn);
-  countEl.classList.add("nodata");
+  // The line itself only after a second without data: a launch with a stored
+  // copy reads it in less, and the line makes the header a second row that
+  // would then jump away. Plain text, not retryBtn: nothing to retry yet.
+  setTimeout(() => {
+    if (dataReady) return;
+    countEl.textContent = t("dataLoading");
+    countEl.classList.add("nodata");
+    positionZoomCtrl();   // the second header row
+  }, 1000);
   positionZoomCtrl();   // the taller header (applyI18n) and the chip strip just rendered both add to the topbar
   offlineBtn.hidden = false;
   // A login's return before the data is here (a cold start) waits for it,
