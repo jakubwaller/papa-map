@@ -8,7 +8,7 @@ import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces,
          isHighchair, countHighchair,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, areaPlace, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
          pinColorExpression, nearestFeature, viewOf, localAnswered, haversineKm,
          nearestUsable, formatDistance, geoUri, webRouteHref, webRouteChoices, PAPAMAP_THEME_URL, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
@@ -1274,6 +1274,23 @@ test("areaLink names the country in the UI language when it falls back to the En
   const { label, keys } = areaForLabel(hh, "cs", AREAS, cs);
   assert.equal(label, "Přebalovací pulty – Německo");
   assert.deepEqual([...keys].sort(), ["Bayern", "Hamburg", "Schleswig-Holstein"]);
+});
+
+test("areaPlace names the place of the page areaLink picks (v96)", () => {
+  const hh = { ...AREAS[1], cc: "de" };
+  const names = (cc) => ({ de: "Germany", dk: "Danmark" })[cc] ?? null;
+  // Its own page: the chunk's own name.
+  assert.equal(areaPlace(hh, "de", names), "Hamburg");
+  // The English twin of the country: the country, never the chunk.
+  assert.equal(areaPlace(hh, "en", names), "Germany");
+  // A page with no twin is linked for everyone, so its own name stands.
+  assert.equal(areaPlace(AREAS.find((a) => a.area === "Florida"), "de", names), "Florida");
+  // A country row has no chunk name.
+  assert.equal(areaPlace({ href: "wickeltische/danmark.html", lang: "da", cc: "dk" }, "da", names), "Danmark");
+  // No name to give: null, and the header keeps the full label.
+  assert.equal(areaPlace({ ...hh, cc: "zz" }, "en", names), null);
+  assert.equal(areaPlace(AREAS[1], "en", names), null);
+  assert.equal(areaPlace(null, "de", names), null);
 });
 
 test("every language has an areaCountry phrase with a {country} slot", () => {

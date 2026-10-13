@@ -3,12 +3,15 @@
 > **v96 amendment (13 Oct 2026, more map on a phone): no data shape change.** At
 > 360 × 560 the chrome above the map took 237 px, 42 % of the screen: the area
 > link's long label pushed the language picker onto a fourth header row, and the
-> tagline took a third. Under 640 px the nav row no longer wraps: the area link
-> gives way with an ellipsis, so the picker stays on screen; and the tagline (the
-> page's `<h1>`) is visually hidden, kept for screen readers and search. The
-> header is two rows; on a Honor 9 (360 × 560) the chrome went from 220 to
-> 178–196 px. CSS only; the store app's header is unchanged. Shell pin `app93` →
-> `app94`.
+> tagline took a third. Under 640 px the nav row no longer wraps, and the area
+> link shows only the place behind a pin ("Germany", "Baden-Württemberg";
+> `areaPlace`, `web/datasource.js`) — the whole "Changing tables in Germany"
+> left "Changing tabl…" on a 375 px iPhone. Its full label stays in the link
+> for screen readers; a long place still ends in an ellipsis, so the picker
+> stays on screen. The tagline (the page's `<h1>`) is visually hidden, kept for
+> screen readers and search. The header is two rows; on a Honor 9 (360 × 560)
+> the chrome went from 220 to 178–196 px. The store app's header is unchanged.
+> Shell pin `app93` → `app94`.
 
 > **v95 amendment (13 Oct 2026, pins are finger-sized to tap): no data shape
 > change.** MapLibre hit-tests a tap against the drawn circle only (7 px radius at

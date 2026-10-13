@@ -954,6 +954,17 @@ export function areaLink(area, lang, countryLabel) {
   return { href: area.en.href, label: local || area.en.label, en: true };
 }
 
+// The bare place areaLink's page is about, for the phone header, where the
+// whole "Changing tables in …" does not fit beside the other links (CONTRACT.md
+// v96): the chunk's own name when its own page is the one linked, otherwise
+// the country's name from `regionName` (UI language). Null when there is no
+// name to give, and the header keeps the full label.
+export function areaPlace(area, lang, regionName) {
+  if (!area) return null;
+  if ((area.lang === lang || !area.en) && area.area) return area.area;
+  return (area.cc && regionName?.(area.cc)) || null;
+}
+
 // The set of `f.area` values an areas.json row covers — a chunk (Land,
 // région, state, prefecture) covers its own one sweep area; a country row
 // covers every sweep area behind it (`areas`, CONTRACT.md v32: Germany's 16

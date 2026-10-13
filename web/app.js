@@ -5,7 +5,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          countWheelchair, countHighchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, areaPlace, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, BUCKET_COLOR,
          pinColorExpression, viewOf, nearestUsable, formatDistance, localAnswered,
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
@@ -260,9 +260,25 @@ function updateRegionsLink() {
   // is still the twin's English h1 says so itself.
   const english = link?.en && link.label !== currentArea?.en?.label;
   const label = link ? link.label + (english ? " (English)" : "") : t("regions");
+  // A phone shows only the place behind a pin (style.css): the whole label
+  // cannot fit beside the other links at 375px. Screen readers keep the label.
+  const place = link && areaPlace(currentArea, lang, regionName);
+  const short = place ? place + (english ? " (English)" : "") : "";
   el.href = link ? link.href : t("regionsHref");
-  if (el.textContent === label) return;
-  el.textContent = label;
+  if (el.textContent === label + short) return;
+  const full = document.createElement("span");
+  full.className = "area-full";
+  full.textContent = label;
+  el.replaceChildren(full);
+  el.classList.toggle("has-place", !!short);
+  if (short) {
+    const s = document.createElement("span");
+    s.className = "area-place";
+    s.setAttribute("aria-hidden", "true");
+    s.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24"><path d="M12 21.5s-6.5-6.2-6.5-11a6.5 6.5 0 0113 0c0 4.8-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><circle cx="12" cy="10.3" r="2.3" fill="currentColor"/></svg>';
+    s.append(short);
+    el.append(s);
+  }
   // "Bundesländer" → "Wickeltische in Schleswig-Holstein" can wrap the nav
   // row at phone width, and the zoom control sits under the topbar's
   // measured height (positionZoomCtrl) — re-seat it whenever the label
@@ -1480,10 +1496,15 @@ const num = (n) => Number(n ?? 0).toLocaleString(NUMBER_LOCALE[lang] ?? "en-GB")
 // Null when the runtime has no name for the code (it echoes the code back),
 // and areaLink then keeps the twin's English h1.
 function countryLabel(cc) {
+  const name = regionName(cc);
+  return name ? t("areaCountry", { country: name }) : null;
+}
+// The bare name, which the phone header shows on its own (areaPlace).
+function regionName(cc) {
   try {
     const code = String(cc).toUpperCase();
     const name = new Intl.DisplayNames([NUMBER_LOCALE[lang] ?? lang], { type: "region" }).of(code);
-    return name && name !== code ? t("areaCountry", { country: name }) : null;
+    return name && name !== code ? name : null;
   } catch { return null; }
 }
 let lastStats = null;

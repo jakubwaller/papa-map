@@ -137,6 +137,8 @@ header {
   text-decoration: none;
 }
 .header-actions a:hover { text-decoration: underline; }
+.area-place { display: none; }
+.area-place svg { vertical-align: -1px; margin-right: 3px; }
 
 .add-btn {
   order: 3;
@@ -1128,6 +1130,10 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
     flex-wrap: nowrap; white-space: nowrap; min-width: 0;
   }
   header #regions-link { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* Even alone, "Changing tables in Germany" left "Changing tabl…" on a 375px
+     iPhone: the link shows the bare place behind a pin here (updateRegionsLink),
+     and the full label goes to screen readers only (below). */
+  header #regions-link.has-place .area-place { display: inline; }
   /* 13px, like the add button's 12: with the select sized to its value the
      German nav needs ~306 of 347px, the English ~333, the Bosnian ~341 —
      the last two only at this size. */
@@ -1144,7 +1150,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
      360 × 560 the chrome above the map took 237px, 42% of the screen, and the
      chips beside it already say "Dads can reach it". */
   .chip.wc, .chip.hc { position: relative; }
-  .chip.wc .label, .chip.hc .label, header .tagline {
+  .chip.wc .label, .chip.hc .label, header .tagline, header #regions-link.has-place .area-full {
     position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
     overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
   }
