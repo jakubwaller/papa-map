@@ -39,9 +39,9 @@ export const PLAY_LOCALES = {
 };
 
 // Apple's and Google's own ceilings, in characters. `keywords` is the whole
-// comma-separated string. `whatsNew` is the one optional field: it belongs to
-// a version, not to the app, so a file may leave it out and the store keeps
-// what it has.
+// comma-separated string. `whatsNew` (App Store) and `playWhatsNew` (Play's
+// release notes) are the optional fields: they belong to a version, not to the
+// app, so a file may leave them out and the store keeps what it has.
 export const LIMITS = {
   name: 30,
   subtitle: 30,
@@ -51,8 +51,9 @@ export const LIMITS = {
   whatsNew: 4000,
   shortDescription: 80,
   playDescription: 4000,
+  playWhatsNew: 500,
 };
-export const OPTIONAL = new Set(["whatsNew"]);
+export const OPTIONAL = new Set(["whatsNew", "playWhatsNew"]);
 
 // The same three links on every localization. Only two privacy pages exist.
 export const SUPPORT_URL = "https://papamap.de/impressum.html";
@@ -126,6 +127,14 @@ export function playListingBody(l, existing = null) {
   // otherwise vanish with the first push.
   if (existing?.video) body.video = existing.video;
   return body;
+}
+
+// The release notes `play.mjs upload` hands the release, one per Play language
+// whose file has `playWhatsNew`; a language without one falls back to en-US.
+export function playReleaseNotes(listings) {
+  return listings
+    .filter((l) => PLAY_LOCALES[l.lang] && l.playWhatsNew !== undefined)
+    .map((l) => ({ language: PLAY_LOCALES[l.lang], text: l.playWhatsNew }));
 }
 
 // True when every key `want` carries reads the same in `have` — extra keys in

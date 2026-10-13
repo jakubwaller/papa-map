@@ -26,6 +26,8 @@ test("the assertion is an RS256 JWT Google's token endpoint accepts", () => {
 test("the track gets exactly the uploaded version code, as a string", () => {
   assert.deepEqual(trackBody("alpha", 212, "draft"),
                    { track: "alpha", releases: [{ versionCodes: ["212"], status: "draft" }] });
+  const notes = [{ language: "de-DE", text: "Neu" }];
+  assert.deepEqual(trackBody("alpha", 212, "completed", notes).releases[0].releaseNotes, notes);
 });
 
 test("closed testing and draft unless told otherwise; a typo'd status is refused", () => {
