@@ -89,7 +89,7 @@ def has_play_area(tags: dict) -> bool:
       * `kids_area` in PLAY_AREA_VALUES — the play corner of a cafe, restaurant,
         bakery or shop, the most-used tag by a distance. `kids_area:indoor=no`
         no longer overrules it: it only says the area is outdoors, which counts
-        too (v74);
+        too (v97);
       * `kids_area=outdoor` and `kids_area:outdoor` in PLAY_AREA_VALUES — the
         outdoor spellings;
       * `leisure=indoor_play` — a commercial indoor playground;
