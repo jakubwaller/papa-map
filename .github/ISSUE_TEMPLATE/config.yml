@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Wrong or missing changing table
+    url: https://papamap.de/
+    about: "The data comes from OpenStreetMap. Tap the pin and answer the question there, or correct the room through the pin's MapComplete link. A table the map does not show goes in with + Add a place. The map rebuilds nightly. If a pin still disagrees with OpenStreetMap a day after your edit, that is a bug, use the Bug report template."
