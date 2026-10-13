@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, verify } from "node:crypto";
-import { assertion, trackBody, parseArgs, retryable, withRetry, commitEdit } from "./play.mjs";
+import { readFileSync } from "node:fs";
+import { assertion, trackBody, versionName, parseArgs, retryable, withRetry, commitEdit } from "./play.mjs";
 
 test("the assertion is an RS256 JWT Google's token endpoint accepts", () => {
   const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -26,6 +27,14 @@ test("the assertion is an RS256 JWT Google's token endpoint accepts", () => {
 test("the track gets exactly the uploaded version code, as a string", () => {
   assert.deepEqual(trackBody("alpha", 212, "draft"),
                    { track: "alpha", releases: [{ versionCodes: ["212"], status: "draft" }] });
+  const notes = [{ language: "de-DE", text: "Neu" }];
+  assert.deepEqual(trackBody("alpha", 212, "completed", notes).releases[0].releaseNotes, notes);
+});
+
+test("the versionName is read from the real build.gradle, and a missing one fails", () => {
+  assert.match(versionName(readFileSync(new URL("app/build.gradle", import.meta.url), "utf8")), /^\d+\.\d+\.\d+$/);
+  assert.equal(versionName('versionCode 1\n        versionName "1.3.3"\n'), "1.3.3");
+  assert.throws(() => versionName("versionCode 1"), /no versionName/);
 });
 
 test("closed testing and draft unless told otherwise; a typo'd status is refused", () => {

@@ -4,6 +4,7 @@
 // task in .github/workflows/app-build.yml.
 //
 //   node android/play.mjs upload <app.aab> [--track alpha] [--status draft]
+//                                            release notes: playWhatsNew["<versionName>"] in listings/*.json
 //   node android/play.mjs listings pull      print the store listing texts, every language
 //   node android/play.mjs listings push      listings/*.json → the listings, in one committed edit
 //
@@ -21,9 +22,10 @@
 import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
-import { PLAY_LOCALES, listingsDir, readListings, playListingBody, same } from "../listings.mjs";
+import { PLAY_LOCALES, listingsDir, readListings, playListingBody, playReleaseNotes, same } from "../listings.mjs";
 
 export const PACKAGE = "de.papamap.app";
+const GRADLE = new URL("app/build.gradle", import.meta.url);
 const API = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE}`;
 const UPLOAD = `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${PACKAGE}`;
 const SCOPE = "https://www.googleapis.com/auth/androidpublisher";
@@ -158,10 +160,20 @@ export async function commitEdit(bearer, id, { fetch: f = fetch, ...retry } = {}
   return parse(res, "POST", url);
 }
 
-// The release the track gets: this one version code, whole. Pure, so the
-// shape Play is sent is tested without a network.
-export function trackBody(track, versionCode, status) {
-  return { track, releases: [{ versionCodes: [String(versionCode)], status }] };
+// The release the track gets: this one version code, whole, with the release
+// notes of listings/*.json if any file has them. Pure, so the shape Play is
+// sent is tested without a network.
+export function trackBody(track, versionCode, status, releaseNotes = []) {
+  const release = { versionCodes: [String(versionCode)], status };
+  if (releaseNotes.length) release.releaseNotes = releaseNotes;
+  return { track, releases: [release] };
+}
+
+// The versionName the bundle is built with, read where Gradle reads it.
+export function versionName(gradle) {
+  const m = /^\s*versionName\s+"([^"]+)"/m.exec(gradle);
+  if (!m) throw new Error("no versionName in app/build.gradle");
+  return m[1];
 }
 
 export function parseArgs(argv) {
@@ -178,15 +190,17 @@ export function parseArgs(argv) {
 // One edit: open, upload the bundle, point the track at it, commit. An edit
 // that fails half-way is never committed, so Play is left as it was.
 async function upload(file, { track, status }) {
+  const version = versionName(readFileSync(GRADLE, "utf8"));
+  const notes = playReleaseNotes(readListings(), version);   // a bad listing file fails before the upload
   const bearer = await accessToken(serviceAccount());
   const edit = await call(bearer, "POST", `${API}/edits`, { json: {} });
   const bundle = await call(bearer, "POST", `${UPLOAD}/edits/${edit.id}/bundles?uploadType=media`,
                             { body: readFileSync(file), type: "application/octet-stream" });
   console.log(`uploaded version code ${bundle.versionCode} (sha256 ${bundle.sha256})`);
   await call(bearer, "PUT", `${API}/edits/${edit.id}/tracks/${track}`,
-             { json: trackBody(track, bundle.versionCode, status) });
+             { json: trackBody(track, bundle.versionCode, status, notes) });
   await commitEdit(bearer, edit.id);
-  console.log(`${track}: version code ${bundle.versionCode} as ${status}`);
+  console.log(`${track}: version code ${bundle.versionCode} as ${status}, release notes for ${version} in ${notes.length} language(s)`);
 }
 
 // --- Store listing texts -------------------------------------------------------
