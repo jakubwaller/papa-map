@@ -1146,9 +1146,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   /* Visually hidden, never display:none: the label is the chip's name for a
      screen reader (the svg is aria-hidden), and without it the chip reads as a
      bare number. position:relative on the chip keeps the 1px box inside it.
-     The tagline too: it is the page's <h1>, and its row went to the map — at
-     360 × 560 the chrome above the map took 237px, 42% of the screen, and the
-     chips beside it already say "Dads can reach it". */
+     The tagline too: it is the page's <h1>, and its row went to the map — on
+     a 360 × 560 phone the chrome above the map took 220px, 39% of the screen,
+     and the chips beside it already say "Dads can reach it". */
   .chip.wc, .chip.hc { position: relative; }
   .chip.wc .label, .chip.hc .label, header .tagline, header #regions-link.has-place .area-full {
     position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
