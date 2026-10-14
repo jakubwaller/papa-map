@@ -476,10 +476,12 @@ async function main() {
         // opened instead, zoom in a step and tap again.
         if (!PLACE.lngLat) throw new Error(`--place ${PLACE.type}/${PLACE.id} is not in changing_tables.geojson`);
         const near = (ll) => !!ll && Math.hypot((ll[0] - PLACE.lngLat[0]) * Math.cos(PLACE.lngLat[1] * Math.PI / 180), ll[1] - PLACE.lngLat[1]) * 111320 < 5;
-        if (ROOM_FIRST) await sleep(1500);   // hold the city view under the caption
+        if (ROOM_FIRST) await sleep(2600);   // hold the city view under the caption (the cut starts ~1.1 s in)
         for (let zoom = 16; zoom <= 18 && !opened; zoom += 1) {
-          const duration = zoom === 16 && ROOM_FIRST ? 4000 : 1200;   // the first leg is the flight in from the city
-          await frame.evaluate((o) => window._papamap.easeTo({ center: o.c, zoom: o.z, duration: o.d }), { c: PLACE.lngLat, z: zoom, d: duration });
+          // A hard cut from the city to the pin, not a flight: the screen
+          // recorder captures about 17 fps at this size, so a flight judders.
+          if (zoom === 16 && ROOM_FIRST) await frame.evaluate((o) => window._papamap.jumpTo({ center: o.c, zoom: o.z }), { c: PLACE.lngLat, z: zoom });
+          else await frame.evaluate((o) => window._papamap.easeTo({ center: o.c, zoom: o.z, duration: 1200 }), { c: PLACE.lngLat, z: zoom });
           await settle(frame, 250);
           const pt = (await clickablePins(frame, "unknown")).find((p) => near(p.lngLat));
           if (!pt) continue;
@@ -532,16 +534,16 @@ async function main() {
       const c = await centreOf(frame.locator(`.maplibregl-popup .ask .ask-btn[data-room="${ANSWER}"]`));
       await tap(c.x, c.y);
       mark("room-answered");
+      // The popup is as tall as the map, so while it is open the pin sits at
+      // the top edge under the search bar. Close it right after the tap and
+      // centre the pin, so the clip shows it turn green (about 2 s after the
+      // tap, once the app has read the edit back from the OSM API).
+      await sleep(600);
+      await closePopup();
+      await frame.evaluate((ll) => window._papamap.easeTo({ center: ll, duration: 500 }), tapped.lngLat);
       // Fail the run rather than record a "could not save" and exit 0.
       await verifyRoomAnswer(frame, tapped.lngLat, unmocked);
-      if (DEBUG) console.log("  [popup] " + (await frame.locator(".maplibregl-popup .popup").innerText().catch(() => "(gone)")).replace(/\s+/g, " ").slice(0, 400));
-      await sleep(1400);
-      // The popup is as tall as the map, so while it is open the pin sits at
-      // the top edge under the search bar. Close it and centre the pin, so
-      // the clip shows it green.
-      await closePopup();
-      await frame.evaluate((ll) => window._papamap.easeTo({ center: ll, duration: 700 }), tapped.lngLat);
-      await sleep(1800);
+      await sleep(2200);
       mark("room-end");
     };
 
