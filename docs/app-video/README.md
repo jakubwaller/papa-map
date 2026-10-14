@@ -79,8 +79,11 @@ not go through (no green pin, or the app's "could not save" line), and
   on an element whose room you answered yourself: it is served grey again
   and the clip replays your answer. `--here <lat,lon>` puts the reader next
   to it and `--room-first` moves the room step ahead of the nearest-table
-  step, so the nearest table is the place just answered rather than a
-  random shop. `--texts <json>` swaps captions, for example a nearest-table
+  step, opens that step on the whole city and flies in to the pin, and
+  closes the popup after the answer so the pin is seen green; the nearest
+  table is then the place just answered rather than a random shop. Pick a
+  place with no other pin within about 150 m, or the two blur together at
+  the recording zoom. `--texts <json>` swaps captions, for example a nearest-table
   subline without the Siri line for an Android-and-iPhone post:
 
   ```
