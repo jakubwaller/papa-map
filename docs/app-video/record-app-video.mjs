@@ -9,7 +9,7 @@
 //   node record-app-video.mjs <out-dir> [--profile store|social|loop] [--lang de|en]
 //                              [--served-dir <dir>] [--debug] [base-url]
 //                              [--place <type>/<id> --answer <room>] [--here <lat,lon>]
-//                              [--room-first] [--texts <json>]
+//                              [--room-first] [--texts <json>] [--headed]
 //
 // --place replays a real answer: the named OSM element is served grey
 // (status unknown, no room), and the room step taps that pin and answers
@@ -34,13 +34,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const USAGE = "usage: node record-app-video.mjs <out-dir> [--profile store|social|loop] [--lang de|en] [--served-dir <dir>] [--place <type>/<id>] [--answer <room>] [--here <lat,lon>] [--room-first] [--texts <json>] [--debug] [base-url]";
+const USAGE = "usage: node record-app-video.mjs <out-dir> [--profile store|social|loop] [--lang de|en] [--served-dir <dir>] [--place <type>/<id>] [--answer <room>] [--here <lat,lon>] [--room-first] [--texts <json>] [--headed] [--debug] [base-url]";
 const die = (msg) => { console.error(`${msg}\n${USAGE}`); process.exit(2); };
 
 // Value flags take the next token, boolean flags do not, so a positional may
 // stand anywhere (`--debug ./out` is out-dir ./out). `--flag=value` works too.
 const VALUE_FLAGS = ["--profile", "--lang", "--served-dir", "--place", "--answer", "--here", "--texts"];
-const BOOL_FLAGS = ["--debug", "--room-first"];
+const BOOL_FLAGS = ["--debug", "--room-first", "--headed"];
 const opts = {};
 const positional = [];
 const argv = process.argv.slice(2);
@@ -404,7 +404,7 @@ async function main() {
   // either one's setup still reaches the cleanup.
   try {
     writeFileSync(composerPath, composerHtml(appUrl, profile.band));
-    browser = await chromium.launch({ channel: "chrome", args: ["--no-sandbox"] });
+    browser = await chromium.launch({ channel: "chrome", headless: opts["--headed"] !== true, args: ["--no-sandbox"] });   // headed = real GPU, smooth map animations
     const context = await browser.newContext({
       viewport: VIDEO_SIZE, deviceScaleFactor: 1, isMobile: true, hasTouch: true,
       geolocation: READER, permissions: ["geolocation"], locale: LOCALE, colorScheme: "light",
@@ -478,7 +478,7 @@ async function main() {
         const near = (ll) => !!ll && Math.hypot((ll[0] - PLACE.lngLat[0]) * Math.cos(PLACE.lngLat[1] * Math.PI / 180), ll[1] - PLACE.lngLat[1]) * 111320 < 5;
         if (ROOM_FIRST) await sleep(1500);   // hold the city view under the caption
         for (let zoom = 16; zoom <= 18 && !opened; zoom += 1) {
-          const duration = zoom === 16 && ROOM_FIRST ? 3500 : 1200;   // the first leg is the flight in from the city
+          const duration = zoom === 16 && ROOM_FIRST ? 4000 : 1200;   // the first leg is the flight in from the city
           await frame.evaluate((o) => window._papamap.easeTo({ center: o.c, zoom: o.z, duration: o.d }), { c: PLACE.lngLat, z: zoom, d: duration });
           await settle(frame, 250);
           const pt = (await clickablePins(frame, "unknown")).find((p) => near(p.lngLat));
@@ -567,8 +567,23 @@ async function main() {
       const roomScene = async () => {
         await closePopup();
         if (ROOM_FIRST) {
-          // The scene opens on the whole city, zoom 10.5, so the city's name
-          // on the map says where this is; the room step flies in from there.
+          // Open the add-a-place dialog once here, before the cut, so the
+          // app's venue cache answers at once in the add scene instead of
+          // showing the "looking for places" spinner for seconds.
+          await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 16 }), CENTER);
+          await settle(frame, 300);
+          await tapEl("#add-place");
+          await frame.waitForSelector("#add-dialog[open]", { timeout: 8000 });
+          await frame.waitForFunction(() => document.querySelectorAll("#venue-list .venue-row").length >= 3, null, { timeout: 30000 }).catch(() => {});
+          await closeDialog("add-dialog");
+          // Pull the tiles along the flight path into the cache first, so the
+          // flight in does not stall on tile loads.
+          for (const z of [12, 14, 16]) {
+            await frame.evaluate((o) => window._papamap.jumpTo({ center: o.c, zoom: o.z }), { c: PLACE ? PLACE.lngLat : CENTER, z });
+            await settle(frame, 500);
+          }
+          // The scene opens on the whole city, zoom 10.5, so the district
+          // names and the river say where this is; the room step flies in.
           await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 10.5 }), CENTER);
           await settle(frame, 600);
         } else {
