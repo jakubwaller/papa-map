@@ -423,6 +423,7 @@ async function main() {
     await page.goto(`${BASE_URL}/${COMPOSER_NAME}`, { waitUntil: "load", timeout: 60000 });
     const frame = appFrame(page);
     await waitForMapReady(frame);
+    if (PLACE && !PLACE.lngLat) throw new Error(`--place ${PLACE.type}/${PLACE.id} is not in changing_tables.geojson`);
     await verifyNativeShell(frame);
     // Taps are given in the app's own CSS pixels; the composer's stage is
     // scaled by profile.scale and the app starts below the caption band.
@@ -470,12 +471,12 @@ async function main() {
       await caption("room");
       let opened = false;
       let tapped = null;
+      // Within 5 m of the --place element.
+      const near = (ll) => !!ll && Math.hypot((ll[0] - PLACE.lngLat[0]) * Math.cos(PLACE.lngLat[1] * Math.PI / 180), ll[1] - PLACE.lngLat[1]) * 111320 < 5;
       if (PLACE) {
         // The named element, served grey: ease in on it and tap its pin.
         // Pins 10 m apart overlap at zoom 16, so when a neighbour's popup
         // opened instead, zoom in a step and tap again.
-        if (!PLACE.lngLat) throw new Error(`--place ${PLACE.type}/${PLACE.id} is not in changing_tables.geojson`);
-        const near = (ll) => !!ll && Math.hypot((ll[0] - PLACE.lngLat[0]) * Math.cos(PLACE.lngLat[1] * Math.PI / 180), ll[1] - PLACE.lngLat[1]) * 111320 < 5;
         if (ROOM_FIRST) await sleep(2600);   // hold the city view under the caption (the cut starts ~1.1 s in)
         for (let zoom = 16; zoom <= 18 && !opened; zoom += 1) {
           // A hard cut from the city to the pin, not a flight: the screen
@@ -526,6 +527,8 @@ async function main() {
       // The popup has panned into view by now; check the pin it belongs to,
       // not the one the tap aimed at.
       const openedLL = await openedPinLngLat(frame);
+      // With --place the answer must land on that element and no other.
+      if (PLACE && openedLL && !near(openedLL)) throw new Error(`--place ${PLACE.type}/${PLACE.id}: the open popup belongs to another pin`);
       if (openedLL) tapped = { ...tapped, lngLat: openedLL };
       else if (DEBUG) console.log("  [answer] no sign marker on the open pin; checking the tapped one");
       // "Both" is the first choice and the one that turns the pin green; with
@@ -534,16 +537,23 @@ async function main() {
       const c = await centreOf(frame.locator(`.maplibregl-popup .ask .ask-btn[data-room="${ANSWER}"]`));
       await tap(c.x, c.y);
       mark("room-answered");
-      // The popup is as tall as the map, so while it is open the pin sits at
-      // the top edge under the search bar. Close it right after the tap and
-      // centre the pin, so the clip shows it turn green (about 2 s after the
-      // tap, once the app has read the edit back from the OSM API).
-      await sleep(600);
-      await closePopup();
-      await frame.evaluate((ll) => window._papamap.easeTo({ center: ll, duration: 500 }), tapped.lngLat);
-      // Fail the run rather than record a "could not save" and exit 0.
-      await verifyRoomAnswer(frame, tapped.lngLat, unmocked);
-      await sleep(2200);
+      if (ROOM_FIRST) {
+        // The popup is as tall as the map, so while it is open the pin sits at
+        // the top edge under the search bar. Close it right after the tap and
+        // centre the pin, so the clip shows it turn green (about 2 s after the
+        // tap, once the app has read the edit back from the OSM API).
+        await sleep(600);
+        await closePopup();
+        await frame.evaluate((ll) => window._papamap.easeTo({ center: ll, duration: 500 }), tapped.lngLat);
+        // Fail the run rather than record a "could not save" and exit 0.
+        await verifyRoomAnswer(frame, tapped.lngLat, unmocked);
+        await sleep(2200);
+      } else {
+        // Fail the run rather than record a "could not save" and exit 0.
+        await verifyRoomAnswer(frame, tapped.lngLat, unmocked);
+        if (DEBUG) console.log("  [popup] " + (await frame.locator(".maplibregl-popup .popup").innerText().catch(() => "(gone)")).replace(/\s+/g, " ").slice(0, 400));
+        await sleep(2000);
+      }
       mark("room-end");
     };
 
@@ -552,6 +562,25 @@ async function main() {
       await sleep(900);
       await roomStep();
     } else {
+      if (ROOM_FIRST) {
+        // Warm-ups in the head that the trim at "start" drops: open the
+        // add-a-place dialog once, so the app's venue cache answers at once in
+        // the add scene instead of showing the "looking for places" spinner,
+        // and visit the zooms the room scene jumps through so its tiles are
+        // cached.
+        await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 16 }), CENTER);
+        await settle(frame, 300);
+        await tapEl("#add-place");
+        await frame.waitForSelector("#add-dialog[open]", { timeout: 8000 });
+        await frame.waitForFunction(() => document.querySelectorAll("#venue-list .venue-row").length >= 3, null, { timeout: 30000 }).catch(() => {});
+        await closeDialog("add-dialog");
+        for (const z of [12, 14, 16]) {
+          await frame.evaluate((o) => window._papamap.jumpTo({ center: o.c, zoom: o.z }), { c: PLACE ? PLACE.lngLat : CENTER, z });
+          await settle(frame, 500);
+        }
+        await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 13 }), CENTER);
+        await settle(frame, 300);
+      }
       // 1 map
       await caption("map");
       await sleep(600);   // the band's fade-in, so the trim at "start" sees the headline
@@ -569,23 +598,8 @@ async function main() {
       const roomScene = async () => {
         await closePopup();
         if (ROOM_FIRST) {
-          // Open the add-a-place dialog once here, before the cut, so the
-          // app's venue cache answers at once in the add scene instead of
-          // showing the "looking for places" spinner for seconds.
-          await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 16 }), CENTER);
-          await settle(frame, 300);
-          await tapEl("#add-place");
-          await frame.waitForSelector("#add-dialog[open]", { timeout: 8000 });
-          await frame.waitForFunction(() => document.querySelectorAll("#venue-list .venue-row").length >= 3, null, { timeout: 30000 }).catch(() => {});
-          await closeDialog("add-dialog");
-          // Pull the tiles along the flight path into the cache first, so the
-          // flight in does not stall on tile loads.
-          for (const z of [12, 14, 16]) {
-            await frame.evaluate((o) => window._papamap.jumpTo({ center: o.c, zoom: o.z }), { c: PLACE ? PLACE.lngLat : CENTER, z });
-            await settle(frame, 500);
-          }
           // The scene opens on the whole city, zoom 10.5, so the district
-          // names and the river say where this is; the room step flies in.
+          // names and the river say where this is; the room step cuts to the pin.
           await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 10.5 }), CENTER);
           await settle(frame, 600);
         } else {
