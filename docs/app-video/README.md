@@ -72,6 +72,22 @@ not go through (no green pin, or the app's "could not save" line), and
 - The pins and the places in the takes are live data on the day of the
   recording; a grey pin that has been answered since will not be grey any
   more — the recorder walks the rendered pins and takes the first open one.
+- For a clip that goes out under your name, look at the frames before
+  uploading: the default walk answers "both" on whatever grey pin comes
+  first, which shows an invented room on a real place, and that place may
+  be a chain. Record such clips with `--place <type>/<id> --answer <room>`
+  on an element whose room you answered yourself: it is served grey again
+  and the clip replays your answer. `--here <lat,lon>` puts the reader next
+  to it and `--room-first` moves the room step ahead of the nearest-table
+  step, so the nearest table is the place just answered rather than a
+  random shop. `--texts <json>` swaps captions, for example a nearest-table
+  subline without the Siri line for an Android-and-iPhone post:
+
+  ```
+  node record-app-video.mjs ./out --profile social --lang en \
+    --place node/31032271 --answer dedicated --here 53.5507,10.0075 \
+    --room-first --texts ./texts-both.json
+  ```
 - The widget, Siri and Control Centre cannot be recorded this way (they are
   native, not in the shell): those shots are phone recordings, as the
   screenshot recipe's `phone/` images are.
