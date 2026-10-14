@@ -533,7 +533,13 @@ async function main() {
       // Fail the run rather than record a "could not save" and exit 0.
       await verifyRoomAnswer(frame, tapped.lngLat, unmocked);
       if (DEBUG) console.log("  [popup] " + (await frame.locator(".maplibregl-popup .popup").innerText().catch(() => "(gone)")).replace(/\s+/g, " ").slice(0, 400));
-      await sleep(2000);
+      await sleep(1400);
+      // The popup is as tall as the map, so while it is open the pin sits at
+      // the top edge under the search bar. Close it and centre the pin, so
+      // the clip shows it green.
+      await closePopup();
+      await frame.evaluate((ll) => window._papamap.easeTo({ center: ll, duration: 700 }), tapped.lngLat);
+      await sleep(1800);
       mark("room-end");
     };
 
