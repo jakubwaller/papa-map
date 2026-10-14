@@ -476,8 +476,10 @@ async function main() {
         // opened instead, zoom in a step and tap again.
         if (!PLACE.lngLat) throw new Error(`--place ${PLACE.type}/${PLACE.id} is not in changing_tables.geojson`);
         const near = (ll) => !!ll && Math.hypot((ll[0] - PLACE.lngLat[0]) * Math.cos(PLACE.lngLat[1] * Math.PI / 180), ll[1] - PLACE.lngLat[1]) * 111320 < 5;
+        if (ROOM_FIRST) await sleep(1500);   // hold the city view under the caption
         for (let zoom = 16; zoom <= 18 && !opened; zoom += 1) {
-          await frame.evaluate((o) => window._papamap.easeTo({ center: o.c, zoom: o.z, duration: 1200 }), { c: PLACE.lngLat, z: zoom });
+          const duration = zoom === 16 && ROOM_FIRST ? 3500 : 1200;   // the first leg is the flight in from the city
+          await frame.evaluate((o) => window._papamap.easeTo({ center: o.c, zoom: o.z, duration: o.d }), { c: PLACE.lngLat, z: zoom, d: duration });
           await settle(frame, 250);
           const pt = (await clickablePins(frame, "unknown")).find((p) => near(p.lngLat));
           if (!pt) continue;
@@ -564,8 +566,15 @@ async function main() {
       };
       const roomScene = async () => {
         await closePopup();
-        await frame.evaluate((c) => window._papamap.flyTo({ center: c, zoom: 13.5, duration: 1500 }), CENTER);
-        await settle(frame, 200);
+        if (ROOM_FIRST) {
+          // The scene opens on the whole city, zoom 10.5, so the city's name
+          // on the map says where this is; the room step flies in from there.
+          await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 10.5 }), CENTER);
+          await settle(frame, 600);
+        } else {
+          await frame.evaluate((c) => window._papamap.flyTo({ center: c, zoom: 13.5, duration: 1500 }), CENTER);
+          await settle(frame, 200);
+        }
         mark("room");
         await roomStep();
       };
