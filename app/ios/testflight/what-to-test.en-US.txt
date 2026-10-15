@@ -2,5 +2,4 @@
 – Fixed: "+ Add a place" scrolls once. Check: tap "+ Add a place" in a busy city centre with a long list of places. Only the whole window should scroll, not the list inside it.
 – Fixed: pins are easier to hit. Check: tap on the map just beside a pin, about a fingertip away. The pin's card should open. Tapping empty map should still do nothing.
 – Fixed: iOS widget in dark mode. Check (iOS only): put the PapaMap widget on the home screen and switch the phone to dark mode. The widget card should be dark, with light text, not a light grey card.
-– Changed: a venue's outdoor play area now counts. Check: switch on "With play area" and look for a place you know that has an outdoor play area, such as a café with a garden playground. It should now show up as having a play area.
 Anything unclear or broken: take a screenshot and send it through TestFlight.
