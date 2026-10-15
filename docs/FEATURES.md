@@ -1260,13 +1260,15 @@ layout, the build and the signing):
   shows no distance: Control Center is drawn from a process with no fresh fix, and a number
   quietly hours old is worse than none.
 
-- **One request for a store rating, at a calm moment.** A device becomes eligible after the
+- **A request for a store rating, at a calm moment, at most every 30 days.** A device becomes eligible after the
   reader's third successful answer or the third separate day on which they opened a pin,
   whichever comes first (`papamap-review`, on this device only; counted from this build on). The
   ask fires at the next pin close, a second later, and only if no pin, dialog, room card or search
   is up by then: never on launch, and never while the reader is busy swapping one pin for another.
-  One ask per device, ever; whether the sheet appears is Apple's or Google's call (both rate-limit
-  it) and nothing comes back to the page. The website neither counts nor asks (CONTRACT.md v52).
+  After an ask the device waits 30 days before the next pin close may ask again (CONTRACT.md v98):
+  a single ask was lost for good whenever the store swallowed it, as TestFlight always does.
+  Whether the sheet appears is Apple's or Google's call (both rate-limit it) and nothing comes back
+  to the page. The website neither counts nor asks (CONTRACT.md v52).
 
 - **Every language of the map, on the store page too.** The shell speaks all 32 languages the
   website does, chosen from the phone's language list and switchable in the intro — but the

@@ -1,5 +1,17 @@
 # papa-map — build contract (v0)
 
+> **v98 amendment (15 Oct 2026, the rating ask can come again): no data shape
+> change.** v52 asked once per device, ever, and marked the device as asked
+> before the store answered, so an ask the store swallowed (TestFlight never
+> shows the sheet, Play only within its quota) was the last one that device
+> would make. `papamap-review`'s `asked` is now the local date of the last ask
+> instead of `true`, and a device that has met v52's condition may ask again at
+> a calm pin close once 30 days have passed (`REVIEW_AGAIN_DAYS`, either way of
+> the clock). A stored `true` from an older build is read as asked on its last
+> counted day. The stores' own limits still decide whether a sheet appears.
+> Both Datenschutz pages say "at most every 30 days". Shell pin `app94` →
+> `app95`.
+
 > **v97 amendment (13 Oct 2026, `play` covers a venue's outdoor play area): the
 > property keeps its shape, its meaning widens.** `play` was "an *indoor* play
 > area is recorded", so the popup's own "outdoors only" answer

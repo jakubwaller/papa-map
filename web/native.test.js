@@ -1199,18 +1199,22 @@ test("downloadInto: a file at the root needs no folder", async () => {
 });
 
 // ---- The store-rating ask ----
-const RDEF = { answers: 0, days: 0, day: null, asked: false };
+const RDEF = { answers: 0, days: 0, day: null, asked: null };
 
 test("parseReview: strict, field by field", () => {
   assert.deepEqual(parseReview(null), RDEF);
   assert.deepEqual(parseReview("not json"), RDEF);
   assert.deepEqual(parseReview('{"answers":2,"days":1,"day":"2026-09-28","asked":false}'),
-    { answers: 2, days: 1, day: "2026-09-28", asked: false });
+    { answers: 2, days: 1, day: "2026-09-28", asked: null });
   assert.deepEqual(parseReview('{"answers":9,"days":-1,"day":"x","asked":"yes"}'),
-    { answers: 3, days: 0, day: null, asked: false });
+    { answers: 3, days: 0, day: null, asked: null });
   assert.equal(parseReview('{"answers":2.5}').answers, 0);
   for (const raw of ["[]", '"3"', "null"]) assert.deepEqual(parseReview(raw), RDEF, raw);
-  assert.deepEqual(parseReview('{"asked":true}'), { ...RDEF, asked: true });
+  assert.equal(parseReview('{"asked":"2026-10-01"}').asked, "2026-10-01");
+  // A pre-v98 `true` dates from the last counted day; without one it is forgotten.
+  assert.equal(parseReview('{"day":"2026-09-30","asked":true}').asked, "2026-09-30");
+  assert.equal(parseReview('{"asked":true}').asked, null);
+  assert.equal(parseReview('{"asked":"2026-13-01"}').asked, null, "the shape of a date, but none");
 });
 
 test("localDay is the local calendar day, zero-padded", () => {
@@ -1234,11 +1238,14 @@ test("afterAnswer caps at three", () => {
   assert.equal(afterAnswer({ ...RDEF, answers: 3 }).answers, 3);
 });
 
-test("reviewDue: three answers or three days, and not yet asked", () => {
-  assert.equal(reviewDue({ ...RDEF, answers: 3 }), true);
-  assert.equal(reviewDue({ ...RDEF, days: 3 }), true);
-  assert.equal(reviewDue({ ...RDEF, answers: 2, days: 2 }), false);
-  assert.equal(reviewDue({ ...RDEF, answers: 3, asked: true }), false);
+test("reviewDue: three answers or three days, and no ask in the last 30 days", () => {
+  const t = "2026-10-31";
+  assert.equal(reviewDue({ ...RDEF, answers: 3 }, t), true);
+  assert.equal(reviewDue({ ...RDEF, days: 3 }, t), true);
+  assert.equal(reviewDue({ ...RDEF, answers: 2, days: 2 }, t), false);
+  assert.equal(reviewDue({ ...RDEF, answers: 3, asked: "2026-10-02" }, t), false);
+  assert.equal(reviewDue({ ...RDEF, answers: 3, asked: "2026-10-01" }, t), true);
+  assert.equal(reviewDue({ ...RDEF, answers: 3, asked: "2026-11-30" }, t), true, "clock went back");
 });
 
 function trackerRig({ get, set, ask } = {}) {
@@ -1265,7 +1272,7 @@ test("reviewTracker: three days of pins, then a close, asks once", () => {
   assert.equal(r.asked, 0);
   r.scheduled[0]();
   assert.equal(r.asked, 1);
-  assert.equal(r.state().asked, true);
+  assert.equal(r.state().asked, "2026-09-29");
 });
 
 test("reviewTracker: a close before the device is due schedules nothing", () => {
@@ -1280,19 +1287,24 @@ test("reviewTracker: an uncalm moment marks nothing; the next close asks", () =>
   r.calm = false;
   r.scheduled[0]();
   assert.equal(r.asked, 0);
-  assert.equal(r.state().asked, false);
+  assert.equal(r.state().asked, null);
   r.calm = true;
   r.t.pinClosed();
   r.scheduled[1]();
   assert.equal(r.asked, 1);
 });
 
-test("reviewTracker: after the ask nothing schedules again", () => {
+test("reviewTracker: after the ask nothing schedules for 30 days, then it asks again", () => {
   const r = trackerRig();
   r.threeDays(); r.t.pinClosed(); r.scheduled[0]();
   const n = r.scheduled.length;
-  r.day = "2026-10-05"; r.t.pinOpened(); r.t.answered(); r.t.pinClosed();
+  r.day = "2026-10-28"; r.t.pinOpened(); r.t.answered(); r.t.pinClosed();
   assert.equal(r.scheduled.length, n);
+  r.day = "2026-10-29"; r.t.pinOpened(); r.t.pinClosed();
+  assert.equal(r.scheduled.length, n + 1);
+  r.scheduled[n]();
+  assert.equal(r.asked, 2);
+  assert.equal(r.state().asked, "2026-10-29");
 });
 
 test("reviewTracker: three answers on one day, then a close, asks", () => {
@@ -1332,7 +1344,7 @@ test("reviewTracker: an ask that throws is recorded and does not escape", () => 
   const r = trackerRig({ ask: () => { throw new Error("no store"); } });
   r.threeDays(); r.t.pinClosed();
   assert.doesNotThrow(() => r.scheduled[0]());
-  assert.equal(r.state().asked, true);
+  assert.equal(r.state().asked, "2026-09-29");
 });
 
 test("reviewTracker: two closes while due ask exactly once", () => {
@@ -1346,7 +1358,7 @@ test("reviewTracker: two closes while due ask exactly once", () => {
 test("reviewTracker: the stored shape after the first pin open", () => {
   const r = trackerRig();
   r.day = "2026-09-29"; r.t.pinOpened();
-  assert.equal(r.store.get(REVIEW_KEY), '{"answers":0,"days":1,"day":"2026-09-29","asked":false}');
+  assert.equal(r.store.get(REVIEW_KEY), '{"answers":0,"days":1,"day":"2026-09-29","asked":null}');
 });
 
 test("requestReview is inert without a plugin or without the method", () => {

@@ -18,8 +18,8 @@
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
 // nothing is sent that the website does not send: a download is a GET.
 
-import { isWheelchairLimited, haversineKm } from "./datasource.js?v=app94";
-import { awaitingReturn, loginPending } from "./osm.js?v=app94";
+import { isWheelchairLimited, haversineKm } from "./datasource.js?v=app95";
+import { awaitingReturn, loginPending } from "./osm.js?v=app95";
 
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";
@@ -912,8 +912,10 @@ export function shareSettings({ mode, lang }) {
 }
 
 // ---- Asking for a store rating ----
-// The app asks the store for its rating sheet once per device, never on launch
-// and never in the middle of something. A device becomes eligible after the
+// The app asks the store for its rating sheet at most once every 30 days per
+// device, never on launch and never in the middle of something. Not just once:
+// TestFlight never shows the sheet and Play shows it only within a quota, and
+// an ask the store swallowed must not be the last. A device becomes eligible after the
 // reader's third successful answer (room, place or play) or on the third
 // separate local day on which they opened a pin, whichever comes first — a
 // reader who only looks things up is as much a user as one who answers. The
@@ -929,10 +931,14 @@ export function shareSettings({ mode, lang }) {
 // comes back to the page and nothing is sent to papamap.de.
 export const REVIEW_KEY = "papamap-review";
 export const REVIEW_AT = 3;
+export const REVIEW_AGAIN_DAYS = 30;
 // Long enough for a pin that is being swapped for the next one to be open again.
 export const CLOSE_DELAY_MS = 1000;
 
-const REVIEW_DEFAULT = { answers: 0, days: 0, day: null, asked: false };
+// `asked` is the local day of the last ask, or null.
+const REVIEW_DEFAULT = { answers: 0, days: 0, day: null, asked: null };
+// The shape and a real date: a NaN date would make the 30-day gap never pass.
+const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 
 // The local calendar day, not UTC: "another day" is the reader's own.
 export function localDay(date = new Date()) {
@@ -950,8 +956,9 @@ export function parseReview(raw) {
   return {
     answers: n(o.answers),
     days: n(o.days),
-    day: typeof o.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(o.day) ? o.day : null,
-    asked: o.asked === true,
+    day: isDay(o.day) ? o.day : null,
+    // Builds before v98 stored `true`; the last counted day is the nearest date to it.
+    asked: isDay(o.asked) ? o.asked : o.asked === true && isDay(o.day) ? o.day : null,
   };
 }
 
@@ -963,8 +970,11 @@ export function afterPinOpen(state, today) {
 export function afterAnswer(state) {
   return { ...state, answers: Math.min(state.answers + 1, REVIEW_AT) };
 }
-export function reviewDue(state) {
-  return !state.asked && (state.answers >= REVIEW_AT || state.days >= REVIEW_AT);
+// Days apart either way, like afterPinOpen: a clock that went back must not lock the ask out.
+const daysApart = (a, b) => Math.abs(Date.parse(a) - Date.parse(b)) / 86400000;
+export function reviewDue(state, today) {
+  return (state.answers >= REVIEW_AT || state.days >= REVIEW_AT)
+    && (state.asked === null || daysApart(state.asked, today) >= REVIEW_AGAIN_DAYS);
 }
 
 // Through the app's own plugin, like the two methods above. Inert on the
@@ -1001,11 +1011,12 @@ export function reviewTracker(io = {}) {
     pinOpened() { write(afterPinOpen(read(), today())); },
     answered() { write(afterAnswer(read())); },
     pinClosed() {
-      if (!reviewDue(read())) return;
+      if (!reviewDue(read(), today())) return;
       later(() => {
         const s = read();
-        if (!reviewDue(s) || !calm()) return;
-        write({ ...s, asked: true });
+        const d = today();
+        if (!reviewDue(s, d) || !calm()) return;
+        write({ ...s, asked: d });
         try { ask(); } catch { /* the store's call, not ours */ }
       });
     },

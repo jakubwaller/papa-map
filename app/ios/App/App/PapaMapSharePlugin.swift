@@ -82,7 +82,7 @@ public class PapaMapSharePlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve()
     }
 
-    // The page calls this once, at a calm pin close after the reader's third answer
+    // The page calls this at most every 30 days, at a calm pin close after the reader's third answer
     // or third day of opening pins. StoreKit
     // decides whether the sheet shows (it rate-limits it), and says nothing back.
     @objc func requestReview(_ call: CAPPluginCall) {
