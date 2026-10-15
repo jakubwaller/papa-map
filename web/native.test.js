@@ -1214,6 +1214,7 @@ test("parseReview: strict, field by field", () => {
   // A pre-v98 `true` dates from the last counted day; without one it is forgotten.
   assert.equal(parseReview('{"day":"2026-09-30","asked":true}').asked, "2026-09-30");
   assert.equal(parseReview('{"asked":true}').asked, null);
+  assert.equal(parseReview('{"asked":"2026-13-01"}').asked, null, "the shape of a date, but none");
 });
 
 test("localDay is the local calendar day, zero-padded", () => {

@@ -937,7 +937,8 @@ export const CLOSE_DELAY_MS = 1000;
 
 // `asked` is the local day of the last ask, or null.
 const REVIEW_DEFAULT = { answers: 0, days: 0, day: null, asked: null };
-const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+// The shape and a real date: a NaN date would make the 30-day gap never pass.
+const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 
 // The local calendar day, not UTC: "another day" is the reader's own.
 export function localDay(date = new Date()) {
