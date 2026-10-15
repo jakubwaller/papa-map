@@ -29,8 +29,8 @@ The Swift side reads a compact copy of the dataset that `web/native.js` hands ov
 the app's own plugin (`PapaMapSharePlugin.swift`), via an App Group container. A row is `[lat, lon, status, name, osm_url, men_only, limited]`;
 `limited` (CONTRACT v56) is true only under the wheelchair chip, and is shown in words, never a colour.
 
-The plugin's third method, `requestReview`, asks the store for its rating sheet once, at a pin
-close after the reader's third answer or third day of opening pins (`reviewTracker` in
+The plugin's third method, `requestReview`, asks the store for its rating sheet at a pin
+close after the reader's third answer or third day of opening pins, and again at most every 30 days (`reviewTracker` in
 `web/native.js`): `AppStore.requestReview(in:)` on iOS,
 Google Play In-App Review (`com.google.android.play:review`) on Android, where the sheet only
 appears in a copy installed from Google Play.

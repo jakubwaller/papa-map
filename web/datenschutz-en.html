@@ -263,9 +263,9 @@
      map shows by itself until the next data update (<code>papamap-answer-overrides</code>) and the
      closed room notes (<code>papamap-card-dismissed</code>) and a note of which version of the app last showed
      the start screen (the welcome on first opening, or what's new after an update)
-     (<code>papamap-intro</code>), and, for the one-time request for a rating, a tally of how
+     (<code>papamap-intro</code>), and, for the request for a rating, a tally of how
      many answers you have given in the app and on how many days you have opened a pin (both
-     counted only up to three), the date of the day last counted, and whether the request has been
+     counted only up to three), the date of the day last counted, and the day the request was last
      made (<code>papamap-review</code>) — just in the app's own storage instead of the browser's. Purely functional, without tracking, only on your device —
      and, like everything the app stores, in a device backup as described under
      "The app" (§ 25(2) no. 2 TDDDG).</p>
@@ -289,14 +289,14 @@
      policy of the respective service applies; this policy applies to the pages of this website.</p>
   <h2>App: asking for a rating</h2>
   <p>Once you have given three answers in the app, or have opened a pin on three different days,
-     the app asks the operating system, once, to show the rating dialog of the App Store or Google
-     Play the next time you close a pin. Whether and when it appears is up to Apple or Google; the
+     the app asks the operating system to show the rating dialog of the App Store or Google Play the
+     next time you close a pin, and after that at most once every 30 days. Whether and when it appears is up to Apple or Google; the
      app learns neither whether it appeared nor whether or how you rate. The request goes to the
      operating system or to Google Play on your device, which may connect to Apple or Google for
      it; you give a rating directly to Apple or Google. Each is independently responsible for this
      and processes the data under its own privacy policy. The app sends nothing to this server for
      it. The app uses the tally behind it (<code>papamap-review</code>, see "App: settings on the
-     device") only to make the request neither too early nor more than once; it sends it
+     device") only to make the request neither too early nor more often than every 30 days; it sends it
      nowhere.</p>
   <h2>App: Apple (App Store and TestFlight)</h2>
   <p>Distribution through the App Store and through TestFlight is Apple's responsibility. Apple is
@@ -342,6 +342,6 @@
      <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a>.</p>
   <p>You also have the right to lodge a complaint with a data protection supervisory authority
      (Art. 77 GDPR), for example the one where you live.</p>
-  <p style="margin-top:30px">Last updated: 7 October 2026</p>
+  <p style="margin-top:30px">Last updated: 15 October 2026</p>
   <p><a href="./?lang=en">← Back to the map</a></p>
 </body></html>
