@@ -1,7 +1,6 @@
 – Opraveno: karta místa, pod kterou je ještě další obsah, se dole zeslabuje. Jak vyzkoušet: na malém telefonu klepni na pin s dlouhou kartou. Dolní okraj by měl blednout, dokud je co posouvat; posuň dolů a blednutí zmizí.
 – Opraveno: „+ Přidat místo“ se posouvá jen jednou. Jak vyzkoušet: klepni na „+ Přidat místo“ v rušném centru města s dlouhým seznamem míst. Posouvat by se mělo jen celé okno, ne navíc seznam v něm.
 – Opraveno: do pinů se lépe trefuje. Jak vyzkoušet: klepni na mapu těsně vedle pinu, asi o špičku prstu vedle. Karta pinu by se měla otevřít. Klepnutí na prázdnou mapu by dál nemělo nic dělat.
-– Opraveno: horní lišta se na malých telefonech lépe vejde. Jak vyzkoušet: podívej se na horní část mapy na nejmenším telefonu, který máš. Nic by nemělo být uříznuté ani se překrývat.
 – Opraveno: widget na iOS v tmavém režimu. Jak vyzkoušet (jen iOS): dej widget PapaMap na plochu a přepni telefon do tmavého režimu. Karta widgetu by měla být tmavá se světlým textem, ne světle šedá.
 – Změněno: venkovní dětské hřiště u podniku se teď počítá. Jak vyzkoušet: zapni „S dětským koutkem“ a najdi místo, které znáš a které má venkovní hřiště, třeba kavárnu s hřištěm na zahradě. Mělo by se teď ukázat jako místo s dětským koutkem.
 Cokoli je nejasné nebo nefunguje: udělej snímek obrazovky a pošli ho přes TestFlight.

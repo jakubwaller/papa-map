@@ -1,7 +1,6 @@
 – Behoben: Eine Ortskarte mit mehr Inhalt darunter wird am unteren Rand ausgeblendet. Zum Testen: auf einem kleinen Telefon einen Pin mit langer Karte antippen. Der Rand sollte verblassen, solange noch etwas zum Scrollen da ist; ganz nach unten scrollen, dann verschwindet das Verblassen.
 – Behoben: „+ Ort hinzufügen“ scrollt nur noch einmal. Zum Testen: „+ Ort hinzufügen“ in einer belebten Innenstadt mit langer Ortsliste antippen. Es sollte nur das ganze Fenster scrollen, nicht zusätzlich die Liste darin.
 – Behoben: Pins lassen sich leichter treffen. Zum Testen: auf der Karte knapp neben einen Pin tippen, etwa eine Fingerspitze entfernt. Die Karte des Pins sollte aufgehen. Ein Tipp auf leere Karte sollte weiter nichts tun.
-– Behoben: Die obere Leiste passt auf kleinen Telefonen besser. Zum Testen: oben auf der Karte auf dem kleinsten Telefon nachsehen, das du hast. Nichts sollte abgeschnitten sein oder sich überlappen.
 – Behoben: iOS-Widget im Dunkelmodus. Zum Testen (nur iOS): das PapaMap-Widget auf den Home-Bildschirm legen und das Telefon auf Dunkelmodus stellen. Die Widget-Karte sollte dunkel mit heller Schrift sein, nicht hellgrau.
 – Geändert: Die Außenspielfläche eines Lokals zählt jetzt mit. Zum Testen: „Mit Spielecke“ einschalten und einen Ort suchen, den du kennst und der eine Außenspielfläche hat, etwa ein Café mit Spielplatz im Garten. Er sollte jetzt als Ort mit Spielecke erscheinen.
 Alles, was unklar ist oder hakt: Screenshot machen und über TestFlight schicken.
