@@ -334,21 +334,24 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                 break
             if rounds is not None and rnd >= rounds:
                 break
-            # Only the leaderboard is left: it gets the old fixed rounds, not
-            # the deadline — the map is not held until 06:30 for a city.
-            if not remaining and rnd >= SWEEP_FIXED_ROUNDS:
-                break
             # An area that keeps failing the same way (a 400, a pipeline bug)
             # is not retried until the deadline: it goes to its saved answer
-            # below, and the other areas keep their rounds. A city like it is
-            # only dropped from today's leaderboard.
+            # below, and the other areas keep their rounds. Without a saved
+            # answer the build is doomed, so the sweep stops right away.
             stuck = [a for a in remaining
                      if hard_fails.get(("area", a[0]), 0) >= SWEEP_FIXED_ROUNDS]
             if stuck:
                 given_up_areas.extend(stuck)
                 remaining = [a for a in remaining if a not in stuck]
-                if not remaining and not remaining_cities:
+                if any(sweep_cache.load(SWEEP_CACHE_DIR, sweep_ql(*a), today,
+                                        SWEEP_CACHE_MAX_DAYS) is None for a in stuck):
                     break
+            # Only the leaderboard is left: it gets the old fixed rounds, not
+            # the deadline — the map is not held until 06:30 for a city. A
+            # city that keeps failing the same way is only dropped from
+            # today's leaderboard.
+            if not remaining and rnd >= SWEEP_FIXED_ROUNDS:
+                break
             hopeless = [c for c in remaining_cities
                         if hard_fails.get(("city", c[0]), 0) >= SWEEP_FIXED_ROUNDS]
             if hopeless:
@@ -375,6 +378,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                       f"{rest / 60:.0f} min before round {rnd + 1}", file=sys.stderr)
             time.sleep(max(pause, rest))
         failed = []
+        late = []
         for i, (area_name, admin_level) in enumerate(remaining):
             # Past the deadline, the first round's included, no query starts
             # for an area with a saved answer: it falls back on that below.
@@ -382,8 +386,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             if time.monotonic() > deadline and sweep_cache.load(
                     SWEEP_CACHE_DIR, sweep_ql(area_name, admin_level), today,
                     SWEEP_CACHE_MAX_DAYS):
-                print(f"  WARN {area_name}: not swept, past the {budget / 3600:g} h "
-                      "sweep deadline", file=sys.stderr)
+                late.append(area_name)
                 failed.append((area_name, admin_level))
                 continue
             try:
@@ -404,6 +407,9 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                     hard_fails[key] = hard_fails.get(key, 0) + 1
                 failed.append((area_name, admin_level))
                 continue
+        if late:
+            print(f"  WARN not swept, past the {budget / 3600:g} h sweep deadline: "
+                  f"{', '.join(late)}", file=sys.stderr)
         failed_cities = []
         for i, (display, area_name, admin_level) in enumerate(remaining_cities):
             if time.monotonic() > deadline:

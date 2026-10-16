@@ -2,7 +2,8 @@
 
 > **v99 amendment (16 Oct 2026, one failed area no longer sinks the build):
 > `stats.json` gains `fallback_areas`**, `{area name: days}`, empty on a normal
-> night. An area Overpass has not answered by the sweep deadline is built from
+> night. An area Overpass has not answered by the sweep deadline, or one that
+> failed six times with an error a retry cannot fix, is built from
 > its last good answer (at most 7 days old, `pipeline/sweep_cache.py`) instead
 > of aborting the build, and is listed here with that answer's age. Its older
 > `osm_base` makes `data_base` older too, so the delta replays the gap. The

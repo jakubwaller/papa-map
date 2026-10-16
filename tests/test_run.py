@@ -1353,7 +1353,7 @@ def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, 
     assert len(calls) == 3  # at 0, 1 and 2 h; at 3 h the deadline has passed
     assert summary["toilets_total"] == first["toilets_total"]
     err = capsys.readouterr().err
-    assert err.count("not swept, past the 2.5 h sweep deadline") == len(sweep_areas()) - 3
+    assert err.count("WARN not swept, past the 2.5 h sweep deadline: ") == 1
     assert "WARN: leaderboard skips" in err
 
 
@@ -1406,3 +1406,49 @@ def test_an_unfixable_area_falls_back_while_the_others_keep_their_rounds(
     stats = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))
     assert stats["fallback_areas"] == {"Saarland": 0}  # Bayern landed fresh on round 9
     assert bayern[0] == 8
+
+
+def test_a_stuck_area_does_not_buy_the_cities_an_extra_round(tmp_path, load_fixture,
+                                                              monkeypatch):
+    # Review of #288, round 2: once the stuck area left `remaining`, the
+    # leaderboard-only check came too late and a failing city got round 7.
+    inner = _fake_overpass(load_fixture)
+    _run(tmp_path, load_fixture, inner)
+    city, _ = next((a, l) for a, l in CITY_SWEEP if a not in dict(SWEEP))
+    city_calls = []
+
+    def flaky(ql, **kwargs):
+        if '"Saarland"' in ql:
+            raise _http_error(400)
+        if '"kids_area"' not in ql and '"amenity"="toilets"' not in ql and f'"{city}"' in ql:
+            city_calls.append(1)
+            raise requests.ConnectionError("resting")
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.osm, "breaker_wait_s", lambda urls=None, now=None: 0.0)
+    _run(tmp_path, load_fixture, flaky, sweep_deadline_s=5 * 3600)
+    assert len(city_calls) == config.SWEEP_FIXED_ROUNDS
+
+
+def test_a_stuck_area_without_a_saved_answer_stops_the_sweep(tmp_path, load_fixture,
+                                                             monkeypatch):
+    # Nothing to fall back on means the build is lost: no rounds to 06:30.
+    # The clock moves a minute a query, so a regression ends at the fake
+    # deadline instead of hanging the suite for five real hours.
+    bayern = []
+    clock = [0.0]
+
+    def flaky(ql, **kwargs):
+        clock[0] += 60
+        if '"Saarland"' in ql:
+            raise _http_error(400)
+        if '"Bayern"' in ql:
+            bayern.append(1)
+            raise requests.ConnectionError("resting")
+        return _fake_overpass(load_fixture)(ql, **kwargs)
+
+    monkeypatch.setattr(run.osm, "breaker_wait_s", lambda urls=None, now=None: 0.0)
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    with pytest.raises(RuntimeError, match="Bayern, Saarland after 6 rounds|Saarland, Bayern after 6 rounds"):
+        _run(tmp_path, load_fixture, flaky, sweep_deadline_s=5 * 3600)
+    assert len(bayern) == config.SWEEP_FIXED_ROUNDS
