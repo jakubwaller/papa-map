@@ -811,3 +811,15 @@ def test_rerun_still_reports_the_drop_against_yesterday(tmp_path):
                       gj=gj, state=state)
     a2, _, _, _ = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, gj=gj)
     assert any("dropped" in a for a in a1) and any("dropped" in a for a in a2)
+
+
+def test_an_area_built_from_an_old_sweep_alerts_after_48h(tmp_path):
+    for i, (ages, alert) in enumerate((({}, False), ({"Missouri": 1}, False),
+                                       ({"Missouri": 2, "Iowa": 1}, True))):
+        (tmp_path / str(i)).mkdir()
+        stats = {**fresh_stats(TUESDAY), "fallback_areas": ages}
+        anomalies, _, _, _ = run(tmp_path / str(i), stats=stats,
+                                 gj=geojson([("node", 1, "unknown")]), now=TUESDAY)
+        hits = [a for a in anomalies if "older sweep" in a]
+        assert hits == (["built from an older sweep, Overpass not answering for them: "
+                         "Missouri (2 d)"] if alert else [])

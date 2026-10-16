@@ -1,7 +1,7 @@
 import json
 import re
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -1278,3 +1278,80 @@ def test_a_city_that_answers_empty_is_retried(tmp_path, load_fixture):
     _run(tmp_path, load_fixture, flaky)
     assert not empty  # the empty answer was served ...
     assert inner.areas_seen.count((city, level)) == 1  # ... so only the retry reached the fixture
+
+
+def _run_on(tmp_path, load_fixture, fetch, now):
+    return run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        overpass_fetch=fetch, taginfo_fetch=_fake_taginfo(load_fixture),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+        history_path=str(tmp_path / "history.json"), now=now, sweep_pause_s=0)
+
+
+def test_an_area_failing_every_round_falls_back_on_its_last_answer(tmp_path, load_fixture,
+                                                                   capsys):
+    # 2026-10-16: Missouri alone failed and threw away the other 183 areas.
+    # With yesterday's answer on file the build goes on and says so, and
+    # data_base is that older answer's, so the delta replays the gap.
+    inner = _fake_overpass(load_fixture)
+
+    def fetch_at(base, down=None):
+        def fetch(ql, **kwargs):
+            if down and f'"{down}"' in ql:
+                raise requests.ConnectionError("still dead")
+            return {**inner(ql, **kwargs), "osm3s": {"timestamp_osm_base": base}}
+        return fetch
+
+    first = _run_on(tmp_path, load_fixture, fetch_at("2026-07-25T01:00:00Z"),
+                    NOW - timedelta(days=1))
+    capsys.readouterr()
+    # Every count is due tonight, the fallback area's too: it must come from
+    # the counts cache, since no query may be sent for that area.
+    summary = _run(tmp_path, load_fixture, fetch_at("2026-07-26T01:00:00Z", down="Saarland"),
+                   sweep_rounds=2, counts_period_days=1)
+    err = capsys.readouterr().err
+    assert "WARN Saarland: no answer tonight, using its sweep from 1 d ago" in err
+    assert "\n  Saarland: ct=" in err
+    assert summary["toilets_total"] == first["toilets_total"]  # Saarland's count is in
+    stats = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))
+    assert stats["data_base"] == "2026-07-25T01:00:00Z"
+    assert stats["fallback_areas"] == {"Saarland": 1}
+
+
+def test_an_answer_older_than_the_limit_is_no_fallback(tmp_path, load_fixture):
+    inner = _fake_overpass(load_fixture)
+    _run_on(tmp_path, load_fixture, inner, NOW - timedelta(days=config.SWEEP_CACHE_MAX_DAYS + 1))
+
+    def down(ql, **kwargs):
+        if '"Saarland"' in ql:
+            raise requests.ConnectionError("still dead")
+        return inner(ql, **kwargs)
+
+    with pytest.raises(RuntimeError, match="sweep failed for Saarland after 2 rounds, "
+                                           "with no answer from the last 7 days"):
+        _run(tmp_path, load_fixture, down, sweep_rounds=2)
+
+
+def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, capsys):
+    # The deadline only gated the next round, so on 2026-10-16 the first
+    # round ran on to 07:14. Now the areas it has not reached by the deadline
+    # are built from their last answers, and the cities wait for tomorrow.
+    inner = _fake_overpass(load_fixture)
+    first = _run(tmp_path, load_fixture, inner)
+    clock = [0.0]
+    calls = []
+
+    def slow(ql, **kwargs):
+        calls.append(ql)
+        clock[0] += 3600  # every query takes an hour
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    capsys.readouterr()
+    summary = _run(tmp_path, load_fixture, slow, sweep_deadline_s=2.5 * 3600)
+    assert len(calls) == 3  # at 0, 1 and 2 h; at 3 h the deadline has passed
+    assert summary["toilets_total"] == first["toilets_total"]
+    err = capsys.readouterr().err
+    assert "more: not swept, past the 2.5 h sweep deadline" in err
+    assert "WARN: leaderboard skips" in err

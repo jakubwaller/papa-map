@@ -50,6 +50,15 @@ def _isolated_areas_bbox(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _isolated_sweep_cache(tmp_path, monkeypatch):
+    """Every area's last good answer (pipeline/sweep_cache.py) is written by
+    every successful sweep; the suite keeps it in a temp directory, which
+    starts empty, so no test falls back on another's answers."""
+    from pipeline import run
+    monkeypatch.setattr(run, "SWEEP_CACHE_DIR", str(tmp_path / "sweeps"))
+
+
+@pytest.fixture(autouse=True)
 def _isolated_web_output(tmp_path, monkeypatch):
     """Everything else run_pipeline writes by default — the two GeoJSON files,
     stats.json, areas.json, history.json and the pages directory — lives under

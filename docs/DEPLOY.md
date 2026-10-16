@@ -179,6 +179,10 @@ four minutes after both started in the same minute (02:00 at the time).
 
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.
+An area Overpass still has not answered at the 4.5 h sweep deadline is built from its last
+good answer, at most 7 days old, kept in `web-data/private/sweeps/` (a WARN line on the ops
+page names it), so one bad area no longer throws away the rest of the night. Only an area
+with no such answer still aborts the build.
 
 The same run rewrites `web/wickeltische/` — the per-area pages (16 Bundesländer + index,
 one page per other swept country in its own language, and four hubs over chunk pages:

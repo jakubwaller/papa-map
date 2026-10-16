@@ -1,5 +1,14 @@
 # papa-map — build contract (v0)
 
+> **v99 amendment (16 Oct 2026, one failed area no longer sinks the build):
+> `stats.json` gains `fallback_areas`**, `{area name: days}`, empty on a normal
+> night. An area Overpass has not answered by the sweep deadline is built from
+> its last good answer (at most 7 days old, `pipeline/sweep_cache.py`) instead
+> of aborting the build, and is listed here with that answer's age. Its older
+> `osm_base` makes `data_base` older too, so the delta replays the gap. The
+> frontend does not read the field; `pipeline.ops` alerts once an entry is 2
+> days old, the same 48 h as a stale `generated_at`. No shell pin change.
+
 > **v98 amendment (15 Oct 2026, the rating ask can come again): no data shape
 > change.** v52 asked once per device, ever, and marked the device as asked
 > before the store answered, so an ask the store swallowed (TestFlight never

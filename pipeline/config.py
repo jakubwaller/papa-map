@@ -889,11 +889,14 @@ def display_area() -> tuple[str, str | None]:
 # (a round against resting hosts sends nothing), so the limit is wall clock:
 # no new round starts once it would begin more than SWEEP_DEADLINE_S after the
 # sweep started. 4.5 h from the 02:00 cron puts the last round's start at
-# 06:30, and the ops cron moved from 05:30 to 07:30. The limit is on when a
-# round starts, not when it ends: a round that starts at 06:29 with most areas still
-# to do takes about as long as a normal night (~105 min). The 07:30 mail then
-# honestly says "not finished" about a build that succeeds later, which beats
-# cutting off a round that is working. PAPAMAP_SWEEP_ROUNDS stays as an
+# 06:30, and the ops cron moved from 05:30 to 07:30.
+#
+# Since 2026-10-16 the deadline also stops a round that is still running: no
+# query starts after it, and an area not in by then is built from its last
+# good answer (SWEEP_CACHE_*, pipeline/sweep_cache.py) instead of aborting the
+# build. Before that, a deadline that only gated the next round let a slow
+# first round run to 07:14, leave no time to retry Missouri, and throw away
+# the other 183 areas. PAPAMAP_SWEEP_ROUNDS stays as an
 # optional hard cap (unset = none) for tests and one-off runs.
 SWEEP_DEADLINE_S = float(os.environ.get("PAPAMAP_SWEEP_DEADLINE_S", str(4.5 * 3600)))
 SWEEP_ROUNDS = (int(os.environ["PAPAMAP_SWEEP_ROUNDS"])
@@ -907,6 +910,11 @@ SWEEP_ROUNDS = (int(os.environ["PAPAMAP_SWEEP_ROUNDS"])
 # NOT one of those: a mirror without an area database answers that way.
 SWEEP_FIXED_ROUNDS = 6
 SWEEP_PAUSE_S = float(os.environ.get("PAPAMAP_SWEEP_PAUSE_S", "120"))
+# Each area's last good sweep answer, the fallback above. Not public
+# (web-data/private/ on the VPS, set in the Dockerfile); a week covers a long
+# Overpass outage without passing off a stale area as current for longer.
+SWEEP_CACHE_DIR = os.environ.get("PAPAMAP_SWEEP_CACHE_DIR", "web-data/private/sweeps")
+SWEEP_CACHE_MAX_DAYS = int(os.environ.get("PAPAMAP_SWEEP_CACHE_MAX_DAYS", "7"))
 
 # The query budget stays under the observed 60 s cutoff so the server answers
 # (even with a timeout remark) instead of the connection dying mid-compute; the
