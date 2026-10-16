@@ -153,12 +153,13 @@ is the room waves 2 and 3 took the same day: the US per state and Canada per pro
 64 areas, Japan per prefecture 47 more, for about 270 queries a night (184 areas + 62
 cities) — a third above the pre-rota night's 208, so expect ~105 minutes and a finish near
 03:45, well before the ops mail. A night when Overpass is struggling runs longer by design: failed
-areas are retried in rounds until 4.5 h after the start (`PAPAMAP_SWEEP_DEADLINE_S`), so the
-last round starts by about 06:30. That limits when a round *starts*, not when it ends: if an outage
-ends just before 06:30, the last round can take as long as a normal night, and the ops mail
-then says "not finished" about a build that succeeds later. An area that keeps failing with
-an error a retry cannot fix (a 400 or a pipeline bug) stops the sweep after six tries instead of
-waiting for the deadline. An empty answer is not such an error: a mirror whose area database is
+areas are retried in rounds until 4.5 h after the start (`PAPAMAP_SWEEP_DEADLINE_S`), about
+06:30. After that no query starts, even inside a running round, for an area that has a saved
+answer from the last 7 days: it is built from that answer (below), so such a night ends near
+06:30. An area with no saved answer (the first night after deploy or after a country joins) is
+still swept late, and the ops mail may then say "not finished" about a build that succeeds
+later. An area that keeps failing with an error a retry cannot fix (a 400 or a pipeline bug)
+goes to its saved answer after six tries while the other areas keep their rounds. An empty answer is not such an error: a mirror whose area database is
 broken returns one, so it waits for the deadline like an outage. The ops mail moved from 05:30 to 07:30 on 2026-09-25 so it reads
 that night's outcome rather than a build still in progress. (Until then the rounds were a fixed six, and on
 2026-09-25 stale mirrors used them all up in 45 minutes of waiting while the good hosts were

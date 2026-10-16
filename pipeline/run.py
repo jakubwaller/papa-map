@@ -326,6 +326,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     # Keyed by kind as well: Berlin and Hamburg are both an area and a city.
     hard_fails: dict[tuple[str, str], int] = {}
     given_up_cities: list = []
+    given_up_areas: list = []
     rnd = 0
     while True:
         if rnd:
@@ -337,12 +338,17 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             # the deadline — the map is not held until 06:30 for a city.
             if not remaining and rnd >= SWEEP_FIXED_ROUNDS:
                 break
-            # An area that keeps failing the same way dooms the build; stop
-            # now instead of retrying it until the deadline. A city like it
-            # is only dropped from today's leaderboard.
-            if any(hard_fails.get(("area", name), 0) >= SWEEP_FIXED_ROUNDS
-                   for name, _ in remaining):
-                break
+            # An area that keeps failing the same way (a 400, a pipeline bug)
+            # is not retried until the deadline: it goes to its saved answer
+            # below, and the other areas keep their rounds. A city like it is
+            # only dropped from today's leaderboard.
+            stuck = [a for a in remaining
+                     if hard_fails.get(("area", a[0]), 0) >= SWEEP_FIXED_ROUNDS]
+            if stuck:
+                given_up_areas.extend(stuck)
+                remaining = [a for a in remaining if a not in stuck]
+                if not remaining and not remaining_cities:
+                    break
             hopeless = [c for c in remaining_cities
                         if hard_fails.get(("city", c[0]), 0) >= SWEEP_FIXED_ROUNDS]
             if hopeless:
@@ -370,13 +376,16 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             time.sleep(max(pause, rest))
         failed = []
         for i, (area_name, admin_level) in enumerate(remaining):
-            # No query starts past the deadline, the first round's included:
-            # what is left falls back on its last good answer below.
-            if time.monotonic() > deadline:
-                print(f"  WARN {area_name} and {len(remaining) - i - 1} more: not "
-                      f"swept, past the {budget / 3600:g} h sweep deadline", file=sys.stderr)
-                failed.extend(remaining[i:])
-                break
+            # Past the deadline, the first round's included, no query starts
+            # for an area with a saved answer: it falls back on that below.
+            # One without is still swept late, as before the fallback existed.
+            if time.monotonic() > deadline and sweep_cache.load(
+                    SWEEP_CACHE_DIR, sweep_ql(area_name, admin_level), today,
+                    SWEEP_CACHE_MAX_DAYS):
+                print(f"  WARN {area_name}: not swept, past the {budget / 3600:g} h "
+                      "sweep deadline", file=sys.stderr)
+                failed.append((area_name, admin_level))
+                continue
             try:
                 sweep_area(area_name, admin_level)
             except osm.OverpassUnavailable as exc:
@@ -426,6 +435,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                                  for el in ids["elements"]}
         remaining, remaining_cities = failed, failed_cities
         rnd += 1
+    remaining = given_up_areas + remaining
     fallback_ages = {}
     if remaining:
         # Overpass is done for the night. An area still failing is built from
@@ -451,7 +461,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     if remaining:
         raise RuntimeError(
             f"sweep failed for {', '.join(name for name, _ in remaining)} "
-            f"after {rnd} rounds, with no answer from the last "
+            f"after {rnd} rounds, with no usable answer from the last "
             f"{SWEEP_CACHE_MAX_DAYS} days to fall back on — refusing to "
             f"overwrite existing data (last error: {last_exc})")
     remaining_cities = given_up_cities + remaining_cities

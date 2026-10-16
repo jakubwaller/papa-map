@@ -1329,7 +1329,7 @@ def test_an_answer_older_than_the_limit_is_no_fallback(tmp_path, load_fixture):
         return inner(ql, **kwargs)
 
     with pytest.raises(RuntimeError, match="sweep failed for Saarland after 2 rounds, "
-                                           "with no answer from the last 7 days"):
+                                           "with no usable answer from the last 7 days"):
         _run(tmp_path, load_fixture, down, sweep_rounds=2)
 
 
@@ -1353,7 +1353,7 @@ def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, 
     assert len(calls) == 3  # at 0, 1 and 2 h; at 3 h the deadline has passed
     assert summary["toilets_total"] == first["toilets_total"]
     err = capsys.readouterr().err
-    assert "more: not swept, past the 2.5 h sweep deadline" in err
+    assert err.count("not swept, past the 2.5 h sweep deadline") == len(sweep_areas()) - 3
     assert "WARN: leaderboard skips" in err
 
 
@@ -1366,3 +1366,43 @@ def test_every_answer_is_kept_not_only_the_recounted_ones(tmp_path, load_fixture
     dates = {json.loads(p.read_text(encoding="utf-8"))["date"]
              for p in (tmp_path / "sweeps").glob("*.json")}
     assert dates == {NOW.date().isoformat()}
+
+
+def test_an_area_without_a_saved_answer_is_still_swept_late(tmp_path, load_fixture,
+                                                             monkeypatch):
+    # Review of #288: with nothing to fall back on (the first night, a new
+    # country), the deadline must not turn a slow night into an abort.
+    inner = _fake_overpass(load_fixture)
+    clock = [0.0]
+
+    def slow(ql, **kwargs):
+        clock[0] += 3600
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    summary = _run(tmp_path, load_fixture, slow, sweep_deadline_s=2.5 * 3600)
+    assert {a for a, _ in inner.areas_seen} >= {a for a, _ in sweep_areas()}
+    assert summary["features"] == 7
+
+
+def test_an_unfixable_area_falls_back_while_the_others_keep_their_rounds(
+        tmp_path, load_fixture, monkeypatch):
+    # Review of #288: a 400 on one area once ended the whole sweep, which with
+    # the fallback would have shipped every other failing area's old answer.
+    inner = _fake_overpass(load_fixture)
+    _run(tmp_path, load_fixture, inner)
+    bayern = [0]
+
+    def flaky(ql, **kwargs):
+        if '"Saarland"' in ql:
+            raise _http_error(400)
+        if '"Bayern"' in ql and bayern[0] < 8:
+            bayern[0] += 1
+            raise requests.ConnectionError("resting")
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.osm, "breaker_wait_s", lambda urls=None, now=None: 0.0)
+    _run(tmp_path, load_fixture, flaky, sweep_deadline_s=5 * 3600)
+    stats = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))
+    assert stats["fallback_areas"] == {"Saarland": 0}  # Bayern landed fresh on round 9
+    assert bayern[0] == 8

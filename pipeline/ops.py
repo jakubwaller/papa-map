@@ -289,7 +289,7 @@ def find_anomalies(stats, counts, last_counts, now, delta=None,
                if isinstance(age, int) and age * 24 >= STALE_AFTER_H}
         if old:
             anomalies.append(
-                "built from an older sweep, Overpass not answering for them: "
+                "built from an older sweep, no fresh answer for them: "
                 + ", ".join(f"{name} ({age} d)" for name, age in sorted(old.items())))
     if counts is None:
         anomalies.append("changing_tables.geojson is missing or unreadable")

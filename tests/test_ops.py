@@ -821,5 +821,5 @@ def test_an_area_built_from_an_old_sweep_alerts_after_48h(tmp_path):
         anomalies, _, _, _ = run(tmp_path / str(i), stats=stats,
                                  gj=geojson([("node", 1, "unknown")]), now=TUESDAY)
         hits = [a for a in anomalies if "older sweep" in a]
-        assert hits == (["built from an older sweep, Overpass not answering for them: "
+        assert hits == (["built from an older sweep, no fresh answer for them: "
                          "Missouri (2 d)"] if alert else [])
