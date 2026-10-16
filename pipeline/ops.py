@@ -282,6 +282,15 @@ def find_anomalies(stats, counts, last_counts, now, delta=None,
             anomalies.append(
                 f"stats.json has no parsable generated_at "
                 f"({stats.get('generated_at')!r})")
+        # A fresh generated_at no longer means every area is fresh (v99): an
+        # area Overpass keeps failing is rebuilt from its last answer, so it
+        # gets the same 48 h limit the whole dataset has.
+        old = {name: age for name, age in (stats.get("fallback_areas") or {}).items()
+               if isinstance(age, int) and age * 24 >= STALE_AFTER_H}
+        if old:
+            anomalies.append(
+                "built from an older sweep, no fresh answer for them: "
+                + ", ".join(f"{name} ({age} d)" for name, age in sorted(old.items())))
     if counts is None:
         anomalies.append("changing_tables.geojson is missing or unreadable")
     elif last_counts:
