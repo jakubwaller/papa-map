@@ -182,13 +182,13 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     last_exc: Exception | None = None
     sweep_cache.prune(SWEEP_CACHE_DIR, SWEEP_CACHE_MAX_DAYS)
 
-    def sweep_area(area_name: str, admin_level: str, cached: dict | None = None) -> None:
-        """Sweep one area into the night's collections, or raise. `cached` is
+    def sweep_area(area_name: str, admin_level: str, saved: dict | None = None) -> None:
+        """Sweep one area into the night's collections, or raise. `saved` is
         its last good answer (sweep_cache), used once Overpass is done for the
         night: no query is sent then, the toilet count included."""
         nonlocal counts_fellback, counts_reused
         ql = sweep_ql(area_name, admin_level)
-        sweep = overpass_fetch(ql) if cached is None else cached
+        sweep = overpass_fetch(ql) if saved is None else saved
         _note_base(sweep)
         # The toilets are recounted on the area's night of the rota
         # (toilet_counts.is_due) — and whenever the sweep came back
@@ -220,7 +220,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                           f"{4 * max(counts_period, 1)} d, and a count "
                           "still failing then fails the area")
             try:
-                count_answer = _fetch_count(overpass_fetch if cached is None else _no_query,
+                count_answer = _fetch_count(overpass_fetch if saved is None else _no_query,
                                             count_ql, sweep)
                 _note_base(count_answer)
                 counts = osm.parse_counts(count_answer)
@@ -288,7 +288,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                 f"area {area_name!r} resolved to zero objects on this "
                 "mirror (stale area database or typo'd "
                 "PAPAMAP_AREA_NAME?)")
-        if cached is None:
+        if saved is None:
             try:
                 sweep_cache.save(SWEEP_CACHE_DIR, ql, sweep, today)
             except OSError as exc:
@@ -441,7 +441,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             print(f"  WARN {area_name}: no answer tonight, using its sweep from "
                   f"{hit[1]} d ago", file=sys.stderr)
             try:
-                sweep_area(area_name, admin_level, cached=hit[0])
+                sweep_area(area_name, admin_level, saved=hit[0])
                 fallback_ages[area_name] = hit[1]
             except Exception as exc:
                 print(f"  WARN {area_name}: {exc}", file=sys.stderr)

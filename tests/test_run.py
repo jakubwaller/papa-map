@@ -1355,3 +1355,14 @@ def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, 
     err = capsys.readouterr().err
     assert "more: not swept, past the 2.5 h sweep deadline" in err
     assert "WARN: leaderboard skips" in err
+
+
+def test_every_answer_is_kept_not_only_the_recounted_ones(tmp_path, load_fixture):
+    # Review of #288: the counts cache's local shadowed the sweep answer, so
+    # only the night's recounted areas (a seventh of them) were kept.
+    inner = _fake_overpass(load_fixture)
+    _run_on(tmp_path, load_fixture, inner, NOW - timedelta(days=1))
+    _run(tmp_path, load_fixture, inner)  # most counts are not due tonight
+    dates = {json.loads(p.read_text(encoding="utf-8"))["date"]
+             for p in (tmp_path / "sweeps").glob("*.json")}
+    assert dates == {NOW.date().isoformat()}
