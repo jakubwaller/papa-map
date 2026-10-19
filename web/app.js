@@ -1669,7 +1669,12 @@ let youMarker = null, toastTimer = null;
 
 // Shared by the locate button and the nearest-table one: both put the reader
 // on the map, and a second marker class would drift from the first.
+// Every fix the dot has stood on this session: a saved view (papamap-view)
+// never sits on one, even after the dot has moved on to a newer fix.
+const shownFixes = [];
 function showYou(at) {
+  const [lng, lat] = Array.isArray(at) ? at : [at.lng, at.lat];
+  shownFixes.push([lng, lat]);
   if (!youMarker) {
     const dot = document.createElement("div");
     dot.className = "you-dot";
@@ -3855,8 +3860,7 @@ async function boot() {
     // A view the map centred on the reader (locate, the open-at-location fix,
     // the logo's flight home to the dot) would store the position itself,
     // which the Datenschutz pages promise is never stored: keep the last one.
-    const you = youMarker?.getLngLat();
-    if (you && Math.abs(you.lng - c.lng) < 1e-5 && Math.abs(you.lat - c.lat) < 1e-5) return;
+    if (shownFixes.some(([lng, lat]) => Math.abs(lng - c.lng) < 1e-5 && Math.abs(lat - c.lat) < 1e-5)) return;
     try { localStorage.setItem(VIEW_KEY, JSON.stringify({ lng: c.lng, lat: c.lat, zoom: map.getZoom() })); }
     catch { /* blocked storage: the home view next time */ }
   });
