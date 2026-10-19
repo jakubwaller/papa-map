@@ -755,6 +755,18 @@ export function withoutOsmParam(href) {
 // the app's own papamap://table, which the widget, the Siri shortcut and the
 // Control Center button all resolve to (app/README.md) before app.js ever
 // calls this.
+// The last view the map showed (CONTRACT v101), as boot() reopens it:
+// {lng, lat, zoom}, or null for anything else in the key — a junk string, an
+// older build's shape, a zoom the map would refuse.
+export function parseSavedView(raw) {
+  try {
+    const { lng, lat, zoom } = JSON.parse(raw) ?? {};
+    if (![lng, lat, zoom].every(Number.isFinite)) return null;
+    if (Math.abs(lng) > 180 || Math.abs(lat) > 85 || zoom < 1 || zoom > 18) return null;
+    return { lng, lat, zoom };
+  } catch { return null; }
+}
+
 export function shouldOpenAtLocation({ search, permission, hasPendingPin = false } = {}) {
   if (permission !== "granted") return false;
   if (hasPendingPin) return false;

@@ -16,7 +16,7 @@ import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
          nearestUnknownRoom, isFixFresh, popupPan, popupMaxHeight, isAppleTouch,
          shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
-         applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl, mergeAnswerOverride,
+         applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl, mergeAnswerOverride, parseSavedView,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          isNewlyCreated, selectAddedPlace, addWatchSince, mapCompleteObjectUrl, zoneForFeature } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
@@ -1482,6 +1482,14 @@ test("applyAnswerOverrides keeps a no-status answer (e.g. play 'none') in places
   const out = applyAnswerOverrides(fc, places, overrides);
   assert.equal(out.fc.features.length, 0);
   assert.equal(out.places.features[0].properties.changing_table, "no");
+});
+
+test("parseSavedView reads a stored view and refuses anything else (v101)", () => {
+  assert.deepEqual(parseSavedView('{"lng":9.96,"lat":53.57,"zoom":15.2}'), { lng: 9.96, lat: 53.57, zoom: 15.2 });
+  for (const raw of [null, "", "junk", "null", "[]", '{"lng":9.96,"lat":53.57}',
+                     '{"lng":"9","lat":53,"zoom":15}', '{"lng":200,"lat":53,"zoom":15}',
+                     '{"lng":9,"lat":89,"zoom":15}', '{"lng":9,"lat":53,"zoom":40}'])
+    assert.equal(parseSavedView(raw), null, raw);
 });
 
 test("applyAnswerOverrides draws a reader's own play ring and keeps the room (v100)", () => {

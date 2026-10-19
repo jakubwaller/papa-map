@@ -475,6 +475,15 @@ one card at a time, and it steps aside for anything that outranks it — any
 popup opening, or the reader panning more than 300 m from the fix that raised
 it.
 
+### Open where the reader left the map
+
+The map remembers its last view, centre and zoom, on the device
+(`papamap-view`, CONTRACT v101) and opens there instead of on the German home
+view. An Android tester, 16 Oct 2026: "reopening brings me to the overview of
+Germany again". The home view stays for a first visit, for a `?bbox=` link, and
+for the logo button. Everything below still moves the map from there: a shared
+pin, a deep link, and the location fix where location is already granted.
+
 ### Open at location
 
 TestFlight feedback: a reader who has already granted location expects the

@@ -14,7 +14,7 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature, nearestFeature } from "./datasource.js?v=app96";
+         zoneForFeature, nearestFeature, parseSavedView } from "./datasource.js?v=app96";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
          canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app96";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
@@ -365,9 +365,17 @@ const HOME_BOUNDS = [[5.5, 47.1], [15.4, 56.6]];
 const VIEW_BOUNDS =
   parseBbox(new URLSearchParams(location.search).get("bbox")) ?? HOME_BOUNDS;
 
+// Without a ?bbox= of its own, the page opens where the reader last left the
+// map (CONTRACT v101; an Android tester, 16 Oct 2026: "reopening brings me to
+// the overview of Germany again"). A shared pin, a deep link and the location
+// fix still move it from there, exactly as they move the home view.
+const VIEW_KEY = "papamap-view";
+const SAVED_VIEW = VIEW_BOUNDS === HOME_BOUNDS && !crawler ? parseSavedView(readStored(VIEW_KEY)) : null;
+
 const map = new maplibregl.Map({
   container: "map", style: OSM_STYLE,
-  bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 },
+  ...(SAVED_VIEW ? { center: [SAVED_VIEW.lng, SAVED_VIEW.lat], zoom: SAVED_VIEW.zoom }
+    : { bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 } }),
   // With no maxBounds this floor is the only stop on the way out, and 1 puts
   // one whole world in 1024 px: a desktop sees every pin from Alaska to New
   // Zealand on one screen, the way Google Maps does. The old 3.5 (itself down
@@ -3834,8 +3842,13 @@ async function boot() {
   // renderChips()/positionZoomCtrl() have already settled by the time it
   // returns — applyDataset itself never calls this, so a later background
   // refresh (watchRefresh, below) never pulls the view out from under a
-  // reader who has since panned somewhere else.
-  fitHome();
+  // reader who has since panned somewhere else. A saved view is already exact.
+  if (!SAVED_VIEW) fitHome();
+  map.on("moveend", () => {
+    const c = map.getCenter().wrap();
+    try { localStorage.setItem(VIEW_KEY, JSON.stringify({ lng: c.lng, lat: c.lat, zoom: map.getZoom() })); }
+    catch { /* blocked storage: the home view next time */ }
+  });
   const fitHomeAt = Date.now();   // LATE_FIX_MS is measured from here, not from boot's own start
   // On the website `fromStore` is still the service worker's honest "you are
   // looking at old data" signal (X-PapaMap-Source: cache) and the toast fires

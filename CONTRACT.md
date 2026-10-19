@@ -1,5 +1,14 @@
 # papa-map — build contract (v0)
 
+> **v101 amendment (19 Oct 2026, the map opens where it was left): no data
+> shape change.** A new device key, `localStorage['papamap-view']`,
+> `{lng, lat, zoom}`, is written on every `moveend` and read once at start
+> (`parseSavedView`, `web/datasource.js`, which refuses anything else). Without a
+> `?bbox=`, the map opens on that view instead of the home view, and boot skips
+> `fitHome()`. A shared pin, a deep link and the open-at-location fix still win, as
+> before. The logo button still goes to the home view. Both Datenschutz pages list
+> the key. Same shell pin as v100 (`app96`, one release).
+
 > **v100 amendment (19 Oct 2026, a play answer draws its ring at once):
 > `stats.json` gains `answer_play`**, `{"play_yes": true, "play_outdoor": true,
 > "play_no": false}`: whether the tags each play answer writes pass
