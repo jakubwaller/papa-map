@@ -3066,6 +3066,7 @@ async function answerVenue(venue, choice, freshToken = null) {
     if (choice !== "none") {
       writeAddWatch({ t: addWatchSince(since, out), osm_url: venue.osm_url, zoom: Math.max(map.getZoom(), VENUE_MIN_ZOOM),
         bbox: [venue.lon, venue.lat, venue.lon, venue.lat] });
+      scheduleDeltaPoll();   // the 30 s pace from now, not after the 3 min tick already set
     }
     review?.answered();
   } catch (err) {
@@ -3706,10 +3707,13 @@ async function pollDelta() {
 // itself, so a poll that races a slow network never queues a second one on
 // top. Faster (30s) for as long as this reader has an answer of their own
 // still waiting to reach the delta — the same readEdit() record
-// startEditCheck/armEditCheck already keep in sessionStorage.
+// startEditCheck/armEditCheck already keep in sessionStorage — or a place
+// they added still to land (the add watch, for as long as it waits).
 function scheduleDeltaPoll() {
   clearTimeout(deltaPollTimer);
-  const ms = readEdit() ? DELTA_POLL_PENDING_MS : DELTA_POLL_MS;
+  const watch = readAddWatch();
+  const adding = watch && Date.now() - Date.parse(watch.t) < ADD_WATCH_TIMEOUT_MS;
+  const ms = readEdit() || adding ? DELTA_POLL_PENDING_MS : DELTA_POLL_MS;
   deltaPollTimer = setTimeout(async () => { await pollDelta(); scheduleDeltaPoll(); }, ms);
 }
 
