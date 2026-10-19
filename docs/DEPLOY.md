@@ -481,6 +481,18 @@ follower**, which builds the same code into an image of its own and keeps runnin
 otherwise (see Live updates). The ops cron already rebuilds on every run, so an ops change
 is live at the next 07:30 after the pull; to see it sooner, use the preview run above.
 
+## Store release tags
+
+`.github/workflows/store-tags.yml` runs hourly (and on demand from the Actions tab), asks App
+Store Connect and Google Play what is live, and pushes any missing annotated tag: `ios/<version>`
+for an App Store version that is on sale (or was, so a missed one is backfilled), `android/<version>`
+for the Play production release. The build number and version code are `app-build.yml`'s
+`run_number`, so the tag lands on that run's `head_sha`. The release tracker reads the newest of
+each; nobody sets them by hand. Tags are only ever created, never moved or deleted, and the "live"
+date in the message is the day the workflow first saw the version live. Dry run from a laptop:
+`~/bin/asc-env.sh node app/ios/asc.mjs live-tags` (add `--push` to really tag; `play.mjs` needs
+`PLAY_SERVICE_ACCOUNT_JSON`).
+
 ## Verify
 
 ```bash

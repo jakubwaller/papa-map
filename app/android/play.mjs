@@ -8,6 +8,8 @@
 //   node android/play.mjs listings pull      print the store listing texts, every language
 //   node android/play.mjs listings push      listings/*.json → the listings, in one committed edit
 //
+//   node android/play.mjs live-tags [--push]  tag the commit of each production release (dry run without --push)
+//
 // Reads PLAY_SERVICE_ACCOUNT_JSON (the key file's text) from the environment —
 // the repository secret of that name.
 //
@@ -22,6 +24,7 @@
 import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { liveTags } from "../live-tags.mjs";
 import { PLAY_LOCALES, listingsDir, readListings, playListingBody, playReleaseNotes, same } from "../listings.mjs";
 
 export const PACKAGE = "de.papamap.app";
@@ -258,7 +261,28 @@ export async function listingsPush({ dir = listingsDir } = {}) {
   if (skipped.length) console.log(`no Google Play language for: ${skipped.join(", ")}`);
 }
 
-const USAGE = "usage: play.mjs upload <app.aab> [--track alpha] [--status draft] | listings pull | listings push";
+// The production track's completed releases. A release's name is the
+// versionName unless someone renamed it; the version code is run_number.
+export function productionLive(tracks) {
+  const prod = (tracks ?? []).find((t) => t.track === "production");
+  return (prod?.releases ?? []).filter((r) => r.status === "completed" && r.versionCodes?.length)
+    .map((r) => ({ version: r.name, build: String(Math.max(...r.versionCodes.map(Number))) }));
+}
+
+// Read-only, like listingsPull: the edit is opened to read the tracks and deleted.
+async function liveTagsCmd(args) {
+  const bearer = await accessToken(serviceAccount());
+  const edit = await call(bearer, "POST", `${API}/edits`, { json: {} });
+  let live;
+  try {
+    live = productionLive((await call(bearer, "GET", `${API}/edits/${edit.id}/tracks`)).tracks);
+  } finally {
+    await call(bearer, "DELETE", `${API}/edits/${edit.id}`);
+  }
+  await liveTags("android", live, args);
+}
+
+const USAGE = "usage: play.mjs upload <app.aab> [--track alpha] [--status draft] | listings pull | listings push | live-tags [--push]";
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [cmd, ...rest] = process.argv.slice(2);
@@ -271,6 +295,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       await listingsPull();
     } else if (cmd === "listings" && rest.length === 1 && rest[0] === "push") {
       await listingsPush();
+    } else if (cmd === "live-tags") {
+      await liveTagsCmd(rest);
     } else throw new Error(USAGE);
   };
   run().catch((e) => { console.error(e.message); process.exit(1); });

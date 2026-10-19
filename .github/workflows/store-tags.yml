@@ -1,0 +1,42 @@
+# Tags the commit behind each live store release, so the release tracker
+# (ios/* = App Store, android/* = Google Play production) needs no hand-set tag.
+# Its own file, not a schedule in app-build.yml: there a cron would default
+# `task` to 'build'. Dry run is the scripts' default; only this workflow pushes.
+# Detail: docs/DEPLOY.md, "Store release tags".
+name: Store tags
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: store-tags
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the tagged commit must be in the clone
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: |
+          git config user.name "papa-map store tags"
+          git config user.email "noreply@papamap.de"
+      - run: node ios/asc.mjs live-tags --push
+      - run: node android/play.mjs live-tags --push
