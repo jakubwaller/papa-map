@@ -481,7 +481,9 @@ The map remembers its last view, centre and zoom, on the device
 (`papamap-view`, CONTRACT v101) and opens there instead of on the German home
 view. An Android tester, 16 Oct 2026: "reopening brings me to the overview of
 Germany again". The home view stays for a first visit, for a `?bbox=` link, and
-for the logo button. Everything below still moves the map from there: a shared
+for the logo button (on the website its reload clears the key first). A view the
+map centred on the reader's own position is never stored, because the
+Datenschutz pages promise the position is not stored. Everything below still moves the map from there: a shared
 pin, a deep link, and the location fix where location is already granted.
 
 ### Open at location

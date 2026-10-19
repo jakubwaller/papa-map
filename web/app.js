@@ -393,6 +393,12 @@ const map = new maplibregl.Map({
 });
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
+// The website's logo is a plain reload of "./", which would reopen the saved
+// view; it promises the home view, so the view is forgotten on the way out.
+// (The app's logo has no href and calls homeView() instead.)
+if (!isNative()) document.querySelector(".brandmark[href]")?.addEventListener("click", () => {
+  try { localStorage.removeItem(VIEW_KEY); } catch { /* blocked storage: there is no saved view either */ }
+});
 // Debug/testing handle — MapLibre offers no global registry, and headless
 // verification (Playwright) needs to drive the view.
 window._papamap = map;
@@ -3846,6 +3852,11 @@ async function boot() {
   if (!SAVED_VIEW) fitHome();
   map.on("moveend", () => {
     const c = map.getCenter().wrap();
+    // A view the map centred on the reader (locate, the open-at-location fix,
+    // the logo's flight home to the dot) would store the position itself,
+    // which the Datenschutz pages promise is never stored: keep the last one.
+    const you = youMarker?.getLngLat();
+    if (you && Math.abs(you.lng - c.lng) < 1e-5 && Math.abs(you.lat - c.lat) < 1e-5) return;
     try { localStorage.setItem(VIEW_KEY, JSON.stringify({ lng: c.lng, lat: c.lat, zoom: map.getZoom() })); }
     catch { /* blocked storage: the home view next time */ }
   });

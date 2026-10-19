@@ -112,7 +112,8 @@
      Papa- oder Mama-Sicht lesen (Schlüssel <code>papamap-mode</code>) und ob der Filter
      „Barrierefrei“ an ist (Schlüssel <code>papamap-wheelchair</code>), dazu der zuletzt gezeigte
      Kartenausschnitt, Mittelpunkt und Zoomstufe, damit die Karte beim nächsten Öffnen dort beginnt
-     (Schlüssel <code>papamap-view</code>) — rein
+     (Schlüssel <code>papamap-view</code>; einen Ausschnitt, den die Karte auf Ihren Standort gelegt
+     hat, merkt sie sich nicht, der Standort selbst wird also auch hier nicht gespeichert) — rein
      funktional, ohne Tracking, nur auf Ihrem Gerät, löschbar über die Browserdaten
      (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>Offline-Speicher (Service Worker)</h2>
@@ -264,7 +265,7 @@
   <p>Die App speichert dieselben funktionalen Schlüssel wie die Website — Sprache
      (<code>papamap-lang</code>), Papa- oder Mama-Sicht (<code>papamap-mode</code>), den Filter
      „Barrierefrei“ (<code>papamap-wheelchair</code>), den zuletzt gezeigten Kartenausschnitt
-     (<code>papamap-view</code>) und, nach einer Anmeldung, das Zugriffstoken
+     (<code>papamap-view</code>, nie einen auf Ihren Standort gelegten) und, nach einer Anmeldung, das Zugriffstoken
      und Ihren OSM-Anzeigenamen samt Nutzer-ID (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>,
      <code>papamap-osm-user-id</code>),
      während der Anmeldung zusätzlich für höchstens eine Stunde den Anmeldevorgang

@@ -6,8 +6,11 @@
 > (`parseSavedView`, `web/datasource.js`, which refuses anything else). Without a
 > `?bbox=`, the map opens on that view instead of the home view, and boot skips
 > `fitHome()`. A shared pin, a deep link and the open-at-location fix still win, as
-> before. The logo button still goes to the home view. Both Datenschutz pages list
-> the key. Same shell pin as v100 (`app96`, one release).
+> before. A view centred on the reader's own fix (locate, the open-at-location
+> fix, the app logo's flight to the dot) is never written, because both
+> Datenschutz pages promise the position is not stored. They list the key and
+> say so. The logo still goes to the home view: the website's logo reload forgets
+> the key on its way out, and the app's logo calls `homeView()`. Same shell pin as v100 (`app96`, one release).
 
 > **v100 amendment (19 Oct 2026, a play answer draws its ring at once):
 > `stats.json` gains `answer_play`**, `{"play_yes": true, "play_outdoor": true,

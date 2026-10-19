@@ -1,5 +1,4 @@
-– Fixed: a place card with more below its foot now fades at the bottom. Check: on a small phone, tap a pin whose card is long. The foot should fade while there is more to scroll; scroll down and the fade goes.
-– Fixed: "+ Add a place" scrolls once. Check: tap "+ Add a place" in a busy city centre with a long list of places. Only the whole window should scroll, not the list inside it.
-– Fixed: pins are easier to hit. Check: tap on the map just beside a pin, about a fingertip away. The pin's card should open. Tapping empty map should still do nothing.
-– Fixed: iOS widget in dark mode. Check (iOS only): put the PapaMap widget on the home screen and switch the phone to dark mode. The widget card should be dark, with light text, not a light grey card.
+– New: the map opens where you left it. Check: zoom into another city, close the app completely (swipe it away) and open it again. It should open on that city, not on Germany. If PapaMap may use your location, it still opens where you are. Tapping the PapaMap logo still goes back to the overview.
+– Fixed: a play area you mark shows its blue ring at once (from tomorrow, after tonight's data update). Check: on a pin that asks "Play area for children?", at a place you know, tap "indoors" or "outdoors only". The blue ring should appear around the pin straight away, without restarting the app.
+– Faster: a place you add shows up within about half a minute. Check (only with a real place you know): "+ Add a place", pick the place and answer which room. Within a minute the new pin should appear and the map fly to it.
 Anything unclear or broken: take a screenshot and send it through TestFlight.

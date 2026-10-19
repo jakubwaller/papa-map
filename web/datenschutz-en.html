@@ -107,8 +107,9 @@
      local storage (key <code>papamap-lang</code>); the same applies to whether you read the map
      from a dad's or a mum's point of view (key <code>papamap-mode</code>) and whether the
      "Wheelchair" filter is on (key <code>papamap-wheelchair</code>), and the map view you last
-     looked at, its centre and zoom, so the map opens there next time (key <code>papamap-view</code>)
-     — purely functional, without
+     looked at, its centre and zoom, so the map opens there next time (key <code>papamap-view</code>;
+     a view the map centred on your location is not kept, so your location is not stored here
+     either) — purely functional, without
      tracking, only on your device, deletable via your browser data
      (§ 25(2) no. 2 TDDDG, Germany's Telecommunications Digital Services Data Protection Act).</p>
   <h2>Offline storage (service worker)</h2>
@@ -255,8 +256,8 @@
   <h2>App: settings on the device</h2>
   <p>The app stores the same functional keys as the website — language (<code>papamap-lang</code>),
      dad or mum view (<code>papamap-mode</code>), the "Wheelchair" filter
-     (<code>papamap-wheelchair</code>), the map view you last looked at (<code>papamap-view</code>)
-     and, after signing in, the access token and your OSM display
+     (<code>papamap-wheelchair</code>), the map view you last looked at (<code>papamap-view</code>,
+     never one centred on your location) and, after signing in, the access token and your OSM display
      name and user id (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>,
      <code>papamap-osm-user-id</code>), while signing in, for an hour at most, the sign-in
      record (<code>papamap-osm-pkce</code>) and the answer still waiting
