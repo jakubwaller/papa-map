@@ -14,16 +14,16 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature, nearestFeature } from "./datasource.js?v=app95";
+         zoneForFeature, nearestFeature, parseSavedView } from "./datasource.js?v=app96";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app95";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app96";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app95";
+         writeTags } from "./osm.js?v=app96";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -31,7 +31,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app95";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app96";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -41,27 +41,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app95";
+         reviewTracker } from "./native.js?v=app96";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app95";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app96";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app95";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app96";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app95";
+import { isOpenNow } from "./opening-hours.js?v=app96";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app95";
-// The bundled shell's pin (`?v=app95`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app96";
+// The bundled shell's pin (`?v=app96`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -365,9 +365,17 @@ const HOME_BOUNDS = [[5.5, 47.1], [15.4, 56.6]];
 const VIEW_BOUNDS =
   parseBbox(new URLSearchParams(location.search).get("bbox")) ?? HOME_BOUNDS;
 
+// Without a ?bbox= of its own, the page opens where the reader last left the
+// map (CONTRACT v101; an Android tester, 16 Oct 2026: "reopening brings me to
+// the overview of Germany again"). A shared pin, a deep link and the location
+// fix still move it from there, exactly as they move the home view.
+const VIEW_KEY = "papamap-view";
+const SAVED_VIEW = VIEW_BOUNDS === HOME_BOUNDS && !crawler ? parseSavedView(readStored(VIEW_KEY)) : null;
+
 const map = new maplibregl.Map({
   container: "map", style: OSM_STYLE,
-  bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 },
+  ...(SAVED_VIEW ? { center: [SAVED_VIEW.lng, SAVED_VIEW.lat], zoom: SAVED_VIEW.zoom }
+    : { bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 } }),
   // With no maxBounds this floor is the only stop on the way out, and 1 puts
   // one whole world in 1024 px: a desktop sees every pin from Alaska to New
   // Zealand on one screen, the way Google Maps does. The old 3.5 (itself down
@@ -385,6 +393,12 @@ const map = new maplibregl.Map({
 });
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
+// The website's logo is a plain reload of "./", which would reopen the saved
+// view; it promises the home view, so the view is forgotten on the way out.
+// (The app's logo has no href and calls homeView() instead.)
+if (!isNative()) document.querySelector(".brandmark[href]")?.addEventListener("click", () => {
+  try { localStorage.removeItem(VIEW_KEY); } catch { /* blocked storage: there is no saved view either */ }
+});
 // Debug/testing handle — MapLibre offers no global registry, and headless
 // verification (Playwright) needs to drive the view.
 window._papamap = map;
@@ -1655,7 +1669,12 @@ let youMarker = null, toastTimer = null;
 
 // Shared by the locate button and the nearest-table one: both put the reader
 // on the map, and a second marker class would drift from the first.
+// Every fix the dot has stood on this session: a saved view (papamap-view)
+// never sits on one, even after the dot has moved on to a newer fix.
+const shownFixes = [];
 function showYou(at) {
+  const [lng, lat] = Array.isArray(at) ? at : [at.lng, at.lat];
+  shownFixes.push([lng, lat]);
   if (!youMarker) {
     const dot = document.createElement("div");
     dot.className = "you-dot";
@@ -2695,23 +2714,26 @@ async function answer(kind, obj, choice, freshToken = null) {
     // The popup's tag row and the question's absence both read from the
     // object, so the one in memory learns the answer. A room answer's own
     // status recolours instantly below (stats.json's answer_status — never
-    // re-derived here); everything else — a status this reader did NOT just
-    // answer, and the blue play ring either way — still only moves once the
-    // pipeline says so: the delta follower within a few minutes, tonight's
-    // build as the backstop.
+    // re-derived here), and a play answer's ring the same way (answer_play,
+    // v100); everything else — a status this reader did NOT just answer —
+    // still only moves once the pipeline says so: the delta follower within
+    // a few minutes, tonight's build as the backstop.
     if (play) {
       // Answered is answered, whichever way: the question does not come back
       // when this popup is reopened. Only its own line goes; a room question
       // still waiting above it stays.
       obj.play_recorded = true;
-      remember({ play_answered: true });
+      // A stats.json from before v100 has no answer_play: the ring then waits
+      // for the delta, as it used to.
+      const ring = lastStats?.answer_play?.[choice];
+      remember({ play_answered: true, ...(typeof ring === "boolean" ? { play: ring } : {}) });
       renderMergedDataset();
       here()?.querySelector(".ask-play")?.remove();
     } else if (hc) {
       // The same for the high chair (v65), except that its line shows at
       // once: the question is replaced in place by the row it just recorded.
-      // The chip's count waits for the pipeline, like the play ring: the
-      // answer lives in highchair_answered, which only the row reads.
+      // The chip's count waits for the pipeline: the answer lives in
+      // highchair_answered, which only the row reads.
       obj.highchair_answered = choice === "hc_yes";
       obj.highchair_recorded = true;
       remember({ highchair_answered: obj.highchair_answered });
@@ -3063,6 +3085,7 @@ async function answerVenue(venue, choice, freshToken = null) {
     if (choice !== "none") {
       writeAddWatch({ t: addWatchSince(since, out), osm_url: venue.osm_url, zoom: Math.max(map.getZoom(), VENUE_MIN_ZOOM),
         bbox: [venue.lon, venue.lat, venue.lon, venue.lat] });
+      scheduleDeltaPoll();   // the 30 s pace from now, not after the 3 min tick already set
     }
     review?.answered();
   } catch (err) {
@@ -3703,10 +3726,13 @@ async function pollDelta() {
 // itself, so a poll that races a slow network never queues a second one on
 // top. Faster (30s) for as long as this reader has an answer of their own
 // still waiting to reach the delta — the same readEdit() record
-// startEditCheck/armEditCheck already keep in sessionStorage.
+// startEditCheck/armEditCheck already keep in sessionStorage — or a place
+// they added still to land (the add watch, for as long as it waits).
 function scheduleDeltaPoll() {
   clearTimeout(deltaPollTimer);
-  const ms = readEdit() ? DELTA_POLL_PENDING_MS : DELTA_POLL_MS;
+  const watch = readAddWatch();
+  const adding = watch && Date.now() - Date.parse(watch.t) < ADD_WATCH_TIMEOUT_MS;
+  const ms = readEdit() || adding ? DELTA_POLL_PENDING_MS : DELTA_POLL_MS;
   deltaPollTimer = setTimeout(async () => { await pollDelta(); scheduleDeltaPoll(); }, ms);
 }
 
@@ -3827,8 +3853,17 @@ async function boot() {
   // renderChips()/positionZoomCtrl() have already settled by the time it
   // returns — applyDataset itself never calls this, so a later background
   // refresh (watchRefresh, below) never pulls the view out from under a
-  // reader who has since panned somewhere else.
-  fitHome();
+  // reader who has since panned somewhere else. A saved view is already exact.
+  if (!SAVED_VIEW) fitHome();
+  map.on("moveend", () => {
+    const c = map.getCenter().wrap();
+    // A view the map centred on the reader (locate, the open-at-location fix,
+    // the logo's flight home to the dot) would store the position itself,
+    // which the Datenschutz pages promise is never stored: keep the last one.
+    if (shownFixes.some(([lng, lat]) => Math.abs(lng - c.lng) < 1e-5 && Math.abs(lat - c.lat) < 1e-5)) return;
+    try { localStorage.setItem(VIEW_KEY, JSON.stringify({ lng: c.lng, lat: c.lat, zoom: map.getZoom() })); }
+    catch { /* blocked storage: the home view next time */ }
+  });
   const fitHomeAt = Date.now();   // LATE_FIX_MS is measured from here, not from boot's own start
   // On the website `fromStore` is still the service worker's honest "you are
   // looking at old data" signal (X-PapaMap-Source: cache) and the toast fires
@@ -3856,6 +3891,11 @@ async function boot() {
   locationFix.then((coords) => {
     if (!coords) return;
     const at = [coords.longitude, coords.latitude];
+    // A locate tap (or the nearest button) that beat this fix already put the
+    // dot, and the camera, on a finer one: neither moves again, or the dot and
+    // the view would part and the next moveend would save an exact fix
+    // (papamap-view).
+    if (youMarker) return;
     showYou(at);
     redrawWidget();   // not noteFix (above); only the widget's redraw
     if (touchedBeforeFix || pinOpenedBeforeFix || popup?.isOpen()) return;

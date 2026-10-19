@@ -475,6 +475,18 @@ one card at a time, and it steps aside for anything that outranks it — any
 popup opening, or the reader panning more than 300 m from the fix that raised
 it.
 
+### Open where the reader left the map
+
+The map remembers its last view, centre and zoom, on the device
+(`papamap-view`, CONTRACT v101) and opens there instead of on the German home
+view. An Android tester, 16 Oct 2026: "reopening brings me to the overview of
+Germany again". The home view stays for a first visit, for a `?bbox=` link, and
+for the logo button (on the website its reload clears the key first; in the
+app the logo flies to the location dot when there is one, as before). A view the
+map centred on the reader's own position is never stored, because the
+Datenschutz pages promise the position is not stored. Everything below still moves the map from there: a shared
+pin, a deep link, and the location fix where location is already granted.
+
 ### Open at location
 
 TestFlight feedback: a reader who has already granted location expects the
@@ -650,9 +662,10 @@ instead, a recorded answer of any kind is never asked again, and a
 answer. *Indoors* writes `kids_area:indoor=yes` together with `kids_area=yes`,
 *outdoors only* writes `kids_area=yes` together with `kids_area:indoor=no`,
 *none* writes `kids_area=no`: the three mappings the site's own MapComplete
-theme uses for the same question, and values `classify.py` already reads, so
-the ring appears (or stays away) a few minutes later, through the delta
-follower (v48). The third answer is what
+theme uses for the same question, and values `classify.py` already reads. The
+ring appears the moment OSM confirms the write, from `stats.json`'s
+`answer_play`, the pipeline's own reading of each answer's tags (v100), and
+the delta follower (v48) carries it for everyone else a few minutes later. The third answer is what
 makes the first two honest — `kids_area=no` is OSM's "nowhere for children to
 play", and a two-button *indoor play area? yes/no* wrote it under bakeries with
 a garden playground (issue #119, v31). The two questions are independent taps

@@ -1,7 +1,8 @@
 import re
 from pathlib import Path
 
-from pipeline.room_choices import ROOM_CHOICES, answer_men_only_table, answer_status_table
+from pipeline.room_choices import (PLAY_CHOICES, ROOM_CHOICES, answer_men_only_table,
+                                   answer_play_table, answer_status_table)
 
 WEB_OSM_JS = Path(__file__).resolve().parents[1] / "web" / "osm.js"
 
@@ -59,3 +60,25 @@ def test_answer_men_only_is_the_mens_room_alone():
     table = answer_men_only_table()
     assert set(table) == set(ROOM_CHOICES) | {"none"}
     assert [c for c, v in table.items() if v] == ["male"]
+
+
+def _js_play_patch() -> dict:
+    """web/osm.js's playPatch read back, {choice: {key: value}}: the same
+    drift guard as ROOMS above, for the tags a play answer writes."""
+    text = WEB_OSM_JS.read_text(encoding="utf-8")
+    m = re.search(r"export function playPatch\(choice\) \{(.*?)\n\}", text, re.S)
+    assert m, "web/osm.js: export function playPatch(choice) {...} not found"
+    branches = re.findall(r'choice === "(\w+)"\) return \{([^}]*)\}', m.group(1))
+    assert branches, "web/osm.js: no branches parsed out of playPatch"
+    return {choice: dict(re.findall(r'"?([\w:]+)"?\s*:\s*"([^"]*)"', body))
+            for choice, body in branches}
+
+
+def test_play_choices_mirror_web_osm_js_play_patch():
+    assert PLAY_CHOICES == _js_play_patch(), (
+        "pipeline.room_choices.PLAY_CHOICES has drifted from web/osm.js's "
+        "playPatch — update both in the same commit")
+
+
+def test_answer_play_rings_indoors_and_outdoors_not_none():
+    assert answer_play_table() == {"play_yes": True, "play_outdoor": True, "play_no": False}

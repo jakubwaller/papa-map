@@ -1,5 +1,34 @@
 # papa-map — build contract (v0)
 
+> **v101 amendment (19 Oct 2026, the map opens where it was left): no data
+> shape change.** A new device key, `localStorage['papamap-view']`,
+> `{lng, lat, zoom}`, is written on every `moveend` and read once at start
+> (`parseSavedView`, `web/datasource.js`, which refuses anything else). Without a
+> `?bbox=`, the map opens on that view instead of the home view, and boot skips
+> `fitHome()`. A shared pin, a deep link and the open-at-location fix still win, as
+> before. A view centred on the reader's own fix (locate, the open-at-location
+> fix, the app logo's flight to the dot) is never written, because both
+> Datenschutz pages promise the position is not stored. They list the key and
+> say so. The logo keeps its behaviour: on the website its reload forgets the key
+> on its way out and lands on the home view, and in the app it calls `homeView()`
+> (the dot, if there is one, else the home view). Same shell pin as v100 (`app96`, one release).
+
+> **v100 amendment (19 Oct 2026, a play answer draws its ring at once):
+> `stats.json` gains `answer_play`**, `{"play_yes": true, "play_outdoor": true,
+> "play_no": false}`: whether the tags each play answer writes pass
+> `has_play_area` (`room_choices.answer_play_table`, its `PLAY_CHOICES` held to
+> `web/osm.js`'s `playPatch` by a test). The same rule as v48's `answer_status`:
+> the frontend looks its own confirmed answer up here and never reads the tag.
+> The answer override gains an optional `play` boolean, which
+> `applyAnswerOverrides` writes onto the feature, so the blue ring shows the
+> moment OSM confirms the write instead of after the next delta poll (Trello
+> "PapaMap bugs": the ring only appeared after an app restart). A `stats.json`
+> without the field leaves the ring to the delta as before. The delta poll also
+> runs at its 30 s pace while an add watch waits (at most its 10 minutes), not
+> only while an own edit is pending, so a place added in the dialog lands within
+> half a minute of the follower carrying it (the follower itself lags OSM by
+> ~1.5–3 min, so a few minutes end to end). Shell pin `app95` → `app96`.
+
 > **v99 amendment (16 Oct 2026, one failed area no longer sinks the build):
 > `stats.json` gains `fallback_areas`**, `{area name: days}`, empty on a normal
 > night. An area Overpass has not answered by the sweep deadline, or one that

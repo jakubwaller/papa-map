@@ -53,7 +53,8 @@ export function loadFeatures(fc) {
       // A reader's own play answer (play_answered, from the override layer in
       // applyAnswerOverrides) counts as recorded too, so the question stays
       // answered across every re-merge until the delta carries the tag. `play`
-      // itself still waits for the pipeline: the ring is OSM's, not ours.
+      // itself comes from the pipeline, or for that answer from stats.json's
+      // answer_play (v100), never from reading the tag here.
       play_recorded: p.play === true || p.play === false || p.play_answered === true,
       // Tri-state or null, straight from the pipeline (v26). Same strictness
       // as play: only the three wiki values pass, so a dataset from before the
@@ -736,6 +737,18 @@ export function withoutOsmParam(href) {
   return url.toString();
 }
 
+// The last view the map showed (CONTRACT v101), as boot() reopens it:
+// {lng, lat, zoom}, or null for anything else in the key — a junk string, an
+// older build's shape, a zoom the map would refuse.
+export function parseSavedView(raw) {
+  try {
+    const { lng, lat, zoom } = JSON.parse(raw) ?? {};
+    if (![lng, lat, zoom].every(Number.isFinite)) return null;
+    if (Math.abs(lng) > 180 || Math.abs(lat) > 85 || zoom < 1 || zoom > 18) return null;
+    return { lng, lat, zoom };
+  } catch { return null; }
+}
+
 // ---- Open at location: zoomed in on the reader, the way Google Maps opens ----
 // TestFlight feedback: a reader who has already granted location expects the
 // map to open where they are, not on Germany. Whether app.js's boot fix
@@ -1100,8 +1113,8 @@ export function resolveDataUrl(path, native, site) {
 // grey table's room and a play place's own room question can move an
 // object's status). `overrides` is localStorage's papamap-answer-overrides
 // shape: {osm_url: {status, men_only, changing_table, location_raw,
-// play_answered, highchair_answered, t, version}}, every field but t and
-// version optional (men_only since v50; an override stored before it keeps
+// play_answered, play, highchair_answered, t, version}}, every field but t and
+// version optional (men_only since v50, play since v100; an override stored before it keeps
 // the base's). Only the fields an entry carries are written: a play or
 // high-chair answer must not blank the room the base already records. An
 // override for an object neither collection has any more (deleted, or never
@@ -1123,6 +1136,7 @@ export function applyAnswerOverrides(fc, places, overrides) {
     if (o.status) props.status = o.status;
     if (o.men_only != null) props.men_only = o.men_only;
     if (o.play_answered === true) props.play_answered = true;
+    if (typeof o.play === "boolean") props.play = o.play;
     if (typeof o.highchair_answered === "boolean") props.highchair_answered = o.highchair_answered;
     const patched = { ...base, properties: props };
     if (o.status || isTable) { tableByUrl.set(url, patched); placeByUrl.delete(url); }

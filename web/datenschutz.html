@@ -110,7 +110,11 @@
   <p>Wählen Sie über den Sprachumschalter eine Sprache, wird diese Wahl im Local Storage Ihres
      Browsers gespeichert (Schlüssel <code>papamap-lang</code>); ebenso, ob Sie die Karte aus
      Papa- oder Mama-Sicht lesen (Schlüssel <code>papamap-mode</code>) und ob der Filter
-     „Barrierefrei“ an ist (Schlüssel <code>papamap-wheelchair</code>) — rein
+     „Barrierefrei“ an ist (Schlüssel <code>papamap-wheelchair</code>), dazu der zuletzt gezeigte
+     Kartenausschnitt, Mittelpunkt und Zoomstufe, damit die Karte beim nächsten Öffnen dort beginnt
+     (Schlüssel <code>papamap-view</code>; einen Ausschnitt, den die Karte genau auf Ihren Standort
+     gelegt hat, merkt sie sich nicht, Ihre Position selbst steht also nicht darin; einen Ausschnitt,
+     den Sie danach in Ihrer Nähe einstellen, aber schon) — rein
      funktional, ohne Tracking, nur auf Ihrem Gerät, löschbar über die Browserdaten
      (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>Offline-Speicher (Service Worker)</h2>
@@ -261,7 +265,8 @@
   <h2>App: Einstellungen auf dem Gerät</h2>
   <p>Die App speichert dieselben funktionalen Schlüssel wie die Website — Sprache
      (<code>papamap-lang</code>), Papa- oder Mama-Sicht (<code>papamap-mode</code>), den Filter
-     „Barrierefrei“ (<code>papamap-wheelchair</code>) und, nach einer Anmeldung, das Zugriffstoken
+     „Barrierefrei“ (<code>papamap-wheelchair</code>), den zuletzt gezeigten Kartenausschnitt
+     (<code>papamap-view</code>, nie einen genau auf Ihren Standort gelegten) und, nach einer Anmeldung, das Zugriffstoken
      und Ihren OSM-Anzeigenamen samt Nutzer-ID (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>,
      <code>papamap-osm-user-id</code>),
      während der Anmeldung zusätzlich für höchstens eine Stunde den Anmeldevorgang
