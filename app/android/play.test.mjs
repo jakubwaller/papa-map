@@ -183,15 +183,15 @@ test("a 403 on the re-send is still a failure", async () => {
   await assert.rejects(commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), /: 403 error/);
 });
 
-test("productionLive reads versionName and code off completed production releases only", () => {
-  const tracks = [
-    { track: "alpha", releases: [{ name: "600 (1.4)", status: "completed", versionCodes: ["600"] }] },
-    { track: "production", releases: [
-      { name: "525 (1.3.4)", status: "completed", versionCodes: ["525"] },
-      { name: "530 (1.4)", status: "draft", versionCodes: ["530"] },
-    ] },
-  ];
-  assert.deepEqual(productionLive(tracks), [{ version: "1.3.4", build: "525" }]);
-  assert.deepEqual(productionLive([{ track: "production", releases: [{ name: "1.3.5", status: "completed", versionCodes: ["531"] }] }]),
-                   [{ version: "1.3.5", build: "531" }]);
+test("productionLive keeps only PUBLISHED releases, name and code from the release summary", () => {
+  const rel = (releaseName, state, ...codes) => ({ releaseName, releaseLifecycleState: state, activeArtifacts: codes.map((versionCode) => ({ versionCode })) });
+  const P = "RELEASE_LIFECYCLE_STATE_PUBLISHED";
+  assert.deepEqual(productionLive([
+    rel("525 (1.3.4)", P, "524", "525"),
+    rel("530 (1.4)", "RELEASE_LIFECYCLE_STATE_IN_REVIEW", "530"),
+    rel("1.3.5", P, "531"),
+    rel("526", P, "526"),
+  ]), [
+    { version: "1.3.4", build: "525" }, { version: "1.3.5", build: "531" }, { version: undefined, build: "526" },
+  ]);
 });

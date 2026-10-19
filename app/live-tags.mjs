@@ -62,16 +62,20 @@ export async function liveTags(platform, live, argv) {
   console.log(`${platform} live: ${live.map((l) => `${l.version} (${l.build ?? "no build"})`).join(", ") || "nothing"}`);
   const todo = tagsToCreate(platform, live, remoteTags(), today);
   if (!todo.length) return console.log("no new tags");
+  let skipped = 0;
   for (const t of todo) {
     const sha = await runSha(t.build);
-    if (!sha) { console.log(`${t.tag}: CI run ${t.build} not found, skipped`); continue; }
+    if (!sha) { console.log(`${t.tag}: CI run ${t.build} not found, skipped`); skipped++; continue; }
     console.log(`${push ? "tagging" : "would tag"} ${t.tag} at ${sha.slice(0, 9)}: ${t.message}`);
     if (!push) continue;
     try {
+      git("fetch", "origin", sha);   // a PR-label build's branch head may be gone after a squash merge
       git("tag", "-a", t.tag, sha, "-m", t.message);
       git("push", "origin", `refs/tags/${t.tag}`);   // no force: an existing tag is refused, never moved
     } catch (e) {   // a commit this clone does not have, say: log it, the next hour tries again
       console.log(`${t.tag}: ${String(e.message).split("\n")[0]}, skipped`);
+      skipped++;
     }
   }
+  if (skipped) process.exitCode = 1;   // a permanent skip shows red instead of retrying silently
 }

@@ -24,3 +24,7 @@ test("runSha pages until the run number appears, and gives null past it", async 
   const more = [page([9, 8]), page([7, 6]), page([])];
   assert.equal(await runSha(5, { fetch: async () => more.shift(), token: "t" }), null);
 });
+
+test("tagsToCreate yields nothing when the store has nothing live", () => {
+  assert.deepEqual(tagsToCreate("android", [], [], "d"), []);
+});

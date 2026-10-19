@@ -261,26 +261,25 @@ export async function listingsPush({ dir = listingsDir } = {}) {
   if (skipped.length) console.log(`no Google Play language for: ${skipped.join(", ")}`);
 }
 
-// The production track's completed releases. Play names a release "525 (1.3.4)":
-// version code, then versionName (seen on the real track, 2026-10-19). A bare
-// "1.3.4" is taken as is; the version code is run_number.
-export function productionLive(tracks) {
-  const prod = (tracks ?? []).find((t) => t.track === "production");
-  return (prod?.releases ?? []).filter((r) => r.status === "completed" && r.versionCodes?.length)
-    .map((r) => ({ version: /\(([\d.]+)\)\s*$/.exec(r.name ?? "")?.[1] ?? (/^\d+(\.\d+)*$/.test(r.name ?? "") ? r.name : undefined), build: String(Math.max(...r.versionCodes.map(Number))) }));
+// The production track's releases that are really out. applications.tracks.releases.list
+// names one "525 (1.3.4)" (version code, then versionName) and says where it is in
+// its life; an edit's `status: completed` also covers releases still in review.
+// PUBLISHED includes a staged rollout. A bare name needs a dot, so "525" is never a version.
+export function productionLive(releases) {
+  return (releases ?? [])
+    .filter((r) => r.releaseLifecycleState === "RELEASE_LIFECYCLE_STATE_PUBLISHED" && r.activeArtifacts?.length)
+    .map((r) => ({
+      version: /\(([\d.]+)\)\s*$/.exec(r.releaseName ?? "")?.[1] ?? (/^\d+(\.\d+)+$/.test(r.releaseName ?? "") ? r.releaseName : undefined),
+      build: String(Math.max(...r.activeArtifacts.map((a) => Number(a.versionCode)))),
+    }));
 }
 
-// Read-only, like listingsPull: the edit is opened to read the tracks and deleted.
+// Read-only and no edit opened: one GET of the production track's release list.
 async function liveTagsCmd(args) {
   const bearer = await accessToken(serviceAccount());
-  const edit = await call(bearer, "POST", `${API}/edits`, { json: {} });
-  let live;
-  try {
-    live = productionLive((await call(bearer, "GET", `${API}/edits/${edit.id}/tracks`)).tracks);
-  } finally {
-    await call(bearer, "DELETE", `${API}/edits/${edit.id}`);
-  }
-  await liveTags("android", live, args);
+  const { releases } = await call(bearer, "GET", `${API}/tracks/production/releases`);
+  if (process.env.LIVE_TAGS_DEBUG) console.log(JSON.stringify(releases));
+  await liveTags("android", productionLive(releases), args);
 }
 
 const USAGE = "usage: play.mjs upload <app.aab> [--track alpha] [--status draft] | listings pull | listings push | live-tags [--push]";

@@ -22,12 +22,6 @@ jobs:
     defaults:
       run:
         working-directory: app
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
-      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
-      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,4 +33,13 @@ jobs:
           git config user.name "papa-map store tags"
           git config user.email "noreply@papamap.de"
       - run: node ios/asc.mjs live-tags --push
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
       - run: node android/play.mjs live-tags --push
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
