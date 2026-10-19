@@ -10,8 +10,10 @@
 > `applyAnswerOverrides` writes onto the feature, so the blue ring shows the
 > moment OSM confirms the write instead of after the next delta poll (Trello
 > "PapaMap bugs": the ring only appeared after an app restart). A `stats.json`
-> without the field leaves the ring to the delta as before. Shell pin `app95` →
-> `app96`.
+> without the field leaves the ring to the delta as before. The delta poll also
+> runs at its 30 s pace while an add watch waits (at most its 10 minutes), not
+> only while an own edit is pending, so a place added in the dialog lands within
+> half a minute of the follower carrying it. Shell pin `app95` → `app96`.
 
 > **v99 amendment (16 Oct 2026, one failed area no longer sinks the build):
 > `stats.json` gains `fallback_areas`**, `{area name: days}`, empty on a normal

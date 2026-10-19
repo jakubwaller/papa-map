@@ -2713,8 +2713,8 @@ async function answer(kind, obj, choice, freshToken = null) {
     } else if (hc) {
       // The same for the high chair (v65), except that its line shows at
       // once: the question is replaced in place by the row it just recorded.
-      // The chip's count waits for the pipeline, like the play ring: the
-      // answer lives in highchair_answered, which only the row reads.
+      // The chip's count waits for the pipeline: the answer lives in
+      // highchair_answered, which only the row reads.
       obj.highchair_answered = choice === "hc_yes";
       obj.highchair_recorded = true;
       remember({ highchair_answered: obj.highchair_answered });
