@@ -8,6 +8,8 @@
 //   node android/play.mjs listings pull      print the store listing texts, every language
 //   node android/play.mjs listings push      listings/*.json → the listings, in one committed edit
 //
+//   node android/play.mjs live-tags [--push]  tag the commit of each production release (dry run without --push)
+//
 // Reads PLAY_SERVICE_ACCOUNT_JSON (the key file's text) from the environment —
 // the repository secret of that name.
 //
@@ -22,6 +24,7 @@
 import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { liveTags } from "../live-tags.mjs";
 import { PLAY_LOCALES, listingsDir, readListings, playListingBody, playReleaseNotes, same } from "../listings.mjs";
 
 export const PACKAGE = "de.papamap.app";
@@ -258,7 +261,27 @@ export async function listingsPush({ dir = listingsDir } = {}) {
   if (skipped.length) console.log(`no Google Play language for: ${skipped.join(", ")}`);
 }
 
-const USAGE = "usage: play.mjs upload <app.aab> [--track alpha] [--status draft] | listings pull | listings push";
+// The production track's releases that are really out. applications.tracks.releases.list
+// names one "525 (1.3.4)" (version code, then versionName) and says where it is in
+// its life; an edit's `status: completed` also covers releases still in review.
+// PUBLISHED includes a staged rollout. A bare name needs a dot, so "525" is never a version.
+export function productionLive(releases) {
+  return (releases ?? [])
+    .filter((r) => r.releaseLifecycleState === "RELEASE_LIFECYCLE_STATE_PUBLISHED" && r.activeArtifacts?.length)
+    .map((r) => ({
+      version: /\(([\d.]+)\)\s*$/.exec(r.releaseName ?? "")?.[1] ?? (/^\d+(\.\d+)+$/.test(r.releaseName ?? "") ? r.releaseName : undefined),
+      build: String(Math.max(...r.activeArtifacts.map((a) => Number(a.versionCode)))),
+    }));
+}
+
+// Read-only and no edit opened: one GET of the production track's release list.
+async function liveTagsCmd(args) {
+  const bearer = await accessToken(serviceAccount());
+  const { releases } = await call(bearer, "GET", `${API}/tracks/production/releases`);
+  await liveTags("android", productionLive(releases), args);
+}
+
+const USAGE = "usage: play.mjs upload <app.aab> [--track alpha] [--status draft] | listings pull | listings push | live-tags [--push]";
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [cmd, ...rest] = process.argv.slice(2);
@@ -271,6 +294,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       await listingsPull();
     } else if (cmd === "listings" && rest.length === 1 && rest[0] === "push") {
       await listingsPush();
+    } else if (cmd === "live-tags") {
+      await liveTagsCmd(rest);
     } else throw new Error(USAGE);
   };
   run().catch((e) => { console.error(e.message); process.exit(1); });
