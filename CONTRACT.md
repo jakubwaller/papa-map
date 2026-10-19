@@ -25,7 +25,8 @@
 > without the field leaves the ring to the delta as before. The delta poll also
 > runs at its 30 s pace while an add watch waits (at most its 10 minutes), not
 > only while an own edit is pending, so a place added in the dialog lands within
-> half a minute of the follower carrying it. Shell pin `app95` → `app96`.
+> half a minute of the follower carrying it (the follower itself lags OSM by
+> ~1.5–3 min, so a few minutes end to end). Shell pin `app95` → `app96`.
 
 > **v99 amendment (16 Oct 2026, one failed area no longer sinks the build):
 > `stats.json` gains `fallback_areas`**, `{area name: days}`, empty on a normal
