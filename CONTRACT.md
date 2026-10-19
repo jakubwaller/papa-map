@@ -1,5 +1,18 @@
 # papa-map — build contract (v0)
 
+> **v100 amendment (19 Oct 2026, a play answer draws its ring at once):
+> `stats.json` gains `answer_play`**, `{"play_yes": true, "play_outdoor": true,
+> "play_no": false}`: whether the tags each play answer writes pass
+> `has_play_area` (`room_choices.answer_play_table`, its `PLAY_CHOICES` held to
+> `web/osm.js`'s `playPatch` by a test). The same rule as v48's `answer_status`:
+> the frontend looks its own confirmed answer up here and never reads the tag.
+> The answer override gains an optional `play` boolean, which
+> `applyAnswerOverrides` writes onto the feature, so the blue ring shows the
+> moment OSM confirms the write instead of after the next delta poll (Trello
+> "PapaMap bugs": the ring only appeared after an app restart). A `stats.json`
+> without the field leaves the ring to the delta as before. Shell pin `app95` →
+> `app96`.
+
 > **v99 amendment (16 Oct 2026, one failed area no longer sinks the build):
 > `stats.json` gains `fallback_areas`**, `{area name: days}`, empty on a normal
 > night. An area Overpass has not answered by the sweep deadline, or one that

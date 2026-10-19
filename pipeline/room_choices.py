@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .classify import classify, men_only
+from .classify import classify, has_play_area, men_only
 
 # Mirrors web/osm.js's ROOMS exactly — the vocabulary a reader's own tap
 # writes to OSM (roomPatch). Kept here, not imported (there is nothing to
@@ -17,6 +17,14 @@ ROOM_CHOICES = {
     "room": "room",
     "sales": "sales_area",
     "outdoor": "outdoor",
+}
+
+# Mirrors web/osm.js's playPatch the same way: the tags each play answer
+# writes. tests/test_room_choices.py reads playPatch back out of the JS.
+PLAY_CHOICES = {
+    "play_yes": {"kids_area:indoor": "yes", "kids_area": "yes"},
+    "play_outdoor": {"kids_area": "yes", "kids_area:indoor": "no"},
+    "play_no": {"kids_area": "no"},
 }
 
 
@@ -43,3 +51,11 @@ def answer_men_only_table() -> dict:
              for choice, location in ROOM_CHOICES.items()}
     table["none"] = False
     return table
+
+
+def answer_play_table() -> dict:
+    """{choice: bool} for the three play answers: whether the tags that answer
+    writes draw the blue ring (has_play_area), so the reader's own play answer
+    shows its ring the moment OSM confirms it, as a room answer recolours
+    (CONTRACT v100), instead of after the next delta poll."""
+    return {choice: has_play_area(tags) for choice, tags in PLAY_CHOICES.items()}

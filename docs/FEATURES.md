@@ -650,9 +650,10 @@ instead, a recorded answer of any kind is never asked again, and a
 answer. *Indoors* writes `kids_area:indoor=yes` together with `kids_area=yes`,
 *outdoors only* writes `kids_area=yes` together with `kids_area:indoor=no`,
 *none* writes `kids_area=no`: the three mappings the site's own MapComplete
-theme uses for the same question, and values `classify.py` already reads, so
-the ring appears (or stays away) a few minutes later, through the delta
-follower (v48). The third answer is what
+theme uses for the same question, and values `classify.py` already reads. The
+ring appears the moment OSM confirms the write, from `stats.json`'s
+`answer_play`, the pipeline's own reading of each answer's tags (v100), and
+the delta follower (v48) carries it for everyone else a few minutes later. The third answer is what
 makes the first two honest — `kids_area=no` is OSM's "nowhere for children to
 play", and a two-button *indoor play area? yes/no* wrote it under bakeries with
 a garden playground (issue #119, v31). The two questions are independent taps

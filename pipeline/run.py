@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from . import (delta, export, leaderboard, osm, pages, stats, sweep_cache, timezones,
                toilet_counts)
-from .room_choices import answer_men_only_table, answer_status_table
+from .room_choices import answer_men_only_table, answer_play_table, answer_status_table
 from .config import (AREA_COUNTRY, AREAS_PATH, BUNDESLAENDER, CITY_AREAS,
                      GEOJSON_PATH, HISTORY_PATH,
                      PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_FIXED_ROUNDS,
@@ -528,6 +528,8 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         "answer_status": answer_status_table(),
         # Its v50 companion: whether that answer is the men's room only.
         "answer_men_only": answer_men_only_table(),
+        # v100: whether a reader's own play answer draws the blue ring.
+        "answer_play": answer_play_table(),
         # v80: the zone each swept area's opening hours are meant in, for the
         # popup's "Open now"; a feature off its area's default carries `tz`.
         "area_tz": timezones.area_tz_table(name for name, _ in areas),

@@ -1484,6 +1484,20 @@ test("applyAnswerOverrides keeps a no-status answer (e.g. play 'none') in places
   assert.equal(out.places.features[0].properties.changing_table, "no");
 });
 
+test("applyAnswerOverrides draws a reader's own play ring and keeps the room (v100)", () => {
+  const fc = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "accessible",
+                changing_table: "yes", location_raw: "male_toilet" }),
+  ] };
+  const places = { type: "FeatureCollection", features: [] };
+  const overrides = { "https://www.openstreetmap.org/node/1":
+    { play_answered: true, play: true, t: "2026-10-19T10:00:00Z" } };
+  const props = applyAnswerOverrides(fc, places, overrides).fc.features[0].properties;
+  assert.equal(props.play, true);
+  assert.equal(props.status, "accessible");
+  assert.equal(props.location_raw, "male_toilet");
+});
+
 test("applyAnswerOverrides ignores an override for an object neither collection has", () => {
   const fc = { type: "FeatureCollection", features: [] };
   const places = { type: "FeatureCollection", features: [] };
