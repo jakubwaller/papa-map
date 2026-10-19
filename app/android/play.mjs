@@ -278,7 +278,6 @@ export function productionLive(releases) {
 async function liveTagsCmd(args) {
   const bearer = await accessToken(serviceAccount());
   const { releases } = await call(bearer, "GET", `${API}/tracks/production/releases`);
-  if (process.env.LIVE_TAGS_DEBUG) console.log(JSON.stringify(releases));
   await liveTags("android", productionLive(releases), args);
 }
 
