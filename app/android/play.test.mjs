@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, verify } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { assertion, trackBody, versionName, parseArgs, retryable, withRetry, commitEdit } from "./play.mjs";
+import { assertion, trackBody, versionName, parseArgs, retryable, withRetry, commitEdit, productionLive } from "./play.mjs";
 
 test("the assertion is an RS256 JWT Google's token endpoint accepts", () => {
   const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -181,4 +181,17 @@ test("a 4xx on the re-sent commit with the edit still there is a real refusal", 
 test("a 403 on the re-send is still a failure", async () => {
   const { f } = fakePlay([503, 403], [200]);
   await assert.rejects(commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), /: 403 error/);
+});
+
+test("productionLive reads versionName and code off completed production releases only", () => {
+  const tracks = [
+    { track: "alpha", releases: [{ name: "600 (1.4)", status: "completed", versionCodes: ["600"] }] },
+    { track: "production", releases: [
+      { name: "525 (1.3.4)", status: "completed", versionCodes: ["525"] },
+      { name: "530 (1.4)", status: "draft", versionCodes: ["530"] },
+    ] },
+  ];
+  assert.deepEqual(productionLive(tracks), [{ version: "1.3.4", build: "525" }]);
+  assert.deepEqual(productionLive([{ track: "production", releases: [{ name: "1.3.5", status: "completed", versionCodes: ["531"] }] }]),
+                   [{ version: "1.3.5", build: "531" }]);
 });

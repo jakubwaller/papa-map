@@ -261,12 +261,13 @@ export async function listingsPush({ dir = listingsDir } = {}) {
   if (skipped.length) console.log(`no Google Play language for: ${skipped.join(", ")}`);
 }
 
-// The production track's completed releases. A release's name is the
-// versionName unless someone renamed it; the version code is run_number.
+// The production track's completed releases. Play names a release "525 (1.3.4)":
+// version code, then versionName (seen on the real track, 2026-10-19). A bare
+// "1.3.4" is taken as is; the version code is run_number.
 export function productionLive(tracks) {
   const prod = (tracks ?? []).find((t) => t.track === "production");
   return (prod?.releases ?? []).filter((r) => r.status === "completed" && r.versionCodes?.length)
-    .map((r) => ({ version: r.name, build: String(Math.max(...r.versionCodes.map(Number))) }));
+    .map((r) => ({ version: /\(([\d.]+)\)\s*$/.exec(r.name ?? "")?.[1] ?? (/^\d+(\.\d+)*$/.test(r.name ?? "") ? r.name : undefined), build: String(Math.max(...r.versionCodes.map(Number))) }));
 }
 
 // Read-only, like listingsPull: the edit is opened to read the tracks and deleted.
