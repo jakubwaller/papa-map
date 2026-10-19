@@ -6,6 +6,8 @@
 name: Store tags
 
 on:
+  pull_request:
+    paths: [".github/workflows/store-tags.yml"]
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
@@ -32,14 +34,15 @@ jobs:
       - run: |
           git config user.name "papa-map store tags"
           git config user.email "noreply@papamap.de"
-      - run: node ios/asc.mjs live-tags --push
+      - run: node ios/asc.mjs live-tags
         env:
           GITHUB_TOKEN: ${{ github.token }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
-      - run: node android/play.mjs live-tags --push
+      - run: node android/play.mjs live-tags
         if: ${{ !cancelled() }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          LIVE_TAGS_DEBUG: "1"
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
