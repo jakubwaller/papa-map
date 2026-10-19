@@ -1,4 +1,4 @@
-– New: the map opens where you left it. Check: zoom into another city, close the app completely (swipe it away) and open it again. It should open on that city, not on Germany. If PapaMap may use your location, it still opens where you are. Tapping the PapaMap logo still goes back to the overview.
+– New: the map opens where you left it. Check: zoom into another city, close the app completely (swipe it away) and open it again. It should open on that city, not on Germany. If PapaMap may use your location, it still opens where you are.
 – Fixed: a play area you mark shows its blue ring at once (from tomorrow, after tonight's data update). Check: on a pin that asks "Play area for children?", at a place you know, tap "indoors" or "outdoors only". The blue ring should appear around the pin straight away, without restarting the app.
 – Faster: a place you add shows up within about half a minute. Check (only with a real place you know): "+ Add a place", pick the place and answer which room. Within a minute the new pin should appear and the map fly to it.
 Anything unclear or broken: take a screenshot and send it through TestFlight.

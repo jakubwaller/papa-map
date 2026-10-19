@@ -1,4 +1,4 @@
-– Novinka: mapa se otevře tam, kde jsi ji naposledy nechal. Jak vyzkoušet: přibliž jiné město, aplikaci úplně zavři (odsuň ji) a znovu otevři. Měla by se otevřít na tom městě, ne na Německu. Pokud PapaMap smí používat tvou polohu, otevře se dál tam, kde jsi. Logo PapaMap dál vede na přehled.
+– Novinka: mapa se otevře tam, kde jsi ji naposledy nechal. Jak vyzkoušet: přibliž jiné město, aplikaci úplně zavři (odsuň ji) a znovu otevři. Měla by se otevřít na tom městě, ne na Německu. Pokud PapaMap smí používat tvou polohu, otevře se dál tam, kde jsi.
 – Opraveno: dětský koutek, který zadáš, ukáže svůj modrý kroužek hned (od zítřka, po nočních datech). Jak vyzkoušet: u pinu, který se ptá „Dětský koutek?“, na místě, které znáš, klepni na „uvnitř“ nebo „jen venku“. Modrý kroužek by se měl kolem pinu objevit hned, bez restartu aplikace.
 – Rychleji: přidané místo se objeví asi do půl minuty. Jak vyzkoušet (jen se skutečným místem, které znáš): „+ Přidat místo“, vyber místo a odpověz, ve které místnosti. Do minuty by se měl objevit nový pin a mapa by na něj měla přeletět.
 Cokoli je nejasné nebo nefunguje: udělej snímek obrazovky a pošli ho přes TestFlight.

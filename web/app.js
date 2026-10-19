@@ -3887,7 +3887,10 @@ async function boot() {
   locationFix.then((coords) => {
     if (!coords) return;
     const at = [coords.longitude, coords.latitude];
-    showYou(at);
+    // A locate tap that beat this fix already put the dot, and the camera, on a
+    // finer one: moving the dot now would let the view saved on the next move
+    // (papamap-view) be that exact fix.
+    if (!youMarker) showYou(at);
     redrawWidget();   // not noteFix (above); only the widget's redraw
     if (touchedBeforeFix || pinOpenedBeforeFix || popup?.isOpen()) return;
     const zoom = Math.max(map.getZoom(), 14);
