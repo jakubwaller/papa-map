@@ -6,6 +6,8 @@
 name: Store tags
 
 on:
+  pull_request:
+    paths: [".github/workflows/store-tags.yml"]
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
@@ -38,5 +40,5 @@ jobs:
       - run: |
           git config user.name "papa-map store tags"
           git config user.email "noreply@papamap.de"
-      - run: node ios/asc.mjs live-tags --push
-      - run: node android/play.mjs live-tags --push
+      - run: node ios/asc.mjs live-tags
+      - run: node android/play.mjs live-tags
