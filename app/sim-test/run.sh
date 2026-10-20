@@ -14,6 +14,9 @@ npm ci --no-audit --no-fund >/dev/null && npm run build >/dev/null || exit 1
 cp sim-test/mock.js www/mock.js
 sed -i '' 's#<head>#<head><script src="mock.js"></script>#' www/index.html
 npx cap sync $PLATFORM >/dev/null || exit 1
+# Whatever happens, the native projects get a clean shell back: a phone built
+# from Xcode or Android Studio after a run must not carry the mock.
+trap 'npm run build >/dev/null 2>&1 && npx cap sync $PLATFORM >/dev/null 2>&1' EXIT
 
 if [ "$PLATFORM" = ios ]; then
   UDID=${SIM_UDID:-$(xcrun simctl list devices available -j | python3 -c '
@@ -27,38 +30,43 @@ print(next(x["udid"] for k in sorted((k for k in d if "iOS" in k), reverse=True)
   xcrun simctl uninstall $UDID de.papamap.app 2>/dev/null
   xcrun simctl install $UDID "$OUT/DerivedData/Build/Products/Debug-iphonesimulator/App.app" || exit 1
   xcrun simctl privacy $UDID grant location de.papamap.app
-  xcrun simctl location $UDID set 53.5691,9.9634
+  xcrun simctl location $UDID set 53.5503,9.9930
   xcrun simctl launch --console-pty --terminate-running-process $UDID de.papamap.app > "$OUT/app.log" 2>&1 &
   LOG_PID=$!
   shoot() { xcrun simctl io $UDID screenshot "$1" >/dev/null 2>&1; }
 else
   export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}
   export ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk}
-  ADB=$ANDROID_HOME/platform-tools/adb
+  adb() { "$ANDROID_HOME/platform-tools/adb" -e "$@"; }   # -e: the emulator only, never a phone on USB
+  AVD=${AVD:-papamap-api35}
   (cd android && ./gradlew -q assembleDebug) || exit 1
-  if [ "$($ADB get-state 2>/dev/null)" != device ]; then
-    $ANDROID_HOME/emulator/emulator -avd ${AVD:-papamap-api35} -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect >/dev/null 2>&1 &
-    $ADB wait-for-device
+  if [ "$(adb get-state 2>/dev/null)" != device ]; then
+    "$ANDROID_HOME/emulator/emulator" -list-avds | grep -qx "$AVD" || { echo "no AVD '$AVD' (app/README.md says how to create one)"; exit 1; }
+    "$ANDROID_HOME/emulator/emulator" -avd "$AVD" -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect > "$OUT/emulator.log" 2>&1 &
   fi
-  until [ "$($ADB shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do sleep 2; done
-  $ADB uninstall de.papamap.app >/dev/null 2>&1
-  $ADB install -r android/app/build/outputs/apk/debug/app-debug.apk >/dev/null || exit 1
-  $ADB shell pm grant de.papamap.app android.permission.ACCESS_FINE_LOCATION
-  $ADB emu geo fix 9.9634 53.5691 >/dev/null
-  $ADB shell wm dismiss-keyguard
-  $ADB logcat -c
-  $ADB logcat -v raw -s Capacitor/Console > "$OUT/app.log" 2>&1 &
+  for i in $(seq 1 90); do   # three minutes for the boot
+    [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && break
+    [ "$i" = 90 ] && { echo "emulator did not boot; see app/$OUT/emulator.log"; exit 1; }
+    sleep 2
+  done
+  adb uninstall de.papamap.app >/dev/null 2>&1
+  adb install -r android/app/build/outputs/apk/debug/app-debug.apk >/dev/null || exit 1
+  adb shell pm grant de.papamap.app android.permission.ACCESS_FINE_LOCATION
+  adb emu geo fix 9.9930 53.5503 >/dev/null
+  adb shell wm dismiss-keyguard
+  adb logcat -c
+  adb logcat -v raw -s Capacitor/Console > "$OUT/app.log" 2>&1 &
   LOG_PID=$!
-  $ADB shell am start -W -n de.papamap.app/.MainActivity >/dev/null
-  shoot() { $ADB exec-out screencap -p > "$1"; }
+  adb shell am start -W -n de.papamap.app/.MainActivity >/dev/null
+  shoot() { adb exec-out screencap -p > "$1"; }
 fi
 
 seen=0
 for i in $(seq 1 720); do   # six minutes at most
-  n=$(grep -c 'SHOT' "$OUT/app.log")
+  n=$(grep -c '\[TEST\].*SHOT' "$OUT/app.log")
   while [ "$seen" -lt "$n" ]; do
     seen=$((seen + 1))
-    name=$(grep 'SHOT' "$OUT/app.log" | sed -n "${seen}p" | sed -E 's/.*SHOT ([^ ]+).*/\1/' | tr -d '\r')
+    name=$(grep '\[TEST\].*SHOT' "$OUT/app.log" | sed -n "${seen}p" | sed -E 's/.*SHOT ([^ ]+).*/\1/' | tr -d '\r')
     shoot "$OUT/$name.png"
   done
   grep -q '\[TEST\].*\(DONE\|FAIL\)' "$OUT/app.log" && break

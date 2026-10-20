@@ -6,12 +6,13 @@
 (() => {
   // Where the pins are picked from; run.sh puts the phone's fix in the same area.
   const AREA = { west: 9.93, south: 53.54, east: 10.05, north: 53.60 };   // Hamburg
-  const LAT = 53.5691, LON = 9.9634;
+  const LAT = 53.5503, LON = 9.9930;   // Rathausmarkt: the mocked node's and the phone's fix (run.sh)
   const realFetch = window.fetch.bind(window);
   const t0 = Date.now();
   const log = (...a) => console.log("[TEST]", ((Date.now() - t0) / 1000).toFixed(1) + "s", ...a);
-  addEventListener("error", (e) => log("JSERR", e.message, e.filename, e.lineno));
-  addEventListener("unhandledrejection", (e) => log("REJECT", e.reason?.message || String(e.reason)));
+  const errors = [];   // a page error anywhere in the run fails it at the end
+  addEventListener("error", (e) => { errors.push(e.message); log("JSERR", e.message, e.filename, e.lineno); });
+  addEventListener("unhandledrejection", (e) => { errors.push(String(e.reason?.message || e.reason)); log("REJECT", errors.at(-1)); });
   // Four launches of one install, each a step: 0 picks the pins from the
   // dataset, 1 answers on a grey pin, 2 opens a green one, 3 is the map alone.
   const step = localStorage.getItem("test-step") || "0";
@@ -28,7 +29,7 @@
   const json = (o) => new Response(JSON.stringify(o), { status: 200, headers: { "Content-Type": "application/json" } });
   const text = (s) => new Response(s, { status: 200, headers: { "Content-Type": "text/plain" } });
   const inArea = (f) => { const [x, y] = f.geometry.coordinates; return x > AREA.west && x < AREA.east && y > AREA.south && y < AREA.north; };
-  const noWheelchair = (p) => p.wheelchair == null && p.toilets_wheelchair == null;
+  const noWheelchair = (p) => p.wheelchair == null && p.toilets_wheelchair == null && p.table_wheelchair == null;
   const pickPins = (features) => {
     const near = features.filter(inArea);
     const grey = (f) => f.properties.status === "unknown" && !f.properties.location_raw && noWheelchair(f.properties)
@@ -62,12 +63,12 @@
     if (url.includes("openstreetmap.org/api/")) {
       const path = new URL(url).pathname;
       log("OSM mock", method, path, init.body ? String(init.body).replace(/\s+/g, " ").slice(0, 160) : "");
-      const m = path.match(/\/(node|way)\/(\d+)\.json$/);
+      const m = path.match(/\/(node|way|relation)\/(\d+)\.json$/);
       // Every pin is changing_table=yes in OSM; answer() reads that back from the write.
       if (m && method === "GET") return json({ elements: [{ type: m[1], id: Number(m[2]), lat: LAT, lon: LON,
         version: 5, timestamp: "2026-10-01T00:00:00Z", tags: { amenity: "cafe", name: "Mock", changing_table: "yes" } }] });
       if (path.endsWith("/changeset/create")) return text("4242");
-      if (method === "PUT" && /\/(node|way)\/\d+$/.test(path)) return text("6");
+      if (method === "PUT" && /\/(node|way|relation)\/\d+$/.test(path)) return text("6");
       if (path.endsWith("/user/details.json"))
         return json({ user: { id: 1, display_name: "tester", account_created: "2020-01-01T00:00:00Z" } });
       if (path.includes("/changesets")) return json({ changesets: [] });
@@ -109,6 +110,8 @@
     share: !!$(".maplibregl-popup button[data-share]"),
     note: $(".maplibregl-popup .edit-note")?.textContent.trim(),
   });
+  const check = (ok, what) => { if (!ok) throw new Error("check failed: " + what); };
+  const rowCount = () => $$(".maplibregl-popup .row").length;
   const next = (s) => { localStorage.setItem("test-step", s); location.reload(); };
   const tap = (el) => { el.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); el.click(); };
   const answered = (cls) => waitFor(cls + " answered", () => popup() && !$(".maplibregl-popup ." + cls), 20000);
@@ -120,30 +123,40 @@
         await waitFor("grey pin popup", () => popup() && $(".maplibregl-popup .ask .ask-btns button.ask-btn"));
         await sleep(2500);
         log("STATE grey pin", state()); await shot("01-grey-pin-logged-in");
+        check(fold()?.open, "fold open for a logged-in reader who never toggled it");
         fold().querySelector("summary").click(); await sleep(700);
         log("STATE fold closed", state()); await shot("02-fold-closed");
+        check(!fold().open && localStorage.getItem("papamap-more-open") === "0", "fold closed and remembered");
         $('.maplibregl-popup .ask .ask-btns button.ask-btn[data-room="both"]').click();
         const chained = await waitFor("chained wheelchair question",
           () => { const q = $(".maplibregl-popup .popup > .ask-wc"); return q && !q.querySelector("button[disabled]") ? q : null; }, 20000);
         log("STATE chained", state()); await shot("03-chained-wheelchair");
+        check(chained.querySelector(".ask-who") && !fold().open, "login line on the chained question, fold still closed");
+        let rows = rowCount();
         chained.querySelector('button.ask-btn[data-room="wc_yes"]').click();
         await answered("ask-wc"); await sleep(700);
         log("STATE wc answered", state()); await shot("04-wheelchair-answered");
+        check(rowCount() === rows + 1, "a wheelchair row where the question was");
         fold().querySelector("summary").click(); await sleep(700);
         log("STATE fold reopened", state()); await shot("05-fold-reopened");
+        check(fold().open && localStorage.getItem("papamap-more-open") === "1", "fold open and remembered");
+        rows = rowCount();
         $('.maplibregl-popup details.more .ask-tw button.ask-btn[data-room="tw_limited"]').click();
         await answered("ask-tw"); await sleep(700);
         log("STATE tw answered", state()); await shot("06-table-answered");
+        check(rowCount() === rows + 1, "a table row after the table answer");
         log("OVERRIDES", localStorage.getItem("papamap-answer-overrides"));
         next("2");
       } else if (step === "2") {
         await waitFor("green pin popup", () => popup() && fold());
         await sleep(2500);
         log("STATE green pin", state()); await shot("07-second-pin-sticky-fold");
+        check(fold().open, "fold open on the second pin (sticky)");
         const route = $(".maplibregl-popup a[data-route]");
         log("ROUTE", route?.textContent.trim(), route?.getAttribute("href"));
         const mc = $(".maplibregl-popup details.more a");
         log("EDIT link", mc?.textContent.trim(), mc?.getAttribute("href"));
+        check(route?.getAttribute("href") && mc?.getAttribute("href")?.includes("mapcomplete.org"), "Directions link and the edit link in the fold");
         $(".maplibregl-popup-close-button")?.click(); await sleep(600);
         next("3");
       } else {
@@ -153,19 +166,22 @@
         await shot("08-whats-new");
         $("#intro-ok").click(); await sleep(800);
         const inp = $("#search-input");
-        tap(inp); inp.focus(); inp.value = "Mock";
+        tap(inp); inp.focus(); inp.value = "Teststraße Mock";   // only the mocked Photon result matches
         inp.dispatchEvent(new Event("input", { bubbles: true }));
         await waitFor("search results", () => $("#search-results li.search-opt"), 15000);
         await sleep(1200);
         log("RESULTS", $$("#search-results li").map((l) => l.textContent.trim().replace(/\s+/g, " ")).join(" | ").slice(0, 400));
         await shot("09-search");
         tap($("#search-results li.search-opt")); await sleep(2500);
-        log("after search tap: popup", !!popup());
+        const c = window._papamap?.getCenter?.();
+        log("after search tap: centre", JSON.stringify(c));
         await shot("10-search-result");
-        $(".maplibregl-popup-close-button")?.click();
+        check(c && Math.abs(c.lng - LON) < 0.01 && Math.abs(c.lat - LAT) < 0.01, "map flew to the search result");
         $("#mode-mama").click(); await sleep(1800);
         log("MODE mum pressed", $("#mode-mama")?.getAttribute("aria-pressed"));
         await shot("11-mum-view");
+        check($("#mode-mama")?.getAttribute("aria-pressed") === "true", "mum view on");
+        check(!errors.length, errors.length + " page errors, first: " + errors[0]);
         log("DONE");
       }
     } catch (e) { log("FAIL", e.message); }

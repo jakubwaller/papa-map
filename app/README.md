@@ -119,17 +119,28 @@ Before every store build (`testflight`, `play`), not after:
 
 ```bash
 sim-test/run.sh ios        # iPhone simulator, newest iOS runtime (or SIM_UDID=…)
-sim-test/run.sh android    # Android emulator, AVD papamap-api35 (or AVD=…), started if needed
+sim-test/run.sh android    # Android emulator, AVD papamap-api35 (or AVD=…), started headless if needed
 ```
 
 It builds the app with `sim-test/mock.js` loaded as the shell's first script, installs it
 fresh and drives the popup flows by tapping the real DOM: a grey pin's room answer and the
 wheelchair question that follows it, both wheelchair rows, the sticky "More about this place"
 fold on a second pin, the what's-new dialog, search and the mum view — a screenshot per step in
-`sim-test/out/`, the log in `sim-test/out/app.log`. Nothing reaches OpenStreetMap: the mock
-answers for OSM, Photon and the delta file with a fake login. The mock never enters a store
-build — CI copies `web/` afresh — but a local `npx cap sync` after a run carries it until the
-next `npm run build`. Not covered: the Route tap (leaves the app), the share sheet, the widget.
+`sim-test/out/`, the log in `sim-test/out/app.log`, `PASS` only when every check held and the
+page raised no error. Nothing reaches OpenStreetMap: the mock answers for OSM, Photon and the
+delta file with a fake login, and picks its two test pins from the dataset at run time. On exit
+the script rebuilds `www/` and syncs again, so the native projects never keep the mock; CI never
+sees it either. Not covered: the Route tap (leaves the app), the share sheet, the widget.
+
+The Android side needs a JDK 21 (`JAVA_HOME`, default Homebrew's `openjdk@21`), the SDK in
+`ANDROID_HOME` (default `~/Library/Android/sdk`) and an AVD with Google APIs, which the
+geolocation plugin needs:
+
+```bash
+$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "system-images;android-35;google_apis;arm64-v8a"
+$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n papamap-api35 -d pixel_7 \
+  -k "system-images;android-35;google_apis;arm64-v8a"
+```
 
 ### iOS: signed on the runner, no Mac needed
 
