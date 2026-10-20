@@ -13,7 +13,7 @@ mkdir -p "$OUT"; rm -f "${OUT:?}"/*.png; : > "$OUT/app.log"
 npm ci --no-audit --no-fund >/dev/null && npm run build >/dev/null || exit 1
 # Whatever happens from here on, the native projects get a clean shell back: a
 # phone built from Xcode or Android Studio after a run must not carry the mock.
-trap 'npm run build >/dev/null 2>&1 && npx cap sync $PLATFORM >/dev/null 2>&1' EXIT
+trap 'kill ${LOG_PID:-} 2>/dev/null; npm run build >/dev/null 2>&1 && npx cap sync $PLATFORM >/dev/null 2>&1' EXIT
 trap 'exit 130' INT TERM
 cp sim-test/mock.js www/mock.js
 sed -i '' 's#<head>#<head><script src="mock.js"></script>#' www/index.html
