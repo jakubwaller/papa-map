@@ -285,7 +285,10 @@ but no split, and the command says the history is unchanged. The answers given o
 itself (`created_by=PapaMap`, kept per day since 2026-10-05) are a second series,
 `web_edits_days`, filled by the same run and summed into the page's "Answers on the map
 itself" tiles; that history is all time once it reaches 2026-09-13, the day the room
-question could first be answered on the map, so the one backfill above covers both.
+question could first be answered on the map, so the one backfill above covers both. A third,
+`web_area_days` (since 2026-10-20), splits those answers by the sweep area of the pin each one
+edited — named from `areas-bbox.json` (`PAPAMAP_AREAS_BBOX_PATH`) the way the live updates name
+a new pin's area — for the "Answers in the app by area" table; only area names are stored.
 
 **The check runs in Docker, like the build** — the `ops` service in `docker-compose.yml`,
 the same image, run as the host user (uid 1000; edit `user:` if yours differs), with the

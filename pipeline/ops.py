@@ -31,7 +31,7 @@ from pathlib import Path
 
 import requests
 
-from . import appstats, leaderboard, ops_page
+from . import appstats, delta, leaderboard, ops_page
 from .config import GEOJSON_PATH, STATS_PATH
 from .export import PAPAMAP_THEME_URL, write_text_atomic
 
@@ -484,7 +484,9 @@ def osmcha_edits(days=7, now=None, get=requests.get):
     settings); absent or failing, the report just omits the line. The count
     is aggregate — no mapper data is read or stored: the changesets come back
     as features, but only their dates are counted (by_day, the chart's
-    series) and the rest is dropped on the floor."""
+    series), plus for the answers the sweep area of the pin each one edited
+    (web_points, turned into area names by add_answer_areas), and the rest
+    is dropped on the floor."""
     token = os.environ.get("OSMCHA_TOKEN")
     if not token:
         return None
@@ -526,6 +528,7 @@ def osmcha_edits(days=7, now=None, get=requests.get):
             web_by_day = edits_by_day(web, since, now)
             if web_by_day is not None:
                 out["web_by_day"] = web_by_day
+                out["web_points"] = answer_points(web, since, now)
         except Exception as exc:
             print(f"WARN: OSMCha created_by query failed: {exc}", file=sys.stderr)
         return out
@@ -565,16 +568,60 @@ def edits_by_day(data, since: str, now: datetime) -> dict | None:
     return counts
 
 
+def answer_points(data, since: str, now: datetime) -> list:
+    """(day, lon, lat) for each answer on a complete day of the window: the
+    centre of the changeset's bbox, which for an answer is the one pin it
+    edited. Transient — add_answer_areas turns it into area names and drops
+    it; no coordinate reaches the state."""
+    today = now.strftime("%Y-%m-%d")
+    out = []
+    for f in data.get("features") or []:
+        day = str((f.get("properties") or {}).get("date") or "")[:10]
+        geom = f.get("geometry") or {}
+        # OSMCha's bboxes are Polygons; anything else is skipped, not raised
+        # inside the answers query's try, where it would read as that failing.
+        ring = ((geom.get("coordinates") or [[]])[0]
+                if geom.get("type") == "Polygon" else None)
+        if since <= day < today and ring:
+            lons, lats = [c[0] for c in ring], [c[1] for c in ring]
+            out.append((day, (min(lons) + max(lons)) / 2, (min(lats) + max(lats)) / 2))
+    return out
+
+
+def add_answer_areas(edits: dict | None, geojson, areas_bbox_path=None) -> None:
+    """Replaces the fetch's web_points with web_area_days, {day: {sweep area:
+    answers}} for every day web_by_day covers (an empty day is {}, so it
+    overwrites a stored one like a 0 does). The area is named the way the
+    live updates name a new pin's (delta.area_for_point: the nightly build's
+    area boxes, the nearest table where boxes overlap), so it matches the
+    dataset's own `area`. Only area names are kept: no changeset, user or
+    coordinate. Without the boxes file the split is skipped for the run."""
+    points = (edits or {}).pop("web_points", None)
+    if points is None or "web_by_day" not in edits:
+        return
+    boxes = delta.load_area_bboxes(areas_bbox_path or delta.AREAS_BBOX_PATH)
+    if not boxes:
+        print("WARN: area boxes not found; answers by area skipped this run",
+              file=sys.stderr)
+        return
+    refs = (geojson or {}).get("features") or []
+    days: dict[str, dict] = {d: {} for d in edits["web_by_day"]}
+    for day, lon, lat in points:
+        area = delta.area_for_point(lon, lat, boxes, refs) or "outside the swept areas"
+        days[day][area] = days[day].get(area, 0) + 1
+    edits["web_area_days"] = days
+
+
 def merge_edits(kept: dict, edits: dict | None, key: str = "by_day") -> dict:
     """merge_visits' sibling for the per-day changeset counts: every complete
     day today's fetch covered overwrites the stored one (the fetch is
     OSMCha's fresher answer), capped and sorted. `key` names the series in
     the fetch — by_day for the theme, web_by_day for the answers given on
-    the map itself. A fetch without it — failed, truncated, or token unset —
-    changes nothing."""
+    the map itself, web_area_days for their {area: answers} split. A fetch
+    without it — failed, truncated, or token unset — changes nothing."""
     merged = dict(kept)
     for day, n in ((edits or {}).get(key) or {}).items():
-        merged[day] = int(n)
+        merged[day] = dict(n) if isinstance(n, dict) else int(n)
     return dict(sorted(merged.items())[-EDITS_HISTORY_DAYS:])
 
 
@@ -607,7 +654,7 @@ def merge_same_day(history: list) -> list:
 
 
 def backfill_edits(days: int, state_path=None, now=None,
-                   fetch=osmcha_edits) -> dict | None:
+                   fetch=osmcha_edits, areas_bbox_path=None) -> dict | None:
     """One wider OSMCha fetch merged into the state's per-day history, and
     nothing else touched: no snapshot diff, no history entry, no mail, no
     page. The daily fetch began on 2026-08-31 and looks a week back, so the
@@ -623,6 +670,7 @@ def backfill_edits(days: int, state_path=None, now=None,
         return None
     if edits.get("error"):
         return edits  # osmcha_edits already said so on stderr
+    add_answer_areas(edits, load_json(GEOJSON_PATH), areas_bbox_path)
     state = load_state(state_path)
     before = state.get("edits_days") or {}
     merged = merge_edits(before, edits)
@@ -632,11 +680,15 @@ def backfill_edits(days: int, state_path=None, now=None,
     web_before = state.get("web_edits_days") or {}
     web_merged = (merge_edits(web_before, edits, "web_by_day")
                   if "web_changesets" in edits else web_before)
+    areas_before = state.get("web_area_days") or {}
+    areas_merged = merge_edits(areas_before, edits, "web_area_days")
     if merged != before:
         state["edits_days"] = merged
     if web_merged != web_before:
         state["web_edits_days"] = web_merged
-    if merged != before or web_merged != web_before:
+    if areas_merged != areas_before:
+        state["web_area_days"] = areas_merged
+    if merged != before or web_merged != web_before or areas_merged != areas_before:
         write_text_atomic(json.dumps(state), str(state_path))
     when = (now or datetime.now(timezone.utc)).strftime("%Y-%m-%d")
     print(f"{edits['changesets']} changesets in the {days} days to {when}; "
@@ -644,6 +696,8 @@ def backfill_edits(days: int, state_path=None, now=None,
     if "web_changesets" in edits:
         print(f"{edits['web_changesets']} answers on the map itself in the "
               "same window; " + _merge_summary(web_before, web_merged))
+    if "web_area_days" in edits:
+        print("answers by area: " + _merge_summary(areas_before, areas_merged))
     return edits
 
 
@@ -701,7 +755,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
               apps_fetch=appstats.fetch_all,
               html_path=None, history_path=None, build_log_path=None,
               private_html_path=None, delta_path=None, delta_state_path=None,
-              readers_ledger_path=None):
+              readers_ledger_path=None, areas_bbox_path=None):
     """Returns (anomalies, report). State is updated every run so the daily
     diff stays daily even when no mail goes out, and the ops page is
     rewritten every run from the same numbers. html_path="" skips the page;
@@ -769,6 +823,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     # asked for daily. The mail still carries both on digest days only.
     visits = visits_fetch(now=now)
     edits = edits_fetch(now=now)
+    add_answer_areas(edits, geojson, areas_bbox_path)
     # The store apps too (pipeline/appstats.py): downloads, installs and
     # ratings into their own history; None when no store id is configured.
     try:
@@ -803,6 +858,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     edits_days = merge_edits(state.get("edits_days") or {}, edits)
     web_edits_days = merge_edits(state.get("web_edits_days") or {}, edits,
                                  "web_by_day")
+    web_area_days = merge_edits(state.get("web_area_days") or {}, edits,
+                                "web_area_days")
 
     if edits and not edits.get("error"):
         # by_day stays out of the cached line: the merged history above is
@@ -820,6 +877,8 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
             state["edits_days"] = edits_days
         if web_edits_days:
             state["web_edits_days"] = web_edits_days
+        if web_area_days:
+            state["web_area_days"] = web_area_days
         if visits_history:
             state["visits"] = visits_history
         if readers_days:
@@ -836,7 +895,7 @@ def run_check(now=None, state_path=None, geojson_path=None, stats_path=None,
     ctx = dict(now=now, stats=stats, counts=counts, changes=changes,
                history=history[-HISTORY_DAYS:], anomalies=anomalies,
                edits=cached_edits, edits_days=edits_days,
-               web_edits_days=web_edits_days,
+               web_edits_days=web_edits_days, web_area_days=web_area_days,
                delta=summary, delta_expected=bool(delta_path),
                history_path=history_path or OPS_HISTORY_PATH,
                build_log_path=build_log_path or BUILD_LOG_PATH)

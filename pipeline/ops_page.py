@@ -1063,8 +1063,43 @@ def _stale_notes(edits: dict | None, last: str, now: datetime, *,
     return ""
 
 
+def _answer_areas(web_area_days: dict | None) -> str:
+    """Where the answers given in the app landed: the sweep area of each
+    answered pin (a Land, région, state or prefecture, else the country),
+    over the last 7 recorded days and every recorded day. Area names only —
+    the same grain as the leaderboard, which counts every editor."""
+    days = sorted((web_area_days or {}).items())
+    if not days:
+        return ""
+    start = (date.fromisoformat(days[-1][0]) - timedelta(days=6)).isoformat()
+    week: dict[str, int] = {}
+    total: dict[str, int] = {}
+    for d, areas in days:
+        for a, n in areas.items():
+            total[a] = total.get(a, 0) + n
+            if d >= start:
+                week[a] = week.get(a, 0) + n
+    if not total:
+        return ""
+    whole = ("all time" if days[0][0] <= WEB_ANSWERS_SINCE
+             else f"since {days[0][0]}")
+    p = ['<h3>Answers in the app by area</h3>\n'
+         '<p class="muted">The sweep area of each answered pin, from the '
+         "changeset's bounding box; only the area name is kept. The "
+         '<a href="/wickeltische/leaderboard.html">leaderboard</a> shows the '
+         "same areas for every editor.</p>\n"
+         '<div class="scroll">\n<table>\n<thead><tr><th class="l">area</th>'
+         f"<th>last 7 days</th><th>{esc(whole)}</th></tr></thead>\n<tbody>\n"]
+    for a in sorted(total, key=lambda a: (-week.get(a, 0), -total[a], a)):
+        p.append(f'<tr><td class="l">{esc(a)}</td><td>{_n(week.get(a, 0))}</td>'
+                 f"<td>{_n(total[a])}</td></tr>\n")
+    p.append("</tbody>\n</table>\n</div>\n")
+    return "".join(p)
+
+
 def _edits_section(edits: dict | None, edits_days: dict | None,
-                   web_edits_days: dict | None, now: datetime) -> str:
+                   web_edits_days: dict | None, now: datetime,
+                   web_area_days: dict | None = None) -> str:
     """The OSM changesets the site can claim, in one section: saved through
     its MapComplete theme (OSMCha's metadata filter on the theme URL) or an
     answer given on the map itself under the reader's own account (tagged
@@ -1215,6 +1250,7 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
     else:
         p.append(f'<p class="muted">No edits via PapaMap in the {len(union)} '
                  "recorded days.</p>\n")
+    p.append(_answer_areas(web_area_days))
 
     p.append('<details>\n<summary>How this is counted '
              f'<span class="tag">every day, {len(union)} days</span></summary>\n'
@@ -1720,6 +1756,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
                 anomalies: list[str], edits: dict | None = None,
                 edits_days: dict | None = None,
                 web_edits_days: dict | None = None,
+                web_area_days: dict | None = None,
                 regions: dict | None = None, build: dict | None = None,
                 site_url: str = "https://papamap.de",
                 private: bool = False, visits: dict | None = None,
@@ -1731,7 +1768,8 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
     the entry for today already appended); `regions` is region_rows()'s
     output; `build` is parse_build_log()'s; `edits` the cached OSMCha line,
     `edits_days` its per-day history ({date: changesets}), `web_edits_days`
-    the same for the answers given on the map itself. `private` adds the
+    the same for the answers given on the map itself, `web_area_days` their
+    {date: {area: answers}} split. `private` adds the
     Readers section from `readers` ({date: count}) and `visits` ({date:
     {requests, uniques}}) and the Apps section from `apps` (this run's
     store fetches), `app_days` (the per-day store history) and
@@ -1805,7 +1843,7 @@ def render_page(*, now: datetime, stats: dict | None, counts: dict | None,
     if private:
         p.append(_readers_section(readers, visits, now))
         p.append(_apps_section(apps, app_days, app_ratings, now))
-    p.append(_edits_section(edits, edits_days, web_edits_days, now))
+    p.append(_edits_section(edits, edits_days, web_edits_days, now, web_area_days))
     p.append(_movement_section(history, changes, now))
     p.append(_dataset_section(counts, local, glob, delta, delta_expected))
     p.append(_pipeline_section(build, regions, history, now, stats))
