@@ -1104,6 +1104,8 @@ function askWheelchairHTML(which, busy = false, who = false) {
 // which card it was opened on and comes back open there with the count
 // recomputed; with nothing left to ask it is not rendered at all. A tap on
 // the summary grows the card, so the click handler pans it into view.
+// Kept across a close: the app's login return and a logout reopen the card,
+// and the reader who answered inside the fold is still inside it.
 let moreOpen = null;   // osm_url of the card whose fold the reader opened
 const moreHTML = (qs, open) =>
   `<details class="more"${open ? " open" : ""}><summary>${esc(t("askMorePlace", { n: qs.length }))}</summary>${qs.join("")}</details>`;
@@ -2336,7 +2338,7 @@ map.on("moveend", () => {
 let suppressCardOnClose = false;
 
 function onPopupClosed(closedPopup) {
-  if (popup === closedPopup) { popup = null; popupObj = null; moreOpen = null; updateSignMarker(); }
+  if (popup === closedPopup) { popup = null; popupObj = null; updateSignMarker(); }
   syncNearestBtn();
   if (suppressCardOnClose) { suppressCardOnClose = false; return; }
   review?.pinClosed();   // a switch of language or mode returned above: not the reader closing a pin
@@ -2381,7 +2383,6 @@ function closePopupSilently() {
   popup.remove();
   popup = null;
   popupObj = null;
-  moreOpen = null;   // a reopened card starts with the fold closed (v102)
   syncNearestBtn();
 }
 
@@ -2654,11 +2655,13 @@ document.addEventListener("click", (e) => {
   // so the next re-render of this card keeps it, and pan.
   const sum = e.target.closest?.("details.more > summary");
   if (sum) setTimeout(() => {
-    moreOpen = sum.parentElement?.open ? popupObj?.obj.osm_url ?? null : null;
+    const open = !!sum.parentElement?.open;
+    moreOpen = open ? popupObj?.obj.osm_url ?? null : null;
     // The card now differs from what showPopupHTML last set by the fold
-    // alone: tell it, or the next delta poll redraws the card for nothing
-    // and the reader's scroll and focus jump.
-    if (popupObj) popupHtmlShown = popupObj.kind === "place" ? placeHTML(popupObj.obj) : popupHTML(popupObj.obj);
+    // alone: flip that in the remembered markup (not a rebuild, which would
+    // pass off an opening-hours badge gone stale as shown), or the next
+    // delta poll redraws the card for nothing and scroll and focus jump.
+    if (popupHtmlShown) popupHtmlShown = popupHtmlShown.replace(`<details class="more"${open ? "" : " open"}>`, `<details class="more"${open ? " open" : ""}>`);
     panPopupIntoView();
   }, 0);
   const wcMore = e.target.closest?.("button.wc-more");
@@ -3660,7 +3663,6 @@ function applyFeatureSets(fc, places) {
       popup.remove();
       popup = null;
       popupObj = null;
-      moreOpen = null;   // a reopened card starts with the fold closed (v102)
     }
   }
   // A background refresh can drop the very object a STANDING room card is

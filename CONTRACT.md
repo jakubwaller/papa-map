@@ -31,7 +31,10 @@
 > three) and a fifth line did not fit a 12 mini. The first folded question
 > carries the login line where the room question does not. An answer re-renders
 > the card; the fold comes back open on that card with the count recomputed,
-> and with nothing left to ask it is not rendered.
+> and with nothing left to ask it is not rendered. A fold the reader opened
+> stays open on that card for the life of the page, across a close and reopen
+> too: the app's login return rebuilds the card, and the reader who answered
+> inside the fold is still inside it.
 > MapComplete is the primary button only where nothing in the card asks. The
 > cost to watch is fewer play and high-chair answers; the per-question
 > changeset comments make it countable.
