@@ -916,9 +916,11 @@ const textLink = (url, key) =>
 const mcLink = (url, primary) => primary
   ? `<a class="btn primary" data-edit-check href="${esc(url)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`
   : textLink(url, "popupAnswerMC");
+// The text links are spaced by a CSS gap: a separator would dangle where the
+// line wraps, and at 375 px in German it always wraps.
 const linksHTML = (buttons, texts) =>
   `<div class="links">${buttons.join("")}</div>` +
-  (texts.length ? `<div class="textlinks">${texts.join("")}</div>` : "");   // spaced by CSS gap: a separator would dangle where the line wraps at 375 px
+  (texts.length ? `<div class="textlinks">${texts.join("")}</div>` : "");
 
 function popupHTML(f) {
   const s = viewOf(f, mode);
