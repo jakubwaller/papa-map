@@ -732,11 +732,14 @@ card off-screen); there is no optimistic pin.
 ### Popup links
 
 Answering and going somewhere look different. The answer pills (room, play,
-high chair, wheelchair) are outlined; going somewhere is one row of text links
-under a thin divider, each with a small arrow: Route (with a small directions
-icon), MapComplete, OpenStreetMap, and the round icon-only Share button at the
-row's right end. The only green filled button is MapComplete where the card
-has nothing left to ask itself, because green means "a dad can reach it".
+high chair, wheelchair) are outlined; under a thin divider sits one row with
+Route (text link, small directions icon and arrow) and the round icon-only
+Share button at the row's right end. The MapComplete link ("Add or correct
+details", with its arrow) is the last line inside the fold (v105); the
+OpenStreetMap link is gone. The only green filled button is MapComplete on a pin
+that cannot ask the room itself (the recorded value is unreadable) and has
+nothing else to ask, because green means "a dad can reach it"; that pin has no
+fold.
 
 ### Share a pin
 
@@ -865,7 +868,14 @@ alone, and the MapComplete theme asks the same two on every layer.
 Two more lines did not fit: most pins already asked two or three questions.
 So the room question stays on top and everything else — play corner, high
 chair and the two wheelchair questions — folds behind one native `<details>`
-line, "More about this place (n)", closed by default. The fold will cost some
+line, "More about this place (n)", closed by default. Since v105 the fold is
+one remembered state for every card (`papamap-more-open`), not one per card:
+open by default for a logged-in reader until they close one, closed for
+everyone else until they open one. It always renders on a pin (the count only
+shows above zero) because the MapComplete link lives at its end, and the
+place-wheelchair question is the exception to the folding: right after this
+reader's own room answer it stands unfolded where the room question was, until
+answered. The fold will cost some
 play and high-chair answers; every in-app answer carries a per-question
 changeset comment, so the before and after can be counted. A reader's own
 wheelchair answer is remembered the way the others are (v78) and may count for

@@ -138,7 +138,9 @@ test("the filter chips are named by their text and described by describeBy", () 
 // here until it is escaped or deliberately added to the list.
 test("popupHTML and placeHTML interpolate only escaped text or known markup", () => {
   const SAFE = [
-    /^rows\.join\(""\)$/, /^parts\.join\(" · "\)$/, /^primary$/, /^texts\.join\(""\)$/,
+    /^rows\.join\(""\)$/, /^parts\.join\(" · "\)$/, /^primary$/, /^route$/, /^primary \? "btn primary" : "textlink"$/,
+    /^primary \? "" : '<span aria-hidden="true"> \\u2197<\/span>'$/, /^qs\.join\(""\)$/, /^link$/, /^mcLink\(mcUrl, false\)$/,
+    /^foldOpen\(moreOpen, !!getUser\(\)\) \? " open" : ""$/,
     /^sub$/, /^s\.cls$/, /^asks \? " ask-ctx" : ""$/, /^shareButtonHTML\(\)$/,
   ];
   // `fn(...)` whose opening paren closes at the very last character, so a
@@ -156,8 +158,8 @@ test("popupHTML and placeHTML interpolate only escaped text or known markup", ()
   const CALLS = new Set(["esc", "starHTML", "svgIcon", "tableRowHTML"]);
   // The link helpers are arrow consts: each ends at the first `;` that
   // closes a line and is followed by the next const, a blank line or a comment.
-  const ARROWS = new Set(["textLink", "mcLink", "linksHTML"]);
-  for (const name of ["popupHTML", "placeHTML", "textLink", "mcLink", "linksHTML"]) {
+  const ARROWS = new Set(["mcLink", "linksHTML", "moreHTML"]);
+  for (const name of ["popupHTML", "placeHTML", "mcLink", "linksHTML", "moreHTML"]) {
     const m = src.match(ARROWS.has(name)
       ? new RegExp(`\\nconst ${name} = [\\s\\S]*?;\\n(?=const |\\n|//)`)
       : new RegExp(`\\nfunction ${name}\\(.*?\\n\\}\\n`, "s"));

@@ -1391,3 +1391,11 @@ export function nearestFeature(point, features, project) {
   }
   return best;
 }
+
+// The fold's state (v105): what the reader last chose (true / false), else
+// open for a logged-in reader and closed for the rest.
+export const foldOpen = (stored, loggedIn) => stored ?? loggedIn;
+
+// Whether an answer override carries a room answer — a room answer remembers
+// changing_table; play, high chair and wheelchair answers never do.
+export const roomAnsweredHere = (override) => override?.changing_table !== undefined;
