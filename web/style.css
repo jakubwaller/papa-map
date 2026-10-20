@@ -1006,7 +1006,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   vertical-align: baseline;
 }
 .popup .links { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line-soft); display: flex; flex-wrap: wrap; gap: 6px; }
-.popup .textlinks { margin-top: 2px; font-size: 12.5px; font-weight: 600; }
+.popup .textlinks { margin-top: 2px; display: flex; flex-wrap: wrap; gap: 0 16px; font-size: 12.5px; font-weight: 600; }
 .popup .textlink { display: inline-block; padding: 6px 0; color: var(--green-strong); text-decoration: none; }
 .popup .textlink:is(:hover, :focus-visible) { text-decoration: underline; }
 .popup .textlink:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
@@ -1028,8 +1028,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 /* Grey filled: Route and Share go somewhere, they do not answer anything. */
 :is(.popup, #venue-ask) .btn.soft { background: #f1f4f2; border-color: transparent; color: var(--ink); }
 :is(.popup, #venue-ask) .btn.soft:hover { background: #e4e9e4; color: var(--ink); }
-/* The share button: icon only, in the same row as Route and the OSM link —
-   at 375 px in German that row has no room left for one more word. The
+/* The share button: icon only, in the same row as Route (and the green
+   MapComplete button where the card asks nothing) — at 375 px in German
+   that row has no room left for one more word. The
    :is() is for specificity: the pill rule above carries an id through it,
    and a plain .popup selector lost its padding to that rule (6 Oct 2026). */
 :is(.popup, #venue-ask) .btn.icon-btn {

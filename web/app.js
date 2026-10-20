@@ -918,7 +918,7 @@ const mcLink = (url, primary) => primary
   : textLink(url, "popupAnswerMC");
 const linksHTML = (buttons, texts) =>
   `<div class="links">${buttons.join("")}</div>` +
-  (texts.length ? `<div class="textlinks">${texts.join(" · ")}</div>` : "");
+  (texts.length ? `<div class="textlinks">${texts.join("")}</div>` : "");   // spaced by CSS gap: a separator would dangle where the line wraps at 375 px
 
 function popupHTML(f) {
   const s = viewOf(f, mode);
