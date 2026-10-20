@@ -864,6 +864,11 @@ reads, and "Is the changing table usable from a wheelchair?" writes
 `changing_table:wheelchair=*`, carried as `table_wheelchair` and shown as a row
 of its own. The table pins ask both, the play-place rings the place question
 alone, and the MapComplete theme asks the same two on every layer.
+Since 20 Oct 2026 the place question carries the OSM definition of `limited` in
+parentheses (one small step of up to 7 cm, help needed or not every room
+reachable): readers
+answer from memory as often as on the spot, and the middle pill meant nothing
+without it. The table question had its definition from the start.
 
 Two more lines did not fit: most pins already asked two or three questions.
 So the room question stays on top and everything else — play corner, high
