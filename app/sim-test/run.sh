@@ -11,12 +11,13 @@ PLATFORM=${1:?usage: run.sh ios|android}
 OUT=sim-test/out
 mkdir -p "$OUT"; rm -f "${OUT:?}"/*.png; : > "$OUT/app.log"
 npm ci --no-audit --no-fund >/dev/null && npm run build >/dev/null || exit 1
+# Whatever happens from here on, the native projects get a clean shell back: a
+# phone built from Xcode or Android Studio after a run must not carry the mock.
+trap 'npm run build >/dev/null 2>&1 && npx cap sync $PLATFORM >/dev/null 2>&1' EXIT
+trap 'exit 130' INT TERM
 cp sim-test/mock.js www/mock.js
 sed -i '' 's#<head>#<head><script src="mock.js"></script>#' www/index.html
 npx cap sync $PLATFORM >/dev/null || exit 1
-# Whatever happens, the native projects get a clean shell back: a phone built
-# from Xcode or Android Studio after a run must not carry the mock.
-trap 'npm run build >/dev/null 2>&1 && npx cap sync $PLATFORM >/dev/null 2>&1' EXIT
 
 if [ "$PLATFORM" = ios ]; then
   UDID=${SIM_UDID:-$(xcrun simctl list devices available -j | python3 -c '
@@ -55,7 +56,7 @@ else
   adb emu geo fix 9.9930 53.5503 >/dev/null
   adb shell wm dismiss-keyguard
   adb logcat -c
-  adb logcat -v raw -s Capacitor/Console > "$OUT/app.log" 2>&1 &
+  "$ANDROID_HOME/platform-tools/adb" -e logcat -v raw -s Capacitor/Console > "$OUT/app.log" 2>&1 &   # the binary itself, so $! is logcat
   LOG_PID=$!
   adb shell am start -W -n de.papamap.app/.MainActivity >/dev/null
   shoot() { adb exec-out screencap -p > "$1"; }
@@ -74,4 +75,4 @@ for i in $(seq 1 720); do   # six minutes at most
 done
 kill $LOG_PID 2>/dev/null   # on iOS this also ends the app
 grep '\[TEST\]' "$OUT/app.log" | sed 's/^.*\[TEST\]/[TEST]/' | cut -c1-300
-if grep -q '\[TEST\].*DONE' "$OUT/app.log"; then echo "PASS: $(ls "$OUT"/*.png | wc -l | tr -d ' ') screenshots in app/$OUT"; else echo "FAIL: see app/$OUT/app.log"; exit 1; fi
+if grep -q '\[TEST\].*DONE' "$OUT/app.log" && ! grep -q '\[TEST\].*\(JSERR\|REJECT\)' "$OUT/app.log"; then echo "PASS: $(ls "$OUT"/*.png | wc -l | tr -d ' ') screenshots in app/$OUT"; else echo "FAIL: see app/$OUT/app.log"; exit 1; fi

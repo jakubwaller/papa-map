@@ -7,12 +7,13 @@
   // Where the pins are picked from; run.sh puts the phone's fix in the same area.
   const AREA = { west: 9.93, south: 53.54, east: 10.05, north: 53.60 };   // Hamburg
   const LAT = 53.5503, LON = 9.9930;   // Rathausmarkt: the mocked node's and the phone's fix (run.sh)
+  const RESULT = { lat: LAT + 0.03, lon: LON + 0.05 };   // the mocked search hit, a few km off the fix
   const realFetch = window.fetch.bind(window);
   const t0 = Date.now();
   const log = (...a) => console.log("[TEST]", ((Date.now() - t0) / 1000).toFixed(1) + "s", ...a);
-  const errors = [];   // a page error anywhere in the run fails it at the end
-  addEventListener("error", (e) => { errors.push(e.message); log("JSERR", e.message, e.filename, e.lineno); });
-  addEventListener("unhandledrejection", (e) => { errors.push(String(e.reason?.message || e.reason)); log("REJECT", errors.at(-1)); });
+  // A page error on any of the loads fails the run (run.sh greps for these).
+  addEventListener("error", (e) => log("JSERR", e.message, e.filename, e.lineno));
+  addEventListener("unhandledrejection", (e) => log("REJECT", String(e.reason?.message || e.reason)));
   // Four launches of one install, each a step: 0 picks the pins from the
   // dataset, 1 answers on a grey pin, 2 opens a green one, 3 is the map alone.
   const step = localStorage.getItem("test-step") || "0";
@@ -75,7 +76,7 @@
       return text("");
     }
     if (url.includes("photon.komoot.io")) return json({ type: "FeatureCollection", features: [
-      { type: "Feature", geometry: { type: "Point", coordinates: [LON + 0.0004, LAT + 0.0002] },
+      { type: "Feature", geometry: { type: "Point", coordinates: [RESULT.lon, RESULT.lat] },
         properties: { osm_type: "N", osm_id: 990000001, osm_key: "amenity", osm_value: "cafe", name: "Mock Café",
                       street: "Teststraße", housenumber: "1", city: "Hamburg" } }] });
     if (url.includes("data/delta.json")) {   // an empty delta: the reader's own answers stay the only change
@@ -146,12 +147,19 @@
         log("STATE tw answered", state()); await shot("06-table-answered");
         check(rowCount() === rows + 1, "a table row after the table answer");
         log("OVERRIDES", localStorage.getItem("papamap-answer-overrides"));
+        // Leave the fold closed: on the next pin only the remembered state can
+        // keep it closed, since a logged-in reader's default is open.
+        fold().querySelector("summary").click(); await sleep(500);
+        check(!fold().open && localStorage.getItem("papamap-more-open") === "0", "fold closed again before the next pin");
         next("2");
       } else if (step === "2") {
         await waitFor("green pin popup", () => popup() && fold());
         await sleep(2500);
-        log("STATE green pin", state()); await shot("07-second-pin-sticky-fold");
-        check(fold().open, "fold open on the second pin (sticky)");
+        log("STATE green pin", state()); await shot("07-second-pin-fold-remembered-closed");
+        check(!fold().open, "fold closed on the second pin: the remembered state, not the logged-in default");
+        fold().querySelector("summary").click(); await sleep(700);
+        log("STATE green pin, fold open", state()); await shot("08-second-pin-fold-open");
+        check(fold().open && localStorage.getItem("papamap-more-open") === "1", "fold open again and remembered");
         const route = $(".maplibregl-popup a[data-route]");
         log("ROUTE", route?.textContent.trim(), route?.getAttribute("href"));
         const mc = $(".maplibregl-popup details.more a");
@@ -163,7 +171,7 @@
         await waitFor("what's-new dialog", () => $("#intro-dialog[open]"), 40000);
         await sleep(1000);
         log("NEWS", $("#intro-title")?.textContent, "|", $("#intro-list")?.textContent.trim().replace(/\s+/g, " ").slice(0, 400));
-        await shot("08-whats-new");
+        await shot("09-whats-new");
         $("#intro-ok").click(); await sleep(800);
         const inp = $("#search-input");
         tap(inp); inp.focus(); inp.value = "Teststraße Mock";   // only the mocked Photon result matches
@@ -171,17 +179,16 @@
         await waitFor("search results", () => $("#search-results li.search-opt"), 15000);
         await sleep(1200);
         log("RESULTS", $$("#search-results li").map((l) => l.textContent.trim().replace(/\s+/g, " ")).join(" | ").slice(0, 400));
-        await shot("09-search");
+        await shot("10-search");
         tap($("#search-results li.search-opt")); await sleep(2500);
         const c = window._papamap?.getCenter?.();
         log("after search tap: centre", JSON.stringify(c));
-        await shot("10-search-result");
-        check(c && Math.abs(c.lng - LON) < 0.01 && Math.abs(c.lat - LAT) < 0.01, "map flew to the search result");
+        await shot("11-search-result");
+        check(c && Math.abs(c.lng - RESULT.lon) < 0.01 && Math.abs(c.lat - RESULT.lat) < 0.01, "map flew to the search result");
         $("#mode-mama").click(); await sleep(1800);
         log("MODE mum pressed", $("#mode-mama")?.getAttribute("aria-pressed"));
-        await shot("11-mum-view");
+        await shot("12-mum-view");
         check($("#mode-mama")?.getAttribute("aria-pressed") === "true", "mum view on");
-        check(!errors.length, errors.length + " page errors, first: " + errors[0]);
         log("DONE");
       }
     } catch (e) { log("FAIL", e.message); }
