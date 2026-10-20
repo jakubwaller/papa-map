@@ -123,6 +123,9 @@ export function loadPlaces(fc) {
       // "no" or null, and only those: a dataset from before v27 has no such
       // property and must read as the open question, never as an answer.
       changing_table: p.changing_table === "no" ? "no" : null,
+      // v102: false = only a high chair is recorded. Missing (a dataset from
+      // before v102) means true: every old place is a play place.
+      play_area: p.play_area !== false,
       // As on the pins (v26), read with the same strictness (v28).
       wheelchair: WHEELCHAIR_STATES.includes(p.wheelchair) ? p.wheelchair : null,
       toilets_wheelchair: WHEELCHAIR_STATES.includes(p.toilets_wheelchair)
@@ -255,6 +258,12 @@ export function filterFeatures(features, visible, playOnly = false, wheelchairOn
 export function placeFeatures(places, wheelchairOnly = false, highchairOnly = false) {
   const byWheelchair = wheelchairOnly ? places.filter(isWheelchairOk) : places;
   return highchairOnly ? byWheelchair.filter(isHighchair) : byWheelchair;
+}
+
+// The two ring chips (v102): "Play area only" takes the places with a play
+// area, "High chair only" those that record nothing but a high chair.
+export function splitPlaces(places, playOn = true, highchairOn = true) {
+  return places.filter((p) => (p.play_area === false ? highchairOn : playOn));
 }
 
 // ?bbox=minLon,minLat,maxLon,maxLat — how the Bundesland pages link into the

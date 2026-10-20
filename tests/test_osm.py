@@ -593,6 +593,19 @@ def test_only_query_faults_are_unfixable():
         assert not osm.is_transient(http(status)), status
 
 
+def test_highchair_ql_prefilter_accepts_every_true_highchair_value():
+    import re
+    from pipeline.classify import highchair_state
+    ql = config.highchair_ql("Hamburg", "4")
+    assert ql.count("out tags center;") == 1 and ql.count("area[") == 1
+    assert '[!"changing_table"]' in ql
+    rx = re.search(r'\["highchair"~"([^"]+)",i\]', ql).group(1)
+    for value in ["yes", "Yes", "YES", " yes ", "1", "2", "10", "007", "no", "0", "00",
+                  "limited", "1+", "", "ja", "\u0663"]:
+        if highchair_state({"highchair": value}) is True:
+            assert re.search(rx, value, re.I), value
+
+
 def test_split_sweep_keeps_a_venues_outdoor_play_area_and_drops_a_public_playground():
     outdoor = {"type": "node", "id": 1, "tags": {"kids_area:outdoor": "yes"}}
     indoor_no = {"type": "node", "id": 2, "tags": {"kids_area": "yes", "kids_area:indoor": "no"}}

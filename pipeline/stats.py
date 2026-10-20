@@ -93,7 +93,14 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
         # can actually draw, so the coordless are skipped here too.
         "play_tables": play_tables,
         "play_places": sum(1 for el in (play_data or {}).get("elements", [])
-                           if element_coords(el)[0] is not None),
+                           if has_play_area(el.get("tags") or {})
+                           and element_coords(el)[0] is not None),
+        # High chair, no play area, no changing_table key (v102): the other
+        # half of the open questions in play_data.
+        "highchair_places": sum(1 for el in (play_data or {}).get("elements", [])
+                                if not has_play_area(el.get("tags") or {})
+                                and highchair_state(el.get("tags") or {}) is True
+                                and element_coords(el)[0] is not None),
         # The third kind (v27): a play corner and `changing_table=no`. Drawn
         # as a dashed ring, so it is in play_places.geojson — but it is not an
         # open question, so it is not in play_places.

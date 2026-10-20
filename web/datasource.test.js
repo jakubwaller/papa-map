@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
          chipKeys, chipView,
-         isWheelchairOk, isWheelchairLimited, countWheelchair, pinFeatures, placeFeatures,
+         isWheelchairOk, isWheelchairLimited, countWheelchair, pinFeatures, placeFeatures, splitPlaces,
          isHighchair, countHighchair,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
@@ -80,7 +80,7 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   const places = loadPlaces(PLACES_FC);
   assert.equal(places.length, 3);
   assert.deepEqual(places[0], {
-    idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe", changing_table: null,
+    idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe", changing_table: null, play_area: true,
     wheelchair: null, toilets_wheelchair: null, wheelchair_description: null,
     highchair: null, highchair_recorded: false,
     opening_hours: "Mo-Fr 09:00-18:00",
@@ -2107,6 +2107,21 @@ test("zoneForFeature: the feature's own tz, else its area's default, else null",
   assert.equal(zoneForFeature({ tz: null, area: "Australia" }, areaTz), "Australia/Sydney");
   assert.equal(zoneForFeature({ tz: null, area: "Atlantis" }, areaTz), null);
   assert.equal(zoneForFeature({ tz: null, area: "Australia" }, undefined), null);
+});
+
+test("loadPlaces reads a missing play_area as true, and splitPlaces splits the two ring chips", () => {
+  const places = loadPlaces({ features: [
+    feat(1, 1, {}),
+    feat(2, 2, { play_area: true }),
+    feat(3, 3, { play_area: false, highchair: true }),
+  ] });
+  assert.deepEqual(places.map((p) => p.play_area), [true, true, false]);
+  assert.deepEqual(splitPlaces(places).map((p) => p.idx), [0, 1, 2]);
+  assert.deepEqual(splitPlaces(places, true, false).map((p) => p.idx), [0, 1]);
+  assert.deepEqual(splitPlaces(places, false, true).map((p) => p.idx), [2]);
+  assert.deepEqual(splitPlaces(places, false, false), []);
+  // the high-chair chip narrows both kinds of ring on top
+  assert.deepEqual(splitPlaces(placeFeatures(places, false, true)).map((p) => p.idx), [2]);
 });
 
 test("nearestFeature picks the pin closest to the tap, or null", () => {

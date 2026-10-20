@@ -46,7 +46,7 @@ from .pages import ICON, STYLE, esc
 # night that recounts a seventh of the areas shows a seventh of them swept.
 # ", recount failed" marks the reuse that was not the rota's: tonight's count
 # failed and the cached one stood in (the ops page names those areas).
-AREA_LINE = re.compile(r"^\s+(?P<area>.+?): ct=(?P<ct>\d+) play=(?P<play>\d+) "
+AREA_LINE = re.compile(r"^\s+(?P<area>.+?): ct=(?P<ct>\d+) play=(?P<play>\d+)(?: hc=(?P<hc>\d+))? "
                        r"toilets=(?P<toilets>\d+)"
                        r"(?: \(counted \d+ d ago(?P<failed>, recount failed)?\))?\s*$")
 WARN_LINE = re.compile(r"^\s*WARN\b(?P<text>.*)$")

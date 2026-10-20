@@ -996,6 +996,19 @@ PLAY_AREA_CLAUSES = (
 )
 
 
+def highchair_ql(area_name: str = "Deutschland", admin_level: str = "2",
+                 date: str | None = None) -> str:
+    """Objects recording a high chair and no changing_table key — places for the
+    prospect list. Its own small query, not a clause in sweep_ql: measured on
+    the UK (2026-10-11), a highchair clause in the union costs 4-11 s and
+    pushes the sweep to ~45 s, at the [timeout:55] safety line, because every
+    clause pays its own (area.a) pass. The regex is looser than
+    classify.highchair_state (any value with a digit 1-9, or "yes", any case);
+    Python re-applies the rule."""
+    return (_area_ql(area_name, admin_level, date)
+            + 'nwr["highchair"~"yes|[1-9]",i][!"changing_table"](area.a);out tags center;')
+
+
 def sweep_ql(area_name: str = "Deutschland", admin_level: str = "2",
              date: str | None = None) -> str:
     """The nightly build's object query: everything carrying a changing_table

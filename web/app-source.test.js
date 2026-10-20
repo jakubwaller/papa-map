@@ -123,7 +123,7 @@ test("the filter chips are named by their text and described by describeBy", () 
     assert.ok(/describeBy\(b, /.test(body), `${name} does not describe itself`);
   }
   // Nor may the code that wraps or places them name them over again.
-  for (const name of ["playChip", "placesChip", "renderChips"]) {
+  for (const name of ["playChip", "placesChip", "placesHcChip", "renderChips"]) {
     const start = src.indexOf(`function ${name}(`);
     assert.ok(start > 0, name);
     const body = src.slice(start, src.indexOf("\n}\n", start));

@@ -1550,3 +1550,9 @@ def test_apps_section_says_unset_failed_and_no_day_yet_in_words():
     assert ('<span class="l">Since launch</span><span class="v">6</span>'
             '<span class="s">in the store since 2026-09-25</span>') in html
     assert "6 since launch 2026-09-25 · Play: no report yet" in html
+
+
+def test_area_line_with_the_highchair_count_still_parses():
+    build = ops_page.parse_build_log("  Bayern: ct=9 play=4 hc=7 toilets=50\n"
+                                     "{'features': 1, 'pages': 1}\n")
+    assert build["areas"][0]["play"] == 4 and build["areas"][0]["toilets"] == 50

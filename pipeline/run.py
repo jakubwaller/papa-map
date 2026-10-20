@@ -4,6 +4,7 @@ import sys
 import time
 from datetime import datetime, timezone
 
+from .classify import has_play_area
 from . import (delta, export, leaderboard, osm, pages, stats, sweep_cache, timezones,
                toilet_counts)
 from .room_choices import answer_men_only_table, answer_play_table, answer_status_table
@@ -14,7 +15,7 @@ from .config import (AREA_COUNTRY, AREAS_PATH, BUNDESLAENDER, CITY_AREAS,
                      SWEEP_DEADLINE_S, SWEEP_PAUSE_S, SWEEP_ROUNDS,
                      TOILETS_COUNTS_PATH,
                      TOILETS_COUNTS_PERIOD_DAYS, changing_table_ids_ql,
-                     display_area as configured_area, sweep_areas, sweep_ql,
+                     display_area as configured_area, highchair_ql, sweep_areas, sweep_ql,
                      toilets_counts_ql)
 
 
@@ -289,6 +290,25 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                 "mirror (stale area database or typo'd "
                 "PAPAMAP_AREA_NAME?)")
         if saved is None:
+            # Its own query, after everything else succeeded (see
+            # config.highchair_ql). A failure costs the area its high-chair
+            # places tonight, not its tables: failing the area would build it
+            # from last night's saved answer (v99), tables included. Its
+            # places ride in the saved answer, so a night built from the
+            # cache keeps them too.
+            try:
+                hc_answer = overpass_fetch(highchair_ql(area_name, admin_level))
+            except osm.OverpassUnavailable:
+                raise  # the whole service is resting: fail the round as one
+            except Exception as exc:
+                print(f"  WARN {area_name}: high-chair query failed ({exc}); "
+                      "no high-chair places from this area tonight", file=sys.stderr)
+                hc_answer = {}
+            else:
+                _note_base(hc_answer)
+            sweep = dict(sweep, elements=list(sweep["elements"]) + [
+                el for el in hc_answer.get("elements", ())
+                if "changing_table" not in (el.get("tags") or {})])
             try:
                 sweep_cache.save(SWEEP_CACHE_DIR, ql, sweep, today)
             except OSError as exc:
@@ -318,7 +338,8 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         counted = ("" if recount and fallback is None else
                    f" (counted {toilet_counts.age_days(counts_cache[area_name], today)} d ago"
                    f"{', recount failed' if fallback is not None else ''})")
-        print(f"  {area_name}: ct={len(ct)} play={len(play)} "
+        n_hc = sum(1 for el in play if not has_play_area(el.get("tags") or {}))
+        print(f"  {area_name}: ct={len(ct)} play={len(play) - n_hc} hc={n_hc} "
               f"toilets={toilets_total}{counted}", file=sys.stderr)
 
     deadline = time.monotonic() + budget

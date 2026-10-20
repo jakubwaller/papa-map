@@ -80,7 +80,7 @@ EUROPE_SWEEP = ELEVEN_SWEEP + [(config.COUNTRY_AREAS[c][0][0], "2")
 BY_CODE = {code: name for (name, _), (_, code) in config.AREA_SELECTORS.items()}
 
 
-def _fake_overpass(load_fixture, ct=None):
+def _fake_overpass(load_fixture, ct=None, hc=None):
     """Answers every sweep area with the same fixtures (`ct` replaces the
     changing-table half when a test needs an extra object in it) — dedup_elements must
     collapse the 17 identical copies back to one, which is exactly what the
@@ -90,7 +90,7 @@ def _fake_overpass(load_fixture, ct=None):
     together exactly as Overpass would; the ids-only city query and the
     backfill's narrow query carry no kids_area clause and get the
     changing_table fixture alone."""
-    areas_seen = []
+    areas_seen, hc_seen = [], []
     ct_fixture = ct or load_fixture("overpass_changing_tables.json")
 
     def fetch(ql, **kwargs):
@@ -104,6 +104,9 @@ def _fake_overpass(load_fixture, ct=None):
         value = m.group(2)
         if m.group(1) == "ISO3166-2":
             value = BY_CODE[value]
+        if '"highchair"' in ql:
+            hc_seen.append((value, m.group(3)))  # kept apart: the other tests count two per area
+            return {"elements": hc or []}
         areas_seen.append((value, m.group(3)))
         if '"kids_area"' in ql:
             return {"elements": ct_fixture["elements"]
@@ -121,6 +124,7 @@ def _fake_overpass(load_fixture, ct=None):
                 if any(k.startswith("toilets:num_chambers")
                        for k in (el.get("tags") or {}))))
     fetch.areas_seen = areas_seen
+    fetch.hc_seen = hc_seen
     return fetch
 
 
@@ -1161,7 +1165,7 @@ def test_an_empty_sweep_with_toilets_on_the_same_host_still_resolves(
                            taginfo_fetch=_fake_taginfo(load_fixture), now=NOW,
                            sweep_rounds=1, sweep_pause_s=0)
     assert summary["toilets_total"] == 59 and summary["features"] == 0
-    assert calls[-1] == ("http://m2", "count")
+    assert [c for c in calls if c[1] == "count"][-1] == ("http://m2", "count")
 
 
 def test_a_resting_recount_host_fails_only_its_own_area(tmp_path, load_fixture, monkeypatch):
@@ -1213,6 +1217,53 @@ def test_a_partial_rerun_neither_queries_foreign_cities_nor_narrows_history(
     assert len(fake.areas_seen) == 16 + len(_city_sweep(("de",)))
     assert json.loads((tmp_path / "history.json").read_text(encoding="utf-8")) == full
     assert "history and leaderboard left unchanged" in capsys.readouterr().err
+
+
+HC_PLACE = {"type": "node", "id": 9101, "lat": 53.5, "lon": 9.9,
+            "tags": {"amenity": "restaurant", "highchair": "yes"}}
+HC_NO = {"type": "node", "id": 9102, "lat": 53.5, "lon": 9.9,
+         "tags": {"amenity": "restaurant", "highchair": "no"}}
+HC_HAS_TABLE = {"type": "node", "id": 9103, "lat": 53.5, "lon": 9.9,
+                "tags": {"amenity": "restaurant", "highchair": "yes", "changing_table": "yes"}}
+
+
+def test_highchair_places_join_the_places_file_and_stats(tmp_path, load_fixture):
+    play_geojson = tmp_path / "play_places.geojson"
+    fake = _fake_overpass(load_fixture, hc=[HC_PLACE, HC_NO, HC_HAS_TABLE])
+    summary = run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(tmp_path / "stats.json"),
+        play_geojson_path=str(play_geojson), overpass_fetch=fake,
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+        history_path=str(tmp_path / "history.json"),
+        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+    ids = [f["properties"]["osm_id"] for f in
+           json.loads(play_geojson.read_text(encoding="utf-8"))["features"]]
+    assert ids == [9001, 9002, 9003, 9101]
+    assert summary["play_places"] == 3
+    local = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))["local"]
+    assert local["play_places"] == 3 and local["highchair_places"] == 1
+
+
+def test_a_failing_highchair_query_costs_the_rings_not_the_area(tmp_path, load_fixture, capsys):
+    # Failing the area would build it from last night's saved answer (v99),
+    # its changing tables included, for one optional query.
+    inner = _fake_overpass(load_fixture)
+    fail_next = {"Bayern"}
+
+    def flaky(ql, **kwargs):
+        if '"highchair"' in ql and any(f'"{n}"' in ql for n in fail_next):
+            fail_next.clear()
+            raise requests.ConnectionError("mirror cascade exhausted")
+        return inner(ql, **kwargs)
+
+    summary = run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(tmp_path / "stats.json"),
+        overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+        history_path=str(tmp_path / "history.json"), now=NOW, sweep_pause_s=0)
+    assert summary["features"] == 7
+    assert inner.areas_seen.count(("Bayern", "4")) == 2  # sweep + count, once: not retried
+    assert "WARN Bayern: high-chair query failed (mirror cascade exhausted)" in capsys.readouterr().err
 
 
 def _run(tmp_path, load_fixture, fetch, **kw):
@@ -1350,7 +1401,9 @@ def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, 
     monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
     capsys.readouterr()
     summary = _run(tmp_path, load_fixture, slow, sweep_deadline_s=2.5 * 3600)
-    assert len(calls) == 3  # at 0, 1 and 2 h; at 3 h the deadline has passed
+    # Two areas: their sweeps at 0 and 2 h, their high-chair queries at 1 and
+    # 3 h (an area's own queries are not gated); a third would start at 4 h.
+    assert ['"highchair"' in q for q in calls] == [False, True, False, True]
     assert summary["toilets_total"] == first["toilets_total"]
     err = capsys.readouterr().err
     assert err.count("WARN not swept, past the 2.5 h sweep deadline: ") == 1
