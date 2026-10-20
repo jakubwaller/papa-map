@@ -1,5 +1,13 @@
 # papa-map — build contract (v0)
 
+> **v106 amendment (20 Oct 2026, the place question says what limited means): no data change.**
+> Text only. `askWheelchair` carries the OSM definition of `limited` in
+> parentheses after the question, in all 32 languages: one small step of up to
+> 7 cm, or not every room reachable (the methods pages' words, now where the
+> pill is tapped). Readers answer from memory as often as on the spot, and the
+> middle pill had no definition on the card; the table question had its own
+> from the start. Shell pin `v=app100` becomes `v=app101`.
+
 > **v105 amendment (20 Oct 2026, the fold holds the edit link): no data change.**
 > Presentation only. The fold ("More about this place") is one remembered boolean
 > (`localStorage`, `papamap-more-open`), no longer per card: unset means open for
