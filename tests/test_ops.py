@@ -193,7 +193,7 @@ def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
     assert edits["days"] == 7 and edits["changesets"] == 3
     # the answers come back as a page too, grouped by complete day like the
     # theme's — their own series, never merged into by_day
-    assert calls[1]["page_size"] == "100"
+    assert calls[1]["page_size"] == "500"
     assert edits["web_by_day"] == {"2026-07-27": 0, "2026-07-28": 0,
                                    "2026-07-29": 0, "2026-07-30": 0,
                                    "2026-07-31": 0, "2026-08-01": 1,
