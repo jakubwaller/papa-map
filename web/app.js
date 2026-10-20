@@ -2779,6 +2779,7 @@ async function answer(kind, obj, choice, freshToken = null) {
       remember({ play_answered: true, ...(typeof ring === "boolean" ? { play: ring } : {}) });
       renderMergedDataset();
       here()?.querySelector(".ask-play")?.remove();
+      refreshMore(here());
     } else if (hc) {
       // The same for the high chair (v65), except that its line shows at
       // once: the question is replaced in place by the row it just recorded.
@@ -2790,6 +2791,7 @@ async function answer(kind, obj, choice, freshToken = null) {
       renderMergedDataset();
       const q = here()?.querySelector(".ask-hc");
       if (q) q.outerHTML = highchairRows(obj).join("");
+      refreshMore(here());
     } else if (wc) {
       // The same (v102), for the place or the table. The override carries
       // the value under the property's own name: the row, the question and
@@ -2801,6 +2803,7 @@ async function answer(kind, obj, choice, freshToken = null) {
       renderMergedDataset();
       const q = here()?.querySelector(`.ask-${what}`);
       if (q) q.outerHTML = (what === "tw" ? wcTableRow : wcPlaceRow)(value);
+      refreshMore(here());
     } else {
       obj.changing_table = out.tags.changing_table;
       obj.location_raw = out.tags["changing_table:location"];
