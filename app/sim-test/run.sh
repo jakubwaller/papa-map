@@ -10,13 +10,16 @@ cd "$(dirname "$0")/.."
 PLATFORM=${1:?usage: run.sh ios|android}
 OUT=sim-test/out
 mkdir -p "$OUT"
-# One platform at a time: the runs share app.log, the screenshots and www/.
-mkdir "$OUT/lock" 2>/dev/null || { echo "another run is using app/$OUT (stale? rmdir app/$OUT/lock)"; exit 1; }
+# One run per machine: the simulator, the emulator and the app id are shared by
+# every checkout, and within a checkout so are app.log, the screenshots and www/.
+LOCK=/tmp/papamap-sim-test.lock
+mkdir "$LOCK" 2>/dev/null || { echo "another run is using the phones (stale? rmdir $LOCK)"; exit 1; }
 # Whatever happens from here on, the native projects get a clean shell back: a
 # phone built from Xcode or Android Studio after a run must not carry the mock.
-trap 'kill ${LOG_PID:-} 2>/dev/null; rmdir "$OUT/lock" 2>/dev/null; npm run build >/dev/null 2>&1 && npx cap sync $PLATFORM >/dev/null 2>&1' EXIT
+# The lock goes last: a second run's npm ci would break the rebuild.
+trap 'kill ${LOG_PID:-} 2>/dev/null; npm run build >/dev/null 2>&1 && npx cap sync $PLATFORM >/dev/null 2>&1; rmdir "$LOCK" 2>/dev/null' EXIT
 trap 'exit 130' INT TERM
-rm -f "${OUT:?}"/*.png "$OUT/PASS-$PLATFORM"; : > "$OUT/app.log"
+rm -f "${OUT:?}"/*.png(N) "$OUT/PASS-$PLATFORM"; : > "$OUT/app.log"
 # What the release gate compares: the tree ids of app/ and web/, which survive
 # a squash merge, and whether the run saw uncommitted edits. Taken before the
 # build and checked again at the end, so the marker names the tree that ran.
@@ -84,7 +87,7 @@ done
 kill $LOG_PID 2>/dev/null   # on iOS this also ends the app
 grep '\[TEST\]' "$OUT/app.log" | sed 's/^.*\[TEST\]/[TEST]/' | cut -c1-300
 if grep -q '\[TEST\].*DONE' "$OUT/app.log" && ! grep -q '\[TEST\].*\(JSERR\|REJECT\)' "$OUT/app.log"; then
-  if [ "$(tree_state)" = "$TREE" ]; then echo "$TREE $(date -u +%FT%TZ)" > "$OUT/PASS-$PLATFORM"
-  else echo "note: app/ or web/ changed during the run, no PASS marker written"; fi
+  if [ "$(tree_state)" != "$TREE" ]; then echo "FAIL: app/ or web/ changed during the run, run it again"; exit 1; fi
+  echo "$TREE $(date -u +%FT%TZ)" > "$OUT/PASS-$PLATFORM"
   echo "PASS: $(ls "$OUT"/*.png | wc -l | tr -d ' ') screenshots in app/$OUT"
 else echo "FAIL: see app/$OUT/app.log"; exit 1; fi
