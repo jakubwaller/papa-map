@@ -477,6 +477,20 @@ export function highchairPatch(choice) {
   throw new Error(`unknown high-chair choice ${choice}`);
 }
 
+// The two wheelchair questions (v102), yes / limited / no each: `wc` is the
+// place — getting in, which is what the chip reads; on amenity=toilets the
+// toilet itself — and `tw` the table, David's "reachable is not yet usable"
+// (low enough, room for the knees; three levels, no measuring). The choice
+// names the key and the value, so one patch serves both.
+export const WHEELCHAIR_CHOICES = ["wc_yes", "wc_limited", "wc_no", "tw_yes", "tw_limited", "tw_no"];
+export const isWheelchairChoice = (choice) => WHEELCHAIR_CHOICES.includes(choice);
+
+export function wheelchairPatch(choice) {
+  if (!isWheelchairChoice(choice)) throw new Error(`unknown wheelchair choice ${choice}`);
+  const [what, value] = choice.split("_");
+  return { [what === "tw" ? "changing_table:wheelchair" : "wheelchair"]: value };
+}
+
 // What the "taken" check below has to find empty before it writes. The patch's
 // own keys, plus — for a play answer — the whole of PLAY_KEYS, because the two
 // keys are one statement: a `kids_area:indoor=yes` tagged since last night's

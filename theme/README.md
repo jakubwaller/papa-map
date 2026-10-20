@@ -21,6 +21,11 @@ dependencies beyond bundled icon paths):
   `amenity=toilets` (cafés, restaurants, shops...). Same colors and questions, no draft
   group, no presets (you can't meaningfully "add a changing-table amenity" from scratch).
   Since v10 it also asks **`kids-area`** (see below).
+- **Wheelchair questions (Oct 2026, CONTRACT v102)** — every layer asks
+  **`wheelchair`** (yes / limited / no; the place, or on a toilet block the
+  toilet itself) and, once `changing_table=yes`, **`changing-table-wheelchair`**
+  (`changing_table:wheelchair`, the same three values: usable from the chair).
+  Inline like the others, the same words as the site's own popup questions.
 - **`dad_play_place`** — added v10: places that record a kids' area and carry **no
   `changing_table` tag at all**, minus `amenity=toilets` (which has its own layer above).
   Blue `#0072b2` circle under the bundled playground pictogram, hollow on the website to

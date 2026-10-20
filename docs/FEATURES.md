@@ -840,6 +840,29 @@ locked. Costs no extra Overpass query. Measured on Germany, 13 Sep 2026:
 `limited`, 495 `no`, 742 untagged; 390 tables in a wheelchair toilet, 7 of
 them behind a Euro key.
 
+### Two questions, and the fold (v102)
+
+A father in a wheelchair who had mapped a table through the theme found no way
+to say anything about accessibility, and from his first outings reported that
+step-free is not yet usable: tables level with the floor but high, with no room
+for the knees underneath. Height is impractical to collect, so (his call, 18 Oct
+2026) three levels are enough, which is what OSM already has. Where OSM is
+silent the popup now asks two things, each with yes / limited / no pills: "Can
+you get in with a wheelchair?" writes `wheelchair=*` on the place, what the chip
+reads, and "Is the changing table usable from a wheelchair?" writes
+`changing_table:wheelchair=*`, carried as `table_wheelchair` and shown as a row
+of its own. The table pins ask both, the play-place rings the place question
+alone, and the MapComplete theme asks the same two on every layer.
+
+Two more lines did not fit: most pins already asked two or three questions.
+So the room question stays on top and everything else — play corner, high
+chair and the two wheelchair questions — folds behind one native `<details>`
+line, "More about this place (n)", closed by default. The fold will cost some
+play and high-chair answers; every in-app answer carries a per-question
+changeset comment, so the before and after can be counted. A reader's own
+wheelchair answer is remembered the way the others are (v78) and may count for
+the chip at once.
+
 ## High chairs
 
 Every table feature and every play place carries `highchair` (v65): true when

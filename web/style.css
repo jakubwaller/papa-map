@@ -1100,6 +1100,13 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .ask-hc .ask-hc-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
 .popup .ask-hc .ask-btn { flex: 0 0 auto; padding: 6px 12px; }
 .popup .ask-hc .ask-who { flex: 1 1 100%; margin-top: 0; }
+/* The fold (v102): play, high chair and the two wheelchair questions behind
+   one line, so a card that asks five things stays the height of one that
+   asks two. The summary dresses like the "more rooms" link; the first
+   question inside drops its own rule, the summary's stands in for it. */
+.popup details.more { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+.popup details.more > summary { cursor: pointer; font-size: 12.5px; color: var(--green-strong); text-decoration: underline; }
+.popup details.more > summary + * { margin-top: 4px; padding-top: 0; border-top: none; }
 :is(.popup, #venue-ask) .ask-who { margin-top: 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted-2); }
 :is(.popup, #venue-ask) .linkish {
   border: 0; background: none; padding: 0; font: inherit;

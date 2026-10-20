@@ -618,6 +618,22 @@ test("a high-chair answer guards its own single key", () => {
   assert.deepEqual(guardKeys(highchairPatch("hc_no")), ["highchair"]);
 });
 
+test("the wheelchair answers write the place's or the table's key, one value, nothing else (v102)", () => {
+  assert.deepEqual(wheelchairPatch("wc_yes"), { wheelchair: "yes" });
+  assert.deepEqual(wheelchairPatch("wc_limited"), { wheelchair: "limited" });
+  assert.deepEqual(wheelchairPatch("wc_no"), { wheelchair: "no" });
+  assert.deepEqual(wheelchairPatch("tw_yes"), { "changing_table:wheelchair": "yes" });
+  assert.deepEqual(wheelchairPatch("tw_limited"), { "changing_table:wheelchair": "limited" });
+  assert.deepEqual(wheelchairPatch("tw_no"), { "changing_table:wheelchair": "no" });
+  for (const c of ["yes", "wc_designated", "tw", "hc_yes", "play_yes", undefined]) assert.throws(() => wheelchairPatch(c));
+  for (const c of WHEELCHAIR_CHOICES) {
+    assert.ok(isWheelchairChoice(c), c);
+    assert.ok(!isPlayChoice(c) && !isHighchairChoice(c), c);
+    assert.deepEqual(guardKeys(wheelchairPatch(c)), Object.keys(wheelchairPatch(c)));
+  }
+  for (const c of [...PLAY_CHOICES, ...HIGHCHAIR_CHOICES, "both", "none", null]) assert.ok(!isWheelchairChoice(c), String(c));
+});
+
 test("the high-chair question is asked on eating and family places only", () => {
   for (const a of HIGHCHAIR_VENUES) assert.ok(isHighchairVenue(a), a);
   for (const a of ["kindergarten", "childcare", "community_centre", "social_facility", "library"]) {

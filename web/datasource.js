@@ -64,6 +64,9 @@ export function loadFeatures(fc) {
         ? p.toilets_wheelchair : null,
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
+      // The table's own answer (v102, `changing_table:wheelchair`), the same
+      // three values or null. The popup asks where null; never a chip rule.
+      table_wheelchair: WHEELCHAIR_STATES.includes(p.table_wheelchair) ? p.table_wheelchair : null,
       // A recorded high chair (v65). `highchair` is true / false / null for
       // display; a dataset from before v65 leaves it undefined, read as null.
       // `highchair_recorded` gates the question: true for an answered yes AND
@@ -1113,8 +1116,8 @@ export function resolveDataUrl(path, native, site) {
 // grey table's room and a play place's own room question can move an
 // object's status). `overrides` is localStorage's papamap-answer-overrides
 // shape: {osm_url: {status, men_only, changing_table, location_raw,
-// play_answered, play, highchair_answered, t, version}}, every field but t and
-// version optional (men_only since v50, play since v100; an override stored before it keeps
+// play_answered, play, highchair_answered, wheelchair, table_wheelchair, t, version}}, every field but t and
+// version optional (men_only since v50, play since v100, the wheelchair pair since v102; an override stored before it keeps
 // the base's). Only the fields an entry carries are written: a play or
 // high-chair answer must not blank the room the base already records. An
 // override for an object neither collection has any more (deleted, or never
@@ -1138,6 +1141,11 @@ export function applyAnswerOverrides(fc, places, overrides) {
     if (o.play_answered === true) props.play_answered = true;
     if (typeof o.play === "boolean") props.play = o.play;
     if (typeof o.highchair_answered === "boolean") props.highchair_answered = o.highchair_answered;
+    // A wheelchair answer (v102) is kept under the property's own name: the
+    // question is only asked where the base has none, and the chip may count
+    // the reader's own "yes" at once.
+    if (WHEELCHAIR_STATES.includes(o.wheelchair)) props.wheelchair = o.wheelchair;
+    if (WHEELCHAIR_STATES.includes(o.table_wheelchair)) props.table_wheelchair = o.table_wheelchair;
     const patched = { ...base, properties: props };
     if (o.status || isTable) { tableByUrl.set(url, patched); placeByUrl.delete(url); }
     else placeByUrl.set(url, patched);
