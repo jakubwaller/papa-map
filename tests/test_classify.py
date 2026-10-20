@@ -101,7 +101,6 @@ def test_wheelchair_state_reads_only_the_three_wiki_values():
     assert wheelchair_state({"wheelchair": "designated"}) == "unreadable"   # present, so never asked (v102)
     assert wheelchair_state({"wheelchair": ""}) == "unreadable"
     assert wheelchair_state({}) is None
-    assert wheelchair_state({}) is None
     assert wheelchair_state({"wheelchair": "no", "toilets:wheelchair": "yes"},
                             "toilets:wheelchair") == "yes"
 

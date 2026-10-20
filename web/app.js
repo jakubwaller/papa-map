@@ -2336,7 +2336,7 @@ map.on("moveend", () => {
 let suppressCardOnClose = false;
 
 function onPopupClosed(closedPopup) {
-  if (popup === closedPopup) { popup = null; popupObj = null; updateSignMarker(); }
+  if (popup === closedPopup) { popup = null; popupObj = null; moreOpen = null; updateSignMarker(); }
   syncNearestBtn();
   if (suppressCardOnClose) { suppressCardOnClose = false; return; }
   review?.pinClosed();   // a switch of language or mode returned above: not the reader closing a pin
@@ -2381,6 +2381,7 @@ function closePopupSilently() {
   popup.remove();
   popup = null;
   popupObj = null;
+  moreOpen = null;   // a reopened card starts with the fold closed (v102)
   syncNearestBtn();
 }
 
@@ -2654,6 +2655,10 @@ document.addEventListener("click", (e) => {
   const sum = e.target.closest?.("details.more > summary");
   if (sum) setTimeout(() => {
     moreOpen = sum.parentElement?.open ? popupObj?.obj.osm_url ?? null : null;
+    // The card now differs from what showPopupHTML last set by the fold
+    // alone: tell it, or the next delta poll redraws the card for nothing
+    // and the reader's scroll and focus jump.
+    if (popupObj) popupHtmlShown = popupObj.kind === "place" ? placeHTML(popupObj.obj) : popupHTML(popupObj.obj);
     panPopupIntoView();
   }, 0);
   const wcMore = e.target.closest?.("button.wc-more");
@@ -3655,6 +3660,7 @@ function applyFeatureSets(fc, places) {
       popup.remove();
       popup = null;
       popupObj = null;
+      moreOpen = null;   // a reopened card starts with the fold closed (v102)
     }
   }
   // A background refresh can drop the very object a STANDING room card is

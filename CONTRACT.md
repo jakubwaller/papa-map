@@ -2875,7 +2875,7 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "kind": "cafe|indoor_play|mall|... or null",
   "changing_table": "\"no\" (answered: no table, v27) or null (nobody has answered)",
   "wheelchair": "yes|limited|no|\"unreadable\"|null — as on the tables (v28, v102)",
-  "toilets_wheelchair": "yes|limited|no|null — as on the tables (v28)",
+  "toilets_wheelchair": "yes|limited|no|\"unreadable\"|null — as on the tables (v28, v102)",
   "wheelchair_description": "string or null — as on the tables (v28)",
   "highchair": "true|false|null|\"unreadable\" — as on the tables (v65)",
   "opening_hours": "string or null",
