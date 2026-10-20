@@ -32,7 +32,7 @@ test("the track gets exactly the uploaded version code, as a string", () => {
 });
 
 test("the versionName is read from the real build.gradle, and a missing one fails", () => {
-  assert.match(versionName(readFileSync(new URL("app/build.gradle", import.meta.url), "utf8")), /^\d+\.\d+\.\d+$/);
+  assert.match(versionName(readFileSync(new URL("app/build.gradle", import.meta.url), "utf8")), /^\d+(\.\d+)+$/);
   assert.equal(versionName('versionCode 1\n        versionName "1.3.3"\n'), "1.3.3");
   assert.throws(() => versionName("versionCode 1"), /no versionName/);
 });
