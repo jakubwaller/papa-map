@@ -139,6 +139,8 @@ services:
       - PAPAMAP_OPS_PRIVATE_HTML_PATH=/out/private/ops.html
       - PAPAMAP_OPS_STATE_PATH=/ops-data/ops-state.json
       - PAPAMAP_BUILD_LOG_PATH=/logs/pipeline.log
+      # The build's area boxes, to name the area of each in-app answer.
+      - PAPAMAP_AREAS_BBOX_PATH=/out/private/areas-bbox.json
       # The fleet collector's readers ledger, from the out/ directory mounted
       # below: the private page's Readers section (pipeline/ops.py).
       - PAPAMAP_READERS_LEDGER_PATH=/logs/fleet-ops/readers-history.json
