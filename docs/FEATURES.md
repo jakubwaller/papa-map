@@ -729,6 +729,14 @@ answer (until 5 Oct 2026 the flight came first and the popup's own pan stopped
 it: no zoom-in, and a reader who had wandered off since was left there with the
 card off-screen); there is no optimistic pin.
 
+### Popup links
+
+Answering and going somewhere look different. The answer pills (room, play,
+high chair, wheelchair) are outlined; Route and Share are grey filled buttons
+under a thin divider; MapComplete and OpenStreetMap are one line of text links
+with a small arrow. The only green filled button is MapComplete where the card
+has nothing left to ask itself, because green means "a dad can reach it".
+
 ### Share a pin
 
 Both popups carry a share button, icon only, in the row the Route button

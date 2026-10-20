@@ -14,9 +14,9 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app97";
+         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app98";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app97";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app98";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
@@ -24,7 +24,7 @@ import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, rev
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
          isWheelchairChoice, wheelchairPatch,
-         writeTags } from "./osm.js?v=app97";
+         writeTags } from "./osm.js?v=app98";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -32,7 +32,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app97";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app98";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -42,27 +42,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app97";
+         reviewTracker } from "./native.js?v=app98";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app97";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app98";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app97";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app98";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app97";
+import { isOpenNow } from "./opening-hours.js?v=app98";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app97";
-// The bundled shell's pin (`?v=app97`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app98";
+// The bundled shell's pin (`?v=app98`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -891,7 +891,7 @@ const tableRowText = (value) => (value === "no" ? t("roomNone") : `${t("popupTab
 function routeButton(lat, lon, name) {
   const web = isNative() ? null : webRouteHref(lat, lon, name, navigator.userAgent, navigator.maxTouchPoints);
   const href = web ? web.href : directionsUri(lat, lon, name, geoUri(lat, lon, name));
-  return `<a class="btn" href="${esc(href)}"${web?.external ? ' target="_blank" rel="noopener"' : ""}` +
+  return `<a class="btn soft" href="${esc(href)}"${web?.external ? ' target="_blank" rel="noopener"' : ""}` +
     `${web?.choose ? " data-route-choose" : ""}` +
     ` data-route="${esc(`${lat},${lon}`)}" data-route-label="${esc(name)}">${esc(t("popupDirections"))}</a>`;
 }
@@ -906,7 +906,19 @@ function routeButton(lat, lon, name) {
 const SHARE_VIEWBOX = "-0.5 0 24 24";
 const SHARE_PATH = "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.03-.47-.09-.7l7.05-4.11c.53.49 1.23.79 2.01.79 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L7.04 9.81C6.5 9.31 5.79 9 5 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z";
 const shareButtonHTML = () =>
-  `<button type="button" class="btn icon-btn" data-share aria-label="${esc(t("popupShare"))}" title="${esc(t("popupShare"))}">${svgIcon(SHARE_PATH, "share-icon", SHARE_VIEWBOX)}</button>`;
+  `<button type="button" class="btn soft icon-btn" data-share aria-label="${esc(t("popupShare"))}" title="${esc(t("popupShare"))}">${svgIcon(SHARE_PATH, "share-icon", SHARE_VIEWBOX)}</button>`;
+
+// Answers are outlined pills; going somewhere is a grey button (Route, Share)
+// or a plain text link with a small arrow (MapComplete, OSM). The one green
+// button is MapComplete where the card has nothing left to ask itself.
+const textLink = (url, key) =>
+  `<a class="textlink" data-edit-check href="${esc(url)}" target="_blank" rel="noopener">${esc(t(key))}<span aria-hidden="true"> \u2197</span></a>`;
+const mcLink = (url, primary) => primary
+  ? `<a class="btn primary" data-edit-check href="${esc(url)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`
+  : textLink(url, "popupAnswerMC");
+const linksHTML = (buttons, texts) =>
+  `<div class="links">${buttons.join("")}</div>` +
+  (texts.length ? `<div class="textlinks">${texts.join(" · ")}</div>` : "");
 
 function popupHTML(f) {
   const s = viewOf(f, mode);
@@ -979,13 +991,13 @@ function popupHTML(f) {
   // classifier does not read): there MapComplete is the only way to the room,
   // and the play line under it must not take that away.
   const mcOnly = f.status === "unknown" && !asks;
-  if (mcUrl)
-    links.push(`<a class="btn${!mcOnly && (asks || more.length) ? "" : " primary"}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+  const mcPrimary = !(!mcOnly && (asks || more.length));
+  const textLinks = [];
+  if (mcUrl) (mcPrimary ? links : textLinks).push(mcLink(mcUrl, mcPrimary));
   links.push(routeButton(f.lat, f.lon, f.name || ""));
   links.push(shareButtonHTML());
-  if (osmUrl)
-    links.push(`<a class="btn" data-edit-check href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
-  if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
+  if (osmUrl) textLinks.push(textLink(osmUrl, "popupViewOSM"));
+  rows.push(linksHTML(links, textLinks));
   const title = f.name || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
   const sub = f.amenity ? `<div class="sub">${esc(f.amenity.replace(/_/g, " "))}</div>` : "";
   return `<div class="popup"><h3>${esc(title)}${starHTML(f.osm_url, f.name || "")}</h3>${sub}${rows.join("")}</div>`;
@@ -1157,13 +1169,13 @@ function placeHTML(p) {
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(p.mapcomplete_url, lang)),
         osmUrl = safeUrl(p.osm_url);
-  if (mcUrl)
-    links.push(`<a class="btn${p.changing_table && p.wheelchair_recorded ? " primary" : ""}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+  const mcPrimary = !!(p.changing_table && p.wheelchair_recorded);
+  const textLinks = [];
+  if (mcUrl) (mcPrimary ? links : textLinks).push(mcLink(mcUrl, mcPrimary));
   links.push(routeButton(p.lat, p.lon, p.name || ""));
   links.push(shareButtonHTML());
-  if (osmUrl)
-    links.push(`<a class="btn" data-edit-check href="${esc(osmUrl)}" target="_blank" rel="noopener">${esc(t("popupViewOSM"))}</a>`);
-  if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
+  if (osmUrl) textLinks.push(textLink(osmUrl, "popupViewOSM"));
+  rows.push(linksHTML(links, textLinks));
   const title = p.name || t("popupUnnamed");
   const sub = p.kind ? `<div class="sub">${esc(p.kind.replace(/_/g, " "))}</div>` : "";
   return `<div class="popup"><h3>${esc(title)}${starHTML(p.osm_url, p.name || "")}</h3>${sub}${rows.join("")}</div>`;

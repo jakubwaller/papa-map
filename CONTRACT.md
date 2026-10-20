@@ -1,5 +1,13 @@
 # papa-map — build contract (v0)
 
+> **v103 amendment (20 Oct 2026, popup links look like links): no data change.**
+> Presentation only. In both popups an answer is an outlined pill; going somewhere
+> is either a grey filled button (Route, Share, under a thin divider) or a plain
+> text link with a small arrow (MapComplete, OpenStreetMap, one line, " · "
+> apart). Green stays reserved for "reachable": the one green filled button left
+> is MapComplete as `.btn.primary`, only where the card has nothing to ask
+> itself (conditions unchanged). Shell pin `v=app97` becomes `v=app98`.
+
 > **v102 amendment (20 Oct 2026, two wheelchair questions and the fold):
 > one new table property.** Every table feature gains **`table_wheelchair`**
 > (`yes | limited | no | null`), `changing_table:wheelchair` read by the v26
