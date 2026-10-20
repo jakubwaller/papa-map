@@ -732,15 +732,15 @@ card off-screen); there is no optimistic pin.
 ### Popup links
 
 Answering and going somewhere look different. The answer pills (room, play,
-high chair, wheelchair) are outlined; Route and Share are grey filled buttons
-under a thin divider; MapComplete and OpenStreetMap are one line of text links
-with a small arrow. The only green filled button is MapComplete where the card
+high chair, wheelchair) are outlined; going somewhere is one row of text links
+under a thin divider, each with a small arrow: Route (with a small directions
+icon), MapComplete, OpenStreetMap, and the round icon-only Share button at the
+row's right end. The only green filled button is MapComplete where the card
 has nothing left to ask itself, because green means "a dad can reach it".
 
 ### Share a pin
 
-Both popups carry a share button, icon only, in the row the Route button
-already lives in — a labelled one does not fit that row in German on a 12
+Both popups carry a share button, icon only, at the end of the text-link row — a labelled one does not fit that row in German on a 12
 mini. It builds a plain `https://papamap.de/?osm=<osm_url>` link from the
 pipeline's own `osm_url`, the identifier the app's own deep link
 (`papamap://table?osm=…`, the widget and the Siri shortcut) already carries,

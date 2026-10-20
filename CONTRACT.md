@@ -1,5 +1,13 @@
 # papa-map — build contract (v0)
 
+> **v104 amendment (20 Oct 2026, Route is a text link): no data change.**
+> Presentation only. In both popups Route joins the text links as the first one,
+> with a small directions icon before it and the same arrow after; Share stays a
+> round icon-only button, now at the right end of that text-link row. The only
+> pill-shaped controls on a card are the answers, plus the green MapComplete
+> button where the card has nothing left to ask. Shell pin `v=app98` becomes
+> `v=app99`.
+
 > **v103 amendment (20 Oct 2026, popup links look like links): no data change.**
 > Presentation only. In both popups an answer is an outlined pill; going somewhere
 > is either a grey filled button (Route, Share, under a thin divider) or a plain
