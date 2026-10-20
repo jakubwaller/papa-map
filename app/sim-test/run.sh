@@ -9,7 +9,7 @@ set -u
 cd "$(dirname "$0")/.."
 PLATFORM=${1:?usage: run.sh ios|android}
 OUT=sim-test/out
-mkdir -p "$OUT"; rm -f "${OUT:?}"/*.png; : > "$OUT/app.log"
+mkdir -p "$OUT"; rm -f "${OUT:?}"/*.png "$OUT/PASS-$PLATFORM"; : > "$OUT/app.log"
 npm ci --no-audit --no-fund >/dev/null && npm run build >/dev/null || exit 1
 # Whatever happens from here on, the native projects get a clean shell back: a
 # phone built from Xcode or Android Studio after a run must not carry the mock.
@@ -75,4 +75,9 @@ for i in $(seq 1 720); do   # six minutes at most
 done
 kill $LOG_PID 2>/dev/null   # on iOS this also ends the app
 grep '\[TEST\]' "$OUT/app.log" | sed 's/^.*\[TEST\]/[TEST]/' | cut -c1-300
-if grep -q '\[TEST\].*DONE' "$OUT/app.log" && ! grep -q '\[TEST\].*\(JSERR\|REJECT\)' "$OUT/app.log"; then echo "PASS: $(ls "$OUT"/*.png | wc -l | tr -d ' ') screenshots in app/$OUT"; else echo "FAIL: see app/$OUT/app.log"; exit 1; fi
+if grep -q '\[TEST\].*DONE' "$OUT/app.log" && ! grep -q '\[TEST\].*\(JSERR\|REJECT\)' "$OUT/app.log"; then
+  # The release gate reads this: the tree ids say which app/ and web/ passed,
+  # and they survive a squash merge; "dirty" means the run saw uncommitted edits.
+  echo "app $(git rev-parse HEAD:app) web $(git rev-parse HEAD:web) $([ -z "$(git status --porcelain . ../web)" ] && echo clean || echo dirty) $(date -u +%FT%TZ)" > "$OUT/PASS-$PLATFORM"
+  echo "PASS: $(ls "$OUT"/*.png | wc -l | tr -d ' ') screenshots in app/$OUT"
+else echo "FAIL: see app/$OUT/app.log"; exit 1; fi
