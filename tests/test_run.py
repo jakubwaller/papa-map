@@ -1244,7 +1244,9 @@ def test_highchair_places_join_the_places_file_and_stats(tmp_path, load_fixture)
     assert local["play_places"] == 3 and local["highchair_places"] == 1
 
 
-def test_a_failing_highchair_query_fails_the_area_and_is_retried(tmp_path, load_fixture):
+def test_a_failing_highchair_query_costs_the_rings_not_the_area(tmp_path, load_fixture, capsys):
+    # Failing the area would build it from last night's saved answer (v99),
+    # its changing tables included, for one optional query.
     inner = _fake_overpass(load_fixture)
     fail_next = {"Bayern"}
 
@@ -1260,7 +1262,8 @@ def test_a_failing_highchair_query_fails_the_area_and_is_retried(tmp_path, load_
         pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
         history_path=str(tmp_path / "history.json"), now=NOW, sweep_pause_s=0)
     assert summary["features"] == 7
-    assert inner.areas_seen.count(("Bayern", "4")) == 4  # sweep + count, twice
+    assert inner.areas_seen.count(("Bayern", "4")) == 2  # sweep + count, once: not retried
+    assert "WARN Bayern: high-chair query failed (mirror cascade exhausted)" in capsys.readouterr().err
 
 
 def _run(tmp_path, load_fixture, fetch, **kw):

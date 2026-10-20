@@ -291,11 +291,21 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                 "PAPAMAP_AREA_NAME?)")
         if saved is None:
             # Its own query, after everything else succeeded (see
-            # config.highchair_ql); a failure fails the area like the rest.
-            # Its places ride in the saved answer, so a night built from the
+            # config.highchair_ql). A failure costs the area its high-chair
+            # places tonight, not its tables: failing the area would build it
+            # from last night's saved answer (v99), tables included. Its
+            # places ride in the saved answer, so a night built from the
             # cache keeps them too.
-            hc_answer = overpass_fetch(highchair_ql(area_name, admin_level))
-            _note_base(hc_answer)
+            try:
+                hc_answer = overpass_fetch(highchair_ql(area_name, admin_level))
+            except osm.OverpassUnavailable:
+                raise  # the whole service is resting: fail the round as one
+            except Exception as exc:
+                print(f"  WARN {area_name}: high-chair query failed ({exc}); "
+                      "no high-chair places from this area tonight", file=sys.stderr)
+                hc_answer = {}
+            else:
+                _note_base(hc_answer)
             sweep = dict(sweep, elements=list(sweep["elements"]) + [
                 el for el in hc_answer.get("elements", ())
                 if "changing_table" not in (el.get("tags") or {})])

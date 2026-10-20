@@ -13,9 +13,11 @@
 > Overpass query per sweep area (`config.highchair_ql`), not a clause in
 > `sweep_ql`: measured on the UK, a highchair clause in the union costs 4-11 s
 > and pushes the sweep to ~45 s, at the `[timeout:55]` safety line. The area
-> log line gains `hc=N`; a failing high-chair query fails the area like any
-> other and it is retried; the high-chair answer rides in the sweep's saved copy, so
-> a night built from it (v99) keeps the area's high-chair places too.
+> log line gains `hc=N`. A failing high-chair query costs the area its
+> high-chair places for the night (a WARN line, which the ops page lists), not
+> its tables: failing the area would build it from its saved answer (v99),
+> tables included. The answer rides in the sweep's saved copy, so a night built
+> from it keeps the area's high-chair places too.
 >
 > Frontend side: `loadPlaces` reads `play_area` as `p.play_area !== false`, so
 > a dataset from before v102 (no property) means true: every old place is a play
