@@ -136,6 +136,9 @@ WEB_CREATED_BY = "PapaMap"   # created_by on the changesets web/osm.js opens
 # to the last one, and the caller reports a timeout instead of hiding it.
 # Nothing waits on this: it runs once a day, after the build.
 OSMCHA_TIMEOUT_S = float(os.environ.get("PAPAMAP_OSMCHA_TIMEOUT_S", "300"))
+# OSMCha's own cap (max_page_size in osmcha-django's changeset views); 100 was
+# outgrown on 2026-10-20, when the NDR spike put 108 answers in one week.
+OSMCHA_PAGE_SIZE = "500"
 
 STATUS_KEYS = ("accessible", "female_only", "unknown")
 
@@ -492,7 +495,7 @@ def osmcha_edits(days=7, now=None, get=requests.get):
         r = get(OSMCHA_URL, timeout=OSMCHA_TIMEOUT_S,
                 headers={"Authorization": f"Token {token}"},
                 params={"metadata": f"theme={PAPAMAP_THEME_URL}",
-                        "date__gte": since, "page_size": "100"})
+                        "date__gte": since, "page_size": OSMCHA_PAGE_SIZE})
         data = r.json()
         out = {"days": days, "changesets": data["count"]}
         by_day = edits_by_day(data, since, now)
@@ -517,7 +520,7 @@ def osmcha_edits(days=7, now=None, get=requests.get):
             r = get(OSMCHA_URL, timeout=OSMCHA_TIMEOUT_S,
                     headers={"Authorization": f"Token {token}"},
                     params={"editor": WEB_CREATED_BY,
-                            "date__gte": since, "page_size": "100"})
+                            "date__gte": since, "page_size": OSMCHA_PAGE_SIZE})
             web = r.json()
             out["web_changesets"] = int(web["count"])
             web_by_day = edits_by_day(web, since, now)
@@ -611,7 +614,7 @@ def backfill_edits(days: int, state_path=None, now=None,
     history starts on 2026-08-25 while the theme has been live since
     THEME_LIVE_SINCE — run once with a window reaching back to the launch
     and the page's all-time tile becomes literally that. Same one-page limit
-    as the daily fetch: a window beyond ~100 changesets returns its count
+    as the daily fetch: a window beyond ~500 changesets returns its count
     but no split, and the history is left exactly as it was."""
     state_path = Path(state_path or STATE_PATH)
     edits = fetch(days=days, now=now or datetime.now(timezone.utc))

@@ -280,7 +280,7 @@ wider window, merged into `edits_days` and nothing else touched:
 cd ~/papa-map && docker compose run --build --rm ops python -m pipeline.ops --backfill-edits 31
 ```
 
-Same one-page limit as the daily fetch: a window beyond ~100 changesets returns its count
+Same one-page limit as the daily fetch: a window beyond ~500 changesets returns its count
 but no split, and the command says the history is unchanged. The answers given on the map
 itself (`created_by=PapaMap`, kept per day since 2026-10-05) are a second series,
 `web_edits_days`, filled by the same run and summed into the page's "Answers on the map

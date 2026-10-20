@@ -1053,7 +1053,7 @@ def _stale_notes(edits: dict | None, last: str, now: datetime, *,
         return (f'<p class="warn">OSMCha\'s {edits.get("days", 7)}-day {what} as '
                 f"of {esc(as_of)} is <b>{_n(count)}</b>{'' if web else ' changesets'}, "
                 f"but the per-day split stops at {esc(last)}: a window beyond one "
-                "OSMCha page (~100 changesets) is counted whole, never split.</p>\n")
+                "OSMCha page (~500 changesets) is counted whole, never split.</p>\n")
     missing = _missing_days(last, now)
     if missing > 0 and not failed:
         which = "answers query" if web else "query"
@@ -1102,7 +1102,7 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
             p.append('<p class="muted">A per-day chart of these appears here '
                      "once a daily OSMCha fetch records the split — the check "
                      "asks every run; a success covers a week, though a week "
-                     "beyond ~100 changesets is counted whole rather than "
+                     "beyond ~500 changesets is counted whole rather than "
                      "split.</p>\n")
         p.append("</section>\n")
         return "".join(p)
@@ -1223,7 +1223,7 @@ def _edits_section(edits: dict | None, edits_days: dict | None,
              "<code>created_by=PapaMap</code>. The two sets are disjoint, so the "
              "total adds them. Windows count back from the newest recorded day, "
              "so a failing OSMCha fetch shows as the dates standing still, never "
-             "as a quiet week. A window beyond one OSMCha page (~100 changesets) "
+             "as a quiet week. A window beyond one OSMCha page (~500 changesets) "
              "is counted whole and not split by day. A day one series never "
              "fetched reads “not fetched” and adds nothing to the line.</p>\n"
              '<div class="scroll">\n<table>\n<thead><tr><th class="l">day</th>'
