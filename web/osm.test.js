@@ -6,6 +6,7 @@ import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
          roomLabelKeys,
          PLAY_CHOICES, PLAY_KEYS, isPlayChoice, playPatch, guardKeys, changesetTags, changesetXml,
          HIGHCHAIR_CHOICES, HIGHCHAIR_VENUES, isHighchairChoice, isHighchairVenue, highchairPatch,
+         WHEELCHAIR_CHOICES, isWheelchairChoice, wheelchairPatch,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY,
          startLogin, takeIntent, keepRoundTripAcrossRestarts, awaitingReturn, preferReturn, dropStaleRoundTrip, ROUND_TRIP_MS, PKCE_KEY, INTENT_KEY,
          setLogin, clearLogin, getToken, getUser, getUserId, userInfo, userName, ensureUserInfo } from "./osm.js";

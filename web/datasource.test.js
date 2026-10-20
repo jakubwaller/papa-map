@@ -341,9 +341,9 @@ test("table_wheelchair is one of the three values or null, and an own answer ove
   // The override carries the value under the property's own name; junk stays out.
   const base = { type: "FeatureCollection", features: [feat(9.9, 53.5, { status: "unknown", osm_url: "https://www.openstreetmap.org/node/1" })] };
   const url = "https://www.openstreetmap.org/node/1";
-  const own = applyAnswerOverrides(base, null, { [url]: { wheelchair: "limited", table_wheelchair: "yes", t: "2026-10-20T10:00:00Z", version: 3 } });
+  const own = applyAnswerOverrides(base, { type: "FeatureCollection", features: [] }, { [url]: { wheelchair: "limited", table_wheelchair: "yes", t: "2026-10-20T10:00:00Z", version: 3 } });
   assert.deepEqual(loadFeatures(own.fc).map((f) => [f.wheelchair, f.table_wheelchair]), [["limited", "yes"]]);
-  const junk = applyAnswerOverrides(base, null, { [url]: { wheelchair: "designated", t: "2026-10-20T10:00:00Z", version: 3 } });
+  const junk = applyAnswerOverrides(base, { type: "FeatureCollection", features: [] }, { [url]: { wheelchair: "designated", t: "2026-10-20T10:00:00Z", version: 3 } });
   assert.equal(loadFeatures(junk.fc)[0].wheelchair, null);
 });
 
