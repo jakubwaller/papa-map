@@ -1,2 +1,2 @@
-– Changed: the question "Can you get in with a wheelchair?" now says in parentheses what "limited" means: one small step of up to 7 cm, or not every room reachable. Check: tap a pin that still asks it, open "More about this place". Does the question fit in three lines, do the three buttons stay on one row?
+– Changed: the question "Can you get in with a wheelchair?" now says in parentheses what "limited" means: one small step of up to 7 cm, help needed or not every room reachable. Check: tap a pin that still asks it, open "More about this place". Does the question fit in three lines, do the three buttons stay on one row?
 Anything unclear or stuck: take a screenshot and send it through TestFlight.
