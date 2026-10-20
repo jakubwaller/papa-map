@@ -58,7 +58,7 @@ def test_feature_properties_match_data_contract(load_fixture):
         "men_only": True,
         "play": None,
         "wheelchair": None, "toilets_wheelchair": None,
-        "wheelchair_description": None, "highchair": None, "key": None,
+        "wheelchair_description": None, "table_wheelchair": None, "highchair": None, "key": None,
         "fee": "yes", "opening_hours": "24/7",
         "osm_url": "https://www.openstreetmap.org/node/1",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
@@ -89,8 +89,13 @@ def test_wheelchair_is_a_tri_state_never_a_status():
     assert props({"wheelchair": "no"})["wheelchair"] == "no"
     # unrecorded and junk both read as "nobody said" — never as "no"
     assert props({})["wheelchair"] is None
-    assert props({"wheelchair": "designated"})["wheelchair"] is None
+    assert props({"wheelchair": "designated"})["wheelchair"] == "unreadable"
     assert props({"toilets:wheelchair": "yes"})["toilets_wheelchair"] == "yes"
+    # v102: the table's own key, the same rule, independent of the place's.
+    assert props({"changing_table:wheelchair": "Limited"})["table_wheelchair"] == "limited"
+    assert props({"changing_table:wheelchair": "limited", "wheelchair": "no"})["wheelchair"] == "no"
+    assert props({"changing_table:wheelchair": "maybe"})["table_wheelchair"] == "unreadable"
+    assert props({})["table_wheelchair"] is None
     assert props({"toilets:wheelchair": "yes"})["wheelchair"] is None
     p = props({"wheelchair": "limited", "wheelchair:description": "eine Stufe"})
     assert p["wheelchair_description"] == "eine Stufe"
