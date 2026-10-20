@@ -141,7 +141,7 @@ test("popupHTML and placeHTML interpolate only escaped text or known markup", ()
     /^rows\.join\(""\)$/, /^parts\.join\(" · "\)$/, /^links\.join\(""\)$/,
     /^sub$/, /^s\.cls$/, /^asks \? " ask-ctx" : ""$/, /^shareButtonHTML\(\)$/,
     /^!mcOnly && \(asks \|\| more\.length\) \? "" : " primary"$/,
-    /^p\.changing_table && p\.wheelchair \? " primary" : ""$/,
+    /^p\.changing_table && p\.wheelchair_recorded \? " primary" : ""$/,
   ];
   // `fn(...)` whose opening paren closes at the very last character, so a
   // call followed by `+ f.raw` does not pass as "one esc call".

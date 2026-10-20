@@ -89,12 +89,12 @@ def test_wheelchair_is_a_tri_state_never_a_status():
     assert props({"wheelchair": "no"})["wheelchair"] == "no"
     # unrecorded and junk both read as "nobody said" — never as "no"
     assert props({})["wheelchair"] is None
-    assert props({"wheelchair": "designated"})["wheelchair"] is None
+    assert props({"wheelchair": "designated"})["wheelchair"] == "unreadable"
     assert props({"toilets:wheelchair": "yes"})["toilets_wheelchair"] == "yes"
     # v102: the table's own key, the same rule, independent of the place's.
     assert props({"changing_table:wheelchair": "Limited"})["table_wheelchair"] == "limited"
     assert props({"changing_table:wheelchair": "limited", "wheelchair": "no"})["wheelchair"] == "no"
-    assert props({"changing_table:wheelchair": "maybe"})["table_wheelchair"] is None
+    assert props({"changing_table:wheelchair": "maybe"})["table_wheelchair"] == "unreadable"
     assert props({})["table_wheelchair"] is None
     assert props({"toilets:wheelchair": "yes"})["wheelchair"] is None
     p = props({"wheelchair": "limited", "wheelchair:description": "eine Stufe"})

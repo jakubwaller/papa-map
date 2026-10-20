@@ -23,7 +23,7 @@ dependencies beyond bundled icon paths):
   Since v10 it also asks **`kids-area`** (see below).
 - **Wheelchair questions (Oct 2026, CONTRACT v102)** — every layer asks
   **`wheelchair`** (yes / limited / no; the place, or on a toilet block the
-  toilet itself) and, once `changing_table=yes`, **`changing-table-wheelchair`**
+  toilet itself) and, once `changing_table=yes|limited`, **`changing-table-wheelchair`**
   (`changing_table:wheelchair`, the same three values: usable from the chair).
   Inline like the others, the same words as the site's own popup questions.
 - **`dad_play_place`** — added v10: places that record a kids' area and carry **no

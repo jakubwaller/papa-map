@@ -81,7 +81,7 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   assert.equal(places.length, 3);
   assert.deepEqual(places[0], {
     idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe", changing_table: null,
-    wheelchair: null, toilets_wheelchair: null, wheelchair_description: null,
+    wheelchair: null, toilets_wheelchair: null, wheelchair_recorded: false, wheelchair_description: null,
     highchair: null, highchair_recorded: false,
     opening_hours: "Mo-Fr 09:00-18:00",
     osm_url: "https://www.openstreetmap.org/node/9001",
@@ -335,9 +335,13 @@ test("highchair is true / false / null — a dataset without the property reads 
 
 test("table_wheelchair is one of the three values or null, and an own answer overrides it (v102)", () => {
   assert.deepEqual(loadFeatures(FC).map((f) => f.table_wheelchair), [null, null, null]);
-  for (const [v, want] of [["yes", "yes"], ["limited", "limited"], ["no", "no"], ["designated", null], [true, null], [undefined, null]])
-    assert.equal(loadFeatures({ type: "FeatureCollection",
-      features: [feat(9.9, 53.5, { status: "unknown", table_wheelchair: v })] })[0].table_wheelchair, want);
+  // "unreadable" (a present value outside the three) shows as nothing but counts as recorded, so it is never asked.
+  for (const [v, want, rec] of [["yes", "yes", true], ["limited", "limited", true], ["no", "no", true],
+                                ["unreadable", null, true], ["designated", null, false], [true, null, false], [undefined, null, false]]) {
+    const f = loadFeatures({ type: "FeatureCollection",
+      features: [feat(9.9, 53.5, { status: "unknown", table_wheelchair: v, wheelchair: v })] })[0];
+    assert.deepEqual([f.table_wheelchair, f.wheelchair, f.table_wheelchair_recorded, f.wheelchair_recorded], [want, want, rec, rec], String(v));
+  }
   // The override carries the value under the property's own name; junk stays out.
   const base = { type: "FeatureCollection", features: [feat(9.9, 53.5, { status: "unknown", osm_url: "https://www.openstreetmap.org/node/1" })] };
   const url = "https://www.openstreetmap.org/node/1";

@@ -15,15 +15,23 @@
 > reuse the popup's own `wcYes` / `wcLimited` / `wcNo`. The table pins ask
 > both, the play-place rings the place question alone. The MapComplete theme
 > asks the same two (`wheelchair` on all four layers, `changing-table-wheelchair`
-> under `changing_table=yes`), with the same strings.
+> under `changing_table=yes|limited`, the pins' own set), with the same strings.
+>
+> **Unreadable.** `wheelchair_state` returns `"unreadable"` for a present value
+> outside the three (`designated`, free text), as `highchair_state` has since
+> v65, on `wheelchair`, `toilets_wheelchair` and `table_wheelchair` alike. The
+> frontend keeps the display properties as the three or null and derives
+> `wheelchair_recorded` / `table_wheelchair_recorded`, which gate the questions:
+> asking there would only earn the 409 of a taken key.
 >
 > **The fold.** On a table pin the room question stays on top; play (v34), high
 > chair (v65) and the two wheelchair questions sit behind a native `<details
 > class="more">` whose summary reads "More about this place (n)", closed by
 > default — most pins already asked two or three (11 Oct: 19,885 two, 4,529
 > three) and a fifth line did not fit a 12 mini. The first folded question
-> carries the login line where the room question does not; after an answer the
-> summary's count follows, and with none left the fold opens out into its rows.
+> carries the login line where the room question does not. An answer re-renders
+> the card; the fold comes back open on that card with the count recomputed,
+> and with nothing left to ask it is not rendered.
 > MapComplete is the primary button only where nothing in the card asks. The
 > cost to watch is fewer play and high-chair answers; the per-question
 > changeset comments make it countable.
@@ -2842,10 +2850,10 @@ Overpass `out center`). Feature `properties`:
   "location_raw": "raw changing_table:location value or null",
   "status": "accessible|female_only|unknown",
   "play": "true|false|null — a play area recorded, indoors or a venue's outdoor one (v9, v97); false is an answered 'none' or an outdoor leisure=playground (v30, v31), null is unanswered",
-  "wheelchair": "yes|limited|no|null — the place's wheelchair tag verbatim (v26); null also means unrecorded",
-  "toilets_wheelchair": "yes|limited|no|null — toilets:wheelchair verbatim (v26)",
+  "wheelchair": "yes|limited|no|\"unreadable\"|null — the place's wheelchair tag (v26); null is the key absent, \"unreadable\" a present value outside the three (v102: shown as nothing, not a chip hit, never asked — the write would be refused as taken)",
+  "toilets_wheelchair": "yes|limited|no|\"unreadable\"|null — toilets:wheelchair by the same rule (v26, v102)",
   "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",
-  "table_wheelchair": "yes|limited|no|null — changing_table:wheelchair by the v26 rule (v102); null is unrecorded and gets the popup's question",
+  "table_wheelchair": "yes|limited|no|\"unreadable\"|null — changing_table:wheelchair by the same rule (v102); only null gets the popup's question",
   "highchair": "true|false|null|\"unreadable\" — highchair=yes or a count > 0 is true, no or 0 is false, null is the key absent, \"unreadable\" a present value the pipeline cannot read (shown as nothing, never asked, not a chip hit: the write would be refused as taken) (v65)",
   "key": "string or null — the centralkey value when the key locks the table (v5 rule); such a feature is not a pin (v26)",
   "fee": "string or null",
@@ -2866,7 +2874,7 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "name": "string or null",
   "kind": "cafe|indoor_play|mall|... or null",
   "changing_table": "\"no\" (answered: no table, v27) or null (nobody has answered)",
-  "wheelchair": "yes|limited|no|null — as on the tables (v28)",
+  "wheelchair": "yes|limited|no|\"unreadable\"|null — as on the tables (v28, v102)",
   "toilets_wheelchair": "yes|limited|no|null — as on the tables (v28)",
   "wheelchair_description": "string or null — as on the tables (v28)",
   "highchair": "true|false|null|\"unreadable\" — as on the tables (v65)",

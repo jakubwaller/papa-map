@@ -62,11 +62,16 @@ export function loadFeatures(fc) {
       wheelchair: WHEELCHAIR_STATES.includes(p.wheelchair) ? p.wheelchair : null,
       toilets_wheelchair: WHEELCHAIR_STATES.includes(p.toilets_wheelchair)
         ? p.toilets_wheelchair : null,
+      // Whether OSM says anything at all (v102): one of the three, or a
+      // present value the pipeline cannot read ("unreadable"). Gates the
+      // question — a write onto a present key would be refused as taken.
+      wheelchair_recorded: WHEELCHAIR_STATES.includes(p.wheelchair) || p.wheelchair === "unreadable",
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
       // The table's own answer (v102, `changing_table:wheelchair`), the same
       // three values or null. The popup asks where null; never a chip rule.
       table_wheelchair: WHEELCHAIR_STATES.includes(p.table_wheelchair) ? p.table_wheelchair : null,
+      table_wheelchair_recorded: WHEELCHAIR_STATES.includes(p.table_wheelchair) || p.table_wheelchair === "unreadable",
       // A recorded high chair (v65). `highchair` is true / false / null for
       // display; a dataset from before v65 leaves it undefined, read as null.
       // `highchair_recorded` gates the question: true for an answered yes AND
@@ -130,6 +135,10 @@ export function loadPlaces(fc) {
       wheelchair: WHEELCHAIR_STATES.includes(p.wheelchair) ? p.wheelchair : null,
       toilets_wheelchair: WHEELCHAIR_STATES.includes(p.toilets_wheelchair)
         ? p.toilets_wheelchair : null,
+      // Whether OSM says anything at all (v102): one of the three, or a
+      // present value the pipeline cannot read ("unreadable"). Gates the
+      // question — a write onto a present key would be refused as taken.
+      wheelchair_recorded: WHEELCHAIR_STATES.includes(p.wheelchair) || p.wheelchair === "unreadable",
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
       // As on the pins (v65): true / false / null, and `highchair_recorded`

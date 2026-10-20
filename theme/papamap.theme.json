@@ -1415,7 +1415,12 @@
             "uk": "Чи можна користуватися пеленальним столиком з візка (достатньо низький, коліна поміщаються під ним)?",
             "ja": "おむつ交換台は車いすから使えますか（十分低く、膝が下に入る）？"
           },
-          "condition": "changing_table=yes",
+          "condition": {
+            "or": [
+              "changing_table=yes",
+              "changing_table=limited"
+            ]
+          },
           "mappings": [
             {
               "if": "changing_table:wheelchair=yes",
@@ -3796,7 +3801,12 @@
             "uk": "Чи можна користуватися пеленальним столиком з візка (достатньо низький, коліна поміщаються під ним)?",
             "ja": "おむつ交換台は車いすから使えますか（十分低く、膝が下に入る）？"
           },
-          "condition": "changing_table=yes",
+          "condition": {
+            "or": [
+              "changing_table=yes",
+              "changing_table=limited"
+            ]
+          },
           "mappings": [
             {
               "if": "changing_table:wheelchair=yes",
@@ -5781,7 +5791,12 @@
             "uk": "Чи можна користуватися пеленальним столиком з візка (достатньо низький, коліна поміщаються під ним)?",
             "ja": "おむつ交換台は車いすから使えますか（十分低く、膝が下に入る）？"
           },
-          "condition": "changing_table=yes",
+          "condition": {
+            "or": [
+              "changing_table=yes",
+              "changing_table=limited"
+            ]
+          },
           "mappings": [
             {
               "if": "changing_table:wheelchair=yes",
@@ -7567,7 +7582,12 @@
             "uk": "Чи можна користуватися пеленальним столиком з візка (достатньо низький, коліна поміщаються під ним)?",
             "ja": "おむつ交換台は車いすから使えますか（十分低く、膝が下に入る）？"
           },
-          "condition": "changing_table=yes",
+          "condition": {
+            "or": [
+              "changing_table=yes",
+              "changing_table=limited"
+            ]
+          },
           "mappings": [
             {
               "if": "changing_table:wheelchair=yes",

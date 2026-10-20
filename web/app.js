@@ -967,9 +967,9 @@ function popupHTML(f) {
   const fold = (html) => { more.push(html); who = false; };
   if (!f.play_recorded) fold(askPlayHTML(busy, who));
   if (!f.highchair_recorded && isHighchairVenue(f.amenity)) fold(askHighchairHTML(busy, who));
-  if (!f.wheelchair) fold(askWheelchairHTML("wc", busy, who));
-  if (!f.table_wheelchair) fold(askWheelchairHTML("tw", busy, who));
-  if (more.length) rows.push(moreHTML(more));
+  if (!f.wheelchair_recorded) fold(askWheelchairHTML("wc", busy, who));
+  if (!f.table_wheelchair_recorded) fold(askWheelchairHTML("tw", busy, who));
+  if (more.length) rows.push(moreHTML(more, moreOpen === f.osm_url));
   const links = [];
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang)),
         osmUrl = safeUrl(f.osm_url);
@@ -1093,26 +1093,20 @@ function askWheelchairHTML(which, busy = false, who = false) {
   const dis = busy ? " disabled" : "";
   const pill = (v) =>
     `<button type="button" class="btn ask-btn" data-room="${which}_${v}"${dis}>${esc(t(WC_LABEL[v]))}</button>`;
-  return `<div class="ask-hc ask-${which}"><span class="ask-q">${esc(t(which === "tw" ? "askTableWheelchair" : "askWheelchair"))}</span>` +
+  return `<div class="ask-${which}"><span class="ask-q">${esc(t(which === "tw" ? "askTableWheelchair" : "askWheelchair"))}</span>` +
          `<span class="ask-hc-btns">${WHEELCHAIR_STATES.map(pill).join("")}</span>` +
          `${who ? askWhoHTML() : ""}</div>`;
 }
 
 // The questions after the room one, behind a native <details> (v102): closed
-// by default, the summary counts what is inside. A tap on the summary grows
-// the card, so the document click handler pans it into view like "more rooms".
-const moreHTML = (qs) =>
-  `<details class="more"><summary>${esc(t("askMorePlace", { n: qs.length }))}</summary>${qs.join("")}</details>`;
-
-// After an answer inside the fold: the summary follows the questions left,
-// and with none left the fold opens out into the rows it recorded.
-function refreshMore(el) {
-  const more = el?.querySelector("details.more");
-  if (!more) return;
-  const n = more.querySelectorAll(".ask-q").length;
-  if (n) more.querySelector("summary").textContent = t("askMorePlace", { n });
-  else more.replaceWith(...[...more.children].filter((c) => c.tagName !== "SUMMARY"));
-}
+// by default, the summary counts what is inside. An answer re-renders the
+// whole card (renderMergedDataset → showPopupHTML), so the fold remembers
+// which card it was opened on and comes back open there with the count
+// recomputed; with nothing left to ask it is not rendered at all. A tap on
+// the summary grows the card, so the click handler pans it into view.
+let moreOpen = null;   // osm_url of the card whose fold the reader opened
+const moreHTML = (qs, open) =>
+  `<details class="more"${open ? " open" : ""}><summary>${esc(t("askMorePlace", { n: qs.length }))}</summary>${qs.join("")}</details>`;
 
 // A prospect's popup says one thing the pin popups never do: nobody has
 // answered the changing-table question here at all. So it leads with the one
@@ -1154,7 +1148,7 @@ function placeHTML(p) {
   if (!p.changing_table) rows.push(askHTML("askTable", inFlight.has(p.osm_url)));
   // The place question alone (v102), no fold: a ring has no table to ask
   // about, and the table question above it carries the login line when open.
-  if (!p.wheelchair) rows.push(askWheelchairHTML("wc", inFlight.has(p.osm_url), !!p.changing_table));
+  if (!p.wheelchair_recorded) rows.push(askWheelchairHTML("wc", inFlight.has(p.osm_url), !!p.changing_table));
   if (p.opening_hours)
     rows.push(hoursRowHTML(p.opening_hours, { lat: p.lat, lon: p.lon },
       zoneForFeature(p, lastStats?.area_tz)));
@@ -1162,7 +1156,7 @@ function placeHTML(p) {
   const mcUrl = safeUrl(withMapCompleteLanguage(p.mapcomplete_url, lang)),
         osmUrl = safeUrl(p.osm_url);
   if (mcUrl)
-    links.push(`<a class="btn${p.changing_table && p.wheelchair ? " primary" : ""}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
+    links.push(`<a class="btn${p.changing_table && p.wheelchair_recorded ? " primary" : ""}" data-edit-check href="${esc(mcUrl)}" target="_blank" rel="noopener">${esc(t("popupAnswerMC"))}</a>`);
   links.push(routeButton(p.lat, p.lon, p.name || ""));
   links.push(shareButtonHTML());
   if (osmUrl)
@@ -2655,8 +2649,13 @@ document.addEventListener("click", (e) => {
     more.remove();
     if (!more.closest("#add-dialog")) panPopupIntoView();   // three more pills: the card just grew a row
   }
-  // The fold (v102) toggles after this click's default action: pan then.
-  if (e.target.closest?.("details.more > summary")) setTimeout(panPopupIntoView, 0);
+  // The fold (v102) toggles after this click's default action: read it then,
+  // so the next re-render of this card keeps it, and pan.
+  const sum = e.target.closest?.("details.more > summary");
+  if (sum) setTimeout(() => {
+    moreOpen = sum.parentElement?.open ? popupObj?.obj.osm_url ?? null : null;
+    panPopupIntoView();
+  }, 0);
   const wcMore = e.target.closest?.("button.wc-more");
   if (wcMore) {
     wcMore.previousElementSibling?.classList.add("open");
@@ -2779,7 +2778,6 @@ async function answer(kind, obj, choice, freshToken = null) {
       remember({ play_answered: true, ...(typeof ring === "boolean" ? { play: ring } : {}) });
       renderMergedDataset();
       here()?.querySelector(".ask-play")?.remove();
-      refreshMore(here());
     } else if (hc) {
       // The same for the high chair (v65), except that its line shows at
       // once: the question is replaced in place by the row it just recorded.
@@ -2791,19 +2789,16 @@ async function answer(kind, obj, choice, freshToken = null) {
       renderMergedDataset();
       const q = here()?.querySelector(".ask-hc");
       if (q) q.outerHTML = highchairRows(obj).join("");
-      refreshMore(here());
     } else if (wc) {
       // The same (v102), for the place or the table. The override carries
       // the value under the property's own name: the row, the question and
       // the chip all read it, and a reader's own "yes" may count at once.
+      // The re-render shows the row and takes the question down.
       const [what, value] = choice.split("_");
       const prop = what === "tw" ? "table_wheelchair" : "wheelchair";
       obj[prop] = value;
       remember({ [prop]: value });
       renderMergedDataset();
-      const q = here()?.querySelector(`.ask-${what}`);
-      if (q) q.outerHTML = (what === "tw" ? wcTableRow : wcPlaceRow)(value);
-      refreshMore(here());
     } else {
       obj.changing_table = out.tags.changing_table;
       obj.location_raw = out.tags["changing_table:location"];
@@ -2851,9 +2846,10 @@ async function answer(kind, obj, choice, freshToken = null) {
     // Quoted back: the group this answer wrote. A room answer names the table
     // and its room, a play answer the play corner — never the other question's
     // tags, which this tap did not touch.
-    // A high-chair answer has no tag line of its own in the confirmation: its
-    // row is already in the popup, so the plain "on OSM" note says the rest.
-    if (hc) setEditNote(rec, "found", "editFoundPlain");
+    // A high-chair or wheelchair answer has no tag line of its own in the
+    // confirmation: its row is already in the popup, so the plain "on OSM"
+    // note says the rest.
+    if (hc || wc) setEditNote(rec, "found", "editFoundPlain");
     else {
       const tags = {};
       for (const k of (play ? PLAY_TAGS : TABLE_TAGS)) if (out.tags[k]) tags[k] = out.tags[k];
@@ -3532,7 +3528,7 @@ async function completeLogin(href) {
       const open = isPlayChoice(intent.choice)
         ? !obj.play_recorded
         : isHighchairChoice(intent.choice) ? !obj.highchair_recorded
-        : isWheelchairChoice(intent.choice) ? !obj[intent.choice.startsWith("tw") ? "table_wheelchair" : "wheelchair"]
+        : isWheelchairChoice(intent.choice) ? !obj[intent.choice.startsWith("tw") ? "table_wheelchair_recorded" : "wheelchair_recorded"]
         : kind === "place" ? !obj.changing_table
                            : obj.status === "unknown" && !obj.location_raw;
       if (open) answer(kind, obj, intent.choice, login.token);
