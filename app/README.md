@@ -127,7 +127,9 @@ fresh and drives the popup flows by tapping the real DOM: a grey pin's room answ
 wheelchair question that follows it, both wheelchair rows, the sticky "More about this place"
 fold on a second pin, the what's-new dialog, search and the mum view — a screenshot per step in
 `sim-test/out/`, the log in `sim-test/out/app.log`, `PASS` only when every check held and the
-page raised no error. Nothing reaches OpenStreetMap: the mock answers for OSM, Photon and the
+page raised no error. A green run also writes `sim-test/out/PASS-<platform>` with the tree
+ids of `app/` and `web/` it tested, so a release gate can tell whether the build it ships is
+the build that passed. Nothing reaches OpenStreetMap: the mock answers for OSM, Photon and the
 delta file with a fake login, and picks its two test pins from the dataset at run time. On exit
 the script rebuilds `www/` and syncs again, so the native projects never keep the mock; CI never
 sees it either. Not covered: the Route tap (leaves the app), the share sheet, the widget.
