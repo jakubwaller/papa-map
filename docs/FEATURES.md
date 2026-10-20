@@ -865,7 +865,8 @@ reads, and "Is the changing table usable from a wheelchair?" writes
 of its own. The table pins ask both, the play-place rings the place question
 alone, and the MapComplete theme asks the same two on every layer.
 Since 20 Oct 2026 the place question carries the OSM definition of `limited` in
-parentheses (one small step of up to 7 cm, or not every room reachable): readers
+parentheses (one small step of up to 7 cm, help needed or not every room
+reachable): readers
 answer from memory as often as on the spot, and the middle pill meant nothing
 without it. The table question had its definition from the start.
 
