@@ -978,20 +978,19 @@ function popupHTML(f) {
   const more = [];
   let who = !asks;
   const fold = (html) => { more.push(html); who = false; };
+  // Right after this reader's own room answer the place question follows
+  // unfolded, where the room question stood (v105). It renders first, so it
+  // is the one that carries the login line.
+  const chained = roomAnsweredHere(answerOverrides[f.osm_url]) && !f.wheelchair_recorded;
+  if (chained) { rows.push(askWheelchairHTML("wc", busy, who)); who = false; }
   if (!f.play_recorded) fold(askPlayHTML(busy, who));
   if (!f.highchair_recorded && isHighchairVenue(f.amenity)) fold(askHighchairHTML(busy, who));
-  // Right after this reader's own room answer the place question follows
-  // unfolded, where the room question stood (v105).
-  const chained = roomAnsweredHere(answerOverrides[f.osm_url]) && !f.wheelchair_recorded;
-  if (chained) rows.push(askWheelchairHTML("wc", busy, false));
-  else if (!f.wheelchair_recorded) fold(askWheelchairHTML("wc", busy, who));
+  if (!chained && !f.wheelchair_recorded) fold(askWheelchairHTML("wc", busy, who));
   if (!f.table_wheelchair_recorded) fold(askWheelchairHTML("tw", busy, who));
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang));
-  // MapComplete is the primary action only where the page cannot answer
-  // itself; beside an in-page question, either one, it is the other way, in
-  // plain dress. Not on a grey pin that does not ask (a room in words the
-  // classifier does not read): there MapComplete is the only way to the room,
-  // and the play line under it must not take that away.
+  // MapComplete is the green primary action only on a grey pin that does not
+  // ask (a room in words the classifier does not read) and has nothing else
+  // to ask either; everywhere else it is the edit link inside the fold (v105).
   const mcOnly = f.status === "unknown" && !asks;
   const mcPrimary = mcOnly && !more.length;
   const primary = mcUrl && mcPrimary ? mcLink(mcUrl, true) : "";
@@ -1127,7 +1126,7 @@ const moreHTML = (qs, mcUrl) => {
   if (!qs.length && !mcUrl) return "";
   const link = mcUrl ? `<div class="textlinks">${mcLink(mcUrl, false)}</div>` : "";
   const label = t("askMorePlace") + (qs.length ? " (" + qs.length + ")" : "");
-  return `<details class="more"${foldOpen(moreOpen, !!getUser()) ? " open" : ""}><summary>${esc(label)}</summary>${qs.join("")}${link}</details>`;
+  return `<details class="more"${foldOpen(moreOpen, !!(getUser() || getToken())) ? " open" : ""}><summary>${esc(label)}</summary>${qs.join("")}${link}</details>`;
 };
 
 // A prospect's popup says one thing the pin popups never do: nobody has

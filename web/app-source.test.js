@@ -140,7 +140,7 @@ test("popupHTML and placeHTML interpolate only escaped text or known markup", ()
   const SAFE = [
     /^rows\.join\(""\)$/, /^parts\.join\(" · "\)$/, /^primary$/, /^route$/, /^primary \? "btn primary" : "textlink"$/,
     /^primary \? "" : '<span aria-hidden="true"> \\u2197<\/span>'$/, /^qs\.join\(""\)$/, /^link$/, /^mcLink\(mcUrl, false\)$/,
-    /^foldOpen\(moreOpen, !!getUser\(\)\) \? " open" : ""$/,
+    /^foldOpen\(moreOpen, !!\(getUser\(\) || getToken\(\)\)\) \? " open" : ""$/,
     /^sub$/, /^s\.cls$/, /^asks \? " ask-ctx" : ""$/, /^shareButtonHTML\(\)$/,
   ];
   // `fn(...)` whose opening paren closes at the very last character, so a
