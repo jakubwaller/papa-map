@@ -879,7 +879,9 @@ const tableRowHTML = (value) =>
   value === "no" ? `<b>${esc(t("roomNone"))}</b>` : `${esc(t("popupTable"))}: <b>${esc(value)}</b>`;
 const tableRowText = (value) => (value === "no" ? t("roomNone") : `${t("popupTable")}: ${value}`);
 
-// The Route button, the same one in both popups. On the website its href is
+// The Route link, the same one in both popups (a text link with the
+// directions icon since v104; the ↗ stays even where an iPhone browser first
+// gets the chooser dialog, because the trip still ends outside the page). On the website its href is
 // chosen by the device (webRouteHref): geo: on Android, openstreetmap.org's
 // directions in a new tab on a desktop, where nothing answers geo: at all,
 // and on an iPhone a question — data-route-choose, answered by the dialog at
