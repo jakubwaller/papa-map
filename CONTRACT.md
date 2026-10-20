@@ -1,5 +1,18 @@
 # papa-map — build contract (v0)
 
+> **v105 amendment (20 Oct 2026, the fold holds the edit link): no data change.**
+> Presentation only. The fold ("More about this place") is one remembered boolean
+> (`localStorage`, `papamap-more-open`), no longer per card: unset means open for
+> a logged-in reader and closed otherwise, any toggle is kept. It always renders
+> on a pin card and ends with the MapComplete link ("Add or correct details");
+> its count shows only above zero. The OpenStreetMap text link is dropped from
+> both popups; `.links` holds Route and Share. A ring gets the same fold with
+> only the link. Exception: a pin whose recorded room is unreadable and that has
+> nothing else to ask keeps MapComplete as the green button and renders no fold.
+> After this reader's own room answer on a pin (an answer override carrying
+> `changing_table`) whose place wheelchair is unrecorded, that question renders
+> unfolded where the room question stood. Shell pin `v=app99` becomes `v=app100`.
+
 > **v104 amendment (20 Oct 2026, Route is a text link): no data change.**
 > Presentation only. In both popups Route joins the text links as the first one,
 > with a small directions icon before it and the same arrow after; Share stays a

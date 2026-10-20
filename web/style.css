@@ -1008,7 +1008,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .links { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
 .popup .links .btn.primary { margin-bottom: 4px; }
 .popup .textlinks { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; font-size: 12.5px; font-weight: 600; }
-.popup .textlinks .icon-btn { margin-left: auto; }
+.popup .links .textlinks .icon-btn { margin-left: auto; }   /* Share at the row's end */
 .popup .textlink .route-icon { width: 15px; height: 15px; fill: currentColor; vertical-align: -2px; margin-right: 5px; }
 .popup .textlink { display: inline-block; padding: 6px 0; color: var(--green-strong); text-decoration: none; }
 .popup .textlink:is(:hover, :focus-visible) { text-decoration: underline; }
@@ -1117,6 +1117,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup details.more { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
 .popup details.more > summary { cursor: pointer; font-size: 12.5px; color: var(--green-strong); text-decoration: underline; }
 .popup details.more > summary + * { margin-top: 4px; padding-top: 0; border-top: none; }
+.popup details.more > .textlinks { margin-top: 2px; }
 :is(.popup, #venue-ask) .ask-who { margin-top: 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted-2); }
 :is(.popup, #venue-ask) .linkish {
   border: 0; background: none; padding: 0; font: inherit;

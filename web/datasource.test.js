@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { foldOpen, roomAnsweredHere } from "./datasource.js";
 import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
          chipKeys, chipView,
@@ -2131,4 +2132,18 @@ test("nearestFeature picks the pin closest to the tap, or null", () => {
   const fs = [{ id: "far", x: 30, y: 0 }, { id: "near", x: 12, y: 5 }, { id: "dup", x: 12, y: 5 }];
   assert.equal(nearestFeature({ x: 15, y: 5 }, fs, (f) => f).id, "near");
   assert.equal(nearestFeature({ x: 0, y: 0 }, [], (f) => f), null);
+});
+
+test("foldOpen: the reader's last choice wins, else open for a logged-in reader", () => {
+  assert.equal(foldOpen(null, true), true);
+  assert.equal(foldOpen(null, false), false);
+  assert.equal(foldOpen(false, true), false);
+  assert.equal(foldOpen(true, false), true);
+});
+
+test("roomAnsweredHere: only an override that carries a room answer", () => {
+  assert.equal(roomAnsweredHere({ changing_table: "yes", location_raw: "female_toilet" }), true);
+  assert.equal(roomAnsweredHere({ wheelchair: "yes", t: "x" }), false);
+  assert.equal(roomAnsweredHere({ play_answered: true }), false);
+  assert.equal(roomAnsweredHere(undefined), false);
 });
