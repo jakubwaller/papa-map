@@ -874,3 +874,10 @@ def test_answers_by_area_skipped_without_the_boxes(tmp_path, capsys):
     ops.add_answer_areas(edits, None, str(tmp_path / "absent.json"))
     assert edits == {"web_by_day": {"2026-08-02": 1}}
     assert "answers by area skipped" in capsys.readouterr().err
+
+
+def test_answer_points_skips_a_non_polygon_geometry():
+    data = {"features": [{"geometry": {"type": "Point", "coordinates": [10.0, 53.5]},
+                          "properties": {"date": "2026-08-02T10:00:00Z"}},
+                         _cs("2026-08-02", 10.0, 53.5)]}
+    assert [d for d, _, _ in ops.answer_points(data, "2026-07-31", NOW)] == ["2026-08-02"]

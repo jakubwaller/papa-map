@@ -577,7 +577,11 @@ def answer_points(data, since: str, now: datetime) -> list:
     out = []
     for f in data.get("features") or []:
         day = str((f.get("properties") or {}).get("date") or "")[:10]
-        ring = ((f.get("geometry") or {}).get("coordinates") or [[]])[0]
+        geom = f.get("geometry") or {}
+        # OSMCha's bboxes are Polygons; anything else is skipped, not raised
+        # inside the answers query's try, where it would read as that failing.
+        ring = ((geom.get("coordinates") or [[]])[0]
+                if geom.get("type") == "Polygon" else None)
         if since <= day < today and ring:
             lons, lats = [c[0] for c in ring], [c[1] for c in ring]
             out.append((day, (min(lons) + max(lons)) / 2, (min(lats) + max(lats)) / 2))
