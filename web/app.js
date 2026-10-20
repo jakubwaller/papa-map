@@ -896,10 +896,10 @@ function routeButton(lat, lon, name) {
     ` data-route="${esc(`${lat},${lon}`)}" data-route-label="${esc(name)}">${esc(t("popupDirections"))}</a>`;
 }
 
-// The share button, in the same row: icon only, not icon-plus-label — the
-// German row (MapComplete's long "Auf MapComplete beantworten", Route, View
-// on OSM) is already tight at 375 px, and one more short word would wrap it
-// badly on a 12 mini. The click is delegated (the popup markup is rebuilt on
+// The share button, in the button row with Route (and the green MapComplete
+// button where the card asks nothing, v103): icon only, not icon-plus-label —
+// with the long "Auf MapComplete beantworten" that row is tight at 375 px, and
+// one more short word would wrap it badly on a 12 mini. The click is delegated (the popup markup is rebuilt on
 // every open); the button itself only needs to say which popup it belongs to.
 // The glyph spans x 2..21 of its 24-unit box, so its centre sits half a unit
 // left of the bubble's: the viewBox is slid to put the glyph, not the box, in the middle.
