@@ -1,2 +1,2 @@
-– Změna: otázka „Dostane se sem člověk na vozíku?“ teď v závorce vysvětluje, co znamená „omezeně“: jeden malý schod do 7 cm, nebo ne všechny místnosti jsou dostupné. Jak vyzkoušet: klepni na pin, rozbal „Více o tomto místě“. Vejde se otázka do tří řádků a zůstanou tři tlačítka v jedné řadě?
+– Změna: otázka „Dostane se sem člověk na vozíku?“ teď v závorce vysvětluje, co znamená „omezeně“: jeden malý schod do 7 cm, nebo ne všechny místnosti jsou dostupné. Jak vyzkoušet: klepni na pin, který se ještě ptá, rozbal „Více o tomto místě“. Vejde se otázka do tří řádků a zůstanou tři tlačítka v jedné řadě?
 Cokoli nejasného nebo zaseknutého: udělej snímek obrazovky a pošli ho přes TestFlight.

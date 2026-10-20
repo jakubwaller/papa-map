@@ -1,2 +1,2 @@
-– Geändert: Die Frage „Kommt man mit dem Rollstuhl hinein?“ erklärt jetzt in Klammern, was „eingeschränkt“ heißt: eine kleine Stufe bis 7 cm, oder nicht alle Räume erreichbar. Zum Testen: einen Pin antippen, „Mehr zu diesem Ort“ aufklappen. Passt die Frage in drei Zeilen, bleiben die drei Knöpfe in einer Reihe?
+– Geändert: Die Frage „Kommt man mit dem Rollstuhl hinein?“ erklärt jetzt in Klammern, was „eingeschränkt“ heißt: eine kleine Stufe bis 7 cm, oder nicht alle Räume erreichbar. Zum Testen: einen Pin antippen, der die Frage noch stellt, „Mehr zu diesem Ort“ aufklappen. Passt die Frage in drei Zeilen, bleiben die drei Knöpfe in einer Reihe?
 Alles, was unklar ist oder hakt: Screenshot machen und über TestFlight schicken.
