@@ -18,8 +18,8 @@
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
 // nothing is sent that the website does not send: a download is a GET.
 
-import { isWheelchairLimited } from "./datasource.js?v=app87";
-import { awaitingReturn } from "./osm.js?v=app87";
+import { isWheelchairLimited, haversineKm } from "./datasource.js?v=app97";
+import { awaitingReturn, loginPending } from "./osm.js?v=app97";
 
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";
@@ -101,6 +101,11 @@ export function budget(ms, now = Date.now) {
   return race;
 }
 
+// One io for the app's whole run, so a later load (the page's retry) sees the
+// downloads an earlier one let go of (promoteLate).
+let appIOCache = null;
+const appIO = () => (appIOCache ??= nativeIO());
+
 // A download the clock let go of, finished on its own time — only reachable
 // from the no-copy path below, where the download itself is the only thing
 // that will ever become tomorrow's stored copy.
@@ -115,16 +120,28 @@ export function budget(ms, now = Date.now) {
 // Validated before it is promoted, because `.new` is itself a file the loader
 // reads: one that does not parse must never stand in for a good copy. Nothing
 // here is awaited; the pins were drawn from the phone seconds ago.
+// Kept on `io` by `.new` path until the next load of the same file (the page's
+// retry, app.js) takes it: that load waits for it rather than download into
+// the same file, and finds its copy fresh rather than download it again.
 function promoteLate(io, running, fresh, path) {
-  running.then(
+  const done = running.then(
     async () => {
       try { await io.read(fresh); }
-      catch { await io.remove(fresh); return; }   // this launch wrote it, and it is not JSON
+      catch { await io.remove(fresh); return false; }   // this launch wrote it, and it is not JSON
       await io.replace(fresh, path);
+      return true;
     },
-    () => {},   // the download failed: whatever was already on the phone is left alone
-  ).catch(() => {});
+    () => false,   // the download failed: whatever was already on the phone is left alone
+  ).catch(() => false);
+  (io.late ??= new Map()).set(fresh, done);
 }
+
+// The download of `url` a load let go of, until a later load takes it: settles
+// true once its copy is on the phone. The page (app.js) redraws the moment it
+// does rather than on its next retry tick, which on a Honor 9 at 25 KB/s was a
+// minute after the tables had landed.
+export const lateDownload = (url, io = appIOCache) =>
+  io?.late?.get(`${DATA_PATH}/${url.split("/").pop().split("?")[0]}.new`);
 
 // The background refresh a stored copy starts once it has already drawn (see
 // loadJSONNative below): runs on its own time and settles into exactly one of
@@ -300,7 +317,7 @@ function nativeIO(fs = plugin("Filesystem")) {
 // an out-parameter rather than a return value so that the { json, fromStore }
 // contract app.js reads — and the `null` that means "nothing anywhere" —
 // are exactly what they were.
-export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = NET_MS, gate = null, hold = false } = {}) {
+export async function loadJSONNative(url, io = appIO(), { note = {}, netMs = NET_MS, gate = null, hold = false } = {}) {
   const name = url.split("/").pop().split("?")[0];
   const path = `${DATA_PATH}/${name}`;
   const fresh = `${path}.new`;
@@ -309,6 +326,16 @@ export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = 
   // whole row from the moment the load starts.
   Object.assign(note, { file: name, step: "none", ms: 0, bytes: null });
   const step = (s) => { note.step = s; note.ms = Date.now() - began; };
+  // A download an earlier load let go of may still be writing `.new` (Android
+  // writes in place): wait for its promotion, within a budget of its own, and
+  // never start a second one beside it — still running means nothing yet.
+  const earlier = io.late?.get(fresh);
+  if (earlier) {
+    try { await budget(netMs)(earlier); } catch { return null; }
+    io.late.delete(fresh);
+  }
+  // A copy that download promoted is as fresh as the network has: asking again
+  // at once would be the same megabytes twice over the same slow link.
 
   // `path` first, `.new` only when `path` is missing or will not parse — the
   // same order a late promotion has to respect, and for the same reason: a
@@ -331,7 +358,8 @@ export async function loadJSONNative(url, io = nativeIO(), { note = {}, netMs = 
     return {
       json: hit.json,
       fromStore: true,
-      refreshed: backgroundRefresh(io, SITE + url, hit.text, path, fresh, hit.copy, { gate, hold }),
+      refreshed: earlier ? Promise.resolve({ ok: true, json: null })
+        : backgroundRefresh(io, SITE + url, hit.text, path, fresh, hit.copy, { gate, hold }),
     };
   }
 
@@ -446,7 +474,7 @@ async function hasStoredCopy(io, path, fresh) {
 // copy that went missing) — means nothing here applies: every file, stats
 // included, loads exactly as loadJSONNative alone always has, none of them
 // waiting on any of the others.
-export async function loadDatasetNative(urls, io = nativeIO(), opts = {}) {
+export async function loadDatasetNative(urls, io = appIO(), opts = {}) {
   const statsAt = urls.findIndex((u) => u.split("/").pop().split("?")[0] === "stats.json");
   if (statsAt === -1) return Promise.all(urls.map((u) => loadJSONNative(u, io, opts)));
 
@@ -782,8 +810,10 @@ export async function followRoute(url, web, launcher = plugin("AppLauncher"), ex
 // app cannot read into, so the password never passes through a WebView of
 // ours) and how the code comes back (the papamap://auth URL, which the OS
 // routes to the app; App's appUrlOpen delivers it here).
+// The promise is the Browser's own: on iOS it settles once the sheet is up
+// over the page, which is how long startLogin holds off a second tap.
 export function nativeNavigate(url) {
-  plugin("Browser").open({ url });
+  return plugin("Browser").open({ url });
 }
 
 // One listener for every URL the OS hands the app: the OAuth return, the
@@ -796,6 +826,13 @@ export function onAppUrl({ auth, table, nearest = () => {}, awaiting = awaitingR
   app.addListener("appUrlOpen", ({ url }) => {
     if (!url) return;
     if (url.startsWith(AUTH_REDIRECT)) {
+      // Any app or web page can open a papamap://auth link. While a login
+      // waits for another state, a stray one is ignored: handed to auth it
+      // would use up the PKCE record the real return is checked against, and
+      // close the sheet the reader is logging in on. With no login waiting at
+      // all (none started, or its hour ran out) there is nothing to protect,
+      // and it goes on as ever, so the reader hears the login failed.
+      if (loginPending() && !awaiting(url)) return;
       plugin("Browser")?.close?.().catch?.(() => {});
       auth(url);
     } else if (url.startsWith("papamap://table")) {
@@ -862,7 +899,9 @@ export function onBrowserFinished(onReturn) {
 export function shareDataset(features, markLimited = false) {
   const p = plugin("PapaMapShare");
   if (!p) return;
-  const rows = features.map((f) => [
+  // Grey pins are never usable in either mode (Table.usable, Tables.java), so
+  // they stay out: 23,003 of 26,541 rows, and a widget extension's memory is tight.
+  const rows = features.filter((f) => f.status !== "unknown").map((f) => [
     +f.lat.toFixed(5), +f.lon.toFixed(5), f.status, f.name || "", f.osm_url || "",
     f.men_only === true, markLimited && isWheelchairLimited(f),
   ]);
@@ -873,8 +912,10 @@ export function shareSettings({ mode, lang }) {
 }
 
 // ---- Asking for a store rating ----
-// The app asks the store for its rating sheet once per device, never on launch
-// and never in the middle of something. A device becomes eligible after the
+// The app asks the store for its rating sheet at most once every 30 days per
+// device, never on launch and never in the middle of something. Not just once:
+// TestFlight never shows the sheet and Play shows it only within a quota, and
+// an ask the store swallowed must not be the last. A device becomes eligible after the
 // reader's third successful answer (room, place or play) or on the third
 // separate local day on which they opened a pin, whichever comes first — a
 // reader who only looks things up is as much a user as one who answers. The
@@ -890,10 +931,14 @@ export function shareSettings({ mode, lang }) {
 // comes back to the page and nothing is sent to papamap.de.
 export const REVIEW_KEY = "papamap-review";
 export const REVIEW_AT = 3;
+export const REVIEW_AGAIN_DAYS = 30;
 // Long enough for a pin that is being swapped for the next one to be open again.
 export const CLOSE_DELAY_MS = 1000;
 
-const REVIEW_DEFAULT = { answers: 0, days: 0, day: null, asked: false };
+// `asked` is the local day of the last ask, or null.
+const REVIEW_DEFAULT = { answers: 0, days: 0, day: null, asked: null };
+// The shape and a real date: a NaN date would make the 30-day gap never pass.
+const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 
 // The local calendar day, not UTC: "another day" is the reader's own.
 export function localDay(date = new Date()) {
@@ -911,8 +956,9 @@ export function parseReview(raw) {
   return {
     answers: n(o.answers),
     days: n(o.days),
-    day: typeof o.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(o.day) ? o.day : null,
-    asked: o.asked === true,
+    day: isDay(o.day) ? o.day : null,
+    // Builds before v98 stored `true`; the last counted day is the nearest date to it.
+    asked: isDay(o.asked) ? o.asked : o.asked === true && isDay(o.day) ? o.day : null,
   };
 }
 
@@ -924,8 +970,11 @@ export function afterPinOpen(state, today) {
 export function afterAnswer(state) {
   return { ...state, answers: Math.min(state.answers + 1, REVIEW_AT) };
 }
-export function reviewDue(state) {
-  return !state.asked && (state.answers >= REVIEW_AT || state.days >= REVIEW_AT);
+// Days apart either way, like afterPinOpen: a clock that went back must not lock the ask out.
+const daysApart = (a, b) => Math.abs(Date.parse(a) - Date.parse(b)) / 86400000;
+export function reviewDue(state, today) {
+  return (state.answers >= REVIEW_AT || state.days >= REVIEW_AT)
+    && (state.asked === null || daysApart(state.asked, today) >= REVIEW_AGAIN_DAYS);
 }
 
 // Through the app's own plugin, like the two methods above. Inert on the
@@ -962,11 +1011,12 @@ export function reviewTracker(io = {}) {
     pinOpened() { write(afterPinOpen(read(), today())); },
     answered() { write(afterAnswer(read())); },
     pinClosed() {
-      if (!reviewDue(read())) return;
+      if (!reviewDue(read(), today())) return;
       later(() => {
         const s = read();
-        if (!reviewDue(s) || !calm()) return;
-        write({ ...s, asked: true });
+        const d = today();
+        if (!reviewDue(s, d) || !calm()) return;
+        write({ ...s, asked: d });
         try { ask(); } catch { /* the store's call, not ours */ }
       });
     },
@@ -1118,13 +1168,6 @@ export function cityLayers(slug, lang) {
     .map((l) => ({ ...l, id: `city-${slug}-${l.id}` }));
 }
 
-// Great-circle distance in km, for sorting the catalogue by the map's centre.
-export function kmBetween(lat1, lon1, lat2, lon2) {
-  const R = 6371, d = Math.PI / 180;
-  const a = Math.sin((lat2 - lat1) * d / 2) ** 2
-    + Math.cos(lat1 * d) * Math.cos(lat2 * d) * Math.sin((lon2 - lon1) * d / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
 export const bboxCentre = ([w, s, e, n]) => ({ lat: (s + n) / 2, lon: (w + e) / 2 });
 
 // Which saved cities to hold in memory for a view: the ones whose extract the
@@ -1137,7 +1180,7 @@ export function citiesToMount(saved, [w, s, e, n], centre, zoom) {
   if (zoom < MOUNT_ZOOM) return null;
   return saved
     .filter(({ bbox: [cw, cs, ce, cn] }) => cw <= e && ce >= w && cs <= n && cn >= s)
-    .map((c) => ({ c, km: kmBetween(centre.lat, centre.lon, bboxCentre(c.bbox).lat, bboxCentre(c.bbox).lon) }))
+    .map((c) => ({ c, km: haversineKm(centre.lat, centre.lon, bboxCentre(c.bbox).lat, bboxCentre(c.bbox).lon) }))
     .sort((a, b) => a.km - b.km)
     .slice(0, MAX_MOUNTED)
     .map(({ c }) => c);

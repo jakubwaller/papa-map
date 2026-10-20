@@ -8,17 +8,17 @@ import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces,
          isHighchair, countHighchair,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
-         pinColorExpression, viewOf, localAnswered, usableStatuses, haversineKm,
+         parseBbox, pickArea, areaLink, areaPlace, areaKeysFor, areaForLabel, nearestAreas, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, viewFor, BUCKET_COLOR,
+         pinColorExpression, nearestFeature, viewOf, localAnswered, haversineKm,
          nearestUsable, formatDistance, geoUri, webRouteHref, webRouteChoices, PAPAMAP_THEME_URL, osmRef, osmApiUrl,
          osmElementFromApi, editOutcome, EDIT_TAGS, TABLE_TAGS, PLAY_TAGS,
          EDIT_TAG_LABEL, editTagLines, printableTableValue, printableEditTagLines,
          EDIT_CHECK_DELAYS, shareUrl, parseShareOsm, withoutOsmParam, ROOM_CARD_RADIUS_KM,
          nearestUnknownRoom, isFixFresh, popupPan, popupMaxHeight, isAppleTouch,
          shouldOpenAtLocation, mergeFeatureCollection, isDeltaFresh,
-         applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl, mergeAnswerOverride,
+         applyAnswerOverrides, pruneAnswerOverrides, resolveDataUrl, mergeAnswerOverride, parseSavedView,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
-         isNewlyCreated, selectAddedPlace, mapCompleteObjectUrl, zoneForFeature } from "./datasource.js";
+         isNewlyCreated, selectAddedPlace, addWatchSince, mapCompleteObjectUrl, zoneForFeature } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 
 const feat = (lon, lat, props) => ({
@@ -668,15 +668,16 @@ test("localAnswered: tables partitions into known and unknown, the pipeline's ow
 // ---- Nearest usable table ----
 
 test("usable means what the reading already calls good, nothing new", () => {
-  // A father can only use the open room. A mother can use both — and the
-  // difference is read out of VIEW, not written down a second time here.
-  assert.deepEqual(usableStatuses("papa"), ["accessible"]);
-  assert.deepEqual(usableStatuses("mama"), ["accessible", "female_only"]);
+  // A father can only use the open room; a mother can use both. "unknown" is
+  // never usable in either reading: nobody has recorded the room, so sending a
+  // parent there is a guess dressed up as an answer.
+  const at = (status, lon) => ({ status, lat: 53, lon });
+  const fs = [at("unknown", 10.0), at("female_only", 10.001), at("accessible", 10.002)];
+  assert.equal(nearestUsable(fs, 53, 10, "papa").feature.status, "accessible");
+  assert.equal(nearestUsable(fs, 53, 10, "mama").feature.status, "female_only");
   // Junk degrades to the father's reading, like every other mode lookup.
-  assert.deepEqual(usableStatuses("nonsense"), ["accessible"]);
-  // "unknown" is never usable in either reading: nobody has recorded the room,
-  // so sending a parent there is a guess dressed up as an answer.
-  for (const m of MODES) assert.ok(!usableStatuses(m).includes("unknown"));
+  assert.equal(nearestUsable(fs, 53, 10, "nonsense").feature.status, "accessible");
+  for (const m of MODES) assert.equal(nearestUsable([at("unknown", 10)], 53, 10, m), null);
 });
 
 test("haversineKm measures a known distance", () => {
@@ -1275,6 +1276,23 @@ test("areaLink names the country in the UI language when it falls back to the En
   assert.deepEqual([...keys].sort(), ["Bayern", "Hamburg", "Schleswig-Holstein"]);
 });
 
+test("areaPlace names the place of the page areaLink picks (v96)", () => {
+  const hh = { ...AREAS[1], cc: "de" };
+  const names = (cc) => ({ de: "Germany", dk: "Danmark" })[cc] ?? null;
+  // Its own page: the chunk's own name.
+  assert.equal(areaPlace(hh, "de", names), "Hamburg");
+  // The English twin of the country: the country, never the chunk.
+  assert.equal(areaPlace(hh, "en", names), "Germany");
+  // A page with no twin is linked for everyone, so its own name stands.
+  assert.equal(areaPlace(AREAS.find((a) => a.area === "Florida"), "de", names), "Florida");
+  // A country row has no chunk name.
+  assert.equal(areaPlace({ href: "wickeltische/danmark.html", lang: "da", cc: "dk" }, "da", names), "Danmark");
+  // No name to give: null, and the header keeps the full label.
+  assert.equal(areaPlace({ ...hh, cc: "zz" }, "en", names), null);
+  assert.equal(areaPlace(AREAS[1], "en", names), null);
+  assert.equal(areaPlace(null, "de", names), null);
+});
+
 test("every language has an areaCountry phrase with a {country} slot", () => {
   for (const l of LANGS) assert.match(STRINGS[l].areaCountry ?? "", /\{country\}/, l);
 });
@@ -1464,6 +1482,28 @@ test("applyAnswerOverrides keeps a no-status answer (e.g. play 'none') in places
   const out = applyAnswerOverrides(fc, places, overrides);
   assert.equal(out.fc.features.length, 0);
   assert.equal(out.places.features[0].properties.changing_table, "no");
+});
+
+test("parseSavedView reads a stored view and refuses anything else (v101)", () => {
+  assert.deepEqual(parseSavedView('{"lng":9.96,"lat":53.57,"zoom":15.2}'), { lng: 9.96, lat: 53.57, zoom: 15.2 });
+  for (const raw of [null, "", "junk", "null", "[]", '{"lng":9.96,"lat":53.57}',
+                     '{"lng":"9","lat":53,"zoom":15}', '{"lng":200,"lat":53,"zoom":15}',
+                     '{"lng":9,"lat":89,"zoom":15}', '{"lng":9,"lat":53,"zoom":40}'])
+    assert.equal(parseSavedView(raw), null, raw);
+});
+
+test("applyAnswerOverrides draws a reader's own play ring and keeps the room (v100)", () => {
+  const fc = { type: "FeatureCollection", features: [
+    feat(1, 1, { osm_url: "https://www.openstreetmap.org/node/1", status: "accessible",
+                changing_table: "yes", location_raw: "male_toilet" }),
+  ] };
+  const places = { type: "FeatureCollection", features: [] };
+  const overrides = { "https://www.openstreetmap.org/node/1":
+    { play_answered: true, play: true, t: "2026-10-19T10:00:00Z" } };
+  const props = applyAnswerOverrides(fc, places, overrides).fc.features[0].properties;
+  assert.equal(props.play, true);
+  assert.equal(props.status, "accessible");
+  assert.equal(props.location_raw, "male_toilet");
 });
 
 test("applyAnswerOverrides ignores an override for an object neither collection has", () => {
@@ -1737,6 +1777,21 @@ test("selectAddedPlace: an osm_url watch takes that object's upsert, created or 
   assert.equal(selectAddedPlace({ tables: { upsert: [up(url, "2026-09-23T09:59:00Z")] } }, watch), null);
   // And other objects never answer an osm_url watch, however new.
   assert.equal(selectAddedPlace({ tables: { upsert: [delta.tables.upsert[0]] } }, watch), null);
+});
+
+// The add dialog's answer found saved already by an earlier, timed-out tap:
+// the delta carries that earlier edit, and the watch must still take it.
+test("addWatchSince: a write's own moment, or a second before the save it found", () => {
+  const url = "https://www.openstreetmap.org/node/42";
+  const before = "2026-09-23T10:05:30.000Z";
+  assert.equal(addWatchSince(before, { changeset: "1234", timestamp: "2026-09-23T10:00:00Z" }), before);
+  assert.equal(addWatchSince(before, { changeset: null }), before);   // no timestamp to go by
+  const t = addWatchSince(before, { changeset: null, timestamp: "2026-09-23T10:04:00Z" });
+  assert.equal(t, "2026-09-23T10:03:59.000Z");
+  const delta = { tables: { upsert: [{ type: "Feature", geometry: { type: "Point", coordinates: [10, 53.55] },
+                                       properties: { osm_url: url, edited_at: "2026-09-23T10:04:00Z" } }] } };
+  assert.equal(selectAddedPlace(delta, { ...WATCH, osm_url: url, t: before }), null);
+  assert.equal(selectAddedPlace(delta, { ...WATCH, osm_url: url, t }).feature.properties.osm_url, url);
 });
 
 test("selectAddedPlace returns null with no watch or no delta", () => {
@@ -2067,4 +2122,10 @@ test("loadPlaces reads a missing play_area as true, and splitPlaces splits the t
   assert.deepEqual(splitPlaces(places, false, false), []);
   // the high-chair chip narrows both kinds of ring on top
   assert.deepEqual(splitPlaces(placeFeatures(places, false, true)).map((p) => p.idx), [2]);
+});
+
+test("nearestFeature picks the pin closest to the tap, or null", () => {
+  const fs = [{ id: "far", x: 30, y: 0 }, { id: "near", x: 12, y: 5 }, { id: "dup", x: 12, y: 5 }];
+  assert.equal(nearestFeature({ x: 15, y: 5 }, fs, (f) => f).id, "near");
+  assert.equal(nearestFeature({ x: 0, y: 0 }, [], (f) => f), null);
 });

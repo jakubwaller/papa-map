@@ -65,7 +65,9 @@ def is_relevant_tags(tags: dict) -> bool:
     *removal* (the key vanishes from `tags` entirely) is still caught."""
     if any(k == "changing_table" or k.startswith("changing_table:") for k in tags):
         return True
-    if any(k in tags for k in PLAY_KEYS):
+    # kids_area:outdoor is evidence for has_play_area (v97) but not an answer
+    # the popup writes, so it is not in PLAY_KEYS.
+    if any(k in tags for k in PLAY_KEYS) or "kids_area:outdoor" in tags:
         return True
     if tags.get("leisure") in ("indoor_play", "playground"):
         return True
@@ -166,9 +168,11 @@ def fetch_osm_full_centroid(osm_type: str, osm_id: int, get=None) -> tuple[float
              and "lat" in el and "lon" in el]
     if not nodes:
         return None
-    lat = sum(n["lat"] for n in nodes) / len(nodes)
-    lon = sum(n["lon"] for n in nodes) / len(nodes)
-    return lat, lon
+    # The middle of the outline's bounding box, which is what Overpass's
+    # `out center` gives the nightly build — the mean of the points would
+    # put the pin tens of metres off by morning.
+    lats, lons = [n["lat"] for n in nodes], [n["lon"] for n in nodes]
+    return (min(lats) + max(lats)) / 2, (min(lons) + max(lons)) / 2
 
 
 # A way/relation with no coordinate reachable any other way is rare ("a few
@@ -442,6 +446,14 @@ def find_start_seq(base_iso: str, fetch_state=fetch_state, max_backoff: int = 8,
         if not st.get("timestamp") or _parse_iso(st["timestamp"]) <= base_dt:
             break
         seq = max(1, seq - backoff_step)
+    else:
+        # The loop stepped back once after its last check; that seq is the
+        # one returned, so only warn if it too is still after the base.
+        ts = fetch_state(seq).get("timestamp")
+        if ts and _parse_iso(ts) > base_dt:
+            print(f"  WARN delta: still after the base {base_iso} at seq {seq} "
+                  f"after {max_backoff} steps back — edits between may not be replayed",
+                  file=sys.stderr)
     return seq
 
 

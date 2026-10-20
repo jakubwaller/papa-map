@@ -10,6 +10,7 @@
 //   node ios/asc.mjs beta-text distribute --build <n> --group <name> add to a beta group, submit for review
 //   node ios/asc.mjs listings pull                                    print the App Store listing texts, every locale
 //   node ios/asc.mjs listings push                                    listings/*.json → the version being prepared
+//   node ios/asc.mjs live-tags [--push]                               tag the commit of each live App Store version (dry run without --push)
 //
 // Reads ASC_ISSUER_ID, ASC_KEY_ID and ASC_API_KEY_P8 (the key's text) from the
 // environment — the repository secrets of the same names.
@@ -22,6 +23,7 @@ import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { liveTags } from "../live-tags.mjs";
 import { ASC_LOCALES, listingsDir, readListings, ascAppInfoAttributes, ascVersionAttributes, same } from "../listings.mjs";
 
 const API = "https://api.appstoreconnect.apple.com/v1";
@@ -556,14 +558,30 @@ async function listings(sub) {
   throw new Error(`listings: unknown subcommand "${sub}" (pull | push)`);
 }
 
+// Apple names the same state twice: appStoreState (the old name, READY_FOR_SALE)
+// and appVersionState (READY_FOR_DISTRIBUTION), and a superseded version shows
+// REPLACED_WITH_NEW_VERSION. All were live, so all are backfilled (ios/1.3.3
+// went missing that way); WAITING_FOR_REVIEW and the like are not.
+const LIVE_STATES = new Set(["READY_FOR_SALE", "READY_FOR_DISTRIBUTION", "REPLACED_WITH_NEW_VERSION"]);
+// The build number is the
+// attached build's CFBundleVersion, which app-build.yml sets to run_number.
+async function liveTagsCmd(...args) {
+  const r = await api("GET", `/apps/${await appId()}/appStoreVersions?filter[platform]=IOS&include=build&limit=200`);
+  const builds = new Map((r.included ?? []).filter((i) => i.type === "builds").map((b) => [b.id, b.attributes.version]));
+  const live = r.data
+    .filter((v) => [v.attributes.appVersionState, v.attributes.appStoreState].some((s) => LIVE_STATES.has(s)))
+    .map((v) => ({ version: v.attributes.versionString, build: builds.get(v.relationships?.build?.data?.id) }));
+  await liveTags("ios", live, args);
+}
+
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) {
   const [cmd, ...args] = process.argv.slice(2);
-  const run = { ids, cert, profiles, "beta-text": betaText, listings }[cmd];
+  const run = { ids, cert, profiles, "beta-text": betaText, listings, "live-tags": liveTagsCmd }[cmd];
   if (!run || (cmd === "cert" && args.length !== 2) || (cmd === "profiles" && args.length !== 1) ||
       (cmd === "beta-text" && args.length < 1) || (cmd === "listings" && args.length !== 1)) {
     console.error("usage: asc.mjs ids | cert <csr> <out.cer> | profiles <dir> | beta-text pull | " +
                   "beta-text push --build <n> | beta-text distribute --build <n> --group <name> | " +
-                  "listings pull | listings push");
+                  "listings pull | listings push | live-tags [--push]");
     process.exit(2);
   }
   run(...args).catch((e) => { console.error(String(e.message ?? e)); process.exit(1); });

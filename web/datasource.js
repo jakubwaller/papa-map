@@ -53,7 +53,8 @@ export function loadFeatures(fc) {
       // A reader's own play answer (play_answered, from the override layer in
       // applyAnswerOverrides) counts as recorded too, so the question stays
       // answered across every re-merge until the delta carries the tag. `play`
-      // itself still waits for the pipeline: the ring is OSM's, not ours.
+      // itself comes from the pipeline, or for that answer from stats.json's
+      // answer_play (v100), never from reading the tag here.
       play_recorded: p.play === true || p.play === false || p.play_answered === true,
       // Tri-state or null, straight from the pipeline (v26). Same strictness
       // as play: only the three wiki values pass, so a dataset from before the
@@ -98,7 +99,8 @@ export function loadFeatures(fc) {
   return out;
 }
 
-// play_places.geojson — places that record an indoor play area and are not
+// play_places.geojson — places that record a play area (indoors or a venue's
+// outdoor one) and are not
 // pins: no changing_table tag at all (the open question), or, since v27,
 // `changing_table=no` (answered, and the answer was no). A separate dataset,
 // not a fourth status: neither has an answer to colour — red would promise a
@@ -121,8 +123,8 @@ export function loadPlaces(fc) {
       // "no" or null, and only those: a dataset from before v27 has no such
       // property and must read as the open question, never as an answer.
       changing_table: p.changing_table === "no" ? "no" : null,
-      // v88: false = only a high chair is recorded. Missing (a dataset from
-      // before v88) means true: every old place is a play place.
+      // v102: false = only a high chair is recorded. Missing (a dataset from
+      // before v102) means true: every old place is a play place.
       play_area: p.play_area !== false,
       // As on the pins (v26), read with the same strictness (v28).
       wheelchair: WHEELCHAIR_STATES.includes(p.wheelchair) ? p.wheelchair : null,
@@ -258,7 +260,7 @@ export function placeFeatures(places, wheelchairOnly = false, highchairOnly = fa
   return highchairOnly ? byWheelchair.filter(isHighchair) : byWheelchair;
 }
 
-// The two ring chips (v88): "Play area only" takes the places with a play
+// The two ring chips (v102): "Play area only" takes the places with a play
 // area, "High chair only" those that record nothing but a high chair.
 export function splitPlaces(places, playOn = true, highchairOn = true) {
   return places.filter((p) => (p.play_area === false ? highchairOn : playOn));
@@ -516,15 +518,6 @@ export function pinColorExpression(mode) {
 }
 
 // ---- Nearest usable table ----
-// "Usable" is the reading's own verdict, not a second classification: a status
-// counts when the view already buckets it "good". So a father searches the
-// green pins and a mother searches green and red together, both fall out of
-// the same VIEW table the colours come from, and neither one re-derives
-// anything from the raw tags. Add a mode to VIEW and this follows for free.
-export function usableStatuses(mode) {
-  return STATUSES.filter((s) => viewFor(s, mode).bucket === "good");
-}
-
 const EARTH_KM = 6371;
 const rad = (deg) => (deg * Math.PI) / 180;
 
@@ -753,6 +746,18 @@ export function withoutOsmParam(href) {
   return url.toString();
 }
 
+// The last view the map showed (CONTRACT v101), as boot() reopens it:
+// {lng, lat, zoom}, or null for anything else in the key — a junk string, an
+// older build's shape, a zoom the map would refuse.
+export function parseSavedView(raw) {
+  try {
+    const { lng, lat, zoom } = JSON.parse(raw) ?? {};
+    if (![lng, lat, zoom].every(Number.isFinite)) return null;
+    if (Math.abs(lng) > 180 || Math.abs(lat) > 85 || zoom < 1 || zoom > 18) return null;
+    return { lng, lat, zoom };
+  } catch { return null; }
+}
+
 // ---- Open at location: zoomed in on the reader, the way Google Maps opens ----
 // TestFlight feedback: a reader who has already granted location expects the
 // map to open where they are, not on Germany. Whether app.js's boot fix
@@ -972,6 +977,17 @@ export function areaLink(area, lang, countryLabel) {
   return { href: area.en.href, label: local || area.en.label, en: true };
 }
 
+// The bare place areaLink's page is about, for the phone header, where the
+// whole "Changing tables in …" does not fit beside the other links (CONTRACT.md
+// v96): the chunk's own name when its own page is the one linked, otherwise
+// the country's name from `regionName` (UI language). Null when there is no
+// name to give, and the header keeps the full label.
+export function areaPlace(area, lang, regionName) {
+  if (!area) return null;
+  if ((area.lang === lang || !area.en) && area.area) return area.area;
+  return (area.cc && regionName?.(area.cc)) || null;
+}
+
 // The set of `f.area` values an areas.json row covers — a chunk (Land,
 // région, state, prefecture) covers its own one sweep area; a country row
 // covers every sweep area behind it (`areas`, CONTRACT.md v32: Germany's 16
@@ -1106,8 +1122,8 @@ export function resolveDataUrl(path, native, site) {
 // grey table's room and a play place's own room question can move an
 // object's status). `overrides` is localStorage's papamap-answer-overrides
 // shape: {osm_url: {status, men_only, changing_table, location_raw,
-// play_answered, highchair_answered, t, version}}, every field but t and
-// version optional (men_only since v50; an override stored before it keeps
+// play_answered, play, highchair_answered, t, version}}, every field but t and
+// version optional (men_only since v50, play since v100; an override stored before it keeps
 // the base's). Only the fields an entry carries are written: a play or
 // high-chair answer must not blank the room the base already records. An
 // override for an object neither collection has any more (deleted, or never
@@ -1129,6 +1145,7 @@ export function applyAnswerOverrides(fc, places, overrides) {
     if (o.status) props.status = o.status;
     if (o.men_only != null) props.men_only = o.men_only;
     if (o.play_answered === true) props.play_answered = true;
+    if (typeof o.play === "boolean") props.play = o.play;
     if (typeof o.highchair_answered === "boolean") props.highchair_answered = o.highchair_answered;
     const patched = { ...base, properties: props };
     if (o.status || isTable) { tableByUrl.set(url, patched); placeByUrl.delete(url); }
@@ -1294,6 +1311,16 @@ export function selectAddedPlace(deltaJson, watch) {
   return null;
 }
 
+// The `t` of the add dialog's osm_url watch: `before`, the moment before its
+// write — unless writeTags found the answer on OSM already (changeset null),
+// saved by an earlier tap that timed out. The delta carries that earlier edit,
+// whose edited_at is before `before`, so the watch starts a second before the
+// save's own timestamp (OSM stamps whole seconds) or it never fires.
+export function addWatchSince(before, out) {
+  const at = Date.parse(out?.timestamp);
+  return out?.changeset || !Number.isFinite(at) ? before : new Date(at - 1000).toISOString();
+}
+
 // Which toast a failed position gets. A denial has its own words because the
 // browser never asks twice: the reader has to know where the switch is, and it
 // is in a different place on the page than in the store app. Location
@@ -1344,4 +1371,15 @@ export function flightMs(length, p = FLIGHT) {
   const ms = length * p.msPerUnit;
   if (ms > p.jumpAboveMs) return null;
   return Math.min(Math.max(Math.round(ms), p.minMs), p.maxMs);
+}
+
+// The rendered feature whose projected pixel is nearest `point` (null if none),
+// for a finger-sized tap box. `project` maps a feature to {x, y}.
+export function nearestFeature(point, features, project) {
+  let best = null, bestD = Infinity;
+  for (const f of features) {
+    const p = project(f), d = Math.hypot(p.x - point.x, p.y - point.y);
+    if (d < bestD) { best = f; bestD = d; }
+  }
+  return best;
 }

@@ -16,12 +16,15 @@ def day(date, regions=None, cities=None, source="build"):
 def test_load_history_cold_start(tmp_path):
     assert leaderboard.load_history(tmp_path / "missing.json") == {
         "v": 1, "days": []}
-    broken = tmp_path / "broken.json"
-    broken.write_text("{not json", encoding="utf-8")
-    assert leaderboard.load_history(broken) == {"v": 1, "days": []}
-    wrong_shape = tmp_path / "wrong.json"
-    wrong_shape.write_text('{"days": "nope"}', encoding="utf-8")
-    assert leaderboard.load_history(wrong_shape) == {"v": 1, "days": []}
+
+
+def test_load_history_refuses_an_unreadable_file(tmp_path):
+    for name, text in (("empty", ""), ("broken", "{not json"),
+                       ("wrong", '{"days": "nope"}')):
+        f = tmp_path / f"{name}.json"
+        f.write_text(text, encoding="utf-8")
+        with pytest.raises(ValueError, match=f"{name}.json"):
+            leaderboard.load_history(f)
 
 
 def test_append_day_replaces_same_date_and_keeps_order():
@@ -606,3 +609,29 @@ def test_backfill_asks_the_empty_answers_host_for_the_count():
         fetch=fetch, pause_s=0, sleep=lambda s: None)
     assert regions == {"Northwest Territories": [0, 0, 0]}
     assert asked == [["http://m2"]]
+
+
+def test_a_gain_the_column_shows_as_a_dash_is_not_ranked():
+    # One more answer in 2,500 is +0.04 points: the delta column prints "–",
+    # so the rank column must not call it the biggest mover.
+    history = {"v": 1, "days": [
+        day("2026-08-07", regions={"Bayern": [250, 0, 2250]}),
+        day("2026-08-14", regions={"Bayern": [251, 0, 2249]}),
+    ]}
+    html = leaderboard.render_leaderboard(
+        "en", leaderboard.leaderboard_data(history))
+    assert '<td data-v="1">1</td>' not in html
+    history["days"][1]["regions"]["Bayern"] = [255, 0, 2245]  # +0.2 points
+    html = leaderboard.render_leaderboard(
+        "en", leaderboard.leaderboard_data(history))
+    assert '<td data-v="1">1</td>' in html
+
+
+def test_a_rerun_that_lost_a_city_would_narrow_the_day():
+    history = {"v": 1, "days": [day("2026-08-14", regions={"Bayern": [1, 0, 0]},
+                                    cities={"München": [1, 0, 0], "Köln": [0, 0, 1]})]}
+    regions = {"Bayern": [1, 0, 0]}
+    assert leaderboard.narrows_day(history, "2026-08-14", regions,
+                                   {"München": [1, 0, 0]}) == ["Köln"]
+    assert leaderboard.narrows_day(history, "2026-08-14", regions,
+                                   {"München": [1, 0, 0], "Köln": [0, 0, 1]}) == []

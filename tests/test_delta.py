@@ -64,6 +64,7 @@ def test_parse_osc_way_has_no_coordinates():
     {"changing_table:location": "male_toilet"},
     {"kids_area": "yes"},
     {"kids_area:indoor": "yes"},
+    {"kids_area:outdoor": "yes"},
     {"leisure": "indoor_play"},
     {"leisure": "playground"},
     {"amenity": "toilets"},
@@ -1365,3 +1366,42 @@ def test_new_table_in_salzburg_gets_austria_not_the_first_overlapping_box():
     events = delta.process_changes(changes, base, area_boxes=list(OVERLAP.values()),
                                    area_boxes_by_name=OVERLAP, acc=delta.new_accumulator())
     assert events[0][2]["properties"]["area"] == "Austria"
+
+
+def test_a_new_way_is_pinned_at_the_middle_of_its_box_like_the_nightly_build():
+    # Three corners bunched in the south-west and one far in the north-east:
+    # the mean of the points sits at 0.25, the box centre (Overpass's
+    # `out center`) at 0.5.
+    pts = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (1.0, 1.0)]
+
+    class Resp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"elements": [{"type": "node", "lat": a, "lon": b} for a, b in pts]}
+
+    got = delta.fetch_osm_full_centroid("way", 5, get=lambda *a, **k: Resp())
+    assert got == (0.5, 0.5)
+
+
+def test_find_start_seq_warns_when_it_gives_up_after_the_base(capsys):
+    states = {None: {"seq": 1000, "timestamp": "2026-09-23T10:00:00Z"}}
+
+    def always_after_base(seq=None):
+        return states.get(seq, {"seq": seq, "timestamp": "2026-09-23T09:55:00Z"})
+
+    delta.find_start_seq("2026-09-23T09:00:00Z", fetch_state=always_after_base,
+                         max_backoff=2, backoff_step=1)
+    assert "WARN delta: still after the base" in capsys.readouterr().err
+    # The last step back lands at or before the base: no false alarm.
+    reached = {None: states[None], 1000 - 60 - 10: {"seq": 930, "timestamp": "2026-09-23T09:55:00Z"}}
+    delta.find_start_seq("2026-09-23T09:00:00Z",
+                         fetch_state=lambda seq=None: reached.get(seq) or {
+                             "seq": seq, "timestamp": "2026-09-23T08:00:00Z"},
+                         max_backoff=1, backoff_step=1)
+    assert capsys.readouterr().err == ""
+    delta.find_start_seq("2026-09-23T09:00:00Z",
+                         fetch_state=lambda seq=None: {"seq": seq or 100,
+                                                       "timestamp": "2026-09-23T08:00:00Z"})
+    assert capsys.readouterr().err == ""

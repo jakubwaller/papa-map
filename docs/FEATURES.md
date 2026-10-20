@@ -200,6 +200,9 @@ since its JavaScript is bundled; the methods pages say so.
 
 ### The selected-place marker
 
+A tap lands on the nearest pin within 20 px, not only on the drawn circle (a pin is
+14-26 px wide, a fingertip about 40); clustering was considered and rejected.
+
 The ~26k pins stay WebGL circles at every zoom — a pictogram needs about
 30 px to read, which would double a pin's footprint and collide with the
 play halo and the key glyph drawn on top of them. Instead, exactly one pin
@@ -329,7 +332,8 @@ wheelchair note made a card taller than a phone's band, so a pan could keep
 its status line clear of the search field or its buttons clear of the
 attribution, never both. `fitPopup()` (`web/app.js`) sets the card's maximum
 height from the same band the pan uses (`popupMaxHeight`, never under 160 px
-for a landscape phone), and a longer card scrolls inside itself; the map's
+for a landscape phone), and a longer card scrolls inside itself, its foot
+fading while there is more below (v94); the map's
 gestures listen on the canvas, which the card is not inside, so a swipe or
 wheel over the card scrolls the card and never the map. The wheelchair note
 clamps to three lines with a "more …" link where the clamp cut something. The
@@ -470,6 +474,18 @@ capped list) so it does not ask about that table again on that device. At most
 one card at a time, and it steps aside for anything that outranks it — any
 popup opening, or the reader panning more than 300 m from the fix that raised
 it.
+
+### Open where the reader left the map
+
+The map remembers its last view, centre and zoom, on the device
+(`papamap-view`, CONTRACT v101) and opens there instead of on the German home
+view. An Android tester, 16 Oct 2026: "reopening brings me to the overview of
+Germany again". The home view stays for a first visit, for a `?bbox=` link, and
+for the logo button (on the website its reload clears the key first; in the
+app the logo flies to the location dot when there is one, as before). A view the
+map centred on the reader's own position is never stored, because the
+Datenschutz pages promise the position is not stored. Everything below still moves the map from there: a shared
+pin, a deep link, and the location fix where location is already granted.
 
 ### Open at location
 
@@ -646,9 +662,10 @@ instead, a recorded answer of any kind is never asked again, and a
 answer. *Indoors* writes `kids_area:indoor=yes` together with `kids_area=yes`,
 *outdoors only* writes `kids_area=yes` together with `kids_area:indoor=no`,
 *none* writes `kids_area=no`: the three mappings the site's own MapComplete
-theme uses for the same question, and values `classify.py` already reads, so
-the ring appears (or stays away) a few minutes later, through the delta
-follower (v48). The third answer is what
+theme uses for the same question, and values `classify.py` already reads. The
+ring appears the moment OSM confirms the write, from `stats.json`'s
+`answer_play`, the pipeline's own reading of each answer's tags (v100), and
+the delta follower (v48) carries it for everyone else a few minutes later. The third answer is what
 makes the first two honest — `kids_area=no` is OSM's "nowhere for children to
 play", and a two-button *indoor play area? yes/no* wrote it under bakeries with
 a garden playground (issue #119, v31). The two questions are independent taps
@@ -736,13 +753,15 @@ instead, the same word the play-corner card itself uses.
 ## Play corners
 
 Every feature carries a tri-state `play`: true when the object also records an
-indoor place for the kid to play (`kids_area:indoor` or `kids_area` =
-`yes|indoor|designated`, `leisure=indoor_play`, or `leisure=playground` +
-`indoor=yes`), false when somebody has answered on one of the `kids_area` keys
-and the answer does not pass — or when the object is an outdoor
-`leisure=playground`, which answers the question by being one (v31) — null when
-nobody has answered at all. `outdoor`,
-`no` and `limited` are excluded, and an explicit `kids_area:indoor=no`
+place for the kid to play, indoors or the venue's own outdoor one
+(`kids_area:indoor`, `kids_area` = `yes|indoor|designated|outdoor`,
+`kids_area:outdoor` = `yes|designated`, `leisure=indoor_play`, or
+`leisure=playground` + `indoor=yes`), false when somebody has answered on one
+of the `kids_area` keys and the answer does not pass — or when the object is an
+outdoor `leisure=playground`, which answers the question by being one (v31) —
+null when nobody has answered at all. `no` and `limited` are excluded, and
+outdoor-only evidence never counts on a public playground (v97; a playground
+with a bare `kids_area=yes` still does). `kids_area:indoor=no` no longer
 overrules a bare `kids_area=yes`. False and null draw the same — nothing — and
 differ only in whether the popup asks the question (CONTRACT v30). The map draws it as a
 blue halo under the pin and the chip bar gains a filter that narrows to those
@@ -785,7 +804,7 @@ halves, and `osm.split_sweep()` sorts them apart by tag.
 
 ### High-chair-only rings
 
-Since v88 the places file also holds objects that record a high chair
+Since v102 the places file also holds objects that record a high chair
 (`highchair` = yes or a number) and no changing-table answer, with or without a
 play area. Each place carries `play_area`; the frontend reads a missing one as
 true, so an older dataset still shows only play places. The rings have two
@@ -1039,7 +1058,7 @@ answered share in percentage points against a snapshot at least a week back,
 never the absolute counts: levels measure mapping thoroughness, movement
 measures people answering the room question, and only the latter is an honest
 race. A same-date re-run replaces its history entry, unless it swept fewer
-regions than the entry it would replace (then history is left alone). A build
+regions or cities than the entry it would replace (then history is left alone). A build
 without all 16 Länder writes no history; one with them files only the cities of
 the countries it swept, so a `PAPAMAP_COUNTRIES=de` run on a day with no nightly
 entry still writes a 16-region day.
@@ -1266,13 +1285,15 @@ layout, the build and the signing):
   shows no distance: Control Center is drawn from a process with no fresh fix, and a number
   quietly hours old is worse than none.
 
-- **One request for a store rating, at a calm moment.** A device becomes eligible after the
+- **A request for a store rating, at a calm moment, at most every 30 days.** A device becomes eligible after the
   reader's third successful answer or the third separate day on which they opened a pin,
   whichever comes first (`papamap-review`, on this device only; counted from this build on). The
   ask fires at the next pin close, a second later, and only if no pin, dialog, room card or search
   is up by then: never on launch, and never while the reader is busy swapping one pin for another.
-  One ask per device, ever; whether the sheet appears is Apple's or Google's call (both rate-limit
-  it) and nothing comes back to the page. The website neither counts nor asks (CONTRACT.md v52).
+  After an ask the device waits 30 days before the next pin close may ask again (CONTRACT.md v98):
+  a single ask was lost for good whenever the store swallowed it, as TestFlight always does.
+  Whether the sheet appears is Apple's or Google's call (both rate-limit it) and nothing comes back
+  to the page. The website neither counts nor asks (CONTRACT.md v52).
 
 - **Every language of the map, on the store page too.** The shell speaks all 32 languages the
   website does, chosen from the phone's language list and switchable in the intro — but the
@@ -1371,7 +1392,7 @@ actually finish one. The service worker's eight seconds make the same call — i
 still stores the response it eventually gets, but only when its validators differ from the stored copy (an unchanged dataset is not rewritten). A file that does not parse is deleted instead, never
 promoted, because `.new` is itself a file the loader reads. A first launch too slow for the twenty
 seconds it is given (`NET_MS`; the page's own fetch shares what is left of that same budget) draws
-an empty map once; the launch after it has the data.
+an empty map once; the launch after it has the data. Those twenty seconds are not blank, since 1.3.2: `bootNative` renders the chips at zero before the load starts and, a second later if the data is still out, puts "Loading changing tables…" in the header, so a waiting first launch looks like an app loading rather than an app with nothing in it — on a phone whose network hangs rather than fails (Airplane Mode behind an auto-connect VPN profile), the only sign of life for the whole wait.
 
 The known rough edge this removes: a reader on a slow-but-working link used to be told "Offline —
 the map is showing stored data" on every visit that happened to read the copy, which was not wrong

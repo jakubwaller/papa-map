@@ -137,6 +137,8 @@ header {
   text-decoration: none;
 }
 .header-actions a:hover { text-decoration: underline; }
+.area-place { display: none; }
+.area-place svg { vertical-align: -1px; margin-right: 3px; }
 
 .add-btn {
   order: 3;
@@ -266,6 +268,12 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   font-weight: 600;
   color: var(--muted-2);
 }
+/* The failed-load line is a button that reads as a link. */
+.count-retry {
+  font: inherit; color: inherit; background: none; border: 0; padding: 4px 0;
+  min-height: 24px; text-decoration: underline; cursor: pointer;
+}
+.count-retry:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 .chip {
   flex: 0 0 auto;
@@ -694,8 +702,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #add-dialog a.btn code { font-size: 11px; }
 #add-dialog .dialog-foot { margin: 4px 0 0; font-size: 12.5px; }
 /* The place list (CONTRACT.md v62): a search box, then one row per place —
-   name over street and distance — in a box that scrolls on its own, so the
-   MapComplete links below stay on screen on a phone. */
+   name over street and distance. The list runs in flow: the dialog is capped
+   and scrolls (#268), so the card scrolls once, not a box inside a box. */
 #venue-search {
   width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 9px 11px;
   border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 16px;
@@ -704,7 +712,6 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #add-dialog .venue-status { margin: 0 0 10px; }
 .venue-list {
   list-style: none; margin: 0 0 12px; padding: 0;
-  max-height: min(40vh, 300px); overflow-y: auto;
   border-top: 1px solid var(--line-soft);
 }
 .venue-list:empty { display: none; }
@@ -919,6 +926,11 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 }
 /* `contain` keeps the scroll from chaining out to the page at either end. */
 .maplibregl-popup-content > .popup { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* A card that scrolls says so: a fade at the foot while there is more below. */
+.maplibregl-popup-content > .popup.more-down {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
 .maplibregl-popup-close-button {
   font-size: 18px;
   padding: 2px 8px;
@@ -1099,18 +1111,33 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   header { padding: 8px calc(14px + var(--safe-right)) 8px calc(14px + var(--safe-left)); gap: 6px 12px; }
   /* Four links no longer fit beside the wordmark, and a nav that wraps into a
      ragged block next to it reads as debris. Row of its own instead, under the
-     brand and its button, above the tagline. That is three rows only because
+     brand and its button. That is two rows only because
      the swept-area subtitle steps aside here: "Deutschland & Dänemark" is 170
      of the 347 available pixels, and the stats strip says it again one line
      below. Without this the button drops to a row of its own — 132px of header
      on a 375px phone instead of 100. */
   .wordmark .city { display: none; }
-  .header-actions { order: 3; flex: 1 0 100%; justify-content: flex-start; gap: 6px 12px; }
+  /* One row, never wrapping: the area link names wherever the map is
+     ("Changing tables in Baden-Württemberg"), and at 360px, the commonest
+     Android width, it pushed the language picker onto a row of its own
+     (2026-10-13). The area link gives way with an ellipsis instead; the other
+     three keep their full width, so the picker is never off screen.
+     header-scoped: the store app moves this nav into the Mein PapaMap
+     dialog, where it wraps. min-width: 0 on the row too, or it grows to its
+     full text and Android Chrome zooms the whole page out to fit it. */
+  header .header-actions {
+    order: 3; flex: 1 0 100%; justify-content: flex-start; gap: 6px 12px;
+    flex-wrap: nowrap; white-space: nowrap; min-width: 0;
+  }
+  header #regions-link { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* Even alone, "Changing tables in Germany" left "Changing tabl…" on a 375px
+     iPhone: the link shows the bare place behind a pin here (updateRegionsLink),
+     and the full label goes to screen readers only (below). */
+  header #regions-link.has-place .area-place { display: inline; }
   /* 13px, like the add button's 12: with the select sized to its value the
      German nav needs ~306 of 347px, the English ~333, the Bosnian ~341 —
      the last two only at this size. */
   .header-actions a { font-size: 13px; }
-  .tagline { order: 4; flex-basis: 100%; font-size: 12px; }
   .add-btn { padding: 6px 11px; font-size: 12px; }
   .app-btn { padding: 6px 11px; font-size: 12px; }
   #stats { padding: 6px 14px 6px calc(14px + var(--safe-left)); gap: 2px 18px; font-size: 12px; }
@@ -1118,9 +1145,12 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   .chip { padding: 7px 10px; font-size: 12px; }
   /* Visually hidden, never display:none: the label is the chip's name for a
      screen reader (the svg is aria-hidden), and without it the chip reads as a
-     bare number. position:relative on the chip keeps the 1px box inside it. */
+     bare number. position:relative on the chip keeps the 1px box inside it.
+     The tagline too: it is the page's <h1>, and its row went to the map — on
+     a 360 × 560 phone the chrome above the map took 220px, 39% of the screen,
+     and the chips beside it already say "Dads can reach it". */
   .chip.wc, .chip.hc { position: relative; }
-  .chip.wc .label, .chip.hc .label {
+  .chip.wc .label, .chip.hc .label, header .tagline, header #regions-link.has-place .area-full {
     position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
     overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
   }

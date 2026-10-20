@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, verify } from "node:crypto";
-import { assertion, trackBody, parseArgs, retryable, withRetry, commitEdit } from "./play.mjs";
+import { readFileSync } from "node:fs";
+import { assertion, trackBody, versionName, parseArgs, retryable, withRetry, commitEdit, productionLive } from "./play.mjs";
 
 test("the assertion is an RS256 JWT Google's token endpoint accepts", () => {
   const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -26,6 +27,14 @@ test("the assertion is an RS256 JWT Google's token endpoint accepts", () => {
 test("the track gets exactly the uploaded version code, as a string", () => {
   assert.deepEqual(trackBody("alpha", 212, "draft"),
                    { track: "alpha", releases: [{ versionCodes: ["212"], status: "draft" }] });
+  const notes = [{ language: "de-DE", text: "Neu" }];
+  assert.deepEqual(trackBody("alpha", 212, "completed", notes).releases[0].releaseNotes, notes);
+});
+
+test("the versionName is read from the real build.gradle, and a missing one fails", () => {
+  assert.match(versionName(readFileSync(new URL("app/build.gradle", import.meta.url), "utf8")), /^\d+\.\d+\.\d+$/);
+  assert.equal(versionName('versionCode 1\n        versionName "1.3.3"\n'), "1.3.3");
+  assert.throws(() => versionName("versionCode 1"), /no versionName/);
 });
 
 test("closed testing and draft unless told otherwise; a typo'd status is refused", () => {
@@ -172,4 +181,17 @@ test("a 4xx on the re-sent commit with the edit still there is a real refusal", 
 test("a 403 on the re-send is still a failure", async () => {
   const { f } = fakePlay([503, 403], [200]);
   await assert.rejects(commitEdit("t", "e1", { fetch: f, sleep: async () => {} }), /: 403 error/);
+});
+
+test("productionLive keeps only PUBLISHED releases, name and code from the release summary", () => {
+  const rel = (releaseName, state, ...codes) => ({ releaseName, releaseLifecycleState: state, activeArtifacts: codes.map((versionCode) => ({ versionCode })) });
+  const P = "RELEASE_LIFECYCLE_STATE_PUBLISHED";
+  assert.deepEqual(productionLive([
+    rel("525 (1.3.4)", P, "524", "525"),
+    rel("530 (1.4)", "RELEASE_LIFECYCLE_STATE_IN_REVIEW", "530"),
+    rel("1.3.5", P, "531"),
+    rel("526", P, "526"),
+  ]), [
+    { version: "1.3.4", build: "525" }, { version: "1.3.5", build: "531" }, { version: undefined, build: "526" },
+  ]);
 });

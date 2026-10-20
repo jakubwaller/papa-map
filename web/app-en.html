@@ -6,13 +6,13 @@
 <script>document.documentElement.classList.add("js");</script>
 <meta name="theme-color" content="#f2f5f3">
 <title>PapaMap as an app</title>
-<meta name="description" content="The iPhone app is on the App Store, the Android app in development. Without a store, PapaMap goes on your home screen and runs there like an app. Offline, the nearest changing table, dad or mum, answers in two taps.">
+<meta name="description" content="The iPhone app is on the App Store, the Android app on Google Play. Without a store, PapaMap goes on your home screen and runs there like an app. Offline, the nearest changing table, dad or mum, answers in two taps.">
 <link rel="canonical" href="https://papamap.de/app-en.html">
 <link rel="alternate" hreflang="de" href="https://papamap.de/app.html">
 <link rel="alternate" hreflang="en" href="https://papamap.de/app-en.html">
 <link rel="alternate" hreflang="x-default" href="https://papamap.de/app.html">
 <meta property="og:title" content="PapaMap as an app">
-<meta property="og:description" content="The iPhone app is on the App Store, the Android app in development. Without a store, PapaMap goes on your home screen.">
+<meta property="og:description" content="The iPhone app is on the App Store, the Android app on Google Play. Without a store, PapaMap goes on your home screen.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://papamap.de/app-en.html">
 <meta property="og:image" content="https://papamap.de/og-image-en.jpg?v=w50">
@@ -68,7 +68,7 @@
     clip-path: inset(50%); white-space: nowrap;
   }
 
-  /* Three equal ways in: the App Store, Android (a mail until it ships),
+  /* Three equal ways in: the App Store, Google Play
      and the home screen without a store. Stacked on a phone, one row from
      760 px. Each card is the same box; only what sits in it differs. */
   .options { display: grid; gap: 0.75rem; margin: 0 0 0.9rem; }
@@ -86,13 +86,7 @@
   .option .slot { display: flex; align-items: center; min-height: 48px; margin: 0.35rem 0; }
   .badge { display: inline-block; line-height: 0; border-radius: 8px; }
   .badge img { display: block; width: auto; height: 48px; }
-  .option a.cta {
-    display: inline-flex; align-items: center; min-height: 48px; padding: 0 1.15rem;
-    border-radius: 10px; background: var(--green-strong); color: var(--on-green);
-    font-weight: 650; text-decoration: none;
-  }
-  .option a.cta:hover { background: var(--green-press); }
-  .badge:focus-visible, .option a.cta:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+  .badge:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
   .option b { color: var(--ink); }
   .free { color: var(--muted); margin: 0 0 1.8rem; }
 
@@ -157,9 +151,6 @@
     .step.flip { grid-template-columns: var(--shot-w) minmax(0, 1fr); }
     .step.flip .media { order: -1; }
     .media .shot + .shot { display: block; }
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .option a.cta { transition: background-color 0.15s ease; }
   }
 
   /* Motion. Only opacity and transform move, so nothing shifts the layout.
@@ -242,17 +233,13 @@
     <p>With Siri, a widget and city maps offline.</p>
   </div>
 
-  <!-- A mailto, not a signup form: the site stores nothing, and the Datenschutz
-       already covers contact by e-mail. The iPhone line carried the same offer
-       until the app reached the store (2026-09-25); the launch mail to those
-       addresses goes out by hand from the inbox, and then they are deleted.
-       When the Android app reaches production, the Google Play badge (48 px
-       high, like the App Store one) replaces the mailto inside .slot and the
-       note under it changes; the card and the row stay as they are. -->
+  <!-- Google's own badge, served from here like Apple's (no third-party requests).
+       The iPhone line carried a mail offer until the app reached the store
+       (2026-09-25); the Android one did the same until Google Play. -->
   <div class="option">
     <h3>Android</h3>
-    <p class="slot"><a class="cta" href="mailto:papamap@jakubwaller.eu?subject=Notify%20me%3A%20Android%20app">Tell me when it’s out</a></p>
-    <p>The app is in development. One e-mail when it’s ready, then the address is deleted.</p>
+    <p class="slot"><a class="badge" href="https://play.google.com/store/apps/details?id=de.papamap.app&amp;hl=en"><img src="img/google-play-badge-en.png" width="160" height="48" alt="Get it on Google Play"></a></p>
+    <p>With a widget, an app-icon shortcut and city maps offline.</p>
   </div>
 
   <div class="option">

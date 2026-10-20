@@ -4,12 +4,14 @@ import sys
 import time
 from datetime import datetime, timezone
 
-from .classify import is_place
-from . import delta, export, leaderboard, osm, pages, stats, timezones, toilet_counts
-from .room_choices import answer_men_only_table, answer_status_table
+from .classify import has_play_area
+from . import (delta, export, leaderboard, osm, pages, stats, sweep_cache, timezones,
+               toilet_counts)
+from .room_choices import answer_men_only_table, answer_play_table, answer_status_table
 from .config import (AREA_COUNTRY, AREAS_PATH, BUNDESLAENDER, CITY_AREAS,
                      GEOJSON_PATH, HISTORY_PATH,
                      PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_FIXED_ROUNDS,
+                     SWEEP_CACHE_DIR, SWEEP_CACHE_MAX_DAYS,
                      SWEEP_DEADLINE_S, SWEEP_PAUSE_S, SWEEP_ROUNDS,
                      TOILETS_COUNTS_PATH,
                      TOILETS_COUNTS_PERIOD_DAYS, changing_table_ids_ql,
@@ -55,6 +57,12 @@ def _fetch_count(overpass_fetch, count_ql: str, sweep: dict) -> dict:
         raise RuntimeError(f"recount host {url} is resting: {exc}") from exc
 
 
+def _no_query(ql: str, **kwargs) -> dict:
+    """The fetch for an area built from its cached answer: Overpass is done
+    for the night, so a due toilet recount falls back on the cached count."""
+    raise RuntimeError("no Overpass query after the sweep gave up")
+
+
 def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                  display_area=None, area_key=None, overpass_fetch=osm.fetch_overpass,
                  taginfo_fetch=stats.fetch_taginfo, now=None,
@@ -70,10 +78,10 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     it. An area whose queries fail on every
     mirror — including one that resolves to zero objects (stale mirror area
     database, typo'd PAPAMAP_AREA_NAME) — is retried in later sweep rounds
-    after a cool-down, until SWEEP_DEADLINE_S; only an area still failing
-    when no further round fits aborts the build, before anything is written
-    (old files survive). A taginfo failure only degrades the global block to
-    the previous one."""
+    after a cool-down, until SWEEP_DEADLINE_S; an area still failing then is
+    built from its last good answer (sweep_cache), and only one with no such
+    answer aborts the build, before anything is written (old files survive).
+    A taginfo failure only degrades the global block to the previous one."""
     areas = areas or sweep_areas()
     # The leaderboard compares regions over time, so it only makes sense on
     # the full default build: a partial or single-area sweep writing history
@@ -173,11 +181,163 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     remaining = list(areas)
     remaining_cities = list(cities)
     last_exc: Exception | None = None
+    sweep_cache.prune(SWEEP_CACHE_DIR, SWEEP_CACHE_MAX_DAYS)
+
+    def sweep_area(area_name: str, admin_level: str, saved: dict | None = None) -> None:
+        """Sweep one area into the night's collections, or raise. `saved` is
+        its last good answer (sweep_cache), used once Overpass is done for the
+        night: no query is sent then, the toilet count included."""
+        nonlocal counts_fellback, counts_reused
+        ql = sweep_ql(area_name, admin_level)
+        sweep = overpass_fetch(ql) if saved is None else saved
+        _note_base(sweep)
+        # The toilets are recounted on the area's night of the rota
+        # (toilet_counts.is_due) — and whenever the sweep came back
+        # empty, whatever the rota says: the zero-objects check below
+        # needs a count fetched tonight, and a cached number would
+        # vouch for an area database it never saw.
+        count_ql = toilets_counts_ql(area_name, admin_level)
+        count_key = toilet_counts.query_hash(count_ql)
+        recount = (not sweep.get("elements") or toilet_counts.is_due(
+            counts_cache, area_name, admin_level, today, counts_period,
+            query=count_key))
+        remember = False
+        # Set when a cached count stands in for a recount that failed
+        # or answered nothing usable; its age goes on the area line.
+        fallback = None
+        if recount:
+            # Only a NON-empty sweep may fall back: it proves the area
+            # resolved on that mirror, so the count is a statistic
+            # tonight, not evidence. An empty sweep needs the real
+            # count for the zero-objects check below.
+            usable = (_usable_count(counts_cache.get(area_name), admin_level,
+                                    count_key, today, counts_period)
+                      if sweep.get("elements") else None)
+            # The fallback takes only an entry at most four periods
+            # old (the cache's own bound), and past that a failing
+            # count fails the area again. Say so in the log, where
+            # the ops page's warning list picks it up.
+            prune_note = (f"; the cache drops it after "
+                          f"{4 * max(counts_period, 1)} d, and a count "
+                          "still failing then fails the area")
+            try:
+                count_answer = _fetch_count(overpass_fetch if saved is None else _no_query,
+                                            count_ql, sweep)
+                _note_base(count_answer)
+                counts = osm.parse_counts(count_answer)
+                # A real answer carries one count per `out count;`
+                # statement, two zeros included when the area resolved
+                # to nothing — so *no* counts at all is not "no
+                # toilets", it is a response that was never a count
+                # answer (the empty body a mirror with no area database
+                # returns), and the zero-objects check below names that
+                # properly. Exactly one count is the genuinely broken
+                # case: reading the missing one as zero would publish
+                # "no capacity tags anywhere" as though it were a fact.
+                if len(counts) == 1:
+                    raise RuntimeError(
+                        f"area {area_name!r}: toilets query answered 1 "
+                        "count, expected 2")
+            except osm.OverpassUnavailable:
+                raise  # the whole service is resting: fail the round as one
+            except Exception as exc:
+                if usable is None:
+                    raise
+                print(f"  WARN {area_name}: toilet count failed ({exc}); "
+                      f"using the count from "
+                      f"{toilet_counts.age_days(usable, today)} d ago"
+                      f"{prune_note}", file=sys.stderr)
+                fallback = usable
+                counts = []
+            if fallback is None and usable is not None and not (counts and counts[0]):
+                # Nothing, or two zeros, next to a sweep full of
+                # objects: a mirror without (or with an empty) area
+                # database answered the count. Every swept area has
+                # mapped toilets, so last week's number is the better
+                # statement tonight than "0 public toilets".
+                print(f"  WARN {area_name}: toilet count answered "
+                      f"{counts or 'nothing'}; using the count from "
+                      f"{toilet_counts.age_days(usable, today)} d ago"
+                      f"{prune_note}", file=sys.stderr)
+                fallback = usable
+            if fallback is not None:
+                toilets_total, capacity_total = fallback["total"], fallback["capacity"]
+            else:
+                toilets_total, capacity_total = counts or (0, 0)
+                # Only a real, non-zero two-count answer is worth
+                # remembering. With no cached count to fall back on,
+                # the empty body a mirror without an area database
+                # returns reads as (0, 0) tonight, as it always did —
+                # and so does a mirror whose area database has the
+                # area but nothing in it (two zero counts). A cached
+                # zero would stand for a week. Every swept area has
+                # mapped toilets, so a zero total is never worth a
+                # week.
+                remember = len(counts) == 2 and toilets_total > 0
+        else:
+            cached = counts_cache[area_name]
+            toilets_total, capacity_total = cached["total"], cached["capacity"]
+        # Every sweep area has at least one amenity=toilets or
+        # changing_table object. Both empty means the *area* didn't
+        # resolve — a fallback mirror whose area database is stale/
+        # ungenerated answers 200 with no elements, and writing that
+        # through would silently drop the area (or, single-area, wipe
+        # the served dataset). Retryable: a later round may hit a
+        # mirror with a healthy area database.
+        if not sweep.get("elements") and not toilets_total:
+            raise RuntimeError(
+                f"area {area_name!r} resolved to zero objects on this "
+                "mirror (stale area database or typo'd "
+                "PAPAMAP_AREA_NAME?)")
+        if saved is None:
+            # Its own query, after everything else succeeded (see
+            # config.highchair_ql); a failure fails the area like the rest.
+            # Its places ride in the saved answer, so a night built from the
+            # cache keeps them too.
+            hc_answer = overpass_fetch(highchair_ql(area_name, admin_level))
+            _note_base(hc_answer)
+            sweep = dict(sweep, elements=list(sweep["elements"]) + [
+                el for el in hc_answer.get("elements", ())
+                if "changing_table" not in (el.get("tags") or {})])
+            try:
+                sweep_cache.save(SWEEP_CACHE_DIR, ql, sweep, today)
+            except OSError as exc:
+                print(f"  WARN {area_name}: answer not kept as a fallback: {exc}",
+                      file=sys.stderr)
+        # A retried area re-fetches both queries; dedup absorbs any
+        # elements its first, half-successful attempt already collected,
+        # and the toilet counts are assigned rather than accumulated.
+        ct, play = osm.split_sweep(sweep["elements"])
+        ct_elements.extend(ct)
+        play_elements.extend(play)
+        toilets_by_area[area_name] = toilets_total
+        toilets_capacity_by_area[area_name] = capacity_total
+        if remember:
+            counts_fresh[area_name] = (toilets_total, capacity_total,
+                                       admin_level, count_key)
+        elif fallback is not None:
+            counts_fellback += 1
+        elif not recount:
+            counts_reused += 1
+        for el in ct:
+            ct_area.setdefault((el.get("type"), el.get("id")), area_name)
+        for el in play:
+            play_area.setdefault((el.get("type"), el.get("id")), area_name)
+        # The suffix ops_page.AREA_LINE expects whenever the published
+        # number is not tonight's: the rota's reuse, or a fallback.
+        counted = ("" if recount and fallback is None else
+                   f" (counted {toilet_counts.age_days(counts_cache[area_name], today)} d ago"
+                   f"{', recount failed' if fallback is not None else ''})")
+        n_hc = sum(1 for el in play if not has_play_area(el.get("tags") or {}))
+        print(f"  {area_name}: ct={len(ct)} play={len(play) - n_hc} hc={n_hc} "
+              f"toilets={toilets_total}{counted}", file=sys.stderr)
+
     deadline = time.monotonic() + budget
     # Per area/city: failures a later round cannot fix (osm.is_transient).
     # Keyed by kind as well: Berlin and Hamburg are both an area and a city.
     hard_fails: dict[tuple[str, str], int] = {}
     given_up_cities: list = []
+    given_up_areas: list = []
     rnd = 0
     while True:
         if rnd:
@@ -185,15 +345,23 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                 break
             if rounds is not None and rnd >= rounds:
                 break
+            # An area that keeps failing the same way (a 400, a pipeline bug)
+            # is not retried until the deadline: it goes to its saved answer
+            # below, and the other areas keep their rounds. Without a saved
+            # answer the build is doomed, so the sweep stops right away.
+            stuck = [a for a in remaining
+                     if hard_fails.get(("area", a[0]), 0) >= SWEEP_FIXED_ROUNDS]
+            if stuck:
+                given_up_areas.extend(stuck)
+                remaining = [a for a in remaining if a not in stuck]
+                if any(sweep_cache.load(SWEEP_CACHE_DIR, sweep_ql(*a), today,
+                                        SWEEP_CACHE_MAX_DAYS) is None for a in stuck):
+                    break
             # Only the leaderboard is left: it gets the old fixed rounds, not
-            # the deadline — the map is not held until 06:30 for a city.
+            # the deadline — the map is not held until 06:30 for a city. A
+            # city that keeps failing the same way is only dropped from
+            # today's leaderboard.
             if not remaining and rnd >= SWEEP_FIXED_ROUNDS:
-                break
-            # An area that keeps failing the same way dooms the build; stop
-            # now instead of retrying it until the deadline. A city like it
-            # is only dropped from today's leaderboard.
-            if any(hard_fails.get(("area", name), 0) >= SWEEP_FIXED_ROUNDS
-                   for name, _ in remaining):
                 break
             hopeless = [c for c in remaining_cities
                         if hard_fails.get(("city", c[0]), 0) >= SWEEP_FIXED_ROUNDS]
@@ -221,114 +389,19 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                       f"{rest / 60:.0f} min before round {rnd + 1}", file=sys.stderr)
             time.sleep(max(pause, rest))
         failed = []
+        late = []
         for i, (area_name, admin_level) in enumerate(remaining):
+            # Past the deadline, the first round's included, no query starts
+            # for an area with a saved answer: it falls back on that below.
+            # One without is still swept late, as before the fallback existed.
+            if time.monotonic() > deadline and sweep_cache.load(
+                    SWEEP_CACHE_DIR, sweep_ql(area_name, admin_level), today,
+                    SWEEP_CACHE_MAX_DAYS):
+                late.append(area_name)
+                failed.append((area_name, admin_level))
+                continue
             try:
-                sweep = overpass_fetch(sweep_ql(area_name, admin_level))
-                _note_base(sweep)
-                # The toilets are recounted on the area's night of the rota
-                # (toilet_counts.is_due) — and whenever the sweep came back
-                # empty, whatever the rota says: the zero-objects check below
-                # needs a count fetched tonight, and a cached number would
-                # vouch for an area database it never saw.
-                count_ql = toilets_counts_ql(area_name, admin_level)
-                count_key = toilet_counts.query_hash(count_ql)
-                recount = (not sweep.get("elements") or toilet_counts.is_due(
-                    counts_cache, area_name, admin_level, today, counts_period,
-                    query=count_key))
-                remember = False
-                # Set when a cached count stands in for a recount that failed
-                # or answered nothing usable; its age goes on the area line.
-                fallback = None
-                if recount:
-                    # Only a NON-empty sweep may fall back: it proves the area
-                    # resolved on that mirror, so the count is a statistic
-                    # tonight, not evidence. An empty sweep needs the real
-                    # count for the zero-objects check below.
-                    usable = (_usable_count(counts_cache.get(area_name), admin_level,
-                                            count_key, today, counts_period)
-                              if sweep.get("elements") else None)
-                    # The fallback takes only an entry at most four periods
-                    # old (the cache's own bound), and past that a failing
-                    # count fails the area again. Say so in the log, where
-                    # the ops page's warning list picks it up.
-                    prune_note = (f"; the cache drops it after "
-                                  f"{4 * max(counts_period, 1)} d, and a count "
-                                  "still failing then fails the area")
-                    try:
-                        count_answer = _fetch_count(overpass_fetch, count_ql, sweep)
-                        _note_base(count_answer)
-                        counts = osm.parse_counts(count_answer)
-                        # A real answer carries one count per `out count;`
-                        # statement, two zeros included when the area resolved
-                        # to nothing — so *no* counts at all is not "no
-                        # toilets", it is a response that was never a count
-                        # answer (the empty body a mirror with no area database
-                        # returns), and the zero-objects check below names that
-                        # properly. Exactly one count is the genuinely broken
-                        # case: reading the missing one as zero would publish
-                        # "no capacity tags anywhere" as though it were a fact.
-                        if len(counts) == 1:
-                            raise RuntimeError(
-                                f"area {area_name!r}: toilets query answered 1 "
-                                "count, expected 2")
-                    except osm.OverpassUnavailable:
-                        raise  # the whole service is resting: fail the round as one
-                    except Exception as exc:
-                        if usable is None:
-                            raise
-                        print(f"  WARN {area_name}: toilet count failed ({exc}); "
-                              f"using the count from "
-                              f"{toilet_counts.age_days(usable, today)} d ago"
-                              f"{prune_note}", file=sys.stderr)
-                        fallback = usable
-                        counts = []
-                    if fallback is None and usable is not None and not (counts and counts[0]):
-                        # Nothing, or two zeros, next to a sweep full of
-                        # objects: a mirror without (or with an empty) area
-                        # database answered the count. Every swept area has
-                        # mapped toilets, so last week's number is the better
-                        # statement tonight than "0 public toilets".
-                        print(f"  WARN {area_name}: toilet count answered "
-                              f"{counts or 'nothing'}; using the count from "
-                              f"{toilet_counts.age_days(usable, today)} d ago"
-                              f"{prune_note}", file=sys.stderr)
-                        fallback = usable
-                    if fallback is not None:
-                        toilets_total, capacity_total = fallback["total"], fallback["capacity"]
-                    else:
-                        toilets_total, capacity_total = counts or (0, 0)
-                        # Only a real, non-zero two-count answer is worth
-                        # remembering. With no cached count to fall back on,
-                        # the empty body a mirror without an area database
-                        # returns reads as (0, 0) tonight, as it always did —
-                        # and so does a mirror whose area database has the
-                        # area but nothing in it (two zero counts). A cached
-                        # zero would stand for a week. Every swept area has
-                        # mapped toilets, so a zero total is never worth a
-                        # week.
-                        remember = len(counts) == 2 and toilets_total > 0
-                else:
-                    cached = counts_cache[area_name]
-                    toilets_total, capacity_total = cached["total"], cached["capacity"]
-                # Every sweep area has at least one amenity=toilets or
-                # changing_table object. Both empty means the *area* didn't
-                # resolve — a fallback mirror whose area database is stale/
-                # ungenerated answers 200 with no elements, and writing that
-                # through would silently drop the area (or, single-area, wipe
-                # the served dataset). Retryable: a later round may hit a
-                # mirror with a healthy area database.
-                if not sweep.get("elements") and not toilets_total:
-                    raise RuntimeError(
-                        f"area {area_name!r} resolved to zero objects on this "
-                        "mirror (stale area database or typo'd "
-                        "PAPAMAP_AREA_NAME?)")
-                # Its own query, after everything else succeeded (see
-                # config.highchair_ql); a failure fails the area like the rest.
-                hc_answer = overpass_fetch(highchair_ql(area_name, admin_level))
-                _note_base(hc_answer)
-                hc = [el for el in hc_answer.get("elements", ())
-                      if "changing_table" not in (el.get("tags") or {})
-                      and is_place(el.get("tags") or {})]
+                sweep_area(area_name, admin_level)
             except osm.OverpassUnavailable as exc:
                 # Nothing was contacted and nothing will be until the rest is
                 # over: the remaining areas fail as one, silently.
@@ -345,35 +418,14 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                     hard_fails[key] = hard_fails.get(key, 0) + 1
                 failed.append((area_name, admin_level))
                 continue
-            # A retried area re-fetches both queries; dedup absorbs any
-            # elements its first, half-successful attempt already collected,
-            # and the toilet counts are assigned rather than accumulated.
-            ct, play = osm.split_sweep(sweep["elements"])
-            ct_elements.extend(ct)
-            play_elements.extend(play)
-            play_elements.extend(hc)
-            toilets_by_area[area_name] = toilets_total
-            toilets_capacity_by_area[area_name] = capacity_total
-            if remember:
-                counts_fresh[area_name] = (toilets_total, capacity_total,
-                                           admin_level, count_key)
-            elif fallback is not None:
-                counts_fellback += 1
-            elif not recount:
-                counts_reused += 1
-            for el in ct:
-                ct_area.setdefault((el.get("type"), el.get("id")), area_name)
-            for el in play + hc:
-                play_area.setdefault((el.get("type"), el.get("id")), area_name)
-            # The suffix ops_page.AREA_LINE expects whenever the published
-            # number is not tonight's: the rota's reuse, or a fallback.
-            counted = ("" if recount and fallback is None else
-                       f" (counted {toilet_counts.age_days(counts_cache[area_name], today)} d ago"
-                       f"{', recount failed' if fallback is not None else ''})")
-            print(f"  {area_name}: ct={len(ct)} play={len(play)} hc={len(hc)} "
-                  f"toilets={toilets_total}{counted}", file=sys.stderr)
+        if late:
+            print(f"  WARN not swept, past the {budget / 3600:g} h sweep deadline: "
+                  f"{', '.join(late)}", file=sys.stderr)
         failed_cities = []
         for i, (display, area_name, admin_level) in enumerate(remaining_cities):
+            if time.monotonic() > deadline:
+                failed_cities.extend(remaining_cities[i:])
+                break
             try:
                 ids = overpass_fetch(changing_table_ids_ql(area_name, admin_level))
                 _note_base(ids)
@@ -400,11 +452,35 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                                  for el in ids["elements"]}
         remaining, remaining_cities = failed, failed_cities
         rnd += 1
+    remaining = given_up_areas + remaining
+    fallback_ages = {}
+    if remaining:
+        # Overpass is done for the night. An area still failing is built from
+        # its last good answer instead of throwing the other areas away; its
+        # older osm_base pulls data_base back, so the delta replays the gap.
+        unswept = []
+        for area_name, admin_level in remaining:
+            hit = sweep_cache.load(SWEEP_CACHE_DIR, sweep_ql(area_name, admin_level),
+                                   today, SWEEP_CACHE_MAX_DAYS)
+            if hit is None:
+                unswept.append((area_name, admin_level))
+                continue
+            print(f"  WARN {area_name}: no answer tonight, using its sweep from "
+                  f"{hit[1]} d ago", file=sys.stderr)
+            try:
+                sweep_area(area_name, admin_level, saved=hit[0])
+                fallback_ages[area_name] = hit[1]
+            except Exception as exc:
+                print(f"  WARN {area_name}: {exc}", file=sys.stderr)
+                last_exc = exc
+                unswept.append((area_name, admin_level))
+        remaining = unswept
     if remaining:
         raise RuntimeError(
             f"sweep failed for {', '.join(name for name, _ in remaining)} "
-            f"after {rnd} rounds — refusing to overwrite existing data "
-            f"(last error: {last_exc})")
+            f"after {rnd} rounds, with no usable answer from the last "
+            f"{SWEEP_CACHE_MAX_DAYS} days to fall back on — refusing to "
+            f"overwrite existing data (last error: {last_exc})")
     remaining_cities = given_up_cities + remaining_cities
     if remaining_cities:
         print(f"  WARN: leaderboard skips "
@@ -453,6 +529,9 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         # build time above — pipeline.delta resets against this. None on a
         # mirror that never reports osm3s.timestamp_osm_base.
         "data_base": min(base_timestamps) if base_timestamps else None,
+        # v99: {area: days} for each area built from an older answer tonight
+        # (sweep_cache); pipeline.ops alerts once one is STALE_AFTER_H old.
+        "fallback_areas": fallback_ages,
         # CONTRACT.md's live-updates amendment: every room a reader can
         # answer with, mapped to the status classify() gives it — the one
         # lookup the frontend may use for its own answer, in room_choices.py
@@ -460,6 +539,8 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         "answer_status": answer_status_table(),
         # Its v50 companion: whether that answer is the men's room only.
         "answer_men_only": answer_men_only_table(),
+        # v100: whether a reader's own play answer draws the blue ring.
+        "answer_play": answer_play_table(),
         # v80: the zone each swept area's opening hours are meant in, for the
         # popup's "Open now"; a feature off its area's default carries `tz`.
         "area_tz": timezones.area_tz_table(name for name, _ in areas),
@@ -515,13 +596,22 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             open_features, ct_area, city_by_key,
             region_names=[name for name, _ in areas],
             city_names=list(city_ids))
-        history = leaderboard.load_history(history_path)
-        narrower = leaderboard.narrows_day(history, generated_at[:10], region_counts)
-        if narrower:
+        try:
+            history = leaderboard.load_history(history_path)
+        except (ValueError, OSError) as exc:
+            history, narrower = None, None
+            print(f"  WARN: history.json unreadable ({exc}) — history and "
+                  "leaderboard left unchanged", file=sys.stderr)
+        else:
+            narrower = leaderboard.narrows_day(history, generated_at[:10], region_counts,
+                                              city_counts)
+        if history is None:
+            pass
+        elif narrower:
             # A same-day re-run over fewer countries (an operator checking a
             # German fix with PAPAMAP_COUNTRIES=de) would replace the night's
             # full entry and drop every other region from the leaderboard.
-            print(f"  WARN: this build swept fewer regions than today's "
+            print(f"  WARN: this build swept fewer regions or cities than today's "
                   f"history entry ({', '.join(narrower[:5])}"
                   f"{' ...' if len(narrower) > 5 else ''} missing) — history "
                   "and leaderboard left unchanged", file=sys.stderr)

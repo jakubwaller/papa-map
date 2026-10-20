@@ -1,7 +1,7 @@
 import json
 import re
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -315,6 +315,35 @@ def test_run_is_idempotent(tmp_path, load_fixture):
     # The same-date re-run replaced its history entry, not appended a second.
     history = json.loads((tmp_path / "history.json").read_text(encoding="utf-8"))
     assert [d["date"] for d in history["days"]] == ["2026-07-26"]
+
+
+@pytest.mark.parametrize("text", ["", "{not json"])
+def test_unreadable_history_is_left_alone_and_the_build_succeeds(
+        tmp_path, load_fixture, capsys, text):
+    history_path = tmp_path / "history.json"
+    history_path.write_text(text, encoding="utf-8")
+    run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+        history_path=str(history_path),
+        overpass_fetch=_fake_overpass(load_fixture),
+        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+    assert "WARN: history.json unreadable" in capsys.readouterr().err
+    assert history_path.read_text(encoding="utf-8") == text
+    assert (tmp_path / "ct.geojson").exists()
+
+
+def test_missing_history_is_a_cold_start(tmp_path, load_fixture):
+    history_path = tmp_path / "history.json"
+    run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+        history_path=str(history_path),
+        overpass_fetch=_fake_overpass(load_fixture),
+        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
+    assert len(json.loads(history_path.read_text(encoding="utf-8"))["days"]) == 1
 
 
 def test_taginfo_down_keeps_previous_global_block(tmp_path, load_fixture, capsys):
@@ -1232,3 +1261,244 @@ def test_a_failing_highchair_query_fails_the_area_and_is_retried(tmp_path, load_
         history_path=str(tmp_path / "history.json"), now=NOW, sweep_pause_s=0)
     assert summary["features"] == 7
     assert inner.areas_seen.count(("Bayern", "4")) == 4  # sweep + count, twice
+
+
+def _run(tmp_path, load_fixture, fetch, **kw):
+    return run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        overpass_fetch=fetch, taginfo_fetch=_fake_taginfo(load_fixture),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+        history_path=str(tmp_path / "history.json"), now=NOW,
+        sweep_pause_s=0, **kw)
+
+
+def test_an_outage_mid_sweep_requeues_every_area_after_it(tmp_path, load_fixture):
+    # All hosts rest on the second area: the third to the last must wait for
+    # the next round with it, not be dropped — a night that "succeeds" with
+    # whole countries missing publishes a map with holes and no error.
+    inner = _fake_overpass(load_fixture)
+    down = [True]
+
+    def flaky(ql, **kwargs):
+        if down and '"Bayern"' in ql:
+            down.clear()
+            raise osm.OverpassUnavailable("every Overpass host is resting")
+        return inner(ql, **kwargs)
+
+    _run(tmp_path, load_fixture, flaky)
+    swept = {name for name, _ in inner.areas_seen}
+    assert swept >= {name for name, _ in SWEEP}
+
+
+def test_data_base_is_the_oldest_answer_of_the_night(tmp_path, load_fixture):
+    # pipeline.delta replays from data_base: the newest answer would skip
+    # edits that the oldest-served area has not seen.
+    inner = _fake_overpass(load_fixture)
+    stamps = iter(["2026-07-26T02:30:00Z", "2026-07-26T01:10:00Z"])
+
+    def stamped(ql, **kwargs):
+        out = dict(inner(ql, **kwargs))
+        ts = next(stamps, "2026-07-26T02:50:00Z")
+        out["osm3s"] = {"timestamp_osm_base": ts}
+        return out
+
+    _run(tmp_path, load_fixture, stamped)
+    stats = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))
+    assert stats["data_base"] == "2026-07-26T01:10:00Z"
+
+
+def test_a_city_that_answers_empty_is_retried(tmp_path, load_fixture):
+    # An empty ids answer means the area did not resolve on that mirror, not
+    # that the city has no tables: it must not land in the history as zero.
+    inner = _fake_overpass(load_fixture)
+    # Not Berlin or Hamburg: those names are also swept as Länder.
+    city, level = next((a, l) for a, l in CITY_SWEEP if a not in dict(SWEEP))
+    empty = [True]
+
+    def flaky(ql, **kwargs):
+        if (empty and '"kids_area"' not in ql and '"amenity"="toilets"' not in ql
+                and f'"{city}"' in ql):
+            empty.clear()
+            return {"elements": []}
+        return inner(ql, **kwargs)
+
+    _run(tmp_path, load_fixture, flaky)
+    assert not empty  # the empty answer was served ...
+    assert inner.areas_seen.count((city, level)) == 1  # ... so only the retry reached the fixture
+
+
+def _run_on(tmp_path, load_fixture, fetch, now):
+    return run_pipeline(
+        geojson_path=str(tmp_path / "ct.geojson"),
+        stats_path=str(tmp_path / "stats.json"),
+        overpass_fetch=fetch, taginfo_fetch=_fake_taginfo(load_fixture),
+        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
+        history_path=str(tmp_path / "history.json"), now=now, sweep_pause_s=0)
+
+
+def test_an_area_failing_every_round_falls_back_on_its_last_answer(tmp_path, load_fixture,
+                                                                   capsys):
+    # 2026-10-16: Missouri alone failed and threw away the other 183 areas.
+    # With yesterday's answer on file the build goes on and says so, and
+    # data_base is that older answer's, so the delta replays the gap.
+    inner = _fake_overpass(load_fixture)
+
+    def fetch_at(base, down=None):
+        def fetch(ql, **kwargs):
+            if down and f'"{down}"' in ql:
+                raise requests.ConnectionError("still dead")
+            return {**inner(ql, **kwargs), "osm3s": {"timestamp_osm_base": base}}
+        return fetch
+
+    first = _run_on(tmp_path, load_fixture, fetch_at("2026-07-25T01:00:00Z"),
+                    NOW - timedelta(days=1))
+    capsys.readouterr()
+    # Every count is due tonight, the fallback area's too: it must come from
+    # the counts cache, since no query may be sent for that area.
+    summary = _run(tmp_path, load_fixture, fetch_at("2026-07-26T01:00:00Z", down="Saarland"),
+                   sweep_rounds=2, counts_period_days=1)
+    err = capsys.readouterr().err
+    assert "WARN Saarland: no answer tonight, using its sweep from 1 d ago" in err
+    assert "\n  Saarland: ct=" in err
+    assert summary["toilets_total"] == first["toilets_total"]  # Saarland's count is in
+    stats = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))
+    assert stats["data_base"] == "2026-07-25T01:00:00Z"
+    assert stats["fallback_areas"] == {"Saarland": 1}
+
+
+def test_an_answer_older_than_the_limit_is_no_fallback(tmp_path, load_fixture):
+    inner = _fake_overpass(load_fixture)
+    _run_on(tmp_path, load_fixture, inner, NOW - timedelta(days=config.SWEEP_CACHE_MAX_DAYS + 1))
+
+    def down(ql, **kwargs):
+        if '"Saarland"' in ql:
+            raise requests.ConnectionError("still dead")
+        return inner(ql, **kwargs)
+
+    with pytest.raises(RuntimeError, match="sweep failed for Saarland after 2 rounds, "
+                                           "with no usable answer from the last 7 days"):
+        _run(tmp_path, load_fixture, down, sweep_rounds=2)
+
+
+def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, capsys):
+    # The deadline only gated the next round, so on 2026-10-16 the first
+    # round ran on to 07:14. Now the areas it has not reached by the deadline
+    # are built from their last answers, and the cities wait for tomorrow.
+    inner = _fake_overpass(load_fixture)
+    first = _run(tmp_path, load_fixture, inner)
+    clock = [0.0]
+    calls = []
+
+    def slow(ql, **kwargs):
+        calls.append(ql)
+        clock[0] += 3600  # every query takes an hour
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    capsys.readouterr()
+    summary = _run(tmp_path, load_fixture, slow, sweep_deadline_s=2.5 * 3600)
+    # Two areas: their sweeps at 0 and 2 h, their high-chair queries at 1 and
+    # 3 h (an area's own queries are not gated); a third would start at 4 h.
+    assert ['"highchair"' in q for q in calls] == [False, True, False, True]
+    assert summary["toilets_total"] == first["toilets_total"]
+    err = capsys.readouterr().err
+    assert err.count("WARN not swept, past the 2.5 h sweep deadline: ") == 1
+    assert "WARN: leaderboard skips" in err
+
+
+def test_every_answer_is_kept_not_only_the_recounted_ones(tmp_path, load_fixture):
+    # Review of #288: the counts cache's local shadowed the sweep answer, so
+    # only the night's recounted areas (a seventh of them) were kept.
+    inner = _fake_overpass(load_fixture)
+    _run_on(tmp_path, load_fixture, inner, NOW - timedelta(days=1))
+    _run(tmp_path, load_fixture, inner)  # most counts are not due tonight
+    dates = {json.loads(p.read_text(encoding="utf-8"))["date"]
+             for p in (tmp_path / "sweeps").glob("*.json")}
+    assert dates == {NOW.date().isoformat()}
+
+
+def test_an_area_without_a_saved_answer_is_still_swept_late(tmp_path, load_fixture,
+                                                             monkeypatch):
+    # Review of #288: with nothing to fall back on (the first night, a new
+    # country), the deadline must not turn a slow night into an abort.
+    inner = _fake_overpass(load_fixture)
+    clock = [0.0]
+
+    def slow(ql, **kwargs):
+        clock[0] += 3600
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    summary = _run(tmp_path, load_fixture, slow, sweep_deadline_s=2.5 * 3600)
+    assert {a for a, _ in inner.areas_seen} >= {a for a, _ in sweep_areas()}
+    assert summary["features"] == 7
+
+
+def test_an_unfixable_area_falls_back_while_the_others_keep_their_rounds(
+        tmp_path, load_fixture, monkeypatch):
+    # Review of #288: a 400 on one area once ended the whole sweep, which with
+    # the fallback would have shipped every other failing area's old answer.
+    inner = _fake_overpass(load_fixture)
+    _run(tmp_path, load_fixture, inner)
+    bayern = [0]
+
+    def flaky(ql, **kwargs):
+        if '"Saarland"' in ql:
+            raise _http_error(400)
+        if '"Bayern"' in ql and bayern[0] < 8:
+            bayern[0] += 1
+            raise requests.ConnectionError("resting")
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.osm, "breaker_wait_s", lambda urls=None, now=None: 0.0)
+    _run(tmp_path, load_fixture, flaky, sweep_deadline_s=5 * 3600)
+    stats = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))
+    assert stats["fallback_areas"] == {"Saarland": 0}  # Bayern landed fresh on round 9
+    assert bayern[0] == 8
+
+
+def test_a_stuck_area_does_not_buy_the_cities_an_extra_round(tmp_path, load_fixture,
+                                                              monkeypatch):
+    # Review of #288, round 2: once the stuck area left `remaining`, the
+    # leaderboard-only check came too late and a failing city got round 7.
+    inner = _fake_overpass(load_fixture)
+    _run(tmp_path, load_fixture, inner)
+    city, _ = next((a, l) for a, l in CITY_SWEEP if a not in dict(SWEEP))
+    city_calls = []
+
+    def flaky(ql, **kwargs):
+        if '"Saarland"' in ql:
+            raise _http_error(400)
+        if '"kids_area"' not in ql and '"amenity"="toilets"' not in ql and f'"{city}"' in ql:
+            city_calls.append(1)
+            raise requests.ConnectionError("resting")
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.osm, "breaker_wait_s", lambda urls=None, now=None: 0.0)
+    _run(tmp_path, load_fixture, flaky, sweep_deadline_s=5 * 3600)
+    assert len(city_calls) == config.SWEEP_FIXED_ROUNDS
+
+
+def test_a_stuck_area_without_a_saved_answer_stops_the_sweep(tmp_path, load_fixture,
+                                                             monkeypatch):
+    # Nothing to fall back on means the build is lost: no rounds to 06:30.
+    # The clock moves a minute a query, so a regression ends at the fake
+    # deadline instead of hanging the suite for five real hours.
+    bayern = []
+    clock = [0.0]
+
+    def flaky(ql, **kwargs):
+        clock[0] += 60
+        if '"Saarland"' in ql:
+            raise _http_error(400)
+        if '"Bayern"' in ql:
+            bayern.append(1)
+            raise requests.ConnectionError("resting")
+        return _fake_overpass(load_fixture)(ql, **kwargs)
+
+    monkeypatch.setattr(run.osm, "breaker_wait_s", lambda urls=None, now=None: 0.0)
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    with pytest.raises(RuntimeError, match="Bayern, Saarland after 6 rounds|Saarland, Bayern after 6 rounds"):
+        _run(tmp_path, load_fixture, flaky, sweep_deadline_s=5 * 3600)
+    assert len(bayern) == config.SWEEP_FIXED_ROUNDS

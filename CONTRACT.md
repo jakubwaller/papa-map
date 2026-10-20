@@ -1,6 +1,6 @@
 # papa-map — build contract (v0)
 
-> **v88 amendment (11 Oct 2026, high-chair places join the places file):
+> **v102 amendment (20 Oct 2026, high-chair places join the places file):
 > `play_places.geojson` now also holds places that record a high chair
 > (`highchair` = yes or a positive number) and carry no `changing_table` key
 > (or `changing_table=no`, like a play place): the same open question, "is
@@ -14,10 +14,11 @@
 > `sweep_ql`: measured on the UK, a highchair clause in the union costs 4-11 s
 > and pushes the sweep to ~45 s, at the `[timeout:55]` safety line. The area
 > log line gains `hc=N`; a failing high-chair query fails the area like any
-> other and it is retried.
+> other and it is retried; the high-chair answer rides in the sweep's saved copy, so
+> a night built from it (v99) keeps the area's high-chair places too.
 >
 > Frontend side: `loadPlaces` reads `play_area` as `p.play_area !== false`, so
-> a dataset from before v88 (no property) means true: every old place is a play
+> a dataset from before v102 (no property) means true: every old place is a play
 > place. The hollow rings split into two chips, `stPlaces` "Play area only"
 > (`play_area !== false`) and the new `stPlacesHc` "High chair only"
 > (`play_area === false`), both on by default and not remembered, via the pure
@@ -30,7 +31,179 @@
 > (`countPlacesHc`) have high-chair versions in all 32 languages; the
 > MapComplete layer `dad_play_place` also selects `highchair=yes` or a number;
 > the methods pages say that rings also mark high-chair places. Shell pin
-> `app86` → `app87`.
+> `app96` → `app97`.
+
+> **v101 amendment (19 Oct 2026, the map opens where it was left): no data
+> shape change.** A new device key, `localStorage['papamap-view']`,
+> `{lng, lat, zoom}`, is written on every `moveend` and read once at start
+> (`parseSavedView`, `web/datasource.js`, which refuses anything else). Without a
+> `?bbox=`, the map opens on that view instead of the home view, and boot skips
+> `fitHome()`. A shared pin, a deep link and the open-at-location fix still win, as
+> before. A view centred on the reader's own fix (locate, the open-at-location
+> fix, the app logo's flight to the dot) is never written, because both
+> Datenschutz pages promise the position is not stored. They list the key and
+> say so. The logo keeps its behaviour: on the website its reload forgets the key
+> on its way out and lands on the home view, and in the app it calls `homeView()`
+> (the dot, if there is one, else the home view). Same shell pin as v100 (`app96`, one release).
+
+> **v100 amendment (19 Oct 2026, a play answer draws its ring at once):
+> `stats.json` gains `answer_play`**, `{"play_yes": true, "play_outdoor": true,
+> "play_no": false}`: whether the tags each play answer writes pass
+> `has_play_area` (`room_choices.answer_play_table`, its `PLAY_CHOICES` held to
+> `web/osm.js`'s `playPatch` by a test). The same rule as v48's `answer_status`:
+> the frontend looks its own confirmed answer up here and never reads the tag.
+> The answer override gains an optional `play` boolean, which
+> `applyAnswerOverrides` writes onto the feature, so the blue ring shows the
+> moment OSM confirms the write instead of after the next delta poll (Trello
+> "PapaMap bugs": the ring only appeared after an app restart). A `stats.json`
+> without the field leaves the ring to the delta as before. The delta poll also
+> runs at its 30 s pace while an add watch waits (at most its 10 minutes), not
+> only while an own edit is pending, so a place added in the dialog lands within
+> half a minute of the follower carrying it (the follower itself lags OSM by
+> ~1.5–3 min, so a few minutes end to end). Shell pin `app95` → `app96`.
+
+> **v99 amendment (16 Oct 2026, one failed area no longer sinks the build):
+> `stats.json` gains `fallback_areas`**, `{area name: days}`, empty on a normal
+> night. An area Overpass has not answered by the sweep deadline, or one that
+> failed six times with an error a retry cannot fix, is built from
+> its last good answer (at most 7 days old, `pipeline/sweep_cache.py`) instead
+> of aborting the build, and is listed here with that answer's age. Its older
+> `osm_base` makes `data_base` older too, so the delta replays the gap. The
+> frontend does not read the field; `pipeline.ops` alerts once an entry is 2
+> days old, the same 48 h as a stale `generated_at`. No shell pin change.
+
+> **v98 amendment (15 Oct 2026, the rating ask can come again): no data shape
+> change.** v52 asked once per device, ever, and marked the device as asked
+> before the store answered, so an ask the store swallowed (TestFlight never
+> shows the sheet, Play only within its quota) was the last one that device
+> would make. `papamap-review`'s `asked` is now the local date of the last ask
+> instead of `true`, and a device that has met v52's condition may ask again at
+> a calm pin close once 30 days have passed (`REVIEW_AGAIN_DAYS`, either way of
+> the clock). A stored `true` from an older build is read as asked on its last
+> counted day. The stores' own limits still decide whether a sheet appears.
+> Both Datenschutz pages say "at most every 30 days". Shell pin `app94` →
+> `app95`.
+
+> **v97 amendment (13 Oct 2026, `play` covers a venue's outdoor play area): the
+> property keeps its shape, its meaning widens.** `play` was "an *indoor* play
+> area is recorded", so the popup's own "outdoors only" answer
+> (`kids_area=yes` + `kids_area:indoor=no`) turned into `play=false`: no blue
+> halo, not under "With play area", although neither the chip nor the popup
+> line says indoor. Now `play` is true for `kids_area:indoor`, `kids_area` in
+> `yes|indoor|designated` (a `kids_area:indoor=no` no longer overrules it),
+> `kids_area=outdoor`, `kids_area:outdoor` in `yes|designated`,
+> `leisure=indoor_play`, and `leisure=playground` + `indoor=yes`. One
+> exception: outdoor-only evidence never counts on an outdoor
+> `leisure=playground` (a public playground is not a venue's play area); a
+> playground with a bare `kids_area=yes` counts as before. `PLAY_KEYS` is
+> still the two keys a reader answers with, so a lone `kids_area:outdoor=no`
+> stays `null` and the question is asked. The Overpass sweep fetches
+> `kids_area=outdoor` and `kids_area:outdoor`; Python re-applies the rule.
+> `web/methods*.html` state it in every language. No shell change.
+>
+> **v96 amendment (13 Oct 2026, more map on a phone): no data shape change.** On
+> a Honor 9 (360 × 560) the chrome above the map took 220 px, 39 % of the screen: the area
+> link's long label pushed the language picker onto a fourth header row, and the
+> tagline took a third. Under 640 px the nav row no longer wraps, and the area
+> link shows only the place behind a pin ("Germany", "Baden-Württemberg";
+> `areaPlace`, `web/datasource.js`) — the whole "Changing tables in Germany"
+> left "Changing tabl…" on a 375 px iPhone. Its full label stays in the link
+> for screen readers; a long place still ends in an ellipsis, so the picker
+> stays on screen. The tagline (the page's `<h1>`) is visually hidden, kept for
+> screen readers and search. The header is two rows (three at 360 px in
+> Hungarian, Portuguese and Greek, whose long add button wraps the first row —
+> untouched here), and on the Honor the chrome is now 178–196 px. The store
+> app's header is unchanged.
+> Shell pin `app93` → `app94`.
+
+> **v95 amendment (13 Oct 2026, pins are finger-sized to tap): no data shape
+> change.** MapLibre hit-tests a tap against the drawn circle only (7 px radius at
+> zoom 14), far under a fingertip. One map-wide click handler now queries a 40 px
+> box around the tap and opens the nearest pin (`nearestFeature`, `web/datasource.js`).
+> No clustering. Shell pin `app92` → `app93`.
+
+> **v94 amendment (13 Oct 2026, a card says it scrolls; Add a place scrolls once): no
+> shipped file changes.** The place card scrolls inside itself since v68 and
+> nothing showed it, so the answer buttons could sit below the fold unseen.
+> `updatePopupFade` now toggles `.popup.more-down`, a mask fade at the foot,
+> while there is more below; `fitPopup`, the scroll of the card and the
+> edit-note row call it. "Add a place" scrolled twice on a short phone: the
+> capped dialog and the venue list inside it. The list now runs in flow and
+> the dialog is the one scroller. Shell pin `app91` → `app92`.
+
+> **v93 amendment (13 Oct 2026, the app paints its shell before the data): no
+> data shape change.** On a first launch the app drew nothing above the map —
+> no chips, no count line, the zoom column still under the header — until
+> `loadDataset` had answered, which on a network that hangs rather than fails
+> (Airplane Mode behind an auto-connect VPN profile) is the full 20 s of
+> `NET_MS`. `bootNative` now renders the chips at zero and positions the zoom
+> column before the load starts, and after one second still without data puts
+> "Loading changing tables…" (`dataLoading`) in the header's count line as
+> plain text — a launch that reads its stored copy faster never shows it, and
+> the line makes the header a second row; `refreshPins` replaces the line once
+> the data has answered, and `applyFeatureSets` positions the zoom column after
+> `refreshPins` rather than before, so it is measured against the header as it
+> will stay. The website is unchanged. Shell pin `app90` → `app91`.
+
+> **v92 amendment (12 Oct 2026, a stray auth link, a double tap and a slow save
+> no longer break an answer): no data shape change.** **(1)** While a login
+> waits for its return (`loginPending`), the app ignores a warm `papamap://auth`
+> (`appUrlOpen`) whose state is not that login's (`awaitingReturn`) and leaves
+> the login sheet open, because handing it on used up the PKCE record the real
+> return is checked against. With no login waiting (none started, or the
+> hour's record ran out) it is handed on as before and toasts "login failed".
+> The cold start keeps v78's stricter check. **(2)** `startLogin` ignores a
+> second call while the first one's browser is still opening (until its
+> `navigate` settles, at most 5 s), so a double tap logged out no longer
+> replaces the record the first sheet comes back with; a browser that will not
+> open toasts "login failed". **(3)** The `writeTags` re-read (v25) reports
+> success with `changeset: null` and the object's `timestamp`, not "taken",
+> when every guarded key already holds exactly what the patch writes: that is
+> the reader's own save, which OSM applied after the page's 15 s timeout. The
+> pin recolours as for any answer; Mein PapaMap's local count adds nothing and
+> waits for the changesets list to bring the first save; the add dialog's watch
+> starts a second before that save (`addWatchSince`), so its pin is still
+> flown to. Shell pin `app89` → `app90`.
+
+> **v91 amendment (12 Oct 2026, the widget is handed only usable tables): no
+> shipped file changes.** `shareDataset` used to write every table to the
+> widget and the Siri shortcut, grey pins included, 23,003 of 26,541 rows. A
+> grey pin (`status: "unknown"`) is never usable in either reading (`Table.usable`,
+> `Tables.usable`), so those rows are now left out of the compact copy; the
+> nearest usable table is the same, the file about eight times smaller. Shell
+> pin `app88` → `app89`. A `papamap-saved` record gains an optional
+> `toilets: true` (an unnamed amenity=toilets starred from now on), so the
+> list can say "Toilets" rather than "Unnamed place" without the dataset.
+
+> **v90 amendment (12 Oct 2026, a new building's live pin sits where the nightly build puts it): no data shape change.**
+> A way or relation created since the nightly build gets its coordinate from the OSM API's
+> outline (`fetch_osm_full_centroid`). That used the mean of the outline's points, while the
+> nightly build's `out center` is the middle of the bounding box, so the pin jumped by up to
+> tens of metres overnight. Both now use the bounding-box centre.
+
+> **v89 amendment (12 Oct 2026, the app retries the moment a slow download
+> lands): no data shape change.** On a first launch over a slow link the app
+> stops waiting for the tables after 20 s but lets the download run on. The
+> retry only came on its timer, so on a Honor 9 at 25 KB/s the header said
+> "Couldn't load" for about a minute after the tables were already on the
+> phone (download done ~79 s, pins at 139 s). While such a download is still
+> running the count line now says "Loading…", and the retry runs as soon as it
+> lands; one that fails leaves the timer to try again. That retry still loads
+> any other file that never arrived alongside the tables, so a failed
+> `play_places` can hold the pins back by up to 40 s more (a wait on its own
+> download, then a fresh one). Shell pin `app87` → `app88`.
+
+> **v88 amendment (12 Oct 2026, a failed data download retries): no data shape
+> change.** The tables file was fetched once per page load; one dropped
+> connection or 5xx left an empty map under "No table data yet — run the
+> pipeline" (a developer message, in every language), a shared `?osm=` link
+> toasted "no longer on the map" and lost its parameter, and nothing retried.
+> Now an empty dataset after load retries by itself (30 s, doubling to 5 min),
+> on `online` and when the tab becomes visible, and the count line is a button
+> ("Couldn't load the changing tables — try again") that retries on tap. A
+> queued shared pin waits for the data. `countNoData` is replaced by
+> `dataLoading` and `dataFailed`; `i18n.test.js` fails on any string that says
+> "pipeline". Shell pin `app86` → `app87`.
 
 > **v87 amendment (11 Oct 2026, dialogs fit an old WebView): no data shape
 > change.** The five dialogs' height cap was `100vh` followed by `100dvh` as a
@@ -1869,7 +2042,7 @@
 
 > **v30 amendment (17 Sep 2026, the popup asks about the play corner too):**
 > `play` on a `changing_tables.geojson` feature becomes **tri-state** —
-> `true` (an indoor play corner is recorded, the v9 rule unchanged), `false`
+> `true` (a play area is recorded; indoor in v9, a venue's outdoor one too since v97), `false`
 > (somebody has answered on `kids_area` or `kids_area:indoor` and the answer
 > does not pass: `no`, `limited`, `outdoor`, a blank, junk) and `null` (nobody
 > has answered). Key presence decides the false, not the value, the same
@@ -2664,7 +2837,7 @@ Overpass `out center`). Feature `properties`:
   "changing_table": "yes|limited",
   "location_raw": "raw changing_table:location value or null",
   "status": "accessible|female_only|unknown",
-  "play": "true|false|null — indoor play area recorded (v9); false is an answered 'none' or an outdoor leisure=playground (v30, v31), null is unanswered",
+  "play": "true|false|null — a play area recorded, indoors or a venue's outdoor one (v9, v97); false is an answered 'none' or an outdoor leisure=playground (v30, v31), null is unanswered",
   "wheelchair": "yes|limited|no|null — the place's wheelchair tag verbatim (v26); null also means unrecorded",
   "toilets_wheelchair": "yes|limited|no|null — toilets:wheelchair verbatim (v26)",
   "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",

@@ -94,23 +94,23 @@ test("the header pill, the sitemap and the pages know each other", () => {
   assert.ok(read("app-en.html").includes('hreflang="de" href="https://papamap.de/app.html"'));
 });
 
-test("both pages link the iPhone app in the store, say where Android stands and offer a mail when it ships", () => {
-  // The iPhone line became the store link when 1.0 went live (2026-09-25).
-  // Android keeps a mailto rather than a signup form: nothing is stored by
-  // the site, and the Datenschutz's e-mail section is what covers the address.
+test("both pages link the iPhone app and the Android app in their stores, with no mail offer left", () => {
+  // The iPhone line became the store link when 1.0 went live (2026-09-25),
+  // the Android one when the app reached Google Play production.
   // The German page links the German storefront; the English one leaves the
-  // country to Apple, which sends the reader to their own.
-  for (const [f, store, words] of [
-    ["app.html", "https://apps.apple.com/de/app/papamap/id6813376985", ["im App Store", "in Arbeit"]],
-    ["app-en.html", "https://apps.apple.com/app/papamap/id6813376985", ["on the App Store", "in development"]],
+  // country to Apple, which sends the reader to their own. Google takes the
+  // language as hl.
+  for (const [f, store, play, words] of [
+    ["app.html", "https://apps.apple.com/de/app/papamap/id6813376985",
+      "https://play.google.com/store/apps/details?id=de.papamap.app&amp;hl=de", ["im App Store", "bei Google Play"]],
+    ["app-en.html", "https://apps.apple.com/app/papamap/id6813376985",
+      "https://play.google.com/store/apps/details?id=de.papamap.app&amp;hl=en", ["on the App Store", "on Google Play"]],
   ]) {
     const html = read(f);
     assert.ok(html.includes(`href="${store}"`), `${f}: store link`);
-    assert.ok(!/im Test|in testing/.test(html), `${f}: still says the app is in testing`);
+    assert.ok(html.includes(`href="${play}"`), `${f}: Google Play link`);
+    assert.ok(!/im Test|in testing|in Arbeit|in development|mailto:/.test(stripped(f)), `${f}: still says the app is coming`);
     for (const w of words) assert.ok(html.includes(w), `${f}: ${w}`);
-    const subjects = [...html.matchAll(/href="mailto:papamap@jakubwaller\.eu\?subject=([^"]+)"/g)]
-      .map((m) => decodeURIComponent(m[1]));
-    assert.deepEqual(subjects.map((s) => s.includes("Android")), [true], `${f}: ${subjects}`);
     assert.ok(!html.includes("<form"), f);
   }
   assert.ok(read("datenschutz.html").includes("Kontakt per E-Mail"));
@@ -140,7 +140,7 @@ test("both privacy pages cover the Android app, and the manifest keeps their thr
 test("the option cards read at AA contrast in both colour schemes", () => {
   // In dark mode the old text badge kept the light scheme's #00775a on the
   // box's dark green, 2.7:1. The store link is Apple's badge now; what is left
-  // to hold is the cards' own text and the Android button, in each scheme.
+  // to hold is the cards' own text, in each scheme.
   const lum = (hex) => {
     const c = hex.match(/[0-9a-f]{2}/gi).map((h) => parseInt(h, 16) / 255)
       .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
@@ -154,11 +154,10 @@ test("the option cards read at AA contrast in both colour schemes", () => {
     const src = read(f);
     const rule = (sel) => src.match(new RegExp(`${sel} \\{([^}]*)\\}`))[1];
     const ref = (body, prop) => body.match(new RegExp(`(?:^|[\\s;])${prop}: var\\((--[a-z-]+)\\)`))[1];
-    const card = rule("\\.option"), link = rule("\\.option a"), cta = rule("\\.option a\\.cta");
+    const card = rule("\\.option"), link = rule("\\.option a");
     const pairs = [
       ["--ink", ref(card, "background")],
       [ref(link, "color"), ref(card, "background")],
-      [ref(cta, "color"), ref(cta, "background")],
     ];
     const roots = [...src.matchAll(/:root \{([^}]*)\}/g)].map((m) => m[1]);
     assert.equal(roots.length, 2, `${f}: expected a light and a dark :root`);
@@ -180,7 +179,7 @@ const attr = (tag, name) => (new RegExp(`\\s${name}="([^"]*)"`).exec(tag) || [])
 const local = (src) => src && !/^(?:[a-z]+:|\/\/)/i.test(src);
 
 test("every image on the two pages is a local file with a size and alt text", () => {
-  // The Datenschutz promises no third-party requests, so Apple's badge is
+  // The Datenschutz promises no third-party requests, so Apple's and Google's badges are
   // served from here, never hotlinked. Width and height keep the layout still
   // while the screenshots load; everything below the hero loads lazily.
   for (const f of PAGES) {
@@ -192,11 +191,12 @@ test("every image on the two pages is a local file with a size and alt text", ()
       assert.ok(existsSync(new URL(src, dir)), `${f}: ${src} is missing`);
       assert.ok(/^\d+$/.test(attr(tag, "width") || "") && /^\d+$/.test(attr(tag, "height") || ""), `${f}: ${src} has no size`);
       assert.ok((attr(tag, "alt") || "").trim().length > 10, `${f}: ${src} has no alt text`);
-      // The badge and the hero screenshot are the first two; the rest wait.
-      assert.equal(attr(tag, "loading") === "lazy", i >= 2, `${f}: ${src} loading`);
+      // The two badges and the hero screenshot are the first three; the rest wait.
+      assert.equal(attr(tag, "loading") === "lazy", i >= 3, `${f}: ${src} loading`);
     });
     assert.ok(imgs[0].includes(`img/app-store-badge-${f === "app.html" ? "de" : "en"}.svg`), `${f}: badge language`);
-    for (const tag of imgs.slice(1))
+    assert.ok(imgs[1].includes(`img/google-play-badge-${f === "app.html" ? "de" : "en"}.png`), `${f}: Play badge language`);
+    for (const tag of imgs.slice(2))
       assert.ok(attr(tag, "src").endsWith(f === "app.html" ? "-de.webp" : "-en.webp"), `${f}: ${attr(tag, "src")}`);
   }
 });

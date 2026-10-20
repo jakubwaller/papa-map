@@ -153,12 +153,13 @@ is the room waves 2 and 3 took the same day: the US per state and Canada per pro
 64 areas, Japan per prefecture 47 more, for about 270 queries a night (184 areas + 62
 cities) — a third above the pre-rota night's 208, so expect ~105 minutes and a finish near
 03:45, well before the ops mail. A night when Overpass is struggling runs longer by design: failed
-areas are retried in rounds until 4.5 h after the start (`PAPAMAP_SWEEP_DEADLINE_S`), so the
-last round starts by about 06:30. That limits when a round *starts*, not when it ends: if an outage
-ends just before 06:30, the last round can take as long as a normal night, and the ops mail
-then says "not finished" about a build that succeeds later. An area that keeps failing with
-an error a retry cannot fix (a 400 or a pipeline bug) stops the sweep after six tries instead of
-waiting for the deadline. An empty answer is not such an error: a mirror whose area database is
+areas are retried in rounds until 4.5 h after the start (`PAPAMAP_SWEEP_DEADLINE_S`), about
+06:30. After that no query starts, even inside a running round, for an area that has a saved
+answer from the last 7 days: it is built from that answer (below), so such a night ends near
+06:30. An area with no saved answer (the first night after deploy or after a country joins) is
+still swept late, and the ops mail may then say "not finished" about a build that succeeds
+later. An area that keeps failing with an error a retry cannot fix (a 400 or a pipeline bug)
+goes to its saved answer after six tries while the other areas keep their rounds. An empty answer is not such an error: a mirror whose area database is
 broken returns one, so it waits for the deadline like an outage. The ops mail moved from 05:30 to 07:30 on 2026-09-25 so it reads
 that night's outcome rather than a build still in progress. (Until then the rounds were a fixed six, and on
 2026-09-25 stale mirrors used them all up in 45 minutes of waiting while the good hosts were
@@ -179,6 +180,11 @@ four minutes after both started in the same minute (02:00 at the time).
 
 The pipeline writes atomically (temp file + rename), so the server never serves a
 half-written file; if taginfo or Overpass is down, the previous JSON stays in place.
+An area Overpass still has not answered at the 4.5 h sweep deadline, or one stuck on an
+error a retry cannot fix, is built from its last
+good answer, at most 7 days old, kept in `web-data/private/sweeps/` (a WARN line on the ops
+page names it), so one bad area no longer throws away the rest of the night. Only an area
+with no such answer still aborts the build.
 
 The same run rewrites `web/wickeltische/` — the per-area pages (16 Bundesländer + index,
 one page per other swept country in its own language, and four hubs over chunk pages:
@@ -259,7 +265,7 @@ The OSMCha line can read `UNKNOWN — query failed (…). Not zero.` That is the
 timing out, not a week without edits. Its cost swings unpredictably — the same query took 21.9 s
 on 2026-08-13, over 150 s on 2026-08-18 and 0.5 s on 2026-08-19 — so `OSMCHA_TIMEOUT_S` is set
 to 300 s, well above any measurement, and overridable with `PAPAMAP_OSMCHA_TIMEOUT_S`. If the
-line says UNKNOWN, re-run the check before believing anything about that week.
+line says UNKNOWN, re-run the check before believing anything about that week. A re-run on the same day updates that day's entry instead of adding a second one.
 
 The OSMCha window is fetched on **every** run, not just digest days: the ops page draws a
 per-day chart of theme changesets, and that series only exists in `ops-state.json`
@@ -274,12 +280,15 @@ wider window, merged into `edits_days` and nothing else touched:
 cd ~/papa-map && docker compose run --build --rm ops python -m pipeline.ops --backfill-edits 31
 ```
 
-Same one-page limit as the daily fetch: a window beyond ~100 changesets returns its count
+Same one-page limit as the daily fetch: a window beyond ~500 changesets returns its count
 but no split, and the command says the history is unchanged. The answers given on the map
 itself (`created_by=PapaMap`, kept per day since 2026-10-05) are a second series,
 `web_edits_days`, filled by the same run and summed into the page's "Answers on the map
 itself" tiles; that history is all time once it reaches 2026-09-13, the day the room
-question could first be answered on the map, so the one backfill above covers both.
+question could first be answered on the map, so the one backfill above covers both. A third,
+`web_area_days` (since 2026-10-20), splits those answers by the sweep area of the pin each one
+edited — named from `areas-bbox.json` (`PAPAMAP_AREAS_BBOX_PATH`) the way the live updates name
+a new pin's area — for the "Answers in the app by area" table; only area names are stored.
 
 **The check runs in Docker, like the build** — the `ops` service in `docker-compose.yml`,
 the same image, run as the host user (uid 1000; edit `user:` if yours differs), with the
@@ -312,11 +321,11 @@ sending a mail, run against a copy of the state with the SMTP host blanked:
 ```bash
 cd ~/papa-map && cp ops-data/ops-state.json ops-data/preview.json && \
   docker compose run --build --rm -e PAPAMAP_OPS_STATE_PATH=/ops-data/preview.json \
-    -e PAPAMAP_SMTP_HOST= ops; rm -f ops-data/preview.json ops-data/preview.tmp
+    -e PAPAMAP_SMTP_HOST= ops; rm -f ops-data/preview.json
 ```
 
-(The copy gains a second entry for today, so the page's "since yesterday" row reads zeros
-until the next 07:30 run regenerates it from the real state.)
+(A preview after the 07:30 run updates today's entry in the copy the way a re-run does, so the
+page shows the day's real changes; the real state is not touched.)
 
 The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
 the report as a page in the order the numbers are read (redesigned 2026-10-06): a status
@@ -474,6 +483,18 @@ any change under `pipeline/` — **and `docker compose up -d --build delta` for 
 follower**, which builds the same code into an image of its own and keeps running the old one
 otherwise (see Live updates). The ops cron already rebuilds on every run, so an ops change
 is live at the next 07:30 after the pull; to see it sooner, use the preview run above.
+
+## Store release tags
+
+`.github/workflows/store-tags.yml` runs hourly (and on demand from the Actions tab), asks App
+Store Connect and Google Play what is live, and pushes any missing annotated tag: `ios/<version>`
+for an App Store version that is on sale (or was, so a missed one is backfilled), `android/<version>`
+for a Play production release that is published (one read of the track's release list, no edit opened). The build number and version code are `app-build.yml`'s
+`run_number`, so the tag lands on that run's `head_sha`. The release tracker reads the newest of
+each; nobody sets them by hand. Tags are only ever created, never moved or deleted, and the "live"
+date in the message is the day the workflow first saw the version live. Dry run from a laptop:
+`~/bin/asc-env.sh node app/ios/asc.mjs live-tags` (add `--push` to really tag; `play.mjs` needs
+`PLAY_SERVICE_ACCOUNT_JSON`).
 
 ## Verify
 

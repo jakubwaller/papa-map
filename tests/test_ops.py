@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 
+import pytest
 import requests
 
 from pipeline import ops
@@ -39,7 +40,8 @@ def fresh_delta(stats, now, minutes=2):
 
 
 def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None,
-        delta="fresh", delta_state=None, stats_mtime=None):
+        delta="fresh", delta_state=None, stats_mtime=None, history_path=None,
+        edits=None, areas_bbox_path=None):
     """`stats_mtime` dates the stats.json write; default is when it is
     written here, i.e. the real clock, not `now`."""
     state_path = tmp_path / "state.json"
@@ -68,10 +70,13 @@ def run(tmp_path, *, stats, gj, state=None, now=NOW, mails=None,
         else str(tmp_path / "absent-gj.json"),
         mail=lambda subject, body: sent.append((subject, body)),
         visits_fetch=lambda **kw: None,
-        edits_fetch=lambda **kw: None,
+        edits_fetch=lambda **kw: edits,
+        areas_bbox_path=areas_bbox_path,
         html_path=str(tmp_path / "ops.html"),
         private_html_path=str(tmp_path / "private-ops.html"),
-        delta_path=delta_path, delta_state_path=delta_state_path)
+        delta_path=delta_path, delta_state_path=delta_state_path,
+        # Never the real history.json: an unreadable one is an anomaly now.
+        history_path=history_path or str(tmp_path / "history.json"))
     return anomalies, report, sent, state_path
 
 
@@ -140,7 +145,8 @@ def test_history_capped(tmp_path):
              "counts": {"total": 1, "accessible": 0, "female_only": 0,
                         "unknown": 1},
              "changes": ops.diff_statuses({}, {})}
-    state = {"statuses": {}, "history": [dict(entry) for _ in range(ops.HISTORY_DAYS + 20)]}
+    state = {"statuses": {}, "history": [dict(entry, date=f"d{i}")
+                         for i in range(ops.HISTORY_DAYS + 20)]}
     _, _, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY),
                               now=TUESDAY, state=state,
                               gj=geojson([("node", 1, "unknown")]))
@@ -189,7 +195,7 @@ def test_osmcha_edits_queries_theme_url_and_window(monkeypatch):
     assert edits["days"] == 7 and edits["changesets"] == 3
     # the answers come back as a page too, grouped by complete day like the
     # theme's — their own series, never merged into by_day
-    assert calls[1]["page_size"] == "100"
+    assert calls[1]["page_size"] == "500"
     assert edits["web_by_day"] == {"2026-07-27": 0, "2026-07-28": 0,
                                    "2026-07-29": 0, "2026-07-30": 0,
                                    "2026-07-31": 0, "2026-08-01": 1,
@@ -660,7 +666,8 @@ def test_mail_week_line_counts_tonight(tmp_path):
                         "unknown": 1},
              "changes": dict(ops.diff_statuses({}, {}), new=2)}
     state = {"statuses": {"node/1": "unknown"},
-             "history": [dict(entry) for _ in range(3)]}
+             "history": [dict(entry, date=f"2026-07-{29 + i}")
+                         for i in range(3)]}
     _, report, _, _ = run(
         tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, state=state,
         gj=geojson([("node", 1, "accessible"), ("node", 2, "unknown")]))
@@ -687,3 +694,190 @@ def test_mail_week_line_includes_a_jump(tmp_path):
         gj=geojson([("node", i, "unknown") for i in range(1, 11)]))
     assert any("jumped 2 -> 10" in a for a in anomalies)
     assert "last 2 days: +8 new" in report
+
+
+# ---- state safety and same-day re-runs --------------------------------------
+
+def entry(date, total=3, acc=0, to_acc=0):
+    c = ops.diff_statuses({}, {})
+    c["to_accessible"] = to_acc
+    return {"date": date, "changes": c,
+            "counts": {"total": total, "accessible": acc, "female_only": 0,
+                       "unknown": total - acc}}
+
+
+def tables(n, status):
+    return [("node", i, status) for i in range(n)]
+
+
+def test_missing_state_is_a_first_run_and_saved(tmp_path):
+    _, _, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+                              gj=geojson(tables(2, "unknown")))
+    assert len(json.loads(state_path.read_text())["history"]) == 1
+
+
+@pytest.mark.parametrize("text", ["", "{not json", "[]",
+                                  '{"statuses": {}, "history": "x"}'])
+def test_unreadable_state_is_never_overwritten(tmp_path, text):
+    (tmp_path / "state.json").write_text(text)
+    anomalies, report, sent, state_path = run(
+        tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+        gj=geojson(tables(2, "unknown")))
+    assert any("ops-state" in a for a in anomalies)
+    assert sent and report
+    assert state_path.read_text() == text
+
+
+def test_unreadable_history_mails_an_anomaly(tmp_path):
+    # The build only WARNs and freezes the leaderboard; the ops check must say so.
+    history = tmp_path / "history.json"
+    history.write_text("{not json")
+    anomalies, _, sent, _ = run(
+        tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+        gj=geojson(tables(2, "unknown")), history_path=str(history))
+    assert any("history.json" in a for a in anomalies)
+    assert sent
+
+
+def test_backfill_edits_refuses_a_corrupt_state(tmp_path):
+    state_path = tmp_path / "state.json"
+    state_path.write_text("{not json")
+    with pytest.raises(ValueError, match="state.json"):
+        ops.backfill_edits(
+            31, state_path=str(state_path), now=NOW,
+            fetch=lambda days, now: {"days": days, "changesets": 1,
+                                     "by_day": {"2026-08-01": 1}})
+    assert state_path.read_text() == "{not json"
+
+
+def yesterday_state(n_unknown=5):
+    return {"statuses": {f"node/{i}": "unknown" for i in range(n_unknown)},
+            "history": [entry("2026-08-03", total=n_unknown)]}
+
+
+def test_same_day_rerun_updates_the_day(tmp_path):
+    gj = geojson(tables(5, "accessible"))
+    run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, gj=gj,
+        state=yesterday_state())
+    _, report, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY),
+                                   now=TUESDAY, gj=gj)
+    history = json.loads(state_path.read_text())["history"]
+    assert [e["date"] for e in history] == ["2026-08-03", "2026-08-04"]
+    assert history[-1]["changes"]["to_accessible"] == 5
+    assert "5 -> accessible" in report
+
+
+def test_rerun_adds_what_moved_between_the_runs(tmp_path):
+    run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+        gj=geojson(tables(5, "accessible") + tables(7, "unknown")[5:]),
+        state=yesterday_state(7))
+    _, _, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+                              gj=geojson(tables(7, "accessible")))
+    history = json.loads(state_path.read_text())["history"]
+    assert len(history) == 2 and history[-1]["changes"]["to_accessible"] == 7
+
+
+def test_next_day_diffs_against_the_rerun(tmp_path):
+    gj = geojson(tables(5, "accessible"))
+    run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, gj=gj,
+        state=yesterday_state())
+    run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, gj=gj)
+    wed = TUESDAY + timedelta(days=1)
+    _, _, _, state_path = run(
+        tmp_path, stats=fresh_stats(wed), now=wed,
+        gj=geojson(tables(4, "accessible") + [("node", 4, "female_only")]))
+    history = json.loads(state_path.read_text())["history"]
+    dates = [e["date"] for e in history]
+    assert dates == sorted(set(dates)) and len(dates) == 3
+    assert history[-1]["changes"]["to_accessible"] == 0
+    assert history[-1]["changes"]["to_female_only"] == 1
+
+
+def test_duplicate_dates_already_saved_are_healed(tmp_path):
+    state = {"statuses": {"node/0": "accessible"},
+             "history": [entry("2026-08-01"), entry("2026-08-02", to_acc=5),
+                         entry("2026-08-02", total=9, to_acc=0)]}
+    _, _, _, state_path = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+                              gj=geojson(tables(1, "accessible")), state=state)
+    history = json.loads(state_path.read_text())["history"]
+    assert [e["date"] for e in history] == ["2026-08-01", "2026-08-02",
+                                            "2026-08-04"]
+    assert history[1]["changes"]["to_accessible"] == 5
+    assert history[1]["counts"]["total"] == 9
+
+
+def test_rerun_still_reports_the_drop_against_yesterday(tmp_path):
+    state = {"statuses": {}, "history": [entry("2026-08-03", total=1000)]}
+    gj = geojson(tables(790, "unknown"))
+    a1, _, _, _ = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY,
+                      gj=gj, state=state)
+    a2, _, _, _ = run(tmp_path, stats=fresh_stats(TUESDAY), now=TUESDAY, gj=gj)
+    assert any("dropped" in a for a in a1) and any("dropped" in a for a in a2)
+
+
+def test_an_area_built_from_an_old_sweep_alerts_after_48h(tmp_path):
+    for i, (ages, alert) in enumerate((({}, False), ({"Missouri": 1}, False),
+                                       ({"Missouri": 2, "Iowa": 1}, True))):
+        (tmp_path / str(i)).mkdir()
+        stats = {**fresh_stats(TUESDAY), "fallback_areas": ages}
+        anomalies, _, _, _ = run(tmp_path / str(i), stats=stats,
+                                 gj=geojson([("node", 1, "unknown")]), now=TUESDAY)
+        hits = [a for a in anomalies if "older sweep" in a]
+        assert hits == (["built from an older sweep, no fresh answer for them: "
+                         "Missouri (2 d)"] if alert else [])
+
+
+def _cs(day, lon, lat):
+    """An OSMCha changeset feature: a bbox polygon around one pin."""
+    ring = [[lon, lat], [lon + 0.001, lat], [lon + 0.001, lat + 0.001],
+            [lon, lat + 0.001], [lon, lat]]
+    return {"geometry": {"type": "Polygon", "coordinates": [ring]},
+            "properties": {"date": f"{day}T10:00:00Z", "user": "someone"}}
+
+
+def test_answers_are_split_by_area_and_only_names_are_stored(tmp_path):
+    """Each answer lands in the sweep area of the pin it edited — boxes
+    first, the nearest table where boxes overlap (Hamburg's box sits inside
+    Schleswig-Holstein's here) — every fetched day is recorded, an empty one
+    as {}, and neither coordinates nor users reach the state."""
+    boxes = write(tmp_path / "boxes.json", {
+        "Schleswig-Holstein": [8, 53, 11.5, 55], "Hamburg": [9.7, 53.3, 10.4, 53.8],
+        "Hessen": [7.7, 49.3, 10.3, 51.7]})
+    gj = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": c},
+         "properties": {"osm_type": "node", "osm_id": i, "status": "unknown",
+                        "area": a}}
+        for i, (c, a) in enumerate([([9.99, 53.55], "Hamburg"),
+                                    ([10.3, 53.75], "Schleswig-Holstein")])]}
+    web = {"count": 4, "features": [
+        _cs("2026-08-01", 9.98, 53.55), _cs("2026-08-01", 8.68, 50.11),
+        _cs("2026-08-02", 10.29, 53.74), _cs("2026-08-03", 9.98, 53.55)]}  # last=today
+    by_day = ops.edits_by_day(web, "2026-07-31", NOW)
+    edits = {"days": 7, "changesets": 0, "web_changesets": 4, "web_by_day": by_day,
+             "web_points": ops.answer_points(web, "2026-07-31", NOW)}
+    _, _, _, state_path = run(tmp_path, stats=fresh_stats(), gj=gj,
+                              edits=edits, areas_bbox_path=boxes)
+    saved = json.loads(state_path.read_text())
+    assert saved["web_area_days"] == {
+        "2026-07-31": {}, "2026-08-01": {"Hamburg": 1, "Hessen": 1},
+        "2026-08-02": {"Schleswig-Holstein": 1}}
+    text = state_path.read_text()
+    assert "someone" not in text and "53.55" not in text
+    html = (tmp_path / "ops.html").read_text()
+    assert "Answers in the app by area" in html
+    assert '<td class="l">Hamburg</td><td>1</td>' in html
+
+
+def test_answers_by_area_skipped_without_the_boxes(tmp_path, capsys):
+    edits = {"web_by_day": {"2026-08-02": 1},
+             "web_points": [("2026-08-02", 10.0, 53.5)]}
+    ops.add_answer_areas(edits, None, str(tmp_path / "absent.json"))
+    assert edits == {"web_by_day": {"2026-08-02": 1}}
+    assert "answers by area skipped" in capsys.readouterr().err
+
+
+def test_answer_points_skips_a_non_polygon_geometry():
+    data = {"features": [{"geometry": {"type": "Point", "coordinates": [10.0, 53.5]},
+                          "properties": {"date": "2026-08-02T10:00:00Z"}},
+                         _cs("2026-08-02", 10.0, 53.5)]}
+    assert [d for d, _, _ in ops.answer_points(data, "2026-07-31", NOW)] == ["2026-08-02"]

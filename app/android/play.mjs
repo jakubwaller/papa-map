@@ -4,8 +4,11 @@
 // task in .github/workflows/app-build.yml.
 //
 //   node android/play.mjs upload <app.aab> [--track alpha] [--status draft]
+//                                            release notes: playWhatsNew["<versionName>"] in listings/*.json
 //   node android/play.mjs listings pull      print the store listing texts, every language
 //   node android/play.mjs listings push      listings/*.json → the listings, in one committed edit
+//
+//   node android/play.mjs live-tags [--push]  tag the commit of each production release (dry run without --push)
 //
 // Reads PLAY_SERVICE_ACCOUNT_JSON (the key file's text) from the environment —
 // the repository secret of that name.
@@ -21,9 +24,11 @@
 import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
-import { PLAY_LOCALES, listingsDir, readListings, playListingBody, same } from "../listings.mjs";
+import { liveTags } from "../live-tags.mjs";
+import { PLAY_LOCALES, listingsDir, readListings, playListingBody, playReleaseNotes, same } from "../listings.mjs";
 
 export const PACKAGE = "de.papamap.app";
+const GRADLE = new URL("app/build.gradle", import.meta.url);
 const API = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE}`;
 const UPLOAD = `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${PACKAGE}`;
 const SCOPE = "https://www.googleapis.com/auth/androidpublisher";
@@ -158,10 +163,20 @@ export async function commitEdit(bearer, id, { fetch: f = fetch, ...retry } = {}
   return parse(res, "POST", url);
 }
 
-// The release the track gets: this one version code, whole. Pure, so the
-// shape Play is sent is tested without a network.
-export function trackBody(track, versionCode, status) {
-  return { track, releases: [{ versionCodes: [String(versionCode)], status }] };
+// The release the track gets: this one version code, whole, with the release
+// notes of listings/*.json if any file has them. Pure, so the shape Play is
+// sent is tested without a network.
+export function trackBody(track, versionCode, status, releaseNotes = []) {
+  const release = { versionCodes: [String(versionCode)], status };
+  if (releaseNotes.length) release.releaseNotes = releaseNotes;
+  return { track, releases: [release] };
+}
+
+// The versionName the bundle is built with, read where Gradle reads it.
+export function versionName(gradle) {
+  const m = /^\s*versionName\s+"([^"]+)"/m.exec(gradle);
+  if (!m) throw new Error("no versionName in app/build.gradle");
+  return m[1];
 }
 
 export function parseArgs(argv) {
@@ -178,15 +193,17 @@ export function parseArgs(argv) {
 // One edit: open, upload the bundle, point the track at it, commit. An edit
 // that fails half-way is never committed, so Play is left as it was.
 async function upload(file, { track, status }) {
+  const version = versionName(readFileSync(GRADLE, "utf8"));
+  const notes = playReleaseNotes(readListings(), version);   // a bad listing file fails before the upload
   const bearer = await accessToken(serviceAccount());
   const edit = await call(bearer, "POST", `${API}/edits`, { json: {} });
   const bundle = await call(bearer, "POST", `${UPLOAD}/edits/${edit.id}/bundles?uploadType=media`,
                             { body: readFileSync(file), type: "application/octet-stream" });
   console.log(`uploaded version code ${bundle.versionCode} (sha256 ${bundle.sha256})`);
   await call(bearer, "PUT", `${API}/edits/${edit.id}/tracks/${track}`,
-             { json: trackBody(track, bundle.versionCode, status) });
+             { json: trackBody(track, bundle.versionCode, status, notes) });
   await commitEdit(bearer, edit.id);
-  console.log(`${track}: version code ${bundle.versionCode} as ${status}`);
+  console.log(`${track}: version code ${bundle.versionCode} as ${status}, release notes for ${version} in ${notes.length} language(s)`);
 }
 
 // --- Store listing texts -------------------------------------------------------
@@ -244,7 +261,27 @@ export async function listingsPush({ dir = listingsDir } = {}) {
   if (skipped.length) console.log(`no Google Play language for: ${skipped.join(", ")}`);
 }
 
-const USAGE = "usage: play.mjs upload <app.aab> [--track alpha] [--status draft] | listings pull | listings push";
+// The production track's releases that are really out. applications.tracks.releases.list
+// names one "525 (1.3.4)" (version code, then versionName) and says where it is in
+// its life; an edit's `status: completed` also covers releases still in review.
+// PUBLISHED includes a staged rollout. A bare name needs a dot, so "525" is never a version.
+export function productionLive(releases) {
+  return (releases ?? [])
+    .filter((r) => r.releaseLifecycleState === "RELEASE_LIFECYCLE_STATE_PUBLISHED" && r.activeArtifacts?.length)
+    .map((r) => ({
+      version: /\(([\d.]+)\)\s*$/.exec(r.releaseName ?? "")?.[1] ?? (/^\d+(\.\d+)+$/.test(r.releaseName ?? "") ? r.releaseName : undefined),
+      build: String(Math.max(...r.activeArtifacts.map((a) => Number(a.versionCode)))),
+    }));
+}
+
+// Read-only and no edit opened: one GET of the production track's release list.
+async function liveTagsCmd(args) {
+  const bearer = await accessToken(serviceAccount());
+  const { releases } = await call(bearer, "GET", `${API}/tracks/production/releases`);
+  await liveTags("android", productionLive(releases), args);
+}
+
+const USAGE = "usage: play.mjs upload <app.aab> [--track alpha] [--status draft] | listings pull | listings push | live-tags [--push]";
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [cmd, ...rest] = process.argv.slice(2);
@@ -257,6 +294,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       await listingsPull();
     } else if (cmd === "listings" && rest.length === 1 && rest[0] === "push") {
       await listingsPush();
+    } else if (cmd === "live-tags") {
+      await liveTagsCmd(rest);
     } else throw new Error(USAGE);
   };
   run().catch((e) => { console.error(e.message); process.exit(1); });

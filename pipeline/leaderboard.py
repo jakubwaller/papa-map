@@ -9,7 +9,7 @@ from .config import (AREA_COUNTRY, BUNDESLAENDER, CANADA_PROVINCES,
                      LANG_HOME_CC, US_STATES, chunked_area_names,
                      HISTORY_MAX_DAYS, PAGES_BASE_PATH, SITE_BASE_URL)
 from .export import write_text_atomic
-from .leaderboard_strings import DE_FILE, EN_FILE, L
+from .leaderboard_strings import L
 from .pages import (ICON, IN_APP_JS, STYLE, UP, _og, esc, footer_html,
                     slugify, sort_key)
 
@@ -36,15 +36,18 @@ WINDOW_DAYS = 7
 # ---- History ---------------------------------------------------------------
 
 def load_history(path) -> dict:
-    """{'v': 1, 'days': [...]} — a missing, unreadable or malformed file is a
-    cold start, not an error: the first build simply writes day one."""
+    """{'v': 1, 'days': [...]} — a missing file is a cold start; one that
+    exists but is unreadable or malformed raises ValueError, because writing
+    day one over it would erase the history."""
     try:
         with open(path) as fh:
             data = json.load(fh)
-    except (OSError, ValueError):
+    except FileNotFoundError:
         return {"v": 1, "days": []}
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"{path}: unreadable ({exc})") from exc
     if not isinstance(data, dict) or not isinstance(data.get("days"), list):
-        return {"v": 1, "days": []}
+        raise ValueError(f"{path}: not a history file (wrong shape)")
     return data
 
 
@@ -95,14 +98,18 @@ def counts_from_features(features, region_by_key, city_by_key,
     return regions, cities
 
 
-def narrows_day(history: dict, day: str, regions: dict) -> list:
-    """The regions of an existing entry for `day` that `regions` lacks, in
-    its order — empty when there is no such entry or the new one covers it.
-    A non-empty answer means writing the new day would narrow it: a partial
-    same-day re-run must not replace the full nightly snapshot."""
+def narrows_day(history: dict, day: str, regions: dict,
+                cities: dict | None = None) -> list:
+    """The regions (and cities) of an existing entry for `day` that `regions`
+    (and `cities`) lack, in its order — empty when there is no such entry or
+    the new one covers it. A non-empty answer means writing the new day would
+    narrow it: a partial same-day re-run must not replace the full nightly
+    snapshot, and a re-run where one city failed must not drop that city."""
     for d in history.get("days", []):
         if d.get("date") == day:
-            return [r for r in d.get("regions") or {} if r not in regions]
+            return ([r for r in d.get("regions") or {} if r not in regions]
+                    + ([c for c in d.get("cities") or {} if c not in cities]
+                       if cities is not None else []))
     return []
 
 
@@ -418,7 +425,8 @@ def _table(rows, name_col: str, tab: dict, lang: str) -> str:
         + "</tr>\n</thead>\n<tbody>\n")
     rank = 0
     for r in rows:
-        mover = r["delta_pp"] is not None and r["delta_pp"] > 0
+        # Rounded as _fmt_delta_pp does: a gain it shows as a dash is no mover.
+        mover = r["delta_pp"] is not None and round(r["delta_pp"], 1) >= 0.1
         if mover:
             rank += 1
         # A row whose name is in no config map is a history key from an area

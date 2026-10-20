@@ -237,3 +237,12 @@ test("the field does not ask a third party before the third character", () => {
   assert.match(dse, /komoot GmbH/);
   assert.match(dse, /https:\/\/www\.komoot\.com\/privacy/);
 });
+
+test("matchLocal: the cached folded name follows a rename, so results never go stale", () => {
+  const pin = { name: "Rewe Markt", lat: 53.55, lon: 9.99, status: "accessible" };
+  assert.equal(matchLocal([pin], [], "rewe", CENTRE).length, 1);
+  assert.equal(matchLocal([pin], [], "rewe", CENTRE).length, 1);   // served from the cache
+  pin.name = "Café Müller";
+  assert.equal(matchLocal([pin], [], "rewe", CENTRE).length, 0);
+  assert.equal(matchLocal([pin], [], "muller", CENTRE).length, 1);
+});

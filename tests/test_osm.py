@@ -1,4 +1,5 @@
 import os
+import re
 
 import pytest
 import requests
@@ -35,7 +36,10 @@ def test_sweep_ql_unions_both_halves_into_one_query(load_fixture):
     # added to PLAY_AREA_VALUES cannot be silently left out of the query.
     for value in PLAY_AREA_VALUES:
         assert value in ql
-    assert "limited" not in ql and "outdoor" not in ql
+    assert "limited" not in ql
+    # v97: a venue's outdoor play area counts, so both outdoor spellings are fetched.
+    assert 'nwr["kids_area:outdoor"~' in ql
+    assert re.search(r'nwr\["kids_area"~"\^\([^"]*\boutdoor\b', ql)
     assert f"[timeout:{config.OVERPASS_QL_TIMEOUT}]" in ql
 
 
@@ -600,3 +604,12 @@ def test_highchair_ql_prefilter_accepts_every_true_highchair_value():
                   "limited", "1+", "", "ja", "\u0663"]:
         if highchair_state({"highchair": value}) is True:
             assert re.search(rx, value, re.I), value
+
+
+def test_split_sweep_keeps_a_venues_outdoor_play_area_and_drops_a_public_playground():
+    outdoor = {"type": "node", "id": 1, "tags": {"kids_area:outdoor": "yes"}}
+    indoor_no = {"type": "node", "id": 2, "tags": {"kids_area": "yes", "kids_area:indoor": "no"}}
+    park = {"type": "node", "id": 3,
+            "tags": {"leisure": "playground", "kids_area:outdoor": "yes"}}
+    ct, play = osm.split_sweep([outdoor, indoor_no, park])
+    assert ct == [] and [el["id"] for el in play] == [1, 2]

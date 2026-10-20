@@ -110,7 +110,11 @@
   <p>Wählen Sie über den Sprachumschalter eine Sprache, wird diese Wahl im Local Storage Ihres
      Browsers gespeichert (Schlüssel <code>papamap-lang</code>); ebenso, ob Sie die Karte aus
      Papa- oder Mama-Sicht lesen (Schlüssel <code>papamap-mode</code>) und ob der Filter
-     „Barrierefrei“ an ist (Schlüssel <code>papamap-wheelchair</code>) — rein
+     „Barrierefrei“ an ist (Schlüssel <code>papamap-wheelchair</code>), dazu der zuletzt gezeigte
+     Kartenausschnitt, Mittelpunkt und Zoomstufe, damit die Karte beim nächsten Öffnen dort beginnt
+     (Schlüssel <code>papamap-view</code>; einen Ausschnitt, den die Karte genau auf Ihren Standort
+     gelegt hat, merkt sie sich nicht, Ihre Position selbst steht also nicht darin; einen Ausschnitt,
+     den Sie danach in Ihrer Nähe einstellen, aber schon) — rein
      funktional, ohne Tracking, nur auf Ihrem Gerät, löschbar über die Browserdaten
      (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
   <h2>Offline-Speicher (Service Worker)</h2>
@@ -261,7 +265,8 @@
   <h2>App: Einstellungen auf dem Gerät</h2>
   <p>Die App speichert dieselben funktionalen Schlüssel wie die Website — Sprache
      (<code>papamap-lang</code>), Papa- oder Mama-Sicht (<code>papamap-mode</code>), den Filter
-     „Barrierefrei“ (<code>papamap-wheelchair</code>) und, nach einer Anmeldung, das Zugriffstoken
+     „Barrierefrei“ (<code>papamap-wheelchair</code>), den zuletzt gezeigten Kartenausschnitt
+     (<code>papamap-view</code>, nie einen genau auf Ihren Standort gelegten) und, nach einer Anmeldung, das Zugriffstoken
      und Ihren OSM-Anzeigenamen samt Nutzer-ID (<code>papamap-osm-token</code>, <code>papamap-osm-user</code>,
      <code>papamap-osm-user-id</code>),
      während der Anmeldung zusätzlich für höchstens eine Stunde den Anmeldevorgang
@@ -272,9 +277,10 @@
      selbst anzeigt (<code>papamap-answer-overrides</code>), und die geschlossenen Raum-Hinweise
      (<code>papamap-card-dismissed</code>) sowie den Vermerk, mit welcher Version der App der Startbildschirm (die Begrüßung
      beim ersten Öffnen oder die Neuigkeiten nach einem Update) zuletzt gezeigt wurde (<code>papamap-intro</code>),
-     und für die einmalige Bitte um eine Bewertung einen Zählerstand: wie viele Antworten Sie in
+     und für die Bitte um eine Bewertung einen Zählerstand: wie viele Antworten Sie in
      der App gegeben und an wie vielen Tagen Sie einen Pin geöffnet haben (beides nur bis drei
-     gezählt), dazu das Datum des zuletzt gezählten Tages und ob die Bitte schon gestellt wurde
+     gezählt), dazu das Datum des zuletzt gezählten Tages und den Tag, an dem die Bitte zuletzt
+     gestellt wurde
      (<code>papamap-review</code>) — nur eben im Speicher der App statt im Browser. Rein
      funktional, ohne Tracking, nur auf Ihrem Gerät — und, wie alles, was die App ablegt, in einer
      Gerätesicherung, wie unter „Die App“ beschrieben (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
@@ -301,8 +307,9 @@
      Seiten dieser Website gilt diese Erklärung.</p>
   <h2>App: Bitte um eine Bewertung</h2>
   <p>Haben Sie in der App drei Antworten gegeben oder an drei verschiedenen Tagen einen Pin
-     geöffnet, bittet die App das Betriebssystem einmalig, beim nächsten Schließen eines Pins den
-     Bewertungsdialog des App Store bzw. von Google Play anzuzeigen. Ob und wann er erscheint,
+     geöffnet, bittet die App das Betriebssystem, beim nächsten Schließen eines Pins den
+     Bewertungsdialog des App Store bzw. von Google Play anzuzeigen, danach frühestens nach 30
+     Tagen wieder. Ob und wann er erscheint,
      entscheiden Apple bzw. Google; die App erfährt weder, ob er erscheint, noch, ob oder wie Sie
      bewerten. Die Bitte geht an das Betriebssystem bzw. an Google Play auf Ihrem Gerät, die sich
      dafür gegebenenfalls mit Apple bzw. Google verbinden; eine Bewertung geben Sie direkt bei
@@ -310,7 +317,7 @@
      verarbeitet die Daten nach seinen eigenen Datenschutzbestimmungen. An diesen Server sendet
      die App dafür nichts. Den Zählerstand dafür (<code>papamap-review</code>, siehe „App:
      Einstellungen auf dem Gerät“) nutzt die App allein, um die Bitte nicht zu früh und nicht
-     mehrfach zu stellen; sie sendet ihn nirgendwohin.</p>
+     öfter als alle 30 Tage zu stellen; sie sendet ihn nirgendwohin.</p>
   <h2>App: Apple (App Store und TestFlight)</h2>
   <p>Die Verteilung über den App Store und über TestFlight ist Sache von Apple. Apple ist dafür
      eigenständig verantwortlich und verarbeitet die dabei anfallenden Daten nach seinen eigenen
@@ -359,6 +366,6 @@
      <a href="mailto:papamap@jakubwaller.eu">papamap@jakubwaller.eu</a>.</p>
   <p>Außerdem haben Sie das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren
      (Art. 77 DSGVO), zum Beispiel bei der Behörde an Ihrem Wohnort.</p>
-  <p style="margin-top:30px">Stand: 7. Oktober 2026</p>
+  <p style="margin-top:30px">Stand: 15. Oktober 2026</p>
   <p><a href="./">← Zur Karte</a></p>
 </body></html>

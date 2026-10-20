@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { locateNative, loadJSONNative, loadDatasetNative, budget,
+import { locateNative, loadJSONNative, loadDatasetNative, lateDownload, budget,
          checkLocationPermissionNative, locateNativeCoarse, downloadInto,
          parseReview, localDay, afterPinOpen, afterAnswer, reviewDue, reviewTracker,
          requestReview, REVIEW_KEY } from "./native.js";
@@ -309,6 +309,88 @@ test("no copy, online: the download becomes the copy, and the map is drawn from 
   assert.deepEqual(io.files, { [COPY]: { n: 1 } });
   assert.deepEqual(io.log, [`text ${COPY}`, `text ${COPY}.new`, `download ${COPY}.new`,
                             `read ${COPY}.new`, `replace ${COPY}`]);
+});
+
+// The page's retry (app.js) loads the same file again while a download the
+// clock let go of may still be writing `.new`; on Android the downloader
+// writes in place, so a second one would truncate the first.
+test("no copy: a retry waits for the download the clock let go of, never a second one into the same file", async () => {
+  const io = fakeIO();
+  let finish, calls = 0;
+  io.download = async (url, path) => {
+    io.log.push(`download ${path}`);
+    if (++calls === 1) await new Promise((r) => { finish = r; });   // slower than the budget
+    io.files[path] = { n: 2 };
+  };
+  assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
+  const retry = loadJSONNative("data/changing_tables.geojson", io, { netMs: 1000 });
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(io.log.filter((l) => l.startsWith("download")).length, 1, "no second download while the first runs");
+  finish();
+  const r = await retry;
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 2 }, fromStore: true });
+  assert.deepEqual(await r.refreshed, { ok: true, json: null }, "just downloaded: nothing to refresh");
+  assert.equal(io.log.filter((l) => l.startsWith("download")).length, 1, "the same megabytes once, not twice");
+});
+
+test("no copy: a retry after that download has landed reads its copy, and does not download it again", async () => {
+  const io = fakeIO();
+  let finish, calls = 0;
+  io.download = async (url, path) => {
+    io.log.push(`download ${path}`);
+    if (++calls === 1) await new Promise((r) => { finish = r; });
+    io.files[path] = { n: 2 };
+  };
+  assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
+  finish();
+  await new Promise((r) => setTimeout(r, 10));   // landed and promoted before the retry asks
+  const r = await loadJSONNative("data/changing_tables.geojson", io, BRIEF);
+  assert.deepEqual({ json: r.json, fromStore: r.fromStore }, { json: { n: 2 }, fromStore: true });
+  assert.deepEqual(await r.refreshed, { ok: true, json: null });
+  assert.equal(io.log.filter((l) => l.startsWith("download")).length, 1, "seen on a Honor 9 at 25 KB/s: the copy downloaded twice");
+  // Taken once: the load after that is an ordinary one again, refresh and all.
+  const next = await loadJSONNative("data/changing_tables.geojson", io, BRIEF);
+  await next.refreshed;
+  assert.equal(io.log.filter((l) => l.startsWith("download")).length, 2);
+});
+
+test("no copy: a retry still waiting on that download when its own clock runs out is null, still one download", async () => {
+  const io = fakeIO({ hangs: ["download"] });
+  assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
+  assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
+  assert.equal(io.log.filter((l) => l.startsWith("download")).length, 1);
+});
+
+// The page redraws the moment the let-go download lands (app.js scheduleRetry),
+// not on its next retry tick: a minute later, on a Honor 9 at 25 KB/s.
+test("no copy: lateDownload hands the page the let-go download, true once its copy is on the phone", async () => {
+  const io = fakeIO();
+  let finish, calls = 0;
+  io.download = async (url, path) => {
+    if (++calls === 1) await new Promise((r) => { finish = r; });
+    io.files[path] = { n: 2 };
+  };
+  const url = "data/changing_tables.geojson?v=1";
+  assert.equal(lateDownload(url, io), undefined, "nothing let go of yet");
+  assert.equal(await loadJSONNative(url, io, BRIEF), null);
+  const late = lateDownload(url, io);
+  finish();
+  assert.equal(await late, true);
+  assert.deepEqual(io.files, { [COPY]: { n: 2 } });
+  await loadJSONNative(url, io, BRIEF);
+  assert.equal(lateDownload(url, io), undefined, "taken by the load after it");
+  assert.equal(lateDownload(url), undefined, "on the website there is no app io at all");
+});
+
+test("no copy: a let-go download that fails settles false, and leaves the phone alone", async () => {
+  const io = fakeIO();
+  let drop;
+  io.download = async () => { await new Promise((r) => { drop = r; }); throw new Error("connection reset"); };
+  assert.equal(await loadJSONNative("data/changing_tables.geojson", io, BRIEF), null);
+  const late = lateDownload("data/changing_tables.geojson", io);
+  drop();
+  assert.equal(await late, false);
+  assert.deepEqual(io.files, {});
 });
 
 test("no copy, offline: null, not a throw", async () => {
@@ -968,6 +1050,31 @@ test("the OSM login's return leg is not mistaken for a table", () => {
   assert.deepEqual([back.length, opened.length], [1, 0]);
 });
 
+// Any app or web page can open papamap://auth while the reader is logging
+// in. While a login waits for another state, a stray one must not reach auth,
+// which would use up the record the real return is checked against, nor close
+// the reader's sheet. With no login waiting it goes on as ever.
+test("a warm auth URL is ignored only while a login waits for another state", () => {
+  const app = fakeApp();
+  const back = [];
+  let closed = 0;
+  const before = globalThis.Capacitor;
+  globalThis.Capacitor = { isNativePlatform: () => true,
+    Plugins: { App: app.plugin, Browser: { close: async () => { closed++; } } } };
+  globalThis.sessionStorage = { getItem: () => JSON.stringify({ verifier: "v", state: "real", at: Date.now() }) };
+  try {
+    onAppUrl({ auth: (u) => back.push(u), table: () => {} });
+    app.open(`${AUTH_REDIRECT}?code=x&state=stray`);
+    assert.deepEqual([back.length, closed], [0, 0]);
+    app.open(`${AUTH_REDIRECT}?code=c&state=real`);
+    assert.deepEqual([back, closed], [[`${AUTH_REDIRECT}?code=c&state=real`], 1]);
+    // None started, or its hour ran out: the page gets it and says the login failed.
+    globalThis.sessionStorage = { getItem: () => null };
+    app.open(`${AUTH_REDIRECT}?code=c&state=late`);
+    assert.deepEqual([back.length, closed], [2, 2]);
+  } finally { globalThis.Capacitor = before; delete globalThis.sessionStorage; }
+});
+
 // Android killed the app while OSM's login was up: the return cold-starts it,
 // and the URL only arrives through getLaunchUrl.
 test("a cold start from the OSM login's return completes the login", async () => {
@@ -1092,18 +1199,22 @@ test("downloadInto: a file at the root needs no folder", async () => {
 });
 
 // ---- The store-rating ask ----
-const RDEF = { answers: 0, days: 0, day: null, asked: false };
+const RDEF = { answers: 0, days: 0, day: null, asked: null };
 
 test("parseReview: strict, field by field", () => {
   assert.deepEqual(parseReview(null), RDEF);
   assert.deepEqual(parseReview("not json"), RDEF);
   assert.deepEqual(parseReview('{"answers":2,"days":1,"day":"2026-09-28","asked":false}'),
-    { answers: 2, days: 1, day: "2026-09-28", asked: false });
+    { answers: 2, days: 1, day: "2026-09-28", asked: null });
   assert.deepEqual(parseReview('{"answers":9,"days":-1,"day":"x","asked":"yes"}'),
-    { answers: 3, days: 0, day: null, asked: false });
+    { answers: 3, days: 0, day: null, asked: null });
   assert.equal(parseReview('{"answers":2.5}').answers, 0);
   for (const raw of ["[]", '"3"', "null"]) assert.deepEqual(parseReview(raw), RDEF, raw);
-  assert.deepEqual(parseReview('{"asked":true}'), { ...RDEF, asked: true });
+  assert.equal(parseReview('{"asked":"2026-10-01"}').asked, "2026-10-01");
+  // A pre-v98 `true` dates from the last counted day; without one it is forgotten.
+  assert.equal(parseReview('{"day":"2026-09-30","asked":true}').asked, "2026-09-30");
+  assert.equal(parseReview('{"asked":true}').asked, null);
+  assert.equal(parseReview('{"asked":"2026-13-01"}').asked, null, "the shape of a date, but none");
 });
 
 test("localDay is the local calendar day, zero-padded", () => {
@@ -1127,11 +1238,14 @@ test("afterAnswer caps at three", () => {
   assert.equal(afterAnswer({ ...RDEF, answers: 3 }).answers, 3);
 });
 
-test("reviewDue: three answers or three days, and not yet asked", () => {
-  assert.equal(reviewDue({ ...RDEF, answers: 3 }), true);
-  assert.equal(reviewDue({ ...RDEF, days: 3 }), true);
-  assert.equal(reviewDue({ ...RDEF, answers: 2, days: 2 }), false);
-  assert.equal(reviewDue({ ...RDEF, answers: 3, asked: true }), false);
+test("reviewDue: three answers or three days, and no ask in the last 30 days", () => {
+  const t = "2026-10-31";
+  assert.equal(reviewDue({ ...RDEF, answers: 3 }, t), true);
+  assert.equal(reviewDue({ ...RDEF, days: 3 }, t), true);
+  assert.equal(reviewDue({ ...RDEF, answers: 2, days: 2 }, t), false);
+  assert.equal(reviewDue({ ...RDEF, answers: 3, asked: "2026-10-02" }, t), false);
+  assert.equal(reviewDue({ ...RDEF, answers: 3, asked: "2026-10-01" }, t), true);
+  assert.equal(reviewDue({ ...RDEF, answers: 3, asked: "2026-11-30" }, t), true, "clock went back");
 });
 
 function trackerRig({ get, set, ask } = {}) {
@@ -1158,7 +1272,7 @@ test("reviewTracker: three days of pins, then a close, asks once", () => {
   assert.equal(r.asked, 0);
   r.scheduled[0]();
   assert.equal(r.asked, 1);
-  assert.equal(r.state().asked, true);
+  assert.equal(r.state().asked, "2026-09-29");
 });
 
 test("reviewTracker: a close before the device is due schedules nothing", () => {
@@ -1173,19 +1287,24 @@ test("reviewTracker: an uncalm moment marks nothing; the next close asks", () =>
   r.calm = false;
   r.scheduled[0]();
   assert.equal(r.asked, 0);
-  assert.equal(r.state().asked, false);
+  assert.equal(r.state().asked, null);
   r.calm = true;
   r.t.pinClosed();
   r.scheduled[1]();
   assert.equal(r.asked, 1);
 });
 
-test("reviewTracker: after the ask nothing schedules again", () => {
+test("reviewTracker: after the ask nothing schedules for 30 days, then it asks again", () => {
   const r = trackerRig();
   r.threeDays(); r.t.pinClosed(); r.scheduled[0]();
   const n = r.scheduled.length;
-  r.day = "2026-10-05"; r.t.pinOpened(); r.t.answered(); r.t.pinClosed();
+  r.day = "2026-10-28"; r.t.pinOpened(); r.t.answered(); r.t.pinClosed();
   assert.equal(r.scheduled.length, n);
+  r.day = "2026-10-29"; r.t.pinOpened(); r.t.pinClosed();
+  assert.equal(r.scheduled.length, n + 1);
+  r.scheduled[n]();
+  assert.equal(r.asked, 2);
+  assert.equal(r.state().asked, "2026-10-29");
 });
 
 test("reviewTracker: three answers on one day, then a close, asks", () => {
@@ -1225,7 +1344,7 @@ test("reviewTracker: an ask that throws is recorded and does not escape", () => 
   const r = trackerRig({ ask: () => { throw new Error("no store"); } });
   r.threeDays(); r.t.pinClosed();
   assert.doesNotThrow(() => r.scheduled[0]());
-  assert.equal(r.state().asked, true);
+  assert.equal(r.state().asked, "2026-09-29");
 });
 
 test("reviewTracker: two closes while due ask exactly once", () => {
@@ -1239,7 +1358,7 @@ test("reviewTracker: two closes while due ask exactly once", () => {
 test("reviewTracker: the stored shape after the first pin open", () => {
   const r = trackerRig();
   r.day = "2026-09-29"; r.t.pinOpened();
-  assert.equal(r.store.get(REVIEW_KEY), '{"answers":0,"days":1,"day":"2026-09-29","asked":false}');
+  assert.equal(r.store.get(REVIEW_KEY), '{"answers":0,"days":1,"day":"2026-09-29","asked":null}');
 });
 
 test("requestReview is inert without a plugin or without the method", () => {
@@ -1302,7 +1421,7 @@ test("shareDataset marks a limited place only under the chip", () => {
 
 test("shareDataset reads men_only strictly and defaults name and url", () => {
   const p = fakeShare();
-  const bare = { lat: 1, lon: 2, status: "unknown" };
+  const bare = { lat: 1, lon: 2, status: "female_only" };
   withShare(p, () => shareDataset([bare, { ...bare, men_only: "yes" }, { ...bare, men_only: true }], true));
   const rows = p.written[0];
   assert.equal(rows[0][5], false);
@@ -1310,6 +1429,12 @@ test("shareDataset reads men_only strictly and defaults name and url", () => {
   assert.equal(rows[2][5], true);
   assert.equal(rows[0][3], "");
   assert.equal(rows[0][4], "");
+});
+
+test("shareDataset leaves grey pins out, the widget can never use them", () => {
+  const p = fakeShare();
+  withShare(p, () => shareDataset([SHARED, { ...SHARED, status: "unknown" }]));
+  assert.equal(p.written[0].length, 1);
 });
 
 test("shareDataset without a plugin does nothing and does not throw", () => {

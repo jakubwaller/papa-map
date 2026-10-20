@@ -5,7 +5,7 @@ import { loadFeatures, loadPlaces, placeFeatures, splitPlaces, filterFeatures, c
          countWheelchair, countHighchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
-         parseBbox, pickArea, areaLink, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, BUCKET_COLOR,
+         parseBbox, pickArea, areaLink, areaPlace, areaForLabel, visibleMapView, MODES, DEFAULT_MODE, pickMode, pickWheelchair, WHEELCHAIR_KEY, BUCKET_COLOR,
          pinColorExpression, viewOf, nearestUsable, formatDistance, localAnswered,
          geoUri, webRouteHref, webRouteChoices, osmRef, osmApiUrl, osmElementFromApi, editOutcome,
          TABLE_TAGS, PLAY_TAGS, printableTableValue, printableEditTagLines,
@@ -13,17 +13,17 @@ import { loadFeatures, loadPlaces, placeFeatures, splitPlaces, filterFeatures, c
          isFixFresh, popupPan, popupMaxHeight, isAppleTouch, shouldOpenAtLocation,
          mergeFeatureCollection, isDeltaFresh, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
-         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, flightLength, flightMs,
-         zoneForFeature } from "./datasource.js?v=app87";
+         geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
+         zoneForFeature, nearestFeature, parseSavedView } from "./datasource.js?v=app97";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app87";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app97";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
          ROOM_LABEL, roomLabelKeys,
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         writeTags } from "./osm.js?v=app87";
+         writeTags } from "./osm.js?v=app97";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -31,37 +31,37 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app87";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app97";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
-         downloadCity, deleteCity, citySource, cityLayers, kmBetween, bboxCentre,
-         cityRowState, latestOnly,
+         downloadCity, deleteCity, citySource, cityLayers, bboxCentre,
+         cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app87";
+         reviewTracker } from "./native.js?v=app97";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app87";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app97";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app87";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app97";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app87";
+import { isOpenNow } from "./opening-hours.js?v=app97";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app87";
-// The bundled shell's pin (`?v=app87`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app97";
+// The bundled shell's pin (`?v=app97`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -260,9 +260,25 @@ function updateRegionsLink() {
   // is still the twin's English h1 says so itself.
   const english = link?.en && link.label !== currentArea?.en?.label;
   const label = link ? link.label + (english ? " (English)" : "") : t("regions");
+  // A phone shows only the place behind a pin (style.css): the whole label
+  // cannot fit beside the other links at 375px. Screen readers keep the label.
+  const place = link && areaPlace(currentArea, lang, regionName);
+  const short = place ? place + (english ? " (English)" : "") : "";
   el.href = link ? link.href : t("regionsHref");
-  if (el.textContent === label) return;
-  el.textContent = label;
+  if (el.textContent === label + short) return;
+  const full = document.createElement("span");
+  full.className = "area-full";
+  full.textContent = label;
+  el.replaceChildren(full);
+  el.classList.toggle("has-place", !!short);
+  if (short) {
+    const s = document.createElement("span");
+    s.className = "area-place";
+    s.setAttribute("aria-hidden", "true");
+    s.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24"><path d="M12 21.5s-6.5-6.2-6.5-11a6.5 6.5 0 0113 0c0 4.8-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><circle cx="12" cy="10.3" r="2.3" fill="currentColor"/></svg>';
+    s.append(short);
+    el.append(s);
+  }
   // "Bundesländer" → "Wickeltische in Schleswig-Holstein" can wrap the nav
   // row at phone width, and the zoom control sits under the topbar's
   // measured height (positionZoomCtrl) — re-seat it whenever the label
@@ -349,9 +365,17 @@ const HOME_BOUNDS = [[5.5, 47.1], [15.4, 56.6]];
 const VIEW_BOUNDS =
   parseBbox(new URLSearchParams(location.search).get("bbox")) ?? HOME_BOUNDS;
 
+// Without a ?bbox= of its own, the page opens where the reader last left the
+// map (CONTRACT v101; an Android tester, 16 Oct 2026: "reopening brings me to
+// the overview of Germany again"). A shared pin, a deep link and the location
+// fix still move it from there, exactly as they move the home view.
+const VIEW_KEY = "papamap-view";
+const SAVED_VIEW = VIEW_BOUNDS === HOME_BOUNDS && !crawler ? parseSavedView(readStored(VIEW_KEY)) : null;
+
 const map = new maplibregl.Map({
   container: "map", style: OSM_STYLE,
-  bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 },
+  ...(SAVED_VIEW ? { center: [SAVED_VIEW.lng, SAVED_VIEW.lat], zoom: SAVED_VIEW.zoom }
+    : { bounds: VIEW_BOUNDS, fitBoundsOptions: { padding: 12 } }),
   // With no maxBounds this floor is the only stop on the way out, and 1 puts
   // one whole world in 1024 px: a desktop sees every pin from Alaska to New
   // Zealand on one screen, the way Google Maps does. The old 3.5 (itself down
@@ -369,6 +393,12 @@ const map = new maplibregl.Map({
 });
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
+// The website's logo is a plain reload of "./", which would reopen the saved
+// view; it promises the home view, so the view is forgotten on the way out.
+// (The app's logo has no href and calls homeView() instead.)
+if (!isNative()) document.querySelector(".brandmark[href]")?.addEventListener("click", () => {
+  try { localStorage.removeItem(VIEW_KEY); } catch { /* blocked storage: there is no saved view either */ }
+});
 // Debug/testing handle — MapLibre offers no global registry, and headless
 // verification (Playwright) needs to drive the view.
 window._papamap = map;
@@ -493,7 +523,7 @@ let wheelchairOnly = (() => {
   try { return pickWheelchair(localStorage.getItem(WHEELCHAIR_KEY)); } catch { return false; }
 })();
 let placesOn = true;                                      // add the prospects (on by default since 2026-09-10)
-let placesHcOn = true;                                    // and the high-chair-only ones (v88), likewise not remembered
+let placesHcOn = true;                                    // and the high-chair-only ones (v102), likewise not remembered
 
 const statsEl = document.getElementById("stats");
 const filterBar = document.getElementById("filter-bar");
@@ -685,21 +715,19 @@ function addTableLayer() {
   // A tap on tiles drawn from older arrays (featureGen) is dropped: its idx
   // may already name the next object over. Only for the moment MapLibre
   // takes to re-tile after a merge; the next tap lands on the new tiles.
-  for (const layer of [PLAY_LAYER, SRC, KEY_LAYER, LIMITED_LAYER]) {
-    map.on("click", layer, (e) => {
-      const props = e.features[0].properties;
-      const f = props.gen === featureGen ? allFeatures[props.idx] : null;
-      if (f) openPopup(f);
-    });
-  }
-  for (const layer of [PLACES, PLACES_NO, PLACES_LIMITED]) {
-    map.on("click", layer, (e) => {
-      const props = e.features[0].properties;
-      const p = props.gen === featureGen ? allPlaces[props.idx] : null;
-      if (p) openPlacePopup(p);
-    });
-  }
-  for (const layer of [PLAY_LAYER, SRC, KEY_LAYER, LIMITED_LAYER, PLACES, PLACES_NO, PLACES_LIMITED]) {
+  // A finger is ~40 px wide, a pin 14-26: query a box around the tap and let
+  // the nearest pin win, so overlapping pins (SRC and KEY_LAYER) are harmless.
+  const PIN_LAYERS = [PLAY_LAYER, SRC, KEY_LAYER, LIMITED_LAYER, PLACES, PLACES_NO, PLACES_LIMITED];
+  map.on("click", (e) => {
+    const { x, y } = e.point;
+    const hit = nearestFeature(e.point,
+      map.queryRenderedFeatures([[x - 20, y - 20], [x + 20, y + 20]], { layers: PIN_LAYERS }),
+      (f) => map.project(f.geometry.coordinates));
+    if (!hit || hit.properties.gen !== featureGen) return;
+    if ([PLACES, PLACES_NO, PLACES_LIMITED].includes(hit.layer.id)) openPlacePopup(allPlaces[hit.properties.idx]);
+    else openPopup(allFeatures[hit.properties.idx]);
+  });
+  for (const layer of PIN_LAYERS) {
     map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
   }
@@ -711,6 +739,12 @@ function addTableLayer() {
     closeSearch();
   });
 }
+
+// The count line when the dataset is empty: a retry button, not a developer message.
+const retryBtn = document.createElement("button");
+retryBtn.type = "button";
+retryBtn.className = "count-retry";
+retryBtn.addEventListener("click", () => retryDataset());
 
 function refreshPins() {
   if (!dataReady) return;
@@ -726,11 +760,21 @@ function refreshPins() {
   const places = splitPlaces(placeFeatures(allPlaces, wheelchairOnly, highchairOnly), placesOn, placesHcOn);
   const nHc = places.filter((p) => p.play_area === false).length;
   const nPlay = places.length - nHc;
-  countEl.textContent = total
-    ? t("countShown", { shown: shown.length, total })
+  if (total) {
+    countEl.textContent = t("countShown", { shown: shown.length, total })
       + (nPlay ? t("countPlaces", { n: nPlay }) : "")
-      + (nHc ? t("countPlacesHc", { n: nHc }) : "")
-    : t("countNoData");
+      + (nHc ? t("countPlacesHc", { n: nHc }) : "");
+  } else {
+    // Never disabled or re-inserted while up: either drops a keyboard user's focus.
+    // retryDataset itself ignores a second tap while one is in flight.
+    retryBtn.textContent = t(retrying || awaitingLate ? "dataLoading" : "dataFailed");
+    // On the website the count ends the scrolling chip row, off-screen at any width: scroll
+    // the row to its end. (The app's count sits in the header, outside the row.)
+    if (countEl.firstChild !== retryBtn) {
+      countEl.replaceChildren(retryBtn);
+      if (filterBar.contains(countEl)) filterBar.scrollLeft = filterBar.scrollWidth;
+    }
+  }
   // In the app the count shows only when there is nothing to count.
   countEl.classList.toggle("nodata", !total);
   updateBarFade();   // on the website the count is the row's last item: its width moves the edge
@@ -933,7 +977,7 @@ function popupHTML(f) {
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
   const title = f.name || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed");
   const sub = f.amenity ? `<div class="sub">${esc(f.amenity.replace(/_/g, " "))}</div>` : "";
-  return `<div class="popup"><h3>${esc(title)}${starHTML(f.osm_url, title)}</h3>${sub}${rows.join("")}</div>`;
+  return `<div class="popup"><h3>${esc(title)}${starHTML(f.osm_url, f.name || "")}</h3>${sub}${rows.join("")}</div>`;
 }
 
 // The question and its answers, in the reading's own vocabulary: a mother is
@@ -1065,7 +1109,7 @@ function placeHTML(p) {
     rows.push(`<div class="status play ask-ctx">${esc(t(p.play_area === false ? "metaPlacesHc" : "metaPlaces"))}</div>`);
   // Between the headline and the question, where a pin's popup has them.
   // The high-chair line only — a place is never asked (v65). Not under the
-  // high-chair headline (v88), which already says it.
+  // high-chair headline (v102), which already says it.
   if (p.changing_table || p.play_area !== false) rows.push(...highchairRows(p));
   rows.push(...wheelchairRows(p));
   if (!p.changing_table) rows.push(askHTML("askTable", inFlight.has(p.osm_url)));
@@ -1084,7 +1128,7 @@ function placeHTML(p) {
   if (links.length) rows.push(`<div class="links">${links.join("")}</div>`);
   const title = p.name || t("popupUnnamed");
   const sub = p.kind ? `<div class="sub">${esc(p.kind.replace(/_/g, " "))}</div>` : "";
-  return `<div class="popup"><h3>${esc(title)}${starHTML(p.osm_url, title)}</h3>${sub}${rows.join("")}</div>`;
+  return `<div class="popup"><h3>${esc(title)}${starHTML(p.osm_url, p.name || "")}</h3>${sub}${rows.join("")}</div>`;
 }
 
 // A table popup clears the sign pin above its point, a place's has none to
@@ -1263,6 +1307,7 @@ function fitPopup() {
     more.textContent = t("popupMore");
     desc.after(more);
   }
+  updatePopupFade();
 }
 function panPopupIntoView() {
   const el = popup?.getElement();
@@ -1288,7 +1333,7 @@ function panPopupIntoView() {
 
 // ---- Status chips: legend, count badges and filter toggles in one ----
 // Three status chips (on by default, each one subtracts when switched off),
-// then wheelchair and two blue ones. (Since v88 the order is status,
+// then wheelchair and two blue ones. (Since v102 the order is status,
 // wheelchair, play corner, high chair, then the two rings: "Play area only"
 // and "High chair only", both on by default, hollow blue, not remembered.)
 // The first blue one is off by default and, switched on, narrows
@@ -1304,6 +1349,11 @@ function renderChips() {
   // A dataset from before v50 carries no men_only at all: no fourth chip then,
   // rather than one that always reads 0.
   const hasMenOnly = allFeatures.some((f) => f.men_only === true);
+  // The rebuild removes the chip that has the focus, which would drop a keyboard
+  // or screen-reader reader onto <body> on every background redraw (the delta
+  // poll). Status chips carry data-chip, the others a distinct title.
+  const focusKey = (el) => el?.dataset.chip || el?.title;
+  const focused = document.activeElement?.closest?.(".chip") ? focusKey(document.activeElement) : null;
   filterBar.querySelectorAll(".chip").forEach((el) => el.remove());
   const frag = document.createDocumentFragment();
   for (const key of chipKeys(mode)) {
@@ -1313,6 +1363,7 @@ function renderChips() {
     b.type = "button";
     b.className = "chip" + (visible.has(key) ? " on" : "");
     b.setAttribute("aria-pressed", String(visible.has(key)));
+    b.dataset.chip = key;
     b.style.setProperty("--chip", BUCKET_COLOR[v.bucket]);
     // The chips follow the pin colours of the reading (v51): a mother gets a
     // red chip for the men's room alone, and her green chips count only what
@@ -1331,13 +1382,14 @@ function renderChips() {
   frag.appendChild(wheelchairChip(countWheelchair(allFeatures)));
   frag.appendChild(playChip(countPlay(pinFeatures(allFeatures, wheelchairOnly))));
   frag.appendChild(highchairChip(countHighchair(pinFeatures(allFeatures, wheelchairOnly))));
-  // The two rings last (v88), after the high-chair chip.
+  // The two rings last (v102), after the high-chair chip.
   const ringable = placeFeatures(allPlaces, wheelchairOnly);
   frag.appendChild(placesChip(splitPlaces(ringable, true, false).length));
   frag.appendChild(placesHcChip(splitPlaces(ringable, false, true).length));
   // Not firstChild: the mode toggle is static markup and holds that slot, so
   // the generated chips go in front of the spacer instead.
   filterBar.insertBefore(frag, filterBar.querySelector(".spacer"));
+  if (focused) [...filterBar.querySelectorAll(".chip")].find((el) => focusKey(el) === focused)?.focus();
   updateBarFade();
 }
 
@@ -1347,6 +1399,16 @@ function updateBarFade() {
   filterBar.classList.toggle("more-right", filterBar.scrollLeft + filterBar.clientWidth < filterBar.scrollWidth - 1);
   filterBar.classList.toggle("more-left", filterBar.scrollLeft > 1);
 }
+// Same for the place card: fade its foot while it has more below (.more-down).
+function updatePopupFade() {
+  const sc = popup?.getElement()?.querySelector(".popup");
+  if (!sc) return;
+  sc.classList.toggle("more-down", sc.scrollTop + sc.clientHeight < sc.scrollHeight - 1);
+}
+// Delegated and captured: scroll does not bubble, and setHTML replaces the node.
+document.addEventListener("scroll", (e) => {
+  if (e.target instanceof Element && e.target.classList.contains("popup")) updatePopupFade();
+}, true);
 filterBar.addEventListener("scroll", updateBarFade, { passive: true });
 window.addEventListener("resize", updateBarFade);
 // A turned phone has a different band; the open card takes the new cap where
@@ -1397,7 +1459,7 @@ function placesHcChip(count) {
 }
 
 // The high-chair chip (v65), after the blue chips (v66), before the two
-// rings (v88),
+// rings (v102),
 // off by default and not remembered: switched on it narrows the table pins
 // and the play-place rings to those with a recorded high chair. It subtracts,
 // never adds — a silent OSM is unrecorded, not "no high chair". Ink, like the
@@ -1448,9 +1510,8 @@ function wheelchairChip(count) {
     // The strip is rebuilt, not toggled: the status badges count over the
     // chip's universe, so they change with it (renderChips reads the state).
     renderChips();
-    // The rebuild removed the button that had the focus; a keyboard or
-    // screen-reader user — this chip's audience — would otherwise land on
-    // <body> and never hear the new aria-pressed state.
+    // WebKit (Safari, the app's WKWebView, VoiceOver) does not focus a tapped
+    // button, so renderChips found nothing focused to restore.
     filterBar.querySelector(".chip.wc")?.focus();
     refreshPins();
   });
@@ -1468,10 +1529,15 @@ const num = (n) => Number(n ?? 0).toLocaleString(NUMBER_LOCALE[lang] ?? "en-GB")
 // Null when the runtime has no name for the code (it echoes the code back),
 // and areaLink then keeps the twin's English h1.
 function countryLabel(cc) {
+  const name = regionName(cc);
+  return name ? t("areaCountry", { country: name }) : null;
+}
+// The bare name, which the phone header shows on its own (areaPlace).
+function regionName(cc) {
   try {
     const code = String(cc).toUpperCase();
     const name = new Intl.DisplayNames([NUMBER_LOCALE[lang] ?? lang], { type: "region" }).of(code);
-    return name && name !== code ? t("areaCountry", { country: name }) : null;
+    return name && name !== code ? name : null;
   } catch { return null; }
 }
 let lastStats = null;
@@ -1622,7 +1688,12 @@ let youMarker = null, toastTimer = null;
 
 // Shared by the locate button and the nearest-table one: both put the reader
 // on the map, and a second marker class would drift from the first.
+// Every fix the dot has stood on this session: a saved view (papamap-view)
+// never sits on one, even after the dot has moved on to a newer fix.
+const shownFixes = [];
 function showYou(at) {
+  const [lng, lat] = Array.isArray(at) ? at : [at.lng, at.lat];
+  shownFixes.push([lng, lat]);
   if (!youMarker) {
     const dot = document.createElement("div");
     dot.className = "you-dot";
@@ -1770,7 +1841,8 @@ function syncNearestBtn() {
 }
 nearestBtn.addEventListener("click", (e) => {
   if (!hasGeo()) { toast(t("toastNoGeo")); return; }
-  if (!dataReady) { toast(t("countNoData")); return; }
+  if (!dataReady) { toast(t("dataLoading")); return; }
+  if (dataMissing()) { toast(t("dataFailed")); retryDataset(); return; }
   locateFrom(e.currentTarget).then(
     (coords) => {
       const { latitude: lat, longitude: lon } = coords;
@@ -2483,12 +2555,14 @@ function attachEditNote() {
   if (!el) { el = document.createElement("div"); root.appendChild(el); }
   el.className = `edit-note ${editNote.cls}`;
   el.textContent = editText(editNote);
+  updatePopupFade();   // the note is a row more
   return true;
 }
 
 function dropEditNote() {
   editNote = null;
   popup?.getElement()?.querySelector(".edit-note")?.remove();
+  updatePopupFade();
 }
 
 // ---- Share: the same https link the app's own deep link opens ----
@@ -2586,7 +2660,9 @@ function rememberView() {
 // verifiable (storage blocked: some privacy settings, some webviews) the
 // login does not start, and the reader is told rather than left with a
 // button that does nothing.
-const goLogin = (intent) => startLogin(osm, intent, isNative() ? nativeNavigate : undefined).then((went) => { if (!went) toast(t("loginFailed")); });
+// A browser that would not open (Browser.open rejecting) is a failed login too.
+const goLogin = (intent) => startLogin(osm, intent, isNative() ? nativeNavigate : undefined)
+  .catch(() => false).then((went) => { if (!went) toast(t("loginFailed")); });
 
 // Answers on their way to OSM, by object. A pin closed and reopened during
 // the round trip renders its question again; it must not take a second
@@ -2657,23 +2733,26 @@ async function answer(kind, obj, choice, freshToken = null) {
     // The popup's tag row and the question's absence both read from the
     // object, so the one in memory learns the answer. A room answer's own
     // status recolours instantly below (stats.json's answer_status — never
-    // re-derived here); everything else — a status this reader did NOT just
-    // answer, and the blue play ring either way — still only moves once the
-    // pipeline says so: the delta follower within a few minutes, tonight's
-    // build as the backstop.
+    // re-derived here), and a play answer's ring the same way (answer_play,
+    // v100); everything else — a status this reader did NOT just answer —
+    // still only moves once the pipeline says so: the delta follower within
+    // a few minutes, tonight's build as the backstop.
     if (play) {
       // Answered is answered, whichever way: the question does not come back
       // when this popup is reopened. Only its own line goes; a room question
       // still waiting above it stays.
       obj.play_recorded = true;
-      remember({ play_answered: true });
+      // A stats.json from before v100 has no answer_play: the ring then waits
+      // for the delta, as it used to.
+      const ring = lastStats?.answer_play?.[choice];
+      remember({ play_answered: true, ...(typeof ring === "boolean" ? { play: ring } : {}) });
       renderMergedDataset();
       here()?.querySelector(".ask-play")?.remove();
     } else if (hc) {
       // The same for the high chair (v65), except that its line shows at
       // once: the question is replaced in place by the row it just recorded.
-      // The chip's count waits for the pipeline, like the play ring: the
-      // answer lives in highchair_answered, which only the row reads.
+      // The chip's count waits for the pipeline: the answer lives in
+      // highchair_answered, which only the row reads.
       obj.highchair_answered = choice === "hc_yes";
       obj.highchair_recorded = true;
       remember({ highchair_answered: obj.highchair_answered });
@@ -2889,6 +2968,9 @@ function renderVenueSkeleton() {
 function showVenueStep(step) {
   venuePick.hidden = step !== "pick";
   venueAskEl.hidden = step !== "ask";
+  // The dialog is the scroller (v94): a row picked deep in the list would
+  // otherwise open step two with its heading above the fold.
+  addDialog.scrollTop = 0;
 }
 
 function openVenuePicker(c, z) {
@@ -3005,7 +3087,8 @@ async function answerVenue(venue, choice, freshToken = null) {
   btns.forEach((b) => { b.disabled = true; });
   setVenueNote("askSaving", "looking");
   // Taken before the write: OSM's edited_at on the delta's upsert is the
-  // server's time DURING the write, and the watch must be older than that.
+  // server's time DURING the write, and the watch must be older than that
+  // (addWatchSince moves it back when an earlier tap's save was the write).
   const since = new Date().toISOString();
   try {
     const ref = osmRef(venue.osm_url);
@@ -3019,8 +3102,9 @@ async function answerVenue(venue, choice, freshToken = null) {
     venueAskEl.querySelector(".ask")?.remove();
     setVenueNote(choice === "none" ? "venueSavedNone" : "venueSaved", "found");
     if (choice !== "none") {
-      writeAddWatch({ t: since, osm_url: venue.osm_url, zoom: Math.max(map.getZoom(), VENUE_MIN_ZOOM),
+      writeAddWatch({ t: addWatchSince(since, out), osm_url: venue.osm_url, zoom: Math.max(map.getZoom(), VENUE_MIN_ZOOM),
         bbox: [venue.lon, venue.lat, venue.lon, venue.lat] });
+      scheduleDeltaPoll();   // the 30 s pace from now, not after the 3 min tick already set
     }
     review?.answered();
   } catch (err) {
@@ -3201,6 +3285,7 @@ function applyMode() {
   if (popupObj?.kind === "table") {
     showPopupHTML(popupHTML(popupObj.obj));
     attachEditNote();
+    fitPopup();
     updateSignMarker();
   } else {
     closePopupSilently();   // its text belonged to the old reading; not the reader's own close
@@ -3443,7 +3528,8 @@ function runNearest() {
 }
 function openPin(osmUrl) {
   if (!osmUrl) return;
-  if (!dataReady) { pendingPin = osmUrl; return; }
+  // An empty dataset queues too: the link must survive until a retry fills it.
+  if (!dataReady || !allFeatures.length) { pendingPin = osmUrl; return; }
   const f = featuresByOsmUrl.get(osmUrl);
   if (f) {
     map.jumpTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) });
@@ -3505,8 +3591,8 @@ function applyFeatureSets(fc, places) {
   placesByOsmUrl = new Map();
   for (const p of allPlaces) if (p.osm_url) placesByOsmUrl.set(p.osm_url, p);
   renderChips();
-  positionZoomCtrl();   // topbar height depends on the rendered strip
   refreshPins();
+  positionZoomCtrl();   // topbar height depends on the rendered strip, and on whether the count line shows
   if (isNative()) shareTables();   // the widget and the shortcut search this same data
   if (popupObj) {
     // Either kind: a room answer (or a delta) that promotes a play place to a
@@ -3659,10 +3745,13 @@ async function pollDelta() {
 // itself, so a poll that races a slow network never queues a second one on
 // top. Faster (30s) for as long as this reader has an answer of their own
 // still waiting to reach the delta — the same readEdit() record
-// startEditCheck/armEditCheck already keep in sessionStorage.
+// startEditCheck/armEditCheck already keep in sessionStorage — or a place
+// they added still to land (the add watch, for as long as it waits).
 function scheduleDeltaPoll() {
   clearTimeout(deltaPollTimer);
-  const ms = readEdit() ? DELTA_POLL_PENDING_MS : DELTA_POLL_MS;
+  const watch = readAddWatch();
+  const adding = watch && Date.now() - Date.parse(watch.t) < ADD_WATCH_TIMEOUT_MS;
+  const ms = readEdit() || adding ? DELTA_POLL_PENDING_MS : DELTA_POLL_MS;
   deltaPollTimer = setTimeout(async () => { await pollDelta(); scheduleDeltaPoll(); }, ms);
 }
 
@@ -3689,11 +3778,64 @@ function watchDeltaForVersion(osmUrl, minVersion, attemptsLeft = 20) {
 async function watchRefresh(loaded) {
   const results = await Promise.all(loaded.map((l) => l.refreshed));
   if (results.some((r) => r?.json != null)) {
-    const [fc, places, stats, areas] = results.map((r, i) => r?.json ?? loaded[i].json);
-    applyDataset(fc, places, stats, areas);
+    // lastJsons, not boot's own: a retry may have filled a file boot came back without.
+    lastJsons = results.map((r, i) => r?.json ?? lastJsons[i]);
+    applyDataset(...lastJsons);
     pollDelta();
   }
   if (allFeatures.length && results.every((r) => !r || r.ok === false)) toast(t("toastOffline"));
+}
+
+const DATA_URLS = [
+  "data/changing_tables.geojson",
+  "data/play_places.geojson",
+  "data/stats.json",
+  "data/areas.json",
+];
+const dataMissing = () => dataReady && !allFeatures.length;
+let lastJsons = [];   // the last-loaded jsons, so a retry that gets only some files keeps the rest
+let retrying = false, retryTimer = null, retryDelay = 30000, awaitingLate = false;
+
+function openQueuedPin() {
+  if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
+}
+
+function scheduleRetry() {
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(() => { if (!document.hidden) retryDataset(); }, retryDelay);
+  retryDelay = Math.min(retryDelay * 2, 300000);
+  // In the app, a tables download that outran native.js's 20 s may still be arriving: say
+  // so, and draw the moment it lands. One that fails leaves the timer above to try again.
+  const late = lateDownload(DATA_URLS[0]);
+  if (!late) return;
+  awaitingLate = true;
+  refreshPins();
+  late.then((landed) => { awaitingLate = false; if (landed) retryDataset(); else refreshPins(); });
+}
+
+// The tables file is fetched once per load; without this one failure left the map empty for good.
+async function retryDataset() {
+  if (retrying || !dataMissing()) return;
+  clearTimeout(retryTimer);
+  retrying = true;
+  refreshPins();
+  // The tables (empty is why we are here) and any other file that never
+  // arrived: in the app the rest have a background refresh writing their own
+  // `.new` already, and a second one would race it.
+  const missing = DATA_URLS.flatMap((u, i) => (i === 0 || lastJsons[i] == null ? [i] : []));
+  const loaded = await loadDataset(missing.map((i) => DATA_URLS[i]));
+  retrying = false;
+  missing.forEach((i, k) => { lastJsons[i] = loaded[k]?.json ?? lastJsons[i]; });
+  if (loaded[0]?.json) {
+    applyDataset(...lastJsons);
+    pollDelta();
+    openQueuedPin();
+  }
+  // Still nothing to draw, a tables file with no features included: try again later.
+  if (dataMissing()) {
+    refreshPins();
+    scheduleRetry();
+  }
 }
 
 async function boot() {
@@ -3715,24 +3857,32 @@ async function boot() {
   // or a fast fix would open on the reader only for fitHome to undo it a
   // moment later.
   const locationFix = openAtLocationFix();
-  const loaded = await loadDataset([
-    "data/changing_tables.geojson",
-    "data/play_places.geojson",
-    "data/stats.json",
-    "data/areas.json",
-  ]);
+  const loaded = await loadDataset(DATA_URLS);
+  lastJsons = loaded.map((l) => l.json);
   // dataReady before applyDataset, not after: its own refreshPins() call
   // reads the flag, and finding it still false here would skip the very
   // first paint — the count text included, not only the pins.
   dataReady = true;
   map.on("moveend", updateRegionsLink);   // registered once, here — applyDataset never does
-  applyDataset(...loaded.map((l) => l.json));
+  applyDataset(...lastJsons);
+  window.addEventListener("online", retryDataset);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) retryDataset(); });
+  if (dataMissing()) scheduleRetry();
   // Only the topbar's rendered height, which applyDataset's own
   // renderChips()/positionZoomCtrl() have already settled by the time it
   // returns — applyDataset itself never calls this, so a later background
   // refresh (watchRefresh, below) never pulls the view out from under a
-  // reader who has since panned somewhere else.
-  fitHome();
+  // reader who has since panned somewhere else. A saved view is already exact.
+  if (!SAVED_VIEW) fitHome();
+  map.on("moveend", () => {
+    const c = map.getCenter().wrap();
+    // A view the map centred on the reader (locate, the open-at-location fix,
+    // the logo's flight home to the dot) would store the position itself,
+    // which the Datenschutz pages promise is never stored: keep the last one.
+    if (shownFixes.some(([lng, lat]) => Math.abs(lng - c.lng) < 1e-5 && Math.abs(lat - c.lat) < 1e-5)) return;
+    try { localStorage.setItem(VIEW_KEY, JSON.stringify({ lng: c.lng, lat: c.lat, zoom: map.getZoom() })); }
+    catch { /* blocked storage: the home view next time */ }
+  });
   const fitHomeAt = Date.now();   // LATE_FIX_MS is measured from here, not from boot's own start
   // On the website `fromStore` is still the service worker's honest "you are
   // looking at old data" signal (X-PapaMap-Source: cache) and the toast fires
@@ -3760,6 +3910,11 @@ async function boot() {
   locationFix.then((coords) => {
     if (!coords) return;
     const at = [coords.longitude, coords.latitude];
+    // A locate tap (or the nearest button) that beat this fix already put the
+    // dot, and the camera, on a finer one: neither moves again, or the dot and
+    // the view would part and the next moveend would save an exact fix
+    // (papamap-view).
+    if (youMarker) return;
     showYou(at);
     redrawWidget();   // not noteFix (above); only the widget's redraw
     if (touchedBeforeFix || pinOpenedBeforeFix || popup?.isOpen()) return;
@@ -3776,7 +3931,7 @@ async function boot() {
   // Whatever queued a pin above the data — the app's own deep link (bootNative,
   // an appUrlOpen already fired) or this load's own ?osm= — opens it now that
   // there is a dataset to look it up in. jumpTo overrides fitHome's view.
-  if (pendingPin) { const u = pendingPin; pendingPin = null; openPin(u); }
+  openQueuedPin();
   if (pendingNearest) { pendingNearest = false; runNearest(); }
   // A return from OSM's consent screen lands here with ?code= and ?state=,
   // or, in the app, as the papamap://auth URL that cold-started it (bootNative).
@@ -3837,7 +3992,22 @@ function bootNative() {
   about.hidden = false;
   // The count stands in the header, off the scrolling chip row.
   document.querySelector("header").append(countEl);
-  positionZoomCtrl();   // applyI18n placed the column under the taller header a moment ago
+  // The shell before the data: the chips at zero before the load starts. A
+  // first launch waits on the download for up to native.js's 20 s — longer on
+  // a network that hangs rather than fails — and until then the app showed a
+  // bare header over an empty map (2026-10-13). refreshPins takes the line
+  // over once the data has answered.
+  renderChips();
+  // The line itself only after a second without data: a launch with a stored
+  // copy reads it in less, and the line makes the header a second row that
+  // would then jump away. Plain text, not retryBtn: nothing to retry yet.
+  setTimeout(() => {
+    if (dataReady) return;
+    countEl.textContent = t("dataLoading");
+    countEl.classList.add("nodata");
+    positionZoomCtrl();   // the second header row
+  }, 1000);
+  positionZoomCtrl();   // the taller header (applyI18n) and the chip strip just rendered both add to the topbar
   offlineBtn.hidden = false;
   // A login's return before the data is here (a cold start) waits for it,
   // like a pin: the answer it files needs its object to land on.
@@ -4039,7 +4209,7 @@ async function renderOfflineList() {
   const savedSlugs = new Set(saved.map((x) => x.slug));
   const cities = [...cat.cities].sort((a, b) => {
     const ca = bboxCentre(a.bbox), cb = bboxCentre(b.bbox);
-    return kmBetween(c.lat, c.lng, ca.lat, ca.lon) - kmBetween(c.lat, c.lng, cb.lat, cb.lon);
+    return haversineKm(c.lat, c.lng, ca.lat, ca.lon) - haversineKm(c.lat, c.lng, cb.lat, cb.lon);
   });
   for (const city of cities) {
     const row = cityRowState(city.slug, savedSlugs, downloading);
@@ -4211,7 +4381,8 @@ function toggleStar(btn) {
   else {
     const obj = featuresByOsmUrl.get(osm) || placesByOsmUrl.get(osm);
     if (!obj) return;
-    next = addSaved(savedPlaces, { osm, name: btn.dataset.name || "", lon: obj.lon, lat: obj.lat });
+    next = addSaved(savedPlaces, { osm, name: btn.dataset.name || "", lon: obj.lon, lat: obj.lat,
+      toilets: obj.amenity === "toilets" });
   }
   if (!writeSavedRaw(next)) { toast(t("meSaveFailed")); return; }
   savedPlaces = next;
@@ -4259,7 +4430,7 @@ function renderSavedList() {
   for (const row of savedPlaces) {
     const li = document.createElement("li");
     li.className = "saved-row";
-    const name = row.name || t("popupUnnamed");
+    const name = row.name || t(row.toilets ? "popupToilets" : "popupUnnamed");
     const dist = lastFix ? formatDistance(haversineKm(lastFix.lat, lastFix.lon, row.lat, row.lon)) : null;
     const open = document.createElement("button");
     open.type = "button";
@@ -4351,10 +4522,12 @@ function ensureMyAnswers(user) {
 // of edge this guards). Always exactly one answer at this site's own hand
 // (n: 1) at the exact object's own position, so the 50 m floor always finds
 // it — never a MapComplete session, which only ever arrives via the
-// changesets list itself.
+// changesets list itself. No changeset id, nothing to add: writeTags found
+// the answer on OSM already, saved by an earlier tap whose changeset the
+// list will page in.
 function recordMyAnswer(changesetId, lon, lat) {
   const user = getUser();
-  if (!user) return;
+  if (!user || !changesetId) return;
   const cache = ensureMyAnswers(user);
   cache.answers = mergeAnswers(cache.answers,
     // `local`: stamped by the device clock, so never the top-up's watermark

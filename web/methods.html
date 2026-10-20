@@ -198,14 +198,16 @@ diese. Ein Ort zählt, wenn eines dieser Tags in OSM steht:</p>
 <ul>
   <li><span class="ring"></span><code>kids_area:indoor=yes</code> oder <code>designated</code></li>
   <li><span class="ring"></span><code>kids_area=yes</code>, <code>indoor</code> oder
-      <code>designated</code> (das häufigste Tag, es sagt nicht, ob drinnen oder draußen)</li>
+      <code>designated</code> (das häufigste Tag, es sagt nicht, ob drinnen oder draußen, beides zählt)</li>
+  <li><span class="ring"></span><code>kids_area=outdoor</code>, oder <code>kids_area:outdoor=yes</code> oder
+      <code>designated</code></li>
   <li><span class="ring"></span><code>leisure=indoor_play</code></li>
   <li><span class="ring"></span><code>leisure=playground</code> zusammen mit
       <code>indoor=yes</code></li>
 </ul>
-<p><code>outdoor</code>, <code>no</code> und <code>limited</code> zählen nicht. Ein
-ausdrückliches <code>kids_area:indoor=no</code> gewinnt gegen ein bloßes
-<code>kids_area=yes</code>.</p>
+<p>Die Spielecke darf also drinnen oder draußen sein, solange sie zum Ort gehört. <code>no</code> und
+<code>limited</code> zählen nicht, und ein öffentlicher Spielplatz (<code>leisure=playground</code> ohne
+<code>indoor=yes</code>) zählt allein nicht, auch nicht mit einem Draußen-Tag.</p>
 <p>Der Ring ist ein Abzeichen, keine vierte Farbe. Ein Ort ohne diese Tags hat nicht &bdquo;keine
 Spielecke&ldquo;, in OSM steht dazu einfach nichts, und das gilt für fast alle Orte. Deshalb gibt
 es hier kein Grau.</p>

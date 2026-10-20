@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
-from .classify import has_play_area
+from .classify import is_place
 from .config import (OVERPASS_BACKOFF_S, OVERPASS_HTTP_TIMEOUT,
                      OVERPASS_MAX_DATA_AGE_H, OVERPASS_RETRIES,
                      OVERPASS_SLOT_WAIT_MAX_S, OVERPASS_STALE_REST_S,
@@ -76,18 +76,21 @@ def split_sweep(elements) -> tuple[list, list]:
 
       * objects carrying a `changing_table` tag — any value, since `no` and
         junk like "02" still feed the stats;
-      * objects that carry none but do record an indoor play area.
+      * objects that carry none but do record a play area, indoors or a venue's
+        outdoor one, or a high chair (v102: config.highchair_ql's answer rides in the
+        same list).
 
     An object with both belongs to the first list only: it is already a pin,
     and its play corner rides along as the feature's `play` property. Anything
-    in neither list is the Overpass prefilter being looser than has_play_area
-    (`kids_area:indoor=no` over a bare `kids_area=yes`) and is dropped."""
+    in neither list is the Overpass prefilter being looser than classify.is_place
+    (an outdoor `leisure=playground` carrying `kids_area:outdoor=yes`) and is
+    dropped."""
     ct, play = [], []
     for el in elements:
         tags = el.get("tags") or {}
         if "changing_table" in tags:
             ct.append(el)
-        elif has_play_area(tags):
+        elif is_place(tags):
             play.append(el)
     return ct, play
 
@@ -100,7 +103,7 @@ def slot_wait_s(url: str, get=None) -> float:
     gets a 429 for two of every three queries; asking first is both quicker
     and politer than colliding. Hosts without that page (the mirrors) and any
     failure to read it answer 0 — the fetch then just tries."""
-    host = url.split("/")[2] if "//" in url else ""
+    host = _host(url)
     if host not in OVERPASS_STATUS_HOSTS:
         return 0
     try:

@@ -8,6 +8,19 @@
 //
 //   node record-app-video.mjs <out-dir> [--profile store|social|loop] [--lang de|en]
 //                              [--served-dir <dir>] [--debug] [base-url]
+//                              [--place <type>/<id> --answer <room>] [--here <lat,lon>]
+//                              [--room-first] [--texts <json>] [--headed]
+//
+// --place replays a real answer: the named OSM element is served grey
+// (status unknown, no room), and the room step taps that pin and answers
+// --answer (a data-room key: both, male, female, unisex, wheelchair,
+// dedicated, ...). Use it with an element whose room you answered yourself,
+// so what the clip shows is true: the default walk answers "both" on
+// whatever grey pin comes first, which puts an invented room on a real
+// place on screen. --here moves the reader (geolocation and map centre).
+// --room-first puts the room step before the nearest-table step, so the
+// place just answered can be the nearest table. --texts merges a
+// {"02": {"subline": "..."}} JSON over the language's captions.
 //
 // Output: <out-dir>/<profile>-<lang>.webm (Playwright's raw recording),
 // <out-dir>/<profile>-<lang>.json (segment timeline, seconds from video
@@ -21,13 +34,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const USAGE = "usage: node record-app-video.mjs <out-dir> [--profile store|social|loop] [--lang de|en] [--served-dir <dir>] [--debug] [base-url]";
+const USAGE = "usage: node record-app-video.mjs <out-dir> [--profile store|social|loop] [--lang de|en] [--served-dir <dir>] [--place <type>/<id>] [--answer <room>] [--here <lat,lon>] [--room-first] [--texts <json>] [--headed] [--debug] [base-url]";
 const die = (msg) => { console.error(`${msg}\n${USAGE}`); process.exit(2); };
 
 // Value flags take the next token, boolean flags do not, so a positional may
 // stand anywhere (`--debug ./out` is out-dir ./out). `--flag=value` works too.
-const VALUE_FLAGS = ["--profile", "--lang", "--served-dir"];
-const BOOL_FLAGS = ["--debug"];
+const VALUE_FLAGS = ["--profile", "--lang", "--served-dir", "--place", "--answer", "--here", "--texts"];
+const BOOL_FLAGS = ["--debug", "--room-first", "--headed"];
 const opts = {};
 const positional = [];
 const argv = process.argv.slice(2);
@@ -53,6 +66,22 @@ if (positional.length > 2) die(`unexpected argument ${positional[2]}`);
 const OUT_DIR = positional[0];
 const BASE_URL = (positional[1] || "http://127.0.0.1:8099").replace(/\/+$/, "");
 const DEBUG = opts["--debug"] === true;
+const ROOM_FIRST = opts["--room-first"] === true;
+const ANSWER = opts["--answer"] ?? "both";
+// --place node/31032271 → { type: "node", id: 31032271 }, matched against the
+// dataset's osm_type/osm_id; lngLat is read off the served file (regreyed).
+let PLACE = null;
+if (opts["--place"]) {
+  const m = /^(node|way|relation)\/(\d+)$/.exec(opts["--place"]);
+  if (!m) die(`--place wants <node|way|relation>/<id>, got ${opts["--place"]}`);
+  PLACE = { type: m[1], id: Number(m[2]), lngLat: null };
+}
+let READER = { latitude: 53.5503, longitude: 9.9937 };   // Hamburg Rathaus
+if (opts["--here"]) {
+  const m = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.exec(opts["--here"]);
+  if (!m) die(`--here wants <lat>,<lon>, got ${opts["--here"]}`);
+  READER = { latitude: Number(m[1]), longitude: Number(m[2]) };
+}
 
 // Apple's app-preview size for the large iPhones is 886×1920 (App Store
 // Connect, app preview specifications, read 2026-10-08): the app at 443×960
@@ -81,14 +110,16 @@ if (!Object.hasOwn(LOCALES, LANG)) die(`unknown language ${LANG} (de or en)`);
 const profile = PROFILES[PROFILE];
 const LOCALE = LOCALES[LANG];
 mkdirSync(OUT_DIR, { recursive: true });
-const HAMBURG_RATHAUS = { latitude: 53.5503, longitude: 9.9937 };
-const CENTER = [9.9937, 53.5503];
+const CENTER = [READER.longitude, READER.latitude];
 const VIDEO_SIZE = { width: Math.round(profile.viewport.width * profile.scale), height: Math.round(profile.viewport.height * profile.scale) };
 
 // Captions: the store screenshots' own headlines (texts.json next to the
 // screenshot recipe), so listing and preview say the same thing. *accent*
 // marks the one green word, as there.
 const TEXTS = JSON.parse(readFileSync(join(HERE, "..", "store-screenshots", "texts.json"), "utf8"))[LANG];
+if (opts["--texts"]) {
+  for (const [k, v] of Object.entries(JSON.parse(readFileSync(opts["--texts"], "utf8")))) TEXTS[k] = { ...TEXTS[k], ...v };
+}
 const CAPTION = {
   map: TEXTS["01"], nearest: TEXTS["02"], room: TEXTS["03"],
   add: TEXTS["05"], offline: TEXTS["07"], me: TEXTS["08"],
@@ -176,15 +207,35 @@ async function installNativeStub(context, platform, dpr) {
   }, { platform, dpr });
 }
 
-async function proxyTo(route, target) {
+async function proxyTo(route, target, transform = (body) => body) {
   try {
     const r = await fetch(target);
-    const body = Buffer.from(await r.arrayBuffer());
+    const body = transform(Buffer.from(await r.arrayBuffer()));
     await route.fulfill({ status: r.status, headers: { "content-type": r.headers.get("content-type") || "application/json" }, body });
   } catch { await route.abort(); }
 }
+// With --place, the dataset is served with that one element grey (status
+// unknown, no room), so its room question stands again, and the delta file
+// without it, so a newer state of it cannot recolour the pin mid-take. The
+// element's coordinates are kept for the room step, which fails loudly when
+// they never arrived (the element is not in the dataset).
+function regreyed(name, body) {
+  if (!PLACE || !/^(changing_tables\.geojson|delta\.json)$/.test(name)) return body;
+  const isMine = (f) => f?.properties?.osm_type === PLACE.type && f?.properties?.osm_id === PLACE.id;
+  const data = JSON.parse(body.toString("utf8"));
+  if (name === "changing_tables.geojson") {
+    const f = data.features.find(isMine);
+    if (!f) return body;
+    f.properties.status = "unknown";
+    f.properties.location_raw = null;
+    PLACE.lngLat = f.geometry.coordinates;
+  } else {
+    for (const k of Object.keys(data.tables ?? {})) if (Array.isArray(data.tables[k])) data.tables[k] = data.tables[k].filter((f) => !isMine(f));
+  }
+  return Buffer.from(JSON.stringify(data));
+}
 async function installProxies(page) {
-  await page.route("**/data/*", (route) => { const u = new URL(route.request().url()); return proxyTo(route, `https://papamap.de${u.pathname}${u.search}`); });
+  await page.route("**/data/*", (route) => { const u = new URL(route.request().url()); return proxyTo(route, `https://papamap.de${u.pathname}${u.search}`, (b) => regreyed(u.pathname.split("/").pop(), b)); });
   await page.route("**/tiles/index.json", (route) => proxyTo(route, "https://papamap.de/tiles/index.json"));
 }
 
@@ -353,10 +404,10 @@ async function main() {
   // either one's setup still reaches the cleanup.
   try {
     writeFileSync(composerPath, composerHtml(appUrl, profile.band));
-    browser = await chromium.launch({ channel: "chrome", args: ["--no-sandbox"] });
+    browser = await chromium.launch({ channel: "chrome", headless: opts["--headed"] !== true, args: ["--no-sandbox"] });   // headed = real GPU, smooth map animations
     const context = await browser.newContext({
       viewport: VIDEO_SIZE, deviceScaleFactor: 1, isMobile: true, hasTouch: true,
-      geolocation: HAMBURG_RATHAUS, permissions: ["geolocation"], locale: LOCALE, colorScheme: "light",
+      geolocation: READER, permissions: ["geolocation"], locale: LOCALE, colorScheme: "light",
       recordVideo: { dir: OUT_DIR, size: VIDEO_SIZE },
     });
     await installNativeStub(context, "ios", profile.scale);
@@ -372,6 +423,7 @@ async function main() {
     await page.goto(`${BASE_URL}/${COMPOSER_NAME}`, { waitUntil: "load", timeout: 60000 });
     const frame = appFrame(page);
     await waitForMapReady(frame);
+    if (PLACE && !PLACE.lngLat) throw new Error(`--place ${PLACE.type}/${PLACE.id} is not in changing_tables.geojson`);
     await verifyNativeShell(frame);
     // Taps are given in the app's own CSS pixels; the composer's stage is
     // scaled by profile.scale and the app starts below the caption band.
@@ -417,12 +469,36 @@ async function main() {
     // -- the room answer, shared by both tours --
     const roomStep = async () => {
       await caption("room");
-      // Pick a grey pin, ease in on it so it stands alone on the screen (at
-      // zoom 13 pins overlap and a tap lands on a neighbour), then tap it.
-      // Three tries with different pins; a pin answered since the dataset
-      // was built opens without the question and is skipped.
       let opened = false;
       let tapped = null;
+      // Within 5 m of the --place element.
+      const near = (ll) => !!ll && Math.hypot((ll[0] - PLACE.lngLat[0]) * Math.cos(PLACE.lngLat[1] * Math.PI / 180), ll[1] - PLACE.lngLat[1]) * 111320 < 5;
+      if (PLACE) {
+        // The named element, served grey: ease in on it and tap its pin.
+        // Pins 10 m apart overlap at zoom 16, so when a neighbour's popup
+        // opened instead, zoom in a step and tap again.
+        if (ROOM_FIRST) await sleep(2600);   // hold the city view under the caption (the cut starts ~1.1 s in)
+        for (let zoom = 16; zoom <= 18 && !opened; zoom += 1) {
+          // A hard cut from the city to the pin, not a flight: the screen
+          // recorder captures about 17 fps at this size, so a flight judders.
+          if (zoom === 16 && ROOM_FIRST) await frame.evaluate((o) => window._papamap.jumpTo({ center: o.c, zoom: o.z }), { c: PLACE.lngLat, z: zoom });
+          else await frame.evaluate((o) => window._papamap.easeTo({ center: o.c, zoom: o.z, duration: 1200 }), { c: PLACE.lngLat, z: zoom });
+          await settle(frame, 250);
+          const pt = (await clickablePins(frame, "unknown")).find((p) => near(p.lngLat));
+          if (!pt) continue;
+          await tap(pt.x, pt.y);
+          const popup = await frame.waitForSelector(".maplibregl-popup .popup", { timeout: 4000 }).catch(() => null);
+          await sleep(600);   // the sign marker lands on the opened pin a moment after the popup
+          const ll = await openedPinLngLat(frame);
+          if (popup && (ll == null || near(ll)) && await frame.locator(".maplibregl-popup .ask .ask-btn[data-room]").count() > 0) { opened = true; tapped = { ...pt, lngLat: PLACE.lngLat }; break; }
+          await closePopup();
+        }
+        if (!opened) throw new Error(`--place ${PLACE.type}/${PLACE.id}: its pin did not open with the room question`);
+      }
+      // Otherwise pick a grey pin, ease in on it so it stands alone on the
+      // screen (at zoom 13 pins overlap and a tap lands on a neighbour), then
+      // tap it. Three tries with different pins; a pin answered since the
+      // dataset was built opens without the question and is skipped.
       const tried = new Set();
       for (let attempt = 0; attempt < 3 && !opened; attempt++) {
         let cands = (await clickablePins(frame, "unknown")).filter((c) => !tried.has(c.lngLat.join()));
@@ -451,16 +527,33 @@ async function main() {
       // The popup has panned into view by now; check the pin it belongs to,
       // not the one the tap aimed at.
       const openedLL = await openedPinLngLat(frame);
+      // With --place the answer must land on that element and no other.
+      if (PLACE && openedLL && !near(openedLL)) throw new Error(`--place ${PLACE.type}/${PLACE.id}: the open popup belongs to another pin`);
       if (openedLL) tapped = { ...tapped, lngLat: openedLL };
       else if (DEBUG) console.log("  [answer] no sign marker on the open pin; checking the tapped one");
-      // "Both" is the first choice and the one that turns the pin green.
-      const c = await centreOf(frame.locator('.maplibregl-popup .ask .ask-btn[data-room="both"]'));
+      // "Both" is the first choice and the one that turns the pin green; with
+      // --place it is the room that was really answered there.
+      // shortcut: the three rare rooms sit behind the "more rooms" link and are not unfolded here, add that when an --answer needs one
+      const c = await centreOf(frame.locator(`.maplibregl-popup .ask .ask-btn[data-room="${ANSWER}"]`));
       await tap(c.x, c.y);
       mark("room-answered");
-      // Fail the run rather than record a "could not save" and exit 0.
-      await verifyRoomAnswer(frame, tapped.lngLat, unmocked);
-      if (DEBUG) console.log("  [popup] " + (await frame.locator(".maplibregl-popup .popup").innerText().catch(() => "(gone)")).replace(/\s+/g, " ").slice(0, 400));
-      await sleep(2000);
+      if (ROOM_FIRST) {
+        // The popup is as tall as the map, so while it is open the pin sits at
+        // the top edge under the search bar. Close it right after the tap and
+        // centre the pin, so the clip shows it turn green (about 2 s after the
+        // tap, once the app has read the edit back from the OSM API).
+        await sleep(600);
+        await closePopup();
+        await frame.evaluate((ll) => window._papamap.easeTo({ center: ll, duration: 500 }), tapped.lngLat);
+        // Fail the run rather than record a "could not save" and exit 0.
+        await verifyRoomAnswer(frame, tapped.lngLat, unmocked);
+        await sleep(2200);
+      } else {
+        // Fail the run rather than record a "could not save" and exit 0.
+        await verifyRoomAnswer(frame, tapped.lngLat, unmocked);
+        if (DEBUG) console.log("  [popup] " + (await frame.locator(".maplibregl-popup .popup").innerText().catch(() => "(gone)")).replace(/\s+/g, " ").slice(0, 400));
+        await sleep(2000);
+      }
       mark("room-end");
     };
 
@@ -469,24 +562,56 @@ async function main() {
       await sleep(900);
       await roomStep();
     } else {
+      if (ROOM_FIRST) {
+        // Warm-ups in the head that the trim at "start" drops: open the
+        // add-a-place dialog once, so the app's venue cache answers at once in
+        // the add scene instead of showing the "looking for places" spinner,
+        // and visit the zooms the room scene jumps through so its tiles are
+        // cached.
+        await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 16 }), CENTER);
+        await settle(frame, 300);
+        await tapEl("#add-place");
+        await frame.waitForSelector("#add-dialog[open]", { timeout: 8000 });
+        await frame.waitForFunction(() => document.querySelectorAll("#venue-list .venue-row").length >= 3, null, { timeout: 30000 }).catch(() => {});
+        await closeDialog("add-dialog");
+        for (const z of [12, 14, 16]) {
+          await frame.evaluate((o) => window._papamap.jumpTo({ center: o.c, zoom: o.z }), { c: PLACE ? PLACE.lngLat : CENTER, z });
+          await settle(frame, 500);
+        }
+        await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 13 }), CENTER);
+        await settle(frame, 300);
+      }
       // 1 map
       await caption("map");
       await sleep(600);   // the band's fade-in, so the trim at "start" sees the headline
       mark("start");
       await frame.evaluate((c) => window._papamap.easeTo({ center: c, zoom: 13.5, duration: 2600, easing: (t) => t }), CENTER);
       await sleep(3000);
-      // 2 nearest
-      await caption("nearest");
-      mark("nearest");
-      await tapEl("#nearest");
-      await frame.waitForSelector(".maplibregl-popup .popup", { timeout: 10000 });
-      await settle(frame, 2200);
-      // 3 room
-      await closePopup();
-      await frame.evaluate((c) => window._papamap.flyTo({ center: c, zoom: 13.5, duration: 1500 }), CENTER);
-      await settle(frame, 200);
-      mark("room");
-      await roomStep();
+      const nearestStep = async () => {
+        await caption("nearest");
+        mark("nearest");
+        await tapEl("#nearest");
+        await frame.waitForSelector(".maplibregl-popup .popup", { timeout: 10000 });
+        if (DEBUG) console.log("  [nearest] " + (await frame.locator(".maplibregl-popup .popup").innerText().catch(() => "(gone)")).replace(/\s+/g, " ").slice(0, 300));
+        await settle(frame, 2200);
+      };
+      const roomScene = async () => {
+        await closePopup();
+        if (ROOM_FIRST) {
+          // The scene opens on the whole city, zoom 10.5, so the district
+          // names and the river say where this is; the room step cuts to the pin.
+          await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 10.5 }), CENTER);
+          await settle(frame, 600);
+        } else {
+          await frame.evaluate((c) => window._papamap.flyTo({ center: c, zoom: 13.5, duration: 1500 }), CENTER);
+          await settle(frame, 200);
+        }
+        mark("room");
+        await roomStep();
+      };
+      // 2 nearest, 3 room — or the other way round with --room-first, so the
+      // place just answered can be the nearest table.
+      if (ROOM_FIRST) { await roomScene(); await closePopup(); await nearestStep(); } else { await nearestStep(); await roomScene(); }
       // 4 add a place
       await closePopup();
       await caption("add");
