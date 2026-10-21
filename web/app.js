@@ -957,7 +957,9 @@ function popupHTML(f) {
   // Only ever seen under the wheelchair chip: the door needs a central key.
   if (f.key)
     rows.push(`<div class="row key">${svgIcon(KEY_PATH, "key")}${esc(t("popupKey"))}</div>`);
-  if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
+  // yes/no in the reader's language; anything else (an amount) as recorded.
+  if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ` +
+    `${esc(f.fee === "yes" || f.fee === "no" ? t(WC_LABEL[f.fee]) : f.fee)}</div>`);
   if (f.opening_hours)
     rows.push(hoursRowHTML(f.opening_hours, { lat: f.lat, lon: f.lon },
       zoneForFeature(f, lastStats?.area_tz)));
@@ -3579,6 +3581,7 @@ function refreshUserInfo() {
 // bookmark) flies nowhere and says so once, rather than doing nothing —
 // which the widget and the shortcut inherit for free, not only the share link.
 let pendingPin = null;
+let deltaChecked = false;   // the first delta poll has answered, delta or not
 let pendingAuth = null;   // papamap://auth before the data (bootNative)
 // papamap://nearest (Android's widget and launcher shortcut, native.js): the
 // map's own "nearest" button, pressed for the reader — the same fix, the same
@@ -3609,6 +3612,9 @@ function openPin(osmUrl) {
     pinOpenedBeforeFix = true;
     return;
   }
+  // A place added since the nightly build exists only in the delta, whose
+  // first poll comes after boot's openQueuedPin: wait for it (pollDelta).
+  if (!deltaChecked) { pendingPin = osmUrl; return; }
   toast(t("sharePinGone"));
   stripOsmParam();
 }
@@ -3802,6 +3808,7 @@ async function pollDelta() {
   if (!dataReady || document.hidden) return;
   const json = await fetchDelta();
   if (json) applyDelta(json);
+  if (!deltaChecked) { deltaChecked = true; openQueuedPin(); }
 }
 
 // A schedule already running keeps its own pace; the next tick reschedules

@@ -755,7 +755,10 @@ so `openPin` is the one place that reads either back — on this page's own load
 and from the app; once it has (found the pin, found the play place, or found
 neither), the `?osm=` param strips itself from the address bar, the way
 `?lang=`/`?mode=` already do, so a shared link saved to the home screen does
-not reopen the same pin on every future launch. The link opens for anyone, the
+not reopen the same pin on every future launch. "Found neither" waits for the
+first delta poll (21 Oct 2026): a place added since the nightly build is only in
+the delta, which arrives after boot's own `openQueuedPin`, and the freshly added
+place is exactly the one people share. The link opens for anyone, the
 app installed or not, in the receiver's own language (a share carries no
 `?lang=`: it is not the sharer's choice to make). `navigator.share` where the
 browser offers it, otherwise a clipboard copy with a toast to confirm it — no
