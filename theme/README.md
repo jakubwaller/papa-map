@@ -47,6 +47,10 @@ dependencies beyond bundled icon paths):
   iD, which on a phone meant finding the object, opening the raw tag editor and typing two
   keys; now the button opens this theme a zoom level inside the layer and the flow is tap →
   `changing_table` yes/no → room → fee → `kids-area`, the same questions as the layers above.
+  Since 21 Oct 2026 it has three presets, a café, a restaurant and a baby shop, for a place
+  OSM does not have yet, and a `name` question asked only where the name is missing. A
+  preset's tags must stay inside the layer's filter or the new point is hidden from the
+  layer that asks its questions (`web/venues.test.js` checks).
 
 ### The `kids-area` question (v10)
 

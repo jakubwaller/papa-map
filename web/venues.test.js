@@ -26,6 +26,18 @@ test("VENUE_TAGS is the theme's dad_venue filter, value for value", () => {
   assert.deepEqual(sorted(VENUE_TAGS), sorted(fromTheme));
 });
 
+// A preset outside the filter would add a place the layer then hides, so its
+// changing-table questions are never asked.
+test("every dad_venue preset adds a place the layer shows", () => {
+  const theme = JSON.parse(readFileSync(new URL("../theme/papamap.theme.json", import.meta.url)));
+  const layer = theme.layers.find((l) => l.id === "dad_venue");
+  assert.ok(layer.presets.length);
+  for (const tag of layer.presets.flatMap((p) => p.tags)) {
+    const [k, v] = tag.split("=");
+    assert.ok(VENUE_TAGS[k]?.includes(v), tag);
+  }
+});
+
 test("isVenue: on the list, off the list, toilets never", () => {
   assert.equal(isVenue("amenity", "cafe"), true);
   assert.equal(isVenue("railway", "station"), true);
