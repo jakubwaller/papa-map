@@ -38,6 +38,18 @@ test("every dad_venue preset adds a place the layer shows", () => {
   }
 });
 
+// The changing-table layer also holds rooms, playgrounds and bare table nodes,
+// which rightly have no name: only the venue categories are asked for one.
+test("the name question asks only dad_venue's categories, in both layers", () => {
+  const theme = JSON.parse(readFileSync(new URL("../theme/papamap.theme.json", import.meta.url)));
+  const layer = (id) => theme.layers.find((l) => l.id === id);
+  const venueOr = layer("dad_venue").source.osmTags.and.find((x) => x?.or);
+  for (const id of ["dad_venue", "dad_changing_table_amenity"]) {
+    const name = layer(id).tagRenderings.find((r) => r.id === "name");
+    assert.deepEqual(name.condition.and.find((x) => x?.or), venueOr, id);
+  }
+});
+
 test("isVenue: on the list, off the list, toilets never", () => {
   assert.equal(isVenue("amenity", "cafe"), true);
   assert.equal(isVenue("railway", "station"), true);
