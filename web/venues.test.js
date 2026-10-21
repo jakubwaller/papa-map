@@ -26,6 +26,30 @@ test("VENUE_TAGS is the theme's dad_venue filter, value for value", () => {
   assert.deepEqual(sorted(VENUE_TAGS), sorted(fromTheme));
 });
 
+// A preset outside the filter would add a place the layer then hides, so its
+// changing-table questions are never asked.
+test("every dad_venue preset adds a place the layer shows", () => {
+  const theme = JSON.parse(readFileSync(new URL("../theme/papamap.theme.json", import.meta.url)));
+  const layer = theme.layers.find((l) => l.id === "dad_venue");
+  assert.ok(layer.presets.length);
+  for (const tag of layer.presets.flatMap((p) => p.tags)) {
+    const [k, v] = tag.split("=");
+    assert.ok(VENUE_TAGS[k]?.includes(v), tag);
+  }
+});
+
+// The changing-table layer also holds rooms, playgrounds and bare table nodes,
+// which rightly have no name: only the venue categories are asked for one.
+test("the name question asks only dad_venue's categories, in both layers", () => {
+  const theme = JSON.parse(readFileSync(new URL("../theme/papamap.theme.json", import.meta.url)));
+  const layer = (id) => theme.layers.find((l) => l.id === id);
+  const venueOr = layer("dad_venue").source.osmTags.and.find((x) => x?.or);
+  for (const id of ["dad_venue", "dad_changing_table_amenity"]) {
+    const name = layer(id).tagRenderings.find((r) => r.id === "name");
+    assert.deepEqual(name.condition.and.find((x) => x?.or), venueOr, id);
+  }
+});
+
 test("isVenue: on the list, off the list, toilets never", () => {
   assert.equal(isVenue("amenity", "cafe"), true);
   assert.equal(isVenue("railway", "station"), true);
