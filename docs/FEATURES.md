@@ -698,7 +698,8 @@ under the same login, with the same changeset comments as a play place's
 the two MapComplete links under the list: creating an object is a different job
 from tagging one. Since 21 Oct 2026 the venue link can create one too: the
 theme's `dad_venue` layer offers a café, a restaurant and a baby shop as new
-points, and asks a new place its name first. A baby-shop owner whose shop OSM
+points, and asks a new place its name after the table questions (so the table
+lands in the point's first upload, see `theme/README.md`). A baby-shop owner whose shop OSM
 did not have wrote in because no path in PapaMap could add it.
 
 The list is Photon's `/reverse`, 300 m around the map centre, filtered to the
