@@ -3809,11 +3809,13 @@ function applyDelta(deltaJson) {
 
 async function pollDelta() {
   if (!dataReady || document.hidden) return;
+  // Counts only if a dataset was there when it started: a poll before a failed
+  // tables fetch's retry merged nothing, even if the retry lands mid-fetch,
+  // and the retry's openQueuedPin must wait for its own.
+  const onData = allFeatures.length > 0;
   const json = await fetchDelta();
   if (json) applyDelta(json);
-  // Counts only on top of a dataset: a poll before a failed tables fetch's
-  // retry merged nothing, and the retry's openQueuedPin must wait for its own.
-  if (!deltaChecked && allFeatures.length) { deltaChecked = true; openQueuedPin(); }
+  if (!deltaChecked && onData) { deltaChecked = true; openQueuedPin(); }
 }
 
 // A schedule already running keeps its own pace; the next tick reschedules
