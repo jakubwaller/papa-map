@@ -3808,7 +3808,9 @@ async function pollDelta() {
   if (!dataReady || document.hidden) return;
   const json = await fetchDelta();
   if (json) applyDelta(json);
-  if (!deltaChecked) { deltaChecked = true; openQueuedPin(); }
+  // Counts only on top of a dataset: a poll before a failed tables fetch's
+  // retry merged nothing, and the retry's openQueuedPin must wait for its own.
+  if (!deltaChecked && allFeatures.length) { deltaChecked = true; openQueuedPin(); }
 }
 
 // A schedule already running keeps its own pace; the next tick reschedules
