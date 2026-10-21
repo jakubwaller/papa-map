@@ -1,5 +1,17 @@
 # papa-map — build contract (v0)
 
+> **v107 amendment (21 Oct 2026, links and toasts for places added today): no data change.**
+> Three frontend fixes. A `?osm=` link (or the app's deep link) to an object
+> that is only in the delta waits for the first delta poll started on top of a
+> dataset before "not on the map": boot used to resolve it first, so the place a
+> reader had just added and shared was the one link that failed. The popup's fee
+> row says yes/no through `wcYes`/`wcNo` instead of the raw tag value; any other
+> value stays as recorded. The add watch records which MapComplete link was
+> tapped (`venue: true` for the café/shop/restaurant one), and a venue watch
+> that times out stays quiet instead of the "nothing new on OSM yet" nudge:
+> tagging a place OSM already had is never `created`, so its success looked the
+> same as nothing. Shell pin `v=app101` becomes `v=app102`.
+
 > **v106 amendment (20 Oct 2026, the place question says what limited means): no data change.**
 > Text only. `askWheelchair` carries the OSM definition of `limited` in
 > parentheses after the question, in all 32 languages: one small step of up to

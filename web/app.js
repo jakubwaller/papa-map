@@ -14,9 +14,9 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, foldOpen, roomAnsweredHere, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app101";
+         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app102";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app101";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app102";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
@@ -24,7 +24,7 @@ import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, rev
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
          isWheelchairChoice, wheelchairPatch,
-         writeTags } from "./osm.js?v=app101";
+         writeTags } from "./osm.js?v=app102";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -32,7 +32,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app101";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app102";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
@@ -42,27 +42,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, int
          cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app101";
+         reviewTracker } from "./native.js?v=app102";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app101";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app102";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app101";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app102";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app101";
+import { isOpenNow } from "./opening-hours.js?v=app102";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app101";
-// The bundled shell's pin (`?v=app101`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app102";
+// The bundled shell's pin (`?v=app102`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -957,7 +957,9 @@ function popupHTML(f) {
   // Only ever seen under the wheelchair chip: the door needs a central key.
   if (f.key)
     rows.push(`<div class="row key">${svgIcon(KEY_PATH, "key")}${esc(t("popupKey"))}</div>`);
-  if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ${esc(f.fee)}</div>`);
+  // yes/no in the reader's language; anything else (an amount) as recorded.
+  if (f.fee) rows.push(`<div class="row">${esc(t("popupFee"))}: ` +
+    `${esc(f.fee === "yes" || f.fee === "no" ? t(WC_LABEL[f.fee]) : f.fee)}</div>`);
   if (f.opening_hours)
     rows.push(hoursRowHTML(f.opening_hours, { lat: f.lat, lon: f.lon },
       zoneForFeature(f, lastStats?.area_tz)));
@@ -3219,6 +3221,7 @@ for (const id of ["add-toilet-link", "add-venue-link"]) {
       // below, but there is no reason to approximate what MapLibre already
       // hands over for free.
       zoom: map.getZoom(),
+      venue: id === "add-venue-link",
     });
     addDialog.close();
   });
@@ -3258,7 +3261,9 @@ function maybeNotifyAddedPlace(deltaJson) {
       clearAddWatch();
       // The dialog's own answer is on OSM already (writeTags said so); the
       // MapComplete nudge below would be advice about an upload never needed.
-      if (!watch.osm_url) toast(t("editNone"));   // "nothing new on OSM yet / log in to MapComplete and upload"
+      // The venue link mostly tags a place OSM already had, which is never
+      // `created` (selectAddedPlace): its success looks the same as nothing.
+      if (!watch.osm_url && !watch.venue) toast(t("editNone"));   // "nothing new on OSM yet / log in to MapComplete and upload"
     }
     return;
   }
@@ -3579,6 +3584,7 @@ function refreshUserInfo() {
 // bookmark) flies nowhere and says so once, rather than doing nothing —
 // which the widget and the shortcut inherit for free, not only the share link.
 let pendingPin = null;
+let deltaChecked = false;   // the first delta poll has answered, delta or not
 let pendingAuth = null;   // papamap://auth before the data (bootNative)
 // papamap://nearest (Android's widget and launcher shortcut, native.js): the
 // map's own "nearest" button, pressed for the reader — the same fix, the same
@@ -3609,6 +3615,9 @@ function openPin(osmUrl) {
     pinOpenedBeforeFix = true;
     return;
   }
+  // A place added since the nightly build exists only in the delta, whose
+  // first poll comes after boot's openQueuedPin: wait for it (pollDelta).
+  if (!deltaChecked) { pendingPin = osmUrl; return; }
   toast(t("sharePinGone"));
   stripOsmParam();
 }
@@ -3800,8 +3809,13 @@ function applyDelta(deltaJson) {
 
 async function pollDelta() {
   if (!dataReady || document.hidden) return;
+  // Counts only if a dataset was there when it started: a poll before a failed
+  // tables fetch's retry merged nothing, even if the retry lands mid-fetch,
+  // and the retry's openQueuedPin must wait for its own.
+  const onData = allFeatures.length > 0;
   const json = await fetchDelta();
   if (json) applyDelta(json);
+  if (!deltaChecked && onData) { deltaChecked = true; openQueuedPin(); }
 }
 
 // A schedule already running keeps its own pace; the next tick reschedules
