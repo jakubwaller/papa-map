@@ -6,8 +6,12 @@
 	<false/>
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
-	<!-- Location is used on the phone and never transmitted, which Apple's
-	     definition does not count as collected. Nothing else is read. -->
+	<!-- The GPS fix stays on the phone. What leaves it is the map view: the
+	     tiles for the visible section from tile.openstreetmap.org, and the
+	     map centre sent to komoot's Photon, rounded to ~10 km by the search
+	     field (web/search.js) and ~100 m by the add-a-place list
+	     (web/venues.js). Apple's definition does not count a request served
+	     in real time as collected. Nothing else is read. -->
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
 	<key>NSPrivacyAccessedAPITypes</key>
