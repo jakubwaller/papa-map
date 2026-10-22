@@ -2,6 +2,7 @@
 # Smoke test of the store app on a simulated phone, before every store build:
 #   app/sim-test/run.sh ios       iPhone simulator (Xcode; newest iOS runtime, or SIM_UDID=…)
 #   app/sim-test/run.sh android   Android emulator (AVD=papamap-api35 by default, started if not running)
+# Either phone is shut down at the end, so a headless emulator is not left eating RAM for days.
 # Builds the app with sim-test/mock.js as the shell's first script, installs it
 # fresh, drives the popup flows and screenshots each step into sim-test/out/.
 # Nothing reaches OpenStreetMap: the mock answers for OSM, Photon and the delta.
@@ -17,7 +18,8 @@ mkdir "$LOCK" 2>/dev/null || { echo "another run is using the phones (stale? rmd
 # Whatever happens from here on, the native projects get a clean shell back: a
 # phone built from Xcode or Android Studio after a run must not carry the mock.
 # The lock goes last: a second run's npm ci would break the rebuild.
-trap 'kill ${LOG_PID:-} 2>/dev/null; npm run build >/dev/null 2>&1 && npx cap sync $PLATFORM >/dev/null 2>&1; rmdir "$LOCK" 2>/dev/null' EXIT
+stop_phone() { if [ "$PLATFORM" = ios ]; then xcrun simctl shutdown "${UDID:-}" >/dev/null 2>&1; else "${ANDROID_HOME:-$HOME/Library/Android/sdk}/platform-tools/adb" -e emu kill >/dev/null 2>&1; fi; }
+trap 'kill ${LOG_PID:-} 2>/dev/null; stop_phone; npm run build >/dev/null 2>&1 && npx cap sync $PLATFORM >/dev/null 2>&1; rmdir "$LOCK" 2>/dev/null' EXIT
 trap 'exit 130' INT TERM
 rm -f "${OUT:?}"/*.png(N) "$OUT/PASS-$PLATFORM"; : > "$OUT/app.log"
 # What the release gate compares: the tree ids of app/ and web/, which survive

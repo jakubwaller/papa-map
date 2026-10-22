@@ -119,7 +119,7 @@ Before every store build (`testflight`, `play`), not after:
 
 ```bash
 sim-test/run.sh ios        # iPhone simulator, newest iOS runtime (or SIM_UDID=…)
-sim-test/run.sh android    # Android emulator, AVD papamap-api35 (or AVD=…), started headless if needed
+sim-test/run.sh android    # Android emulator, AVD papamap-api35 (or AVD=…), started headless if needed, shut down afterwards
 ```
 
 It builds the app with `sim-test/mock.js` loaded as the shell's first script, installs it
