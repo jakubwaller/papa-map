@@ -185,7 +185,7 @@
         const c = await waitFor("map flew to the search result", () => {
           const c = window._papamap?.getCenter?.();
           return c && Math.abs(c.lng - RESULT.lon) < 0.01 && Math.abs(c.lat - RESULT.lat) < 0.01 && c;
-        }, 20000);
+        }, 20000).catch((e) => { throw new Error(e.message + "; centre " + JSON.stringify(window._papamap?.getCenter?.())); });
         log("after search tap: centre", JSON.stringify(c));
         await shot("11-search-result");
         $("#mode-mama").click(); await sleep(1800);
