@@ -180,11 +180,14 @@
         await sleep(1200);
         log("RESULTS", $$("#search-results li").map((l) => l.textContent.trim().replace(/\s+/g, " ")).join(" | ").slice(0, 400));
         await shot("10-search");
-        tap($("#search-results li.search-opt")); await sleep(2500);
-        const c = window._papamap?.getCenter?.();
+        tap($("#search-results li.search-opt"));
+        // The flight takes well over 2.5 s on a freshly booted simulator, so wait for it rather than a fixed time.
+        const c = await waitFor("map flew to the search result", () => {
+          const c = window._papamap?.getCenter?.();
+          return c && Math.abs(c.lng - RESULT.lon) < 0.01 && Math.abs(c.lat - RESULT.lat) < 0.01 && c;
+        }, 20000);
         log("after search tap: centre", JSON.stringify(c));
         await shot("11-search-result");
-        check(c && Math.abs(c.lng - RESULT.lon) < 0.01 && Math.abs(c.lat - RESULT.lat) < 0.01, "map flew to the search result");
         $("#mode-mama").click(); await sleep(1800);
         log("MODE mum pressed", $("#mode-mama")?.getAttribute("aria-pressed"));
         await shot("12-mum-view");
