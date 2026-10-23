@@ -56,7 +56,7 @@ def test_feature_properties_match_data_contract(load_fixture):
         "amenity": "toilets", "changing_table": "yes",
         "location_raw": "male_toilet", "status": "accessible",
         "men_only": True,
-        "play": None,
+        "play": False,
         "wheelchair": None, "toilets_wheelchair": None,
         "wheelchair_description": None, "table_wheelchair": None, "highchair": None, "key": None,
         "fee": "yes", "opening_hours": "24/7",
@@ -135,7 +135,7 @@ def test_play_area_is_a_property_not_a_status(load_fixture):
              for f in build_features(load_fixture("overpass_changing_tables.json"))}
     assert feats[3]["play"] is True    # cafe with kids_area=yes
     assert feats[7]["play"] is False   # restaurant with kids_area=no — answered
-    assert feats[1]["play"] is None    # no kids_area tag at all — unanswered
+    assert feats[1]["play"] is False   # a WC: nothing to ask (v108)
     # the badge never moves a pin's color
     assert feats[3]["status"] == "unknown"
 

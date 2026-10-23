@@ -1,5 +1,13 @@
 # papa-map — build contract (v0)
 
+> **v108 amendment (23 Oct 2026, a public toilet is not asked about a play corner):**
+> `play` is `false`, not `null`, on an `amenity=toilets` object that records no
+> play area, the way an outdoor `leisure=playground` already is (v31), so the
+> popup no longer asks "Play area for children?" on a WC: a play corner belongs
+> to a café or a shop, and 17,271 toilet pins carried the question that day. A
+> `kids_area` that passes `has_play_area` still makes it `true`. Shape unchanged;
+> the 32 methods pages say so. Takes effect with the next dataset build.
+
 > **v107 amendment (21 Oct 2026, links and toasts for places added today): no data change.**
 > Three frontend fixes. A `?osm=` link (or the app's deep link) to an object
 > that is only in the delta waits for the first delta poll started on top of a

@@ -163,6 +163,14 @@ def test_a_playground_is_its_own_answer_so_the_popup_never_asks():
     assert play_state({"leisure": "indoor_play"}) is True
 
 
+def test_a_toilet_is_never_asked_about_a_play_corner():
+    # v108: a WC has no play corner, so `amenity=toilets` settles the question.
+    assert play_state({"amenity": "toilets"}) is False
+    assert play_state({"amenity": "toilets", "changing_table": "yes"}) is False
+    # A recorded play corner still rings, as on the McDonald's WC node tagged so.
+    assert play_state({"amenity": "toilets", "kids_area": "yes"}) is True
+
+
 @pytest.mark.parametrize("location", ["male_toilet", " Male_Toilet ", "male_toilet;baby_room",
                                       "male_toilet;male_toilet"])
 def test_mens_room_alone_is_men_only(location):
