@@ -659,7 +659,8 @@ to go but MapComplete). Alone on such a pin it carries the login line itself.
 It is asked only where OSM is silent: a recorded play corner shows its blue ring
 instead, a recorded answer of any kind is never asked again, and a
 `leisure=playground` is not asked at all, because the object itself is the
-answer. *Indoors* writes `kids_area:indoor=yes` together with `kids_area=yes`,
+answer, nor is a public toilet (`amenity=toilets`, v108), which has no play
+corner of its own. *Indoors* writes `kids_area:indoor=yes` together with `kids_area=yes`,
 *outdoors only* writes `kids_area=yes` together with `kids_area:indoor=no`,
 *none* writes `kids_area=no`: the three mappings the site's own MapComplete
 theme uses for the same question, and values `classify.py` already reads. The
