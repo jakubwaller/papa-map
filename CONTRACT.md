@@ -2909,7 +2909,7 @@ Overpass `out center`). Feature `properties`:
   "changing_table": "yes|limited",
   "location_raw": "raw changing_table:location value or null",
   "status": "accessible|female_only|unknown",
-  "play": "true|false|null — a play area recorded, indoors or a venue's outdoor one (v9, v97); false is an answered 'none' or an outdoor leisure=playground (v30, v31), null is unanswered",
+  "play": "true|false|null — a play area recorded, indoors or a venue's outdoor one (v9, v97); false is an answered 'none', an outdoor leisure=playground or an amenity=toilets (v30, v31, v108), null is unanswered",
   "wheelchair": "yes|limited|no|\"unreadable\"|null — the place's wheelchair tag (v26); null is the key absent, \"unreadable\" a present value outside the three (v102: shown as nothing, not a chip hit, never asked — the write would be refused as taken)",
   "toilets_wheelchair": "yes|limited|no|\"unreadable\"|null — toilets:wheelchair by the same rule (v26, v102)",
   "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",
