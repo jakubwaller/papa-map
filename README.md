@@ -66,7 +66,7 @@ Static files, no API, no database. A `caddy:2-alpine` container serves `web/`, s
 is the deploy, and a nightly cron rebuilds the data:
 
 ```cron
-0 2 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
+0 2 * * * cd /path/to/papa-map && flock -w 21600 /tmp/overpass.lock docker compose run --build --rm pipeline >> pipeline.log 2>&1; docker compose run --build --rm ops >> ops.log 2>&1
 ```
 
 Everything else, including the optional ops mail, is in [`docs/DEPLOY.md`](docs/DEPLOY.md).

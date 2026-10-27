@@ -136,32 +136,35 @@ nothing here writes to OSM.
 
 `crontab -e`, matching the live schedule:
 ```cron
-0 2 * * * cd /path/to/papa-map && docker compose run --build --rm pipeline >> pipeline.log 2>&1
+0 2 * * * cd /path/to/papa-map && flock -w 21600 /tmp/overpass.lock docker compose run --build --rm pipeline >> pipeline.log 2>&1; docker compose run --build --rm ops >> ops.log 2>&1
 ```
+The lock is shared with the other Overpass jobs on this host (Zapfkompass, Dopivatel), so their
+sweeps queue behind this one instead of competing for the same mirrors from one IP; each waits
+up to 6 h for it. The ops check (below) follows on the same line after `;`, outside the lock,
+so it reads that night's finished build and still runs, and reports, when the build failed.
 Outside Docker the equivalent line is
 `0 2 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
 
 **02:00, and it stays there — do not move it earlier.** The 46-country build measured 80
 minutes from 02:00 on 2026-09-05, when it was still 208 queries (73 sweeps, 73 counts, 62
-leaderboard cities); the ops mail below runs at 07:30, and a build still writing when the
-digest reads `stats.json` is the one health signal the site has reporting a half-finished
-dataset. (02:00 was the move for Europe-complete on 2026-08-22, 03:30 for the UK and
+leaderboard cities); the ops mail below runs right after the build, so it reads a finished
+one. (02:00 was the move for Europe-complete on 2026-08-22, 03:30 for the UK and
 France before that.) What keeps the build from growing with the areas is the toilets-count
 rota (2026-09-05): each area's `amenity=toilets` count is refreshed one night a week rather
 than every night, so a night costs one query per area plus a seventh of the counts — which
 is the room waves 2 and 3 took the same day: the US per state and Canada per province add
 64 areas, Japan per prefecture 47 more, for about 270 queries a night (184 areas + 62
 cities) — a third above the pre-rota night's 208, so expect ~105 minutes and a finish near
-03:45, well before the ops mail. A night when Overpass is struggling runs longer by design: failed
+03:45. A night when Overpass is struggling runs longer by design: failed
 areas are retried in rounds until 4.5 h after the start (`PAPAMAP_SWEEP_DEADLINE_S`), about
 06:30. After that no query starts, even inside a running round, for an area that has a saved
 answer from the last 7 days: it is built from that answer (below), so such a night ends near
 06:30. An area with no saved answer (the first night after deploy or after a country joins) is
-still swept late, and the ops mail may then say "not finished" about a build that succeeds
-later. An area that keeps failing with an error a retry cannot fix (a 400 or a pipeline bug)
+still swept late, and the ops mail waits for it. An area that keeps failing with an error a retry cannot fix (a 400 or a pipeline bug)
 goes to its saved answer after six tries while the other areas keep their rounds. An empty answer is not such an error: a mirror whose area database is
 broken returns one, so it waits for the deadline like an outage. The ops mail moved from 05:30 to 07:30 on 2026-09-25 so it reads
-that night's outcome rather than a build still in progress. (Until then the rounds were a fixed six, and on
+that night's outcome rather than a build still in progress, and on 2026-10-27 onto the build's
+own cron line, which settles that for good. (Until then the rounds were a fixed six, and on
 2026-09-25 stale mirrors used them all up in 45 minutes of waiting while the good hosts were
 resting.)
 **Earlier than 02:00 is not an option on this host:** the VPS runs Europe/Berlin, and 01:00
@@ -307,12 +310,12 @@ mkdir -p ops-data web-data/private && touch pipeline.log   # already done in One
 docker compose run --build --rm ops        # first run: writes the state and both pages
 ```
 
-```cron
-30 7 * * * cd /path/to/papa-map && docker compose run --build --rm ops >> ops.log 2>&1
-```
+After that it runs every night straight after the build, on the build's cron line (Daily data
+refresh above): `; docker compose run --build --rm ops >> ops.log 2>&1`. Until 2026-10-27 it
+had its own line at 07:30.
 
-Outside Docker the equivalent line is
-`30 7 * * * cd /path/to/papa-map && set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1`
+Outside Docker the equivalent is to append
+`; set -a && . ./ops.env && set +a && ./.venv/bin/python -m pipeline.ops >> ops.log 2>&1` to the build line,
 with the state at `ops-state.json` in the repo directory (`PAPAMAP_OPS_STATE_PATH`).
 
 To rewrite the page right now — after a deploy, say — without touching the real state or
@@ -324,7 +327,7 @@ cd ~/papa-map && cp ops-data/ops-state.json ops-data/preview.json && \
     -e PAPAMAP_SMTP_HOST= ops; rm -f ops-data/preview.json
 ```
 
-(A preview after the 07:30 run updates today's entry in the copy the way a re-run does, so the
+(A preview after the nightly run updates today's entry in the copy the way a re-run does, so the
 page shows the day's real changes; the real state is not touched.)
 
 The same run rewrites the **ops page**, `https://papamap.de/ops.html` — public, English-only,
@@ -402,7 +405,7 @@ and each optional. The store ids are set by the `ops` service itself (`PAPAMAP_A
   (`base64 < AuthKey_<id>.p8 | tr -d '\n'` — the key on one line, since an env file cannot
   hold a multi-line PEM) and `ASC_VENDOR_NUMBER` (App Store Connect → Payments and Financial
   Reports, top left). Apple publishes a day's report around 05:00 Pacific the day after,
-  i.e. after the 07:30 run, so each run asks for the last seven days and a day that is "not
+  i.e. after the nightly ops run, so each run asks for the last seven days and a day that is "not
   available yet" fills in the next morning. A day with no downloads is a 404 too ("no sales")
   and is read as the zero it is.
 - **Google Play installs** — a service account with *View app information and download bulk
@@ -482,7 +485,7 @@ lives in the image, so a `git pull` alone leaves the old build logic in place. A
 any change under `pipeline/` — **and `docker compose up -d --build delta` for the live-updates
 follower**, which builds the same code into an image of its own and keeps running the old one
 otherwise (see Live updates). The ops cron already rebuilds on every run, so an ops change
-is live at the next 07:30 after the pull; to see it sooner, use the preview run above.
+is live after the next nightly build following the pull; to see it sooner, use the preview run above.
 
 ## Store release tags
 
