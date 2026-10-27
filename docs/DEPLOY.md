@@ -136,11 +136,12 @@ nothing here writes to OSM.
 
 `crontab -e`, matching the live schedule:
 ```cron
-0 2 * * * cd /path/to/papa-map && flock -w 21600 /tmp/overpass.lock docker compose run --build --rm pipeline >> pipeline.log 2>&1; docker compose run --build --rm ops >> ops.log 2>&1
+0 2 * * * cd /path/to/papa-map && flock -w 21600 /tmp/overpass.lock docker compose run --build --rm pipeline timeout -k 5m 6h python -m pipeline.run >> pipeline.log 2>&1; docker compose run --build --rm ops >> ops.log 2>&1
 ```
 The lock is shared with the other Overpass jobs on this host (Zapfkompass, Dopivatel), so their
 sweeps queue behind this one instead of competing for the same mirrors from one IP; each waits
-up to 6 h for it. The ops check (below) follows on the same line after `;`, outside the lock,
+up to 6 h for it, and `timeout` inside the container ends a hung run after 6 h so it cannot
+hold the lock, or keep the ops check from running, any longer. The ops check (below) follows on the same line after `;`, outside the lock,
 so it reads that night's finished build and still runs, and reports, when the build failed.
 Outside Docker the equivalent line is
 `0 2 * * * cd /path/to/papa-map && ./.venv/bin/python -m pipeline.run >> pipeline.log 2>&1`.
