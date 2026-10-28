@@ -133,10 +133,11 @@ or a second load: the service worker hands a returning browser the previous shel
 refreshes it in the background.
 
 A local browser check can measure old code for the same reason. Serve on a port no other session
-uses and confirm the page title and shell version you expect before measuring, since a server that
-cannot bind dies silently and the page then belongs to someone else's app. Unregister service
-workers (`navigator.serviceWorker.getRegistrations()`, then `unregister()` each) and clear caches
-(`caches.keys()`, then `caches.delete()` each) first, or use a fresh browser context.
+uses and confirm the page title and shell version you expect before measuring: a server started on
+a taken port may die (silently, when backgrounded) or bind beside the other one, and either way the
+page belongs to someone else's app. Unregister service workers
+(`navigator.serviceWorker.getRegistrations()`, then `unregister()` each), clear caches
+(`caches.keys()`, then `caches.delete()` each) and reload first, or use a fresh browser context.
 
 If tests or the post-deploy check fail, stop and report rather than merging or leaving the server
 half-deployed.
