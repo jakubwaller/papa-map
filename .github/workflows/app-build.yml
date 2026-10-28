@@ -126,7 +126,7 @@ jobs:
   # Signing re-signs it with the key phones see (app/android/PLAY.md).
   play:
     if: inputs.task == 'play' || (github.event.action == 'labeled' && github.event.label.name == 'play')
-    # Play keeps one live edit per account: queue behind other Play-edit jobs, never cancel them.
+    # Play keeps one live edit per account: one Play-edit job runs, one waits; a third cancels the waiting one.
     concurrency: { group: play-edit, cancel-in-progress: false }
     runs-on: ubuntu-latest
     defaults:
@@ -243,7 +243,7 @@ jobs:
   # one store's refusal never hides the other's state.
   listings-pull:
     if: inputs.task == 'listings-pull'
-    # Play keeps one live edit per account: queue behind other Play-edit jobs, never cancel them.
+    # Play keeps one live edit per account: one Play-edit job runs, one waits; a third cancels the waiting one.
     concurrency: { group: play-edit, cancel-in-progress: false }
     runs-on: ubuntu-latest
     defaults:
@@ -267,7 +267,7 @@ jobs:
 
   listings-push:
     if: inputs.task == 'listings-push'
-    # Play keeps one live edit per account: queue behind other Play-edit jobs, never cancel them.
+    # Play keeps one live edit per account: one Play-edit job runs, one waits; a third cancels the waiting one.
     concurrency: { group: play-edit, cancel-in-progress: false }
     runs-on: ubuntu-latest
     defaults:
