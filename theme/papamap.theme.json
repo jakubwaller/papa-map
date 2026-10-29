@@ -3217,7 +3217,7 @@
               {
                 "or": [
                   "amenity~^(cafe|restaurant|fast_food|food_court|ice_cream|bar|pub|biergarten|library|community_centre|cinema|theatre|arts_centre|events_venue|pharmacy|doctors|clinic|hospital|dentist|fuel|childcare|kindergarten|social_facility|townhall|marketplace|public_bath)$",
-                  "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store)$",
+                  "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store|yes)$",
                   "tourism~^(museum|zoo|aquarium|theme_park|gallery|hotel)$",
                   "leisure~^(sports_centre|swimming_pool|water_park|fitness_centre|ice_rink|bowling_alley|amusement_arcade)$",
                   "railway=station",
@@ -6122,7 +6122,7 @@
             {
               "or": [
                 "amenity~^(cafe|restaurant|fast_food|food_court|ice_cream|bar|pub|biergarten|library|community_centre|cinema|theatre|arts_centre|events_venue|pharmacy|doctors|clinic|hospital|dentist|fuel|childcare|kindergarten|social_facility|townhall|marketplace|public_bath)$",
-                "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store)$",
+                "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store|yes)$",
                 "tourism~^(museum|zoo|aquarium|theme_park|gallery|hotel)$",
                 "leisure~^(sports_centre|swimming_pool|water_park|fitness_centre|ice_rink|bowling_alley|amusement_arcade)$",
                 "railway=station",
@@ -6258,6 +6258,46 @@
           },
           "tags": [
             "shop=baby_goods"
+          ]
+        },
+        {
+          "title": {
+            "en": "a different shop",
+            "de": "ein anderes Geschäft",
+            "da": "en anden butik",
+            "nl": "een andere winkel",
+            "fr": "un autre type de magasin",
+            "it": "un negozio di altro tipo",
+            "cs": "jiný obchod",
+            "pl": "inny sklep",
+            "sv": "en annan butik",
+            "bs": "drugačija prodavnica",
+            "ca": "una botiga d'un altre tipus",
+            "et": "muu pood",
+            "es": "otro tipo de tienda",
+            "hr": "drugačija trgovina",
+            "is": "verslun af öðru tagi",
+            "lv": "cits veikals",
+            "lt": "kita parduotuvė",
+            "hu": "más üzlet",
+            "nb_NO": "en annen butikk",
+            "no": "en annen butikk",
+            "pt": "outro tipo de loja",
+            "ro": "un alt tip de magazin",
+            "sq": "një lloj tjetër dyqani",
+            "sk": "iný obchod",
+            "sl": "drugačna trgovina",
+            "fi": "muu kauppa",
+            "el": "ένα διαφορετικό κατάστημα",
+            "be": "іншая крама",
+            "bg": "различен магазин",
+            "mk": "различна продавница",
+            "sr": "другачија продавница",
+            "uk": "інший магазин",
+            "ja": "その他の店"
+          },
+          "tags": [
+            "shop=yes"
           ]
         }
       ],
@@ -7248,7 +7288,7 @@
               {
                 "or": [
                   "amenity~^(cafe|restaurant|fast_food|food_court|ice_cream|bar|pub|biergarten|library|community_centre|cinema|theatre|arts_centre|events_venue|pharmacy|doctors|clinic|hospital|dentist|fuel|childcare|kindergarten|social_facility|townhall|marketplace|public_bath)$",
-                  "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store)$",
+                  "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store|yes)$",
                   "tourism~^(museum|zoo|aquarium|theme_park|gallery|hotel)$",
                   "leisure~^(sports_centre|swimming_pool|water_park|fitness_centre|ice_rink|bowling_alley|amusement_arcade)$",
                   "railway=station",
