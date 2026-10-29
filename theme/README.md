@@ -47,7 +47,8 @@ dependencies beyond bundled icon paths):
   iD, which on a phone meant finding the object, opening the raw tag editor and typing two
   keys; now the button opens this theme a zoom level inside the layer and the flow is tap →
   `changing_table` yes/no → room → fee → `kids-area`, the same questions as the layers above.
-  Since 21 Oct 2026 it has three presets, a café, a restaurant and a baby shop, for a place
+  Since 21 Oct 2026 it has four presets, a café, a restaurant, a baby shop and a generic `shop=yes` "another
+  shop" (for a shop owner whose business was none of the three), for a place
   OSM does not have yet, and a `name` question (here and on `dad_changing_table_amenity`)
   asked only where the name is missing, `noname=yes` is not set and the object is one of
   this layer's own venue categories (the changing-table layer also holds rooms,

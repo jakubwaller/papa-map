@@ -24,7 +24,7 @@ export const VENUE_TAGS = {
     "events_venue", "pharmacy", "doctors", "clinic", "hospital", "dentist", "fuel",
     "childcare", "kindergarten", "social_facility", "townhall", "marketplace", "public_bath"],
   shop: ["mall", "department_store", "supermarket", "hypermarket", "baby_goods", "toys",
-    "furniture", "garden_centre", "doityourself", "hardware", "chemist", "variety_store"],
+    "furniture", "garden_centre", "doityourself", "hardware", "chemist", "variety_store", "yes"],
   tourism: ["museum", "zoo", "aquarium", "theme_park", "gallery", "hotel"],
   leisure: ["sports_centre", "swimming_pool", "water_park", "fitness_centre", "ice_rink",
     "bowling_alley", "amusement_arcade"],
