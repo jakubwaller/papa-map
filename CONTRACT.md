@@ -1,5 +1,11 @@
 # papa-map — build contract (v0)
 
+> **v109 amendment (29 Oct 2026, a generic shop can be added from MapComplete): no data shape change.**
+> The theme's `dad_venue` layer gets a fourth preset, "a different shop" (`shop=yes`),
+> for a shop that is none of café, restaurant or baby shop; `yes` joins the layer's shop
+> filter and `VENUE_TAGS.shop`, so untagged `shop=yes` places also appear in the nearby
+> list. Shell pin `v=app102` becomes `v=app103`.
+
 > **v108 amendment (23 Oct 2026, a public toilet is not asked about a play corner):**
 > `play` is `false`, not `null`, on an `amenity=toilets` object that records no
 > play area, the way an outdoor `leisure=playground` already is (v31), so the
