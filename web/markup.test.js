@@ -115,9 +115,8 @@ test("the dataset preloads are exactly what boot() fetches first", () => {
     // crossorigin (anonymous) is fetch()'s own cors + same-origin credentials.
     assert.equal(l.crossorigin, "");
   }
-  // And loadJSON's fetch takes no options that would change mode or credentials
-  // (an abort signal, the high-chair file's timeout, changes neither).
-  assert.match(appJs, /async function loadJSON\(url, \{ signal \} = \{\}\) \{\n  try \{\n    const r = await fetch\(url, \{ signal \}\);/);
+  // And loadJSON's fetch takes no options that would change mode or credentials.
+  assert.match(appJs, /async function loadJSON\(url\) \{\n  try \{\n    const r = await fetch\(url\);/);
 });
 
 test("the website's logo reloads the map in the language on screen", () => {

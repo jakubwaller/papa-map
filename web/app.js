@@ -3475,11 +3475,9 @@ let fromStore = false;
 // (X-PapaMap-Source: cache). `refreshed` is always null here — there is
 // nothing more to ask once fetch has answered; the app's own loader
 // (loadDataset, below) is the one that hands back a real promise for it.
-// An options object, not a bare signal: loadDataset maps over its urls, and
-// map's index would land in a positional second parameter.
-async function loadJSON(url, { signal } = {}) {
+async function loadJSON(url) {
   try {
-    const r = await fetch(url, { signal });
+    const r = await fetch(url);
     if (r.headers.get("X-PapaMap-Source") === "cache") fromStore = true;
     return { json: r.ok ? await r.json() : null, refreshed: null };
   } catch {
@@ -3911,13 +3909,16 @@ let hcPending = true;   // a ?osm= link the map cannot place waits for this file
 function loadHighchairPlaces(statsRefreshed) {
   const apply = (json) => { if (json) { baseHcPlacesFC = json; renderMergedDataset(); } };
   const gate = statsRefreshed?.then((r) => (r?.ok === false ? "failed" : r?.json != null ? "changed" : "unchanged"));
-  // A stalled first visit gives up after the app's own NET_MS (native.js) and
-  // means no rings, rather than holding a ?osm= link until the browser quits.
-  (isNative() ? loadJSONNative(HC_URL, undefined, { gate })
-    : loadJSON(HC_URL, { signal: AbortSignal.timeout?.(20000) }))
+  // A queued ?osm= link waits for the file 20 s at most (the app's own
+  // NET_MS). The download itself is never aborted: on a slow link it still
+  // lands, and draws its rings, late; sw.js does not abort a dataset fetch
+  // either, so its stored copy is kept too.
+  const release = () => { if (hcPending) { hcPending = false; openQueuedPin(); } };
+  setTimeout(release, 20000);
+  (isNative() ? loadJSONNative(HC_URL, undefined, { gate }) : loadJSON(HC_URL))
     .then((l) => { apply(l?.json); l?.refreshed?.then((r) => apply(r?.json)); })
     .catch(() => {})
-    .finally(() => { hcPending = false; openQueuedPin(); });
+    .finally(release);
 }
 const dataMissing = () => dataReady && !allFeatures.length;
 let lastJsons = [];   // the last-loaded jsons, so a retry that gets only some files keeps the rest
