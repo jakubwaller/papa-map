@@ -74,8 +74,8 @@ Don't trade it for more retries.
 
 **Judge a new sweep area on the slower of its TWO big queries.** Every area has three, `sweep_ql`
 nightly and `toilets_counts_ql` on one night a week (the rota in `pipeline/toilet_counts.py`,
-since 2026-09-05), plus the small nightly `highchair_ql` (its own query so the UK sweep stays
-under the line), and the cheap-looking counting one can be the slower:
+since 2026-09-05), plus the small `highchair_ql` on the same rota (its own query so the UK
+sweep stays under the line), and the cheap-looking counting one can be the slower:
 the UK measured 41.9 s sweeping but **45.2 s counting**, which is 82 % of the `[timeout:55]` budget
 and the tightest area in the project. The line is ~45 s (the slowest area otherwise shipped is the
 Netherlands at 41.7 s).

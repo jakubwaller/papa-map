@@ -11,7 +11,7 @@ import json
 import re
 from pathlib import Path
 
-from pipeline.classify import ACCESSIBLE_TOKENS, FEATURE_VALUES, FEMALE_TOKEN
+from pipeline.classify import ACCESSIBLE_TOKENS, FEATURE_VALUES, FEMALE_TOKEN, HIGHCHAIR_PLACE_RE
 
 ROOT = Path(__file__).resolve().parent.parent
 THEME = json.loads((ROOT / "theme" / "papamap.theme.json").read_text(encoding="utf-8"))
@@ -62,20 +62,30 @@ def test_changing_table_values_are_the_feature_values():
     assert values - {"no"} == FEATURE_VALUES
 
 
-def test_play_place_texts_test_the_play_half_of_the_layer():
-    # dad_play_place selects a play area or a high chair (CONTRACT v110). Its
-    # "Place to play" title and status must test the play half exactly, or a
-    # high-chair-only place reads as a play place, an outdoor one as a chair.
+def test_play_place_layer_tells_its_two_kinds_apart_by_the_pipelines_rules():
+    # dad_play_place selects a play area or a high chair (CONTRACT v110). The
+    # high-chair clause is classify.HIGHCHAIR_PLACE_RE, so every ring of
+    # highchair_places.geojson opens on this layer; every "play" title, status
+    # and pictogram tests the play half exactly, or a high-chair-only place
+    # reads as a play place and an outdoor play area as a high chair.
     layer = next(lay for lay in THEME["layers"] if lay["id"] == "dad_play_place")
     selects = layer["source"]["osmTags"]["and"][0]["or"]
-    play = {"or": [c for c in selects if not str(c).startswith("highchair")]}
-    assert len(play["or"]) == len(selects) - 1
-    status = next(r for r in layer["tagRenderings"]
-                  if isinstance(r, dict) and r.get("id") == "dad-status")
-    for mappings in (layer["title"]["mappings"], status["mappings"]):
-        ifs = [m["if"] for m in mappings if any("kids_area" in s for s in strings(m["if"]))]
-        assert ifs == [play]
+    hc = f"highchair~i~^({HIGHCHAIR_PLACE_RE.pattern})$"
+    assert hc in selects
+    play = {"or": [c for c in selects if c != hc]}
+    ifs = [s["if"] for s in mappings(layer) if "leisure=indoor_play" in strings(s["if"])]
+    assert len(ifs) == 3 and all(i == play for i in ifs)   # title, status, icon
     # ...and dad_venue leaves those places to it, so none is drawn twice.
     venue = next(lay for lay in THEME["layers"] if lay["id"] == "dad_venue")
-    hc = next(c for c in selects if str(c).startswith("highchair"))
     assert hc.replace("~", "!~", 1) in venue["source"]["osmTags"]["and"]
+
+
+def mappings(node):
+    if isinstance(node, dict):
+        if "if" in node and "then" in node:
+            yield node
+        for v in node.values():
+            yield from mappings(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from mappings(v)

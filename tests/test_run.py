@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 import requests
 
-from pipeline import config, leaderboard, osm, run
-from pipeline.config import BUNDESLAENDER, sweep_areas
+from pipeline import config, leaderboard, osm, run, toilet_counts
+from pipeline.config import BUNDESLAENDER, sweep_areas, sweep_ql
 from pipeline.run import run_pipeline
 
 NOW = datetime(2026, 7, 26, 3, 0, tzinfo=timezone.utc)
@@ -1227,43 +1227,93 @@ HC_HAS_TABLE = {"type": "node", "id": 9103, "lat": 53.5, "lon": 9.9,
                 "tags": {"amenity": "restaurant", "highchair": "yes", "changing_table": "yes"}}
 
 
-def test_highchair_places_join_the_places_file_and_stats(tmp_path, load_fixture):
-    play_geojson = tmp_path / "play_places.geojson"
-    fake = _fake_overpass(load_fixture, hc=[HC_PLACE, HC_NO, HC_HAS_TABLE])
-    summary = run_pipeline(
+HC_PLAY = {"type": "node", "id": 9104, "lat": 53.5, "lon": 9.9,
+           "tags": {"amenity": "cafe", "highchair": "yes", "kids_area": "yes"}}
+
+
+def _hc_run(tmp_path, load_fixture, fetch, now=NOW):
+    """One build; the ids in the play file and the high-chair file, and stats' local block."""
+    run_pipeline(
         geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(tmp_path / "stats.json"),
-        play_geojson_path=str(play_geojson), overpass_fetch=fake,
+        play_geojson_path=str(tmp_path / "play.geojson"),
+        highchair_geojson_path=str(tmp_path / "hc.geojson"), overpass_fetch=fetch,
         pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
         history_path=str(tmp_path / "history.json"),
-        taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
-    ids = [f["properties"]["osm_id"] for f in
-           json.loads(play_geojson.read_text(encoding="utf-8"))["features"]]
-    assert ids == [9001, 9002, 9003, 9101]
-    assert summary["play_places"] == 3
-    local = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))["local"]
+        taginfo_fetch=_fake_taginfo(load_fixture), now=now, sweep_pause_s=0)
+
+    def ids(name):
+        return [f["properties"]["osm_id"] for f in
+                json.loads((tmp_path / name).read_text(encoding="utf-8"))["features"]]
+    stats = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))
+    return ids("play.geojson"), ids("hc.geojson"), stats["local"]
+
+
+def test_highchair_places_get_their_own_file_and_leave_the_play_file_alone(
+        tmp_path, load_fixture):
+    # A shell from before v110 reads play_places.geojson alone: it must stay
+    # exactly the play places.
+    fake = _fake_overpass(load_fixture, hc=[HC_PLACE, HC_NO, HC_HAS_TABLE, HC_PLAY])
+    play, hc, local = _hc_run(tmp_path, load_fixture, fake)
+    assert play == [9001, 9002, 9003]
+    assert hc == [9101]
     assert local["play_places"] == 3 and local["highchair_places"] == 1
 
 
-def test_a_failing_highchair_query_costs_the_rings_not_the_area(tmp_path, load_fixture, capsys):
-    # Failing the area would build it from last night's saved answer (v99),
-    # its changing tables included, for one optional query.
-    inner = _fake_overpass(load_fixture)
-    fail_next = {"Bayern"}
+def test_the_highchair_query_runs_on_the_weekly_rota(tmp_path, load_fixture):
+    # Every query holds a ~40 s Overpass slot however short it runs.
+    fake = _fake_overpass(load_fixture, hc=[HC_PLACE])
+    _hc_run(tmp_path, load_fixture, fake)   # nothing saved yet: every area asks
+    areas = {name for name, _ in sweep_areas()}
+    assert {a for a, _ in fake.hc_seen} == areas and len(fake.hc_seen) == len(areas)
+    fake.hc_seen.clear()
+    _hc_run(tmp_path, load_fixture, fake)   # a re-run the same night pays nothing
+    assert fake.hc_seen == []
+    night = NOW + timedelta(days=2)
+    period = run.TOILETS_COUNTS_PERIOD_DAYS
+    due = {a for a in areas
+           if toilet_counts.slot(a, period) == night.date().toordinal() % period}
+    assert 0 < len(due) < len(areas)
+    _, hc, _ = _hc_run(tmp_path, load_fixture, fake, now=night)
+    assert {a for a, _ in fake.hc_seen} == due
+    assert hc == [9101]   # the other areas' rings come from their saved answers
+
+
+def test_a_failing_highchair_query_keeps_the_saved_rings_and_the_area(
+        tmp_path, load_fixture, capsys):
+    # A resting service included: failing the area would build it from its
+    # saved sweep (v99), its tables too, for one optional query.
+    fake = _fake_overpass(load_fixture, hc=[HC_PLACE])
+    _hc_run(tmp_path, load_fixture, fake, now=NOW - timedelta(days=7))
+
+    def resting(ql, **kwargs):
+        if '"highchair"' in ql:
+            raise osm.OverpassUnavailable("every Overpass host is resting")
+        return fake(ql, **kwargs)
+
+    capsys.readouterr()
+    play, hc, _ = _hc_run(tmp_path, load_fixture, resting)   # a week on: every area is due
+    assert play == [9001, 9002, 9003] and hc == [9101]
+    err = capsys.readouterr().err
+    assert ("WARN Bayern: high-chair query failed (every Overpass host is resting); "
+            "keeping its answer from 7 d ago") in err
+    assert "round 2" not in err and "Bayern: ct=" in err
+
+
+def test_a_failing_highchair_query_with_nothing_saved_costs_only_the_rings(
+        tmp_path, load_fixture, capsys):
+    inner = _fake_overpass(load_fixture, hc=[HC_PLACE])
 
     def flaky(ql, **kwargs):
-        if '"highchair"' in ql and any(f'"{n}"' in ql for n in fail_next):
-            fail_next.clear()
+        if '"highchair"' in ql and '"Bayern"' in ql:
             raise requests.ConnectionError("mirror cascade exhausted")
         return inner(ql, **kwargs)
 
-    summary = run_pipeline(
-        geojson_path=str(tmp_path / "ct.geojson"), stats_path=str(tmp_path / "stats.json"),
-        overpass_fetch=flaky, taginfo_fetch=_fake_taginfo(load_fixture),
-        pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"),
-        history_path=str(tmp_path / "history.json"), now=NOW, sweep_pause_s=0)
-    assert summary["features"] == 7
-    assert inner.areas_seen.count(("Bayern", "4")) == 2  # sweep + count, once: not retried
-    assert "WARN Bayern: high-chair query failed (mirror cascade exhausted)" in capsys.readouterr().err
+    _, hc, _ = _hc_run(tmp_path, load_fixture, flaky)
+    assert hc == [9101]   # from the other areas
+    err = capsys.readouterr().err
+    assert ("WARN Bayern: high-chair query failed (mirror cascade exhausted); "
+            "no high-chair places from this area tonight") in err
+    assert inner.areas_seen.count(("Bayern", "4")) == 2   # sweep + count, once: not retried
 
 
 def _run(tmp_path, load_fixture, fetch, **kw):
@@ -1401,9 +1451,9 @@ def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, 
     monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
     capsys.readouterr()
     summary = _run(tmp_path, load_fixture, slow, sweep_deadline_s=2.5 * 3600)
-    # Two areas: their sweeps at 0 and 2 h, their high-chair queries at 1 and
-    # 3 h (an area's own queries are not gated); a third would start at 4 h.
-    assert ['"highchair"' in q for q in calls] == [False, True, False, True]
+    # At 0, 1 and 2 h; at 3 h the deadline has passed. No high-chair query:
+    # the first run asked them all tonight (the weekly rota).
+    assert len(calls) == 3 and not any('"highchair"' in q for q in calls)
     assert summary["toilets_total"] == first["toilets_total"]
     err = capsys.readouterr().err
     assert err.count("WARN not swept, past the 2.5 h sweep deadline: ") == 1
@@ -1416,9 +1466,12 @@ def test_every_answer_is_kept_not_only_the_recounted_ones(tmp_path, load_fixture
     inner = _fake_overpass(load_fixture)
     _run_on(tmp_path, load_fixture, inner, NOW - timedelta(days=1))
     _run(tmp_path, load_fixture, inner)  # most counts are not due tonight
+    # The sweeps', that is: a high-chair answer keeps its date until its own
+    # night of the rota.
+    sweeps = {f"{toilet_counts.query_hash(sweep_ql(*a))}.json" for a in sweep_areas()}
     dates = {json.loads(p.read_text(encoding="utf-8"))["date"]
-             for p in (tmp_path / "sweeps").glob("*.json")}
-    assert dates == {NOW.date().isoformat()}
+             for p in (tmp_path / "sweeps").glob("*.json") if p.name in sweeps}
+    assert len(sweeps) == len(sweep_areas()) and dates == {NOW.date().isoformat()}
 
 
 def test_an_area_without_a_saved_answer_is_still_swept_late(tmp_path, load_fixture,

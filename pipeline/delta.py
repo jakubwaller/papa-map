@@ -16,7 +16,7 @@ import requests
 
 from . import export
 from .classify import HIGHCHAIR_KEY, PLAY_KEYS
-from .config import GEOJSON_PATH, PLAY_GEOJSON_PATH, STATS_PATH
+from .config import GEOJSON_PATH, HIGHCHAIR_GEOJSON_PATH, PLAY_GEOJSON_PATH, STATS_PATH
 
 # A long-running follower, not the nightly sweep: it reads OSM's minutely
 # replication diffs and turns the ones that matter into web/data/delta.json,
@@ -243,13 +243,37 @@ def _load_feature_collection(path: str) -> dict:
 
 
 def load_base_dataset(geojson_path: str = GEOJSON_PATH,
-                      play_geojson_path: str = PLAY_GEOJSON_PATH) -> dict:
-    """{"tables": {osm_url: feature}, "places": {osm_url: feature}} from the
+                      play_geojson_path: str = PLAY_GEOJSON_PATH,
+                      highchair_geojson_path: str = HIGHCHAIR_GEOJSON_PATH) -> dict:
+    """{"tables": {osm_url: feature}, "places": {osm_url: feature},
+    "highchair_places": {osm_url: feature}} from the
     nightly build's own output — the authority on both "which objects are
     already pins" (for tag-removal and delete detection) and their
     coordinates (for a way/relation that doesn't carry its own)."""
     return {"tables": _load_feature_collection(geojson_path),
-            "places": _load_feature_collection(play_geojson_path)}
+            "places": _load_feature_collection(play_geojson_path),
+            "highchair_places": _load_feature_collection(highchair_geojson_path)}
+
+
+# The two kinds of place: event kind, the key shared by the base dataset, the
+# accumulator and delta.json, and export.build_play_features' `highchair`.
+# High-chair places (v110) have a key of their own, which a shell from before
+# v110 never reads: in "places" it would draw them as play places.
+PLACE_KINDS = (("place", "places", False), ("highchair_place", "highchair_places", True))
+PLACE_KEYS = tuple(key for _, key, _ in PLACE_KINDS)
+PLACE_KEY = {kind: key for kind, key, _ in PLACE_KINDS}
+
+
+def _known(url: str, base_dataset: dict, acc: dict | None, keys) -> dict | None:
+    """The feature the base dataset or the accumulator already holds for url
+    under the first of `keys` that has one."""
+    for key in keys:
+        f = base_dataset.get(key, {}).get(url)
+        if f is None and acc is not None:
+            f = acc[f"{key}_upsert"].get(url)
+        if f is not None:
+            return f
+    return None
 
 
 # web-data/private/areas-bbox.json (never served, same directory as
@@ -475,7 +499,8 @@ def _could_emit(osm_type: str, osm_id: int, tags: dict, created: bool) -> bool:
     rules."""
     probe = {"type": osm_type, "id": osm_id, "tags": tags, "lat": 0.0, "lon": 0.0}
     return bool(export.build_features({"elements": [probe]})
-                or export.build_play_features({"elements": [probe]}, {"elements": []})
+                or any(export.build_play_features({"elements": [probe]}, {"elements": []},
+                                                  highchair=hc) for _, _, hc in PLACE_KINDS)
                 or _is_new_toilet_no_table(tags, created))
 
 
@@ -484,7 +509,7 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
                     area_boxes_by_name: dict | None = None,
                     dropped: list | None = None) -> list[tuple]:
     """changes (parse_osc's shape) -> a list of (osm_url, kind, feature_or_none)
-    events, kind in {"table", "place", "toilet_no_table"}, feature_or_none
+    events, kind in {"table", "place", "highchair_place", "toilet_no_table"}, feature_or_none
     being None for a removal. Features are built with export.build_features /
     export.build_play_features — the exact functions the nightly build
     calls — never a re-derivation of status here. `area_boxes`: an iterable
@@ -521,7 +546,7 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
     appended to it as a copy of the change — run_tick queues those for a
     retry (queue_pending) instead of losing them until the nightly build."""
     known_tables = set(base_dataset["tables"])
-    known_places = set(base_dataset["places"])
+    known = {key: set(base_dataset.get(key, ())) for key in PLACE_KEYS}
     # Whether an object is "created" — the add-a-place flow's own meaning of
     # new, never confused with the diff entry's own version: the FIRST
     # version this pipeline ever saw for a url since the base reset decides
@@ -539,11 +564,13 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
     created_by_url: dict[str, bool] = {}
     if acc is not None:
         known_tables = (known_tables | set(acc["tables_upsert"])) - acc["tables_remove"]
-        known_places = (known_places | set(acc["places_upsert"])) - acc["places_remove"]
+        for key in PLACE_KEYS:
+            known[key] = (known[key] | set(acc[f"{key}_upsert"])) - acc[f"{key}_remove"]
         for u, f in acc["tables_upsert"].items():
             created_by_url[u] = bool(f["properties"].get("created"))
-        for u, f in acc["places_upsert"].items():
-            created_by_url[u] = bool(f["properties"].get("created"))
+        for key in PLACE_KEYS:
+            for u, f in acc[f"{key}_upsert"].items():
+                created_by_url[u] = bool(f["properties"].get("created"))
         for u, t in acc["new_toilets_no_table"].items():
             created_by_url[u] = bool(t.get("created"))
     events = []
@@ -557,14 +584,16 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         osm_type, osm_id = ch["type"], ch["id"]
         url = _osm_url(osm_type, osm_id)
         was_table = url in known_tables
-        was_place = url in known_places
+        was = {kind: url in known[key] for kind, key, _ in PLACE_KINDS}
+        was_place = any(was.values())
         if ch["action"] == "delete":
             if was_table:
                 events.append((url, "table", None))
                 known_tables.discard(url)
-            if was_place:
-                events.append((url, "place", None))
-                known_places.discard(url)
+            for kind, key, _ in PLACE_KINDS:
+                if was[kind]:
+                    events.append((url, kind, None))
+                    known[key].discard(url)
             continue
         tags = ch.get("tags") or {}
         if not (is_relevant_tags(tags) or was_table or was_place):
@@ -585,9 +614,7 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
             created = ch.get("version") == 1
         lat, lon = ch.get("lat"), ch.get("lon")
         if lat is None:
-            ref = base_dataset["tables"].get(url) or base_dataset["places"].get(url)
-            if ref is None and acc is not None:
-                ref = acc["tables_upsert"].get(url) or acc["places_upsert"].get(url)
+            ref = _known(url, base_dataset, acc, ("tables", *PLACE_KEYS))
             if ref:
                 lon, lat = ref["geometry"]["coordinates"]
             elif not (was_table or was_place or _could_emit(osm_type, osm_id, tags, created)):
@@ -611,9 +638,7 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         existing_table = base_dataset["tables"].get(url)
         if existing_table is None and acc is not None:
             existing_table = acc["tables_upsert"].get(url)
-        existing_place = base_dataset["places"].get(url)
-        if existing_place is None and acc is not None:
-            existing_place = acc["places_upsert"].get(url)
+        existing_place = _known(url, base_dataset, acc, PLACE_KEYS)
         if existing_table is not None:
             area = existing_table["properties"].get("area")
         elif existing_place is not None and existing_place["properties"].get("area"):
@@ -628,11 +653,13 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         table_feats = export.build_features({"elements": [el]}, {(osm_type, osm_id): area})
         # The same area for the place half: its `area` and `tz` (v80), as the
         # nightly build gives them.
-        place_feats = export.build_play_features({"elements": [el]}, {"elements": []},
-                                                 {(osm_type, osm_id): area})
+        place_feats = {}
+        for kind, _, hc in PLACE_KINDS:
+            got = export.build_play_features({"elements": [el]}, {"elements": []},
+                                             {(osm_type, osm_id): area}, highchair=hc)
+            place_feats[kind] = got[0] if got else None
         table_feat = table_feats[0] if table_feats else None
-        place_feat = place_feats[0] if place_feats else None
-        for f in (table_feat, place_feat):
+        for f in (table_feat, *place_feats.values()):
             if f is not None:
                 f["properties"]["osm_version"] = ch.get("version")
                 f["properties"]["edited_at"] = ch.get("timestamp")
@@ -643,12 +670,13 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         elif was_table:
             events.append((url, "table", None))
             known_tables.discard(url)
-        if place_feat is not None:
-            events.append((url, "place", place_feat))
-            known_places.add(url)
-        elif was_place:
-            events.append((url, "place", None))
-            known_places.discard(url)
+        for kind, key, _ in PLACE_KINDS:
+            if place_feats[kind] is not None:
+                events.append((url, kind, place_feats[kind]))
+                known[key].add(url)
+            elif was[kind]:
+                events.append((url, kind, None))
+                known[key].discard(url)
         # A toilet_no_table entry only for a genuinely created object (the
         # same `created` flag the table/place upsert above would carry, had
         # this object qualified as one) — never for merely editing an
@@ -659,7 +687,8 @@ def process_changes(changes: list[dict], base_dataset: dict, area_boxes=None,
         # answer the table question a moment later, v2, now a table) — so a
         # stale "no table" toast can never fire once the table itself has
         # landed.
-        if table_feat is None and place_feat is None and _is_new_toilet_no_table(tags, created):
+        if (table_feat is None and not any(place_feats.values())
+                and _is_new_toilet_no_table(tags, created)):
             events.append((url, "toilet_no_table",
                           {"osm_url": url, "lon": lon, "lat": lat, "t": ch.get("timestamp"),
                            "version": ch.get("version"), "created": created}))
@@ -734,6 +763,7 @@ def retry_pending(pending: list, max_batch: int, base_dataset: dict, *, area_box
 def new_accumulator() -> dict:
     return {"tables_upsert": {}, "tables_remove": set(),
             "places_upsert": {}, "places_remove": set(),
+            "highchair_places_upsert": {}, "highchair_places_remove": set(),
             "new_toilets_no_table": {}}
 
 
@@ -751,13 +781,14 @@ def apply_events(acc: dict, events: list[tuple]) -> dict:
                 # this lands (the ordinary MapComplete flow: create the
                 # toilet, then answer the table question a moment later).
                 acc["new_toilets_no_table"].pop(url, None)
-        elif kind == "place":
-            acc["places_remove"].discard(url)
+        elif kind in PLACE_KEY:
+            key = PLACE_KEY[kind]
+            acc[f"{key}_remove"].discard(url)
             if feat is None:
-                acc["places_upsert"].pop(url, None)
-                acc["places_remove"].add(url)
+                acc[f"{key}_upsert"].pop(url, None)
+                acc[f"{key}_remove"].add(url)
             else:
-                acc["places_upsert"][url] = feat
+                acc[f"{key}_upsert"][url] = feat
                 acc["new_toilets_no_table"].pop(url, None)
         elif kind == "toilet_no_table":
             acc["new_toilets_no_table"][url] = feat
@@ -774,6 +805,8 @@ def render_delta(acc: dict, base_iso: str, seq: int, now: datetime | None = None
                   "remove": sorted(acc["tables_remove"])},
         "places": {"upsert": list(acc["places_upsert"].values()),
                   "remove": sorted(acc["places_remove"])},
+        "highchair_places": {"upsert": list(acc["highchair_places_upsert"].values()),
+                             "remove": sorted(acc["highchair_places_remove"])},
         "new_toilets_no_table": list(acc["new_toilets_no_table"].values()),
     }
 
@@ -795,10 +828,11 @@ def load_accumulator(delta_path: str, expected_base: str) -> dict:
         acc["tables_upsert"][f["properties"]["osm_url"]] = f
     for u in data.get("tables", {}).get("remove", []):
         acc["tables_remove"].add(u)
-    for f in data.get("places", {}).get("upsert", []):
-        acc["places_upsert"][f["properties"]["osm_url"]] = f
-    for u in data.get("places", {}).get("remove", []):
-        acc["places_remove"].add(u)
+    for key in PLACE_KEYS:
+        for f in data.get(key, {}).get("upsert", []):
+            acc[f"{key}_upsert"][f["properties"]["osm_url"]] = f
+        for u in data.get(key, {}).get("remove", []):
+            acc[f"{key}_remove"].add(u)
     for t in data.get("new_toilets_no_table", []):
         acc["new_toilets_no_table"][t["osm_url"]] = t
     return acc
@@ -816,7 +850,8 @@ def save_state(state_path: str, state: dict) -> None:
 
 
 def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
-            play_geojson_path: str = PLAY_GEOJSON_PATH, stats_path: str = STATS_PATH,
+            play_geojson_path: str = PLAY_GEOJSON_PATH,
+            highchair_geojson_path: str = HIGHCHAIR_GEOJSON_PATH, stats_path: str = STATS_PATH,
             delta_path: str = DELTA_PATH, areas_bbox_path: str = AREAS_BBOX_PATH,
             fetch_state=fetch_state, fetch_osc=fetch_osc,
             coord_fetch=None, coord_fetch_factory=None,
@@ -843,7 +878,7 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
     base_iso = read_data_base(stats_path)
     if base_iso is None:
         raise RuntimeError("no data base yet — stats.json missing (build has not run)")
-    base_dataset = load_base_dataset(geojson_path, play_geojson_path)
+    base_dataset = load_base_dataset(geojson_path, play_geojson_path, highchair_geojson_path)
     area_boxes_by_name = load_area_bboxes(areas_bbox_path)
     if area_boxes_by_name is None:
         # First run before a new nightly build has written the file (a

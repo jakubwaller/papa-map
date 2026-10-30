@@ -131,8 +131,8 @@ export function loadPlaces(fc) {
       // "no" or null, and only those: a dataset from before v27 has no such
       // property and must read as the open question, never as an answer.
       changing_table: p.changing_table === "no" ? "no" : null,
-      // v110: false = only a high chair is recorded. Missing (a dataset from
-      // before v110) means true: every old place is a play place.
+      // v110: false for a high-chair place, set by withHighchairPlaces from
+      // the file it came in; anything else is a play place.
       play_area: p.play_area !== false,
       // As on the pins (v26), read with the same strictness (v28).
       wheelchair: WHEELCHAIR_STATES.includes(p.wheelchair) ? p.wheelchair : null,
@@ -270,6 +270,17 @@ export function filterFeatures(features, visible, playOnly = false, wheelchairOn
 export function placeFeatures(places, wheelchairOnly = false, highchairOnly = false) {
   const byWheelchair = wheelchairOnly ? places.filter(isWheelchairOk) : places;
   return highchairOnly ? byWheelchair.filter(isHighchair) : byWheelchair;
+}
+
+// highchair_places.geojson and its delta key (v110), drawn as rings with the
+// play places: one list, each high-chair place marked play_area: false. Kept
+// in a file of their own so a shell from before v110, which reads only
+// play_places.geojson, never draws one as a play place. Either file may be
+// missing (null): an older dataset has no high-chair file.
+export function withHighchairPlaces(places, hcPlaces) {
+  const hc = (hcPlaces?.features || []).map((f) =>
+    ({ ...f, properties: { ...(f.properties || {}), play_area: false } }));
+  return { type: "FeatureCollection", features: [...(places?.features || []), ...hc] };
 }
 
 // The two ring chips (v110): "Play area only" takes the places with a play
@@ -1212,7 +1223,7 @@ export function pruneAnswerOverrides(overrides, datasetBase, versionByUrl) {
 }
 
 // What makes one delta.json different from the last for the map: its base
-// and the four lists. Never `generated` or `seq`, which the follower stamps
+// and the six lists. Never `generated` or `seq`, which the follower stamps
 // afresh on every tick even when no object changed (pipeline/delta.py), nor
 // new_toilets_no_table, which only the add-a-place watch reads. The whole
 // upserts, not only url and version: a pending coordinate lookup can fill in
@@ -1220,7 +1231,8 @@ export function pruneAnswerOverrides(overrides, datasetBase, versionByUrl) {
 export function deltaFingerprint(d) {
   if (!d) return null;
   return JSON.stringify([d.base ?? null, d.tables?.upsert ?? [], d.tables?.remove ?? [],
-                         d.places?.upsert ?? [], d.places?.remove ?? []]);
+                         d.places?.upsert ?? [], d.places?.remove ?? [],
+                         d.highchair_places?.upsert ?? [], d.highchair_places?.remove ?? []]);
 }
 
 // A delta that lost a race: two polls in flight (boot's and the background
@@ -1273,7 +1285,7 @@ export function isNewlyCreated(properties) {
 // The pure decision behind maybeNotifyAddedPlace (web/app.js): which of one
 // delta's upserts and new_toilets_no_table entries, if any, is what this
 // reader added at the tapped view, and what kind of outcome it is —
-// {type: "table" | "place", feature} for the new pin itself (the candidate
+// {type: "table" | "place" | "highchair_place", feature} for the new pin itself (the candidate
 // nearest the tapped view's own centre, when more than one qualifies — a
 // few readers can add places in the same neighbourhood in the same few
 // minutes), {type: "toilet_no_table", entry} when OSM has the toilet but no
@@ -1295,7 +1307,8 @@ export function selectAddedPlace(deltaJson, watch) {
   if (!watch || !deltaJson) return null;
   const since = watch.t;
   if (watch.osm_url) {
-    for (const [kind, list] of [["table", deltaJson.tables?.upsert], ["place", deltaJson.places?.upsert]])
+    for (const [kind, list] of [["table", deltaJson.tables?.upsert], ["place", deltaJson.places?.upsert],
+                                ["highchair_place", deltaJson.highchair_places?.upsert]])
       for (const f of list || [])
         if (f.properties?.osm_url === watch.osm_url && f.properties.edited_at > since)
           return { type: kind, feature: f };
@@ -1303,7 +1316,8 @@ export function selectAddedPlace(deltaJson, watch) {
   }
   const center = [(watch.bbox[0] + watch.bbox[2]) / 2, (watch.bbox[1] + watch.bbox[3]) / 2];
   const upserts = [...(deltaJson.tables?.upsert || []).map((f) => ["table", f]),
-                   ...(deltaJson.places?.upsert || []).map((f) => ["place", f])];
+                   ...(deltaJson.places?.upsert || []).map((f) => ["place", f]),
+                   ...(deltaJson.highchair_places?.upsert || []).map((f) => ["highchair_place", f])];
   const upsertUrls = new Set();
   const candidates = [];
   for (const [kind, f] of upserts) {

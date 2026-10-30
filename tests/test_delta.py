@@ -1125,22 +1125,50 @@ def test_no_lookup_for_a_way_that_can_never_become_an_event():
     assert events == [] and dropped == []
 
 
-def test_highchair_only_object_becomes_a_place_and_loses_it_with_the_tag():
+def test_highchair_place_has_its_own_kind_and_key_never_places():
+    # A shell from before v110 reads delta.json's "places" alone and would draw
+    # a high-chair place there as a play place.
     tags = {"amenity": "restaurant", "highchair": "yes"}
     created = delta.parse_osc(__import__("io").BytesIO(_osc(
         _way("create", 31, 1, "2026-09-23T10:00:00Z", tags))))
     fetch, calls = _spy()
     events = delta.process_changes(created, _empty_dataset(), coord_fetch=fetch)
-    assert [(u.rsplit("/", 1)[1], kind) for u, kind, _ in events] == [("31", "place")]
+    assert [(u.rsplit("/", 1)[1], kind) for u, kind, _ in events] == [("31", "highchair_place")]
     feat = events[0][2]
-    assert feat["properties"]["play_area"] is False
-    assert feat["properties"]["highchair"] is True
+    assert feat["properties"]["highchair"] is True and "play_area" not in feat["properties"]
+    acc = delta.apply_events(delta.new_accumulator(), events)
+    rendered = delta.render_delta(acc, "2026-09-23T00:00:00Z", 1)
+    assert rendered["places"] == {"upsert": [], "remove": []}
+    assert [f["properties"]["osm_url"] for f in rendered["highchair_places"]["upsert"]] == [
+        feat["properties"]["osm_url"]]
+    # Gaining a play area moves it to "places"; losing the tag removes it.
     base = _empty_dataset()
-    base["places"][feat["properties"]["osm_url"]] = feat
+    base["highchair_places"] = {feat["properties"]["osm_url"]: feat}
+    play = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("modify", 31, 2, "2026-09-23T11:00:00Z", {**tags, "kids_area": "yes"}))))
+    events = delta.process_changes(play, base, coord_fetch=fetch)
+    assert [(kind, f is None) for _, kind, f in events] == [("place", False),
+                                                           ("highchair_place", True)]
     gone = delta.parse_osc(__import__("io").BytesIO(_osc(
-        _way("modify", 31, 2, "2026-09-23T11:00:00Z", {"amenity": "restaurant"}))))
+        _way("modify", 31, 3, "2026-09-23T12:00:00Z", {"amenity": "restaurant"}))))
     events = delta.process_changes(gone, base, coord_fetch=fetch)
-    assert [(u.rsplit("/", 1)[1], kind, f) for u, kind, f in events] == [("31", "place", None)]
+    assert [(u.rsplit("/", 1)[1], kind, f) for u, kind, f in events] == [
+        ("31", "highchair_place", None)]
+    assert len(calls) == 1   # the new way's; later, the base knows where it is
+
+
+def test_a_restarted_follower_keeps_its_highchair_places(tmp_path):
+    acc = delta.new_accumulator()
+    url = "https://www.openstreetmap.org/node/5"
+    acc["highchair_places_upsert"][url] = {"type": "Feature", "geometry": None,
+                                           "properties": {"osm_url": url}}
+    acc["highchair_places_remove"].add("https://www.openstreetmap.org/node/6")
+    path = tmp_path / "delta.json"
+    path.write_text(json.dumps(delta.render_delta(acc, "B", 1)), encoding="utf-8")
+    back = delta.load_accumulator(str(path), "B")
+    assert set(back["highchair_places_upsert"]) == {url}
+    assert back["highchair_places_remove"] == {"https://www.openstreetmap.org/node/6"}
+    assert back["places_upsert"] == {}
 
 
 def test_lookup_still_made_for_ways_that_can_become_an_event():

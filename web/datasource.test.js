@@ -6,6 +6,7 @@ import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
          chipKeys, chipView,
          isWheelchairOk, isWheelchairLimited, countWheelchair, pinFeatures, placeFeatures, splitPlaces,
+         withHighchairPlaces,
          isHighchair, countHighchair,
          placesToFeatureCollection, mapCompleteAddUrl, mapCompleteVenueUrl,
          mapCompleteLanguage, withMapCompleteLanguage,
@@ -1731,6 +1732,7 @@ test("deltaFingerprint changes with the base, a removal, or a late fill at the s
   assert.notEqual(deltaFingerprint(delta({ base: "2026-10-08T02:00:00+00:00" })), k);
   assert.notEqual(deltaFingerprint(delta({ tables: { upsert: delta().tables.upsert, remove: ["y"] } })), k);
   assert.notEqual(deltaFingerprint(delta({ places: { upsert: [], remove: ["z"] } })), k);
+  assert.notEqual(deltaFingerprint(delta({ highchair_places: { upsert: [], remove: ["z"] } })), k);
   // Same osm_version, new coordinates: still a different delta.
   assert.notEqual(deltaFingerprint(delta({ tables: { upsert:
     [feat(1.5, 2, { osm_url: OWN, osm_version: 3, status: "unknown" })], remove: [] } })), k);
@@ -1811,6 +1813,16 @@ test("addWatchSince: a write's own moment, or a second before the save it found"
                                        properties: { osm_url: url, edited_at: "2026-09-23T10:04:00Z" } }] } };
   assert.equal(selectAddedPlace(delta, { ...WATCH, osm_url: url, t: before }), null);
   assert.equal(selectAddedPlace(delta, { ...WATCH, osm_url: url, t }).feature.properties.osm_url, url);
+});
+
+test("selectAddedPlace tells a new high-chair place from a play place", () => {
+  const hcPlace = feat(10.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/3",
+                                      created: true, edited_at: "2026-09-23T10:01:00Z" });
+  const delta = { tables: { upsert: [] }, places: { upsert: [] },
+                  highchair_places: { upsert: [hcPlace], remove: [] } };
+  assert.deepEqual(selectAddedPlace(delta, WATCH), { type: "highchair_place", feature: hcPlace });
+  const watch = { ...WATCH, osm_url: hcPlace.properties.osm_url };
+  assert.equal(selectAddedPlace(delta, watch).type, "highchair_place");
 });
 
 test("selectAddedPlace returns null with no watch or no delta", () => {
@@ -2128,19 +2140,21 @@ test("zoneForFeature: the feature's own tz, else its area's default, else null",
   assert.equal(zoneForFeature({ tz: null, area: "Australia" }, undefined), null);
 });
 
-test("loadPlaces reads a missing play_area as true, and splitPlaces splits the two ring chips", () => {
-  const places = loadPlaces({ features: [
-    feat(1, 1, {}),
-    feat(2, 2, { play_area: true }),
-    feat(3, 3, { play_area: false, highchair: true }),
-  ] });
+test("withHighchairPlaces marks the high-chair file's places, and splitPlaces splits the two ring chips", () => {
+  const play = { features: [feat(1, 1, { osm_url: "a" }), feat(2, 2, { osm_url: "b" })] };
+  const hc = { features: [feat(3, 3, { osm_url: "c", highchair: true })] };
+  const places = loadPlaces(withHighchairPlaces(play, hc));
   assert.deepEqual(places.map((p) => p.play_area), [true, true, false]);
+  assert.equal(hc.features[0].properties.play_area, undefined);   // the file itself untouched
   assert.deepEqual(splitPlaces(places).map((p) => p.idx), [0, 1, 2]);
   assert.deepEqual(splitPlaces(places, true, false).map((p) => p.idx), [0, 1]);
   assert.deepEqual(splitPlaces(places, false, true).map((p) => p.idx), [2]);
   assert.deepEqual(splitPlaces(places, false, false), []);
   // the high-chair chip narrows both kinds of ring on top
   assert.deepEqual(splitPlaces(placeFeatures(places, false, true)).map((p) => p.idx), [2]);
+  // A build from before v110 has no high-chair file; neither file is fine too.
+  assert.equal(loadPlaces(withHighchairPlaces(play, null)).length, 2);
+  assert.deepEqual(withHighchairPlaces(null, null).features, []);
 });
 
 test("nearestFeature picks the pin closest to the tap, or null", () => {

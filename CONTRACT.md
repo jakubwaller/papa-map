@@ -1,40 +1,54 @@
 # papa-map — build contract (v0)
 
-> **v110 amendment (30 Oct 2026, high-chair places join the places file):
-> `play_places.geojson` now also holds places that record a high chair
-> (`highchair` = yes or a positive number) and carry no `changing_table` key
-> (or `changing_table=no`, like a play place): the same open question, "is
-> there a changing table?". `highchair=no` and unreadable values never
-> qualify; no venue-type filter. New boolean property `play_area` on every
-> place (`has_play_area(tags)`), so the popup can tell a play place from a
-> high-chair-only place. `stats.local.play_places` still counts play-area
-> prospects only; the new `stats.local.highchair_places` counts prospects with
-> a high chair and no play area. The objects come from a separate small
-> Overpass query per sweep area (`config.highchair_ql`), not a clause in
-> `sweep_ql`: measured on the UK, a highchair clause in the union costs 4-11 s
-> and pushes the sweep to ~45 s, at the `[timeout:55]` safety line. The area
-> log line gains `hc=N`. A failing high-chair query costs the area its
-> high-chair places for the night (a WARN line, which the ops page lists), not
-> its tables: failing the area would build it from its saved answer (v99),
-> tables included. The answer rides in the sweep's saved copy, so a night built
-> from it keeps the area's high-chair places too.
+> **v110 amendment (30 Oct 2026, high-chair places, a file of their own):**
+> A new file, **`web/data/highchair_places.geojson`**, the same FeatureCollection
+> shape and properties as `play_places.geojson`: places that record a high chair
+> (`classify.is_highchair_place`: `highchair` = `yes` or a count, any case, no
+> padding and no leading zero, the MapComplete theme's own regex) and no play
+> area, with no `changing_table` key (the open question, "is there a changing
+> table?") or `changing_table=no` (a dashed ring, as for a play place).
+> `highchair=no` and anything else never qualify; no venue-type filter. A place
+> with a play area stays a play place whatever its high chair.
+> `play_places.geojson`, its stats and delta.json's `places` are unchanged: a
+> shell from before v110 (the 1.3.x store apps bundle theirs) reads only those,
+> so it draws exactly what it drew before. `stats.local.highchair_places` counts
+> the new file's open questions. delta.json gains a `highchair_places` key,
+> `{upsert, remove}` like `places`, which the follower fills by the same rule: an
+> object that gains or loses a play area leaves one key and joins the other.
 >
-> Frontend side: `loadPlaces` reads `play_area` as `p.play_area !== false`, so
-> a dataset from before v110 (no property) means true: every old place is a play
-> place. The hollow rings split into two chips, `stPlaces` "Play area only"
-> (`play_area !== false`) and the new `stPlacesHc` "High chair only"
-> (`play_area === false`), both on by default and not remembered, via the pure
-> `splitPlaces` in `datasource.js`. A place with both a play area and a high
-> chair is a play place. The wheelchair and high-chair chips narrow both kinds
-> of ring as before (`placeFeatures`). Both ring chips now sit at the END of the
+> **The query.** The objects come from a separate small Overpass query per sweep
+> area (`config.highchair_ql`), not a clause in `sweep_ql`: measured on the UK, a
+> highchair clause in the union costs 4-11 s and pushes the sweep to ~45 s, at
+> the `[timeout:55]` safety line. Every query holds a ~40 s slot on
+> overpass-api.de however short it runs, so it follows the toilet counts' weekly
+> rota (`toilet_counts.due_by_age`, each area on its own night), and the area's
+> saved answer (`sweep_cache`, keyed by the query) stands in on the other nights,
+> on a night built from the saved sweep, and when the query fails. A failure, a
+> resting Overpass included, is a WARN line (the ops page lists it) and costs the
+> area nothing else. A reused answer does not pull `data_base` back, so between
+> its nights an area's high-chair places can lag OSM by up to a week; the delta
+> carries the edits since the night's base. The area log line gains `hc=N`.
+>
+> **Frontend.** `highchair_places.geojson` is the fifth dataset file, after
+> `areas.json`; a 404 (a build from before v110) only means no high-chair rings.
+> `withHighchairPlaces` adds its places, with the delta's `highchair_places`
+> merged in, to the play places, each marked `play_area: false`, a property only
+> the frontend sets. The hollow rings split into two chips, `stPlaces` "Play area
+> only" and the new `stPlacesHc` "High chair only", both on by default and not
+> remembered (`splitPlaces`). The wheelchair and high-chair chips narrow both
+> kinds of ring as before (`placeFeatures`). Both ring chips sit at the END of the
 > strip, after the high-chair chip: status, wheelchair, play corner, high chair,
 > play places, high-chair places (supersedes the v66 order). The popup headline
-> (`metaPlacesHc`), the share text (`sharePlaceHcText`) and the count line
-> (`countPlacesHc`) have high-chair versions in all 32 languages; the
-> MapComplete layer `dad_play_place` also selects `highchair=yes` or a number
-> (and `dad_venue` leaves those to it);
-> the methods pages say that rings also mark high-chair places. Shell pin
-> `v=app103` becomes `v=app104`.
+> (`metaPlacesHc`), the share text (`sharePlaceHcText`), the count line
+> (`countPlacesHc`) and the thank-you toast for a place this reader added
+> (`toastNewPlaceHc`, `selectAddedPlace`'s new type `highchair_place`) have
+> high-chair versions in all 32 languages.
+>
+> **MapComplete.** The `dad_play_place` layer also selects `highchair` by the
+> same regex, with a high-chair title, status text and the café pictogram where
+> no play area is recorded, and `dad_venue` leaves those places to it. The
+> methods pages say that rings also mark high-chair places. Shell pin `v=app103`
+> becomes `v=app104`.
 
 > **v109 amendment (29 Oct 2026, a generic shop can be added from MapComplete): no data shape change.**
 > The theme's `dad_venue` layer gets a fourth preset, "a different shop" (`shop=yes`),
@@ -2967,7 +2981,7 @@ Overpass `out center`). Feature `properties`:
 
 `web/data/play_places.geojson` — same FeatureCollection shape, the v10 dataset
 of places with a play area and no changing-table answer — or, since v27, the answer
-`no`; since v110 also places that record a high chair instead. Feature `properties`:
+`no`. Feature `properties`:
 
 ```json
 {
@@ -2976,7 +2990,6 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "name": "string or null",
   "kind": "cafe|indoor_play|mall|... or null",
   "changing_table": "\"no\" (answered: no table, v27) or null (nobody has answered)",
-  "play_area": "true|false — false: only a high chair is recorded (v110)",
   "wheelchair": "yes|limited|no|\"unreadable\"|null — as on the tables (v28, v102)",
   "toilets_wheelchair": "yes|limited|no|\"unreadable\"|null — as on the tables (v28, v102)",
   "wheelchair_description": "string or null — as on the tables (v28)",
@@ -2986,6 +2999,10 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "mapcomplete_url": "string or null"
 }
 ```
+
+`web/data/highchair_places.geojson` (v110) — the same FeatureCollection shape and feature
+`properties` as `play_places.geojson`, for places that record a high chair and no play area
+(`classify.is_highchair_place`) and have no changing-table answer, or the answer `no`.
 
 `web/data/stats.json`:
 

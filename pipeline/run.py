@@ -4,12 +4,12 @@ import sys
 import time
 from datetime import datetime, timezone
 
-from .classify import has_play_area
+from .classify import is_highchair_place
 from . import (delta, export, leaderboard, osm, pages, stats, sweep_cache, timezones,
                toilet_counts)
 from .room_choices import answer_men_only_table, answer_play_table, answer_status_table
 from .config import (AREA_COUNTRY, AREAS_PATH, BUNDESLAENDER, CITY_AREAS,
-                     GEOJSON_PATH, HISTORY_PATH,
+                     GEOJSON_PATH, HIGHCHAIR_GEOJSON_PATH, HISTORY_PATH,
                      PAGES_DIR, PLAY_GEOJSON_PATH, STATS_PATH, SWEEP_FIXED_ROUNDS,
                      SWEEP_CACHE_DIR, SWEEP_CACHE_MAX_DAYS,
                      SWEEP_DEADLINE_S, SWEEP_PAUSE_S, SWEEP_ROUNDS,
@@ -69,7 +69,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                  sweep_rounds=None, sweep_pause_s=None,
                  sweep_deadline_s=None, pages_dir=None,
                  cities=None, history_path=None,
-                 play_geojson_path=None,
+                 play_geojson_path=None, highchair_geojson_path=None,
                  counts_path=None, counts_period_days=None,
                  areas_path=None, areas_bbox_path=None):
     """One idempotent build: Overpass (per sweep area) -> classify -> GeoJSON +
@@ -119,6 +119,8 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     # places where the map has thousands.
     geojson_path = GEOJSON_PATH if geojson_path is None else geojson_path
     play_geojson_path = PLAY_GEOJSON_PATH if play_geojson_path is None else play_geojson_path
+    highchair_geojson_path = (HIGHCHAIR_GEOJSON_PATH if highchair_geojson_path is None
+                              else highchair_geojson_path)
     stats_path = STATS_PATH if stats_path is None else stats_path
     areas_path = AREAS_PATH if areas_path is None else areas_path
     history_path = HISTORY_PATH if history_path is None else history_path
@@ -138,7 +140,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     counts_fresh: dict[str, tuple[int, int, str, str]] = {}  # recounted tonight
     counts_reused = 0
     counts_fellback = 0  # reused because tonight's recount failed, not by the rota
-    ct_elements, play_elements = [], []
+    ct_elements, play_elements, hc_elements = [], [], []
     # Toilets arrive as two server-side counts per area, not objects
     # (config.toilets_counts_ql). Keyed by area and *assigned*, never added to
     # a running total, so a retried area overwrites its earlier attempt
@@ -158,6 +160,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     # gets a `ct_area` entry (build_features never sees it), but it comes
     # from the very same area's Overpass answer, so it is free here too.
     play_area = {}
+    hc_area = {}   # the same for the high-chair places (v110)
     # The minimum osm3s.timestamp_osm_base across every Overpass answer of
     # the night — the DATA timestamp, not the build time, which can lag it by
     # a day (CLAUDE.md). Persisted into stats.json as data_base so
@@ -290,36 +293,48 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                 "mirror (stale area database or typo'd "
                 "PAPAMAP_AREA_NAME?)")
         if saved is None:
-            # Its own query, after everything else succeeded (see
-            # config.highchair_ql). A failure costs the area its high-chair
-            # places tonight, not its tables: failing the area would build it
-            # from last night's saved answer (v99), tables included. Its
-            # places ride in the saved answer, so a night built from the
-            # cache keeps them too.
-            try:
-                hc_answer = overpass_fetch(highchair_ql(area_name, admin_level))
-            except osm.OverpassUnavailable:
-                raise  # the whole service is resting: fail the round as one
-            except Exception as exc:
-                print(f"  WARN {area_name}: high-chair query failed ({exc}); "
-                      "no high-chair places from this area tonight", file=sys.stderr)
-                hc_answer = {}
-            else:
-                _note_base(hc_answer)
-            sweep = dict(sweep, elements=list(sweep["elements"]) + [
-                el for el in hc_answer.get("elements", ())
-                if "changing_table" not in (el.get("tags") or {})])
             try:
                 sweep_cache.save(SWEEP_CACHE_DIR, ql, sweep, today)
             except OSError as exc:
                 print(f"  WARN {area_name}: answer not kept as a fallback: {exc}",
                       file=sys.stderr)
+        # The high-chair places (v110): their own small query (config.
+        # highchair_ql), on the toilet counts' weekly rota, with the area's
+        # saved answer standing in on the other nights, on a night built from
+        # the saved sweep, and when the query fails. A failure, a resting
+        # service included, costs the area nothing else: failing the area
+        # would build it from its saved sweep (v99), and the next area's sweep
+        # still fails the round as one. A reused answer does not pull
+        # data_base back; its places are at most a period old.
+        hc_ql = highchair_ql(area_name, admin_level)
+        hc_hit = sweep_cache.load(SWEEP_CACHE_DIR, hc_ql, today, SWEEP_CACHE_MAX_DAYS)
+        hc_answer = hc_hit[0] if hc_hit else {}
+        if saved is None and toilet_counts.due_by_age(
+                area_name, hc_hit[1] if hc_hit else None, today, counts_period):
+            try:
+                hc_answer = overpass_fetch(hc_ql)
+            except Exception as exc:
+                kept = (f"keeping its answer from {hc_hit[1]} d ago" if hc_hit
+                        else "no high-chair places from this area tonight")
+                print(f"  WARN {area_name}: high-chair query failed ({exc}); {kept}",
+                      file=sys.stderr)
+            else:
+                _note_base(hc_answer)
+                try:
+                    sweep_cache.save(SWEEP_CACHE_DIR, hc_ql, hc_answer, today)
+                except OSError as exc:
+                    print(f"  WARN {area_name}: high-chair answer not kept: {exc}",
+                          file=sys.stderr)
+        hc = [el for el in hc_answer.get("elements", ())
+              if "changing_table" not in (el.get("tags") or {})
+              and is_highchair_place(el.get("tags") or {})]
         # A retried area re-fetches both queries; dedup absorbs any
         # elements its first, half-successful attempt already collected,
         # and the toilet counts are assigned rather than accumulated.
         ct, play = osm.split_sweep(sweep["elements"])
         ct_elements.extend(ct)
         play_elements.extend(play)
+        hc_elements.extend(hc)
         toilets_by_area[area_name] = toilets_total
         toilets_capacity_by_area[area_name] = capacity_total
         if remember:
@@ -333,13 +348,14 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             ct_area.setdefault((el.get("type"), el.get("id")), area_name)
         for el in play:
             play_area.setdefault((el.get("type"), el.get("id")), area_name)
+        for el in hc:
+            hc_area.setdefault((el.get("type"), el.get("id")), area_name)
         # The suffix ops_page.AREA_LINE expects whenever the published
         # number is not tonight's: the rota's reuse, or a fallback.
         counted = ("" if recount and fallback is None else
                    f" (counted {toilet_counts.age_days(counts_cache[area_name], today)} d ago"
                    f"{', recount failed' if fallback is not None else ''})")
-        n_hc = sum(1 for el in play if not has_play_area(el.get("tags") or {}))
-        print(f"  {area_name}: ct={len(ct)} play={len(play) - n_hc} hc={n_hc} "
+        print(f"  {area_name}: ct={len(ct)} play={len(play)} hc={len(hc)} "
               f"toilets={toilets_total}{counted}", file=sys.stderr)
 
     deadline = time.monotonic() + budget
@@ -504,6 +520,9 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     # A place answered `changing_table=no` comes from the ct half, so ct_area
     # knows it; the open questions are play_area's.
     play_features = export.build_play_features(play_data, ct_data, {**play_area, **ct_area})
+    hc_data = {"elements": osm.dedup_elements(hc_elements)}
+    hc_features = export.build_play_features(hc_data, ct_data, {**hc_area, **ct_area},
+                                             highchair=True)
     # The key-locked tables ride along in the GeoJSON for the wheelchair chip
     # (v26) and nowhere else: the pages, the leaderboard and the history
     # count pins, and a table behind a Euro key is not one.
@@ -515,7 +534,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     # matched the deduped totals exactly (73,860) across all 24 areas.
     toilets_counts = {"total": sum(toilets_by_area.values()),
                       "capacity_tagged": sum(toilets_capacity_by_area.values())}
-    local = stats.local_stats(ct_data, toilets_counts, play_data)
+    local = stats.local_stats(ct_data, toilets_counts, play_data, hc_data)
 
     try:
         global_block = stats.global_stats(fetch=taginfo_fetch)
@@ -529,6 +548,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     generated_at = build_time.isoformat(timespec="seconds")
     exported = export.export_geojson(features, geojson_path)
     export.export_geojson(play_features, play_geojson_path)
+    export.export_geojson(hc_features, highchair_geojson_path)
     export.export_stats({
         "generated_at": generated_at,
         "area_name": display_area,

@@ -4500,7 +4500,38 @@
               "color": "#0072b2"
             },
             {
-              "icon": "./assets/themes/playgrounds/playground.svg"
+              "icon": {
+                "render": "./assets/layers/cafe_pub/cafe.svg",
+                "mappings": [
+                  {
+                    "if": {
+                      "or": [
+                        "kids_area~i~^(yes|indoor|designated)$",
+                        "kids_area:indoor~i~^(yes|indoor|designated)$",
+                        {
+                          "and": [
+                            "leisure!=playground",
+                            {
+                              "or": [
+                                "kids_area~i~^outdoor$",
+                                "kids_area:outdoor~i~^(yes|indoor|designated)$"
+                              ]
+                            }
+                          ]
+                        },
+                        "leisure=indoor_play",
+                        {
+                          "and": [
+                            "leisure=playground",
+                            "indoor=yes"
+                          ]
+                        }
+                      ]
+                    },
+                    "then": "./assets/themes/playgrounds/playground.svg"
+                  }
+                ]
+              }
             }
           ]
         }

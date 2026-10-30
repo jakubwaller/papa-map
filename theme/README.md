@@ -34,8 +34,9 @@ dependencies beyond bundled icon paths):
   first question is `changing_table` yes/no, which is the whole point: these are the
   places a father goes to anyway, so he is the one who can answer it. Same location/fee
   follow-ups as the other layers, then `kids-area`. Since CONTRACT v110 it also holds places
-  that record a high chair (`highchair=yes` or a number) instead, with a high-chair title and
-  status text where no play area is recorded.
+  that record a high chair (`highchair=yes` or a number, `classify.HIGHCHAIR_PLACE_RE`)
+  instead, with a high-chair title, status text and the café pictogram where no play area
+  is recorded.
 
 - **`dad_venue`** — added v11 (27 Aug 2026): cafés, restaurants, fast food, bars, shops
   that plausibly have a customer toilet (malls, supermarkets, baby goods, DIY…), libraries,

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 # Rooms a dad can reach the table in. Token matching is EXACT, never substring:
 # "female_toilet" *contains* "male_toilet", so a substring check would classify
 # every women's-room table as dad-accessible. `outdoor` (open-air table, no
@@ -184,10 +186,18 @@ def wheelchair_state(tags: dict, key: str = "wheelchair") -> str | None:
     return value if value in WHEELCHAIR_VALUES else "unreadable"
 
 
-def is_place(tags: dict) -> bool:
-    """True when an object without a changing-table answer belongs in the places
-    file: an indoor play area (has_play_area) or a recorded high chair."""
-    return has_play_area(tags) or highchair_state(tags) is True
+# What makes a high-chair place (v110): `yes` or a count, exactly the regex
+# the MapComplete theme's dad_play_place layer selects them by, so every ring
+# opens on its layer. Stricter than highchair_state (no padding, no `007`).
+HIGHCHAIR_PLACE_RE = re.compile(r"yes|[1-9][0-9]*", re.IGNORECASE)
+
+
+def is_highchair_place(tags: dict) -> bool:
+    """True for highchair_places.geojson: a high chair recorded the way
+    HIGHCHAIR_PLACE_RE reads it, and no play area — one with a play area is a
+    play place, and stays in play_places.geojson whatever its high chair."""
+    return (not has_play_area(tags)
+            and HIGHCHAIR_PLACE_RE.fullmatch(tags.get(HIGHCHAIR_KEY) or "") is not None)
 
 
 def highchair_state(tags: dict) -> bool | str | None:

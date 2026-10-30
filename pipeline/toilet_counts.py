@@ -109,7 +109,13 @@ def is_due(cache: dict, area_name: str, admin_level: str, today: date,
         return True
     if query is not None and entry.get("query") != query:
         return True
-    age = age_days(entry, today)
-    if age is None or age < 0 or age >= period_days:
+    return due_by_age(area_name, age_days(entry, today), today, period_days)
+
+
+def due_by_age(area_name: str, age: int | None, today: date, period_days: int) -> bool:
+    """The rota itself, for anything fetched weekly per area (the counts here,
+    run.py's high-chair query): due when the last answer is undated or a
+    period old, or on the area's own night unless it was fetched today."""
+    if period_days <= 1 or age is None or age < 0 or age >= period_days:
         return True
     return age >= 1 and today.toordinal() % period_days == slot(area_name, period_days)

@@ -240,11 +240,12 @@ def test_local_stats_counts_highchair_places_apart_from_play_places():
         if coords:
             e.update(lat=53.5, lon=9.9)
         return e
-    local = stats.local_stats({"elements": []}, {}, {"elements": [
-        el(1, {"kids_area": "yes"}),
+    play = {"elements": [el(1, {"kids_area": "yes"})]}
+    local = stats.local_stats({"elements": []}, {}, play, {"elements": [
         el(2, {"highchair": "yes"}),
-        el(3, {"kids_area": "yes", "highchair": "2"}),  # a play place, not counted twice
+        el(3, {"kids_area": "yes", "highchair": "2"}),  # a play place, not counted here
         el(4, {"highchair": "yes"}, coords=False),
+        el(5, {"highchair": "007"}),                    # not what the theme selects
     ]})
-    assert local["play_places"] == 2
+    assert local["play_places"] == 1
     assert local["highchair_places"] == 1

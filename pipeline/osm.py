@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
-from .classify import is_place
+from .classify import has_play_area
 from .config import (OVERPASS_BACKOFF_S, OVERPASS_HTTP_TIMEOUT,
                      OVERPASS_MAX_DATA_AGE_H, OVERPASS_RETRIES,
                      OVERPASS_SLOT_WAIT_MAX_S, OVERPASS_STALE_REST_S,
@@ -76,13 +76,11 @@ def split_sweep(elements) -> tuple[list, list]:
 
       * objects carrying a `changing_table` tag — any value, since `no` and
         junk like "02" still feed the stats;
-      * objects that carry none but do record a play area, indoors or a venue's
-        outdoor one, or a high chair (v110: config.highchair_ql's answer rides in the
-        same list).
+      * objects that carry none but do record a play area, indoors or a venue's outdoor one.
 
     An object with both belongs to the first list only: it is already a pin,
     and its play corner rides along as the feature's `play` property. Anything
-    in neither list is the Overpass prefilter being looser than classify.is_place
+    in neither list is the Overpass prefilter being looser than has_play_area
     (an outdoor `leisure=playground` carrying `kids_area:outdoor=yes`) and is
     dropped."""
     ct, play = [], []
@@ -90,7 +88,7 @@ def split_sweep(elements) -> tuple[list, list]:
         tags = el.get("tags") or {}
         if "changing_table" in tags:
             ct.append(el)
-        elif is_place(tags):
+        elif has_play_area(tags):
             play.append(el)
     return ct, play
 

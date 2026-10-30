@@ -211,7 +211,7 @@ def test_play_features_are_their_own_dataset(load_fixture):
         "osm_type": "node", "osm_id": 9001, "name": "Café Bauklotz",
         "kind": "cafe", "changing_table": None,
         "wheelchair": None, "toilets_wheelchair": None, "wheelchair_description": None,
-        "highchair": None, "play_area": True,
+        "highchair": None,
         "opening_hours": "Mo-Fr 09:00-18:00",
         "osm_url": "https://www.openstreetmap.org/node/9001",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
@@ -341,17 +341,20 @@ def test_features_carry_the_sweep_area_that_found_them(load_fixture):
     assert feats[3]["area"] is None
 
 
-def test_highchair_only_place_is_a_prospect_but_highchair_no_is_not():
-    def feats(tags, ct=None):
+def test_highchair_places_are_their_own_features_and_never_play_places():
+    def feats(tags, ct=False, highchair=True):
         el = {"type": "node", "id": 1, "lat": 53.5, "lon": 9.9, "tags": tags}
         return build_play_features({"elements": [] if ct else [el]},
-                                   {"elements": [el]} if ct else None)
+                                   {"elements": [el]} if ct else None, highchair=highchair)
     f = feats({"amenity": "restaurant", "highchair": "yes"})
-    assert len(f) == 1
-    assert f[0]["properties"]["play_area"] is False and f[0]["properties"]["highchair"] is True
-    assert feats({"amenity": "restaurant", "highchair": "3"})[0]["properties"]["highchair"] is True
+    assert len(f) == 1 and f[0]["properties"]["highchair"] is True
+    assert "play_area" not in f[0]["properties"]
+    assert feats({"amenity": "restaurant", "highchair": "yes"}, highchair=False) == []
+    assert len(feats({"amenity": "restaurant", "highchair": "3"})) == 1
     assert feats({"amenity": "restaurant", "highchair": "no"}) == []
     # answered no (from the sweep's changing_table half) qualifies like a play place
     assert len(feats({"highchair": "yes", "changing_table": "no"}, ct=True)) == 1
     assert feats({"highchair": "yes", "changing_table": "yes"}, ct=True) == []
-    assert feats({"kids_area": "yes"})[0]["properties"]["play_area"] is True
+    # a play area keeps it in the play file
+    assert feats({"kids_area": "yes", "highchair": "yes"}) == []
+    assert len(feats({"kids_area": "yes", "highchair": "yes"}, highchair=False)) == 1

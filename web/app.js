@@ -1,7 +1,7 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
 import { loadFeatures, loadPlaces, placeFeatures, splitPlaces, filterFeatures, countsByStatus, countPlay,
-         chipKeys, chipKey, chipView, MEN_ONLY_CHIP,
+         chipKeys, chipKey, chipView, MEN_ONLY_CHIP, withHighchairPlaces,
          countWheelchair, countHighchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
@@ -487,6 +487,7 @@ let allPlaces = [];                                       // play-area prospects
 // build or a background refresh.
 let baseFC = null;
 let basePlacesFC = null;
+let baseHcPlacesFC = null;   // highchair_places.geojson (v110)
 // The delta most recently merged in, or null before the first successful
 // poll (or once a fresher applyDataset has superseded it — see applyDataset).
 let currentDelta = null;
@@ -3288,10 +3289,10 @@ function maybeNotifyAddedPlace(deltaJson) {
   }
   clearAddWatch();
   if (result.type === "toilet_no_table") { toast(t("toastToiletNoTable")); return; }
-  toast(t(result.type === "place" ? "toastNewPlace" : "toastNewTable"));
-  const obj = (result.type === "place" ? placesByOsmUrl : featuresByOsmUrl)
-    .get(result.feature.properties.osm_url);
-  if (obj) pulseNewPin(result.type, obj, watch);
+  const isPlace = result.type !== "table";
+  toast(t({ place: "toastNewPlace", highchair_place: "toastNewPlaceHc" }[result.type] ?? "toastNewTable"));
+  const obj = (isPlace ? placesByOsmUrl : featuresByOsmUrl).get(result.feature.properties.osm_url);
+  if (obj) pulseNewPin(isPlace ? "place" : "table", obj, watch);
 }
 
 // ---- Language picker: re-render everything that carries text ----
@@ -3720,20 +3721,24 @@ function applyFeatureSets(fc, places) {
 // one function that has to run after any of the three changes. Never called
 // with a null baseFC (before the first applyDataset).
 function renderMergedDataset() {
-  let fc = baseFC, places = basePlacesFC;
+  let fc = baseFC, places = basePlacesFC, hcPlaces = baseHcPlacesFC;
   if (currentDelta) {
     fc = mergeFeatureCollection(fc, currentDelta.tables?.upsert, currentDelta.tables?.remove);
     places = mergeFeatureCollection(places, currentDelta.places?.upsert, currentDelta.places?.remove);
+    hcPlaces = mergeFeatureCollection(hcPlaces, currentDelta.highchair_places?.upsert,
+                                      currentDelta.highchair_places?.remove);
   }
+  places = withHighchairPlaces(places, hcPlaces);
   if (Object.keys(answerOverrides).length) {
     ({ fc, places } = applyAnswerOverrides(fc, places, answerOverrides));
   }
   applyFeatureSets(fc, places);
 }
 
-function applyDataset(fc, places, stats, areas) {
+function applyDataset(fc, places, stats, areas, hcPlaces) {
   baseFC = fc;
   basePlacesFC = places;
+  baseHcPlacesFC = hcPlaces;
   // A fresh base dataset (a new nightly build, or the app's background
   // refresh) already contains whatever the delta and this reader's own
   // answers described — pruneAnswerOverrides below drops the ones it truly
@@ -3811,7 +3816,8 @@ function applyDelta(deltaJson) {
   currentDelta = deltaJson;
   currentDeltaKey = key;
   const versionByUrl = new Map();
-  for (const f of (deltaJson.tables?.upsert || []).concat(deltaJson.places?.upsert || [])) {
+  for (const f of (deltaJson.tables?.upsert || []).concat(deltaJson.places?.upsert || [],
+                                                          deltaJson.highchair_places?.upsert || [])) {
     const url = f?.properties?.osm_url;
     const version = f?.properties?.osm_version;
     if (url && version != null) versionByUrl.set(url, version);
@@ -3861,7 +3867,8 @@ function watchDeltaForVersion(osmUrl, minVersion, attemptsLeft = 20) {
   const check = async () => {
     const json = await fetchDelta();
     if (json && isDeltaFresh(json.base, lastStats?.data_base)) {
-      const hit = (json.tables?.upsert || []).concat(json.places?.upsert || [])
+      const hit = (json.tables?.upsert || []).concat(json.places?.upsert || [],
+                                                      json.highchair_places?.upsert || [])
         .find((f) => f.properties.osm_url === osmUrl
           && Number.isFinite(f.properties.osm_version) && f.properties.osm_version >= minVersion);
       if (hit) { applyDelta(json); return; }
@@ -3887,6 +3894,9 @@ const DATA_URLS = [
   "data/play_places.geojson",
   "data/stats.json",
   "data/areas.json",
+  // Last, so every index above keeps its meaning; a 404 (a build from before
+  // v110) only means no high-chair rings.
+  "data/highchair_places.geojson",
 ];
 const dataMissing = () => dataReady && !allFeatures.length;
 let lastJsons = [];   // the last-loaded jsons, so a retry that gets only some files keeps the rest

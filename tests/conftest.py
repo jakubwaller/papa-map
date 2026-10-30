@@ -73,6 +73,7 @@ def _isolated_web_output(tmp_path, monkeypatch):
     out = tmp_path / "web"
     for name, filename in (("GEOJSON_PATH", "changing_tables.geojson"),
                            ("PLAY_GEOJSON_PATH", "play_places.geojson"),
+                           ("HIGHCHAIR_GEOJSON_PATH", "highchair_places.geojson"),
                            ("STATS_PATH", "stats.json"),
                            ("AREAS_PATH", "areas.json"),
                            ("HISTORY_PATH", "history.json")):
