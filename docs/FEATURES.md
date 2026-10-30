@@ -830,8 +830,11 @@ MapComplete layer's own regex) and no play area, and no changing-table answer,
 are rings too, from a file of their own, `highchair_places.geojson`, with a
 `highchair_places` key in the delta. Not in the play-places file: the 1.3.x
 store apps bundle a shell that reads that file alone and would call every café
-with a high chair a play area. The frontend joins the two lists and marks the
-high-chair ones (`withHighchairPlaces`); the rings have two chips at the end of
+with a high chair a play area. Public toilets are left out, as the MapComplete
+layer leaves them out. The frontend asks for the file only once the pins are
+drawn (in the app it is not gated with the other four, so it can never hold
+them back), joins the two lists and marks the high-chair ones
+(`withHighchairPlaces`); the rings have two chips at the end of
 the strip, "Play area only" and "High chair only" (both on by default, not
 remembered, `splitPlaces` in `web/datasource.js`); a place with both is a play
 place. The popup headline, share text, count line and the thank-you toast say
@@ -843,7 +846,9 @@ They come from a small query of their own per area (`config.highchair_ql`),
 kept out of the sweep for the UK's sake, and on the toilet counts' weekly rota:
 every Overpass query costs a ~40 s slot however short it runs. The area's saved
 answer covers the other nights and any failure, so a high-chair place can lag
-OSM by up to a week, minus what the delta catches.
+OSM by up to a week, minus what the delta catches. Tonight's sweep still wins:
+an object it found as a table, an answered-no place or a play place is never
+an open high-chair ring as well.
 
 ## Wheelchair access
 

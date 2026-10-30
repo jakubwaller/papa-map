@@ -4,8 +4,9 @@
 > A new file, **`web/data/highchair_places.geojson`**, the same FeatureCollection
 > shape and properties as `play_places.geojson`: places that record a high chair
 > (`classify.is_highchair_place`: `highchair` = `yes` or a count, any case, no
-> padding and no leading zero, the MapComplete theme's own regex) and no play
-> area, with no `changing_table` key (the open question, "is there a changing
+> padding and no leading zero, the MapComplete theme's own regex), no play
+> area and no `amenity=toilets` (left out by the theme's layer too; a new one
+> stays the delta's `new_toilets_no_table`), with no `changing_table` key (the open question, "is there a changing
 > table?") or `changing_table=no` (a dashed ring, as for a play place).
 > `highchair=no` and anything else never qualify; no venue-type filter. A place
 > with a play area stays a play place whatever its high chair.
@@ -27,10 +28,18 @@
 > resting Overpass included, is a WARN line (the ops page lists it) and costs the
 > area nothing else. A reused answer does not pull `data_base` back, so between
 > its nights an area's high-chair places can lag OSM by up to a week; the delta
-> carries the edits since the night's base. The area log line gains `hc=N`.
+> carries the edits since the night's base. It never outvotes tonight's sweep:
+> an object the sweep found as a table, an answered-no place or a play place is
+> dropped from the high-chair answer, so it is drawn once, as the sweep has it.
+> The area log line gains `hc=N`.
 >
-> **Frontend.** `highchair_places.geojson` is the fifth dataset file, after
-> `areas.json`; a 404 (a build from before v110) only means no high-chair rings.
+> **Frontend.** `highchair_places.geojson` is not one of boot's four dataset
+> files: `loadHighchairPlaces` asks for it once the pins are drawn, so it never
+> holds back the first paint nor, in the app, the stats.json promotion, and it
+> is not preloaded. In the app it draws from its stored copy and downloads
+> again only when stats.json changed. A 404 (a build from before v110), a slow
+> answer or a failure only means no high-chair rings; a `?osm=` link the map
+> cannot place waits for it as it waits for the first delta poll.
 > `withHighchairPlaces` adds its places, with the delta's `highchair_places`
 > merged in, to the play places, each marked `play_area: false`, a property only
 > the frontend sets. The hollow rings split into two chips, `stPlaces` "Play area

@@ -1157,6 +1157,14 @@ def test_highchair_place_has_its_own_kind_and_key_never_places():
     assert len(calls) == 1   # the new way's; later, the base knows where it is
 
 
+def test_a_new_toilet_with_a_high_chair_is_still_a_toilet_without_a_table():
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 501, 1, "2026-09-23T10:13:00Z", 53.55, 10.0,
+              {"amenity": "toilets", "highchair": "yes"}))))
+    events = delta.process_changes(changes, _empty_dataset())
+    assert [kind for _, kind, _ in events] == ["toilet_no_table"]
+
+
 def test_a_restarted_follower_keeps_its_highchair_places(tmp_path):
     acc = delta.new_accumulator()
     url = "https://www.openstreetmap.org/node/5"

@@ -35,7 +35,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app104";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
-import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
+import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, bboxCentre,
@@ -3636,8 +3636,9 @@ function openPin(osmUrl) {
     return;
   }
   // A place added since the nightly build exists only in the delta, whose
-  // first poll comes after boot's openQueuedPin: wait for it (pollDelta).
-  if (!deltaChecked) { pendingPin = osmUrl; return; }
+  // first poll comes after boot's openQueuedPin: wait for it (pollDelta), and
+  // for the high-chair file, which comes after the pins (loadHighchairPlaces).
+  if (!deltaChecked || hcPending) { pendingPin = osmUrl; return; }
   toast(t("sharePinGone"));
   stripOsmParam();
 }
@@ -3735,10 +3736,9 @@ function renderMergedDataset() {
   applyFeatureSets(fc, places);
 }
 
-function applyDataset(fc, places, stats, areas, hcPlaces) {
+function applyDataset(fc, places, stats, areas) {
   baseFC = fc;
   basePlacesFC = places;
-  baseHcPlacesFC = hcPlaces;
   // A fresh base dataset (a new nightly build, or the app's background
   // refresh) already contains whatever the delta and this reader's own
   // answers described — pruneAnswerOverrides below drops the ones it truly
@@ -3894,10 +3894,26 @@ const DATA_URLS = [
   "data/play_places.geojson",
   "data/stats.json",
   "data/areas.json",
-  // Last, so every index above keeps its meaning; a 404 (a build from before
-  // v110) only means no high-chair rings.
-  "data/highchair_places.geojson",
 ];
+
+// The high-chair rings' own file (v110), never one of DATA_URLS: it is
+// optional, so it must not hold back the first paint or, in the app, the
+// stats.json promotion that waits on every file loaded beside it. Asked for
+// once the pins are drawn, so it never competes with them on a slow link
+// (which is also why index.html does not preload it). In the app it draws
+// from its stored copy and downloads again only when stats.json changed,
+// like the other files. A 404 (a build from before v110), a timeout or a
+// failure only means no high-chair rings.
+const HC_URL = "data/highchair_places.geojson";
+let hcPending = true;   // a ?osm= link the map cannot place waits for this file too
+function loadHighchairPlaces(statsRefreshed) {
+  const apply = (json) => { if (json) { baseHcPlacesFC = json; renderMergedDataset(); } };
+  const gate = statsRefreshed?.then((r) => (r?.ok === false ? "failed" : r?.json != null ? "changed" : "unchanged"));
+  (isNative() ? loadJSONNative(HC_URL, undefined, { gate }) : loadJSON(HC_URL))
+    .then((l) => { apply(l?.json); l?.refreshed?.then((r) => apply(r?.json)); })
+    .catch(() => {})
+    .finally(() => { hcPending = false; openQueuedPin(); });
+}
 const dataMissing = () => dataReady && !allFeatures.length;
 let lastJsons = [];   // the last-loaded jsons, so a retry that gets only some files keeps the rest
 let retrying = false, retryTimer = null, retryDelay = 30000, awaitingLate = false;
@@ -3971,6 +3987,7 @@ async function boot() {
   dataReady = true;
   map.on("moveend", updateRegionsLink);   // registered once, here — applyDataset never does
   applyDataset(...lastJsons);
+  loadHighchairPlaces(loaded[DATA_URLS.indexOf("data/stats.json")]?.refreshed);
   window.addEventListener("online", retryDataset);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) retryDataset(); });
   if (dataMissing()) scheduleRetry();

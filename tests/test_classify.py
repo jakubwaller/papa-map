@@ -204,6 +204,8 @@ def test_a_highchair_place_has_a_high_chair_by_the_themes_regex_and_no_play_area
     for value in ("no", "0", "007", " yes", "limited", "1+", ""):
         assert not is_highchair_place({"highchair": value}), value
     assert not is_highchair_place({"amenity": "cafe"})
+    # A public toilet is never a ring (the theme's layer leaves it out too).
+    assert not is_highchair_place({"amenity": "toilets", "highchair": "yes"})
 
 
 PG = {"leisure": "playground"}

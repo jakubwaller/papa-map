@@ -195,8 +195,11 @@ HIGHCHAIR_PLACE_RE = re.compile(r"yes|[1-9][0-9]*", re.IGNORECASE)
 def is_highchair_place(tags: dict) -> bool:
     """True for highchair_places.geojson: a high chair recorded the way
     HIGHCHAIR_PLACE_RE reads it, and no play area — one with a play area is a
-    play place, and stays in play_places.geojson whatever its high chair."""
-    return (not has_play_area(tags)
+    play place, and stays in play_places.geojson whatever its high chair. Never
+    a public toilet, which the theme's dad_play_place leaves out too
+    (`amenity!=toilets`): a new one without a table is the delta's
+    new_toilets_no_table, not a ring."""
+    return (tags.get("amenity") != "toilets" and not has_play_area(tags)
             and HIGHCHAIR_PLACE_RE.fullmatch(tags.get(HIGHCHAIR_KEY) or "") is not None)
 
 

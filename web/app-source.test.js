@@ -177,3 +177,14 @@ test("popupHTML and placeHTML interpolate only escaped text or known markup", ()
     assert.deepEqual(bad, [], `${name}: unescaped interpolation`);
   }
 });
+
+// The high-chair file is optional (v110). Among DATA_URLS, boot's first paint
+// and, in the app, stats.json's promotion would wait on it: a slow or missing
+// file would hold back the pins, and keep the app downloading them again.
+test("the high-chair file is loaded apart from DATA_URLS, after the first paint", () => {
+  const urls = src.slice(src.indexOf("const DATA_URLS = ["), src.indexOf("];", src.indexOf("const DATA_URLS = [")));
+  assert.ok(!urls.includes("highchair"), "highchair_places.geojson is not one of DATA_URLS");
+  const boot = src.slice(src.indexOf("async function boot()"));
+  const paint = boot.indexOf("applyDataset(...lastJsons);");
+  assert.ok(paint > 0 && boot.indexOf("loadHighchairPlaces(") > paint);
+});

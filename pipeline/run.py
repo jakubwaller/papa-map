@@ -520,7 +520,13 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     # A place answered `changing_table=no` comes from the ct half, so ct_area
     # knows it; the open questions are play_area's.
     play_features = export.build_play_features(play_data, ct_data, {**play_area, **ct_area})
-    hc_data = {"elements": osm.dedup_elements(hc_elements)}
+    # A reused high-chair answer can be a period old, and even tonight's can
+    # lag the sweep: an object tonight's sweep found as a table, an answered-no
+    # place or a play place is that (it is a pin, a dashed ring from the ct
+    # half, or a play ring), never an open high-chair ring beside it.
+    swept = {(el.get("type"), el.get("id")) for el in ct_elements + play_elements}
+    hc_data = {"elements": osm.dedup_elements(
+        [el for el in hc_elements if (el.get("type"), el.get("id")) not in swept])}
     hc_features = export.build_play_features(hc_data, ct_data, {**hc_area, **ct_area},
                                              highchair=True)
     # The key-locked tables ride along in the GeoJSON for the wheelchair chip

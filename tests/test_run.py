@@ -1,3 +1,4 @@
+import copy
 import json
 import re
 import time
@@ -1257,6 +1258,35 @@ def test_highchair_places_get_their_own_file_and_leave_the_play_file_alone(
     assert play == [9001, 9002, 9003]
     assert hc == [9101]
     assert local["play_places"] == 3 and local["highchair_places"] == 1
+
+
+@pytest.mark.parametrize("change, kind", [
+    # A reader answered the ring: tonight's sweep has it as a pin...
+    ({"changing_table": "yes", "changing_table:location": "unisex_toilet"}, "table"),
+    # ...or as an answered-no place, a dashed ring of the ct half...
+    ({"changing_table": "no"}, "no"),
+    # ...or somebody mapped its play area: a play ring.
+    ({"kids_area": "yes"}, "play"),
+])
+def test_a_reused_highchair_answer_never_outvotes_tonights_sweep(
+        tmp_path, load_fixture, change, kind):
+    # Most areas reuse an answer up to a period old; the object is drawn once,
+    # as tonight's sweep has it.
+    _hc_run(tmp_path, load_fixture, _fake_overpass(load_fixture, hc=[HC_PLACE]))
+    ct = copy.deepcopy(load_fixture("overpass_changing_tables.json"))
+    swept = copy.deepcopy(HC_PLACE)
+    swept["tags"].update(change)
+    ct["elements"].append(swept)
+    play, hc_ids, local = _hc_run(tmp_path, load_fixture, _fake_overpass(load_fixture, ct=ct, hc=[]),
+                                  now=NOW + timedelta(days=1))
+    tables = [f["properties"]["osm_id"] for f in
+              json.loads((tmp_path / "ct.geojson").read_text(encoding="utf-8"))["features"]]
+    hc = json.loads((tmp_path / "hc.geojson").read_text(encoding="utf-8"))["features"]
+    assert (9101 in tables, 9101 in play) == (kind == "table", kind == "play")
+    # Answered no: one dashed high-chair ring, from the sweep; else none.
+    assert [f["properties"]["changing_table"] for f in hc if f["properties"]["osm_id"] == 9101] == (
+        ["no"] if kind == "no" else [])
+    assert local["highchair_places"] == 0
 
 
 def test_the_highchair_query_runs_on_the_weekly_rota(tmp_path, load_fixture):
