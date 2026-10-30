@@ -2152,6 +2152,12 @@ test("withHighchairPlaces marks the high-chair file's places, and splitPlaces sp
   assert.deepEqual(splitPlaces(places, false, false), []);
   // the high-chair chip narrows both kinds of ring on top
   assert.deepEqual(splitPlaces(placeFeatures(places, false, true)).map((p) => p.idx), [2]);
+  // A stale high-chair file never draws a ring for a place the tables or the
+  // play places already have: the answered ring is its pin now.
+  const tables = { features: [feat(4, 4, { osm_url: "c", status: "unknown" })] };
+  assert.deepEqual(withHighchairPlaces(play, hc, tables).features.map((f) => f.properties.osm_url), ["a", "b"]);
+  const nowPlay = { features: [...play.features, feat(3, 3, { osm_url: "c" })] };
+  assert.deepEqual(loadPlaces(withHighchairPlaces(nowPlay, hc)).map((p) => p.play_area), [true, true, true]);
   // A build from before v110 has no high-chair file; neither file is fine too.
   assert.equal(loadPlaces(withHighchairPlaces(play, null)).length, 2);
   assert.deepEqual(withHighchairPlaces(null, null).features, []);

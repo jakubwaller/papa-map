@@ -3475,9 +3475,11 @@ let fromStore = false;
 // (X-PapaMap-Source: cache). `refreshed` is always null here — there is
 // nothing more to ask once fetch has answered; the app's own loader
 // (loadDataset, below) is the one that hands back a real promise for it.
-async function loadJSON(url) {
+// An options object, not a bare signal: loadDataset maps over its urls, and
+// map's index would land in a positional second parameter.
+async function loadJSON(url, { signal } = {}) {
   try {
-    const r = await fetch(url);
+    const r = await fetch(url, { signal });
     if (r.headers.get("X-PapaMap-Source") === "cache") fromStore = true;
     return { json: r.ok ? await r.json() : null, refreshed: null };
   } catch {
@@ -3729,7 +3731,7 @@ function renderMergedDataset() {
     hcPlaces = mergeFeatureCollection(hcPlaces, currentDelta.highchair_places?.upsert,
                                       currentDelta.highchair_places?.remove);
   }
-  places = withHighchairPlaces(places, hcPlaces);
+  places = withHighchairPlaces(places, hcPlaces, fc);
   if (Object.keys(answerOverrides).length) {
     ({ fc, places } = applyAnswerOverrides(fc, places, answerOverrides));
   }
@@ -3909,7 +3911,10 @@ let hcPending = true;   // a ?osm= link the map cannot place waits for this file
 function loadHighchairPlaces(statsRefreshed) {
   const apply = (json) => { if (json) { baseHcPlacesFC = json; renderMergedDataset(); } };
   const gate = statsRefreshed?.then((r) => (r?.ok === false ? "failed" : r?.json != null ? "changed" : "unchanged"));
-  (isNative() ? loadJSONNative(HC_URL, undefined, { gate }) : loadJSON(HC_URL))
+  // A stalled first visit gives up after the app's own NET_MS (native.js) and
+  // means no rings, rather than holding a ?osm= link until the browser quits.
+  (isNative() ? loadJSONNative(HC_URL, undefined, { gate })
+    : loadJSON(HC_URL, { signal: AbortSignal.timeout?.(20000) }))
     .then((l) => { apply(l?.json); l?.refreshed?.then((r) => apply(r?.json)); })
     .catch(() => {})
     .finally(() => { hcPending = false; openQueuedPin(); });

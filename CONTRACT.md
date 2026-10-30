@@ -37,9 +37,12 @@
 > files: `loadHighchairPlaces` asks for it once the pins are drawn, so it never
 > holds back the first paint nor, in the app, the stats.json promotion, and it
 > is not preloaded. In the app it draws from its stored copy and downloads
-> again only when stats.json changed. A 404 (a build from before v110), a slow
-> answer or a failure only means no high-chair rings; a `?osm=` link the map
-> cannot place waits for it as it waits for the first delta poll.
+> again only when stats.json changed. A 404 (a build from before v110), an
+> answer slower than 20 s or a failure only means no high-chair rings; a
+> `?osm=` link the map cannot place waits for it as it waits for the first
+> delta poll. Loaded on its own clock, it can be a build older than the tables:
+> a high-chair place whose `osm_url` the merged tables or play places already
+> have is skipped, so an answered ring never comes back beside its pin.
 > `withHighchairPlaces` adds its places, with the delta's `highchair_places`
 > merged in, to the play places, each marked `play_area: false`, a property only
 > the frontend sets. The hollow rings split into two chips, `stPlaces` "Play area

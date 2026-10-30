@@ -276,9 +276,14 @@ export function placeFeatures(places, wheelchairOnly = false, highchairOnly = fa
 // play places: one list, each high-chair place marked play_area: false. Kept
 // in a file of their own so a shell from before v110, which reads only
 // play_places.geojson, never draws one as a play place. Either file may be
-// missing (null): an older dataset has no high-chair file.
-export function withHighchairPlaces(places, hcPlaces) {
-  const hc = (hcPlaces?.features || []).map((f) =>
+// missing (null): an older dataset has no high-chair file. It loads on its own
+// clock and can be a build older than the rest, so a place the tables or the
+// play places already have (an answered ring, deltas merged in) is theirs,
+// never a stale open ring beside it.
+export function withHighchairPlaces(places, hcPlaces, tables = null) {
+  const taken = new Set([...(places?.features || []), ...(tables?.features || [])]
+    .map((f) => f?.properties?.osm_url));
+  const hc = (hcPlaces?.features || []).filter((f) => !taken.has(f?.properties?.osm_url)).map((f) =>
     ({ ...f, properties: { ...(f.properties || {}), play_area: false } }));
   return { type: "FeatureCollection", features: [...(places?.features || []), ...hc] };
 }
