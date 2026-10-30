@@ -833,7 +833,8 @@ chips at the end of the strip, "Play area only" and "High chair only" (both on
 by default, not remembered, `splitPlaces` in `web/datasource.js`); a place with
 both is a play place. The popup headline, share text and count line say "high
 chair" instead of "play area" for the second kind, and the `dad_play_place`
-MapComplete layer selects them too, so the answer button works on their rings.
+MapComplete layer selects them too, so the answer button works on their rings
+(and `dad_venue` leaves them to it, so none is drawn twice).
 
 ## Wheelchair access
 

@@ -31,7 +31,8 @@
 > play places, high-chair places (supersedes the v66 order). The popup headline
 > (`metaPlacesHc`), the share text (`sharePlaceHcText`) and the count line
 > (`countPlacesHc`) have high-chair versions in all 32 languages; the
-> MapComplete layer `dad_play_place` also selects `highchair=yes` or a number;
+> MapComplete layer `dad_play_place` also selects `highchair=yes` or a number
+> (and `dad_venue` leaves those to it);
 > the methods pages say that rings also mark high-chair places. Shell pin
 > `v=app103` becomes `v=app104`.
 
@@ -2966,7 +2967,7 @@ Overpass `out center`). Feature `properties`:
 
 `web/data/play_places.geojson` — same FeatureCollection shape, the v10 dataset
 of places with a play area and no changing-table answer — or, since v27, the answer
-`no`. Feature `properties`:
+`no`; since v110 also places that record a high chair instead. Feature `properties`:
 
 ```json
 {
@@ -2975,6 +2976,7 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "name": "string or null",
   "kind": "cafe|indoor_play|mall|... or null",
   "changing_table": "\"no\" (answered: no table, v27) or null (nobody has answered)",
+  "play_area": "true|false — false: only a high chair is recorded (v110)",
   "wheelchair": "yes|limited|no|\"unreadable\"|null — as on the tables (v28, v102)",
   "toilets_wheelchair": "yes|limited|no|\"unreadable\"|null — as on the tables (v28, v102)",
   "wheelchair_description": "string or null — as on the tables (v28)",
@@ -2997,7 +2999,7 @@ of places with a play area and no changing-table answer — or, since v27, the a
     "yes_location_known": 17, "yes_location_unknown": 68,
     "accessible": 0, "female_only": 0, "unknown": 0,
     "play_tables": 0, "play_places": 0, "play_places_no": 0,
-    "highchair_tables": 0,
+    "highchair_tables": 0, "highchair_places": 0,
     "capacity_tagged_toilets": 2
   },
   "global": {

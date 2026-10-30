@@ -4430,14 +4430,24 @@
               "or": [
                 "kids_area~i~^(yes|indoor|designated)$",
                 "kids_area:indoor~i~^(yes|indoor|designated)$",
+                {
+                  "and": [
+                    "leisure!=playground",
+                    {
+                      "or": [
+                        "kids_area~i~^outdoor$",
+                        "kids_area:outdoor~i~^(yes|indoor|designated)$"
+                      ]
+                    }
+                  ]
+                },
                 "leisure=indoor_play",
                 {
                   "and": [
                     "leisure=playground",
                     "indoor=yes"
                   ]
-                },
-                "highchair~i~^(yes|[1-9][0-9]*)$"
+                }
               ]
             },
             "then": {
@@ -4717,14 +4727,24 @@
                 "or": [
                   "kids_area~i~^(yes|indoor|designated)$",
                   "kids_area:indoor~i~^(yes|indoor|designated)$",
+                  {
+                    "and": [
+                      "leisure!=playground",
+                      {
+                        "or": [
+                          "kids_area~i~^outdoor$",
+                          "kids_area:outdoor~i~^(yes|indoor|designated)$"
+                        ]
+                      }
+                    ]
+                  },
                   "leisure=indoor_play",
                   {
                     "and": [
                       "leisure=playground",
                       "indoor=yes"
                     ]
-                  },
-                  "highchair~i~^(yes|[1-9][0-9]*)$"
+                  }
                 ]
               },
               "then": {
@@ -6238,7 +6258,8 @@
             "kids_area!~^(yes|indoor|designated|outdoor)$",
             "kids_area:indoor!~^(yes|indoor|designated)$",
             "kids_area:outdoor!~^(yes|indoor|designated)$",
-            "leisure!=indoor_play"
+            "leisure!=indoor_play",
+            "highchair!~i~^(yes|[1-9][0-9]*)$"
           ]
         }
       },

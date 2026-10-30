@@ -60,3 +60,22 @@ def test_location_answers_are_the_classified_vocabulary():
 def test_changing_table_values_are_the_feature_values():
     values = {s.split("=", 1)[1] for s in tag_conditions() if s.startswith("changing_table=")}
     assert values - {"no"} == FEATURE_VALUES
+
+
+def test_play_place_texts_test_the_play_half_of_the_layer():
+    # dad_play_place selects a play area or a high chair (CONTRACT v110). Its
+    # "Place to play" title and status must test the play half exactly, or a
+    # high-chair-only place reads as a play place, an outdoor one as a chair.
+    layer = next(lay for lay in THEME["layers"] if lay["id"] == "dad_play_place")
+    selects = layer["source"]["osmTags"]["and"][0]["or"]
+    play = {"or": [c for c in selects if not str(c).startswith("highchair")]}
+    assert len(play["or"]) == len(selects) - 1
+    status = next(r for r in layer["tagRenderings"]
+                  if isinstance(r, dict) and r.get("id") == "dad-status")
+    for mappings in (layer["title"]["mappings"], status["mappings"]):
+        ifs = [m["if"] for m in mappings if any("kids_area" in s for s in strings(m["if"]))]
+        assert ifs == [play]
+    # ...and dad_venue leaves those places to it, so none is drawn twice.
+    venue = next(lay for lay in THEME["layers"] if lay["id"] == "dad_venue")
+    hc = next(c for c in selects if str(c).startswith("highchair"))
+    assert hc.replace("~", "!~", 1) in venue["source"]["osmTags"]["and"]
