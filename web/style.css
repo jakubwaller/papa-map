@@ -1005,7 +1005,14 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
   border: 2px solid var(--play);
   vertical-align: baseline;
 }
-.popup .links { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+.popup .links { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+.popup .links .btn.primary { margin-bottom: 4px; }
+.popup .textlinks { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; font-size: 12.5px; font-weight: 600; }
+.popup .links .textlinks .icon-btn { margin-left: auto; }   /* Share at the row's end */
+.popup .textlink .route-icon { width: 15px; height: 15px; fill: currentColor; vertical-align: -2px; margin-right: 5px; }
+.popup .textlink { display: inline-block; padding: 6px 0; color: var(--green-strong); text-decoration: none; }
+.popup .textlink:is(:hover, :focus-visible) { text-decoration: underline; }
+.popup .textlink:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 :is(.popup, #venue-ask) .btn {
   display: inline-block;
   padding: 7px 12px;
@@ -1021,8 +1028,11 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    outrank a plain .popup selector and paint the label dark grey on green. */
 :is(.popup, #venue-ask) .btn.primary { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
 :is(.popup, #venue-ask) .btn.primary:is(:hover, :active) { background: var(--green-press); border-color: var(--green-press); color: #fff; }
-/* The share button: icon only, in the same row as Route and the OSM link —
-   at 375 px in German that row has no room left for one more word. The
+/* Grey filled: Share goes somewhere, it does not answer anything. */
+:is(.popup, #venue-ask) .btn.soft { background: #f1f4f2; border-color: transparent; color: var(--ink); }
+:is(.popup, #venue-ask) .btn.soft:hover { background: #e4e9e4; color: var(--ink); }
+/* The share button: the one round icon, icon only, at the right end of the
+   text-link row (v104) — that row is tight in German at 375 px. The
    :is() is for specificity: the pill rule above carries an id through it,
    and a plain .popup selector lost its padding to that rule (6 Oct 2026). */
 :is(.popup, #venue-ask) .btn.icon-btn {
@@ -1084,11 +1094,11 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    Alone on a pin whose room is on record (v34) it carries the line itself, on
    a row of its own; that card has no rooms and is short. A language whose
    words do not fit beside the pills wraps rather than clips. */
-.popup .ask-play, .popup .ask-hc {
+.popup .ask-play, .popup :is(.ask-hc, .ask-wc, .ask-tw) {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
   margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft);
 }
-.popup .ask-play .ask-q, .popup .ask-hc .ask-q { margin-bottom: 0; flex: 1 1 auto; }
+.popup .ask-play .ask-q, .popup :is(.ask-hc, .ask-wc, .ask-tw) .ask-q { margin-bottom: 0; flex: 1 1 auto; }
 /* Three answers since v31, so they wrap as a group: either the whole row fits
    beside the question or the three drop under it together, never two up and
    one alone. 12px of padding rather than 14 buys the German row (drinnen /
@@ -1097,9 +1107,17 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup .ask-play .ask-btn { flex: 0 0 auto; padding: 6px 12px; }
 .popup .ask-play .ask-who { flex: 1 1 100%; margin-top: 0; }
 /* The high-chair question (v65) is the play question's shape with two pills. */
-.popup .ask-hc .ask-hc-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
-.popup .ask-hc .ask-btn { flex: 0 0 auto; padding: 6px 12px; }
-.popup .ask-hc .ask-who { flex: 1 1 100%; margin-top: 0; }
+.popup :is(.ask-hc, .ask-wc, .ask-tw) .ask-hc-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
+.popup :is(.ask-hc, .ask-wc, .ask-tw) .ask-btn { flex: 0 0 auto; padding: 6px 12px; }
+.popup :is(.ask-hc, .ask-wc, .ask-tw) .ask-who { flex: 1 1 100%; margin-top: 0; }
+/* The fold (v102): play, high chair and the two wheelchair questions behind
+   one line, so a card that asks five things stays the height of one that
+   asks two. The summary dresses like the "more rooms" link; the first
+   question inside drops its own rule, the summary's stands in for it. */
+.popup details.more { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+.popup details.more > summary { cursor: pointer; font-size: 12.5px; color: var(--green-strong); text-decoration: underline; }
+.popup details.more > summary + * { margin-top: 4px; padding-top: 0; border-top: none; }
+.popup details.more > .textlinks { margin-top: 2px; }
 :is(.popup, #venue-ask) .ask-who { margin-top: 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted-2); }
 :is(.popup, #venue-ask) .linkish {
   border: 0; background: none; padding: 0; font: inherit;

@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app97";
-import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app97";
+import { CREATED_BY } from "./osm.js?v=app104";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app104";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -421,6 +421,7 @@ export function pinNumber(pin) {
 export const WHATS_NEW = [
   { since: 67, keys: ["newsHighchair"] },   // the high-chair chip and question (v65)
   { since: 74, keys: ["newsAddPlace"] },    // "+ Add a place" lists the places OSM already knows (v73)
+  { since: 97, keys: ["newsWheelchairAsk"] },   // the two wheelchair questions and the fold (v102)
 ];
 
 export function introKind(stored, current, notes = WHATS_NEW) {

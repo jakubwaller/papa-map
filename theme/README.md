@@ -21,6 +21,11 @@ dependencies beyond bundled icon paths):
   `amenity=toilets` (cafés, restaurants, shops...). Same colors and questions, no draft
   group, no presets (you can't meaningfully "add a changing-table amenity" from scratch).
   Since v10 it also asks **`kids-area`** (see below).
+- **Wheelchair questions (Oct 2026, CONTRACT v102)** — every layer asks
+  **`wheelchair`** (yes / limited / no; the place, or on a toilet block the
+  toilet itself) and, once `changing_table=yes|limited`, **`changing-table-wheelchair`**
+  (`changing_table:wheelchair`, the same three values: usable from the chair).
+  Inline like the others, the same words as the site's own popup questions.
 - **`dad_play_place`** — added v10: places that record a kids' area and carry **no
   `changing_table` tag at all**, minus `amenity=toilets` (which has its own layer above).
   Blue `#0072b2` circle under the bundled playground pictogram, hollow on the website to
@@ -42,6 +47,18 @@ dependencies beyond bundled icon paths):
   iD, which on a phone meant finding the object, opening the raw tag editor and typing two
   keys; now the button opens this theme a zoom level inside the layer and the flow is tap →
   `changing_table` yes/no → room → fee → `kids-area`, the same questions as the layers above.
+  Since 21 Oct 2026 it has three presets, a café, a restaurant and a baby shop, and since
+  29 Oct 2026 a fourth, a generic `shop=yes` "a different shop" (for a shop owner whose business
+  was none of the three), for a place OSM does not have yet, and a `name` question (here and on `dad_changing_table_amenity`)
+  asked only where the name is missing, `noname=yes` is not set and the object is one of
+  this layer's own venue categories (the changing-table layer also holds rooms,
+  playgrounds and bare table nodes, which rightly have no name). It comes after the
+  table questions on purpose: MapComplete uploads after 15 s of quiet, and a quick table
+  answer lands in the same upload as the new point, so the delta sees a version 1 with a
+  table and marks it `created` — the site's add-watch toast needs that. A name typed first
+  would often upload the bare café alone. A preset's tags must stay inside the layer's
+  filter or the new point is hidden from the layer that asks its questions
+  (`web/venues.test.js` checks).
 
 ### The `kids-area` question (v10)
 

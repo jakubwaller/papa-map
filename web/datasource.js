@@ -62,8 +62,16 @@ export function loadFeatures(fc) {
       wheelchair: WHEELCHAIR_STATES.includes(p.wheelchair) ? p.wheelchair : null,
       toilets_wheelchair: WHEELCHAIR_STATES.includes(p.toilets_wheelchair)
         ? p.toilets_wheelchair : null,
+      // Whether OSM says anything at all (v102): one of the three, or a
+      // present value the pipeline cannot read ("unreadable"). Gates the
+      // question — a write onto a present key would be refused as taken.
+      wheelchair_recorded: WHEELCHAIR_STATES.includes(p.wheelchair) || p.wheelchair === "unreadable",
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
+      // The table's own answer (v102, `changing_table:wheelchair`), the same
+      // three values or null. The popup asks where null; never a chip rule.
+      table_wheelchair: WHEELCHAIR_STATES.includes(p.table_wheelchair) ? p.table_wheelchair : null,
+      table_wheelchair_recorded: WHEELCHAIR_STATES.includes(p.table_wheelchair) || p.table_wheelchair === "unreadable",
       // A recorded high chair (v65). `highchair` is true / false / null for
       // display; a dataset from before v65 leaves it undefined, read as null.
       // `highchair_recorded` gates the question: true for an answered yes AND
@@ -123,13 +131,17 @@ export function loadPlaces(fc) {
       // "no" or null, and only those: a dataset from before v27 has no such
       // property and must read as the open question, never as an answer.
       changing_table: p.changing_table === "no" ? "no" : null,
-      // v102: false = only a high chair is recorded. Missing (a dataset from
-      // before v102) means true: every old place is a play place.
+      // v110: false = only a high chair is recorded. Missing (a dataset from
+      // before v110) means true: every old place is a play place.
       play_area: p.play_area !== false,
       // As on the pins (v26), read with the same strictness (v28).
       wheelchair: WHEELCHAIR_STATES.includes(p.wheelchair) ? p.wheelchair : null,
       toilets_wheelchair: WHEELCHAIR_STATES.includes(p.toilets_wheelchair)
         ? p.toilets_wheelchair : null,
+      // Whether OSM says anything at all (v102): one of the three, or a
+      // present value the pipeline cannot read ("unreadable"). Gates the
+      // question — a write onto a present key would be refused as taken.
+      wheelchair_recorded: WHEELCHAIR_STATES.includes(p.wheelchair) || p.wheelchair === "unreadable",
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
       // As on the pins (v65): true / false / null, and `highchair_recorded`
@@ -260,7 +272,7 @@ export function placeFeatures(places, wheelchairOnly = false, highchairOnly = fa
   return highchairOnly ? byWheelchair.filter(isHighchair) : byWheelchair;
 }
 
-// The two ring chips (v102): "Play area only" takes the places with a play
+// The two ring chips (v110): "Play area only" takes the places with a play
 // area, "High chair only" those that record nothing but a high chair.
 export function splitPlaces(places, playOn = true, highchairOn = true) {
   return places.filter((p) => (p.play_area === false ? highchairOn : playOn));
@@ -1122,8 +1134,8 @@ export function resolveDataUrl(path, native, site) {
 // grey table's room and a play place's own room question can move an
 // object's status). `overrides` is localStorage's papamap-answer-overrides
 // shape: {osm_url: {status, men_only, changing_table, location_raw,
-// play_answered, play, highchair_answered, t, version}}, every field but t and
-// version optional (men_only since v50, play since v100; an override stored before it keeps
+// play_answered, play, highchair_answered, wheelchair, table_wheelchair, t, version}}, every field but t and
+// version optional (men_only since v50, play since v100, the wheelchair pair since v102; an override stored before it keeps
 // the base's). Only the fields an entry carries are written: a play or
 // high-chair answer must not blank the room the base already records. An
 // override for an object neither collection has any more (deleted, or never
@@ -1147,6 +1159,11 @@ export function applyAnswerOverrides(fc, places, overrides) {
     if (o.play_answered === true) props.play_answered = true;
     if (typeof o.play === "boolean") props.play = o.play;
     if (typeof o.highchair_answered === "boolean") props.highchair_answered = o.highchair_answered;
+    // A wheelchair answer (v102) is kept under the property's own name: the
+    // question is only asked where the base has none, and the chip may count
+    // the reader's own "yes" at once.
+    if (WHEELCHAIR_STATES.includes(o.wheelchair)) props.wheelchair = o.wheelchair;
+    if (WHEELCHAIR_STATES.includes(o.table_wheelchair)) props.table_wheelchair = o.table_wheelchair;
     const patched = { ...base, properties: props };
     if (o.status || isTable) { tableByUrl.set(url, patched); placeByUrl.delete(url); }
     else placeByUrl.set(url, patched);
@@ -1383,3 +1400,11 @@ export function nearestFeature(point, features, project) {
   }
   return best;
 }
+
+// The fold's state (v105): what the reader last chose (true / false), else
+// open for a logged-in reader and closed for the rest.
+export const foldOpen = (stored, loggedIn) => stored ?? loggedIn;
+
+// Whether an answer override carries a room answer — a room answer remembers
+// changing_table; play, high chair and wheelchair answers never do.
+export const roomAnsweredHere = (override) => override?.changing_table !== undefined;

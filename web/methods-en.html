@@ -222,7 +222,7 @@ with a playground in the garden gets <em>outdoors only</em> rather than a false 
 follows (or stays away) a few minutes later. Nobody is asked twice: a recorded
 <code>kids_area</code> <em>or</em> <code>kids_area:indoor</code>, whatever the value, takes the
 question away. On a <code>leisure=playground</code> without <code>indoor=yes</code> it is never
-asked at all — the place <em>is</em> somewhere for children to play, just not indoors.</p>
+asked at all — the place <em>is</em> somewhere for children to play, just not indoors. Nor is it asked on a public toilet (<code>amenity=toilets</code>): a play corner belongs to a café or a shop, not to a WC.</p>
 <p>Many more places pass this rule than have a pin. Only
 <span data-stat="play_tables">111</span> of them have a pin.
 At <span data-stat="play_places">701</span> more, nobody has answered the first question: is there
@@ -238,6 +238,7 @@ with a kid you'd happily go there without one.</p>
 
 <h2 id="wheelchair">The Wheelchair chip</h2>
 <p>The <em>Wheelchair</em> chip shows places tagged <code>wheelchair=yes</code> or <code>wheelchair=limited</code> in OSM. <code>limited</code> means one step of up to 7&nbsp;cm, or help needed. Under the chip these places carry an exclamation mark from zoom 13, and the popup says <em>limited</em>. <code>toilets:wheelchair=yes</code> on its own is not enough, but it still appears in the popup, together with <code>wheelchair:description</code>. A place without the tag is not inaccessible, OSM simply says nothing, so the chip only filters and colours nothing. The chip filters and marks the blue rings (places with a play area) the same way.</p>
+<p>Where OSM says nothing, the popup asks two more things: whether you can get in with a wheelchair (<code>wheelchair</code>, the place, not the table) and whether the changing table is usable from a wheelchair (<code>changing_table:wheelchair</code>: yes, limited, no). The answers appear in the popup; the chip still filters on <code>wheelchair</code> alone.</p>
 <p>Under this chip, and only there, the tables behind a Euro or RADAR key come back, with a key drawn in the pin: whoever needs the chip usually holds the key. On the normal map, in the numbers and in the leaderboard they stay out.</p>
 
 <h2 id="high-chair">The High chair chip</h2>
@@ -249,8 +250,7 @@ with a kid you'd happily go there without one.</p>
 that on site in under a minute.</p>
 <ul>
   <li><strong>In the app (quickest):</strong> tap the grey pin. The popup asks <em>Which room is the changing table in?</em> Tap <em>Women's &amp; men's</em>, <em>Men's room</em>, <em>Women's room</em>, <em>Unisex toilet</em>, <em>Accessible toilet</em> or <em>Separate room</em>. Other rooms are behind <em>More rooms …</em>. In the <em>Mum</em> reading, <em>Men's room</em> and <em>Women's &amp; men's</em> are left out, because a mum cannot vouch for the men's room. You log in once with OSM, the answer is saved under your own account, and the pin updates within a few minutes. Tap the location button within 75&nbsp;m of a grey pin and a card asks whether you are there right now; <em>Answer the question</em> opens the same popup.</li>
-  <li><strong>MapComplete (any phone, in the browser):</strong> &ldquo;Answer on
-      MapComplete&rdquo; on a grey pin opens the same object in PapaMap's own MapComplete theme.
+  <li><strong>MapComplete (any phone, in the browser):</strong> &ldquo;Add or correct details&rdquo; on a grey pin opens the same object in PapaMap's own MapComplete theme.
       MapComplete warns once about an unofficial theme, that's fine. Log in with your OSM account
       and answer the changing-table questions, including the one about the room. The answer goes
       straight into OpenStreetMap and shows up here within a few minutes.</li>
@@ -356,7 +356,7 @@ The site's own code is MIT-licensed.</p>
 <h2 id="privacy">Privacy</h2>
 <p>A static site. It sets no cookies and runs no analytics. The map tiles come from
 OpenStreetMap's tile servers, so those requests fall under the
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privacy policy</a>. Tap <em>Answer on MapComplete</em> in a pin, and for a few minutes the page also asks api.openstreetmap.org what that one object now says — those requests fall under the same policy. From the third character you type into the search
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">OSMF privacy policy</a>. Tap <em>Add or correct details</em> in a pin, and for a few minutes the page also asks api.openstreetmap.org what that one object now says — those requests fall under the same policy. From the third character you type into the search
 field, and whenever you open <em>Add a place</em>, the page also asks komoot's Photon place
 search (photon.komoot.io). It receives the text you typed and a rounded map centre and, like any
 server, your IP address. Links to

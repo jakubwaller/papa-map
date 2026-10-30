@@ -6,6 +6,7 @@ import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
          roomLabelKeys,
          PLAY_CHOICES, PLAY_KEYS, isPlayChoice, playPatch, guardKeys, changesetTags, changesetXml,
          HIGHCHAIR_CHOICES, HIGHCHAIR_VENUES, isHighchairChoice, isHighchairVenue, highchairPatch,
+         WHEELCHAIR_CHOICES, isWheelchairChoice, wheelchairPatch,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY,
          startLogin, takeIntent, keepRoundTripAcrossRestarts, awaitingReturn, preferReturn, dropStaleRoundTrip, ROUND_TRIP_MS, PKCE_KEY, INTENT_KEY,
          setLogin, clearLogin, getToken, getUser, getUserId, userInfo, userName, ensureUserInfo } from "./osm.js";
@@ -616,6 +617,22 @@ test("a high-chair answer guards its own single key", () => {
   // The 409 "taken" re-read applies to `highchair` with no special case.
   assert.deepEqual(guardKeys(highchairPatch("hc_yes")), ["highchair"]);
   assert.deepEqual(guardKeys(highchairPatch("hc_no")), ["highchair"]);
+});
+
+test("the wheelchair answers write the place's or the table's key, one value, nothing else (v102)", () => {
+  assert.deepEqual(wheelchairPatch("wc_yes"), { wheelchair: "yes" });
+  assert.deepEqual(wheelchairPatch("wc_limited"), { wheelchair: "limited" });
+  assert.deepEqual(wheelchairPatch("wc_no"), { wheelchair: "no" });
+  assert.deepEqual(wheelchairPatch("tw_yes"), { "changing_table:wheelchair": "yes" });
+  assert.deepEqual(wheelchairPatch("tw_limited"), { "changing_table:wheelchair": "limited" });
+  assert.deepEqual(wheelchairPatch("tw_no"), { "changing_table:wheelchair": "no" });
+  for (const c of ["yes", "wc_designated", "tw", "hc_yes", "play_yes", undefined]) assert.throws(() => wheelchairPatch(c));
+  for (const c of WHEELCHAIR_CHOICES) {
+    assert.ok(isWheelchairChoice(c), c);
+    assert.ok(!isPlayChoice(c) && !isHighchairChoice(c), c);
+    assert.deepEqual(guardKeys(wheelchairPatch(c)), Object.keys(wheelchairPatch(c)));
+  }
+  for (const c of [...PLAY_CHOICES, ...HIGHCHAIR_CHOICES, "both", "none", null]) assert.ok(!isWheelchairChoice(c), String(c));
 });
 
 test("the high-chair question is asked on eating and family places only", () => {

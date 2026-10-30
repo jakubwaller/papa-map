@@ -659,7 +659,8 @@ to go but MapComplete). Alone on such a pin it carries the login line itself.
 It is asked only where OSM is silent: a recorded play corner shows its blue ring
 instead, a recorded answer of any kind is never asked again, and a
 `leisure=playground` is not asked at all, because the object itself is the
-answer. *Indoors* writes `kids_area:indoor=yes` together with `kids_area=yes`,
+answer, nor is a public toilet (`amenity=toilets`, v108), which has no play
+corner of its own. *Indoors* writes `kids_area:indoor=yes` together with `kids_area=yes`,
 *outdoors only* writes `kids_area=yes` together with `kids_area:indoor=no`,
 *none* writes `kids_area=no`: the three mappings the site's own MapComplete
 theme uses for the same question, and values `classify.py` already reads. The
@@ -696,7 +697,13 @@ its room*, or *no changing table*. The answer goes through the same `writeTags`,
 under the same login, with the same changeset comments as a play place's
 (CONTRACT.md v62). Places OSM does not have at all, and public toilets, stay with
 the two MapComplete links under the list: creating an object is a different job
-from tagging one.
+from tagging one. Since 21 Oct 2026 the venue link can create one too: the
+theme's `dad_venue` layer offers a café, a restaurant and a baby shop as new
+points, and since 29 Oct 2026 a generic "a different shop" (`shop=yes`), and asks a new place its name after the table questions (so the table
+lands in the point's first upload, see `theme/README.md`). A baby-shop owner whose shop OSM
+did not have wrote in because no path in PapaMap could add it; a hearing-aid shop owner
+then wrote in because none of the three fit, hence the generic shop (untagged `shop=yes`
+places now also show in the nearby list and as orange pins).
 
 The list is Photon's `/reverse`, 300 m around the map centre, filtered to the
 `dad_venue` layer's own tag list (`web/venues.js`; a test fails if the two
@@ -729,10 +736,21 @@ answer (until 5 Oct 2026 the flight came first and the popup's own pan stopped
 it: no zoom-in, and a reader who had wandered off since was left there with the
 card off-screen); there is no optimistic pin.
 
+### Popup links
+
+Answering and going somewhere look different. The answer pills (room, play,
+high chair, wheelchair) are outlined; under a thin divider sits one row with
+Route (text link, small directions icon and arrow) and the round icon-only
+Share button at the row's right end. The MapComplete link ("Add or correct
+details", with its arrow) is the last line inside the fold (v105); the
+OpenStreetMap link is gone. The only green filled button is MapComplete on a pin
+that cannot ask the room itself (the recorded value is unreadable) and has
+nothing else to ask, because green means "a dad can reach it"; that pin has no
+fold.
+
 ### Share a pin
 
-Both popups carry a share button, icon only, in the row the Route button
-already lives in — a labelled one does not fit that row in German on a 12
+Both popups carry a share button, icon only, at the end of the text-link row — a labelled one does not fit that row in German on a 12
 mini. It builds a plain `https://papamap.de/?osm=<osm_url>` link from the
 pipeline's own `osm_url`, the identifier the app's own deep link
 (`papamap://table?osm=…`, the widget and the Siri shortcut) already carries,
@@ -740,7 +758,10 @@ so `openPin` is the one place that reads either back — on this page's own load
 and from the app; once it has (found the pin, found the play place, or found
 neither), the `?osm=` param strips itself from the address bar, the way
 `?lang=`/`?mode=` already do, so a shared link saved to the home screen does
-not reopen the same pin on every future launch. The link opens for anyone, the
+not reopen the same pin on every future launch. "Found neither" waits for the
+first delta poll (21 Oct 2026): a place added since the nightly build is only in
+the delta, which arrives after boot's own `openQueuedPin`, and the freshly added
+place is exactly the one people share. The link opens for anyone, the
 app installed or not, in the receiver's own language (a share carries no
 `?lang=`: it is not the sharer's choice to make). `navigator.share` where the
 browser offers it, otherwise a clipboard copy with a toast to confirm it — no
@@ -804,7 +825,7 @@ halves, and `osm.split_sweep()` sorts them apart by tag.
 
 ### High-chair-only rings
 
-Since v102 the places file also holds objects that record a high chair
+Since v110 the places file also holds objects that record a high chair
 (`highchair` = yes or a number) and no changing-table answer, with or without a
 play area. Each place carries `play_area`; the frontend reads a missing one as
 true, so an older dataset still shows only play places. The rings have two
@@ -851,6 +872,41 @@ locked. Costs no extra Overpass query. Measured on Germany, 13 Sep 2026:
 6,190 `changing_table=yes` objects, 4,419 of them `wheelchair=yes`, 534
 `limited`, 495 `no`, 742 untagged; 390 tables in a wheelchair toilet, 7 of
 them behind a Euro key.
+
+### Two questions, and the fold (v102)
+
+A father in a wheelchair who had mapped a table through the theme found no way
+to say anything about accessibility, and from his first outings reported that
+step-free is not yet usable: tables level with the floor but high, with no room
+for the knees underneath. Height is impractical to collect, so (his call, 18 Oct
+2026) three levels are enough, which is what OSM already has. Where OSM is
+silent the popup now asks two things, each with yes / limited / no pills: "Can
+you get in with a wheelchair?" writes `wheelchair=*` on the place, what the chip
+reads, and "Is the changing table usable from a wheelchair?" writes
+`changing_table:wheelchair=*`, carried as `table_wheelchair` and shown as a row
+of its own. The table pins ask both, the play-place rings the place question
+alone, and the MapComplete theme asks the same two on every layer.
+Since 20 Oct 2026 the place question carries the OSM definition of `limited` in
+parentheses (one small step of up to 7 cm, help needed or not every room
+reachable): readers
+answer from memory as often as on the spot, and the middle pill meant nothing
+without it. The table question had its definition from the start.
+
+Two more lines did not fit: most pins already asked two or three questions.
+So the room question stays on top and everything else — play corner, high
+chair and the two wheelchair questions — folds behind one native `<details>`
+line, "More about this place (n)", closed by default. Since v105 the fold is
+one remembered state for every card (`papamap-more-open`), not one per card:
+open by default for a logged-in reader until they close one, closed for
+everyone else until they open one. It always renders on a pin (the count only
+shows above zero) because the MapComplete link lives at its end, and the
+place-wheelchair question is the exception to the folding: right after this
+reader's own room answer it stands unfolded where the room question was, until
+answered. The fold will cost some
+play and high-chair answers; every in-app answer carries a per-question
+changeset comment, so the before and after can be counted. A reader's own
+wheelchair answer is remembered the way the others are (v78) and may count for
+the chip at once.
 
 ## High chairs
 

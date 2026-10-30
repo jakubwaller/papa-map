@@ -77,7 +77,7 @@ def split_sweep(elements) -> tuple[list, list]:
       * objects carrying a `changing_table` tag — any value, since `no` and
         junk like "02" still feed the stats;
       * objects that carry none but do record a play area, indoors or a venue's
-        outdoor one, or a high chair (v102: config.highchair_ql's answer rides in the
+        outdoor one, or a high chair (v110: config.highchair_ql's answer rides in the
         same list).
 
     An object with both belongs to the first list only: it is already a pin,

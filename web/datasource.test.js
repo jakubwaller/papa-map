@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { foldOpen, roomAnsweredHere } from "./datasource.js";
 import { flightLength, flightMs, geoFailKey, STATUSES, loadFeatures, loadPlaces, filterByStatus, filterFeatures,
          countsByStatus, countPlay, toFeatureCollection, WHEELCHAIR_STATES,
          chipKeys, chipView,
@@ -81,7 +82,7 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   assert.equal(places.length, 3);
   assert.deepEqual(places[0], {
     idx: 0, lon: 9.98, lat: 53.54, name: "Café Bauklotz", kind: "cafe", changing_table: null, play_area: true,
-    wheelchair: null, toilets_wheelchair: null, wheelchair_description: null,
+    wheelchair: null, toilets_wheelchair: null, wheelchair_recorded: false, wheelchair_description: null,
     highchair: null, highchair_recorded: false,
     opening_hours: "Mo-Fr 09:00-18:00",
     osm_url: "https://www.openstreetmap.org/node/9001",
@@ -331,6 +332,24 @@ test("highchair is true / false / null — a dataset without the property reads 
   for (const h of [undefined, null, "yes", 1, "true", 0, ""])
     assert.equal(loadFeatures({ type: "FeatureCollection",
       features: [feat(9.9, 53.5, { status: "unknown", highchair: h })] })[0].highchair, null);
+});
+
+test("table_wheelchair is one of the three values or null, and an own answer overrides it (v102)", () => {
+  assert.deepEqual(loadFeatures(FC).map((f) => f.table_wheelchair), [null, null, null]);
+  // "unreadable" (a present value outside the three) shows as nothing but counts as recorded, so it is never asked.
+  for (const [v, want, rec] of [["yes", "yes", true], ["limited", "limited", true], ["no", "no", true],
+                                ["unreadable", null, true], ["designated", null, false], [true, null, false], [undefined, null, false]]) {
+    const f = loadFeatures({ type: "FeatureCollection",
+      features: [feat(9.9, 53.5, { status: "unknown", table_wheelchair: v, wheelchair: v })] })[0];
+    assert.deepEqual([f.table_wheelchair, f.wheelchair, f.table_wheelchair_recorded, f.wheelchair_recorded], [want, want, rec, rec], String(v));
+  }
+  // The override carries the value under the property's own name; junk stays out.
+  const base = { type: "FeatureCollection", features: [feat(9.9, 53.5, { status: "unknown", osm_url: "https://www.openstreetmap.org/node/1" })] };
+  const url = "https://www.openstreetmap.org/node/1";
+  const own = applyAnswerOverrides(base, { type: "FeatureCollection", features: [] }, { [url]: { wheelchair: "limited", table_wheelchair: "yes", t: "2026-10-20T10:00:00Z", version: 3 } });
+  assert.deepEqual(loadFeatures(own.fc).map((f) => [f.wheelchair, f.table_wheelchair]), [["limited", "yes"]]);
+  const junk = applyAnswerOverrides(base, { type: "FeatureCollection", features: [] }, { [url]: { wheelchair: "designated", t: "2026-10-20T10:00:00Z", version: 3 } });
+  assert.equal(loadFeatures(junk.fc)[0].wheelchair, null);
 });
 
 test("highchair \"unreadable\" is shown as nothing, never asked, never a chip hit", () => {
@@ -2128,4 +2147,18 @@ test("nearestFeature picks the pin closest to the tap, or null", () => {
   const fs = [{ id: "far", x: 30, y: 0 }, { id: "near", x: 12, y: 5 }, { id: "dup", x: 12, y: 5 }];
   assert.equal(nearestFeature({ x: 15, y: 5 }, fs, (f) => f).id, "near");
   assert.equal(nearestFeature({ x: 0, y: 0 }, [], (f) => f), null);
+});
+
+test("foldOpen: the reader's last choice wins, else open for a logged-in reader", () => {
+  assert.equal(foldOpen(null, true), true);
+  assert.equal(foldOpen(null, false), false);
+  assert.equal(foldOpen(false, true), false);
+  assert.equal(foldOpen(true, false), true);
+});
+
+test("roomAnsweredHere: only an override that carries a room answer", () => {
+  assert.equal(roomAnsweredHere({ changing_table: "yes", location_raw: "female_toilet" }), true);
+  assert.equal(roomAnsweredHere({ wheelchair: "yes", t: "x" }), false);
+  assert.equal(roomAnsweredHere({ play_answered: true }), false);
+  assert.equal(roomAnsweredHere(undefined), false);
 });

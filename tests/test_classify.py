@@ -98,7 +98,8 @@ def test_wheelchair_state_reads_only_the_three_wiki_values():
     assert wheelchair_state({"wheelchair": "yes"}) == "yes"
     assert wheelchair_state({"wheelchair": " LIMITED "}) == "limited"
     assert wheelchair_state({"wheelchair": "no"}) == "no"
-    assert wheelchair_state({"wheelchair": "designated"}) is None
+    assert wheelchair_state({"wheelchair": "designated"}) == "unreadable"   # present, so never asked (v102)
+    assert wheelchair_state({"wheelchair": ""}) == "unreadable"
     assert wheelchair_state({}) is None
     assert wheelchair_state({"wheelchair": "no", "toilets:wheelchair": "yes"},
                             "toilets:wheelchair") == "yes"
@@ -160,6 +161,14 @@ def test_a_playground_is_its_own_answer_so_the_popup_never_asks():
     assert play_state({"amenity": "cafe"}) is None
     # leisure=indoor_play was already True, by the tag and not by this rule.
     assert play_state({"leisure": "indoor_play"}) is True
+
+
+def test_a_toilet_is_never_asked_about_a_play_corner():
+    # v108: a WC has no play corner, so `amenity=toilets` settles the question.
+    assert play_state({"amenity": "toilets"}) is False
+    assert play_state({"amenity": "toilets", "changing_table": "yes"}) is False
+    # A recorded play corner still rings, as on the McDonald's WC node tagged so.
+    assert play_state({"amenity": "toilets", "kids_area": "yes"}) is True
 
 
 @pytest.mark.parametrize("location", ["male_toilet", " Male_Toilet ", "male_toilet;baby_room",

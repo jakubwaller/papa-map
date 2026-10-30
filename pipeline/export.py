@@ -90,6 +90,9 @@ def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]
                 "wheelchair": wheelchair_state(tags),
                 "toilets_wheelchair": wheelchair_state(tags, "toilets:wheelchair"),
                 "wheelchair_description": tags.get("wheelchair:description"),
+                # The table's own answer (v102): `changing_table:wheelchair`,
+                # the same tri-state or null. Only the null gets the question.
+                "table_wheelchair": wheelchair_state(tags, "changing_table:wheelchair"),
                 # Free as well (v65): true / false / null, a badge and a chip,
                 # never a status. Only the null gets the popup's question.
                 "highchair": highchair_state(tags),
@@ -125,7 +128,7 @@ KIND_KEYS = ("leisure", "amenity", "shop", "tourism", "healthcare")
 def build_play_features(play_data: dict, ct_data: dict | None = None,
                         area_by_key: dict | None = None) -> list[dict]:
     """GeoJSON features for places that record a play area (indoors or a venue's outdoor one)
-    or a high chair (v102) and are not pins — the prospecting list, and a strictly different dataset from the
+    or a high chair (v110) and are not pins — the prospecting list, and a strictly different dataset from the
     pins.
 
     These are not a fourth status. A pin is a place where a table is *known* to
@@ -173,7 +176,7 @@ def build_play_features(play_data: dict, ct_data: dict | None = None,
                 "kind": next((tags[k] for k in KIND_KEYS if tags.get(k)), None),
                 # "no" or None — see the docstring; never anything else.
                 "changing_table": value or None,
-                # Told apart from a high-chair-only place (v102) by the popup.
+                # Told apart from a high-chair-only place (v110) by the popup.
                 "play_area": has_play_area(tags),
                 # As on the pins (v26), so the wheelchair chip can narrow the
                 # rings by the same rule (v28). Same free tags, no new query.

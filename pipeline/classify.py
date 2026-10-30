@@ -147,7 +147,9 @@ def play_state(tags: dict) -> bool | None:
 
     One object answers the question by existing: a `leisure=playground` that is
     not `indoor=yes` is an outdoor play area, so it is False rather than None —
-    there is nothing to ask a reader standing on one (v31)."""
+    there is nothing to ask a reader standing on one (v31). A standalone
+    `amenity=toilets` is False too: a play corner belongs to the café or shop,
+    not to the WC (v108)."""
     if has_play_area(tags):
         return True
     # A playground that is not indoors is itself the answer: the object *is* an
@@ -157,20 +159,29 @@ def play_state(tags: dict) -> bool | None:
     # `indoor=yes` never reaches this line — has_play_area already said True.
     if _v(tags, "leisure") == "playground":
         return False
+    # A public WC has no play corner to ask about (17,271 toilet pins asked it,
+    # 23 Oct 2026); a mis-placed `kids_area=yes` on one still rings above.
+    if _v(tags, "amenity") == "toilets":
+        return False
     return False if any(k in tags for k in PLAY_KEYS) else None
 
 
 def wheelchair_state(tags: dict, key: str = "wheelchair") -> str | None:
     """`yes` | `limited` | `no` from the `wheelchair` tag (or, with
-    key="toilets:wheelchair", from that one), None when unrecorded or junk.
+    key="toilets:wheelchair", from that one); None when the key is absent,
+    "unreadable" when it is present with anything else — `designated`, free
+    text — as highchair_state does (v102): shown as nothing, not a chip hit,
+    and never asked, because the write would be refused as taken.
 
     On a shop or a café `wheelchair=*` describes the entrance, on an
     `amenity=toilets` object the toilet itself; `toilets:wheelchair=*` says the
     place has an accessible toilet. The frontend shows both as they are and
     filters on `wheelchair=yes` or `limited` (CONTRACT v26, v53) — neither says where the
     table is, which stays `changing_table:location`'s job."""
+    if key not in tags:
+        return None
     value = _v(tags, key)
-    return value if value in WHEELCHAIR_VALUES else None
+    return value if value in WHEELCHAIR_VALUES else "unreadable"
 
 
 def is_place(tags: dict) -> bool:

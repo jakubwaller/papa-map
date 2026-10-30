@@ -224,7 +224,7 @@ statt einer falschen Null. Der Ring kommt (oder bleibt weg) wenige Minuten spät
 schon geantwortet hat, wird nicht noch einmal gefragt: Ein erfasstes <code>kids_area</code>
 <em>oder</em> <code>kids_area:indoor</code> — welcher Wert auch immer — nimmt die Frage weg. Auf
 einem <code>leisure=playground</code> ohne <code>indoor=yes</code> steht sie gar nicht erst: Der
-Ort <em>ist</em> eine Spielmöglichkeit, nur eben draußen.</p>
+Ort <em>ist</em> eine Spielmöglichkeit, nur eben draußen. Auch an einer öffentlichen Toilette (<code>amenity=toilets</code>) steht sie nicht: Eine Spielecke gehört zu einem Café oder Laden, nicht zu einem WC.</p>
 <p>Auf viel mehr Orte trifft die Regel zu, als Pins haben. Nur
 <span data-stat="play_tables">111</span> davon haben einen Pin. Bei <span data-stat="play_places">701</span> weiteren hat niemand
 die erste Frage beantwortet: Gibt es hier einen Wickeltisch? Die kann die Karte nicht einfärben,
@@ -240,6 +240,7 @@ Ort trotzdem, weil man mit Kind auch ohne Tisch gern hingeht.</p>
 
 <h2 id="wheelchair">Der Chip Barrierefrei</h2>
 <p>Der Chip <em>Barrierefrei</em> zeigt Orte, die in OSM <code>wheelchair=yes</code> oder <code>wheelchair=limited</code> tragen. <code>limited</code> heißt eine Stufe bis 7&nbsp;cm oder Hilfe nötig. Diese Orte haben unter dem Chip ab Zoomstufe 13 ein Ausrufezeichen im Pin, und im Popup steht <em>eingeschränkt</em>. <code>toilets:wheelchair=yes</code> allein reicht nicht, steht aber trotzdem im Popup, zusammen mit <code>wheelchair:description</code>. Ein Ort ohne Tag ist nicht unzugänglich, in OSM steht dazu einfach nichts, also filtert der Chip nur und färbt nichts. Die blauen Ringe (Orte mit Spielecke) filtert und markiert der Chip genauso.</p>
+<p>Wo OSM nichts weiß, fragt das Popup zwei Dinge mehr: ob man mit dem Rollstuhl hineinkommt (<code>wheelchair</code>, der Ort, nicht der Tisch) und ob der Wickeltisch vom Rollstuhl aus nutzbar ist (<code>changing_table:wheelchair</code>: ja, eingeschränkt, nein). Die Antworten stehen im Popup; der Chip filtert weiter nur auf <code>wheelchair</code>.</p>
 <p>Unter diesem Chip, und nur dort, kommen die Tische hinter Euroschlüssel zurück, mit einem Schlüssel im Pin: Wer den Chip braucht, hat meist den Schlüssel. Auf der normalen Karte, in den Zahlen und in der Rangliste bleiben sie draußen.</p>
 
 <h2 id="high-chair">Der Chip Hochstuhl</h2>
@@ -251,8 +252,7 @@ Ort trotzdem, weil man mit Kind auch ohne Tisch gern hingeht.</p>
 OSM-Konto vor Ort in unter einer Minute beantworten.</p>
 <ul>
   <li><strong>In der App (am schnellsten):</strong> Tippe auf den grauen Pin. Das Popup fragt <em>In welchem Raum ist der Wickeltisch?</em> Tippe auf <em>Damen &amp; Herren</em>, <em>Herren-WC</em>, <em>Damen-WC</em>, <em>Unisex-WC</em>, <em>Barrierefreies WC</em> oder <em>Eigener Raum</em>. Andere Räume liegen hinter <em>Weitere Räume …</em>. In der Ansicht <em>Mama</em> entfallen <em>Herren-WC</em> und <em>Damen &amp; Herren</em>, weil eine Mutter für das Herren-WC nicht bürgen kann. Du meldest dich einmal mit OSM an, die Antwort wird unter deinem eigenen Konto gespeichert und der Pin ist wenige Minuten später aktualisiert. Tippst du im Umkreis von 75&nbsp;m eines grauen Pins auf den Standort-Knopf, fragt eine Karte, ob du gerade dort bist; <em>Frage beantworten</em> öffnet dasselbe Popup.</li>
-  <li><strong>MapComplete (jedes Handy, im Browser):</strong> &bdquo;Auf MapComplete
-      beantworten&ldquo; am grauen Pin öffnet dasselbe Objekt im PapaMap-Thema von MapComplete.
+  <li><strong>MapComplete (jedes Handy, im Browser):</strong> &bdquo;Angaben ergänzen oder korrigieren&ldquo; am grauen Pin öffnet dasselbe Objekt im PapaMap-Thema von MapComplete.
       MapComplete warnt einmal vor einem inoffiziellen Thema, das ist okay. Mit dem OSM-Konto
       einloggen und die Wickeltisch-Fragen beantworten, auch die nach dem Raum. Die Antwort geht
       direkt in OpenStreetMap und ist wenige Minuten später hier zu sehen.</li>
@@ -363,7 +363,7 @@ Der Code der Website ist MIT-lizenziert.</p>
 <h2 id="privacy">Datenschutz</h2>
 <p>Eine statische Website. Sie setzt keine Cookies und hat keine Analytics. Die Kartenkacheln
 kommen von den Tile-Servern von OpenStreetMap, für diese Anfragen gilt die
-<a href="https://osmfoundation.org/wiki/Privacy_Policy">Datenschutzerklärung der OSMF</a>. Tippst du in einem Pin auf <em>Auf MapComplete beantworten</em>, fragt die Seite in den folgenden Minuten außerdem einige Male bei api.openstreetmap.org nach, was dieses eine Objekt jetzt sagt — für diese Anfragen gilt dieselbe Erklärung. Ab dem dritten Zeichen im Suchfeld und beim Öffnen von
+<a href="https://osmfoundation.org/wiki/Privacy_Policy">Datenschutzerklärung der OSMF</a>. Tippst du in einem Pin auf <em>Angaben ergänzen oder korrigieren</em>, fragt die Seite in den folgenden Minuten außerdem einige Male bei api.openstreetmap.org nach, was dieses eine Objekt jetzt sagt — für diese Anfragen gilt dieselbe Erklärung. Ab dem dritten Zeichen im Suchfeld und beim Öffnen von
 <em>Ort hinzufügen</em> fragt die Seite außerdem die Ortssuche Photon von komoot
 (photon.komoot.io). Sie bekommt den getippten Text und einen gerundeten Kartenmittelpunkt und,
 wie jeder Server, deine IP-Adresse. Links

@@ -1,6 +1,6 @@
 # papa-map — build contract (v0)
 
-> **v102 amendment (20 Oct 2026, high-chair places join the places file):
+> **v110 amendment (30 Oct 2026, high-chair places join the places file):
 > `play_places.geojson` now also holds places that record a high chair
 > (`highchair` = yes or a positive number) and carry no `changing_table` key
 > (or `changing_table=no`, like a play place): the same open question, "is
@@ -20,7 +20,7 @@
 > from it keeps the area's high-chair places too.
 >
 > Frontend side: `loadPlaces` reads `play_area` as `p.play_area !== false`, so
-> a dataset from before v102 (no property) means true: every old place is a play
+> a dataset from before v110 (no property) means true: every old place is a play
 > place. The hollow rings split into two chips, `stPlaces` "Play area only"
 > (`play_area !== false`) and the new `stPlacesHc` "High chair only"
 > (`play_area === false`), both on by default and not remembered, via the pure
@@ -33,7 +33,118 @@
 > (`countPlacesHc`) have high-chair versions in all 32 languages; the
 > MapComplete layer `dad_play_place` also selects `highchair=yes` or a number;
 > the methods pages say that rings also mark high-chair places. Shell pin
-> `app96` → `app97`.
+> `v=app103` becomes `v=app104`.
+
+> **v109 amendment (29 Oct 2026, a generic shop can be added from MapComplete): no data shape change.**
+> The theme's `dad_venue` layer gets a fourth preset, "a different shop" (`shop=yes`),
+> for a shop that is none of café, restaurant or baby shop; `yes` joins the layer's shop
+> filter and `VENUE_TAGS.shop`, so untagged `shop=yes` places also appear in the nearby
+> list. Shell pin `v=app102` becomes `v=app103`.
+
+> **v108 amendment (23 Oct 2026, a public toilet is not asked about a play corner):**
+> `play` is `false`, not `null`, on an `amenity=toilets` object that records no
+> play area, the way an outdoor `leisure=playground` already is (v31), so the
+> popup no longer asks "Play area for children?" on a WC: a play corner belongs
+> to a café or a shop, and 17,271 toilet pins carried the question that day. A
+> `kids_area` that passes `has_play_area` still makes it `true`. Shape unchanged;
+> the 32 methods pages say so. Takes effect with the next dataset build.
+
+> **v107 amendment (21 Oct 2026, links and toasts for places added today): no data change.**
+> Three frontend fixes. A `?osm=` link (or the app's deep link) to an object
+> that is only in the delta waits for the first delta poll started on top of a
+> dataset before "not on the map": boot used to resolve it first, so the place a
+> reader had just added and shared was the one link that failed. The popup's fee
+> row says yes/no through `wcYes`/`wcNo` instead of the raw tag value; any other
+> value stays as recorded. The add watch records which MapComplete link was
+> tapped (`venue: true` for the café/shop/restaurant one), and a venue watch
+> that times out stays quiet instead of the "nothing new on OSM yet" nudge:
+> tagging a place OSM already had is never `created`, so its success looked the
+> same as nothing. Shell pin `v=app101` becomes `v=app102`.
+
+> **v106 amendment (20 Oct 2026, the place question says what limited means): no data change.**
+> Text only. `askWheelchair` carries the OSM definition of `limited` in
+> parentheses after the question, in all 32 languages: one small step of up to
+> 7 cm, help needed or not every room reachable (the methods pages' two cases
+> and the OSM wiki's own example, now where the pill is tapped). Readers answer from memory as often as on the spot, and the
+> middle pill had no definition on the card; the table question had its own
+> from the start. Shell pin `v=app100` becomes `v=app101`.
+
+> **v105 amendment (20 Oct 2026, the fold holds the edit link): no data change.**
+> Presentation only. The fold ("More about this place") is one remembered boolean
+> (`localStorage`, `papamap-more-open`), no longer per card: unset means open for
+> a logged-in reader and closed otherwise, any toggle is kept. It always renders
+> on a pin card and ends with the MapComplete link ("Add or correct details");
+> its count shows only above zero. The OpenStreetMap text link is dropped from
+> both popups; `.links` holds Route and Share. A ring gets the same fold with
+> only the link. Exception: a pin whose recorded room is unreadable and that has
+> nothing else to ask keeps MapComplete as the green button and renders no fold.
+> After this reader's own room answer on a pin (an answer override carrying
+> `changing_table`) whose place wheelchair is unrecorded, that question renders
+> unfolded where the room question stood. Shell pin `v=app99` becomes `v=app100`.
+
+> **v104 amendment (20 Oct 2026, Route is a text link): no data change.**
+> Presentation only. In both popups Route joins the text links as the first one,
+> with a small directions icon before it and the same arrow after; Share stays a
+> round icon-only button, now at the right end of that text-link row. The only
+> pill-shaped controls on a card are the answers, plus the green MapComplete
+> button where the card has nothing left to ask. Shell pin `v=app98` becomes
+> `v=app99`.
+
+> **v103 amendment (20 Oct 2026, popup links look like links): no data change.**
+> Presentation only. In both popups an answer is an outlined pill; going somewhere
+> is either a grey filled button (Route, Share, under a thin divider) or a plain
+> text link with a small arrow (MapComplete, OpenStreetMap, one line, " · "
+> apart). Green stays reserved for "reachable": the one green filled button left
+> is MapComplete as `.btn.primary`, only where the card has nothing to ask
+> itself (conditions unchanged). Shell pin `v=app97` becomes `v=app98`.
+
+> **v102 amendment (20 Oct 2026, two wheelchair questions and the fold):
+> one new table property.** Every table feature gains **`table_wheelchair`**
+> (`yes | limited | no | null`), `changing_table:wheelchair` read by the v26
+> rule (`pipeline/classify.py::wheelchair_state`); play places do not carry it,
+> they have no table. Never a status and never a chip rule: the wheelchair chip
+> still reads `wheelchair` alone (v53). The popup asks two new questions where
+> OSM is silent, the high-chair shape with three pills each: "Can you get in
+> with a wheelchair?" writes `wheelchair=yes|limited|no` on the place (what the
+> chip reads; the toilet itself on `amenity=toilets`), and "Is the changing
+> table usable from a wheelchair?" writes `changing_table:wheelchair` (David's
+> three levels, 18 Oct 2026: no height, no measuring). Choices `wc_*` and
+> `tw_*` (`web/osm.js::wheelchairPatch`), six changeset comments, the pills
+> reuse the popup's own `wcYes` / `wcLimited` / `wcNo`. The table pins ask
+> both, the play-place rings the place question alone. The MapComplete theme
+> asks the same two (`wheelchair` on all four layers, `changing-table-wheelchair`
+> under `changing_table=yes|limited`, the pins' own set), with the same strings.
+>
+> **Unreadable.** `wheelchair_state` returns `"unreadable"` for a present value
+> outside the three (`designated`, free text), as `highchair_state` has since
+> v65, on `wheelchair`, `toilets_wheelchair` and `table_wheelchair` alike. The
+> frontend keeps the display properties as the three or null and derives
+> `wheelchair_recorded` / `table_wheelchair_recorded`, which gate the questions:
+> asking there would only earn the 409 of a taken key.
+>
+> **The fold.** On a table pin the room question stays on top; play (v34), high
+> chair (v65) and the two wheelchair questions sit behind a native `<details
+> class="more">` whose summary reads "More about this place (n)", closed by
+> default — most pins already asked two or three (11 Oct: 19,885 two, 4,529
+> three) and a fifth line did not fit a 12 mini. The first folded question
+> carries the login line where the room question does not. An answer re-renders
+> the card; the fold comes back open on that card with the count recomputed,
+> and with nothing left to ask it is not rendered. A fold the reader opened
+> stays open on that card for the life of the page, across a close and reopen
+> too: the app's login return rebuilds the card, and the reader who answered
+> inside the fold is still inside it.
+> MapComplete is the primary button only where nothing in the card asks. The
+> cost to watch is fewer play and high-chair answers; the per-question
+> changeset comments make it countable.
+>
+> **Overrides.** A wheelchair answer is remembered (v78 layer) under the
+> property's own name, `wheelchair` / `table_wheelchair`, and
+> `applyAnswerOverrides` writes it over the base: the question is only asked
+> where the base has none, and a reader's own `yes` may count for the chip at
+> once. Four new strings (`askWheelchair`, `askTableWheelchair`,
+> `popupTableWheelchair`, `askMorePlace`) and a what's-new note
+> (`newsWheelchairAsk`, shown from pin app97) in all 32 languages; one
+> paragraph on the 32 methods pages. Shell pin `app96` → `app97`.
 
 > **v101 amendment (19 Oct 2026, the map opens where it was left): no data
 > shape change.** A new device key, `localStorage['papamap-view']`,
@@ -2839,10 +2950,11 @@ Overpass `out center`). Feature `properties`:
   "changing_table": "yes|limited",
   "location_raw": "raw changing_table:location value or null",
   "status": "accessible|female_only|unknown",
-  "play": "true|false|null — a play area recorded, indoors or a venue's outdoor one (v9, v97); false is an answered 'none' or an outdoor leisure=playground (v30, v31), null is unanswered",
-  "wheelchair": "yes|limited|no|null — the place's wheelchair tag verbatim (v26); null also means unrecorded",
-  "toilets_wheelchair": "yes|limited|no|null — toilets:wheelchair verbatim (v26)",
+  "play": "true|false|null — a play area recorded, indoors or a venue's outdoor one (v9, v97); false is an answered 'none', an outdoor leisure=playground or an amenity=toilets (v30, v31, v108), null is unanswered",
+  "wheelchair": "yes|limited|no|\"unreadable\"|null — the place's wheelchair tag (v26); null is the key absent, \"unreadable\" a present value outside the three (v102: shown as nothing, not a chip hit, never asked — the write would be refused as taken)",
+  "toilets_wheelchair": "yes|limited|no|\"unreadable\"|null — toilets:wheelchair by the same rule (v26, v102)",
   "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",
+  "table_wheelchair": "yes|limited|no|\"unreadable\"|null — changing_table:wheelchair by the same rule (v102); only null gets the popup's question",
   "highchair": "true|false|null|\"unreadable\" — highchair=yes or a count > 0 is true, no or 0 is false, null is the key absent, \"unreadable\" a present value the pipeline cannot read (shown as nothing, never asked, not a chip hit: the write would be refused as taken) (v65)",
   "key": "string or null — the centralkey value when the key locks the table (v5 rule); such a feature is not a pin (v26)",
   "fee": "string or null",
@@ -2863,8 +2975,8 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "name": "string or null",
   "kind": "cafe|indoor_play|mall|... or null",
   "changing_table": "\"no\" (answered: no table, v27) or null (nobody has answered)",
-  "wheelchair": "yes|limited|no|null — as on the tables (v28)",
-  "toilets_wheelchair": "yes|limited|no|null — as on the tables (v28)",
+  "wheelchair": "yes|limited|no|\"unreadable\"|null — as on the tables (v28, v102)",
+  "toilets_wheelchair": "yes|limited|no|\"unreadable\"|null — as on the tables (v28, v102)",
   "wheelchair_description": "string or null — as on the tables (v28)",
   "highchair": "true|false|null|\"unreadable\" — as on the tables (v65)",
   "opening_hours": "string or null",
