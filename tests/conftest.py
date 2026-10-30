@@ -73,8 +73,12 @@ def _isolated_web_output(tmp_path, monkeypatch):
     out = tmp_path / "web"
     for name, filename in (("GEOJSON_PATH", "changing_tables.geojson"),
                            ("PLAY_GEOJSON_PATH", "play_places.geojson"),
+                           ("HIGHCHAIR_GEOJSON_PATH", "highchair_places.geojson"),
                            ("STATS_PATH", "stats.json"),
                            ("AREAS_PATH", "areas.json"),
                            ("HISTORY_PATH", "history.json")):
         monkeypatch.setattr(run, name, str(out / filename))
     monkeypatch.setattr(run, "PAGES_DIR", str(out / "wickeltische"))
+    # The delta follower's high-chair base too: the tests pass the other two.
+    from pipeline import delta
+    monkeypatch.setattr(delta, "HIGHCHAIR_GEOJSON_PATH", str(out / "highchair_places.geojson"))

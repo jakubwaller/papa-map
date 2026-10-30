@@ -1,5 +1,74 @@
 # papa-map — build contract (v0)
 
+> **v110 amendment (30 Oct 2026, high-chair places, a file of their own):**
+> A new file, **`web/data/highchair_places.geojson`**, the same FeatureCollection
+> shape and properties as `play_places.geojson`: places that record a high chair
+> (`classify.is_highchair_place`: `highchair` = `yes` or a count, any case, no
+> padding and no leading zero, the MapComplete theme's own regex), no play
+> area and no `amenity=toilets` (left out by the theme's layer too; a new one
+> stays the delta's `new_toilets_no_table`), with no `changing_table` key (the open question, "is there a changing
+> table?") or `changing_table=no` (a dashed ring, as for a play place).
+> `highchair=no` and anything else never qualify; no venue-type filter. A place
+> with a play area stays a play place whatever its high chair.
+> `play_places.geojson`, its stats and delta.json's `places` are unchanged: a
+> shell from before v110 (the 1.3.x store apps bundle theirs) reads only those,
+> so it draws exactly what it drew before. `stats.local.highchair_places` counts
+> the new file's open questions. delta.json gains a `highchair_places` key,
+> `{upsert, remove}` like `places`, which the follower fills by the same rule: an
+> object that gains or loses a play area leaves one key and joins the other.
+>
+> **The query.** The objects come from a separate small Overpass query per sweep
+> area (`config.highchair_ql`), not a clause in `sweep_ql`: measured on the UK, a
+> highchair clause in the union costs 4-11 s and pushes the sweep to ~45 s, at
+> the `[timeout:55]` safety line. Every query holds a ~40 s slot on
+> overpass-api.de however short it runs, so it follows the toilet counts' weekly
+> rota (`toilet_counts.due_by_age`, each area on its own night), pinned to the
+> host that answered tonight's sweep (a mirror without an area database
+> answers 200 and nothing), and the area's saved answer (`sweep_cache`, keyed by the query) stands in on the other nights,
+> on a night built from the saved sweep, and when the query fails. A failure, a
+> resting Overpass included, is a WARN line (the ops page lists it) and costs the
+> area nothing else. A reused answer does not pull `data_base` back, so between
+> its nights an area's high-chair places can lag OSM by up to a week, so the
+> delta follower carries their latest state per object (`hc_carry` in its
+> state file, upsert or removal with the change's timestamp) across rebases
+> for 8 days, a rota period and a day, and delta.json's `highchair_places`
+> lays it over the stale answer; a gap in the diffs before a new base drops
+> the carry rather than guess. It never outvotes tonight's sweep:
+> an object the sweep found as a table, an answered-no place or a play place is
+> dropped from the high-chair answer, so it is drawn once, as the sweep has it.
+> The area log line gains `hc=N`.
+>
+> **Frontend.** `highchair_places.geojson` is not one of boot's four dataset
+> files: `loadHighchairPlaces` asks for it once the pins are drawn, so it never
+> holds back the first paint nor, in the app, the stats.json promotion, and it
+> is not preloaded. In the app it draws from its stored copy and downloads
+> again only when stats.json changed. A 404 (a build from before v110) or a
+> failure only means no high-chair rings, and a slow answer draws them late:
+> the download is never aborted. A `?osm=` link the map cannot place waits for
+> it, 20 s at most, as it waits for the first delta poll. A boot whose tables
+> failed (offline) asks for it again when `retryDataset` fills them, one load
+> at a time. Loaded on its own clock, it can be a build older than the tables:
+> a high-chair place whose `osm_url` the merged tables or play places already
+> have is skipped, so an answered ring never comes back beside its pin.
+> `withHighchairPlaces` adds its places, with the delta's `highchair_places`
+> merged in, to the play places, each marked `play_area: false`, a property only
+> the frontend sets. The hollow rings split into two chips, `stPlaces` "Play area
+> only" and the new `stPlacesHc` "High chair only", both on by default and not
+> remembered (`splitPlaces`). The wheelchair and high-chair chips narrow both
+> kinds of ring as before (`placeFeatures`). Both ring chips sit at the END of the
+> strip, after the high-chair chip: status, wheelchair, play corner, high chair,
+> play places, high-chair places (supersedes the v66 order). The popup headline
+> (`metaPlacesHc`), the share text (`sharePlaceHcText`), the count line
+> (`countPlacesHc`) and the thank-you toast for a place this reader added
+> (`toastNewPlaceHc`, `selectAddedPlace`'s new type `highchair_place`) have
+> high-chair versions in all 32 languages.
+>
+> **MapComplete.** The `dad_play_place` layer also selects `highchair` by the
+> same regex, with a high-chair title, status text and the café pictogram where
+> no play area is recorded, and `dad_venue` leaves those places to it. The
+> methods pages say that rings also mark high-chair places. Shell pin `v=app103`
+> becomes `v=app104`.
+
 > **v109 amendment (29 Oct 2026, a generic shop can be added from MapComplete): no data shape change.**
 > The theme's `dad_venue` layer gets a fourth preset, "a different shop" (`shop=yes`),
 > for a shop that is none of café, restaurant or baby shop; `yes` joins the layer's shop
@@ -2950,6 +3019,10 @@ of places with a play area and no changing-table answer — or, since v27, the a
 }
 ```
 
+`web/data/highchair_places.geojson` (v110) — the same FeatureCollection shape and feature
+`properties` as `play_places.geojson`, for places that record a high chair and no play area
+(`classify.is_highchair_place`) and have no changing-table answer, or the answer `no`.
+
 `web/data/stats.json`:
 
 ```json
@@ -2962,7 +3035,7 @@ of places with a play area and no changing-table answer — or, since v27, the a
     "yes_location_known": 17, "yes_location_unknown": 68,
     "accessible": 0, "female_only": 0, "unknown": 0,
     "play_tables": 0, "play_places": 0, "play_places_no": 0,
-    "highchair_tables": 0,
+    "highchair_tables": 0, "highchair_places": 0,
     "capacity_tagged_toilets": 2
   },
   "global": {

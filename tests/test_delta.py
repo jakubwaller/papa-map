@@ -1110,19 +1110,73 @@ def _spy():
 def test_no_lookup_for_a_way_that_can_never_become_an_event():
     # is_relevant_tags lets every one of these through, but no builder would
     # keep any of them: an outdoor playground, a wheelchair-only shop, a
-    # toilet edited at v4 with no table, a highchair-only restaurant.
+    # toilet edited at v4 with no table, a highchair=no restaurant.
     changes = delta.parse_osc(__import__("io").BytesIO(_osc(
         _way("modify", 11, 7, "2026-09-23T10:00:00Z", {"leisure": "playground"}),
         _way("modify", 12, 3, "2026-09-23T10:00:00Z",
              {"building": "yes", "shop": "bakery", "wheelchair": "yes"}),
         _way("modify", 13, 4, "2026-09-23T10:00:00Z", {"amenity": "toilets"}),
         _way("modify", 14, 2, "2026-09-23T10:00:00Z",
-             {"amenity": "restaurant", "highchair": "yes"}))))
+             {"amenity": "restaurant", "highchair": "no"}))))
     fetch, calls = _spy()
     dropped = []
     events = delta.process_changes(changes, _empty_dataset(), coord_fetch=fetch, dropped=dropped)
     assert calls == []
     assert events == [] and dropped == []
+
+
+def test_highchair_place_has_its_own_kind_and_key_never_places():
+    # A shell from before v110 reads delta.json's "places" alone and would draw
+    # a high-chair place there as a play place.
+    tags = {"amenity": "restaurant", "highchair": "yes"}
+    created = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("create", 31, 1, "2026-09-23T10:00:00Z", tags))))
+    fetch, calls = _spy()
+    events = delta.process_changes(created, _empty_dataset(), coord_fetch=fetch)
+    assert [(u.rsplit("/", 1)[1], kind) for u, kind, _ in events] == [("31", "highchair_place")]
+    feat = events[0][2]
+    assert feat["properties"]["highchair"] is True and "play_area" not in feat["properties"]
+    acc = delta.apply_events(delta.new_accumulator(), events)
+    rendered = delta.render_delta(acc, "2026-09-23T00:00:00Z", 1)
+    assert rendered["places"] == {"upsert": [], "remove": []}
+    assert [f["properties"]["osm_url"] for f in rendered["highchair_places"]["upsert"]] == [
+        feat["properties"]["osm_url"]]
+    # Gaining a play area moves it to "places"; losing the tag removes it.
+    base = _empty_dataset()
+    base["highchair_places"] = {feat["properties"]["osm_url"]: feat}
+    play = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("modify", 31, 2, "2026-09-23T11:00:00Z", {**tags, "kids_area": "yes"}))))
+    events = delta.process_changes(play, base, coord_fetch=fetch)
+    assert [(kind, f is None) for _, kind, f in events] == [("place", False),
+                                                           ("highchair_place", True)]
+    gone = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _way("modify", 31, 3, "2026-09-23T12:00:00Z", {"amenity": "restaurant"}))))
+    events = delta.process_changes(gone, base, coord_fetch=fetch)
+    assert [(u.rsplit("/", 1)[1], kind, f) for u, kind, f in events] == [
+        ("31", "highchair_place", None)]
+    assert len(calls) == 1   # the new way's; later, the base knows where it is
+
+
+def test_a_new_toilet_with_a_high_chair_is_still_a_toilet_without_a_table():
+    changes = delta.parse_osc(__import__("io").BytesIO(_osc(
+        _node("create", 501, 1, "2026-09-23T10:13:00Z", 53.55, 10.0,
+              {"amenity": "toilets", "highchair": "yes"}))))
+    events = delta.process_changes(changes, _empty_dataset())
+    assert [kind for _, kind, _ in events] == ["toilet_no_table"]
+
+
+def test_a_restarted_follower_keeps_its_highchair_places(tmp_path):
+    acc = delta.new_accumulator()
+    url = "https://www.openstreetmap.org/node/5"
+    acc["highchair_places_upsert"][url] = {"type": "Feature", "geometry": None,
+                                           "properties": {"osm_url": url}}
+    acc["highchair_places_remove"].add("https://www.openstreetmap.org/node/6")
+    path = tmp_path / "delta.json"
+    path.write_text(json.dumps(delta.render_delta(acc, "B", 1)), encoding="utf-8")
+    back = delta.load_accumulator(str(path), "B")
+    assert set(back["highchair_places_upsert"]) == {url}
+    assert back["highchair_places_remove"] == {"https://www.openstreetmap.org/node/6"}
+    assert back["places_upsert"] == {}
 
 
 def test_lookup_still_made_for_ways_that_can_become_an_event():
@@ -1387,3 +1441,95 @@ def test_find_start_seq_warns_when_it_gives_up_after_the_base(capsys):
                          fetch_state=lambda seq=None: {"seq": seq or 100,
                                                        "timestamp": "2026-09-23T08:00:00Z"})
     assert capsys.readouterr().err == ""
+
+
+# ---- high-chair states carried across a rebase (v110) -----------------------
+# The high-chair answer is weekly, so the build after an edit can lay an answer
+# from before it under a fresh base: the follower carries the latest state.
+
+HC_URL = "https://www.openstreetmap.org/node/77"
+HC_TAGS = {"amenity": "restaurant", "highchair": "yes"}
+
+
+def _hc_tick(tmp_path, state, base, osc_by_seq, head, head_ts, hc_base=(), now=NOW):
+    """One run_tick at `base`, the high-chair file holding `hc_base` (the
+    weekly answer, as stale as a test wants it); every sequence before the
+    base dates from before it, every later one from after."""
+    stats_path, delta_path = tmp_path / "stats.json", tmp_path / "delta.json"
+    _write_stats(stats_path, base)
+    for name in ("changing_tables.geojson", "play_places.geojson"):
+        _write_fc(tmp_path / name, [])
+    _write_fc(tmp_path / "hc.geojson", list(hc_base))
+
+    def fake_fetch_state(seq=None):
+        if seq is None:
+            return {"seq": head, "timestamp": head_ts}
+        return {"seq": seq, "timestamp": base}
+
+    new_state, out = delta.run_tick(
+        state, geojson_path=str(tmp_path / "changing_tables.geojson"),
+        play_geojson_path=str(tmp_path / "play_places.geojson"),
+        highchair_geojson_path=str(tmp_path / "hc.geojson"), stats_path=str(stats_path),
+        delta_path=str(delta_path), areas_bbox_path=str(tmp_path / "missing.json"),
+        fetch_state=fake_fetch_state, fetch_osc=lambda seq: osc_by_seq.get(seq, _osc()), now=now)
+    delta.export.write_json_atomic(out, str(delta_path))
+    return new_state, out
+
+
+def _hc_feature(**props):
+    feats = delta.export.build_play_features(
+        {"elements": [{"type": "node", "id": 77, "lat": 53.5, "lon": 10.0,
+                       "tags": {**HC_TAGS, **props}}]}, None, highchair=True)
+    return feats[0]
+
+
+def _hc_upserts(out):
+    return {f["properties"]["osm_url"]: f for f in out["highchair_places"]["upsert"]}
+
+
+B1, B2 = "2026-09-23T08:00:00+00:00", "2026-09-24T02:00:00+00:00"
+LATER = datetime(2026, 9, 24, 3, 0, tzinfo=timezone.utc)
+
+
+def test_a_wheelchair_answer_on_a_ring_outlives_the_rebase_onto_a_stale_answer(tmp_path):
+    osc = {101: _osc(_node("modify", 77, 2, "2026-09-23T10:01:00Z", 53.5, 10.0,
+                           {**HC_TAGS, "wheelchair": "yes"}))}
+    state, out = _hc_tick(tmp_path, {"seq": 100, "base": B1}, B1, osc, 101,
+                          "2026-09-23T10:02:00Z", hc_base=[_hc_feature()])
+    assert _hc_upserts(out)[HC_URL]["properties"]["wheelchair"] == "yes"
+    # Tonight's build reused the area's week-old answer: no wheelchair there.
+    state, out = _hc_tick(tmp_path, state, B2, {}, 110, "2026-09-24T02:05:00Z",
+                          hc_base=[_hc_feature()], now=LATER)
+    assert out["base"] == B2 and out["tables"]["upsert"] == []
+    assert _hc_upserts(out)[HC_URL]["properties"]["wheelchair"] == "yes"
+    # And it survives a restart: the carry is in the state file.
+    assert HC_URL in state["hc_carry"]
+    _, again = _hc_tick(tmp_path, json.loads(json.dumps(state)), B2, {}, 110,
+                        "2026-09-24T02:05:00Z", hc_base=[_hc_feature()], now=LATER)
+    assert _hc_upserts(again)[HC_URL]["properties"]["wheelchair"] == "yes"
+
+
+def test_a_place_the_reader_added_stays_after_the_rebase_and_can_still_go(tmp_path):
+    osc = {101: _osc(_node("create", 77, 1, "2026-09-23T10:01:00Z", 53.5, 10.0, HC_TAGS))}
+    state, out = _hc_tick(tmp_path, {"seq": 100, "base": B1}, B1, osc, 101, "2026-09-23T10:02:00Z")
+    assert _hc_upserts(out)[HC_URL]["properties"]["created"] is True
+    state, out = _hc_tick(tmp_path, state, B2, {}, 110, "2026-09-24T02:05:00Z", now=LATER)
+    assert _hc_upserts(out)[HC_URL]["properties"]["created"] is True   # not in the weekly answer
+    # Its high chair untagged after the rebase: carried, so known, so removed.
+    osc = {111: _osc(_node("modify", 77, 2, "2026-09-24T02:10:00Z", 53.5, 10.0,
+                           {"amenity": "restaurant"}))}
+    state, out = _hc_tick(tmp_path, state, B2, osc, 111, "2026-09-24T02:11:00Z", now=LATER)
+    assert out["highchair_places"] == {"upsert": [], "remove": [HC_URL]}
+    assert state["hc_carry"][HC_URL]["feature"] is None
+
+
+def test_the_carry_goes_at_a_gap_and_after_eight_days(tmp_path, capsys):
+    osc = {101: _osc(_node("create", 77, 1, "2026-09-23T10:01:00Z", 53.5, 10.0, HC_TAGS))}
+    state, _ = _hc_tick(tmp_path, {"seq": 100, "base": B1}, B1, osc, 101, "2026-09-23T10:02:00Z")
+    # The follower stopped at 101; the new base starts far beyond it.
+    _, out = _hc_tick(tmp_path, state, B2, {}, 5000, "2026-09-24T02:05:00Z", now=LATER)
+    assert out["highchair_places"] == {"upsert": [], "remove": []}
+    assert "1 carried high-chair state(s) dropped" in capsys.readouterr().err
+    carry = {HC_URL: {"t": "2026-09-23T10:01:00Z", "feature": None}}
+    assert delta.prune_carry(carry, datetime(2026, 10, 1, 10, 0, tzinfo=timezone.utc)) == carry
+    assert delta.prune_carry(carry, datetime(2026, 10, 1, 10, 2, tzinfo=timezone.utc)) == {}

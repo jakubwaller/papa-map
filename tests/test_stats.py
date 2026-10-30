@@ -21,7 +21,7 @@ def test_local_stats_counts_every_bucket(load_fixture):
         # One fixture pin carries kids_area=yes; no play half was passed in,
         # which is the single-argument caller's honest zero.
         "play_tables": 1, "play_places": 0, "play_places_no": 0,
-        "highchair_tables": 0,
+        "highchair_places": 0, "highchair_tables": 0,
         "capacity_tagged_toilets": 1,
     }
 
@@ -232,3 +232,20 @@ def test_fetch_taginfo_sends_identifying_user_agent(monkeypatch):
     monkeypatch.setattr(stats.requests, "get", get)
     assert stats.fetch_taginfo(config.TAGINFO_STATS_URL) == {"data": []}
     assert calls[0]["User-Agent"].startswith("papa-map/0.1")
+
+
+def test_local_stats_counts_highchair_places_apart_from_play_places():
+    def el(id_, tags, coords=True):
+        e = {"type": "node", "id": id_, "tags": tags}
+        if coords:
+            e.update(lat=53.5, lon=9.9)
+        return e
+    play = {"elements": [el(1, {"kids_area": "yes"})]}
+    local = stats.local_stats({"elements": []}, {}, play, {"elements": [
+        el(2, {"highchair": "yes"}),
+        el(3, {"kids_area": "yes", "highchair": "2"}),  # a play place, not counted here
+        el(4, {"highchair": "yes"}, coords=False),
+        el(5, {"highchair": "007"}),                    # not what the theme selects
+    ]})
+    assert local["play_places"] == 1
+    assert local["highchair_places"] == 1

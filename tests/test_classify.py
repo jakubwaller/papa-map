@@ -194,6 +194,20 @@ def test_men_only_never_matches_female_toilet_by_substring():
     assert not men_only("female_toilet;baby_room")
 
 
+def test_a_highchair_place_has_a_high_chair_by_the_themes_regex_and_no_play_area():
+    from pipeline.classify import is_highchair_place
+    assert is_highchair_place({"highchair": "yes"}) and is_highchair_place({"highchair": "YES"})
+    assert is_highchair_place({"highchair": "2"}) and is_highchair_place({"highchair": "10"})
+    # A play area makes it a play place, whatever its high chair.
+    assert not is_highchair_place({"highchair": "yes", "kids_area": "yes"})
+    # Stricter than highchair_state: what MapComplete's layer would not select.
+    for value in ("no", "0", "007", " yes", "limited", "1+", ""):
+        assert not is_highchair_place({"highchair": value}), value
+    assert not is_highchair_place({"amenity": "cafe"})
+    # A public toilet is never a ring (the theme's layer leaves it out too).
+    assert not is_highchair_place({"amenity": "toilets", "highchair": "yes"})
+
+
 PG = {"leisure": "playground"}
 
 

@@ -1,7 +1,7 @@
 // The ?v= pin matches index.html's — bump all four together, or a cached
 // half-pair (new app.js, stale datasource.js) serves for up to an hour.
-import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus, countPlay,
-         chipKeys, chipKey, chipView, MEN_ONLY_CHIP,
+import { loadFeatures, loadPlaces, placeFeatures, splitPlaces, filterFeatures, countsByStatus, countPlay,
+         chipKeys, chipKey, chipView, MEN_ONLY_CHIP, withHighchairPlaces,
          countWheelchair, countHighchair, pinFeatures,
          toFeatureCollection, placesToFeatureCollection,
          mapCompleteAddUrl, mapCompleteVenueUrl, withMapCompleteLanguage,
@@ -14,9 +14,9 @@ import { loadFeatures, loadPlaces, placeFeatures, filterFeatures, countsByStatus
          mergeFeatureCollection, isDeltaFresh, foldOpen, roomAnsweredHere, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app103";
+         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app104";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app103";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app104";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
@@ -24,7 +24,7 @@ import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, rev
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
          isWheelchairChoice, wheelchairPatch,
-         writeTags } from "./osm.js?v=app103";
+         writeTags } from "./osm.js?v=app104";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -32,37 +32,37 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app103";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app104";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
-import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, locateNative, interceptLinks,
+import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, locateNative, interceptLinks,
          directionsUri, planRoute, followRoute, routeWebUrl,
          nativeNavigate, onAppUrl, shareDataset, shareSettings, cityCatalogue, savedCities,
          downloadCity, deleteCity, citySource, cityLayers, bboxCentre,
          cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app103";
+         reviewTracker } from "./native.js?v=app104";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app103";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app104";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app103";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app104";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app103";
+import { isOpenNow } from "./opening-hours.js?v=app104";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app103";
-// The bundled shell's pin (`?v=app103`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app104";
+// The bundled shell's pin (`?v=app104`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -487,6 +487,7 @@ let allPlaces = [];                                       // play-area prospects
 // build or a background refresh.
 let baseFC = null;
 let basePlacesFC = null;
+let baseHcPlacesFC = null;   // highchair_places.geojson (v110)
 // The delta most recently merged in, or null before the first successful
 // poll (or once a fresher applyDataset has superseded it — see applyDataset).
 let currentDelta = null;
@@ -530,6 +531,7 @@ let wheelchairOnly = (() => {
   try { return pickWheelchair(localStorage.getItem(WHEELCHAIR_KEY)); } catch { return false; }
 })();
 let placesOn = true;                                      // add the prospects (on by default since 2026-09-10)
+let placesHcOn = true;                                    // and the high-chair-only ones (v110), likewise not remembered
 
 const statsEl = document.getElementById("stats");
 const filterBar = document.getElementById("filter-bar");
@@ -763,10 +765,13 @@ function refreshPins() {
   const total = pinFeatures(allFeatures, wheelchairOnly).length;
   // The places narrow under the wheelchair chip like the tables (v28), and
   // under the high-chair chip the same way (v65).
-  const places = placesOn ? placeFeatures(allPlaces, wheelchairOnly, highchairOnly) : [];
+  const places = splitPlaces(placeFeatures(allPlaces, wheelchairOnly, highchairOnly), placesOn, placesHcOn);
+  const nHc = places.filter((p) => p.play_area === false).length;
+  const nPlay = places.length - nHc;
   if (total) {
     countEl.textContent = t("countShown", { shown: shown.length, total })
-      + (places.length ? t("countPlaces", { n: places.length }) : "");
+      + (nPlay ? t("countPlaces", { n: nPlay }) : "")
+      + (nHc ? t("countPlacesHc", { n: nHc }) : "");
   } else {
     // Never disabled or re-inserted while up: either drops a keyboard user's focus.
     // retryDataset itself ignores a second tap while one is in flight.
@@ -1163,10 +1168,11 @@ function placeHTML(p) {
     // with the .ask block. No styling of its own. ("Been here? Then you know"
     // used to stand between the two; the question says it, and on a 12 mini
     // the play-place card was the one that still did not fit.)
-    rows.push(`<div class="status play ask-ctx">${esc(t("metaPlaces"))}</div>`);
+    rows.push(`<div class="status play ask-ctx">${esc(t(p.play_area === false ? "metaPlacesHc" : "metaPlaces"))}</div>`);
   // Between the headline and the question, where a pin's popup has them.
-  // The high-chair line only — a place is never asked (v65).
-  rows.push(...highchairRows(p));
+  // The high-chair line only — a place is never asked (v65). Not under the
+  // high-chair headline (v110), which already says it.
+  if (p.changing_table || p.play_area !== false) rows.push(...highchairRows(p));
   rows.push(...wheelchairRows(p));
   if (!p.changing_table) rows.push(askHTML("askTable", inFlight.has(p.osm_url)));
   // The place question alone (v102), no fold: a ring has no table to ask
@@ -1385,7 +1391,10 @@ function panPopupIntoView() {
 
 // ---- Status chips: legend, count badges and filter toggles in one ----
 // Three status chips (on by default, each one subtracts when switched off),
-// then two blue ones. The first is off by default and, switched on, narrows
+// then wheelchair and two blue ones. (Since v110 the order is status,
+// wheelchair, play corner, high chair, then the two rings: "Play area only"
+// and "High chair only", both on by default, hollow blue, not remembered.)
+// The first blue one is off by default and, switched on, narrows
 // to the pins with a recorded play corner; the second is on by default (since
 // 10 Sep 2026) and, switched off, takes away the places that have a play
 // corner and no changing-table answer at all. Neither is a status: rendering
@@ -1430,8 +1439,11 @@ function renderChips() {
   }
   frag.appendChild(wheelchairChip(countWheelchair(allFeatures)));
   frag.appendChild(playChip(countPlay(pinFeatures(allFeatures, wheelchairOnly))));
-  frag.appendChild(placesChip(placeFeatures(allPlaces, wheelchairOnly).length));
   frag.appendChild(highchairChip(countHighchair(pinFeatures(allFeatures, wheelchairOnly))));
+  // The two rings last (v110), after the high-chair chip.
+  const ringable = placeFeatures(allPlaces, wheelchairOnly);
+  frag.appendChild(placesChip(splitPlaces(ringable, true, false).length));
+  frag.appendChild(placesHcChip(splitPlaces(ringable, false, true).length));
   // Not firstChild: the mode toggle is static markup and holds that slot, so
   // the generated chips go in front of the spacer instead.
   filterBar.insertBefore(frag, filterBar.querySelector(".spacer"));
@@ -1497,7 +1509,15 @@ function placesChip(count) {
   });
 }
 
-// The high-chair chip (v65), last in the strip after the blue chips (v66),
+function placesHcChip(count) {
+  return blueChip({
+    label: "stPlacesHc", aria: "ariaPlacesHc", count, on: placesHcOn, hollow: true,
+    toggle: () => (placesHcOn = !placesHcOn),
+  });
+}
+
+// The high-chair chip (v65), after the blue chips (v66), before the two
+// rings (v110),
 // off by default and not remembered: switched on it narrows the table pins
 // and the play-place rings to those with a recorded high chair. It subtracts,
 // never adds — a silent OSM is unrecorded, not "no high chair". Ink, like the
@@ -2088,9 +2108,9 @@ function clearSearch() {
 // The prospects chip may be switched off, and flying to a place the reader
 // then cannot see would read as a broken tap — ensureVisible's reasoning, for
 // the one filter it does not cover.
-function ensurePlacesVisible() {
-  if (placesOn) return;
-  placesOn = true;
+function ensurePlacesVisible(f) {
+  if (f.play_area === false ? placesHcOn : placesOn) return;
+  if (f.play_area === false) placesHcOn = true; else placesOn = true;
   renderChips();
   refreshPins();
 }
@@ -2116,7 +2136,7 @@ function pickSearchRow(row) {
   }
   const f = row.hit.obj;
   if (row.hit.kind === "table") { ensureVisible(f); openPopup(f); }
-  else { ensurePlacesVisible(); openPlacePopup(f); }
+  else { ensurePlacesVisible(f); openPlacePopup(f); }
   // Exactly what the nearest button does with its own answer: fly, and fit the
   // card to the view it lands in once the flight is over.
   flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }, panPopupIntoView);
@@ -2617,7 +2637,7 @@ async function sharePin(kind, obj) {
   // else — the open question, or a recorded "no" — gets sharePlaceText, which
   // names the place, not a table it does not have.
   const hasTable = kind === "table" || obj.changing_table === "yes";
-  const text = t(hasTable ? "shareText" : "sharePlaceText", { name: title });
+  const text = t(hasTable ? "shareText" : obj.play_area === false ? "sharePlaceHcText" : "sharePlaceText", { name: title });
   if (navigator.share) {
     try { await navigator.share({ title, text, url }); return; }
     // AbortError: the reader closed the OS share sheet without picking
@@ -3269,10 +3289,10 @@ function maybeNotifyAddedPlace(deltaJson) {
   }
   clearAddWatch();
   if (result.type === "toilet_no_table") { toast(t("toastToiletNoTable")); return; }
-  toast(t(result.type === "place" ? "toastNewPlace" : "toastNewTable"));
-  const obj = (result.type === "place" ? placesByOsmUrl : featuresByOsmUrl)
-    .get(result.feature.properties.osm_url);
-  if (obj) pulseNewPin(result.type, obj, watch);
+  const isPlace = result.type !== "table";
+  toast(t({ place: "toastNewPlace", highchair_place: "toastNewPlaceHc" }[result.type] ?? "toastNewTable"));
+  const obj = (isPlace ? placesByOsmUrl : featuresByOsmUrl).get(result.feature.properties.osm_url);
+  if (obj) pulseNewPin(isPlace ? "place" : "table", obj, watch);
 }
 
 // ---- Language picker: re-render everything that carries text ----
@@ -3616,8 +3636,9 @@ function openPin(osmUrl) {
     return;
   }
   // A place added since the nightly build exists only in the delta, whose
-  // first poll comes after boot's openQueuedPin: wait for it (pollDelta).
-  if (!deltaChecked) { pendingPin = osmUrl; return; }
+  // first poll comes after boot's openQueuedPin: wait for it (pollDelta), and
+  // for the high-chair file, which comes after the pins (loadHighchairPlaces).
+  if (!deltaChecked || hcPending) { pendingPin = osmUrl; return; }
   toast(t("sharePinGone"));
   stripOsmParam();
 }
@@ -3701,11 +3722,14 @@ function applyFeatureSets(fc, places) {
 // one function that has to run after any of the three changes. Never called
 // with a null baseFC (before the first applyDataset).
 function renderMergedDataset() {
-  let fc = baseFC, places = basePlacesFC;
+  let fc = baseFC, places = basePlacesFC, hcPlaces = baseHcPlacesFC;
   if (currentDelta) {
     fc = mergeFeatureCollection(fc, currentDelta.tables?.upsert, currentDelta.tables?.remove);
     places = mergeFeatureCollection(places, currentDelta.places?.upsert, currentDelta.places?.remove);
+    hcPlaces = mergeFeatureCollection(hcPlaces, currentDelta.highchair_places?.upsert,
+                                      currentDelta.highchair_places?.remove);
   }
+  places = withHighchairPlaces(places, hcPlaces, fc);
   if (Object.keys(answerOverrides).length) {
     ({ fc, places } = applyAnswerOverrides(fc, places, answerOverrides));
   }
@@ -3792,7 +3816,8 @@ function applyDelta(deltaJson) {
   currentDelta = deltaJson;
   currentDeltaKey = key;
   const versionByUrl = new Map();
-  for (const f of (deltaJson.tables?.upsert || []).concat(deltaJson.places?.upsert || [])) {
+  for (const f of (deltaJson.tables?.upsert || []).concat(deltaJson.places?.upsert || [],
+                                                          deltaJson.highchair_places?.upsert || [])) {
     const url = f?.properties?.osm_url;
     const version = f?.properties?.osm_version;
     if (url && version != null) versionByUrl.set(url, version);
@@ -3842,7 +3867,8 @@ function watchDeltaForVersion(osmUrl, minVersion, attemptsLeft = 20) {
   const check = async () => {
     const json = await fetchDelta();
     if (json && isDeltaFresh(json.base, lastStats?.data_base)) {
-      const hit = (json.tables?.upsert || []).concat(json.places?.upsert || [])
+      const hit = (json.tables?.upsert || []).concat(json.places?.upsert || [],
+                                                      json.highchair_places?.upsert || [])
         .find((f) => f.properties.osm_url === osmUrl
           && Number.isFinite(f.properties.osm_version) && f.properties.osm_version >= minVersion);
       if (hit) { applyDelta(json); return; }
@@ -3869,6 +3895,35 @@ const DATA_URLS = [
   "data/stats.json",
   "data/areas.json",
 ];
+
+// The high-chair rings' own file (v110), never one of DATA_URLS: it is
+// optional, so it must not hold back the first paint or, in the app, the
+// stats.json promotion that waits on every file loaded beside it. Asked for
+// once the pins are drawn, so it never competes with them on a slow link
+// (which is also why index.html does not preload it). In the app it draws
+// from its stored copy and downloads again only when stats.json changed,
+// like the other files. A 404 (a build from before v110), a timeout or a
+// failure only means no high-chair rings.
+const HC_URL = "data/highchair_places.geojson";
+let hcPending = true;   // a ?osm= link the map cannot place waits for this file too
+let hcLoading = false;  // one load at a time: boot's, or retryDataset's after an offline boot
+function loadHighchairPlaces(statsRefreshed) {
+  if (hcLoading) return;
+  hcLoading = hcPending = true;
+  // Replaces, never adds: a second load cannot double the rings.
+  const apply = (json) => { if (json) { baseHcPlacesFC = json; renderMergedDataset(); } };
+  const gate = statsRefreshed?.then((r) => (r?.ok === false ? "failed" : r?.json != null ? "changed" : "unchanged"));
+  // A queued ?osm= link waits for the file 20 s at most (the app's own
+  // NET_MS). The download itself is never aborted: on a slow link it still
+  // lands, and draws its rings, late; sw.js does not abort a dataset fetch
+  // either, so its stored copy is kept too.
+  const timer = setTimeout(() => release(), 20000);
+  const release = () => { clearTimeout(timer); if (hcPending) { hcPending = false; openQueuedPin(); } };
+  (isNative() ? loadJSONNative(HC_URL, undefined, { gate }) : loadJSON(HC_URL))
+    .then((l) => { apply(l?.json); l?.refreshed?.then((r) => apply(r?.json)); })
+    .catch(() => {})
+    .finally(() => { hcLoading = false; release(); });
+}
 const dataMissing = () => dataReady && !allFeatures.length;
 let lastJsons = [];   // the last-loaded jsons, so a retry that gets only some files keeps the rest
 let retrying = false, retryTimer = null, retryDelay = 30000, awaitingLate = false;
@@ -3905,6 +3960,9 @@ async function retryDataset() {
   missing.forEach((i, k) => { lastJsons[i] = loaded[k]?.json ?? lastJsons[i]; });
   if (loaded[0]?.json) {
     applyDataset(...lastJsons);
+    // Boot's own try failed with the tables (offline): the rings come too,
+    // and a queued ?osm= link waits for them again.
+    if (!baseHcPlacesFC) loadHighchairPlaces();
     pollDelta();
     openQueuedPin();
   }
@@ -3942,6 +4000,7 @@ async function boot() {
   dataReady = true;
   map.on("moveend", updateRegionsLink);   // registered once, here — applyDataset never does
   applyDataset(...lastJsons);
+  loadHighchairPlaces(loaded[DATA_URLS.indexOf("data/stats.json")]?.refreshed);
   window.addEventListener("online", retryDataset);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) retryDataset(); });
   if (dataMissing()) scheduleRetry();

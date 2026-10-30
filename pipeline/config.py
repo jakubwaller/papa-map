@@ -931,6 +931,11 @@ GEOJSON_PATH = os.environ.get("PAPAMAP_GEOJSON_PATH", "web/data/changing_tables.
 # stats) is about changing tables and must stay that way.
 PLAY_GEOJSON_PATH = os.environ.get("PAPAMAP_PLAY_GEOJSON_PATH",
                                    "web/data/play_places.geojson")
+# High-chair places (v110): the same shape as the play places, a file of their
+# own because a shell from before v110 would draw everything in the one above
+# as a play place.
+HIGHCHAIR_GEOJSON_PATH = os.environ.get("PAPAMAP_HIGHCHAIR_GEOJSON_PATH",
+                                        "web/data/highchair_places.geojson")
 STATS_PATH = os.environ.get("PAPAMAP_STATS_PATH", "web/data/stats.json")
 # The area index behind the map's footer link (pipeline/pages.area_index):
 # one row per generated area page with its bbox, so the link can follow the
@@ -994,6 +999,21 @@ PLAY_AREA_CLAUSES = (
     'nwr["leisure"="indoor_play"](area.a);'
     'nwr["leisure"="playground"]["indoor"="yes"](area.a);'
 )
+
+
+def highchair_ql(area_name: str = "Deutschland", admin_level: str = "2",
+                 date: str | None = None) -> str:
+    """Objects recording a high chair and no changing_table key — places for the
+    prospect list. Its own small query, not a clause in sweep_ql: measured on
+    the UK (2026-10-11), a highchair clause in the union costs 4-11 s and
+    pushes the sweep to ~45 s, at the [timeout:55] safety line, because every
+    clause pays its own (area.a) pass. And not every night: an Overpass slot
+    costs ~40 s however short the query, so it runs on the toilet counts'
+    weekly rota and the area's saved answer stands in between (run.py). The
+    regex is looser than classify.HIGHCHAIR_PLACE_RE (any value with a digit
+    1-9, or "yes", any case); Python re-applies the rule."""
+    return (_area_ql(area_name, admin_level, date)
+            + 'nwr["highchair"~"yes|[1-9]",i][!"changing_table"](area.a);out tags center;')
 
 
 def sweep_ql(area_name: str = "Deutschland", admin_level: str = "2",

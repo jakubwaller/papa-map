@@ -7,7 +7,7 @@ from pathlib import Path
 import requests
 
 from .classify import (FEATURE_VALUES, centralkey_locked, classify, has_play_area,
-                       highchair_state, men_only, tokens)
+                       highchair_state, is_highchair_place, men_only, tokens)
 from .config import TAGINFO_STATS_URL, TAGINFO_VALUES_URL, USER_AGENT
 from .osm import element_coords
 
@@ -18,7 +18,7 @@ def fetch_taginfo(url: str) -> dict:
     return resp.json()
 
 
-def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
+def local_stats(ct_data: dict, toilets_counts: dict, play_data=None, hc_data=None) -> dict:
     """The `local` stats block, from the Overpass responses. ct_yes/no/
     limited are exact value counts, so junk values ("02") show up only in
     ct_objects. The feature-facing counters (ct_yes/ct_limited, location and
@@ -31,6 +31,7 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
 
     play_data is the sweep's play-only half (objects with a play area
     and no changing_table tag); omit it and both play counters read 0.
+    hc_data is the high-chair query's answer (v110), counted the same way.
 
     toilets_counts is {"total", "capacity_tagged"} — two integers Overpass
     counted server-side (config.toilets_counts_ql), not a response full of
@@ -94,6 +95,12 @@ def local_stats(ct_data: dict, toilets_counts: dict, play_data=None) -> dict:
         "play_tables": play_tables,
         "play_places": sum(1 for el in (play_data or {}).get("elements", [])
                            if element_coords(el)[0] is not None),
+        # The open questions of highchair_places.geojson (v110), by the
+        # exporter's own rule.
+        "highchair_places": sum(1 for el in (hc_data or {}).get("elements", [])
+                                if "changing_table" not in (el.get("tags") or {})
+                                and is_highchair_place(el.get("tags") or {})
+                                and element_coords(el)[0] is not None),
         # The third kind (v27): a play corner and `changing_table=no`. Drawn
         # as a dashed ring, so it is in play_places.geojson — but it is not an
         # open question, so it is not in play_places.

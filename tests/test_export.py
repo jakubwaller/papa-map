@@ -339,3 +339,22 @@ def test_features_carry_the_sweep_area_that_found_them(load_fixture):
     assert feats[1]["area"] == "Hamburg"
     assert feats[2]["area"] == "Danmark"
     assert feats[3]["area"] is None
+
+
+def test_highchair_places_are_their_own_features_and_never_play_places():
+    def feats(tags, ct=False, highchair=True):
+        el = {"type": "node", "id": 1, "lat": 53.5, "lon": 9.9, "tags": tags}
+        return build_play_features({"elements": [] if ct else [el]},
+                                   {"elements": [el]} if ct else None, highchair=highchair)
+    f = feats({"amenity": "restaurant", "highchair": "yes"})
+    assert len(f) == 1 and f[0]["properties"]["highchair"] is True
+    assert "play_area" not in f[0]["properties"]
+    assert feats({"amenity": "restaurant", "highchair": "yes"}, highchair=False) == []
+    assert len(feats({"amenity": "restaurant", "highchair": "3"})) == 1
+    assert feats({"amenity": "restaurant", "highchair": "no"}) == []
+    # answered no (from the sweep's changing_table half) qualifies like a play place
+    assert len(feats({"highchair": "yes", "changing_table": "no"}, ct=True)) == 1
+    assert feats({"highchair": "yes", "changing_table": "yes"}, ct=True) == []
+    # a play area keeps it in the play file
+    assert feats({"kids_area": "yes", "highchair": "yes"}) == []
+    assert len(feats({"kids_area": "yes", "highchair": "yes"}, highchair=False)) == 1
