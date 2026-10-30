@@ -187,4 +187,8 @@ test("the high-chair file is loaded apart from DATA_URLS, after the first paint"
   const boot = src.slice(src.indexOf("async function boot()"));
   const paint = boot.indexOf("applyDataset(...lastJsons);");
   assert.ok(paint > 0 && boot.indexOf("loadHighchairPlaces(") > paint);
+  // An offline boot's retry brings the rings too, one load at a time.
+  const retry = src.slice(src.indexOf("async function retryDataset()"), src.indexOf("async function boot()"));
+  assert.match(retry, /if \(!baseHcPlacesFC\) loadHighchairPlaces\(\);/);
+  assert.match(src, /function loadHighchairPlaces\(statsRefreshed\) \{\n  if \(hcLoading\) return;/);
 });

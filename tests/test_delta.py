@@ -1441,3 +1441,95 @@ def test_find_start_seq_warns_when_it_gives_up_after_the_base(capsys):
                          fetch_state=lambda seq=None: {"seq": seq or 100,
                                                        "timestamp": "2026-09-23T08:00:00Z"})
     assert capsys.readouterr().err == ""
+
+
+# ---- high-chair states carried across a rebase (v110) -----------------------
+# The high-chair answer is weekly, so the build after an edit can lay an answer
+# from before it under a fresh base: the follower carries the latest state.
+
+HC_URL = "https://www.openstreetmap.org/node/77"
+HC_TAGS = {"amenity": "restaurant", "highchair": "yes"}
+
+
+def _hc_tick(tmp_path, state, base, osc_by_seq, head, head_ts, hc_base=(), now=NOW):
+    """One run_tick at `base`, the high-chair file holding `hc_base` (the
+    weekly answer, as stale as a test wants it); every sequence before the
+    base dates from before it, every later one from after."""
+    stats_path, delta_path = tmp_path / "stats.json", tmp_path / "delta.json"
+    _write_stats(stats_path, base)
+    for name in ("changing_tables.geojson", "play_places.geojson"):
+        _write_fc(tmp_path / name, [])
+    _write_fc(tmp_path / "hc.geojson", list(hc_base))
+
+    def fake_fetch_state(seq=None):
+        if seq is None:
+            return {"seq": head, "timestamp": head_ts}
+        return {"seq": seq, "timestamp": base}
+
+    new_state, out = delta.run_tick(
+        state, geojson_path=str(tmp_path / "changing_tables.geojson"),
+        play_geojson_path=str(tmp_path / "play_places.geojson"),
+        highchair_geojson_path=str(tmp_path / "hc.geojson"), stats_path=str(stats_path),
+        delta_path=str(delta_path), areas_bbox_path=str(tmp_path / "missing.json"),
+        fetch_state=fake_fetch_state, fetch_osc=lambda seq: osc_by_seq.get(seq, _osc()), now=now)
+    delta.export.write_json_atomic(out, str(delta_path))
+    return new_state, out
+
+
+def _hc_feature(**props):
+    feats = delta.export.build_play_features(
+        {"elements": [{"type": "node", "id": 77, "lat": 53.5, "lon": 10.0,
+                       "tags": {**HC_TAGS, **props}}]}, None, highchair=True)
+    return feats[0]
+
+
+def _hc_upserts(out):
+    return {f["properties"]["osm_url"]: f for f in out["highchair_places"]["upsert"]}
+
+
+B1, B2 = "2026-09-23T08:00:00+00:00", "2026-09-24T02:00:00+00:00"
+LATER = datetime(2026, 9, 24, 3, 0, tzinfo=timezone.utc)
+
+
+def test_a_wheelchair_answer_on_a_ring_outlives_the_rebase_onto_a_stale_answer(tmp_path):
+    osc = {101: _osc(_node("modify", 77, 2, "2026-09-23T10:01:00Z", 53.5, 10.0,
+                           {**HC_TAGS, "wheelchair": "yes"}))}
+    state, out = _hc_tick(tmp_path, {"seq": 100, "base": B1}, B1, osc, 101,
+                          "2026-09-23T10:02:00Z", hc_base=[_hc_feature()])
+    assert _hc_upserts(out)[HC_URL]["properties"]["wheelchair"] == "yes"
+    # Tonight's build reused the area's week-old answer: no wheelchair there.
+    state, out = _hc_tick(tmp_path, state, B2, {}, 110, "2026-09-24T02:05:00Z",
+                          hc_base=[_hc_feature()], now=LATER)
+    assert out["base"] == B2 and out["tables"]["upsert"] == []
+    assert _hc_upserts(out)[HC_URL]["properties"]["wheelchair"] == "yes"
+    # And it survives a restart: the carry is in the state file.
+    assert HC_URL in state["hc_carry"]
+    _, again = _hc_tick(tmp_path, json.loads(json.dumps(state)), B2, {}, 110,
+                        "2026-09-24T02:05:00Z", hc_base=[_hc_feature()], now=LATER)
+    assert _hc_upserts(again)[HC_URL]["properties"]["wheelchair"] == "yes"
+
+
+def test_a_place_the_reader_added_stays_after_the_rebase_and_can_still_go(tmp_path):
+    osc = {101: _osc(_node("create", 77, 1, "2026-09-23T10:01:00Z", 53.5, 10.0, HC_TAGS))}
+    state, out = _hc_tick(tmp_path, {"seq": 100, "base": B1}, B1, osc, 101, "2026-09-23T10:02:00Z")
+    assert _hc_upserts(out)[HC_URL]["properties"]["created"] is True
+    state, out = _hc_tick(tmp_path, state, B2, {}, 110, "2026-09-24T02:05:00Z", now=LATER)
+    assert _hc_upserts(out)[HC_URL]["properties"]["created"] is True   # not in the weekly answer
+    # Its high chair untagged after the rebase: carried, so known, so removed.
+    osc = {111: _osc(_node("modify", 77, 2, "2026-09-24T02:10:00Z", 53.5, 10.0,
+                           {"amenity": "restaurant"}))}
+    state, out = _hc_tick(tmp_path, state, B2, osc, 111, "2026-09-24T02:11:00Z", now=LATER)
+    assert out["highchair_places"] == {"upsert": [], "remove": [HC_URL]}
+    assert state["hc_carry"][HC_URL]["feature"] is None
+
+
+def test_the_carry_goes_at_a_gap_and_after_eight_days(tmp_path, capsys):
+    osc = {101: _osc(_node("create", 77, 1, "2026-09-23T10:01:00Z", 53.5, 10.0, HC_TAGS))}
+    state, _ = _hc_tick(tmp_path, {"seq": 100, "base": B1}, B1, osc, 101, "2026-09-23T10:02:00Z")
+    # The follower stopped at 101; the new base starts far beyond it.
+    _, out = _hc_tick(tmp_path, state, B2, {}, 5000, "2026-09-24T02:05:00Z", now=LATER)
+    assert out["highchair_places"] == {"upsert": [], "remove": []}
+    assert "1 carried high-chair state(s) dropped" in capsys.readouterr().err
+    carry = {HC_URL: {"t": "2026-09-23T10:01:00Z", "feature": None}}
+    assert delta.prune_carry(carry, datetime(2026, 10, 1, 10, 0, tzinfo=timezone.utc)) == carry
+    assert delta.prune_carry(carry, datetime(2026, 10, 1, 10, 2, tzinfo=timezone.utc)) == {}

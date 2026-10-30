@@ -1329,6 +1329,25 @@ def test_a_failing_highchair_query_keeps_the_saved_rings_and_the_area(
     assert "round 2" not in err and "Bayern: ct=" in err
 
 
+def test_the_highchair_query_goes_to_the_host_that_answered_the_sweep(tmp_path, load_fixture):
+    # Another host may be a mirror without an area database, whose 200 with no
+    # elements would be saved over the area's good answer for a week.
+    inner = _fake_overpass(load_fixture, hc=[HC_PLACE])
+    pinned = []
+
+    def fetch(ql, urls=None):
+        data = inner(ql)
+        if '"highchair"' in ql:
+            pinned.append(urls)
+        elif '"kids_area"' in ql:
+            data = {**data, osm.ANSWERED_BY: "http://m2"}
+        return data
+
+    _, hc, _ = _hc_run(tmp_path, load_fixture, fetch)
+    assert hc == [9101]
+    assert pinned and all(u == ["http://m2"] for u in pinned)
+
+
 def test_a_failing_highchair_query_with_nothing_saved_costs_only_the_rings(
         tmp_path, load_fixture, capsys):
     inner = _fake_overpass(load_fixture, hc=[HC_PLACE])

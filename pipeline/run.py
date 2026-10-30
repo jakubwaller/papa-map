@@ -309,10 +309,14 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         hc_ql = highchair_ql(area_name, admin_level)
         hc_hit = sweep_cache.load(SWEEP_CACHE_DIR, hc_ql, today, SWEEP_CACHE_MAX_DAYS)
         hc_answer = hc_hit[0] if hc_hit else {}
+        # Pinned to the host that answered tonight's sweep, as the recount is
+        # (_fetch_count): a mirror without an area database answers 200 and
+        # nothing, and saved, that empty answer would stand for a week.
+        hc_host = sweep.get(osm.ANSWERED_BY)
         if saved is None and toilet_counts.due_by_age(
                 area_name, hc_hit[1] if hc_hit else None, today, counts_period):
             try:
-                hc_answer = overpass_fetch(hc_ql)
+                hc_answer = overpass_fetch(hc_ql, **({"urls": [hc_host]} if hc_host else {}))
             except Exception as exc:
                 kept = (f"keeping its answer from {hc_hit[1]} d ago" if hc_hit
                         else "no high-chair places from this area tonight")

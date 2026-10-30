@@ -3906,19 +3906,23 @@ const DATA_URLS = [
 // failure only means no high-chair rings.
 const HC_URL = "data/highchair_places.geojson";
 let hcPending = true;   // a ?osm= link the map cannot place waits for this file too
+let hcLoading = false;  // one load at a time: boot's, or retryDataset's after an offline boot
 function loadHighchairPlaces(statsRefreshed) {
+  if (hcLoading) return;
+  hcLoading = hcPending = true;
+  // Replaces, never adds: a second load cannot double the rings.
   const apply = (json) => { if (json) { baseHcPlacesFC = json; renderMergedDataset(); } };
   const gate = statsRefreshed?.then((r) => (r?.ok === false ? "failed" : r?.json != null ? "changed" : "unchanged"));
   // A queued ?osm= link waits for the file 20 s at most (the app's own
   // NET_MS). The download itself is never aborted: on a slow link it still
   // lands, and draws its rings, late; sw.js does not abort a dataset fetch
   // either, so its stored copy is kept too.
-  const release = () => { if (hcPending) { hcPending = false; openQueuedPin(); } };
-  setTimeout(release, 20000);
+  const timer = setTimeout(() => release(), 20000);
+  const release = () => { clearTimeout(timer); if (hcPending) { hcPending = false; openQueuedPin(); } };
   (isNative() ? loadJSONNative(HC_URL, undefined, { gate }) : loadJSON(HC_URL))
     .then((l) => { apply(l?.json); l?.refreshed?.then((r) => apply(r?.json)); })
     .catch(() => {})
-    .finally(release);
+    .finally(() => { hcLoading = false; release(); });
 }
 const dataMissing = () => dataReady && !allFeatures.length;
 let lastJsons = [];   // the last-loaded jsons, so a retry that gets only some files keeps the rest
@@ -3956,6 +3960,9 @@ async function retryDataset() {
   missing.forEach((i, k) => { lastJsons[i] = loaded[k]?.json ?? lastJsons[i]; });
   if (loaded[0]?.json) {
     applyDataset(...lastJsons);
+    // Boot's own try failed with the tables (offline): the rings come too,
+    // and a queued ?osm= link waits for them again.
+    if (!baseHcPlacesFC) loadHighchairPlaces();
     pollDelta();
     openQueuedPin();
   }

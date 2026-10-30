@@ -22,13 +22,18 @@
 > highchair clause in the union costs 4-11 s and pushes the sweep to ~45 s, at
 > the `[timeout:55]` safety line. Every query holds a ~40 s slot on
 > overpass-api.de however short it runs, so it follows the toilet counts' weekly
-> rota (`toilet_counts.due_by_age`, each area on its own night), and the area's
-> saved answer (`sweep_cache`, keyed by the query) stands in on the other nights,
+> rota (`toilet_counts.due_by_age`, each area on its own night), pinned to the
+> host that answered tonight's sweep (a mirror without an area database
+> answers 200 and nothing), and the area's saved answer (`sweep_cache`, keyed by the query) stands in on the other nights,
 > on a night built from the saved sweep, and when the query fails. A failure, a
 > resting Overpass included, is a WARN line (the ops page lists it) and costs the
 > area nothing else. A reused answer does not pull `data_base` back, so between
-> its nights an area's high-chair places can lag OSM by up to a week; the delta
-> carries the edits since the night's base. It never outvotes tonight's sweep:
+> its nights an area's high-chair places can lag OSM by up to a week, so the
+> delta follower carries their latest state per object (`hc_carry` in its
+> state file, upsert or removal with the change's timestamp) across rebases
+> for 8 days, a rota period and a day, and delta.json's `highchair_places`
+> lays it over the stale answer; a gap in the diffs before a new base drops
+> the carry rather than guess. It never outvotes tonight's sweep:
 > an object the sweep found as a table, an answered-no place or a play place is
 > dropped from the high-chair answer, so it is drawn once, as the sweep has it.
 > The area log line gains `hc=N`.
@@ -40,7 +45,9 @@
 > again only when stats.json changed. A 404 (a build from before v110) or a
 > failure only means no high-chair rings, and a slow answer draws them late:
 > the download is never aborted. A `?osm=` link the map cannot place waits for
-> it, 20 s at most, as it waits for the first delta poll. Loaded on its own clock, it can be a build older than the tables:
+> it, 20 s at most, as it waits for the first delta poll. A boot whose tables
+> failed (offline) asks for it again when `retryDataset` fills them, one load
+> at a time. Loaded on its own clock, it can be a build older than the tables:
 > a high-chair place whose `osm_url` the merged tables or play places already
 > have is skipped, so an answered ring never comes back beside its pin.
 > `withHighchairPlaces` adds its places, with the delta's `highchair_places`

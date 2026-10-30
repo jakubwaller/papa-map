@@ -9,7 +9,7 @@ import os
 import sys
 import time
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
@@ -226,6 +226,15 @@ def make_coord_fetch(max_lookups: int = COORD_FETCH_MAX_PER_SEQ, fetch=fetch_osm
 # whose delete we missed, an API that 404s it) cannot stay forever.
 PENDING_MAX = int(os.environ.get("PAPAMAP_DELTA_PENDING_MAX", "200"))
 PENDING_MAX_ATTEMPTS = int(os.environ.get("PAPAMAP_DELTA_PENDING_ATTEMPTS", "30"))
+
+# The high-chair places' answer is weekly (pipeline/run.py's rota), so a
+# nightly build can lay one up to a period old under a fresh data_base: every
+# edit to a high-chair place in between would be lost at the rebase until the
+# area's own night. So their latest state per object is carried across
+# rebases (`hc_carry` in the state file) for one rota period and a day. Safe
+# to lay over any answer: the newest state the diffs gave an object is never
+# older than the answer, or the object's later change would be the one carried.
+HC_CARRY_DAYS = 8
 
 
 # ---- Base dataset (the nightly build's output, read back) ------------------
@@ -795,8 +804,44 @@ def apply_events(acc: dict, events: list[tuple]) -> dict:
     return acc
 
 
-def render_delta(acc: dict, base_iso: str, seq: int, now: datetime | None = None) -> dict:
+def carry_highchair(carry: dict, events: list[tuple], changes: list[dict],
+                    now: datetime) -> dict:
+    """Records each highchair_place event in `carry` as its object's latest
+    state, {osm_url: {"t": the change's timestamp, "feature": feature or None
+    for a removal}}."""
+    ts = {_osm_url(c["type"], c["id"]): c.get("timestamp") for c in changes}
+    for url, kind, feat in events:
+        if kind == "highchair_place":
+            carry[url] = {"t": ts.get(url) or now.isoformat(timespec="seconds"), "feature": feat}
+    return carry
+
+
+def prune_carry(carry: dict, now: datetime) -> dict:
+    """The entries of the last HC_CARRY_DAYS; one that cannot be dated goes."""
+    cutoff = now - timedelta(days=HC_CARRY_DAYS)
+    keep = {}
+    for url, e in (carry or {}).items():
+        try:
+            if _parse_iso(e["t"]) >= cutoff:
+                keep[url] = e
+        except (KeyError, TypeError, ValueError):
+            pass
+    return keep
+
+
+def render_delta(acc: dict, base_iso: str, seq: int, now: datetime | None = None,
+                 carry: dict | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
+    # This base's own high-chair events, then what the carry holds from before
+    # it (the same state wherever both have an object).
+    hc_upsert = dict(acc["highchair_places_upsert"])
+    hc_remove = set(acc["highchair_places_remove"])
+    for url, e in (carry or {}).items():
+        if url not in hc_upsert and url not in hc_remove:
+            if e.get("feature") is None:
+                hc_remove.add(url)
+            else:
+                hc_upsert[url] = e["feature"]
     return {
         "generated": now.isoformat(timespec="seconds"),
         "base": base_iso,
@@ -805,8 +850,7 @@ def render_delta(acc: dict, base_iso: str, seq: int, now: datetime | None = None
                   "remove": sorted(acc["tables_remove"])},
         "places": {"upsert": list(acc["places_upsert"].values()),
                   "remove": sorted(acc["places_remove"])},
-        "highchair_places": {"upsert": list(acc["highchair_places_upsert"].values()),
-                             "remove": sorted(acc["highchair_places_remove"])},
+        "highchair_places": {"upsert": list(hc_upsert.values()), "remove": sorted(hc_remove)},
         "new_toilets_no_table": list(acc["new_toilets_no_table"].values()),
     }
 
@@ -851,7 +895,7 @@ def save_state(state_path: str, state: dict) -> None:
 
 def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
             play_geojson_path: str = PLAY_GEOJSON_PATH,
-            highchair_geojson_path: str = HIGHCHAIR_GEOJSON_PATH, stats_path: str = STATS_PATH,
+            highchair_geojson_path: str | None = None, stats_path: str = STATS_PATH,
             delta_path: str = DELTA_PATH, areas_bbox_path: str = AREAS_BBOX_PATH,
             fetch_state=fetch_state, fetch_osc=fetch_osc,
             coord_fetch=None, coord_fetch_factory=None,
@@ -878,6 +922,8 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
     base_iso = read_data_base(stats_path)
     if base_iso is None:
         raise RuntimeError("no data base yet — stats.json missing (build has not run)")
+    if highchair_geojson_path is None:   # at call time, so a test can point it elsewhere
+        highchair_geojson_path = HIGHCHAIR_GEOJSON_PATH
     base_dataset = load_base_dataset(geojson_path, play_geojson_path, highchair_geojson_path)
     area_boxes_by_name = load_area_bboxes(areas_bbox_path)
     if area_boxes_by_name is None:
@@ -901,8 +947,16 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
     # accumulator they had built.
     need_reset = state is None or state.get("base") != base_iso
 
+    carry = prune_carry((state or {}).get("hc_carry"), now)
     if need_reset:
         start_seq = find_start_seq(base_iso, fetch_state=fetch_state)
+        # Sequences between the last one walked and the new base's start were
+        # never read: the carry could miss an object's later change, so it
+        # goes rather than guess.
+        if carry and not (isinstance(state.get("seq"), int) and state["seq"] >= start_seq - 1):
+            print(f"  WARN delta: {len(carry)} carried high-chair state(s) dropped, a gap "
+                  f"before the new base's seq {start_seq}", file=sys.stderr)
+            carry = {}
         acc = new_accumulator()
         last_seq = start_seq - 1
         pending: list = []   # the diffs are re-walked from the base anyway
@@ -910,6 +964,14 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
         acc = load_accumulator(delta_path, base_iso)
         last_seq = state["seq"]
         pending = list(state.get("pending") or [])
+
+    # The carry patches the base the diffs are compared against, so a later
+    # edit to a carried place is one to a known object, a removal included.
+    for url, e in carry.items():
+        if e.get("feature") is None:
+            base_dataset["highchair_places"].pop(url, None)
+        else:
+            base_dataset["highchair_places"][url] = e["feature"]
 
     def _fetcher():
         if coord_fetch is not None:
@@ -926,6 +988,7 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
                                         area_boxes=area_boxes, coord_fetch=_fetcher(),
                                         acc=acc, area_boxes_by_name=area_boxes_by_name)
         apply_events(acc, events)
+        carry_highchair(carry, events, [], now)
 
     head = current["seq"]
     first_seq = last_seq + 1
@@ -946,6 +1009,7 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
                   file=sys.stderr)
             break
         apply_events(acc, events)
+        carry_highchair(carry, events, changes, now)
         # A newer diff entry for a pending object decides its fate now — a
         # delete or a retag away from relevance included — so the older
         # pending entry goes, whatever this one did.
@@ -955,8 +1019,9 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
         pending = queue_pending(pending, dropped, now)
         last_seq = seq
 
-    delta = render_delta(acc, base_iso, last_seq, now=now)
-    return {"seq": last_seq, "base": base_iso, "pending": pending, "head": head}, delta
+    delta = render_delta(acc, base_iso, last_seq, now=now, carry=carry)
+    return {"seq": last_seq, "base": base_iso, "pending": pending, "head": head,
+            **({"hc_carry": carry} if carry else {})}, delta
 
 
 def run_forever(poll_s: float = POLL_INTERVAL_S, state_path: str = STATE_PATH,

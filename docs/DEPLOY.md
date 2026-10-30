@@ -173,6 +173,16 @@ that night's outcome rather than a build still in progress, and on 2026-10-27 on
 own cron line, which settles that for good. (Until then the rounds were a fixed six, and on
 2026-09-25 stale mirrors used them all up in 45 minutes of waiting while the good hosts were
 resting.)
+**The high-chair query (v110) is on the same weekly rota**, one small query per area on its
+own night, with its saved answer in `web-data/private/sweeps/` covering the others. The
+first build after the deploy that brings it finds no saved answer anywhere, so it queries
+every area once and runs long (an hour or two more). Areas past the deadline get their saved
+sweep and no high-chair rings that night, and fill in on later nights; from then on the rota
+spreads the areas across the week by a hash of their names. A daytime run right after that
+deploy takes the cost off the night. Rebuild the `delta` image in the same deploy: the
+follower carries high-chair edits across rebases (`hc_carry` in its state file) and emits
+their delta key.
+
 **Earlier than 02:00 is not an option on this host:** the VPS runs Europe/Berlin, and 01:00
 CEST is 23:00 UTC of the *previous* day. The rota dates its entries and the leaderboard its
 history in UTC, so on the night of the spring clock change two builds would share one UTC

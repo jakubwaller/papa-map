@@ -239,7 +239,7 @@ export const STRINGS = {
     ariaPlaces: "Orte mit Spielecke anzeigen, an denen niemand einen Wickeltisch erfasst hat oder an denen es keinen gibt",
     metaPlaces: "Spielecke erfasst — über einen Wickeltisch sagt OpenStreetMap hier nichts.",
     stPlacesHc: "Nur Hochstuhl",
-    ariaPlacesHc: "Orte mit Hochstuhl anzeigen, an denen niemand einen Wickeltisch erfasst hat",
+    ariaPlacesHc: "Orte mit Hochstuhl anzeigen, an denen niemand einen Wickeltisch erfasst hat oder an denen es keinen gibt",
     metaPlacesHc: "Hochstuhl erfasst — über einen Wickeltisch sagt OpenStreetMap hier nichts.",
 
     countShown: "{shown} von {total} Wickeltischen",
@@ -492,7 +492,7 @@ export const STRINGS = {
     ariaPlaces: "Show places with a play area where nobody has recorded a changing table, or where there is none",
     metaPlaces: "A play area is recorded here — about a changing table, OpenStreetMap says nothing.",
     stPlacesHc: "High chair only",
-    ariaPlacesHc: "Show places with a high chair where nobody has recorded a changing table",
+    ariaPlacesHc: "Show places with a high chair where nobody has recorded a changing table, or where there is none",
     metaPlacesHc: "A high chair is recorded here — about a changing table, OpenStreetMap says nothing.",
 
     countShown: "{shown} of {total} tables",
@@ -741,7 +741,7 @@ export const STRINGS = {
     ariaPlaces: "Vis steder med legeområde, hvor ingen har registreret et puslebord, eller hvor der ikke er noget",
     metaPlaces: "Her er der registreret et legeområde — om et puslebord siger OpenStreetMap intet.",
     stPlacesHc: "Kun højstol",
-    ariaPlacesHc: "Vis steder med højstol, hvor ingen har registreret et puslebord",
+    ariaPlacesHc: "Vis steder med højstol, hvor ingen har registreret et puslebord, eller hvor der ikke er noget",
     metaPlacesHc: "Her er der registreret en højstol — om et puslebord siger OpenStreetMap intet.",
 
     countShown: "{shown} af {total} pusleborde",
@@ -988,7 +988,7 @@ export const STRINGS = {
     ariaPlaces: "Plekken met een speelhoek tonen waar niemand een verschoontafel heeft vastgelegd, of waar er geen is",
     metaPlaces: "Hier is een speelhoek vastgelegd — over een verschoontafel zegt OpenStreetMap niets.",
     stPlacesHc: "Alleen kinderstoel",
-    ariaPlacesHc: "Plekken met een kinderstoel tonen waar niemand een verschoontafel heeft vastgelegd",
+    ariaPlacesHc: "Plekken met een kinderstoel tonen waar niemand een verschoontafel heeft vastgelegd, of waar er geen is",
     metaPlacesHc: "Hier is een kinderstoel vastgelegd — over een verschoontafel zegt OpenStreetMap niets.",
 
     countShown: "{shown} van {total} verschoontafels",
@@ -1233,7 +1233,7 @@ export const STRINGS = {
     ariaPlaces: "Afficher les lieux avec un coin jeux où personne n'a renseigné de table à langer, ou où il n'y en a pas",
     metaPlaces: "Un coin jeux est renseigné ici — sur une table à langer, OpenStreetMap ne dit rien.",
     stPlacesHc: "Chaise haute uniquement",
-    ariaPlacesHc: "Afficher les lieux avec une chaise haute où personne n'a renseigné de table à langer",
+    ariaPlacesHc: "Afficher les lieux avec une chaise haute où personne n'a renseigné de table à langer, ou où il n'y en a pas",
     metaPlacesHc: "Une chaise haute est renseignée ici — sur une table à langer, OpenStreetMap ne dit rien.",
 
     countShown: "{shown} tables sur {total}",
@@ -1478,7 +1478,7 @@ export const STRINGS = {
     ariaPlaces: "Mostra i luoghi con angolo giochi dove nessuno ha registrato un fasciatoio, o dove non c'è",
     metaPlaces: "Qui è registrato un angolo giochi — sul fasciatoio OpenStreetMap non dice nulla.",
     stPlacesHc: "Solo seggiolone",
-    ariaPlacesHc: "Mostra i luoghi con seggiolone dove nessuno ha registrato un fasciatoio",
+    ariaPlacesHc: "Mostra i luoghi con seggiolone dove nessuno ha registrato un fasciatoio, o dove non c'è",
     metaPlacesHc: "Qui è registrato un seggiolone — sul fasciatoio OpenStreetMap non dice nulla.",
 
     countShown: "{shown} di {total} fasciatoi",
@@ -1723,7 +1723,7 @@ export const STRINGS = {
     ariaPlaces: "Zobrazit místa s dětským koutkem, kde nikdo nezaznamenal přebalovací pult, nebo kde žádný není",
     metaPlaces: "Je tu zaznamenaný dětský koutek — o přebalovacím pultu OpenStreetMap neříká nic.",
     stPlacesHc: "Jen dětská židlička",
-    ariaPlacesHc: "Zobrazit místa s dětskou židličkou, kde nikdo nezaznamenal přebalovací pult",
+    ariaPlacesHc: "Zobrazit místa s dětskou židličkou, kde nikdo nezaznamenal přebalovací pult, nebo kde žádný není",
     metaPlacesHc: "Je tu zaznamenaná dětská židlička — o přebalovacím pultu OpenStreetMap neříká nic.",
 
     countShown: "{shown} z {total} přebalovacích pultů",
@@ -1968,7 +1968,7 @@ export const STRINGS = {
     ariaPlaces: "Pokaż miejsca z kącikiem zabaw, w których nikt nie zapisał przewijaka albo w których go nie ma",
     metaPlaces: "Kącik zabaw jest zapisany — o przewijaku OpenStreetMap nic tu nie mówi.",
     stPlacesHc: "Tylko krzesełko do karmienia",
-    ariaPlacesHc: "Pokaż miejsca z krzesełkiem do karmienia, w których nikt nie zapisał przewijaka",
+    ariaPlacesHc: "Pokaż miejsca z krzesełkiem do karmienia, w których nikt nie zapisał przewijaka albo w których go nie ma",
     metaPlacesHc: "Krzesełko do karmienia jest zapisane — o przewijaku OpenStreetMap nic tu nie mówi.",
 
     countShown: "{shown} z {total} przewijaków",
@@ -2213,7 +2213,7 @@ export const STRINGS = {
     ariaPlaces: "Visa platser med lekhörna där ingen har registrerat något skötbord, eller där det inte finns något",
     metaPlaces: "Här finns en lekhörna registrerad — om skötbord säger OpenStreetMap ingenting.",
     stPlacesHc: "Bara barnstol",
-    ariaPlacesHc: "Visa platser med barnstol där ingen har registrerat något skötbord",
+    ariaPlacesHc: "Visa platser med barnstol där ingen har registrerat något skötbord, eller där det inte finns något",
     metaPlacesHc: "Här finns en barnstol registrerad — om skötbord säger OpenStreetMap ingenting.",
 
     countShown: "{shown} av {total} skötbord",
@@ -2457,7 +2457,7 @@ export const STRINGS = {
     ariaPlaces: "Prikaži mjesta sa kutkom za igru gdje niko nije zabilježio sto za previjanje, ili gdje ga nema",
     metaPlaces: "Ovdje je zabilježen kutak za igru — o stolu za previjanje OpenStreetMap ne kaže ništa.",
     stPlacesHc: "Samo hranilica",
-    ariaPlacesHc: "Prikaži mjesta s hranilicom gdje niko nije zabilježio sto za previjanje",
+    ariaPlacesHc: "Prikaži mjesta s hranilicom gdje niko nije zabilježio sto za previjanje, ili gdje ga nema",
     metaPlacesHc: "Ovdje je zabilježena hranilica — o stolu za previjanje OpenStreetMap ne kaže ništa.",
 
     countShown: "{shown} od {total} stolova za previjanje",
@@ -2701,7 +2701,7 @@ export const STRINGS = {
     ariaPlaces: "Mostra llocs amb racó de jocs on ningú no ha registrat cap canviador, o on no n'hi ha",
     metaPlaces: "Aquí hi ha un racó de jocs registrat — sobre un canviador, OpenStreetMap no diu res.",
     stPlacesHc: "Només trona",
-    ariaPlacesHc: "Mostra llocs amb trona on ningú no ha registrat cap canviador",
+    ariaPlacesHc: "Mostra llocs amb trona on ningú no ha registrat cap canviador, o on no n'hi ha",
     metaPlacesHc: "Aquí hi ha una trona registrada — sobre un canviador, OpenStreetMap no diu res.",
 
     countShown: "{shown} de {total} canviadors",
@@ -2945,7 +2945,7 @@ export const STRINGS = {
     ariaPlaces: "Näita kohti, kus on mänguala, aga mähkimislauda pole keegi märkinud või seda pole",
     metaPlaces: "Siin on registreeritud mänguala — mähkimislaua kohta OpenStreetMap midagi ei ütle.",
     stPlacesHc: "Ainult lastetool",
-    ariaPlacesHc: "Näita kohti, kus on lastetool, aga mähkimislauda pole keegi märkinud",
+    ariaPlacesHc: "Näita kohti, kus on lastetool, aga mähkimislauda pole keegi märkinud või seda pole",
     metaPlacesHc: "Siin on registreeritud lastetool — mähkimislaua kohta OpenStreetMap midagi ei ütle.",
 
     countShown: "{shown} mähkimislauda {total}-st",
@@ -3189,7 +3189,7 @@ export const STRINGS = {
     ariaPlaces: "Mostrar los lugares con zona de juegos donde nadie ha registrado un cambiador, o donde no lo hay",
     metaPlaces: "Aquí hay una zona de juegos registrada — sobre un cambiador, OpenStreetMap no dice nada.",
     stPlacesHc: "Solo trona",
-    ariaPlacesHc: "Mostrar los lugares con trona donde nadie ha registrado un cambiador",
+    ariaPlacesHc: "Mostrar los lugares con trona donde nadie ha registrado un cambiador, o donde no lo hay",
     metaPlacesHc: "Aquí hay una trona registrada — sobre un cambiador, OpenStreetMap no dice nada.",
 
     countShown: "{shown} de {total} cambiadores",
@@ -3433,7 +3433,7 @@ export const STRINGS = {
     ariaPlaces: "Prikaži mjesta s dječjim kutkom gdje nitko nije zabilježio stol za previjanje, ili gdje ga nema",
     metaPlaces: "Ovdje je zabilježen dječji kutak — o stolu za previjanje OpenStreetMap ne kaže ništa.",
     stPlacesHc: "Samo hranilica",
-    ariaPlacesHc: "Prikaži mjesta s hranilicom gdje nitko nije zabilježio stol za previjanje",
+    ariaPlacesHc: "Prikaži mjesta s hranilicom gdje nitko nije zabilježio stol za previjanje, ili gdje ga nema",
     metaPlacesHc: "Ovdje je zabilježena hranilica — o stolu za previjanje OpenStreetMap ne kaže ništa.",
 
     countShown: "{shown} od {total} stolova",
@@ -3677,7 +3677,7 @@ export const STRINGS = {
     ariaPlaces: "Sýna staði með leiksvæði þar sem enginn hefur skráð skiptiborð, eða þar sem ekkert er",
     metaPlaces: "Hér er skráð leiksvæði — um skiptiborð segir OpenStreetMap ekkert.",
     stPlacesHc: "Aðeins barnastóll",
-    ariaPlacesHc: "Sýna staði með barnastól þar sem enginn hefur skráð skiptiborð",
+    ariaPlacesHc: "Sýna staði með barnastól þar sem enginn hefur skráð skiptiborð, eða þar sem ekkert er",
     metaPlacesHc: "Hér er skráður barnastóll — um skiptiborð segir OpenStreetMap ekkert.",
 
     countShown: "{shown} af {total} skiptiborðum",
@@ -3921,7 +3921,7 @@ export const STRINGS = {
     ariaPlaces: "Rādīt vietas ar rotaļu stūrīti, kur neviens nav atzīmējis pārtinamo galdiņu vai kur tāda nav",
     metaPlaces: "Šeit ir atzīmēts rotaļu stūrītis — par pārtinamo galdiņu OpenStreetMap neko nesaka.",
     stPlacesHc: "Tikai bērnu krēsliņš",
-    ariaPlacesHc: "Rādīt vietas ar bērnu krēsliņu, kur neviens nav atzīmējis pārtinamo galdiņu",
+    ariaPlacesHc: "Rādīt vietas ar bērnu krēsliņu, kur neviens nav atzīmējis pārtinamo galdiņu vai kur tāda nav",
     metaPlacesHc: "Šeit ir atzīmēts bērnu krēsliņš — par pārtinamo galdiņu OpenStreetMap neko nesaka.",
 
     countShown: "{shown} no {total} galdiņiem",
@@ -4165,7 +4165,7 @@ export const STRINGS = {
     ariaPlaces: "Rodyti vietas su žaidimų kampeliu, kuriose niekas nepažymėjo pervystymo stalo arba kuriose jo nėra",
     metaPlaces: "Čia pažymėtas žaidimų kampelis — apie pervystymo stalą OpenStreetMap nieko nesako.",
     stPlacesHc: "Tik maitinimo kėdutė",
-    ariaPlacesHc: "Rodyti vietas su maitinimo kėdute, kuriose niekas nepažymėjo pervystymo stalo",
+    ariaPlacesHc: "Rodyti vietas su maitinimo kėdute, kuriose niekas nepažymėjo pervystymo stalo arba kuriose jo nėra",
     metaPlacesHc: "Čia pažymėta maitinimo kėdutė — apie pervystymo stalą OpenStreetMap nieko nesako.",
 
     countShown: "{shown} iš {total} stalų",
@@ -4409,7 +4409,7 @@ export const STRINGS = {
     ariaPlaces: "Olyan helyek megjelenítése, ahol van játszósarok, de senki nem rögzített pelenkázóasztalt, vagy nincs is",
     metaPlaces: "Itt egy játszósarok van rögzítve — pelenkázóasztalról az OpenStreetMap nem mond semmit.",
     stPlacesHc: "Csak etetőszék",
-    ariaPlacesHc: "Olyan helyek megjelenítése, ahol van etetőszék, de senki nem rögzített pelenkázóasztalt",
+    ariaPlacesHc: "Olyan helyek megjelenítése, ahol van etetőszék, de senki nem rögzített pelenkázóasztalt, vagy nincs is",
     metaPlacesHc: "Itt egy etetőszék van rögzítve — pelenkázóasztalról az OpenStreetMap nem mond semmit.",
 
     countShown: "{shown}/{total} pelenkázóasztal",
@@ -4653,7 +4653,7 @@ export const STRINGS = {
     ariaPlaces: "Vis steder med lekeområde der ingen har registrert et stellebord, eller der det ikke finnes noe",
     metaPlaces: "Her er det registrert et lekeområde — om et stellebord sier OpenStreetMap ingenting.",
     stPlacesHc: "Bare barnestol",
-    ariaPlacesHc: "Vis steder med barnestol der ingen har registrert et stellebord",
+    ariaPlacesHc: "Vis steder med barnestol der ingen har registrert et stellebord, eller der det ikke finnes noe",
     metaPlacesHc: "Her er det registrert en barnestol — om et stellebord sier OpenStreetMap ingenting.",
 
     countShown: "{shown} av {total} stellebord",
@@ -4897,7 +4897,7 @@ export const STRINGS = {
     ariaPlaces: "Mostrar locais com cantinho de brincar onde ninguém registou um fraldário, ou onde não há nenhum",
     metaPlaces: "Aqui há um cantinho de brincar registado — sobre um fraldário, o OpenStreetMap não diz nada.",
     stPlacesHc: "Só cadeira de papa",
-    ariaPlacesHc: "Mostrar locais com cadeira de papa onde ninguém registou um fraldário",
+    ariaPlacesHc: "Mostrar locais com cadeira de papa onde ninguém registou um fraldário, ou onde não há nenhum",
     metaPlacesHc: "Aqui há uma cadeira de papa registada — sobre um fraldário, o OpenStreetMap não diz nada.",
 
     countShown: "{shown} de {total} fraldários",
@@ -5141,7 +5141,7 @@ export const STRINGS = {
     ariaPlaces: "Arată locurile cu zonă de joacă unde nimeni nu a înregistrat o masă de înfășat sau unde nu există",
     metaPlaces: "Aici este înregistrată o zonă de joacă — despre o masă de înfășat, OpenStreetMap nu spune nimic.",
     stPlacesHc: "Doar scaun înalt",
-    ariaPlacesHc: "Arată locurile cu scaun înalt pentru copii unde nimeni nu a înregistrat o masă de înfășat",
+    ariaPlacesHc: "Arată locurile cu scaun înalt pentru copii unde nimeni nu a înregistrat o masă de înfășat sau unde nu există",
     metaPlacesHc: "Aici este înregistrat un scaun înalt pentru copii — despre o masă de înfășat, OpenStreetMap nu spune nimic.",
 
     countShown: "{shown} din {total} mese",
@@ -5385,7 +5385,7 @@ export const STRINGS = {
     ariaPlaces: "Shfaq vendet me hapësirë lojërash, ku askush nuk ka regjistruar një tavolinë ndërrimi ose ku nuk ka fare",
     metaPlaces: "Këtu është regjistruar një hapësirë lojërash — për tavolinë ndërrimi, OpenStreetMap nuk thotë asgjë.",
     stPlacesHc: "Vetëm karrige e lartë",
-    ariaPlacesHc: "Shfaq vendet me karrige të lartë për fëmijë, ku askush nuk ka regjistruar një tavolinë ndërrimi",
+    ariaPlacesHc: "Shfaq vendet me karrige të lartë për fëmijë, ku askush nuk ka regjistruar një tavolinë ndërrimi ose ku nuk ka fare",
     metaPlacesHc: "Këtu është regjistruar një karrige e lartë për fëmijë — për tavolinë ndërrimi, OpenStreetMap nuk thotë asgjë.",
 
     countShown: "{shown} nga {total} tavolina",
@@ -5629,7 +5629,7 @@ export const STRINGS = {
     ariaPlaces: "Zobraziť miesta s detským kútikom, kde nikto nezaznamenal prebaľovací pult alebo kde žiadny nie je",
     metaPlaces: "Je tu zaznamenaný detský kútik — o prebaľovacom pulte OpenStreetMap nehovorí nič.",
     stPlacesHc: "Len detská stolička",
-    ariaPlacesHc: "Zobraziť miesta s detskou stoličkou, kde nikto nezaznamenal prebaľovací pult",
+    ariaPlacesHc: "Zobraziť miesta s detskou stoličkou, kde nikto nezaznamenal prebaľovací pult alebo kde žiadny nie je",
     metaPlacesHc: "Je tu zaznamenaná detská stolička — o prebaľovacom pulte OpenStreetMap nehovorí nič.",
 
     countShown: "{shown} z {total} prebaľovacích pultov",
@@ -5873,7 +5873,7 @@ export const STRINGS = {
     ariaPlaces: "Prikaži kraje z igralnim kotičkom, kjer nihče ni zabeležil previjalne mize ali kjer je ni",
     metaPlaces: "Tukaj je zabeležen igralni kotiček — o previjalni mizi OpenStreetMap ne pove nič.",
     stPlacesHc: "Samo otroški stolček",
-    ariaPlacesHc: "Prikaži kraje z otroškim stolčkom, kjer nihče ni zabeležil previjalne mize",
+    ariaPlacesHc: "Prikaži kraje z otroškim stolčkom, kjer nihče ni zabeležil previjalne mize ali kjer je ni",
     metaPlacesHc: "Tukaj je zabeležen otroški stolček — o previjalni mizi OpenStreetMap ne pove nič.",
 
     countShown: "{shown} od {total} previjalnih miz",
@@ -6117,7 +6117,7 @@ export const STRINGS = {
     ariaPlaces: "Näytä paikat, joissa on leikkinurkka mutta joihin kukaan ei ole merkinnyt hoitopöytää tai joissa sitä ei ole",
     metaPlaces: "Täällä on merkitty leikkinurkka — hoitopöydästä OpenStreetMap ei kerro tässä mitään.",
     stPlacesHc: "Vain syöttötuoli",
-    ariaPlacesHc: "Näytä paikat, joissa on syöttötuoli mutta joihin kukaan ei ole merkinnyt hoitopöytää",
+    ariaPlacesHc: "Näytä paikat, joissa on syöttötuoli mutta joihin kukaan ei ole merkinnyt hoitopöytää tai joissa sitä ei ole",
     metaPlacesHc: "Täällä on merkitty syöttötuoli — hoitopöydästä OpenStreetMap ei kerro tässä mitään.",
 
     countShown: "{shown}/{total} hoitopöytää",
@@ -6361,7 +6361,7 @@ export const STRINGS = {
     ariaPlaces: "Εμφάνιση μερών με παιδική γωνιά όπου κανείς δεν έχει καταγράψει αλλαξιέρα, ή όπου δεν υπάρχει",
     metaPlaces: "Εδώ είναι καταγεγραμμένη μια παιδική γωνιά — για αλλαξιέρα, το OpenStreetMap δεν λέει τίποτα.",
     stPlacesHc: "Μόνο παιδικό καρεκλάκι",
-    ariaPlacesHc: "Εμφάνιση μερών με παιδικό καρεκλάκι όπου κανείς δεν έχει καταγράψει αλλαξιέρα",
+    ariaPlacesHc: "Εμφάνιση μερών με παιδικό καρεκλάκι όπου κανείς δεν έχει καταγράψει αλλαξιέρα, ή όπου δεν υπάρχει",
     metaPlacesHc: "Εδώ είναι καταγεγραμμένο ένα παιδικό καρεκλάκι — για αλλαξιέρα, το OpenStreetMap δεν λέει τίποτα.",
 
     countShown: "{shown} από {total} αλλαξιέρες",
@@ -6605,7 +6605,7 @@ export const STRINGS = {
     ariaPlaces: "Паказваць месцы з гульнявым кутком, дзе ніхто не адзначыў стол для спавівання або дзе яго няма",
     metaPlaces: "Тут адзначаны гульнявы куток — а пра стол для спавівання OpenStreetMap нічога не кажа.",
     stPlacesHc: "Толькі дзіцячае крэсла",
-    ariaPlacesHc: "Паказваць месцы з дзіцячым крэслам, дзе ніхто не адзначыў стол для спавівання",
+    ariaPlacesHc: "Паказваць месцы з дзіцячым крэслам, дзе ніхто не адзначыў стол для спавівання або дзе яго няма",
     metaPlacesHc: "Тут адзначана дзіцячае крэсла — а пра стол для спавівання OpenStreetMap нічога не кажа.",
 
     countShown: "{shown} з {total} сталоў для спавівання",
@@ -6849,7 +6849,7 @@ export const STRINGS = {
     ariaPlaces: "Покажи местата с кът за игра, където никой не е отбелязал маса за повиване или където няма такава",
     metaPlaces: "Тук е отбелязан кът за игра — за маса за повиване OpenStreetMap не казва нищо.",
     stPlacesHc: "Само детско столче",
-    ariaPlacesHc: "Покажи местата с детско столче, където никой не е отбелязал маса за повиване",
+    ariaPlacesHc: "Покажи местата с детско столче, където никой не е отбелязал маса за повиване или където няма такава",
     metaPlacesHc: "Тук е отбелязано детско столче — за маса за повиване OpenStreetMap не казва нищо.",
 
     countShown: "{shown} от {total} маси",
@@ -7093,7 +7093,7 @@ export const STRINGS = {
     ariaPlaces: "Прикажи места со простор за игра каде никој не забележал маса за пеленање или каде нема",
     metaPlaces: "Тука е забележан простор за игра — за маса за пеленање, OpenStreetMap не кажува ништо.",
     stPlacesHc: "Само детско столче",
-    ariaPlacesHc: "Прикажи места со детско столче каде никој не забележал маса за пеленање",
+    ariaPlacesHc: "Прикажи места со детско столче каде никој не забележал маса за пеленање или каде нема",
     metaPlacesHc: "Тука е забележано детско столче — за маса за пеленање, OpenStreetMap не кажува ништо.",
 
     countShown: "{shown} од {total} маси",
@@ -7337,7 +7337,7 @@ export const STRINGS = {
     ariaPlaces: "Прикажи места са играоницом где нико није унео сто за превијање, или где га нема",
     metaPlaces: "Овде је забележена играоница — о столу за превијање OpenStreetMap не каже ништа.",
     stPlacesHc: "Само хранилица",
-    ariaPlacesHc: "Прикажи места са хранилицом где нико није унео сто за превијање",
+    ariaPlacesHc: "Прикажи места са хранилицом где нико није унео сто за превијање, или где га нема",
     metaPlacesHc: "Овде је забележена хранилица — о столу за превијање OpenStreetMap не каже ништа.",
 
     countShown: "{shown} од {total} столова",
@@ -7581,7 +7581,7 @@ export const STRINGS = {
     ariaPlaces: "Показати місця з дитячим куточком, де ніхто не зафіксував пеленальний столик або де його немає",
     metaPlaces: "Тут зафіксовано дитячий куточок — про пеленальний столик OpenStreetMap нічого не каже.",
     stPlacesHc: "Лише дитячий стільчик",
-    ariaPlacesHc: "Показати місця з дитячим стільчиком, де ніхто не зафіксував пеленальний столик",
+    ariaPlacesHc: "Показати місця з дитячим стільчиком, де ніхто не зафіксував пеленальний столик або де його немає",
     metaPlacesHc: "Тут зафіксовано дитячий стільчик — про пеленальний столик OpenStreetMap нічого не каже.",
 
     countShown: "{shown} з {total} столиків",
@@ -7829,7 +7829,7 @@ export const STRINGS = {
     ariaPlaces: "遊び場はあるが、おむつ交換台を誰も記録していない、または交換台がない場所を表示",
     metaPlaces: "ここには遊び場が記録されています — おむつ交換台については、OpenStreetMapは何も言っていません。",
     stPlacesHc: "ベビーチェアのみ",
-    ariaPlacesHc: "ベビーチェアはあるが、おむつ交換台を誰も記録していない場所を表示",
+    ariaPlacesHc: "ベビーチェアはあるが、おむつ交換台を誰も記録していない、または交換台がない場所を表示",
     metaPlacesHc: "ここにはベビーチェアが記録されています — おむつ交換台については、OpenStreetMapは何も言っていません。",
 
     countShown: "{total}台のうち{shown}台",
