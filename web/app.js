@@ -61,7 +61,8 @@ import { isOpenNow } from "./opening-hours.js?v=app106";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM, venueAnswer, venueFromIntent } from "./venues.js?v=app106";
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM, venueAnswer, venueFromIntent,
+         venueQuestions } from "./venues.js?v=app106";
 // The bundled shell's pin (`?v=app106`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
@@ -1042,7 +1043,9 @@ function popupHTML(f) {
 // it is appended after the rooms rather than folded into roomChoices().
 // `busy`: an answer for this object is already on its way (the popup was
 // closed and reopened mid-write), so the buttons render quiet.
-function askHTML(question = "askRoom", busy = false) {
+// `who` false leaves the login line to the caller (the add dialog's venue
+// step carries one line for its three questions).
+function askHTML(question = "askRoom", busy = false, who = true) {
   const dis = busy ? " disabled" : "";
   // The label rides along explicitly: a room added to ROOMS without a label
   // then renders as "undefined" — loud — not as another answer's words.
@@ -1059,7 +1062,7 @@ function askHTML(question = "askRoom", busy = false) {
       ? `<div class="ask-btns ask-btns-none">${pill("none", "roomNone", " ask-btn-none")}</div>`
       : "");
   return `<div class="ask"><div class="ask-q">${esc(t(question))}</div>` +
-         `${btns}${askWhoHTML()}</div>`;
+         `${btns}${who ? askWhoHTML() : ""}</div>`;
 }
 
 // Who the answer will be filed as — or, before the first login, that it will
@@ -3136,6 +3139,8 @@ async function loadVenues(url, cacheKey = null, accept = isVenue) {
 }
 
 function showVenueRowsWithout(osmUrl) {
+  // A list from another open (loading, or another street) is not this one's.
+  if (!venueShown.some((r) => r.osm_url === osmUrl)) return;
   const rows = venueShown.filter((r) => r.osm_url !== osmUrl);
   renderVenueRows(rows);
   setVenueStatus(rows.length ? null : "venueEmpty");
@@ -3167,15 +3172,21 @@ venueList.addEventListener("click", (e) => {
   if (row) askVenue(row);
 });
 
-// The three questions unfolded, unlike the pin card's fold: the reader came
-// here to add something. The table block carries the login line; the high
-// chair only where the pin card would ask it (v112).
+// The questions unfolded, unlike the pin card's fold: the reader came here to
+// add something. Which ones, venueQuestions says (v112). One login line under
+// them all, so it stays whichever is answered first. A place whose answer is
+// still on its way (picked again after a close) renders quiet.
 function askVenue(row, busy = false) {
   venuePicked = row;
+  busy ||= inFlight.has(row.osm_url);
+  const qs = venueQuestions(row, placesByOsmUrl.get(row.osm_url));
   document.getElementById("venue-name").textContent = row.name;
   document.getElementById("venue-context").textContent = row.context || "";
-  document.getElementById("venue-q").innerHTML = askHTML("askTable", busy) + askPlayHTML(busy) +
-    (isHighchairVenue(row.amenity) ? askHighchairHTML(busy) : "");
+  document.getElementById("venue-q").innerHTML = askHTML("askTable", busy, false) +
+    (qs.includes("play") ? askPlayHTML(busy) : "") + (qs.includes("hc") ? askHighchairHTML(busy) : "") +
+    askWhoHTML();
+  // Quieted by an earlier place's write, which no longer owns the step.
+  document.getElementById("venue-back").disabled = false;
   setVenueNote(null);
   showVenueStep("ask");
 }
@@ -3222,13 +3233,17 @@ async function answerVenue(venue, choice, freshToken = null) {
   // (addWatchSince moves it back when an earlier tap's save was the write).
   const since = new Date().toISOString();
   let a = null;
+  // Whether the step still shows this place: the reader may have closed the
+  // dialog during the write and picked another, whose step is not this one's.
+  const shown = () => venuePicked?.osm_url === venue.osm_url;
+  const note = (...args) => { if (shown()) setVenueNote(...args); };
   // Answered or found answered, the place leaves the list (a second tap on
   // the same question would be refused as somebody else's) and the question
   // its step; the other questions stay.
   const done = () => {
     venueAnswered.add(venue.osm_url);
     showVenueRowsWithout(venue.osm_url);
-    venueAskEl.querySelector(VENUE_Q_SEL[a.q])?.remove();
+    if (shown()) venueAskEl.querySelector(VENUE_Q_SEL[a.q])?.remove();
   };
   try {
     const ref = osmRef(venue.osm_url);
@@ -3238,7 +3253,7 @@ async function answerVenue(venue, choice, freshToken = null) {
     recordMyAnswer(out.changeset, venue.lon, venue.lat);
     venueCache.clear();   // the place is answered; a reopen must not list it
     done();
-    setVenueNote(a.pin ? "venueSaved" : "venueSavedNone", "found");
+    note(a.pin ? "venueSaved" : "venueSavedNone", "found");
     if (a.pin) {
       writeAddWatch({ t: addWatchSince(since, out), osm_url: venue.osm_url, zoom: Math.max(map.getZoom(), VENUE_MIN_ZOOM),
         bbox: [venue.lon, venue.lat, venue.lon, venue.lat] });
@@ -3253,13 +3268,16 @@ async function answerVenue(venue, choice, freshToken = null) {
     // on record still leaves the play and high-chair questions open.
     if (err.step === "taken") {
       done();
-      setVenueNote("venueTaken", "none");
+      note("venueTaken", "none");
       return;
     }
-    setVenueNote(err.status === 409 ? "askConflict" : "askFailed", "none", { status: err.status || "network" });
+    note(err.status === 409 ? "askConflict" : "askFailed", "none", { status: err.status || "network" });
   } finally {
     inFlight.delete(venue.osm_url);
-    btns.forEach((b) => { if (b.isConnected) b.disabled = false; });
+    // The step's buttons as they are now: this place picked again during the
+    // write rendered them anew, quiet. Another place's are its own.
+    if (shown()) venueAskEl.querySelectorAll("button.ask-btn, button.ask-more, #venue-back")
+      .forEach((b) => { b.disabled = false; });
   }
 }
 

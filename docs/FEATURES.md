@@ -702,8 +702,13 @@ through the same `writeTags`, under the same login, with the same changing-table
 play and high-chair changeset comments as the pin cards' (CONTRACT.md v62), on
 its own: it takes down only its own question. "Taken" is per question too —
 `writeTags` guards only the patch's own keys — so a place whose `changing_table`
-OSM already holds still takes a play or high-chair answer. A login round trip
-keeps the choice and the place's amenity in its intent and resumes that answer. Places OSM does not have at all, and public toilets, stay with
+OSM already holds still takes a play or high-chair answer. A play ring is
+listed too (only table pins are left out), so the step skips the play question
+for one, and the high chair where one is on record (`venueQuestions`); and a play
+answer is refused beside any play area the pipeline counts, `kids_area:outdoor`,
+`leisure=indoor_play` or a playground included (`takenFor`), so a "none" never
+lands next to a ring's own tag. A login round trip keeps the choice and the
+place's amenity in its intent and resumes that answer. Places OSM does not have at all, and public toilets, stay with
 the two MapComplete links under the list: creating an object is a different job
 from tagging one. Since 21 Oct 2026 the venue link can create one too: the
 theme's `dad_venue` layer offers a café, a restaurant and a baby shop as new

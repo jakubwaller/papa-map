@@ -14,7 +14,8 @@
 // stays the last word on whether the place is still unanswered.
 import { haversineKm } from "./datasource.js?v=app106";
 import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app106";
-import { isPlayChoice, playPatch, isHighchairChoice, highchairPatch, tablePatch } from "./osm.js?v=app106";
+import { isPlayChoice, playPatch, isHighchairChoice, highchairPatch, tablePatch,
+         isHighchairVenue } from "./osm.js?v=app106";
 
 // The MapComplete theme's dad_venue layer, as tag lists: the same places the
 // theme offers for the same question. theme/papamap.theme.json is the source,
@@ -180,6 +181,17 @@ export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_L
 export function venueDistance(km) {
   if (!Number.isFinite(km)) return "";
   return `${Math.max(10, Math.round((km * 1000) / 10) * 10)} m`;
+}
+
+// Which of the venue step's questions a row gets. The table always: a table
+// on record is reported by writeTags as taken, and the map draws no pin for a
+// `changing_table=no`. The play area unless the map already draws the place as
+// a play ring (`ring`, its entry in app.js's placesByOsmUrl): its play area is
+// on record, perhaps under a tag no answer here could square with. The high
+// chair where the pin card asks it (isHighchairVenue), unless one is on record.
+export function venueQuestions(row, ring = null) {
+  return ["table", ...(ring?.play_area ? [] : ["play"]),
+          ...(isHighchairVenue(row?.amenity) && !ring?.highchair_recorded ? ["hc"] : [])];
 }
 
 // One answer in the venue step, which asks three questions about the place

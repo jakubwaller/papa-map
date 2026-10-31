@@ -15,7 +15,15 @@
 > "Taken" is per question, because `writeTags` guards only the patch's own keys
 > (`guardKeys`): a place whose `changing_table` is already set loses the table
 > question with `venueTaken`, now worded for any question, and keeps the other
-> two. A yes (a room, `play_yes`, `play_outdoor`, `hc_yes`) is watched for by
+> two. A play answer is also refused where the object records a play area in a
+> way the pipeline counts outside `PLAY_KEYS` (`kids_area:outdoor` in
+> `PLAY_AREA_VALUES`, `leisure=indoor_play`, `leisure=playground`: `playOnRecord`
+> and `takenFor` in `web/osm.js`), none of which the pin card ever asks over; and
+> the step leaves out the play question for a place the map draws as a play ring
+> and the high-chair question where one is on record (`venueQuestions`). One
+> login line sits under all the questions. A write that lands after the reader
+> moved on to another place keeps its bookkeeping and leaves that step alone;
+> a place picked again while its write is on the way renders quiet. A yes (a room, `play_yes`, `play_outdoor`, `hc_yes`) is watched for by
 > `osm_url` in the delta's `tables`, `places` or `highchair_places`
 > (`selectAddedPlace`, unchanged) and flown to with `toastNewTable`,
 > `toastNewPlace` or `toastNewPlaceHc`; a no says "Gespeichert — danke!". The

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { VENUE_TAGS, isVenue, isSearchVenue, venueOsmTags, venueSearchOsmTags, venueReverseUrl,
          venueSearchUrl, venueRows, venueDistance, venueCentreKey, VENUE_LIMIT,
-         VENUE_SEARCH_KEYS, VENUE_SEARCH_EXCLUDE, venueAnswer, venueFromIntent } from "./venues.js";
+         VENUE_SEARCH_KEYS, VENUE_SEARCH_EXCLUDE, venueAnswer, venueFromIntent,
+         venueQuestions } from "./venues.js";
 import { isHighchairVenue, PLAY_CHOICES, HIGHCHAIR_CHOICES, roomChoices, roomChoicesMore } from "./osm.js";
 
 const feat = (props, coords = [9.9563, 53.5745]) =>
@@ -241,4 +242,16 @@ test("venueFromIntent: the place a login brings back, amenity and all", () => {
   assert.equal(venueFromIntent({ ...intent, kind: "table" }), null);
   assert.equal(venueFromIntent({ ...intent, osm_url: null }), null);
   assert.equal(venueFromIntent(null), null);
+});
+
+test("venueQuestions: table always, play unless a play ring, high chair where asked and not on record", () => {
+  const cafe = { amenity: "cafe" }, shop = { amenity: null };
+  assert.deepEqual(venueQuestions(cafe), ["table", "play", "hc"]);
+  assert.deepEqual(venueQuestions(shop), ["table", "play"]);
+  // A play ring's play area is on record, maybe as kids_area:outdoor or leisure=indoor_play.
+  assert.deepEqual(venueQuestions(cafe, { play_area: true, highchair_recorded: false }), ["table", "hc"]);
+  assert.deepEqual(venueQuestions(cafe, { play_area: true, highchair_recorded: true }), ["table"]);
+  // A high-chair ring: its high chair is on record, its play area is not.
+  assert.deepEqual(venueQuestions(cafe, { play_area: false, highchair_recorded: true }), ["table", "play"]);
+  assert.deepEqual(venueQuestions(cafe, null), ["table", "play", "hc"]);
 });

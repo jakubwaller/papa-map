@@ -7,7 +7,7 @@ import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
          PLAY_CHOICES, PLAY_KEYS, isPlayChoice, playPatch, guardKeys, changesetTags, changesetXml,
          HIGHCHAIR_CHOICES, HIGHCHAIR_VENUES, isHighchairChoice, isHighchairVenue, highchairPatch,
          WHEELCHAIR_CHOICES, isWheelchairChoice, wheelchairPatch,
-         elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY,
+         elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY, PLAY_AREA_VALUES, playOnRecord, takenFor,
          startLogin, takeIntent, keepRoundTripAcrossRestarts, awaitingReturn, preferReturn, dropStaleRoundTrip, ROUND_TRIP_MS, PKCE_KEY, INTENT_KEY,
          setLogin, clearLogin, getToken, getUser, getUserId, userInfo, userName, ensureUserInfo } from "./osm.js";
 import { STRINGS, LANGS } from "./i18n.js";
@@ -767,4 +767,49 @@ test("writeTags: a dead token stops at the first read with a 401", async () => {
   await assert.rejects(writeTags(SANDBOX, "old", { type: "way", id: "1" }, roomPatch("male"), "c", fetchFn),
     (e) => e.status === 401);
   assert.equal(calls.length, 1, "nothing is opened on OSM without a valid token");
+});
+
+// The add dialog lists play rings too (v112), and a play area can be on record
+// under tags no play answer writes. Its "none" must not land beside one.
+test("playOnRecord: every play area the pipeline counts outside PLAY_KEYS", () => {
+  for (const tags of [{ "kids_area:outdoor": "yes" }, { "kids_area:outdoor": " Designated " },
+                      { leisure: "indoor_play" }, { leisure: "playground", indoor: "yes" }, { leisure: "Playground" }])
+    assert.equal(playOnRecord(tags), true, JSON.stringify(tags));
+  // Where the pin card asks (play_state None) nothing here is on record.
+  for (const tags of [{}, { amenity: "cafe" }, { "kids_area:outdoor": "no" }, { "kids_area:outdoor": "limited" },
+                      { leisure: "sports_centre" }, { indoor: "yes" }, { shop: "toys" }])
+    assert.equal(playOnRecord(tags), false, JSON.stringify(tags));
+  // The values are classify.py's PLAY_AREA_VALUES, read from the source.
+  const py = readFileSync(new URL("../pipeline/classify.py", import.meta.url), "utf8");
+  const set = py.match(/^PLAY_AREA_VALUES = \{([^}]*)\}/m)[1].match(/"([^"]+)"/g).map((v) => v.slice(1, -1));
+  assert.deepEqual([...PLAY_AREA_VALUES].sort(), set.sort());
+});
+
+test("takenFor: a play answer also stops at a play area recorded another way, other answers do not", () => {
+  const ring = { amenity: "cafe", "kids_area:outdoor": "yes" };
+  for (const c of PLAY_CHOICES) assert.equal(takenFor(playPatch(c), ring), true, c);
+  assert.equal(takenFor(highchairPatch("hc_yes"), ring), false);
+  assert.equal(takenFor(tablePatch("none"), { leisure: "indoor_play" }), false);
+  assert.equal(takenFor(playPatch("play_no"), { amenity: "cafe", "kids_area:outdoor": "no" }), false);
+  assert.equal(takenFor(playPatch("play_no"), { amenity: "cafe", kids_area: "no" }), true);
+});
+
+test("writeTags: a play answer is refused beside leisure=indoor_play, and still writes where nothing is on record", async () => {
+  let api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 5, lat: 1, lon: 2,
+                                        tags: { name: "Spielhalle Beispiel", leisure: "indoor_play" } }] } },
+  ]);
+  await assert.rejects(writeTags(SANDBOX, "tok", { type: "node", id: "42" }, playPatch("play_no"), "c", api.fetchFn),
+    (e) => e.status === 409 && e.step === "taken");
+  assert.equal(api.calls.length, 1, "nothing after the read: no changeset was opened");
+  api = scriptedApi([
+    { status: 200, json: { elements: [{ type: "node", id: 42, version: 5, lat: 1, lon: 2,
+                                        tags: { leisure: "sports_centre", "kids_area:outdoor": "no" } }] } },
+    { status: 200, text: "1234" },
+    { status: 200, text: "6" },
+    { status: 200, text: "" },
+  ]);
+  const out = await writeTags(SANDBOX, "tok", { type: "node", id: "42" }, playPatch("play_no"), "c", api.fetchFn);
+  assert.equal(out.tags.kids_area, "no");
+  assert.equal(out.changeset, "1234");
 });
