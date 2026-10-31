@@ -426,9 +426,11 @@ export function placesToFeatureCollection(places, wheelchairOnly = false, gen = 
       type: "Feature",
       geometry: { type: "Point", coordinates: [p.lon, p.lat] },
       // `no` picks the dashed ring over the hollow one; `limited` (only with
-      // the wheelchair chip on, v53) picks the exclamation mark in it.
+      // the wheelchair chip on, v53) picks the exclamation mark in it; `hc`
+      // (v111) the high-chair ring's colour and glyph.
       properties: { idx: p.idx, gen, no: p.changing_table === "no",
-                    limited: wheelchairOnly && isWheelchairLimited(p) },
+                    limited: wheelchairOnly && isWheelchairLimited(p),
+                    hc: p.play_area === false },
     })),
   };
 }

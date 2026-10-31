@@ -842,6 +842,19 @@ place. The popup headline, share text, count line and the thank-you toast say
 `dad_play_place` MapComplete layer selects them too, so the answer button works
 on their rings (and `dad_venue` leaves them to it, so none is drawn twice).
 
+Since v111 they look like themselves: Okabe-Ito reddish purple (`#cc79a7`)
+instead of the play rings' blue, solid, dashed and under the exclamation mark
+alike, with the high-chair glyph inside in the same colour from zoom 13, and
+the same ring and glyph on the "High chair only" chip (and the colour on its
+dot in the search and saved lists). Purple is the one
+palette entry left that clears 3:1 on the ring's white fill and still parts
+from the blue rings and the pins under protanopia and deuteranopia; it is also
+the mama toggle's colour, which never appears on the map. The glyph gives way
+to the wheelchair chip's exclamation mark, the way the key outranks it on a
+pin. A play ring whose card leads with a table answer (a café recorded
+`changing_table=no`) still says "play area — worth staying", so no ring card
+leaves the reader guessing why the place is on the map.
+
 They come from a small query of their own per area (`config.highchair_ql`),
 kept out of the sweep for the UK's sake, and on the toilet counts' weekly rota:
 every Overpass query costs a ~40 s slot however short it runs. The area's saved

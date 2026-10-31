@@ -1,5 +1,26 @@
 # papa-map — build contract (v0)
 
+> **v111 amendment (31 Oct 2026, high-chair rings look like themselves): no data shape change.**
+> The v110 high-chair rings drew exactly like the play rings, the same blue
+> hollow circle on the map and the same ring on both chips, so a reader could
+> not tell the two apart. They now have a colour of their own, Okabe-Ito
+> reddish purple `#cc79a7` (`HC_RING_COLOR` in `web/app.js`, `--hc-ring` in
+> `web/style.css`), in every layer a high-chair ring is drawn in: the solid
+> ring's stroke, the dashed "answered no" ring (a second canvas image,
+> `ring-dashed-hc`) and the ring under a `limited` exclamation mark. Play rings
+> stay blue. From zoom 13 a high-chair ring carries `HIGHCHAIR_PATH` in its own
+> colour, at the key and exclamation glyphs' size (`play-places-hc`, hit-tested
+> with the other place layers); in a `limited` ring the ink exclamation mark
+> shows alone, as a keyed pin shows the key alone, and the card states both.
+> The "High chair only" chip's ring takes the same colour and glyph, and a
+> high-chair place's dot in the search and saved lists the colour.
+> `placesToFeatureCollection` gains a render-only `hc` property
+> (`play_area === false`). A play ring's card whose table answer replaced the
+> "play area recorded" headline (a `changing_table=no` café) now says
+> `popupPlay`, as a table pin does, so every ring card says why the place is on
+> the map. The methods pages call the high-chair rings purple. Shell pin
+> `v=app104` becomes `v=app105`.
+
 > **v110 amendment (30 Oct 2026, high-chair places, a file of their own):**
 > A new file, **`web/data/highchair_places.geojson`**, the same FeatureCollection
 > shape and properties as `play_places.geojson`: places that record a high chair
