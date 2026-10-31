@@ -1818,6 +1818,17 @@ test("addWatchSince: a write's own moment, or a second before the save it found"
   assert.equal(selectAddedPlace(delta, { ...WATCH, osm_url: url, t }).feature.properties.osm_url, url);
 });
 
+// The add dialog's play or high-chair "yes" (v112) is watched by osm_url too,
+// and lands in places or highchair_places rather than tables.
+test("selectAddedPlace: an osm_url watch takes the object from places or highchair_places", () => {
+  const url = "https://www.openstreetmap.org/node/42";
+  const watch = { ...WATCH, osm_url: url };
+  const up = feat(20, 40, { osm_url: url, edited_at: "2026-09-23T10:04:00Z" });   // outside the bbox
+  assert.equal(selectAddedPlace({ places: { upsert: [up] } }, watch).type, "place");
+  assert.equal(selectAddedPlace({ highchair_places: { upsert: [up] } }, watch).type, "highchair_place");
+  assert.equal(selectAddedPlace({ places: { upsert: [up] } }, { ...watch, t: "2026-09-23T10:05:00Z" }), null);
+});
+
 test("selectAddedPlace tells a new high-chair place from a play place", () => {
   const hcPlace = feat(10.0, 53.55, { osm_url: "https://www.openstreetmap.org/node/3",
                                       created: true, edited_at: "2026-09-23T10:01:00Z" });

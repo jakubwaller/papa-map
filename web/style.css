@@ -1117,20 +1117,21 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
    Alone on a pin whose room is on record (v34) it carries the line itself, on
    a row of its own; that card has no rooms and is short. A language whose
    words do not fit beside the pills wraps rather than clips. */
-.popup .ask-play, .popup :is(.ask-hc, .ask-wc, .ask-tw) {
+.popup .ask-play, .popup :is(.ask-hc, .ask-wc, .ask-tw), #venue-ask :is(.ask-play, .ask-hc) {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
   margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft);
 }
-.popup .ask-play .ask-q, .popup :is(.ask-hc, .ask-wc, .ask-tw) .ask-q { margin-bottom: 0; flex: 1 1 auto; }
+.popup .ask-play .ask-q, .popup :is(.ask-hc, .ask-wc, .ask-tw) .ask-q,
+#venue-ask :is(.ask-play, .ask-hc) .ask-q { margin-bottom: 0; flex: 1 1 auto; }
 /* Three answers since v31, so they wrap as a group: either the whole row fits
    beside the question or the three drop under it together, never two up and
    one alone. 12px of padding rather than 14 buys the German row (drinnen /
    nur draußen / keine) its place on one line at 375px. */
-.popup .ask-play .ask-play-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
+:is(.popup, #venue-ask) .ask-play .ask-play-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
 .popup .ask-play .ask-btn { flex: 0 0 auto; padding: 6px 12px; }
 .popup .ask-play .ask-who { flex: 1 1 100%; margin-top: 0; }
 /* The high-chair question (v65) is the play question's shape with two pills. */
-.popup :is(.ask-hc, .ask-wc, .ask-tw) .ask-hc-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
+.popup :is(.ask-hc, .ask-wc, .ask-tw) .ask-hc-btns, #venue-ask .ask-hc .ask-hc-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
 .popup :is(.ask-hc, .ask-wc, .ask-tw) .ask-btn { flex: 0 0 auto; padding: 6px 12px; }
 .popup :is(.ask-hc, .ask-wc, .ask-tw) .ask-who { flex: 1 1 100%; margin-top: 0; }
 /* The fold (v102): play, high chair and the two wheelchair questions behind

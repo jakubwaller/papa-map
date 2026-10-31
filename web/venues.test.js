@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { VENUE_TAGS, isVenue, isSearchVenue, venueOsmTags, venueSearchOsmTags, venueReverseUrl,
          venueSearchUrl, venueRows, venueDistance, venueCentreKey, VENUE_LIMIT,
-         VENUE_SEARCH_KEYS, VENUE_SEARCH_EXCLUDE } from "./venues.js";
+         VENUE_SEARCH_KEYS, VENUE_SEARCH_EXCLUDE, venueAnswer, venueFromIntent } from "./venues.js";
+import { isHighchairVenue, PLAY_CHOICES, HIGHCHAIR_CHOICES, roomChoices, roomChoicesMore } from "./osm.js";
 
 const feat = (props, coords = [9.9563, 53.5745]) =>
   ({ type: "Feature", geometry: { type: "Point", coordinates: coords }, properties: props });
@@ -191,4 +192,53 @@ test("venueDistance: metres to the nearest ten, never 0 m", () => {
 test("every key of VENUE_TAGS turns into osm_tag pairs", () => {
   const n = Object.values(VENUE_TAGS).reduce((a, v) => a + v.length, 0);
   assert.equal(venueOsmTags().length, n);
+});
+
+// The venue step asks the high chair where the pin card would (isHighchairVenue),
+// so a row carries its amenity — from a duplicate when the first one Photon
+// sent was the same object under another tag.
+test("venueRows: a row carries its amenity, or null, the high-chair question's test", () => {
+  const json = { features: [
+    cafe(1, "Café"),
+    feat({ osm_type: "N", osm_id: 2, osm_key: "shop", osm_value: "supermarket", name: "Markt" }),
+    feat({ osm_type: "N", osm_id: 3, osm_key: "shop", osm_value: "yes", name: "Bistro" }),
+    feat({ osm_type: "N", osm_id: 3, osm_key: "amenity", osm_value: "restaurant", name: "Bistro" }),
+  ] };
+  const rows = Object.fromEntries(venueRows(json, { lat: 53.5745, lon: 9.9563 }).map((r) => [r.name, r]));
+  assert.equal(rows["Café"].amenity, "cafe");
+  assert.equal(rows.Markt.amenity, null);
+  assert.equal(rows.Bistro.amenity, "restaurant");
+  assert.equal(Object.keys(rows).length, 3);
+  assert.ok(isHighchairVenue(rows["Café"].amenity) && !isHighchairVenue(rows.Markt.amenity));
+});
+
+test("venueAnswer: each choice answers its own question with its own patch", () => {
+  assert.deepEqual(venueAnswer("hc_yes"), { q: "hc", patch: { highchair: "yes" }, comment: "hc_yes", pin: true });
+  assert.deepEqual(venueAnswer("hc_no"), { q: "hc", patch: { highchair: "no" }, comment: "hc_no", pin: false });
+  assert.deepEqual(venueAnswer("play_yes"),
+    { q: "play", patch: { "kids_area:indoor": "yes", kids_area: "yes" }, comment: "play_yes", pin: true });
+  assert.equal(venueAnswer("play_outdoor").pin, true);   // an outdoor play area rings too (v97)
+  assert.deepEqual(venueAnswer("play_no"), { q: "play", patch: { kids_area: "no" }, comment: "play_no", pin: false });
+  assert.deepEqual(venueAnswer("none"), { q: "table", patch: { changing_table: "no" }, comment: "place_none", pin: false });
+  assert.deepEqual(venueAnswer("male"),
+    { q: "table", patch: { changing_table: "yes", "changing_table:location": "male_toilet" }, comment: "place", pin: true });
+  // Every pill the step renders routes somewhere; anything else throws.
+  for (const c of [...roomChoices("papa"), ...roomChoicesMore(), "none", ...PLAY_CHOICES, ...HIGHCHAIR_CHOICES])
+    assert.ok(venueAnswer(c).q);
+  for (const c of ["wc_yes", "bogus", undefined]) assert.throws(() => venueAnswer(c));
+});
+
+test("venueFromIntent: the place a login brings back, amenity and all", () => {
+  const intent = { kind: "venue", osm_url: "https://www.openstreetmap.org/node/1", choice: "hc_yes",
+                   name: "Café Beispiel", context: "Beispielweg 1", lon: 9.95, lat: 53.57, amenity: "cafe" };
+  assert.deepEqual(venueFromIntent(intent), { osm_url: intent.osm_url, name: "Café Beispiel",
+    context: "Beispielweg 1", lon: 9.95, lat: 53.57, amenity: "cafe" });
+  // An intent from before v112 has no amenity: no high-chair question, nothing broken.
+  const { amenity, ...old } = intent;
+  assert.equal(venueFromIntent(old).amenity, null);
+  assert.equal(venueFromIntent({ ...intent, amenity: 7 }).amenity, null);
+  assert.equal(venueFromIntent({ ...intent, lon: "x" }), null);
+  assert.equal(venueFromIntent({ ...intent, kind: "table" }), null);
+  assert.equal(venueFromIntent({ ...intent, osm_url: null }), null);
+  assert.equal(venueFromIntent(null), null);
 });
