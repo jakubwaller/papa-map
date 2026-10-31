@@ -12,10 +12,10 @@
 // cannot filter on `changing_table`, which is why venueRows drops what the
 // map already has a pin for, and why writeTags' own re-read (web/osm.js)
 // stays the last word on whether the place is still unanswered.
-import { haversineKm } from "./datasource.js?v=app106";
-import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app106";
+import { haversineKm } from "./datasource.js?v=app107";
+import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app107";
 import { isPlayChoice, playPatch, isHighchairChoice, highchairPatch, tablePatch,
-         isHighchairVenue } from "./osm.js?v=app106";
+         isHighchairVenue } from "./osm.js?v=app107";
 
 // The MapComplete theme's dad_venue layer, as tag lists: the same places the
 // theme offers for the same question. theme/papamap.theme.json is the source,
@@ -147,7 +147,8 @@ const OSM_TYPE = { N: "node", W: "way", R: "relation" };
 // there is answered, the room question lives on its pin. A play or
 // high-chair ring is no table, so it stays: its table can be added here.
 // `amenity` is the row's amenity value, from whichever of its duplicates
-// carries one, or null: the high-chair question is asked by it (isHighchairVenue).
+// carries one, or null; `tags` is every "key=value" Photon listed it under
+// (duplicates merged): asksHighchair reads it.
 export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_LIMIT,
                                   accept = isVenue } = {}) {
   const feats = Array.isArray(json?.features) ? json.features : [];
@@ -161,11 +162,17 @@ export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_L
     if (!accept(p.osm_key, p.osm_value)) continue;
     const osm_url = `https://www.openstreetmap.org/${type}/${p.osm_id}`;
     const amenity = p.osm_key === "amenity" ? p.osm_value : null;
-    if (seen.has(osm_url)) { seen.get(osm_url).amenity ??= amenity; continue; }
+    const tag = `${p.osm_key}=${p.osm_value}`;
+    if (seen.has(osm_url)) {
+      const dup = seen.get(osm_url);
+      dup.amenity ??= amenity;
+      if (!dup.tags.includes(tag)) dup.tags.push(tag);
+      continue;
+    }
     if (known(osm_url)) continue;
     const { context } = photonRow(f);
     const row = {
-      osm_url, name: p.name, context, lon: c[0], lat: c[1], amenity,
+      osm_url, name: p.name, context, lon: c[0], lat: c[1], amenity, tags: [tag],
       km: Number.isFinite(lat) && Number.isFinite(lon) ? haversineKm(lat, lon, c[1], c[0]) : null,
     };
     seen.set(osm_url, row);
@@ -183,15 +190,24 @@ export function venueDistance(km) {
   return `${Math.max(10, Math.round((km * 1000) / 10) * 10)} m`;
 }
 
+// The venue step asks the high chair where the pin card does (isHighchairVenue)
+// and also at a bakery, a patisserie and an indoor playground, whose seating
+// nearly always has one. Pin features carry no shop/leisure value, so the pin
+// card's rule stays amenity-only. Not every place: a "no" at a supermarket
+// would write a meaningless highchair=no.
+export const HIGHCHAIR_VENUE_TAGS = ["shop=bakery", "shop=pastry", "leisure=indoor_play"];
+export const asksHighchair = (row) =>
+  isHighchairVenue(row?.amenity) || Boolean(row?.tags?.some((t) => HIGHCHAIR_VENUE_TAGS.includes(t)));
+
 // Which of the venue step's questions a row gets. The table always: a table
 // on record is reported by writeTags as taken, and the map draws no pin for a
 // `changing_table=no`. The play area unless the map already draws the place as
 // a play ring (`ring`, its entry in app.js's placesByOsmUrl): its play area is
 // on record, perhaps under a tag no answer here could square with. The high
-// chair where the pin card asks it (isHighchairVenue), unless one is on record.
+// chair where asksHighchair says so, unless one is on record.
 export function venueQuestions(row, ring = null) {
   return ["table", ...(ring?.play_area ? [] : ["play"]),
-          ...(isHighchairVenue(row?.amenity) && !ring?.highchair_recorded ? ["hc"] : [])];
+          ...(asksHighchair(row) && !ring?.highchair_recorded ? ["hc"] : [])];
 }
 
 // One answer in the venue step, which asks three questions about the place
@@ -216,6 +232,7 @@ export function venueFromIntent(intent) {
   if (intent?.kind !== "venue" || typeof intent.osm_url !== "string") return null;
   const venue = { osm_url: intent.osm_url, name: String(intent.name ?? ""), context: String(intent.context ?? ""),
                   lon: Number(intent.lon), lat: Number(intent.lat),
-                  amenity: typeof intent.amenity === "string" ? intent.amenity : null };
+                  amenity: typeof intent.amenity === "string" ? intent.amenity : null,
+                  tags: Array.isArray(intent.tags) ? intent.tags.filter((t) => typeof t === "string") : [] };
   return Number.isFinite(venue.lon) && Number.isFinite(venue.lat) ? venue : null;
 }
