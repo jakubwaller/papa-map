@@ -217,7 +217,7 @@ test("the venue step asks table, play and high chair, and its intent keeps the a
   assert.match(ask, /askHTML\("askTable", busy, false\) \+\n\s+\(qs\.includes\("play"\) \? askPlayHTML\(busy\) : ""\) \+ \(qs\.includes\("hc"\) \? askHighchairHTML\(busy\) : ""\) \+\n\s+askWhoHTML\(\);/);
   assert.doesNotMatch(ask, /moreHTML/);
   const fn = src.match(/async function answerVenue\([\s\S]*?\n\}\n/)[0];
-  assert.match(fn, /amenity: venue\.amenity \}/);
+  assert.match(fn, /amenity: venue\.amenity,\n\s+tags: venue\.tags \};/);
   assert.match(fn, /a = venueAnswer\(choice\);\n\s+const out = await writeTags\(osm, token, ref, a\.patch, CHANGESET_COMMENT\[a\.comment\]\);/);
   assert.match(fn, /if \(a\.pin\) \{\n\s+writeAddWatch\(/);
   // A write that lands after the reader moved on to another place touches
