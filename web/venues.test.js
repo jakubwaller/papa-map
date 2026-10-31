@@ -6,6 +6,7 @@ import { VENUE_TAGS, NEARBY_PLAY_TAGS, isVenue, isSearchVenue, venueOsmTags, ven
          VENUE_SEARCH_KEYS, VENUE_SEARCH_EXCLUDE, venueAnswer, venueFromIntent,
          venueQuestions, asksHighchair } from "./venues.js";
 import { isHighchairVenue, PLAY_CHOICES, HIGHCHAIR_CHOICES, roomChoices, roomChoicesMore } from "./osm.js";
+import { PHOTON_LANGS } from "./search.js";
 
 const feat = (props, coords = [9.9563, 53.5745]) =>
   ({ type: "Feature", geometry: { type: "Point", coordinates: coords }, properties: props });
