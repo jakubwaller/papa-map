@@ -41,6 +41,8 @@ test("answer() gives the live card its buttons back after the write", () => {
   const fin = src.match(/\} finally \{\n\s+inFlight\.delete\(obj\.osm_url\);([\s\S]*?)\n  \}\n\}/);
   assert.ok(fin, "answer()'s finally block");
   assert.match(fin[1], /\bwake\(\);/);
+  // The add dialog's step for the same place, drawn busy meanwhile (v112).
+  assert.match(fin[1], /\bwakeVenueStep\(obj\.osm_url\);/);
   // wake() queries the card afresh (the one the answer was given on if it is
   // still up, else this object's reopened card, never another pin's).
   const wake = src.match(/const wake = \(\) => ([\s\S]*?);\n/);
@@ -223,6 +225,8 @@ test("the venue step asks table, play and high chair, and its intent keeps the a
   assert.match(fn, /const shown = \(\) => venuePicked\?\.osm_url === venue\.osm_url;/);
   assert.match(fn, /if \(shown\(\)\) venueAskEl\.querySelector\(VENUE_Q_SEL\[a\.q\]\)\?\.remove\(\);/);
   assert.doesNotMatch(fn.slice(fn.indexOf("try {")), /\bsetVenueNote\(/);
+  assert.match(fn, /\} finally \{\n\s+inFlight\.delete\(venue\.osm_url\);\n\s+wakeVenueStep\(venue\.osm_url\);/);
+  assert.match(src, /function wakeVenueStep\(osmUrl\) \{\n\s+if \(venuePicked\?\.osm_url !== osmUrl\) return;/);
   assert.match(src, /const VENUE_Q_SEL = \{ table: "\.ask", play: "\.ask-play", hc: "\.ask-hc" \};/);
   assert.match(src, /const venue = venueFromIntent\(intent\);/);
 });

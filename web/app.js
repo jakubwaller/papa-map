@@ -2950,6 +2950,7 @@ async function answer(kind, obj, choice, freshToken = null) {
     // life on the live card (wake, above): only after the delete, so a
     // re-render from here on draws it ready rather than busy.
     wake();
+    wakeVenueStep(obj.osm_url);   // the add dialog picked this ring meanwhile, and drew it busy
   }
 }
 
@@ -3139,8 +3140,10 @@ async function loadVenues(url, cacheKey = null, accept = isVenue) {
 }
 
 function showVenueRowsWithout(osmUrl) {
-  // A list from another open (loading, or another street) is not this one's.
-  if (!venueShown.some((r) => r.osm_url === osmUrl)) return;
+  // Nothing of this place's to take out: a list loading, failed, too far out
+  // or another street's keeps what it shows. Only a list never filled (the
+  // login replay opens the step directly) gets its status line.
+  if (!venueShown.some((r) => r.osm_url === osmUrl) && (venueShown.length || !venueStatus.hidden)) return;
   const rows = venueShown.filter((r) => r.osm_url !== osmUrl);
   renderVenueRows(rows);
   setVenueStatus(rows.length ? null : "venueEmpty");
@@ -3274,11 +3277,18 @@ async function answerVenue(venue, choice, freshToken = null) {
     note(err.status === 409 ? "askConflict" : "askFailed", "none", { status: err.status || "network" });
   } finally {
     inFlight.delete(venue.osm_url);
-    // The step's buttons as they are now: this place picked again during the
-    // write rendered them anew, quiet. Another place's are its own.
-    if (shown()) venueAskEl.querySelectorAll("button.ask-btn, button.ask-more, #venue-back")
-      .forEach((b) => { b.disabled = false; });
+    wakeVenueStep(venue.osm_url);
   }
+}
+
+// The venue step's buttons back once a write for its place ended — this
+// step's own, or a pin card's (answer()) for a ring picked here meanwhile:
+// askVenue draws a place busy while any write for it is on the way. The
+// buttons as they are now, since a place picked again renders them anew;
+// another place's are its own.
+function wakeVenueStep(osmUrl) {
+  if (venuePicked?.osm_url !== osmUrl) return;
+  venueAskEl.querySelectorAll("button.ask-btn, button.ask-more, #venue-back").forEach((b) => { b.disabled = false; });
 }
 
 // ---- Add a place: watching the delta for the new object to arrive --------
