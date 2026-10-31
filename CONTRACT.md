@@ -18,8 +18,11 @@
 > (`play_area === false`). A play ring's card whose table answer replaced the
 > "play area recorded" headline (a `changing_table=no` café) now says
 > `popupPlay`, as a table pin does, so every ring card says why the place is on
-> the map. The methods pages call the high-chair rings purple. Shell pin
-> `v=app104` becomes `v=app105`.
+> the map. An open high-chair ring's headline (`metaPlacesHc`) is purple too,
+> darkened to 5.5:1 on white (`--hc-ring-strong`). The methods pages call the
+> high-chair rings purple, and their wheelchair section says the chip narrows
+> them as well, the exclamation mark replacing the high chair in a `limited`
+> one. Shell pin `v=app104` becomes `v=app105`.
 
 > **v110 amendment (30 Oct 2026, high-chair places, a file of their own):**
 > A new file, **`web/data/highchair_places.geojson`**, the same FeatureCollection

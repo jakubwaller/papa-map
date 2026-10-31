@@ -59,6 +59,12 @@ for (const scheme of Object.keys(SCHEMES)) {
     }
   });
 
+  test(`the high-chair ring's card headline reaches 4.5:1 on white (${scheme})`, () => {
+    const color = css.match(/\.popup \.status\.play\.hc\s*\{[^}]*color:\s*var\((--[a-z-]+)\)/)[1];
+    const r = contrast(token(scheme, color), WHITE);
+    assert.ok(r >= 4.5, `.popup .status.play.hc (${color}) is ${r.toFixed(2)}:1`);
+  });
+
   test(`the popup's green room word reaches 4.5:1 on white (${scheme})`, () => {
     const color = css.match(/\.popup \.row\.wc\.ok b\s*\{[^}]*color:\s*var\((--[a-z-]+)\)/)[1];
     const r = contrast(token(scheme, color), WHITE);

@@ -312,8 +312,9 @@ const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
 // color still means "can a dad reach the table", and the halo annotates.
 const PLAY_COLOR = "#0072b2";
 // Okabe-Ito reddish purple for the high-chair rings (v111), so they no longer
-// pass for play rings. The one palette entry left that clears 3:1 on the
-// ring's white fill and stays apart from the blue rings and the three pin
+// pass for play rings. The one palette entry left near 3:1 on the ring's
+// fill (3.06:1 on pure white; the fill is 90 % white, so a little under 3:1
+// over the tiles) that stays apart from the blue rings and the three pin
 // colours under protanopia and deuteranopia. style.css's --hc-ring.
 const HC_RING_COLOR = "#cc79a7";
 
@@ -1196,7 +1197,10 @@ function placeHTML(p) {
     // with the .ask block. No styling of its own. ("Been here? Then you know"
     // used to stand between the two; the question says it, and on a 12 mini
     // the play-place card was the one that still did not fit.)
-    rows.push(`<div class="status play ask-ctx">${esc(t(p.play_area === false ? "metaPlacesHc" : "metaPlaces"))}</div>`);
+    // The high-chair headline in its ring's purple (v111), the play one blue.
+    rows.push(p.play_area === false
+      ? `<div class="status play hc ask-ctx">${esc(t("metaPlacesHc"))}</div>`
+      : `<div class="status play ask-ctx">${esc(t("metaPlaces"))}</div>`);
   // Between the headline and the question, where a pin's popup has them.
   // The high-chair line only — a place is never asked (v65). Not under the
   // high-chair headline (v110), which already says it.

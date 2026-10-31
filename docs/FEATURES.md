@@ -847,13 +847,15 @@ instead of the play rings' blue, solid, dashed and under the exclamation mark
 alike, with the high-chair glyph inside in the same colour from zoom 13, and
 the same ring and glyph on the "High chair only" chip (and the colour on its
 dot in the search and saved lists). Purple is the one
-palette entry left that clears 3:1 on the ring's white fill and still parts
-from the blue rings and the pins under protanopia and deuteranopia; it is also
+palette entry left near 3:1 on the ring's fill (3.06:1 on pure white; the fill
+is 90 % white, so a little under 3:1 over the tiles) that still parts from the
+blue rings and the pins under protanopia and deuteranopia; it is also
 the mama toggle's colour, which never appears on the map. The glyph gives way
 to the wheelchair chip's exclamation mark, the way the key outranks it on a
 pin. A play ring whose card leads with a table answer (a café recorded
 `changing_table=no`) still says "play area — worth staying", so no ring card
-leaves the reader guessing why the place is on the map.
+leaves the reader guessing why the place is on the map. An open high-chair
+ring's headline is purple too, darkened to 5.5:1 on the white card.
 
 They come from a small query of their own per area (`config.highchair_ql`),
 kept out of the sweep for the UK's sake, and on the toilet counts' weekly rota:
