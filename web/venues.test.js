@@ -303,3 +303,11 @@ test("venueFromIntent: tags round-trip; an intent without them replays with none
   assert.deepEqual(venueFromIntent(old).tags, []);
   assert.equal(asksHighchair(venueFromIntent(old)), false);
 });
+
+// Photon is a GET: a proxy or server that refuses a long URL fails the nearby
+// list silently, so the tag list must not outgrow the limit unnoticed.
+test("venueReverseUrl stays under 1900 characters, even at its longest", () => {
+  const u = venueReverseUrl(-53.123456789, -179.123456789, { lang: "nb_NO" });
+  assert.ok(u.length < 1900,
+    `reverse URL is ${u.length} chars; URLs past ~2000 are refused by many servers and proxies, so the nearby list would fail silently. Trim VENUE_TAGS or send fewer tags.`);
+});

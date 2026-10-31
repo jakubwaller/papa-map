@@ -720,7 +720,10 @@ places now also show in the nearby list and as orange pins).
 
 The list is Photon's `/reverse`, 300 m around the map centre, filtered to the
 `dad_venue` layer's own tag list (`web/venues.js`; a test fails if the two
-drift), plus bakeries and patisseries (also in the theme layer since 31 Oct 2026) and indoor playgrounds (list only: the theme keeps them in `dad_play_place`, `NEARBY_PLAY_TAGS`). The dialog's own search box is wider: a typed name matches any shop,
+drift) plus one extra, indoor playgrounds (`NEARBY_PLAY_TAGS`), which belong
+to `dad_play_place` and which `dad_venue` excludes. Bakeries and patisseries
+are in both the list and the theme layer since 31 Oct 2026. The dialog's own
+search box is wider: a typed name matches any shop,
 amenity, tourism or leisure object, because someone who types a name knows
 the place, and a children's clothes shop or a bakery is no stranger to them
 (`isSearchVenue`, since 7 Oct 2026). Toilets stay out, and so does what shares
