@@ -141,12 +141,15 @@ test("loadPlaces tolerates a missing or malformed file", () => {
   assert.deepEqual(loadPlaces({ features: "nope" }), []);
 });
 
-test("placesToFeatureCollection carries idx, the no flag and limited", () => {
+test("placesToFeatureCollection carries idx, the no flag, limited and hc", () => {
   const out = placesToFeatureCollection(loadPlaces(PLACES_FC));
   assert.equal(out.type, "FeatureCollection");
   assert.deepEqual(out.features.map((f) => f.properties),
-    [{ idx: 0, gen: 0, no: false, limited: false }, { idx: 1, gen: 0, no: false, limited: false },
-     { idx: 2, gen: 0, no: true, limited: false }]);
+    [{ idx: 0, gen: 0, no: false, limited: false, hc: false }, { idx: 1, gen: 0, no: false, limited: false, hc: false },
+     { idx: 2, gen: 0, no: true, limited: false, hc: false }]);
+  // v111: a high-chair place (withHighchairPlaces marks it) draws in its own colour.
+  const hc = loadPlaces(withHighchairPlaces(null, PLACES_FC));
+  assert.ok(placesToFeatureCollection(hc).features.every((f) => f.properties.hc === true));
   assert.deepEqual(out.features[0].geometry.coordinates, [9.98, 53.54]);
   assert.deepEqual(placesToFeatureCollection([]).features, []);
 });

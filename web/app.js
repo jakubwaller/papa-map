@@ -14,9 +14,9 @@ import { loadFeatures, loadPlaces, placeFeatures, splitPlaces, filterFeatures, c
          mergeFeatureCollection, isDeltaFresh, foldOpen, roomAnsweredHere, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app104";
+         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app105";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app104";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app105";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
@@ -24,7 +24,7 @@ import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, rev
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
          isWheelchairChoice, wheelchairPatch,
-         writeTags } from "./osm.js?v=app104";
+         writeTags } from "./osm.js?v=app105";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -32,7 +32,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app104";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app105";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, locateNative, interceptLinks,
@@ -42,27 +42,27 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, l
          cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app104";
+         reviewTracker } from "./native.js?v=app105";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app104";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app105";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app104";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app105";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app104";
+import { isOpenNow } from "./opening-hours.js?v=app105";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
-         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app104";
-// The bundled shell's pin (`?v=app104`), what the intro key records.
+         isVenue, isSearchVenue, VENUE_MIN_ZOOM } from "./venues.js?v=app105";
+// The bundled shell's pin (`?v=app105`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -311,6 +311,12 @@ const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
 // deficiency. A ring around the pin rather than a fourth fill on purpose:
 // color still means "can a dad reach the table", and the halo annotates.
 const PLAY_COLOR = "#0072b2";
+// Okabe-Ito reddish purple for the high-chair rings (v111), so they no longer
+// pass for play rings. The one palette entry left near 3:1 on the ring's
+// fill (3.06:1 on pure white; the fill is 90 % white, so a little under 3:1
+// over the tiles) that stays apart from the blue rings and the three pin
+// colours under protanopia and deuteranopia. style.css's --hc-ring.
+const HC_RING_COLOR = "#cc79a7";
 
 // The International Symbol of Access (Material Design's "accessible" glyph,
 // Apache 2.0) and a key, both as bare paths. Drawn in ink on the chip and in
@@ -322,7 +328,8 @@ const ISA_PATH = "M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm7 11v-2c-1.5
 const LIMITED_INK = "#1c2b26";   // --ink, the chip's ISA icon
 const LIMITED_PATH = "M10 3h4v12h-4zM12 17a2 2 0 1 1 0 4 2 2 0 1 1 0-4z";
 // A high chair, drawn for the chip (v65): backrest, seat, tray, splayed legs
-// and a footrest bar. Ink like the ISA icon; never drawn on a pin.
+// and a footrest bar. Ink like the ISA icon; never drawn on a pin, only in a
+// high-chair ring and its chip, in the ring's colour (v111).
 const HIGHCHAIR_PATH = "M7 2h2v11H7zM7 11h10v2H7zM12 7h7v2h-7zM16 9h1.5v2H16zM7 13h2l-2.4 9h-2zM15 13h2l2.4 9h-2zM5.8 18h12.4v1.5H5.8z";
 const KEY_PATH = "M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z";
 const svgIcon = (path, cls, viewBox = "0 0 24 24") =>
@@ -559,6 +566,7 @@ const LIMITED_LAYER = "tables-limited";   // exclamation mark in a pin (v53)
 const PLACES = "play-places";
 const PLACES_NO = "play-places-no";   // the dashed rings: answered, no table (v27)
 const PLACES_LIMITED = "play-places-limited";   // exclamation mark in a ring (v53)
+const PLACES_HC = "play-places-hc";   // high chair in a high-chair ring (v111)
 const IS_UNKNOWN = ["==", ["get", "status"], "unknown"];
 
 // Pin radius by zoom, grey one size up. Shared so the halo can be defined as
@@ -570,8 +578,8 @@ const pinRadius = (extra) => ["interpolate", ["linear"], ["zoom"],
   17, ["case", IS_UNKNOWN, 13 + extra, 10 + extra]];
 
 // The dashed-ring icon, at 2x: fill and stroke as the hollow ring's paint
-// (white at 0.9, PLAY_COLOR), the dash the only difference.
-function dashedRing() {
+// (white at 0.9, the ring's colour), the dash the only difference.
+function dashedRing(color) {
   const size = 56, c = document.createElement("canvas");
   c.width = c.height = size;
   const ctx = c.getContext("2d");
@@ -584,7 +592,7 @@ function dashedRing() {
   ctx.fill();
   ctx.setLineDash([7, 5]);
   ctx.lineWidth = 5;
-  ctx.strokeStyle = PLAY_COLOR;
+  ctx.strokeStyle = color;
   ctx.stroke();
   return ctx.getImageData(0, 0, size, size);
 }
@@ -600,11 +608,13 @@ function addTableLayer() {
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48"><path fill="#fff" d="${KEY_PATH}"/></svg>`);
   // The exclamation marks for `limited` places under the wheelchair chip
   // (v53), white for the pins and ink for the rings, registered like the key.
-  for (const [name, fill] of [["limited", "#fff"], ["limited-ink", LIMITED_INK]]) {
+  // The high chair in a high-chair ring (v111), in the ring's colour, the same way.
+  for (const [name, fill, path] of [["limited", "#fff", LIMITED_PATH], ["limited-ink", LIMITED_INK, LIMITED_PATH],
+                                    ["highchair-ring", HC_RING_COLOR, HIGHCHAIR_PATH]]) {
     const img = new Image(48, 48);
     img.onload = () => { if (!map.hasImage(name)) map.addImage(name, img, { pixelRatio: 2 }); };
     img.src = "data:image/svg+xml," + encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48"><path fill="${fill}" d="${LIMITED_PATH}"/></svg>`);
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48"><path fill="${fill}" d="${path}"/></svg>`);
   }
   // The dashed ring for the places where somebody answered "no" (v27). A
   // circle layer cannot dash its stroke, so these are symbols: one ring
@@ -612,7 +622,8 @@ function addTableLayer() {
   // stroke 2.5, at 2x) and scaled down with the circles below. Synchronous,
   // unlike the key glyph — nothing to decode — so the layer can use it at
   // once. Guarded like the key: the style can be reloaded.
-  if (!map.hasImage("ring-dashed")) map.addImage("ring-dashed", dashedRing(), { pixelRatio: 2 });
+  if (!map.hasImage("ring-dashed")) map.addImage("ring-dashed", dashedRing(PLAY_COLOR), { pixelRatio: 2 });
+  if (!map.hasImage("ring-dashed-hc")) map.addImage("ring-dashed-hc", dashedRing(HC_RING_COLOR), { pixelRatio: 2 });
   map.addSource(PLACES, { type: "geojson", data: placesToFeatureCollection([]) });
   map.addSource(SRC, { type: "geojson", data: toFeatureCollection([]) });
   // Bottom of the stack, and hollow: a filled circle would compete with the
@@ -627,7 +638,8 @@ function addTableLayer() {
         5, 2, 10, 4, 14, 7, 17, 10],
       "circle-color": "#ffffff",
       "circle-opacity": 0.9,
-      "circle-stroke-color": PLAY_COLOR,
+      // A high-chair ring in its own colour (v111), a play ring blue.
+      "circle-stroke-color": ["case", ["==", ["get", "hc"], true], HC_RING_COLOR, PLAY_COLOR],
       "circle-stroke-width": ["interpolate", ["linear"], ["zoom"],
         5, 1, 10, 2, 14, 2.5],
     },
@@ -642,7 +654,7 @@ function addTableLayer() {
     id: PLACES_NO, type: "symbol", source: PLACES,
     filter: ["==", ["get", "no"], true],
     layout: {
-      "icon-image": "ring-dashed",
+      "icon-image": ["case", ["==", ["get", "hc"], true], "ring-dashed-hc", "ring-dashed"],
       "icon-size": ["interpolate", ["linear"], ["zoom"],
         5, 0.24, 10, 0.48, 14, 0.76, 17, 1],
       "icon-allow-overlap": true,
@@ -656,6 +668,19 @@ function addTableLayer() {
     filter: ["==", ["get", "limited"], true],
     layout: {
       "icon-image": "limited-ink",
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 13, 0.4, 17, 0.7],
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
+    },
+  });
+  // The high chair in a high-chair ring (v111), the ring's colour, the same
+  // size and zoom. A `limited` one shows the exclamation mark alone, as a
+  // keyed pin shows the key alone; the popup states both.
+  map.addLayer({
+    id: PLACES_HC, type: "symbol", source: PLACES, minzoom: 13,
+    filter: ["all", ["==", ["get", "hc"], true], ["!=", ["get", "limited"], true]],
+    layout: {
+      "icon-image": "highchair-ring",
       "icon-size": ["interpolate", ["linear"], ["zoom"], 13, 0.4, 17, 0.7],
       "icon-allow-overlap": true,
       "icon-ignore-placement": true,
@@ -725,14 +750,15 @@ function addTableLayer() {
   // takes to re-tile after a merge; the next tap lands on the new tiles.
   // A finger is ~40 px wide, a pin 14-26: query a box around the tap and let
   // the nearest pin win, so overlapping pins (SRC and KEY_LAYER) are harmless.
-  const PIN_LAYERS = [PLAY_LAYER, SRC, KEY_LAYER, LIMITED_LAYER, PLACES, PLACES_NO, PLACES_LIMITED];
+  const PLACE_LAYERS = [PLACES, PLACES_NO, PLACES_LIMITED, PLACES_HC];
+  const PIN_LAYERS = [PLAY_LAYER, SRC, KEY_LAYER, LIMITED_LAYER, ...PLACE_LAYERS];
   map.on("click", (e) => {
     const { x, y } = e.point;
     const hit = nearestFeature(e.point,
       map.queryRenderedFeatures([[x - 20, y - 20], [x + 20, y + 20]], { layers: PIN_LAYERS }),
       (f) => map.project(f.geometry.coordinates));
     if (!hit || hit.properties.gen !== featureGen) return;
-    if ([PLACES, PLACES_NO, PLACES_LIMITED].includes(hit.layer.id)) openPlacePopup(allPlaces[hit.properties.idx]);
+    if (PLACE_LAYERS.includes(hit.layer.id)) openPlacePopup(allPlaces[hit.properties.idx]);
     else openPopup(allFeatures[hit.properties.idx]);
   });
   for (const layer of PIN_LAYERS) {
@@ -1162,13 +1188,19 @@ function placeHTML(p) {
     if (tableValue) parts.push(tableRowHTML(tableValue));
     if (p.location_raw) parts.push(`${esc(t("popupRoom"))}: ${esc(roomLabel(p.location_raw))}`);
     rows.push(`<div class="row">${parts.join(" · ")}</div>`);
+    // Once a table answer stands in for the headline, a play ring says why it
+    // is on the map the way a pin does (v111); a high-chair ring has its line below.
+    if (p.play_area !== false) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
   } else
     // ask-ctx marks the line that is true only while the question is open —
     // "about a changing table, OSM says nothing" — so answer() can sweep it
     // with the .ask block. No styling of its own. ("Been here? Then you know"
     // used to stand between the two; the question says it, and on a 12 mini
     // the play-place card was the one that still did not fit.)
-    rows.push(`<div class="status play ask-ctx">${esc(t(p.play_area === false ? "metaPlacesHc" : "metaPlaces"))}</div>`);
+    // The high-chair headline in its ring's purple (v111), the play one blue.
+    rows.push(p.play_area === false
+      ? `<div class="status play hc ask-ctx">${esc(t("metaPlacesHc"))}</div>`
+      : `<div class="status play ask-ctx">${esc(t("metaPlaces"))}</div>`);
   // Between the headline and the question, where a pin's popup has them.
   // The high-chair line only — a place is never asked (v65). Not under the
   // high-chair headline (v110), which already says it.
@@ -1509,11 +1541,16 @@ function placesChip(count) {
   });
 }
 
+// Blue in behaviour only: its ring takes the high-chair rings' own colour and
+// glyph (v111), as the map draws them.
 function placesHcChip(count) {
-  return blueChip({
+  const b = blueChip({
     label: "stPlacesHc", aria: "ariaPlacesHc", count, on: placesHcOn, hollow: true,
     toggle: () => (placesHcOn = !placesHcOn),
   });
+  b.classList.add("hcring");
+  b.querySelector(".ring").innerHTML = svgIcon(HIGHCHAIR_PATH, "hc-glyph");
+  return b;
 }
 
 // The high-chair chip (v65), after the blue chips (v66), before the two
@@ -2011,7 +2048,7 @@ function searchRowIcon(row) {
     return svg;
   }
   const dot = document.createElement("span");
-  if (row.hit.kind === "place") dot.className = "dot play";
+  if (row.hit.kind === "place") dot.className = row.hit.obj.play_area === false ? "dot play hc" : "dot play";
   else {
     dot.className = "dot";
     dot.style.background = BUCKET_COLOR[viewOf(row.hit.obj, mode).bucket];
@@ -4549,12 +4586,14 @@ function openSavedPlace(row) {
 }
 
 // The dot beside a saved row's name: the pin's own colour when tonight's data
-// still has it (a table's status, a play place's blue), a plain outline when
+// still has it (a table's status, a play place's blue, a high-chair place's
+// purple, v111), a plain outline when
 // it does not — never a status this project did not actually classify.
 function savedDotClass(osmUrl) {
   const f = featuresByOsmUrl.get(osmUrl);
   if (f) return viewOf(f, mode).cls;
-  return placesByOsmUrl.has(osmUrl) ? "play" : "neutral";
+  const p = placesByOsmUrl.get(osmUrl);
+  return p ? (p.play_area === false ? "hc" : "play") : "neutral";
 }
 
 function renderSavedList() {

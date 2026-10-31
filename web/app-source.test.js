@@ -192,3 +192,14 @@ test("the high-chair file is loaded apart from DATA_URLS, after the first paint"
   assert.match(retry, /if \(!baseHcPlacesFC\) loadHighchairPlaces\(\);/);
   assert.match(src, /function loadHighchairPlaces\(statsRefreshed\) \{\n  if \(hcLoading\) return;/);
 });
+
+// A layer drawn from the place source that the tap does not query opens
+// nothing: the high chair in a high-chair ring (v111) covers its middle.
+test("every layer on the place source is hit-tested and opens a place card", () => {
+  const onPlaces = [...src.matchAll(/id: (\w+), type: "\w+", source: PLACES\b/g)].map((m) => m[1]);
+  const listed = src.match(/const PLACE_LAYERS = \[([^\]]*)\]/)[1].split(",").map((x) => x.trim());
+  assert.deepEqual([...onPlaces].sort(), [...listed].sort());
+  assert.ok(onPlaces.includes("PLACES_HC"));
+  assert.match(src, /const PIN_LAYERS = \[[^\]]*\.\.\.PLACE_LAYERS\];/);
+  assert.match(src, /if \(PLACE_LAYERS\.includes\(hit\.layer\.id\)\) openPlacePopup\(/);
+});
