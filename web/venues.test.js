@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { VENUE_TAGS, isVenue, isSearchVenue, venueOsmTags, venueSearchOsmTags, venueReverseUrl,
          venueSearchUrl, venueRows, venueDistance, venueCentreKey, VENUE_LIMIT,
          VENUE_SEARCH_KEYS, VENUE_SEARCH_EXCLUDE, venueAnswer, venueFromIntent,
-         venueQuestions } from "./venues.js";
+         venueQuestions, asksHighchair } from "./venues.js";
 import { isHighchairVenue, PLAY_CHOICES, HIGHCHAIR_CHOICES, roomChoices, roomChoicesMore } from "./osm.js";
 
 const feat = (props, coords = [9.9563, 53.5745]) =>
@@ -233,7 +233,7 @@ test("venueFromIntent: the place a login brings back, amenity and all", () => {
   const intent = { kind: "venue", osm_url: "https://www.openstreetmap.org/node/1", choice: "hc_yes",
                    name: "Café Beispiel", context: "Beispielweg 1", lon: 9.95, lat: 53.57, amenity: "cafe" };
   assert.deepEqual(venueFromIntent(intent), { osm_url: intent.osm_url, name: "Café Beispiel",
-    context: "Beispielweg 1", lon: 9.95, lat: 53.57, amenity: "cafe" });
+    context: "Beispielweg 1", lon: 9.95, lat: 53.57, amenity: "cafe", tags: [] });
   // An intent from before v112 has no amenity: no high-chair question, nothing broken.
   const { amenity, ...old } = intent;
   assert.equal(venueFromIntent(old).amenity, null);
@@ -254,4 +254,39 @@ test("venueQuestions: table always, play unless a play ring, high chair where as
   // A high-chair ring: its high chair is on record, its play area is not.
   assert.deepEqual(venueQuestions(cafe, { play_area: false, highchair_recorded: true }), ["table", "play"]);
   assert.deepEqual(venueQuestions(cafe, null), ["table", "play", "hc"]);
+});
+
+test("asksHighchair: eating places plus bakery, pastry and indoor play; a supermarket never", () => {
+  const rows = (...tags) => venueRows({ features: tags.map((t, i) => {
+    const [k, v] = t.split("=");
+    return feat({ osm_type: "N", osm_id: i + 1, osm_key: k, osm_value: v, name: `P${i}` });
+  }) }, { lat: 53.5745, lon: 9.9563, accept: () => true });
+  const ask = (t) => asksHighchair(rows(t)[0]);
+  for (const t of ["shop=bakery", "shop=pastry", "leisure=indoor_play", "amenity=cafe"]) assert.ok(ask(t), t);
+  assert.equal(ask("shop=supermarket"), false);
+  assert.deepEqual(venueQuestions(rows("shop=bakery")[0]), ["table", "play", "hc"]);
+  assert.deepEqual(venueQuestions(rows("shop=supermarket")[0]), ["table", "play"]);
+});
+
+test("venueRows: duplicates merge their tags", () => {
+  const json = { features: [
+    feat({ osm_type: "N", osm_id: 3, osm_key: "shop", osm_value: "yes", name: "Backstube" }),
+    feat({ osm_type: "N", osm_id: 3, osm_key: "shop", osm_value: "bakery", name: "Backstube" }),
+    feat({ osm_type: "N", osm_id: 3, osm_key: "shop", osm_value: "bakery", name: "Backstube" }),
+  ] };
+  const rows = venueRows(json, { lat: 53.5745, lon: 9.9563, accept: isSearchVenue });
+  assert.equal(rows.length, 1);
+  assert.deepEqual(rows[0].tags, ["shop=yes", "shop=bakery"]);
+  assert.ok(asksHighchair(rows[0]));
+});
+
+test("venueFromIntent: tags round-trip; an intent without them replays with none", () => {
+  const intent = { kind: "venue", osm_url: "https://www.openstreetmap.org/node/1", choice: "hc_yes",
+                   name: "Backstube", context: "", lon: 9.95, lat: 53.57, tags: ["shop=bakery", 7] };
+  const v = venueFromIntent(intent);
+  assert.deepEqual(v.tags, ["shop=bakery"]);
+  assert.ok(asksHighchair(v));
+  const { tags, ...old } = intent;
+  assert.deepEqual(venueFromIntent(old).tags, []);
+  assert.equal(asksHighchair(venueFromIntent(old)), false);
 });

@@ -1,5 +1,18 @@
 # papa-map — build contract (v0)
 
+> **v113 amendment (31 Oct 2026, the venue step asks the high chair at bakeries and indoor playgrounds): no data shape change.**
+> The add dialog asked the high-chair question only where `isHighchairVenue(amenity)`
+> held, so a bakery or an indoor playground, whose seating nearly always has a
+> high chair, got two questions. A venue row now also carries `tags`, every
+> `key=value` Photon listed it under (duplicates merged, like `amenity`), and
+> `asksHighchair` (`web/venues.js`) accepts `HIGHCHAIR_VENUES` amenities plus
+> `shop=bakery`, `shop=pastry` and `leisure=indoor_play`; `venueQuestions` uses it.
+> Nowhere else: a "nein" at a supermarket would write a meaningless
+> `highchair=no`. The pin card's rule is unchanged (pin features carry no `shop`
+> or `leisure` value). The login intent `kind: "venue"` gains `tags`, read back
+> by `venueFromIntent`; an intent saved without it replays with no high-chair
+> question. Shell pin `v=app106` becomes `v=app107`.
+
 > **v112 amendment (31 Oct 2026, add a place with a play area or a high chair): no data shape change.**
 > The add dialog's venue step (v62) asked only the changing-table question, so a
 > café with a high chair or a play corner and no table could not be added from

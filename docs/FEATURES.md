@@ -977,7 +977,8 @@ Where it is silent and the venue is an eating place or a place built for familie
 `web/osm.js`: cafe, restaurant, fast_food, food_court, ice_cream, pub,
 biergarten, canteen, kindergarten, childcare, community_centre,
 social_facility, library; a Kita's parents' café and a family centre have a
-high chair too), a table pin's popup asks "Is there a high chair?" with
+high chair too; the add dialog's venue step also asks at shop=bakery, shop=pastry and
+leisure=indoor_play, `asksHighchair` in `web/venues.js`), a table pin's popup asks "Is there a high chair?" with
 two pills that write `highchair=yes` or `highchair=no` under the reader's own
 OSM login, through the same `writeTags` path and 409 re-read as the other
 answers. It sits outside the room question's block, like the play question,
