@@ -504,6 +504,27 @@ export function guardKeys(patch) {
     : keys;
 }
 
+// What the pipeline counts as a play area outside PLAY_KEYS
+// (pipeline/classify.py: has_play_area, play_state): the outdoor sub-key with
+// one of its PLAY_AREA_VALUES, an indoor play centre, and a playground, which
+// answers the question by existing. A play answer beside any of them would
+// contradict a ring the map draws ("none" stamped on it, issue #119), so a play
+// answer counts them as taken too. The pin card never asks where one is on
+// record (its play_state is not None there), so this refuses none of its writes.
+export const PLAY_AREA_VALUES = ["yes", "indoor", "designated"];
+const tagValue = (tags, k) => (tags[k] ?? "").trim().toLowerCase();
+export function playOnRecord(tags) {
+  return PLAY_AREA_VALUES.includes(tagValue(tags, "kids_area:outdoor"))
+    || ["indoor_play", "playground"].includes(tagValue(tags, "leisure"));
+}
+
+// Whether somebody else's answer stands where this patch would write: a guarded
+// key with any value, or for a play answer a play area recorded another way.
+export function takenFor(patch, tags) {
+  const keys = guardKeys(patch);
+  return keys.some((k) => tags[k]) || (keys.some((k) => PLAY_KEYS.includes(k)) && playOnRecord(tags));
+}
+
 export const CREATED_BY = "PapaMap";
 
 // `host` is where the answer was given: the live site, or on the sandbox the
@@ -589,10 +610,11 @@ export async function writeTags(cfg, token, ref, patch, comment, fetchFn = fetch
     return { version: el.version, tags: el.tags, changeset: null, timestamp: el.timestamp };
   // The popup's gate saw a snapshot up to a day old. If somebody has answered
   // since — a room on the live object, a changing_table on the play place,
-  // either kids_area key under a play answer — that answer is theirs, and this
+  // either kids_area key or any other play area the pipeline counts under a
+  // play answer (takenFor, v112) — that answer is theirs, and this
   // tap does not write over it (CONTRACT.md v25). Reported as the conflict it
   // is, before any changeset is opened.
-  if (keys.some((k) => el.tags[k])) throw httpError(409, "taken");
+  if (takenFor(patch, el.tags)) throw httpError(409, "taken");
 
   const open = await fetchFn(`${cfg.api}/changeset/create`,
     { method: "PUT", headers: xml, body: changesetXml(changesetTags(comment, cfg.host ?? cfg.redirect)), signal: bounded() });

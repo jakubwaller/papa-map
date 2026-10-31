@@ -1,5 +1,40 @@
 # papa-map — build contract (v0)
 
+> **v112 amendment (31 Oct 2026, add a place with a play area or a high chair): no data shape change.**
+> The add dialog's venue step (v62) asked only the changing-table question, so a
+> café with a high chair or a play corner and no table could not be added from
+> PapaMap: "Kein Wickeltisch" wrote `changing_table=no` and nothing appeared. The
+> step now asks three questions, unfolded: the table question first, as before,
+> then the play-area question (`askPlayHTML`) and, at the venues the pin card asks
+> it of (`isHighchairVenue`), the high-chair question (`askHighchairHTML`). A venue
+> row learns its `amenity` from Photon's `osm_key`/`osm_value` (`venueRows`, from
+> whichever duplicate carries one; `null` for a shop, a museum, a station). Each
+> answer is its own `writeTags` call with its own patch and changeset comment
+> (`venueAnswer` in `web/venues.js`: `tablePatch`, `playPatch`, `highchairPatch`),
+> takes down only its own question, and leaves the others to be answered.
+> "Taken" is per question, because `writeTags` guards only the patch's own keys
+> (`guardKeys`): a place whose `changing_table` is already set loses the table
+> question with `venueTaken`, now worded for any question, and keeps the other
+> two. A play answer is also refused where the object records a play area in a
+> way the pipeline counts outside `PLAY_KEYS` (`kids_area:outdoor` in
+> `PLAY_AREA_VALUES`, `leisure=indoor_play`, `leisure=playground`: `playOnRecord`
+> and `takenFor` in `web/osm.js`), none of which the pin card ever asks over; and
+> the step leaves out the play question for a place the map draws as a play ring
+> and the high-chair question where one is on record (`venueQuestions`). One
+> login line sits under all the questions. A write that lands after the reader
+> moved on to another place keeps its bookkeeping and leaves that step alone;
+> a place picked again while its write is on the way renders quiet. A yes (a room, `play_yes`, `play_outdoor`, `hc_yes`) is watched for by
+> `osm_url` in the delta's `tables`, `places` or `highchair_places`
+> (`selectAddedPlace`, unchanged) and flown to with `toastNewTable`,
+> `toastNewPlace` or `toastNewPlaceHc`; a no says "Gespeichert — danke!". The
+> login intent `kind: "venue"` gains `amenity`, read back by `venueFromIntent`;
+> its `choice` already names the question. The dialog's texts (`dlgIntro`,
+> `venueEmpty`, `venueSaved`, `venueTaken`, `dlgVenue`, `dlgVenueHint`) and the
+> methods pages' add-a-place paragraph no longer say the dialog is only about
+> changing tables. The pipeline, the data files and delta.json are unchanged;
+> the 1.3.x store apps bundle an older shell and keep the table-only step.
+> Shell pin `v=app105` becomes `v=app106`.
+
 > **v111 amendment (31 Oct 2026, high-chair rings look like themselves): no data shape change.**
 > The v110 high-chair rings drew exactly like the play rings, the same blue
 > hollow circle on the map and the same ring on both chips, so a reader could

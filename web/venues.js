@@ -12,8 +12,10 @@
 // cannot filter on `changing_table`, which is why venueRows drops what the
 // map already has a pin for, and why writeTags' own re-read (web/osm.js)
 // stays the last word on whether the place is still unanswered.
-import { haversineKm } from "./datasource.js?v=app105";
-import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app105";
+import { haversineKm } from "./datasource.js?v=app106";
+import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app106";
+import { isPlayChoice, playPatch, isHighchairChoice, highchairPatch, tablePatch,
+         isHighchairVenue } from "./osm.js?v=app106";
 
 // The MapComplete theme's dad_venue layer, as tag lists: the same places the
 // theme offers for the same question. theme/papamap.theme.json is the source,
@@ -142,11 +144,14 @@ const OSM_TYPE = { N: "node", W: "way", R: "relation" };
 // own filter is not trusted to be strict), toilets (they are the other
 // button), duplicates (Photon indexes one object once per matching tag), and
 // whatever `known(osm_url)` says the map already has a pin for — a table
-// there is answered, the room question lives on its pin.
+// there is answered, the room question lives on its pin. A play or
+// high-chair ring is no table, so it stays: its table can be added here.
+// `amenity` is the row's amenity value, from whichever of its duplicates
+// carries one, or null: the high-chair question is asked by it (isHighchairVenue).
 export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_LIMIT,
                                   accept = isVenue } = {}) {
   const feats = Array.isArray(json?.features) ? json.features : [];
-  const out = [], seen = new Set();
+  const out = [], seen = new Map();
   for (const f of feats) {
     const p = f?.properties ?? {};
     const type = OSM_TYPE[p.osm_type];
@@ -155,13 +160,16 @@ export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_L
     if (!Array.isArray(c) || !Number.isFinite(c[0]) || !Number.isFinite(c[1])) continue;
     if (!accept(p.osm_key, p.osm_value)) continue;
     const osm_url = `https://www.openstreetmap.org/${type}/${p.osm_id}`;
-    if (seen.has(osm_url) || known(osm_url)) continue;
-    seen.add(osm_url);
+    const amenity = p.osm_key === "amenity" ? p.osm_value : null;
+    if (seen.has(osm_url)) { seen.get(osm_url).amenity ??= amenity; continue; }
+    if (known(osm_url)) continue;
     const { context } = photonRow(f);
-    out.push({
-      osm_url, name: p.name, context, lon: c[0], lat: c[1],
+    const row = {
+      osm_url, name: p.name, context, lon: c[0], lat: c[1], amenity,
       km: Number.isFinite(lat) && Number.isFinite(lon) ? haversineKm(lat, lon, c[1], c[0]) : null,
-    });
+    };
+    seen.set(osm_url, row);
+    out.push(row);
   }
   out.sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
   return out.slice(0, limit);
@@ -173,4 +181,41 @@ export function venueRows(json, { lat, lon, known = () => false, limit = VENUE_L
 export function venueDistance(km) {
   if (!Number.isFinite(km)) return "";
   return `${Math.max(10, Math.round((km * 1000) / 10) * 10)} m`;
+}
+
+// Which of the venue step's questions a row gets. The table always: a table
+// on record is reported by writeTags as taken, and the map draws no pin for a
+// `changing_table=no`. The play area unless the map already draws the place as
+// a play ring (`ring`, its entry in app.js's placesByOsmUrl): its play area is
+// on record, perhaps under a tag no answer here could square with. The high
+// chair where the pin card asks it (isHighchairVenue), unless one is on record.
+export function venueQuestions(row, ring = null) {
+  return ["table", ...(ring?.play_area ? [] : ["play"]),
+          ...(isHighchairVenue(row?.amenity) && !ring?.highchair_recorded ? ["hc"] : [])];
+}
+
+// One answer in the venue step, which asks three questions about the place
+// picked, each answered and written on its own: which question the choice
+// answers (`q`, the block it takes down), the patch, its changeset comment's
+// key (CHANGESET_COMMENT in app.js) and whether a pin or ring follows on the
+// map, so the delta is watched for it. Throws on a choice that is not one of
+// ours, as the patches do.
+export function venueAnswer(choice) {
+  if (isPlayChoice(choice))
+    return { q: "play", patch: playPatch(choice), comment: choice, pin: choice !== "play_no" };
+  if (isHighchairChoice(choice))
+    return { q: "hc", patch: highchairPatch(choice), comment: choice, pin: choice === "hc_yes" };
+  return { q: "table", patch: tablePatch(choice), comment: choice === "none" ? "place_none" : "place",
+           pin: choice !== "none" };
+}
+
+// The place a login's "venue" intent brings back (app.js, completeLogin), or
+// null. The intent sat in storage across the round trip, so every field is
+// read rather than trusted; the osm_url is app.js's osmRef's to check.
+export function venueFromIntent(intent) {
+  if (intent?.kind !== "venue" || typeof intent.osm_url !== "string") return null;
+  const venue = { osm_url: intent.osm_url, name: String(intent.name ?? ""), context: String(intent.context ?? ""),
+                  lon: Number(intent.lon), lat: Number(intent.lat),
+                  amenity: typeof intent.amenity === "string" ? intent.amenity : null };
+  return Number.isFinite(venue.lon) && Number.isFinite(venue.lat) ? venue : null;
 }

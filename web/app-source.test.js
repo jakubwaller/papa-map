@@ -41,6 +41,8 @@ test("answer() gives the live card its buttons back after the write", () => {
   const fin = src.match(/\} finally \{\n\s+inFlight\.delete\(obj\.osm_url\);([\s\S]*?)\n  \}\n\}/);
   assert.ok(fin, "answer()'s finally block");
   assert.match(fin[1], /\bwake\(\);/);
+  // The add dialog's step for the same place, drawn busy meanwhile (v112).
+  assert.match(fin[1], /\bwakeVenueStep\(obj\.osm_url\);/);
   // wake() queries the card afresh (the one the answer was given on if it is
   // still up, else this object's reopened card, never another pin's).
   const wake = src.match(/const wake = \(\) => ([\s\S]*?);\n/);
@@ -202,4 +204,29 @@ test("every layer on the place source is hit-tested and opens a place card", () 
   assert.ok(onPlaces.includes("PLACES_HC"));
   assert.match(src, /const PIN_LAYERS = \[[^\]]*\.\.\.PLACE_LAYERS\];/);
   assert.match(src, /if \(PLACE_LAYERS\.includes\(hit\.layer\.id\)\) openPlacePopup\(/);
+});
+
+// The add dialog's venue step (v112): the three questions unfolded, each
+// answer written on its own, and a login round trip that brings back the
+// place's amenity so the high-chair question renders again.
+test("the venue step asks table, play and high chair, and its intent keeps the amenity", () => {
+  const ask = src.match(/function askVenue\(row, busy = false\) \{[\s\S]*?\n\}\n/)[0];
+  assert.match(ask, /busy \|\|= inFlight\.has\(row\.osm_url\);/);
+  assert.match(ask, /const qs = venueQuestions\(row, placesByOsmUrl\.get\(row\.osm_url\)\);/);
+  // One login line for the step, under all its questions, so it outlives the first answered.
+  assert.match(ask, /askHTML\("askTable", busy, false\) \+\n\s+\(qs\.includes\("play"\) \? askPlayHTML\(busy\) : ""\) \+ \(qs\.includes\("hc"\) \? askHighchairHTML\(busy\) : ""\) \+\n\s+askWhoHTML\(\);/);
+  assert.doesNotMatch(ask, /moreHTML/);
+  const fn = src.match(/async function answerVenue\([\s\S]*?\n\}\n/)[0];
+  assert.match(fn, /amenity: venue\.amenity \}/);
+  assert.match(fn, /a = venueAnswer\(choice\);\n\s+const out = await writeTags\(osm, token, ref, a\.patch, CHANGESET_COMMENT\[a\.comment\]\);/);
+  assert.match(fn, /if \(a\.pin\) \{\n\s+writeAddWatch\(/);
+  // A write that lands after the reader moved on to another place touches
+  // only its bookkeeping, never the step now shown.
+  assert.match(fn, /const shown = \(\) => venuePicked\?\.osm_url === venue\.osm_url;/);
+  assert.match(fn, /if \(shown\(\)\) venueAskEl\.querySelector\(VENUE_Q_SEL\[a\.q\]\)\?\.remove\(\);/);
+  assert.doesNotMatch(fn.slice(fn.indexOf("try {")), /\bsetVenueNote\(/);
+  assert.match(fn, /\} finally \{\n\s+inFlight\.delete\(venue\.osm_url\);\n\s+wakeVenueStep\(venue\.osm_url\);/);
+  assert.match(src, /function wakeVenueStep\(osmUrl\) \{\n\s+if \(venuePicked\?\.osm_url !== osmUrl\) return;/);
+  assert.match(src, /const VENUE_Q_SEL = \{ table: "\.ask", play: "\.ask-play", hc: "\.ask-hc" \};/);
+  assert.match(src, /const venue = venueFromIntent\(intent\);/);
 });
