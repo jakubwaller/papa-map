@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { VENUE_TAGS, isVenue, isSearchVenue, venueOsmTags, venueSearchOsmTags, venueReverseUrl,
+import { VENUE_TAGS, NEARBY_PLAY_TAGS, isVenue, isSearchVenue, venueOsmTags, venueSearchOsmTags, venueReverseUrl,
          venueSearchUrl, venueRows, venueDistance, venueCentreKey, VENUE_LIMIT,
          VENUE_SEARCH_KEYS, VENUE_SEARCH_EXCLUDE, venueAnswer, venueFromIntent,
          venueQuestions, asksHighchair } from "./venues.js";
@@ -191,8 +191,21 @@ test("venueDistance: metres to the nearest ten, never 0 m", () => {
 });
 
 test("every key of VENUE_TAGS turns into osm_tag pairs", () => {
-  const n = Object.values(VENUE_TAGS).reduce((a, v) => a + v.length, 0);
+  const n = [VENUE_TAGS, NEARBY_PLAY_TAGS].flatMap(Object.values).reduce((a, v) => a + v.length, 0);
   assert.equal(venueOsmTags().length, n);
+});
+
+// dad_venue excludes indoor playgrounds (dad_play_place owns them), so they are
+// the list's one stated extra and never part of VENUE_TAGS.
+test("indoor_play is the nearby list's explicit extra, not a dad_venue tag", () => {
+  assert.deepEqual(NEARBY_PLAY_TAGS, { leisure: ["indoor_play"] });
+  assert.equal(VENUE_TAGS.leisure.includes("indoor_play"), false);
+  assert.equal(isVenue("leisure", "indoor_play"), true);
+  assert.ok(venueOsmTags().includes("leisure:indoor_play"));
+  assert.ok(venueOsmTags().includes("shop:bakery") && venueOsmTags().includes("shop:pastry"));
+  const theme = JSON.parse(readFileSync(new URL("../theme/papamap.theme.json", import.meta.url)));
+  const layer = theme.layers.find((l) => l.id === "dad_venue");
+  assert.ok(layer.source.osmTags.and.includes("leisure!=indoor_play"));
 });
 
 // The venue step asks the high chair where the pin card would (isHighchairVenue),

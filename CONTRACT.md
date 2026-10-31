@@ -1,5 +1,17 @@
 # papa-map — build contract (v0)
 
+> **v114 amendment (31 Oct 2026, bakeries and indoor playgrounds in the nearby list): no data shape change.**
+> The add dialog's nearby list asks Photon for `VENUE_TAGS`, the `dad_venue` layer's
+> filter. `shop=bakery` and `shop=pastry` join both (theme and list), so MapComplete
+> also asks its changing-table questions at bakeries. `leisure=indoor_play` joins
+> only the list, as `NEARBY_PLAY_TAGS` in `web/venues.js` (`isVenue` and
+> `venueOsmTags` accept it): the theme keeps indoor playgrounds in `dad_play_place`
+> and `dad_venue` still excludes them (`leisure!=indoor_play`), so no place is drawn
+> twice. A bakery that has `changing_table` is `dad_changing_table_amenity`'s, one
+> with a high chair or kids' area is `dad_play_place`'s; `dad_venue` excludes both.
+> The drift test still compares `dad_venue` with `VENUE_TAGS` alone and states the
+> extra separately. Shell pin `v=app107` becomes `v=app108`.
+
 > **v113 amendment (31 Oct 2026, the venue step asks the high chair at bakeries and indoor playgrounds): no data shape change.**
 > The add dialog asked the high-chair question only where `isHighchairVenue(amenity)`
 > held, so a bakery or an indoor playground, whose seating nearly always has a
