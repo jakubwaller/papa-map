@@ -3217,7 +3217,7 @@
               {
                 "or": [
                   "amenity~^(cafe|restaurant|fast_food|food_court|ice_cream|bar|pub|biergarten|library|community_centre|cinema|theatre|arts_centre|events_venue|pharmacy|doctors|clinic|hospital|dentist|fuel|childcare|kindergarten|social_facility|townhall|marketplace|public_bath)$",
-                  "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store|yes)$",
+                  "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store|yes|bakery|pastry)$",
                   "tourism~^(museum|zoo|aquarium|theme_park|gallery|hotel)$",
                   "leisure~^(sports_centre|swimming_pool|water_park|fitness_centre|ice_rink|bowling_alley|amusement_arcade)$",
                   "railway=station",
@@ -6276,7 +6276,7 @@
             {
               "or": [
                 "amenity~^(cafe|restaurant|fast_food|food_court|ice_cream|bar|pub|biergarten|library|community_centre|cinema|theatre|arts_centre|events_venue|pharmacy|doctors|clinic|hospital|dentist|fuel|childcare|kindergarten|social_facility|townhall|marketplace|public_bath)$",
-                "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store|yes)$",
+                "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store|yes|bakery|pastry)$",
                 "tourism~^(museum|zoo|aquarium|theme_park|gallery|hotel)$",
                 "leisure~^(sports_centre|swimming_pool|water_park|fitness_centre|ice_rink|bowling_alley|amusement_arcade)$",
                 "railway=station",
@@ -7443,7 +7443,7 @@
               {
                 "or": [
                   "amenity~^(cafe|restaurant|fast_food|food_court|ice_cream|bar|pub|biergarten|library|community_centre|cinema|theatre|arts_centre|events_venue|pharmacy|doctors|clinic|hospital|dentist|fuel|childcare|kindergarten|social_facility|townhall|marketplace|public_bath)$",
-                  "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store|yes)$",
+                  "shop~^(mall|department_store|supermarket|hypermarket|baby_goods|toys|furniture|garden_centre|doityourself|hardware|chemist|variety_store|yes|bakery|pastry)$",
                   "tourism~^(museum|zoo|aquarium|theme_park|gallery|hotel)$",
                   "leisure~^(sports_centre|swimming_pool|water_park|fitness_centre|ice_rink|bowling_alley|amusement_arcade)$",
                   "railway=station",

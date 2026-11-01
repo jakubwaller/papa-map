@@ -12,10 +12,10 @@
 // cannot filter on `changing_table`, which is why venueRows drops what the
 // map already has a pin for, and why writeTags' own re-read (web/osm.js)
 // stays the last word on whether the place is still unanswered.
-import { haversineKm } from "./datasource.js?v=app107";
-import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app107";
+import { haversineKm } from "./datasource.js?v=app108";
+import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app108";
 import { isPlayChoice, playPatch, isHighchairChoice, highchairPatch, tablePatch,
-         isHighchairVenue } from "./osm.js?v=app107";
+         isHighchairVenue } from "./osm.js?v=app108";
 
 // The MapComplete theme's dad_venue layer, as tag lists: the same places the
 // theme offers for the same question. theme/papamap.theme.json is the source,
@@ -26,7 +26,8 @@ export const VENUE_TAGS = {
     "events_venue", "pharmacy", "doctors", "clinic", "hospital", "dentist", "fuel",
     "childcare", "kindergarten", "social_facility", "townhall", "marketplace", "public_bath"],
   shop: ["mall", "department_store", "supermarket", "hypermarket", "baby_goods", "toys",
-    "furniture", "garden_centre", "doityourself", "hardware", "chemist", "variety_store", "yes"],
+    "furniture", "garden_centre", "doityourself", "hardware", "chemist", "variety_store", "yes",
+    "bakery", "pastry"],
   tourism: ["museum", "zoo", "aquarium", "theme_park", "gallery", "hotel"],
   leisure: ["sports_centre", "swimming_pool", "water_park", "fitness_centre", "ice_rink",
     "bowling_alley", "amusement_arcade"],
@@ -35,8 +36,13 @@ export const VENUE_TAGS = {
   aeroway: ["terminal"],
 };
 
+// What the nearby list asks Photon for beyond dad_venue: the theme keeps indoor
+// playgrounds in dad_play_place (dad_venue excludes them), where they get the
+// table and high-chair questions, so the list may offer them too.
+export const NEARBY_PLAY_TAGS = { leisure: ["indoor_play"] };
+
 export function isVenue(key, value) {
-  return Boolean(VENUE_TAGS[key]?.includes(value));
+  return Boolean(VENUE_TAGS[key]?.includes(value) || NEARBY_PLAY_TAGS[key]?.includes(value));
 }
 
 // What the dialog's search box accepts: the list above, and anything else
@@ -78,7 +84,7 @@ export function venueSearchOsmTags() {
 
 // Photon's own filter: one `osm_tag=key:value` per pair, ORed.
 export function venueOsmTags() {
-  return Object.entries(VENUE_TAGS).flatMap(([k, vs]) => vs.map((v) => `${k}:${v}`));
+  return [VENUE_TAGS, NEARBY_PLAY_TAGS].flatMap(Object.entries).flatMap(([k, vs]) => vs.map((v) => `${k}:${v}`));
 }
 
 // 300 m around the map centre: a street and its corners, what a reader

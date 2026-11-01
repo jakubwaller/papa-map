@@ -1,11 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { VENUE_TAGS, isVenue, isSearchVenue, venueOsmTags, venueSearchOsmTags, venueReverseUrl,
+import { VENUE_TAGS, NEARBY_PLAY_TAGS, isVenue, isSearchVenue, venueOsmTags, venueSearchOsmTags, venueReverseUrl,
          venueSearchUrl, venueRows, venueDistance, venueCentreKey, VENUE_LIMIT,
          VENUE_SEARCH_KEYS, VENUE_SEARCH_EXCLUDE, venueAnswer, venueFromIntent,
          venueQuestions, asksHighchair } from "./venues.js";
 import { isHighchairVenue, PLAY_CHOICES, HIGHCHAIR_CHOICES, roomChoices, roomChoicesMore } from "./osm.js";
+import { PHOTON_LANGS } from "./search.js";
 
 const feat = (props, coords = [9.9563, 53.5745]) =>
   ({ type: "Feature", geometry: { type: "Point", coordinates: coords }, properties: props });
@@ -191,8 +192,21 @@ test("venueDistance: metres to the nearest ten, never 0 m", () => {
 });
 
 test("every key of VENUE_TAGS turns into osm_tag pairs", () => {
-  const n = Object.values(VENUE_TAGS).reduce((a, v) => a + v.length, 0);
+  const n = [VENUE_TAGS, NEARBY_PLAY_TAGS].flatMap(Object.values).reduce((a, v) => a + v.length, 0);
   assert.equal(venueOsmTags().length, n);
+});
+
+// dad_venue excludes indoor playgrounds (dad_play_place owns them), so they are
+// the list's one stated extra and never part of VENUE_TAGS.
+test("indoor_play is the nearby list's explicit extra, not a dad_venue tag", () => {
+  assert.deepEqual(NEARBY_PLAY_TAGS, { leisure: ["indoor_play"] });
+  assert.equal(VENUE_TAGS.leisure.includes("indoor_play"), false);
+  assert.equal(isVenue("leisure", "indoor_play"), true);
+  assert.ok(venueOsmTags().includes("leisure:indoor_play"));
+  assert.ok(venueOsmTags().includes("shop:bakery") && venueOsmTags().includes("shop:pastry"));
+  const theme = JSON.parse(readFileSync(new URL("../theme/papamap.theme.json", import.meta.url)));
+  const layer = theme.layers.find((l) => l.id === "dad_venue");
+  assert.ok(layer.source.osmTags.and.includes("leisure!=indoor_play"));
 });
 
 // The venue step asks the high chair where the pin card would (isHighchairVenue),
@@ -289,4 +303,15 @@ test("venueFromIntent: tags round-trip; an intent without them replays with none
   const { tags, ...old } = intent;
   assert.deepEqual(venueFromIntent(old).tags, []);
   assert.equal(asksHighchair(venueFromIntent(old)), false);
+});
+
+// Photon is a GET: a proxy or server that refuses a long URL fails the nearby
+// list silently, so the tag list must not outgrow the limit unnoticed. Worst
+// case: a language Photon takes (photonLang drops the rest, sending no `lang`)
+// and the widest coordinates, which round to 3 decimals either way.
+test("venueReverseUrl stays under 1900 characters for every Photon language", () => {
+  const longest = Math.max(...PHOTON_LANGS.map((lang) =>
+    venueReverseUrl(-89.123, -179.123, { lang }).length));
+  assert.ok(longest < 1900,
+    `reverse URL is ${longest} chars; URLs past ~2000 are refused by many servers and proxies, so the nearby list would fail silently. Trim VENUE_TAGS or send fewer tags.`);
 });
