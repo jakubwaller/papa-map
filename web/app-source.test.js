@@ -47,7 +47,7 @@ test("answer() gives the live card its buttons back after the write", () => {
   // still up, else this object's reopened card, never another pin's).
   const wake = src.match(/const wake = \(\) => ([\s\S]*?);\n/);
   assert.ok(wake, "answer()'s wake helper");
-  assert.match(wake[1], /here\(\)\?\.querySelectorAll\("button\.ask-btn, button\.ask-more"\)/);
+  assert.match(wake[1], /here\(\)\?\.querySelectorAll\("button\.ask-btn, button\.ask-more, input\.ask-ct-input"\)/);
   assert.match(wake[1], /disabled = false/);
   assert.match(src, /const here = \(\) => \(el\?\.isConnected \? el\n\s+: popupObj\?\.obj\?\.osm_url === obj\.osm_url/);
 });
@@ -67,7 +67,7 @@ function loadShowPopupHTML(env) {
     return { show: showPopupHTML, shown: () => popupHtmlShown };`)(env);
 }
 function fakePopup(document, cardFocus) {
-  const card = { contains: (n) => n === cardFocus };
+  const card = { contains: (n) => n === cardFocus, querySelector: () => null };
   const popup = {
     options: { focusAfterOpen: true },
     seen: [],
@@ -102,6 +102,20 @@ test("showPopupHTML lets the card take the focus when nothing else holds it", ()
   show("first");
   assert.deepEqual(popup.seen, [true]);
   assert.equal(document.activeElement, button);
+});
+test("showPopupHTML carries a half-typed description over the redraw (v115)", () => {
+  const before = { value: "2. OG, hin", focus() {} };
+  const after = { value: "", focused: false, focus() { after.focused = true; } };
+  const document = { body: {}, activeElement: before };
+  const popup = fakePopup(document, before);
+  let field = before;
+  popup.getElement = () => ({ contains: (x) => x === before || x === after, querySelector: () => field });
+  const setHTML = popup.setHTML;
+  popup.setHTML = (h) => { setHTML(h); field = after; };
+  const { show } = loadShowPopupHTML({ popup, document, shown: "old" });
+  show("new");
+  assert.equal(after.value, "2. OG, hin");
+  assert.equal(after.focused, true);
 });
 test("showPopupHTML restores the option even when setHTML throws", () => {
   const field = { isConnected: true, focus() {} };

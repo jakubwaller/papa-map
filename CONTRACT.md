@@ -1,5 +1,23 @@
 # papa-map — build contract (v0)
 
+> **v115 amendment (3 Nov 2026, where exactly the table is): one new property on the tables.**
+> Every table feature carries **`changing_table_description`**: `changing_table:description`
+> verbatim, or `null` when absent (play places do not carry it; they have no table).
+> `loadFeatures` keeps a non-blank string and reads anything else as `null`. The popup
+> shows it as its own row (`popupTableWhere`, escaped) under the table/room row, and
+> where it is `null` the fold asks for it (`askTableWhere`, `askSave`; three i18n keys in
+> all 32 languages): a text field with `maxlength` 255 (OSM's tag value limit) and a Save
+> pill, choice `ct_desc` (`DESCRIPTION_CHOICE`, `web/osm.js`). `descriptionPatch` trims and
+> refuses blank or over-255 text, so a blank field writes nothing. Fill-only like every
+> answer: `takenFor` refuses the write when the live object already has a description,
+> and also when its `changing_table` is absent or `no`, so the tag never lands on an
+> object without a table. Its own changeset (comment "Changing table: where exactly"); an
+> existing description is never edited or cleared from the page (MapComplete does that).
+> Not asked on a grey pin whose room is in unreadable words (MapComplete stays primary
+> there). The login intent carries the text as `text`; the reader's own answer is an
+> override field `changing_table_description` until the delta has it. Shell pin
+> `v=app108` becomes `v=app109`.
+
 > **v114 amendment (31 Oct 2026, bakeries and indoor playgrounds in the nearby list): no data shape change.**
 > The add dialog's nearby list asks Photon for `VENUE_TAGS`, the `dad_venue` layer's
 > filter. `shop=bakery` and `shop=pastry` join both (theme and list), so MapComplete
@@ -3072,6 +3090,7 @@ Overpass `out center`). Feature `properties`:
   "wheelchair": "yes|limited|no|\"unreadable\"|null — the place's wheelchair tag (v26); null is the key absent, \"unreadable\" a present value outside the three (v102: shown as nothing, not a chip hit, never asked — the write would be refused as taken)",
   "toilets_wheelchair": "yes|limited|no|\"unreadable\"|null — toilets:wheelchair by the same rule (v26, v102)",
   "wheelchair_description": "string or null — wheelchair:description verbatim (v26)",
+  "changing_table_description": "string or null — changing_table:description verbatim (v115); tables only, not on play places",
   "table_wheelchair": "yes|limited|no|\"unreadable\"|null — changing_table:wheelchair by the same rule (v102); only null gets the popup's question",
   "highchair": "true|false|null|\"unreadable\" — highchair=yes or a count > 0 is true, no or 0 is false, null is the key absent, \"unreadable\" a present value the pipeline cannot read (shown as nothing, never asked, not a chip hit: the write would be refused as taken) (v65)",
   "key": "string or null — the centralkey value when the key locks the table (v5 rule); such a feature is not a pin (v26)",

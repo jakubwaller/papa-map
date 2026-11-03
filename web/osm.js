@@ -491,6 +491,23 @@ export function wheelchairPatch(choice) {
   return { [what === "tw" ? "changing_table:wheelchair" : "wheelchair"]: value };
 }
 
+// The free-text one (v115): where exactly the table is — "the barrier-free WC
+// on the 2nd floor, not the one by the entrance" — for the place with several
+// accessible WCs and a table in only one. Fill-only like every other answer:
+// asked where OSM has no `changing_table:description`, and writeTags refuses
+// it where one has appeared since (takenFor). Editing somebody's text belongs
+// in MapComplete, where the reader sees it first. Trimmed; blank is no answer
+// and writes nothing; OSM refuses a tag value over 255 characters, so the field
+// stops there and so does this. JS length counts UTF-16 units, never fewer than
+// OSM's characters, so the limit errs on the safe side.
+export const DESCRIPTION_CHOICE = "ct_desc";
+export const DESCRIPTION_MAX = 255;
+export function descriptionPatch(text) {
+  const v = typeof text === "string" ? text.trim() : "";
+  if (!v || v.length > DESCRIPTION_MAX) throw new Error("no usable changing_table:description");
+  return { "changing_table:description": v };
+}
+
 // What the "taken" check below has to find empty before it writes. The patch's
 // own keys, plus — for a play answer — the whole of PLAY_KEYS, because the two
 // keys are one statement: a `kids_area:indoor=yes` tagged since last night's
@@ -520,9 +537,12 @@ export function playOnRecord(tags) {
 
 // Whether somebody else's answer stands where this patch would write: a guarded
 // key with any value, or for a play answer a play area recorded another way.
+// A description (v115) also counts the table itself: it is never written onto
+// an object whose live tags no longer say there is one.
 export function takenFor(patch, tags) {
   const keys = guardKeys(patch);
-  return keys.some((k) => tags[k]) || (keys.some((k) => PLAY_KEYS.includes(k)) && playOnRecord(tags));
+  return keys.some((k) => tags[k]) || (keys.some((k) => PLAY_KEYS.includes(k)) && playOnRecord(tags))
+    || ("changing_table:description" in patch && ["", "no"].includes(tagValue(tags, "changing_table")));
 }
 
 export const CREATED_BY = "PapaMap";

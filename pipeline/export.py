@@ -90,6 +90,9 @@ def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]
                 "wheelchair": wheelchair_state(tags),
                 "toilets_wheelchair": wheelchair_state(tags, "toilets:wheelchair"),
                 "wheelchair_description": tags.get("wheelchair:description"),
+                # Where exactly the table is, verbatim (v115): the place with
+                # three accessible WCs and a table in one of them.
+                "changing_table_description": tags.get("changing_table:description"),
                 # The table's own answer (v102): `changing_table:wheelchair`,
                 # the same tri-state or null. Only the null gets the question.
                 "table_wheelchair": wheelchair_state(tags, "changing_table:wheelchair"),

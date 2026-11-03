@@ -58,7 +58,8 @@ def test_feature_properties_match_data_contract(load_fixture):
         "men_only": True,
         "play": False,
         "wheelchair": None, "toilets_wheelchair": None,
-        "wheelchair_description": None, "table_wheelchair": None, "highchair": None, "key": None,
+        "wheelchair_description": None, "changing_table_description": None,
+        "table_wheelchair": None, "highchair": None, "key": None,
         "fee": "yes", "opening_hours": "24/7",
         "osm_url": "https://www.openstreetmap.org/node/1",
         "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
@@ -99,6 +100,11 @@ def test_wheelchair_is_a_tri_state_never_a_status():
     assert props({"toilets:wheelchair": "yes"})["wheelchair"] is None
     p = props({"wheelchair": "limited", "wheelchair:description": "eine Stufe"})
     assert p["wheelchair_description"] == "eine Stufe"
+    # v115: where exactly the table is, verbatim, and never a status input.
+    d = props({"changing_table:description": "barrierefreies WC im 2. OG, nicht am Eingang"})
+    assert d["changing_table_description"] == "barrierefreies WC im 2. OG, nicht am Eingang"
+    assert d["status"] == "unknown"
+    assert props({})["changing_table_description"] is None
     # the status is untouched by any of it
     assert props({"wheelchair": "yes"})["status"] == "unknown"
     assert props({"wheelchair": "no", "changing_table:location": "male_toilet"})["status"] == "accessible"

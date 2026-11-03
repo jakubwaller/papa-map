@@ -6,7 +6,7 @@ import { LIVE, SANDBOX, endpoints, authorizeUrl, pkceChallenge, randomToken,
          roomLabelKeys,
          PLAY_CHOICES, PLAY_KEYS, isPlayChoice, playPatch, guardKeys, changesetTags, changesetXml,
          HIGHCHAIR_CHOICES, HIGHCHAIR_VENUES, isHighchairChoice, isHighchairVenue, highchairPatch,
-         WHEELCHAIR_CHOICES, isWheelchairChoice, wheelchairPatch,
+         WHEELCHAIR_CHOICES, isWheelchairChoice, wheelchairPatch, DESCRIPTION_MAX, descriptionPatch,
          elementFromApi, elementXml, xmlEscape, writeTags, CREATED_BY, PLAY_AREA_VALUES, playOnRecord, takenFor,
          startLogin, takeIntent, keepRoundTripAcrossRestarts, awaitingReturn, preferReturn, dropStaleRoundTrip, ROUND_TRIP_MS, PKCE_KEY, INTENT_KEY,
          setLogin, clearLogin, getToken, getUser, getUserId, userInfo, userName, ensureUserInfo } from "./osm.js";
@@ -812,4 +812,22 @@ test("writeTags: a play answer is refused beside leisure=indoor_play, and still 
   const out = await writeTags(SANDBOX, "tok", { type: "node", id: "42" }, playPatch("play_no"), "c", api.fetchFn);
   assert.equal(out.tags.kids_area, "no");
   assert.equal(out.changeset, "1234");
+});
+
+test("descriptionPatch trims, refuses blank and over-long text; takenFor guards it (v115)", () => {
+  const k = "changing_table:description";
+  assert.deepEqual(descriptionPatch("  WC im 2. OG  "), { [k]: "WC im 2. OG" });
+  assert.deepEqual(descriptionPatch("x".repeat(DESCRIPTION_MAX)), { [k]: "x".repeat(DESCRIPTION_MAX) });
+  for (const v of ["", "   ", undefined, null, 3, "x".repeat(DESCRIPTION_MAX + 1)]) assert.throws(() => descriptionPatch(v));
+  const patch = descriptionPatch("2. OG");
+  assert.equal(takenFor(patch, { changing_table: "yes" }), false);
+  assert.equal(takenFor(patch, { changing_table: "limited" }), false);
+  // somebody's text since the snapshot: theirs, never overwritten
+  assert.equal(takenFor(patch, { changing_table: "yes", [k]: "Erdgeschoss" }), true);
+  // never onto an object that no longer has a table
+  assert.equal(takenFor(patch, {}), true);
+  assert.equal(takenFor(patch, { changing_table: "no" }), true);
+  assert.equal(takenFor(patch, { changing_table: " No " }), true);
+  // the other answers are untouched by the table check
+  assert.equal(takenFor(wheelchairPatch("tw_yes"), {}), false);
 });
