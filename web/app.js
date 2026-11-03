@@ -2776,7 +2776,8 @@ document.addEventListener("click", (e) => {
 });
 // Enter in the description field (v115) saves, as the pill beside it would.
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.isComposing && e.target.matches?.("input.ask-ct-input"))
+  // keyCode 229: Safari's IME-confirming Enter, which reports isComposing false.
+  if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229 && e.target.matches?.("input.ask-ct-input"))
     e.target.closest(".ask-ct")?.querySelector("button.ask-btn")?.click();
 });
 
