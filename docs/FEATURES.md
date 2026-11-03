@@ -356,7 +356,17 @@ own scaling gave the Berlin–Munich hop 7 s; a flat 1.2 s, tried for a day in
 October 2026, was fast but dizzying from 500 km. `fitBounds` flies the same
 way, so the search result's fit goes through the same rule.
 
-A refused permission gets its own toast (`geoFailKey`, `web/datasource.js`). A
+Without a position — permission refused, no fix in 10 s, or no geolocation at
+all — the button does not stop at an error (feedback, Nov 2026: a reader who
+had just searched "Hamburg Hauptbahnhof" got only "couldn't get your location").
+It measures from the place last chosen in the search box instead, or from the
+middle of the map when the box holds no chosen row, opens that table the same
+way and says so in the toast ("No location, so from Hamburg Hauptbahnhof — …",
+`toastNearestFrom`, `nearestMapCentre`). Typing in the box or clearing it
+forgets the chosen place. No dot is drawn and no fix is noted, because there
+is none.
+
+On the locate button, a refused permission gets its own toast (`geoFailKey`, `web/datasource.js`). A
 browser remembers a dismissed prompt and never asks again, and a page cannot
 re-prompt, so the words are the fix: on the page the toast says to allow the
 location in the browser's or the phone's settings (a code-1 refusal also comes

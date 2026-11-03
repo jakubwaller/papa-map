@@ -1963,40 +1963,50 @@ const nearestBtn = document.getElementById("nearest");
 function syncNearestBtn() {
   nearestBtn.hidden = !!popup?.isOpen();
 }
+// Opens the nearest usable table to one point. `place` is null for the
+// reader's own fix, else the name of the point the answer is measured from.
+function showNearest(lat, lon, place) {
+  const hit = nearestUsable(allFeatures, lat, lon, mode, wheelchairOnly);
+  if (!hit) { toast(t("toastNearestNone")); return false; }
+  const f = hit.feature;
+  ensureVisible(f);
+  openPopup(f);
+  // flyTo stops the pan openPopup just started; once the flight lands,
+  // fit the card to the view it landed in.
+  flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }, panPopupIntoView);
+  const d = formatDistance(hit.km);
+  const vars = {
+    dist: t(d.key, { n: num(d.n) }),
+    name: f.name || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed"),
+  };
+  toast(place == null ? t("toastNearestFound", vars) : t("toastNearestFrom", { ...vars, place }),
+    { ms: place == null ? 4000 : 6000 });
+  return true;
+}
 nearestBtn.addEventListener("click", (e) => {
-  if (!hasGeo()) { toast(t("toastNoGeo")); return; }
   if (!dataReady) { toast(t("dataLoading")); return; }
   if (dataMissing()) { toast(t("dataFailed")); retryDataset(); return; }
+  // No fix (refused, timed out, no API): rather than a dead end, the nearest
+  // table to the place last searched for, else to the middle of the map.
+  const fallback = () => {
+    const c = searchPicked ?? mapCentre();
+    showNearest(c.lat, c.lon, searchPicked?.name ?? t("nearestMapCentre"));
+  };
+  if (!hasGeo()) { fallback(); return; }
   locateFrom(e.currentTarget).then(
     (coords) => {
       const { latitude: lat, longitude: lon } = coords;
       showYou([lon, lat]);
       noteFix(lat, lon);
-      const hit = nearestUsable(allFeatures, lat, lon, mode, wheelchairOnly);
-      if (!hit) {
-        toast(t("toastNearestNone"));
-        evaluateRoomCard();   // no popup is opening — this fix's own turn to ask
-        return;
-      }
-      const f = hit.feature;
-      ensureVisible(f);
-      openPopup(f);
-      // flyTo stops the pan openPopup just started; once the flight lands,
-      // fit the card to the view it landed in.
-      flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 16) }, panPopupIntoView);
-      const d = formatDistance(hit.km);
-      toast(t("toastNearestFound", {
-        dist: t(d.key, { n: num(d.n) }),
-        name: f.name
-          || t(f.amenity === "toilets" ? "popupToilets" : "popupUnnamed"),
-      }));
+      // No popup is opening — this fix's own turn to ask.
+      if (!showNearest(lat, lon, null)) evaluateRoomCard();
       // The room card follows this popup, not this fix, the way locate's own
       // fix would if a popup were not about to cover it: openPopup above hid
       // it, and closing this one (whenever that happens — this same object,
       // another pin, or the reader taps away) re-evaluates it while the fix
       // is still fresh (evaluateRoomCard, via onPopupClosed below).
     },
-    geoFailed,
+    fallback,
   );
 });
 
@@ -2030,6 +2040,7 @@ let searchActive = -1;            // index into searchRows, -1 = nothing active
 let searchLocal = [];             // matchLocal hits
 let searchWorld = [];             // photonResults rows
 let searchWorldState = "idle";    // idle | loading | ok | failed
+let searchPicked = null;          // {name, lat, lon} of the row last chosen, until the field changes
 let photonTimer = null;
 let photonRequest = null;         // the AbortController of the one request in flight
 
@@ -2162,6 +2173,7 @@ function closeSearch() {
 
 function clearSearch() {
   searchInput.value = "";
+  searchPicked = null;
   searchLocal = [];
   searchWorld = [];
   searchWorldState = "idle";
@@ -2192,6 +2204,9 @@ function searchFitPadding() {
 function pickSearchRow(row) {
   closeSearch();
   if (row.kind === "world") {
+    const b = row.target.bounds, [lon, lat] = row.target.center
+      ?? [(b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2];
+    searchPicked = { name: row.name, lat, lon };
     // fitBounds where the result knows its own extent — a city then fills the
     // screen and is not guessed at from a zoom table. Capped, or a house whose
     // extent is a few metres across would land at the maximum zoom there is.
@@ -2201,6 +2216,7 @@ function pickSearchRow(row) {
     return;
   }
   const f = row.hit.obj;
+  searchPicked = { name: row.name, lat: f.lat, lon: f.lon };
   if (row.hit.kind === "table") { ensureVisible(f); openPopup(f); }
   else { ensurePlacesVisible(f); openPlacePopup(f); }
   // Exactly what the nearest button does with its own answer: fly, and fit the
@@ -2252,6 +2268,7 @@ async function sendPhoton(q) {
 }
 
 searchInput.addEventListener("input", () => {
+  searchPicked = null;
   const q = searchInput.value.trim();
   // The whole dataset, not the viewport: the same true-global search the
   // nearest button does, and for the same reason.
