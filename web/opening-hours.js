@@ -703,6 +703,8 @@ function resolveRuleIntervals(rule, sunTimes, nextSunTimes) {
 //    into the *next* calendar day — read by the caller against the
 //    following day's own minute-of-day
 //  - unkToday, unkSpill: the same two, for minutes an `unknown` rule covers
+//  - unkCuts: the hours partial `unknown` rules name on this day, which turn
+//    the matching part of yesterday's open spill unknown
 //  - cuts: the hours partial `off` rules name on this day, which the caller
 //    also takes out of yesterday's spill
 //
@@ -719,6 +721,9 @@ function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
   // only the caller can apply. A whole-day off does not: yesterday's evening
   // keeps its after-midnight hours (see the header).
   const cuts = [];
+  // Hours a partial `unknown` names on this day: they take yesterday's open
+  // spill out of open (into unknown), the way `cuts` take it out entirely.
+  const unkCuts = [];
   // Tracks whether this weekday has, at any *earlier* group, been touched
   // by a rule that carries its own weekday or date selector — whether or
   // not that rule was its group's first (replacing) member, or merely a
@@ -766,6 +771,7 @@ function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
         for (const iv of ruleSpill) ns = subtractInterval(ns, iv);
         ut = ut.concat(add);
         us = us.concat(ruleSpill);
+        if (!add.some(([s, e]) => s <= 0 && e >= 24 * 60)) unkCuts.push(...add);
       } else if (rule.off) {
         for (const iv of add) nt = subtractInterval(nt, iv);
         for (const iv of ruleSpill) ns = subtractInterval(ns, iv);
@@ -789,7 +795,7 @@ function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
     unkSpill = us;
     if (matched.some((r) => r.days !== null || r.dateSel !== null)) explicitClaimed = true;
   }
-  return { today, spill, unkToday, unkSpill, cuts };
+  return { today, spill, unkToday, unkSpill, cuts, unkCuts };
 }
 
 const usesSun = (rules) => rules.some((r) => r.spans.some(([s, e]) => isSunPoint(s) || isSunPoint(e)));
@@ -817,8 +823,9 @@ function evaluateGroups(groups, day, minutes, val, yval, sunTimes, ySunTimes) {
   const ydayR = resolveDay(groups, yday, yval, ySunTimes, sunTimes);
   const covers = (today, ySpill) => [...today, ...todayR.cuts.reduce(subtractInterval, ySpill)]
     .some(([s, e]) => minutes >= s && minutes < e);
-  if (covers(todayR.today, ydayR.spill)) return "open";
-  if (covers(todayR.unkToday, ydayR.unkSpill)) return "unknown";
+  if (covers(todayR.today, todayR.unkCuts.reduce(subtractInterval, ydayR.spill))) return "open";
+  // Yesterday's open spill only gets here where a partial unknown took it.
+  if (covers(todayR.unkToday, [...ydayR.unkSpill, ...ydayR.spill])) return "unknown";
   return "closed";
 }
 

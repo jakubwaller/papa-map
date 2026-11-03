@@ -858,6 +858,13 @@ test("unknown follows the same replace/add/subtract order as open", () => {
   assert.equal(isOpenNow("Sa 10:00-12:00 unknown; Sa 10:00-11:00", at(6, 11, 30)), "closed");
   // An overnight unknown spills into the next morning.
   assert.equal(isOpenNow("Fr 22:00-02:00 unknown", at(6, 1, 0)), "unknown");
+  // A partial unknown for today turns those hours of yesterday's spill unknown,
+  // as a partial off closes them.
+  const spill = "Fr 20:00-02:00; Sa 01:00-02:00 unknown";
+  assert.equal(isOpenNow(spill, at(6, 0, 30)), "open");
+  assert.equal(isOpenNow(spill, at(6, 1, 30)), "unknown");
+  assert.equal(isOpenNow(spill, at(6, 2, 30)), "closed");
+  assert.equal(isOpenNow("Fr 20:00-02:00; Sa 01:00-02:00 off", at(6, 1, 30)), "closed");
   // A trailing unknown on several spans is as ambiguous as a trailing off.
   assert.equal(isOpenNow("Mo 08:00-12:00,14:00-18:00 unknown", at(1, 9, 0)), "unknown");
   assert.equal(isOpenNow("Mo 08:00-12:00,14:00-18:00 unknown", at(1, 20, 0)), "unknown");
