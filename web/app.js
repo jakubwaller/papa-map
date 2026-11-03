@@ -2774,6 +2774,11 @@ document.addEventListener("click", (e) => {
   const star = e.target.closest?.("button.star-btn");
   if (star) toggleStar(star);
 });
+// Enter in the description field (v115) saves, as the pill beside it would.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.isComposing && e.target.matches?.("input.ask-ct-input"))
+    e.target.closest(".ask-ct")?.querySelector("button.ask-btn")?.click();
+});
 
 // ---- The two-tap answer: written to OSM under the reader's own account ----
 // One tap on the pin, one on the room. The first time, the second tap goes
