@@ -1251,7 +1251,9 @@ label would be naming an area the number never actually counted. The
 percentage itself is counted live over every table the pipeline put in
 whichever area that turns out to be — every loaded feature, never the
 chip-filtered subset a reader happens to be looking at — never a second
-dataset of its own. Only when `pickArea` finds nothing at all (open sea,
+dataset of its own. Key-locked tables are left out, as they are left off the
+area pages (v116): until Nov 2026 they were counted, and Germany read 6,645
+tables in the dialog against 6,500 on its own page. Only when `pickArea` finds nothing at all (open sea,
 zoomed out past any area's reach) does the sentence fall back to the site's
 own whole-sweep numbers, the same ones the stats strip renders
 (`localAnswered`, `web/datasource.js` — one place "how many tables are

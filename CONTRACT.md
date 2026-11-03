@@ -1,5 +1,13 @@
 # papa-map — build contract (v0)
 
+> **v116 amendment (3 Nov 2026, My PapaMap counts what the area pages count): no data shape change.**
+> `areaAnswered` (`web/me.js`) skips every feature with `key` set, the same features
+> `pipeline/run.py` keeps off the area pages and the leaderboard (v5 as amended), so the
+> dialog's tables/known/unknown for an area equal that area's page. Until now they also
+> counted the key-locked tables: Germany read 6,645 in the dialog and 6,500 on its page.
+> v39's "every loaded feature" now means every loaded `key: null` feature; the chip
+> filters still do not move it.
+
 > **v115 amendment (3 Nov 2026, where exactly the table is): one new property on the tables.**
 > Every table feature carries **`changing_table_description`**: `changing_table:description`
 > verbatim, or `null` when absent (play places do not carry it; they have no table).
