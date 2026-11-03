@@ -956,6 +956,24 @@ changeset comment, so the before and after can be counted. A reader's own
 wheelchair answer is remembered the way the others are (v78) and may count for
 the chip at once.
 
+## Where exactly the table is
+
+A reader reported a place with several accessible WCs and a table in only one
+of them; the room vocabulary cannot say which. OSM's free-text
+`changing_table:description` can ("the accessible WC on the 2nd floor, not the
+one by the entrance"), so since v115 every table pin carries it verbatim as
+`changing_table_description` (string or null; play places have no table and do
+not), and the popup shows it as a labelled row under the room ("Where exactly:
+…"). Where it is null the fold asks for it: a text field (255 characters, OSM's
+limit for a tag value) and a Save pill, written in a changeset of its own like
+every other answer. It is fill-only, as every in-app answer is: trimmed, a blank
+field writes nothing, a description somebody has added since the snapshot is
+reported as a conflict rather than overwritten, and so is an object whose live
+tags no longer have a `changing_table` (or say `no`). Changing or clearing an
+existing description is MapComplete's job, where the reader sees the text
+first. Not asked on a grey pin whose room is in unreadable words, where
+MapComplete stays the card's one action.
+
 ## High chairs
 
 Every table feature and every play place carries `highchair` (v65): true when

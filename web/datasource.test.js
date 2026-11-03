@@ -356,6 +356,21 @@ test("table_wheelchair is one of the three values or null, and an own answer ove
   assert.equal(loadFeatures(junk.fc)[0].wheelchair, null);
 });
 
+test("changing_table_description is read verbatim, and a reader's own answer stands in (v115)", () => {
+  const load = (props) => loadFeatures({ type: "FeatureCollection",
+    features: [feat(9.9, 53.5, { status: "unknown", ...props })] })[0];
+  const desc = "barrierefreies WC im 2. OG, nicht am Eingang";
+  assert.equal(load({ changing_table_description: desc }).changing_table_description, desc);
+  // pre-v115 data, junk and a blank value all read as "nobody said" — the popup asks there
+  for (const v of [undefined, null, 3, "", "   "])
+    assert.equal(load({ changing_table_description: v }).changing_table_description, null, String(v));
+  const url = "https://www.openstreetmap.org/node/1";
+  const base = { type: "FeatureCollection", features: [feat(9.9, 53.5, { status: "unknown", osm_url: url })] };
+  const own = applyAnswerOverrides(base, { type: "FeatureCollection", features: [] },
+    { [url]: { changing_table_description: "2. OG", t: "2026-11-03T10:00:00Z", version: 4 } });
+  assert.equal(loadFeatures(own.fc)[0].changing_table_description, "2. OG");
+});
+
 test("highchair \"unreadable\" is shown as nothing, never asked, never a chip hit", () => {
   const fc = { type: "FeatureCollection",
     features: [feat(9.9, 53.5, { status: "unknown", highchair: "unreadable" })] };

@@ -14,9 +14,9 @@ import { loadFeatures, loadPlaces, placeFeatures, splitPlaces, filterFeatures, c
          mergeFeatureCollection, isDeltaFresh, foldOpen, roomAnsweredHere, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app108";
+         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app109";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app108";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app109";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
@@ -24,7 +24,8 @@ import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, rev
          PLAY_CHOICES, isPlayChoice, playPatch,
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
          isWheelchairChoice, wheelchairPatch,
-         writeTags } from "./osm.js?v=app108";
+         DESCRIPTION_CHOICE, DESCRIPTION_MAX, descriptionPatch,
+         writeTags } from "./osm.js?v=app109";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -32,7 +33,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app108";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app109";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, locateNative, interceptLinks,
@@ -42,28 +43,28 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, l
          cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app108";
+         reviewTracker } from "./native.js?v=app109";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app108";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app109";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app108";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app109";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app108";
+import { isOpenNow } from "./opening-hours.js?v=app109";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
          isVenue, isSearchVenue, VENUE_MIN_ZOOM, venueAnswer, venueFromIntent,
-         venueQuestions } from "./venues.js?v=app108";
-// The bundled shell's pin (`?v=app108`), what the intro key records.
+         venueQuestions } from "./venues.js?v=app109";
+// The bundled shell's pin (`?v=app109`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -124,6 +125,7 @@ const CHANGESET_COMMENT = {
   tw_yes: "Changing table usable from a wheelchair: yes (answered on papamap.de)",
   tw_limited: "Changing table usable from a wheelchair: limited (answered on papamap.de)",
   tw_no: "Changing table usable from a wheelchair: no (answered on papamap.de)",
+  ct_desc: "Changing table: where exactly (answered on papamap.de)",
 };
 
 // ---- Reading mode: the same three answers, read as a father or as a mother.
@@ -983,6 +985,9 @@ function popupHTML(f) {
     if (f.location_raw) parts.push(`${esc(t("popupRoom"))}: ${esc(roomLabel(f.location_raw))}`);
     rows.push(`<div class="row">${parts.join(" · ")}</div>`);
   }
+  // Where exactly (v115), a mapper's words: verbatim, escaped, labelled.
+  if (f.changing_table_description)
+    rows.push(`<div class="row ct-desc">${esc(t("popupTableWhere"))}: ${esc(f.changing_table_description)}</div>`);
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
   rows.push(...highchairRows(f));
   rows.push(...wheelchairRows(f));
@@ -1021,6 +1026,9 @@ function popupHTML(f) {
   if (!f.highchair_recorded && isHighchairVenue(f.amenity)) fold(askHighchairHTML(busy, who));
   if (!chained && !f.wheelchair_recorded) fold(askWheelchairHTML("wc", busy, who));
   if (!f.table_wheelchair_recorded) fold(askWheelchairHTML("tw", busy, who));
+  // Not where the room is in words the classifier does not read: there the
+  // card's one action stays MapComplete (mcPrimary), where the room is fixed.
+  if (!f.changing_table_description && !(f.status === "unknown" && !asks)) fold(askDescriptionHTML(busy, who));
   const mcUrl = safeUrl(withMapCompleteLanguage(f.mapcomplete_url, lang));
   // MapComplete is the green primary action only on a grey pin that does not
   // ask (a room in words the classifier does not read) and has nothing else
@@ -1141,6 +1149,19 @@ function askWheelchairHTML(which, busy = false, who = false) {
     `<button type="button" class="btn ask-btn" data-room="${which}_${v}"${dis}>${esc(t(WC_LABEL[v]))}</button>`;
   return `<div class="ask-${which}"><span class="ask-q">${esc(t(which === "tw" ? "askTableWheelchair" : "askWheelchair"))}</span>` +
          `<span class="ask-hc-btns">${WHEELCHAIR_STATES.map(pill).join("")}</span>` +
+         `${who ? askWhoHTML() : ""}</div>`;
+}
+
+// Where exactly the table is (v115): the one free-text question, a field and a
+// Save pill. Only on table pins, only where OSM has no description: the text
+// is written on its own (descriptionPatch), never over somebody's. The pill is
+// an ask-btn so the document listener and the busy quieting take it; a blank
+// field saves nothing. `who` as for the play question.
+function askDescriptionHTML(busy = false, who = false) {
+  const dis = busy ? " disabled" : "";
+  return `<div class="ask-ct"><label class="ask-q" for="ask-ct-input">${esc(t("askTableWhere"))}</label>` +
+         `<input id="ask-ct-input" class="ask-ct-input" type="text" maxlength="${DESCRIPTION_MAX}" autocomplete="off"${dis}>` +
+         `<button type="button" class="btn ask-btn" data-room="${DESCRIPTION_CHOICE}"${dis}>${esc(t("askSave"))}</button>` +
          `${who ? askWhoHTML() : ""}</div>`;
 }
 
@@ -2718,7 +2739,11 @@ document.addEventListener("click", (e) => {
   const room = e.target.closest?.("button.ask-btn");
   // The add dialog renders the same pills for a place that has no popup; a
   // popup left open behind it must not take that answer as its own.
-  if (room && popupObj && !room.closest("#add-dialog")) answer(popupObj.kind, popupObj.obj, room.dataset.room);
+  if (room && popupObj && !room.closest("#add-dialog")) {
+    // The free-text answer (v115) carries its field's words; blank is no answer.
+    const text = room.dataset.room === DESCRIPTION_CHOICE ? room.closest(".ask-ct")?.querySelector("input")?.value.trim() : undefined;
+    if (text !== "") answer(popupObj.kind, popupObj.obj, room.dataset.room, null, text);
+  }
   const more = e.target.closest?.("button.ask-more");
   if (more) {
     more.nextElementSibling?.removeAttribute("hidden");
@@ -2789,9 +2814,10 @@ const inFlight = new Set();
 // directly. Reading it back from storage would, on a browser that lets
 // sessionStorage through but not localStorage, find nothing and send the
 // reader to the consent screen again, and again.
-async function answer(kind, obj, choice, freshToken = null) {
+async function answer(kind, obj, choice, freshToken = null, text = undefined) {
   const token = freshToken ?? getToken();
-  const intent = { kind, osm_url: obj.osm_url, choice };
+  // `text`: the description's words (v115), kept across the login round trip.
+  const intent = { kind, osm_url: obj.osm_url, choice, ...(text !== undefined ? { text } : {}) };
   if (!token) { rememberView(); goLogin(intent); return; }
   if (inFlight.has(obj.osm_url)) return;
   inFlight.add(obj.osm_url);
@@ -2800,7 +2826,7 @@ async function answer(kind, obj, choice, freshToken = null) {
   // stay. Its buttons go quiet for the round trip — a second tap on a slow
   // connection would otherwise open a second changeset for the same answer.
   const el = popup?.getElement();
-  const btns = [...(el?.querySelectorAll("button.ask-btn, button.ask-more") ?? [])];
+  const btns = [...(el?.querySelectorAll("button.ask-btn, button.ask-more, input.ask-ct-input") ?? [])];
   btns.forEach((b) => { b.disabled = true; });
   // Where the reply lands: that popup if it is still up, else the one open on
   // this same object now — reopened during the round trip, or by the login's
@@ -2811,7 +2837,7 @@ async function answer(kind, obj, choice, freshToken = null) {
   // Whatever question is left there was quieted for this round trip, not
   // answered: its buttons come back. Queried afresh, because a re-render
   // (renderMergedDataset) replaces them with copies drawn busy.
-  const wake = () => here()?.querySelectorAll("button.ask-btn, button.ask-more")
+  const wake = () => here()?.querySelectorAll("button.ask-btn, button.ask-more, input.ask-ct-input")
     .forEach((b) => { b.disabled = false; });
   const rec = { kind, osm_url: obj.osm_url };
   setEditNote(rec, "looking", "askSaving");
@@ -2822,12 +2848,16 @@ async function answer(kind, obj, choice, freshToken = null) {
     const play = isPlayChoice(choice);
     const hc = isHighchairChoice(choice);
     const wc = isWheelchairChoice(choice);
+    const desc = choice === DESCRIPTION_CHOICE;
+    // A description only on a table pin: never the tag on a place with no table.
+    if (desc && kind !== "table") throw new Error("a description needs a table");
     const patch = play ? playPatch(choice) : hc ? highchairPatch(choice) : wc ? wheelchairPatch(choice)
+      : desc ? descriptionPatch(text)
       : kind === "place" ? tablePatch(choice) : roomPatch(choice);
     // "none" only ever arrives for a place, and it gets its own changeset
     // comment — the room comment would claim a room was named. A play answer
     // names itself.
-    const comment = play || hc || wc ? CHANGESET_COMMENT[choice]
+    const comment = play || hc || wc || desc ? CHANGESET_COMMENT[choice]
       : kind === "place" && choice === "none" ? CHANGESET_COMMENT.place_none : CHANGESET_COMMENT[kind];
     const out = await writeTags(osm, token, osmRef(obj.osm_url), patch, comment);
     // "Mein PapaMap"'s own count moves on this tap, not the next time the
@@ -2882,6 +2912,11 @@ async function answer(kind, obj, choice, freshToken = null) {
       obj[prop] = value;
       remember({ [prop]: value });
       renderMergedDataset();
+    } else if (desc) {
+      // The same (v115): the row replaces the question on the re-render.
+      obj.changing_table_description = patch["changing_table:description"];
+      remember({ changing_table_description: obj.changing_table_description });
+      renderMergedDataset();
     } else {
       obj.changing_table = out.tags.changing_table;
       obj.location_raw = out.tags["changing_table:location"];
@@ -2932,7 +2967,7 @@ async function answer(kind, obj, choice, freshToken = null) {
     // A high-chair or wheelchair answer has no tag line of its own in the
     // confirmation: its row is already in the popup, so the plain "on OSM"
     // note says the rest.
-    if (hc || wc) setEditNote(rec, "found", "editFoundPlain");
+    if (hc || wc || desc) setEditNote(rec, "found", "editFoundPlain");
     else {
       const tags = {};
       for (const k of (play ? PLAY_TAGS : TABLE_TAGS)) if (out.tags[k]) tags[k] = out.tags[k];
@@ -3658,9 +3693,10 @@ async function completeLogin(href) {
         ? !obj.play_recorded
         : isHighchairChoice(intent.choice) ? !obj.highchair_recorded
         : isWheelchairChoice(intent.choice) ? !obj[intent.choice.startsWith("tw") ? "table_wheelchair_recorded" : "wheelchair_recorded"]
+        : intent.choice === DESCRIPTION_CHOICE ? !obj.changing_table_description
         : kind === "place" ? !obj.changing_table
                            : obj.status === "unknown" && !obj.location_raw;
-      if (open) answer(kind, obj, intent.choice, login.token);
+      if (open) answer(kind, obj, intent.choice, login.token, intent.text);
     }
   }
   // The login the "Mein PapaMap" dialog itself started: land back on it

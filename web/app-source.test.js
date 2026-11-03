@@ -47,7 +47,7 @@ test("answer() gives the live card its buttons back after the write", () => {
   // still up, else this object's reopened card, never another pin's).
   const wake = src.match(/const wake = \(\) => ([\s\S]*?);\n/);
   assert.ok(wake, "answer()'s wake helper");
-  assert.match(wake[1], /here\(\)\?\.querySelectorAll\("button\.ask-btn, button\.ask-more"\)/);
+  assert.match(wake[1], /here\(\)\?\.querySelectorAll\("button\.ask-btn, button\.ask-more, input\.ask-ct-input"\)/);
   assert.match(wake[1], /disabled = false/);
   assert.match(src, /const here = \(\) => \(el\?\.isConnected \? el\n\s+: popupObj\?\.obj\?\.osm_url === obj\.osm_url/);
 });
