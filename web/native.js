@@ -18,8 +18,8 @@
 // Nothing here talks to any server but papamap.de and openstreetmap.org, and
 // nothing is sent that the website does not send: a download is a GET.
 
-import { isWheelchairLimited, haversineKm } from "./datasource.js?v=app110";
-import { awaitingReturn, loginPending } from "./osm.js?v=app110";
+import { isWheelchairLimited, haversineKm } from "./datasource.js?v=app111";
+import { awaitingReturn, loginPending } from "./osm.js?v=app111";
 
 export const SITE = "https://papamap.de/";
 export const AUTH_REDIRECT = "papamap://auth";

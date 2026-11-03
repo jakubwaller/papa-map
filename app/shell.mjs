@@ -10,6 +10,7 @@
 // the website's own pages hide when the app opens them in its in-app browser
 // (web/in-app.js, issue #124); here there is nothing to hide, because there is
 // nothing left.
+const CONTACT = /\s*<span class="contact">[\s\S]*?<\/span>/;
 const DONATE = /<span class="donate">[\s\S]*?<\/span>/;
 
 // The website preloads its dataset files from data/ (index.html's head); the
@@ -31,7 +32,9 @@ export function appShell(html) {
   if (!cut) throw new Error("index.html: no donate span found to remove");
   if (!/ko-fi\.com/i.test(cut[0]))
     throw new Error("index.html: the donate span holds no Ko-fi link");
-  const out = html.replace(DONATE, "");
+  // The me dialog already carries the feedback address in the app.
+  if (!CONTACT.test(html)) throw new Error("index.html: no contact span found to remove");
+  const out = html.replace(DONATE, "").replace(CONTACT, "");
   if (/ko-fi\.com/i.test(out)) throw new Error("index.html: a Ko-fi link is left after the cut");
   if (/class="donate"/.test(out)) throw new Error("index.html: a second donate span is left after the cut");
   const shell = out.replace(DATA_PRELOAD, "");

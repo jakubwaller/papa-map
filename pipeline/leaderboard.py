@@ -580,7 +580,7 @@ def render_leaderboard(lang: str, data: dict, base_url: str = SITE_BASE_URL,
             n=lands, r=fr_regions, c=len(countries), names=names, list=listed))
         parts.append(_table(data["regions"], tab["col_name_region"], tab, lang))
 
-    parts.append(footer_html(tab["footer"]))
+    parts.append(footer_html(tab["footer"], lang))
     if data["cities"] or data["regions"]:
         parts.append(SORT_JS)
     parts.append("\n</body>\n</html>\n")

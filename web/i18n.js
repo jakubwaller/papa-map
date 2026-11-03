@@ -148,6 +148,7 @@ export const STRINGS = {
     // cannot read the current UI can still find their own. Never translated.
     langName: "Deutsch",
     kofi: "☕ Kaffee",
+    contact: "Kontakt",
 
     ariaZoomIn: "Hineinzoomen",
     ariaZoomOut: "Herauszoomen",
@@ -423,6 +424,7 @@ export const STRINGS = {
     ariaApp: "PapaMap as an app",
     langName: "English",
     kofi: "☕ Coffee",
+    contact: "Contact",
 
     ariaZoomIn: "Zoom in",
     ariaZoomOut: "Zoom out",
@@ -676,6 +678,7 @@ export const STRINGS = {
     ariaApp: "PapaMap som app",
     langName: "Dansk",
     kofi: "☕ Kaffe",
+    contact: "Kontakt",
 
     ariaZoomIn: "Zoom ind",
     ariaZoomOut: "Zoom ud",
@@ -931,6 +934,7 @@ export const STRINGS = {
     ariaApp: "PapaMap als app",
     langName: "Nederlands",
     kofi: "☕ Koffie",
+    contact: "Contact",
 
     ariaZoomIn: "Inzoomen",
     ariaZoomOut: "Uitzoomen",
@@ -1179,6 +1183,7 @@ export const STRINGS = {
     ariaApp: "PapaMap en appli",
     langName: "Français",
     kofi: "☕ Café",
+    contact: "Contact",
 
     ariaZoomIn: "Zoom avant",
     ariaZoomOut: "Zoom arrière",
@@ -1427,6 +1432,7 @@ export const STRINGS = {
     ariaApp: "PapaMap come app",
     langName: "Italiano",
     kofi: "☕ Caffè",
+    contact: "Contatti",
 
     ariaZoomIn: "Ingrandisci",
     ariaZoomOut: "Rimpicciolisci",
@@ -1675,6 +1681,7 @@ export const STRINGS = {
     ariaApp: "PapaMap jako aplikace",
     langName: "Čeština",
     kofi: "☕ Káva",
+    contact: "Kontakt",
 
     ariaZoomIn: "Přiblížit",
     ariaZoomOut: "Oddálit",
@@ -1923,6 +1930,7 @@ export const STRINGS = {
     ariaApp: "PapaMap jako aplikacja",
     langName: "Polski",
     kofi: "☕ Kawa",
+    contact: "Kontakt",
 
     ariaZoomIn: "Powiększ",
     ariaZoomOut: "Pomniejsz",
@@ -2171,6 +2179,7 @@ export const STRINGS = {
     ariaApp: "PapaMap som app",
     langName: "Svenska",
     kofi: "☕ Kaffe",
+    contact: "Kontakt",
 
     ariaZoomIn: "Zooma in",
     ariaZoomOut: "Zooma ut",
@@ -2418,6 +2427,7 @@ export const STRINGS = {
     ariaApp: "PapaMap kao aplikacija",
     langName: "Bosanski",
     kofi: "☕ Kafa",
+    contact: "Kontakt",
 
     ariaZoomIn: "Uvećaj",
     ariaZoomOut: "Umanji",
@@ -2665,6 +2675,7 @@ export const STRINGS = {
     ariaApp: "PapaMap com a app",
     langName: "Català",
     kofi: "☕ Cafè",
+    contact: "Contacte",
 
     ariaZoomIn: "Apropa",
     ariaZoomOut: "Allunya",
@@ -2912,6 +2923,7 @@ export const STRINGS = {
     ariaApp: "PapaMap äpina",
     langName: "Eesti",
     kofi: "☕ Kohv",
+    contact: "Kontakt",
 
     ariaZoomIn: "Suumi sisse",
     ariaZoomOut: "Suumi välja",
@@ -3159,6 +3171,7 @@ export const STRINGS = {
     ariaApp: "PapaMap como app",
     langName: "Español",
     kofi: "☕ Café",
+    contact: "Contacto",
 
     ariaZoomIn: "Acercar",
     ariaZoomOut: "Alejar",
@@ -3406,6 +3419,7 @@ export const STRINGS = {
     ariaApp: "PapaMap kao aplikacija",
     langName: "Hrvatski",
     kofi: "☕ Kava",
+    contact: "Kontakt",
 
     ariaZoomIn: "Približi",
     ariaZoomOut: "Udalji",
@@ -3653,6 +3667,7 @@ export const STRINGS = {
     ariaApp: "PapaMap sem app",
     langName: "Íslenska",
     kofi: "☕ Kaffi",
+    contact: "Hafa samband",
 
     ariaZoomIn: "Þysja inn",
     ariaZoomOut: "Þysja út",
@@ -3900,6 +3915,7 @@ export const STRINGS = {
     ariaApp: "PapaMap kā lietotne",
     langName: "Latviešu",
     kofi: "☕ Kafija",
+    contact: "Kontakti",
 
     ariaZoomIn: "Tuvināt",
     ariaZoomOut: "Tālināt",
@@ -4147,6 +4163,7 @@ export const STRINGS = {
     ariaApp: "PapaMap kaip programėlė",
     langName: "Lietuvių",
     kofi: "☕ Kava",
+    contact: "Kontaktai",
 
     ariaZoomIn: "Priartinti",
     ariaZoomOut: "Nutolinti",
@@ -4394,6 +4411,7 @@ export const STRINGS = {
     ariaApp: "PapaMap alkalmazásként",
     langName: "Magyar",
     kofi: "☕ Kávé",
+    contact: "Kapcsolat",
 
     ariaZoomIn: "Nagyítás",
     ariaZoomOut: "Kicsinyítés",
@@ -4641,6 +4659,7 @@ export const STRINGS = {
     ariaApp: "PapaMap som app",
     langName: "Norsk",
     kofi: "☕ Kaffe",
+    contact: "Kontakt",
 
     ariaZoomIn: "Zoom inn",
     ariaZoomOut: "Zoom ut",
@@ -4888,6 +4907,7 @@ export const STRINGS = {
     ariaApp: "PapaMap como app",
     langName: "Português",
     kofi: "☕ Café",
+    contact: "Contacto",
 
     ariaZoomIn: "Aumentar zoom",
     ariaZoomOut: "Diminuir zoom",
@@ -5135,6 +5155,7 @@ export const STRINGS = {
     ariaApp: "PapaMap ca aplicație",
     langName: "Română",
     kofi: "☕ Cafea",
+    contact: "Contact",
 
     ariaZoomIn: "Mărește",
     ariaZoomOut: "Micșorează",
@@ -5382,6 +5403,7 @@ export const STRINGS = {
     ariaApp: "PapaMap si aplikacion",
     langName: "Shqip",
     kofi: "☕ Kafe",
+    contact: "Kontakt",
 
     ariaZoomIn: "Zmadho",
     ariaZoomOut: "Zvogëlo",
@@ -5629,6 +5651,7 @@ export const STRINGS = {
     ariaApp: "PapaMap ako aplikácia",
     langName: "Slovenčina",
     kofi: "☕ Káva",
+    contact: "Kontakt",
 
     ariaZoomIn: "Priblížiť",
     ariaZoomOut: "Oddialiť",
@@ -5876,6 +5899,7 @@ export const STRINGS = {
     ariaApp: "PapaMap kot aplikacija",
     langName: "Slovenščina",
     kofi: "☕ Kava",
+    contact: "Stik",
 
     ariaZoomIn: "Približaj",
     ariaZoomOut: "Oddalji",
@@ -6123,6 +6147,7 @@ export const STRINGS = {
     ariaApp: "PapaMap sovelluksena",
     langName: "Suomi",
     kofi: "☕ Kahvi",
+    contact: "Yhteystiedot",
 
     ariaZoomIn: "Lähennä",
     ariaZoomOut: "Loitonna",
@@ -6370,6 +6395,7 @@ export const STRINGS = {
     ariaApp: "Το PapaMap ως εφαρμογή",
     langName: "Ελληνικά",
     kofi: "☕ Καφές",
+    contact: "Επικοινωνία",
 
     ariaZoomIn: "Μεγέθυνση",
     ariaZoomOut: "Σμίκρυνση",
@@ -6617,6 +6643,7 @@ export const STRINGS = {
     ariaApp: "PapaMap як дадатак",
     langName: "Беларуская",
     kofi: "☕ Кава",
+    contact: "Кантакты",
 
     ariaZoomIn: "Павялічыць",
     ariaZoomOut: "Паменшыць",
@@ -6864,6 +6891,7 @@ export const STRINGS = {
     ariaApp: "PapaMap като приложение",
     langName: "Български",
     kofi: "☕ Кафе",
+    contact: "Контакти",
 
     ariaZoomIn: "Приближаване",
     ariaZoomOut: "Отдалечаване",
@@ -7111,6 +7139,7 @@ export const STRINGS = {
     ariaApp: "PapaMap како апликација",
     langName: "Македонски",
     kofi: "☕ Кафе",
+    contact: "Контакт",
 
     ariaZoomIn: "Зголеми",
     ariaZoomOut: "Намали",
@@ -7358,6 +7387,7 @@ export const STRINGS = {
     ariaApp: "PapaMap као апликација",
     langName: "Српски",
     kofi: "☕ Кафа",
+    contact: "Контакт",
 
     ariaZoomIn: "Увећај",
     ariaZoomOut: "Умањи",
@@ -7605,6 +7635,7 @@ export const STRINGS = {
     ariaApp: "PapaMap як застосунок",
     langName: "Українська",
     kofi: "☕ Кава",
+    contact: "Контакти",
 
     ariaZoomIn: "Наблизити",
     ariaZoomOut: "Віддалити",
@@ -7856,6 +7887,7 @@ export const STRINGS = {
     ariaApp: "PapaMapをアプリとして",
     langName: "日本語",
     kofi: "☕ コーヒー",
+    contact: "お問い合わせ",
 
     ariaZoomIn: "ズームイン",
     ariaZoomOut: "ズームアウト",

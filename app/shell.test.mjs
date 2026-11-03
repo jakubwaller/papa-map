@@ -11,10 +11,12 @@ test("the app's shell has no donate link, and loses nothing else", () => {
   // And no empty span where it was: the separator is inside the span, so what
   // is left reads as if the coffee link had never been in the line.
   assert.doesNotMatch(out, /class="donate"/);
+  assert.doesNotMatch(out, /class="contact"/);
   assert.match(out, />Status<\/a> · <a href="https:\/\/jakubwaller\.eu"/);
   const preloads = page.match(/[ \t]*<link rel="preload" href="data\/[^"]*"[^>]*>\n/g) ?? [];
   assert.equal(page.length - out.length,
                page.match(/<span class="donate">[\s\S]*?<\/span>/)[0].length
+               + page.match(/\s*<span class="contact">[\s\S]*?<\/span>/)[0].length
                + preloads.reduce((n, p) => n + p.length, 0)
                - ", maximum-scale=1".length);
 });

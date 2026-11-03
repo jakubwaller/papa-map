@@ -1598,7 +1598,12 @@ the head of each of those pages, reads the flag, remembers it in `sessionStorage
 of that in-app browsing session and puts `.in-app` on `<html>` before the first paint, under
 which the CSS hides the donate span; once the session remembers, the script takes the flag out
 of the address again, so a link shared out of the in-app browser does not hide the line for
-whoever opens it. Every generated footer gets that span at render time
+whoever opens it. The footer also carries a Kontakt link (`mailto:` the site's own address, the
+word in the page's language: `contact` in `web/i18n.js` on the map, `CONTACT_WORD` in
+`pipeline/pages.py` for generated pages, plain text on the static pages), so readers write
+there and not to the owner's personal address; the app cuts it from the map footer
+(`app/shell.mjs`) because the me dialog already has the feedback link.
+Every generated footer gets that span at render time
 (`wrap_donate` in `pipeline/pages.py`, one rule over ~50 hand-written footers, raising rather
 than shipping the link). A reader on the open web sees exactly what they saw before, and with
 JavaScript off nothing happens at all.

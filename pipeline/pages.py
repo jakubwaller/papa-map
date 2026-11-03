@@ -345,9 +345,60 @@ def wrap_donate(footer: str) -> str:
     return out
 
 
-def footer_html(template: str) -> str:
-    """One rendered footer: the donate link wrapped, then the usual {up}."""
-    return wrap_donate(template).format(up=UP)
+# The Kontakt link, so readers write to the site's own address and not to the
+# owner's personal one. Inserted after the Impressum link at render time, like
+# the donate span: one rule instead of ~50 footers. Impressum stays German in
+# every footer; this word is the page's own language.
+CONTACT_ADDRESS = "papamap@jakubwaller.eu"
+CONTACT_WORD = {
+    "de": "Kontakt",
+    "en": "Contact",
+    "da": "Kontakt",
+    "nl": "Contact",
+    "fr": "Contact",
+    "it": "Contatti",
+    "cs": "Kontakt",
+    "pl": "Kontakt",
+    "sv": "Kontakt",
+    "bs": "Kontakt",
+    "ca": "Contacte",
+    "et": "Kontakt",
+    "es": "Contacto",
+    "hr": "Kontakt",
+    "lv": "Kontakti",
+    "lt": "Kontaktai",
+    "hu": "Kapcsolat",
+    "no": "Kontakt",
+    "pt": "Contacto",
+    "ro": "Contact",
+    "sq": "Kontakt",
+    "sk": "Kontakt",
+    "sl": "Stik",
+    "fi": "Yhteystiedot",
+    "el": "Επικοινωνία",
+    "be": "Кантакты",
+    "bg": "Контакти",
+    "mk": "Контакт",
+    "sr": "Контакт",
+    "uk": "Контакти",
+    "ja": "お問い合わせ",
+    "is": "Hafa samband",
+}
+_IMPRESSUM = '<a href="{up}impressum.html">Impressum</a> ·\n'
+
+
+def add_contact(footer: str, lang: str) -> str:
+    if footer.count(_IMPRESSUM) != 1:
+        raise ValueError("footer: expected one Impressum link to follow")
+    link = (f'<a href="mailto:{CONTACT_ADDRESS}?subject=PapaMap">'
+            f'{CONTACT_WORD[lang]}</a> ·\n')
+    return footer.replace(_IMPRESSUM, _IMPRESSUM + link)
+
+
+def footer_html(template: str, lang: str) -> str:
+    """One rendered footer: the donate link wrapped, the contact link added,
+    then the usual {up}."""
+    return add_contact(wrap_donate(template), lang).format(up=UP)
 
 
 # The social card. Until 2026-08-25 the generated pages carried no og:* at
@@ -580,7 +631,7 @@ def render_area(page: dict, generated_at: str, base_url: str = SITE_BASE_URL,
                 f'{_status_cells(g["statuses"], lang)}</tr>\n')
         parts.append("</table>\n</div>\n")
 
-    parts.append(footer_html(t["footer"]))
+    parts.append(footer_html(t["footer"], lang))
     parts.append("\n</body>\n</html>\n")
     return "".join(parts)
 
@@ -645,7 +696,7 @@ def render_index(summaries, generated_at: str, base_url: str = SITE_BASE_URL,
         "Spalte <em>Toiletten</em> zählt alle erfassten öffentlichen Toiletten, mit oder "
         "ohne Wickeltisch.</p>\n")
     parts.append(_countries_section(countries, "de", own_href="./"))
-    parts.append(footer_html(FOOTER))
+    parts.append(footer_html(FOOTER, "de"))
     parts.append("\n</body>\n</html>\n")
     return "".join(parts)
 
@@ -694,7 +745,7 @@ def render_hub(cc: str, lang: str, slug: str, region_summaries,
     parts.append(f'<h2>{esc(t["help_h2"])}</h2>\n')
     parts.append(f'<p>{t["help"].format(up=UP, methods=t["methods"])}</p>\n')
     parts.append(_countries_section(countries, lang, own_href=own_href))
-    parts.append(footer_html(t["footer"]))
+    parts.append(footer_html(t["footer"], lang))
     parts.append("\n</body>\n</html>\n")
     return "".join(parts)
 
