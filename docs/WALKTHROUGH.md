@@ -7,7 +7,7 @@ walk re-reports the same intentional behaviour every time.
 ## Site
 
 - Live: https://papamap.de (canonical; `www.` and `papamap.jakubwaller.eu` only redirect).
-- Languages: German by default, `?lang=en` (and 30 more) for the rest; area pages under
+- Languages: follows the browser locale (German otherwise), `?lang=en` (and 30 more) for the rest; area pages under
   `/wickeltische/`, leaderboard at `/wickeltische/leaderboard.html`, methods at `/methods-en.html`.
 - What it is: a map of baby changing tables, coloured by whether a dad can reach the room.
 
