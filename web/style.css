@@ -1134,9 +1134,10 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 .popup :is(.ask-hc, .ask-wc, .ask-tw, .ask-ct) .ask-hc-btns, #venue-ask .ask-hc .ask-hc-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
 .popup :is(.ask-hc, .ask-wc, .ask-tw, .ask-ct) .ask-btn { flex: 0 0 auto; padding: 6px 12px; }
 .popup :is(.ask-hc, .ask-wc, .ask-tw, .ask-ct) .ask-who { flex: 1 1 100%; margin-top: 0; }
-/* The description question (v115): the field takes the row's spare width. */
+/* The description question (v115): the field takes the row's spare width, and
+   below ~14em beside the pill the pill wraps under it, off the card's scrollbar. */
 .popup .ask-ct .ask-ct-input {
-  flex: 1 1 10em; min-width: 0; font: inherit; padding: 6px 8px;
+  flex: 1 1 14em; min-width: 0; font: inherit; padding: 6px 8px;
   color: var(--ink); background: transparent; border: 1px solid var(--muted); border-radius: 8px;
 }
 /* The fold (v102): play, high chair and the two wheelchair questions behind
