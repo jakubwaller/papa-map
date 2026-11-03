@@ -826,3 +826,53 @@ test("wallClock reads the zone's fields", () => {
   // Midnight is hour 0, never 24.
   assert.equal(wallClock(new Date("2026-10-09T15:00:00Z"), "Asia/Tokyo").minutes, 0);
 });
+
+test("the unknown modifier: its minutes are unknown, the rest still answers", () => {
+  // A Hamburg church, as mapped: fixed hours, plus "mostly when someone is in".
+  const fallback = 'Mo,Fr 09:00-12:30, Tu 11:00-13:00, Th 16:00-18:00 || ' +
+    'Mo-Fr 09:00-16:00 unknown "meist, wenn jemand im Haus ist"';
+  const comma = 'Mo-Fr 09:00-16:00 unknown "x", Mo,Fr 09:00-12:30 open, ' +
+    "Tu 11:00-13:00 open, Th 16:00-18:00 open";
+  for (const oh of [fallback, comma]) {
+    assert.equal(isOpenNow(oh, at(1, 10, 0)), "open");
+    assert.equal(isOpenNow(oh, at(1, 14, 0)), "unknown");
+    assert.equal(isOpenNow(oh, at(1, 19, 0)), "closed");
+    assert.equal(isOpenNow(oh, at(3, 10, 0)), "unknown");
+    assert.equal(isOpenNow(oh, at(4, 17, 0)), "open");
+    assert.equal(isOpenNow(oh, at(4, 19, 0)), "closed");
+    assert.equal(isOpenNow(oh, at(7, 10, 0)), "closed");
+  }
+});
+
+test("unknown follows the same replace/add/subtract order as open", () => {
+  // A later ; group with its own selector replaces the day, unknown or not.
+  assert.equal(isOpenNow("Mo-Fr 08:00-18:00; We unknown", at(3, 9, 0)), "unknown");
+  assert.equal(isOpenNow("Mo-Fr 08:00-18:00; We unknown", at(2, 9, 0)), "open");
+  // A comma-joined unknown overrides only the minutes it names...
+  const oh = "Mo-Fr 08:00-18:00, We 12:00-14:00 unknown";
+  assert.equal(isOpenNow(oh, at(3, 13, 0)), "unknown");
+  assert.equal(isOpenNow(oh, at(3, 15, 0)), "open");
+  // ...and a later off or open overrides the unknown.
+  assert.equal(isOpenNow("Mo-Fr unknown, We 12:00-14:00 off", at(3, 13, 0)), "closed");
+  assert.equal(isOpenNow("Mo-Fr unknown, We 12:00-14:00 off", at(3, 15, 0)), "unknown");
+  assert.equal(isOpenNow("Sa 10:00-12:00 unknown; Sa 10:00-11:00", at(6, 11, 30)), "closed");
+  // An overnight unknown spills into the next morning.
+  assert.equal(isOpenNow("Fr 22:00-02:00 unknown", at(6, 1, 0)), "unknown");
+  // A partial unknown for today turns those hours of yesterday's spill unknown,
+  // as a partial off closes them.
+  const spill = "Fr 20:00-02:00; Sa 01:00-02:00 unknown";
+  assert.equal(isOpenNow(spill, at(6, 0, 30)), "open");
+  assert.equal(isOpenNow(spill, at(6, 1, 30)), "unknown");
+  assert.equal(isOpenNow(spill, at(6, 2, 30)), "closed");
+  assert.equal(isOpenNow("Fr 20:00-02:00; Sa 01:00-02:00 off", at(6, 1, 30)), "closed");
+  // A trailing unknown on several spans is as ambiguous as a trailing off.
+  assert.equal(isOpenNow("Mo 08:00-12:00,14:00-18:00 unknown", at(1, 9, 0)), "unknown");
+  assert.equal(isOpenNow("Mo 08:00-12:00,14:00-18:00 unknown", at(1, 20, 0)), "unknown");
+  // A comment with no state keyword is still unknown throughout.
+  assert.equal(isOpenNow('Mo-Fr 09:00-16:00 "ring"', at(7, 10, 0)), "unknown");
+});
+
+test("in a || chain an unknown match ends the search like open does", () => {
+  assert.equal(isOpenNow("Mo 10:00-12:00 unknown || 24/7", at(1, 11, 0)), "unknown");
+  assert.equal(isOpenNow("Mo 10:00-12:00 unknown || 24/7", at(1, 13, 0)), "open");
+});

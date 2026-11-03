@@ -49,7 +49,13 @@
 // wrap into the next day, even where the folded time of day would otherwise
 // read as later than the start) and "00:00-00:00" (all day) — a *start*
 // past 24:00 (Fr 24:00-26:00) doesn't mean anything relative to Friday and
-// is "unknown"; the "off" and "closed" modifiers; "open end" times (11:00+ =
+// is "unknown"; the "open", "off" and "closed" modifiers, and "unknown"
+// (Mo-Fr 09:00-16:00 unknown: those minutes answer "unknown", not open) —
+// an unknown rule replaces, adds and is overridden exactly like an open one,
+// it only marks its minutes unknown instead of open, and a later rule of any
+// state over the same minutes wins (Mo-Fr unknown, Mo 09:00-12:00 is open
+// Monday morning, unknown the rest of the weekdays, closed at the weekend);
+// "open end" times (11:00+ =
 // open from 11:00 to midnight, closed before; 00:00+ = open all day; "a-b+"
 // is read as the guaranteed a-b span, the "+" uncertainty about running
 // later isn't modelled); month and date selectors (Apr-Oct, wrapping
@@ -66,7 +72,8 @@
 // event is "unknown", same as on a date where the event doesn't occur at
 // that latitude (polar day/night); a "||" fallback chain, tried in order,
 // purely on whether each alternative is open *right now*: the first
-// alternative that resolves to open decides the answer outright; one that
+// alternative that resolves to open decides the answer outright, and so
+// does one whose `unknown` rule covers this instant ("unknown"); one that
 // resolves to closed (it parses and evaluates fine, just isn't open at this
 // instant) doesn't end the search, the next alternative is tried; one that
 // carries no evaluable rule at all (e.g. it's only "PH off") is silently
@@ -425,7 +432,7 @@ function dateSelMatches(dateSel, val) {
 // Parses one ;-separated rule (already split into its comma-joined pieces
 // by splitAdditiveGroup). Returns:
 //  - { skip: true }                     — a PH/SH rule we deliberately ignore
-//  - { days, spans, off, dateSel }      — a rule we can evaluate (days: Set
+//  - { days, spans, off, unknown, dateSel } — a rule we can evaluate (days: Set
 //                                          or null for "every day"; dateSel:
 //                                          array of intervals, or null)
 //  - null                               — anything we don't confidently
@@ -445,11 +452,10 @@ function parseRule(raw) {
     hasComment = true;
     rule = commentMatch[1].trim();
   }
-  if (hasComment) {
-    const openMatch = /^(.*?)\s+open$/.exec(rule);
-    if (openMatch) rule = openMatch[1].trim();
-    else if (!/(?:^|\s)(?:off|closed)$/.test(rule)) return null;
-  }
+  if (hasComment && !/(?:^|\s)(?:open|off|closed|unknown)$/.test(rule)) return null;
+  // An explicit `open` says what a rule without a modifier says anyway.
+  const openMatch = /^(.*?)\s+open$/.exec(rule);
+  if (openMatch) rule = openMatch[1].trim();
 
   if (PH_SH_ONLY_RE.test(rule)) return { skip: true };
 
@@ -480,18 +486,17 @@ function parseRule(raw) {
     rule = dayParts.join(",") + rule.slice(sel[0].length);
   }
 
-  let off = false;
+  // `unknown` is a state like open: its minutes are neither open nor closed.
+  let off = false, unknown = false;
   let rest = rule;
-  const offMatch = /^(.*?)\s+(off|closed)$/.exec(rest);
+  const offMatch = /^(?:(.*?)\s+)?(off|closed|unknown)$/.exec(rest);
   if (offMatch) {
-    off = true;
-    rest = offMatch[1].trim();
-  } else if (rest === "off" || rest === "closed") {
-    off = true;
-    rest = "";
+    unknown = offMatch[2] === "unknown";
+    off = !unknown;
+    rest = (offMatch[1] ?? "").trim();
   }
 
-  if (rest === "") return { days: null, spans: [[0, 24 * 60]], off, dateSel };
+  if (rest === "") return { days: null, spans: [[0, 24 * 60]], off, unknown, dateSel };
 
   const dayMatch = DAY_LIST_RE.exec(rest);
   let days = null;
@@ -501,7 +506,7 @@ function parseRule(raw) {
     timeText = rest.slice(dayMatch[0].length).trim();
   }
 
-  if (timeText === "") return { days, spans: [[0, 24 * 60]], off, dateSel };
+  if (timeText === "") return { days, spans: [[0, 24 * 60]], off, unknown, dateSel };
 
   const spans = parseTimeSpans(timeText);
   if (!spans) return null; // week numbers, year ranges, "+N day", ...
@@ -514,8 +519,9 @@ function parseRule(raw) {
   // tell which spans the trailing off was meant to cover once there's more
   // than one, so this comes back unknown rather than closing more than the
   // mapper meant.
-  if (off && spans.length > 1) return null;
-  return { days, spans, off, dateSel };
+  // The same goes for a trailing `unknown`.
+  if ((off || unknown) && spans.length > 1) return null;
+  return { days, spans, off, unknown, dateSel };
 }
 
 // Expands a day-list fragment ("Mo-Fr", "Mo,We", "Fr-Mo", "Mo - Sa") into
@@ -550,7 +556,7 @@ const daysOf = (rule) => rule.days ?? ALL_DAYS;
 // and a date list's commas ("Dec 25-26,Jan 01 closed") joined to the rule
 // they belong to.
 function bufLooksComplete(buf) {
-  return /\d:\d\d/.test(buf) || /(?:^|\s)(?:off|closed)$/.test(buf.trim());
+  return /\d:\d\d/.test(buf) || /(?:^|\s)(?:open|off|closed|unknown)$/.test(buf.trim());
 }
 
 function splitAdditiveGroup(chunk) {
@@ -696,6 +702,9 @@ function resolveRuleIntervals(rule, sunTimes, nextSunTimes) {
 //  - spill: [0,end) intervals that a wrap span (e.g. 22:00-02:00) pushes
 //    into the *next* calendar day — read by the caller against the
 //    following day's own minute-of-day
+//  - unkToday, unkSpill: the same two, for minutes an `unknown` rule covers
+//  - unkCuts: the hours partial `unknown` rules name on this day, which turn
+//    the matching part of yesterday's open spill unknown
 //  - cuts: the hours partial `off` rules name on this day, which the caller
 //    also takes out of yesterday's spill
 //
@@ -705,11 +714,16 @@ function resolveRuleIntervals(rule, sunTimes, nextSunTimes) {
 // sunrise, not today's).
 function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
   let today = [], spill = [];
+  // The same pair for minutes an `unknown` rule covers.
+  let unkToday = [], unkSpill = [];
   // Hours a partial `off` names on this day. They also close the matching
   // part of *yesterday's* spill ("Fr 20:00-02:00; Sa 01:00-02:00 off"), which
   // only the caller can apply. A whole-day off does not: yesterday's evening
   // keeps its after-midnight hours (see the header).
   const cuts = [];
+  // Hours a partial `unknown` names on this day: they take yesterday's open
+  // spill out of open (into unknown), the way `cuts` take it out entirely.
+  const unkCuts = [];
   // Tracks whether this weekday has, at any *earlier* group, been touched
   // by a rule that carries its own weekday or date selector — whether or
   // not that rule was its group's first (replacing) member, or merely a
@@ -743,9 +757,22 @@ function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
     const replaces = explicitReplace || implicitReplace;
     let nt = replaces ? [] : today;
     let ns = replaces ? [] : spill;
+    let ut = replaces ? [] : unkToday;
+    let us = replaces ? [] : unkSpill;
     for (const rule of matched) {
       const { add, spill: ruleSpill } = resolveRuleIntervals(rule, sunTimes, nextSunTimes);
-      if (rule.off) {
+      // Whatever state this rule names wins over what earlier rules said
+      // about the same minutes: an `unknown` takes them out of open, an open
+      // takes them out of unknown, an `off` out of both.
+      for (const iv of add) ut = subtractInterval(ut, iv);
+      for (const iv of ruleSpill) us = subtractInterval(us, iv);
+      if (rule.unknown) {
+        for (const iv of add) nt = subtractInterval(nt, iv);
+        for (const iv of ruleSpill) ns = subtractInterval(ns, iv);
+        ut = ut.concat(add);
+        us = us.concat(ruleSpill);
+        if (!add.some(([s, e]) => s <= 0 && e >= 24 * 60)) unkCuts.push(...add);
+      } else if (rule.off) {
         for (const iv of add) nt = subtractInterval(nt, iv);
         for (const iv of ruleSpill) ns = subtractInterval(ns, iv);
         // A whole-day off (no times of its own, or 00:00-24:00 in any
@@ -755,7 +782,7 @@ function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
         // off entirely. A partial off, by contrast, only subtracts the
         // specific hours it names, and a still-running overnight span
         // outside those hours is untouched.
-        if (add.some(([s, e]) => s <= 0 && e >= 24 * 60)) ns = [];
+        if (add.some(([s, e]) => s <= 0 && e >= 24 * 60)) ns = us = [];
         else cuts.push(...add);
       } else {
         nt = nt.concat(add);
@@ -764,9 +791,11 @@ function resolveDay(groups, weekday, dateVal, sunTimes, nextSunTimes) {
     }
     today = nt;
     spill = ns;
+    unkToday = ut;
+    unkSpill = us;
     if (matched.some((r) => r.days !== null || r.dateSel !== null)) explicitClaimed = true;
   }
-  return { today, spill, cuts };
+  return { today, spill, unkToday, unkSpill, cuts, unkCuts };
 }
 
 const usesSun = (rules) => rules.some((r) => r.spans.some(([s, e]) => isSunPoint(s) || isSunPoint(e)));
@@ -783,18 +812,21 @@ function sunEventsUsed(rules) {
   return events;
 }
 
-// Evaluates one alternative's groups at a specific instant: whether
+// Evaluates one alternative's groups at a specific instant: "open" if
 // `minutes` on weekday `day` falls in today's resolved schedule, or in
 // yesterday's schedule where it spills past midnight, less any hours a
-// partial `off` for today names.
+// partial `off` for today names; else "unknown" if it falls in the same
+// places for `unknown` rules; else "closed".
 function evaluateGroups(groups, day, minutes, val, yval, sunTimes, ySunTimes) {
   const yday = (day + 6) % 7;
   const todayR = resolveDay(groups, day, val, sunTimes, null);
   const ydayR = resolveDay(groups, yday, yval, ySunTimes, sunTimes);
-  const todayOpen = todayR.today.some(([s, e]) => minutes >= s && minutes < e);
-  const spill = todayR.cuts.reduce(subtractInterval, ydayR.spill);
-  const spillOpen = spill.some(([s, e]) => minutes >= s && minutes < e);
-  return todayOpen || spillOpen;
+  const covers = (today, ySpill) => [...today, ...todayR.cuts.reduce(subtractInterval, ySpill)]
+    .some(([s, e]) => minutes >= s && minutes < e);
+  if (covers(todayR.today, todayR.unkCuts.reduce(subtractInterval, ydayR.spill))) return "open";
+  // Yesterday's open spill only gets here where a partial unknown took it.
+  if (covers(todayR.unkToday, [...ydayR.unkSpill, ...ydayR.spill])) return "unknown";
+  return "closed";
 }
 
 const hasCoords = (coords) => Number.isFinite(coords?.lat) && Number.isFinite(coords?.lon);
@@ -807,7 +839,8 @@ const hasCoords = (coords) => Number.isFinite(coords?.lat) && Number.isFinite(co
 //
 // A "||" value tries its alternatives in order, purely on whether each one
 // is open *right now*: the first alternative that resolves to open wins
-// outright. An alternative that resolves to "closed" (evaluable, just not
+// outright, and so does one whose `unknown` rule covers this instant. An
+// alternative that resolves to "closed" (evaluable, just not
 // open at this instant) doesn't end the search — the next alternative is
 // tried. An alternative that carries no evaluable rule at all (e.g. it's
 // only "PH off") is silently skipped, neither open nor closed. An
@@ -857,9 +890,11 @@ export function isOpenNow(openingHours, now = new Date(), coords = null, timeZon
     }
 
     evaluatedAny = true;
-    const open = evaluateGroups(groups, day, minutes, val, yval, sunTimes, ySunTimes);
-    if (open) return "open";
-    // Closed, not unknown: try the next alternative, if any.
+    const state = evaluateGroups(groups, day, minutes, val, yval, sunTimes, ySunTimes);
+    // An `unknown` rule covering this instant matched it, so it ends the
+    // search the same way open does.
+    if (state !== "closed") return state;
+    // Closed: try the next alternative, if any.
   }
 
   return evaluatedAny ? "closed" : "unknown";
