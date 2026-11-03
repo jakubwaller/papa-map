@@ -23,8 +23,7 @@ test("every localStorage access in app.js is inside a try", () => {
   assert.deepEqual(bare, []);
 });
 
-// statsMissing is our own markup in every language (a <code> and the
-// methods link), rendered unescaped by renderStats. Escaped, the "Mein
+// statsMissing is our own markup in every language (the methods link), rendered unescaped by renderStats. Escaped, the "Mein
 // PapaMap" dialog printed the tags as text and lost the link.
 test("statsMissing is HTML in every language and never escaped at a call site", () => {
   for (const l of LANGS) assert.ok(STRINGS[l].statsMissing.includes('<a href="{href}">'), l);

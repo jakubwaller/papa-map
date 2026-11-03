@@ -1258,7 +1258,11 @@ zoomed out past any area's reach) does the sentence fall back to the site's
 own whole-sweep numbers, the same ones the stats strip renders
 (`localAnswered`, `web/datasource.js` — one place "how many tables are
 answered" comes from `stats.json`'s `local` block, so the strip and that
-one fallback sentence cannot drift apart either). The sentence reads the
+one fallback sentence cannot drift apart either). Opened before the dataset
+has landed — tapped right after a reload — the sentence says the tables are
+still loading and fills in once they arrive; until Nov 2026 it said the stats
+file was missing, and stayed that way. "Stats unavailable" is kept for a load
+that has actually failed, and no longer names the file. The sentence reads the
 same in both readings since CONTRACT v60: the share with a recorded room is
 the same task whoever is looking, and the Mama reading's old "wahrscheinlich
 … für dich nutzbar" had put that very percentage under a claim it never

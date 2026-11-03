@@ -260,7 +260,7 @@ export const STRINGS = {
     popupToilets: "Öffentliche Toilette",
     popupUnnamed: "Unbenannter Ort",
 
-    statsMissing: 'Statistik nicht verfügbar — <code>data/stats.json</code> fehlt. <a href="{href}">Methoden</a>',
+    statsMissing: 'Statistik nicht verfügbar. <a href="{href}">Methoden</a>',
     statsLocal: '<b>{tables}</b> Wickeltische in {area}, bei <b>{known}</b> ist der Raum erfasst ({percent} %). <span class="cta-grey">Tippe auf die grauen Pins, um das zu ändern.</span>',
     statsLocalMama: '<b>{tables}</b> Wickeltische in {area}, bei <b>{known}</b> ist der Raum erfasst ({percent} %). <span class="cta-grey">Tippe auf die orangen Pins, um das zu ändern.</span>',
     statsGlobal: "Weltweit, wo der Raum erfasst ist ({total}): <b>{f}</b> nur Damen-WC vs. <b>{m}</b> nur Herren-WC — {ratio}.",
@@ -519,7 +519,7 @@ export const STRINGS = {
     popupToilets: "Public toilets",
     popupUnnamed: "Unnamed place",
 
-    statsMissing: 'Stats unavailable — <code>data/stats.json</code> is missing. <a href="{href}">Methods</a>',
+    statsMissing: 'Stats unavailable. <a href="{href}">Methods</a>',
     statsLocal: '<b>{tables}</b> changing tables in {area}, <b>{known}</b> with the room recorded ({percent}%). <span class="cta-grey">Tap the grey pins to fix that.</span>',
     statsLocalMama: '<b>{tables}</b> changing tables in {area}, <b>{known}</b> with the room recorded ({percent}%). <span class="cta-grey">Tap the orange pins to fix that.</span>',
     statsGlobal: "Worldwide, where the room is tagged ({total}): <b>{f}</b> women's-room-only vs <b>{m}</b> men's-room-only — {ratio}.",
@@ -774,7 +774,7 @@ export const STRINGS = {
     popupToilets: "Offentligt toilet",
     popupUnnamed: "Sted uden navn",
 
-    statsMissing: 'Statistik utilgængelig — <code>data/stats.json</code> mangler. <a href="{href}">Metode</a>',
+    statsMissing: 'Statistik utilgængelig. <a href="{href}">Metode</a>',
     statsLocal: '<b>{tables}</b> pusleborde i {area}, hos <b>{known}</b> er rummet registreret ({percent} %). <span class="cta-grey">Tryk på de grå nåle for at ændre det.</span>',
     statsLocalMama: '<b>{tables}</b> pusleborde i {area}, hos <b>{known}</b> er rummet registreret ({percent} %). <span class="cta-grey">Tryk på de orange nåle for at ændre det.</span>',
     statsGlobal: "På verdensplan, hvor rummet er registreret ({total}): <b>{f}</b> kun dametoilet mod <b>{m}</b> kun herretoilet — {ratio}.",
@@ -1027,7 +1027,7 @@ export const STRINGS = {
     popupToilets: "Openbaar toilet",
     popupUnnamed: "Naamloze plek",
 
-    statsMissing: "Statistiek niet beschikbaar — <code>data/stats.json</code> ontbreekt. <a href=\"{href}\">Methode</a>",
+    statsMissing: "Statistiek niet beschikbaar. <a href=\"{href}\">Methode</a>",
     statsLocal: '<b>{tables}</b> verschoontafels in {area}, bij <b>{known}</b> is de ruimte vastgelegd ({percent} %). <span class="cta-grey">Tik op de grijze pins om dat te veranderen.</span>',
     statsLocalMama: '<b>{tables}</b> verschoontafels in {area}, bij <b>{known}</b> is de ruimte vastgelegd ({percent} %). <span class="cta-grey">Tik op de oranje pins om dat te veranderen.</span>',
     statsGlobal: "Wereldwijd, waar de ruimte is vastgelegd ({total}): <b>{f}</b> alleen damestoilet tegenover <b>{m}</b> alleen herentoilet — {ratio}.",
@@ -1278,7 +1278,7 @@ export const STRINGS = {
     popupToilets: "Toilettes publiques",
     popupUnnamed: "Lieu sans nom",
 
-    statsMissing: "Statistiques indisponibles — <code>data/stats.json</code> est absent. <a href=\"{href}\">Méthodes</a>",
+    statsMissing: "Statistiques indisponibles. <a href=\"{href}\">Méthodes</a>",
     statsLocal: '<b>{tables}</b> tables à langer dans {area}, dont <b>{known}</b> avec la pièce renseignée ({percent} %). <span class="cta-grey">Touche les marqueurs gris pour changer ça.</span>',
     statsLocalMama: '<b>{tables}</b> tables à langer dans {area}, dont <b>{known}</b> avec la pièce renseignée ({percent} %). <span class="cta-grey">Touche les marqueurs orange pour changer ça.</span>',
     statsGlobal: "Dans le monde, là où la pièce est renseignée ({total}) : <b>{f}</b> uniquement WC femmes contre <b>{m}</b> uniquement WC hommes — {ratio}.",
@@ -1529,7 +1529,7 @@ export const STRINGS = {
     popupToilets: "Bagno pubblico",
     popupUnnamed: "Luogo senza nome",
 
-    statsMissing: "Statistiche non disponibili — manca <code>data/stats.json</code>. <a href=\"{href}\">Metodo</a>",
+    statsMissing: "Statistiche non disponibili. <a href=\"{href}\">Metodo</a>",
     statsLocal: '<b>{tables}</b> fasciatoi in {area}, per <b>{known}</b> la stanza è registrata ({percent} %). <span class="cta-grey">Tocca i pin grigi per rimediare.</span>',
     statsLocalMama: '<b>{tables}</b> fasciatoi in {area}, per <b>{known}</b> la stanza è registrata ({percent} %). <span class="cta-grey">Tocca i pin arancioni per rimediare.</span>',
     statsGlobal: "Nel mondo, dove la stanza è registrata ({total}): <b>{f}</b> solo bagno donne contro <b>{m}</b> solo bagno uomini — {ratio}.",
@@ -1780,7 +1780,7 @@ export const STRINGS = {
     popupToilets: "Veřejné WC",
     popupUnnamed: "Místo bez názvu",
 
-    statsMissing: "Statistika není k dispozici — chybí <code>data/stats.json</code>. <a href=\"{href}\">Metody</a>",
+    statsMissing: "Statistika není k dispozici. <a href=\"{href}\">Metody</a>",
     statsLocal: '<b>{tables}</b> přebalovacích pultů v {area}, u <b>{known}</b> je známá místnost ({percent} %). <span class="cta-grey">Klepni na šedé špendlíky a změň to.</span>',
     statsLocalMama: '<b>{tables}</b> přebalovacích pultů v {area}, u <b>{known}</b> je známá místnost ({percent} %). <span class="cta-grey">Klepni na oranžové špendlíky a změň to.</span>',
     statsGlobal: "Celosvětově tam, kde je místnost zaznamenaná ({total}): <b>{f}</b> jen dámské WC vs. <b>{m}</b> jen pánské WC — {ratio}.",
@@ -2031,7 +2031,7 @@ export const STRINGS = {
     popupToilets: "Toaleta publiczna",
     popupUnnamed: "Miejsce bez nazwy",
 
-    statsMissing: "Statystyki niedostępne — brakuje pliku <code>data/stats.json</code>. <a href=\"{href}\">Metody</a>",
+    statsMissing: "Statystyki niedostępne. <a href=\"{href}\">Metody</a>",
     statsLocal: '<b>{tables}</b> przewijaków w {area}, dla <b>{known}</b> zapisano pomieszczenie ({percent} %). <span class="cta-grey">Kliknij szare pinezki, żeby to zmienić.</span>',
     statsLocalMama: '<b>{tables}</b> przewijaków w {area}, dla <b>{known}</b> zapisano pomieszczenie ({percent} %). <span class="cta-grey">Kliknij pomarańczowe pinezki, żeby to zmienić.</span>',
     statsGlobal: "Na świecie, tam gdzie pomieszczenie jest zapisane ({total}): <b>{f}</b> tylko damskie WC vs <b>{m}</b> tylko męskie WC — {ratio}.",
@@ -2282,7 +2282,7 @@ export const STRINGS = {
     popupToilets: "Offentlig toalett",
     popupUnnamed: "Namnlös plats",
 
-    statsMissing: "Statistik inte tillgänglig — <code>data/stats.json</code> saknas. <a href=\"{href}\">Metod</a>",
+    statsMissing: "Statistik inte tillgänglig. <a href=\"{href}\">Metod</a>",
     statsLocal: '<b>{tables}</b> skötbord i {area}, för <b>{known}</b> är rummet registrerat ({percent} %). <span class="cta-grey">Tryck på de grå nålarna för att ändra det.</span>',
     statsLocalMama: '<b>{tables}</b> skötbord i {area}, för <b>{known}</b> är rummet registrerat ({percent} %). <span class="cta-grey">Tryck på de orange nålarna för att ändra det.</span>',
     statsGlobal: "Världen över, där rummet är registrerat ({total}): <b>{f}</b> bara damtoalett mot <b>{m}</b> bara herrtoalett — {ratio}.",
@@ -2532,7 +2532,7 @@ export const STRINGS = {
     popupToilets: "Javni WC",
     popupUnnamed: "Mjesto bez naziva",
 
-    statsMissing: 'Statistika nije dostupna — nedostaje <code>data/stats.json</code>. <a href="{href}">Metode</a>',
+    statsMissing: 'Statistika nije dostupna. <a href="{href}">Metode</a>',
     statsLocal: '<b>{tables}</b> stolova za previjanje u {area}, za <b>{known}</b> je prostorija zabilježena ({percent} %). <span class="cta-grey">Dodirni sive oznake da to promijeniš.</span>',
     statsLocalMama: '<b>{tables}</b> stolova za previjanje u {area}, za <b>{known}</b> je prostorija zabilježena ({percent} %). <span class="cta-grey">Dodirni narandžaste oznake da to promijeniš.</span>',
     statsGlobal: "Širom svijeta, tamo gdje je prostorija označena ({total}): <b>{f}</b> samo žensko WC naspram <b>{m}</b> samo muško WC — {ratio}.",
@@ -2782,7 +2782,7 @@ export const STRINGS = {
     popupToilets: "Lavabos públics",
     popupUnnamed: "Lloc sense nom",
 
-    statsMissing: 'Estadístiques no disponibles — falta <code>data/stats.json</code>. <a href="{href}">Mètodes</a>',
+    statsMissing: 'Estadístiques no disponibles. <a href="{href}">Mètodes</a>',
     statsLocal: '<b>{tables}</b> canviadors a {area}, <b>{known}</b> amb la sala registrada ({percent} %). <span class="cta-grey">Toca els pins grisos per solucionar-ho.</span>',
     statsLocalMama: '<b>{tables}</b> canviadors a {area}, <b>{known}</b> amb la sala registrada ({percent} %). <span class="cta-grey">Toca els pins taronja per solucionar-ho.</span>',
     statsGlobal: "Arreu del món, on la sala consta registrada ({total}): <b>{f}</b> només lavabo de dones contra <b>{m}</b> només lavabo d'homes — {ratio}.",
@@ -3032,7 +3032,7 @@ export const STRINGS = {
     popupToilets: "Avalik tualett",
     popupUnnamed: "Nimetu koht",
 
-    statsMissing: 'Statistika pole saadaval — <code>data/stats.json</code> puudub. <a href="{href}">Meetodid</a>',
+    statsMissing: 'Statistika pole saadaval. <a href="{href}">Meetodid</a>',
     statsLocal: '<b>{tables}</b> mähkimislauda {area}, <b>{known}</b> puhul on ruum märgitud ({percent} %). <span class="cta-grey">Puuduta halle nõelu, et seda muuta.</span>',
     statsLocalMama: '<b>{tables}</b> mähkimislauda {area}, <b>{known}</b> puhul on ruum märgitud ({percent} %). <span class="cta-grey">Puuduta oranže nõelu, et seda muuta.</span>',
     statsGlobal: "Kogu maailmas, kus ruum on märgitud ({total}): <b>{f}</b> ainult naiste WC-s vs <b>{m}</b> ainult meeste WC-s — {ratio}.",
@@ -3282,7 +3282,7 @@ export const STRINGS = {
     popupToilets: "Aseo público",
     popupUnnamed: "Lugar sin nombre",
 
-    statsMissing: 'Estadísticas no disponibles — falta <code>data/stats.json</code>. <a href="{href}">Métodos</a>',
+    statsMissing: 'Estadísticas no disponibles. <a href="{href}">Métodos</a>',
     statsLocal: '<b>{tables}</b> cambiadores en {area}, <b>{known}</b> con la sala registrada ({percent} %). <span class="cta-grey">Toca los pines grises para cambiar eso.</span>',
     statsLocalMama: '<b>{tables}</b> cambiadores en {area}, <b>{known}</b> con la sala registrada ({percent} %). <span class="cta-grey">Toca los pines naranjas para cambiar eso.</span>',
     statsGlobal: "En el mundo, donde la sala está registrada ({total}): <b>{f}</b> solo baño de mujeres frente a <b>{m}</b> solo baño de hombres — {ratio}.",
@@ -3532,7 +3532,7 @@ export const STRINGS = {
     popupToilets: "Javni WC",
     popupUnnamed: "Mjesto bez naziva",
 
-    statsMissing: 'Statistika nije dostupna — nedostaje <code>data/stats.json</code>. <a href="{href}">Metode</a>',
+    statsMissing: 'Statistika nije dostupna. <a href="{href}">Metode</a>',
     statsLocal: '<b>{tables}</b> stolova za previjanje u {area}, kod <b>{known}</b> je prostorija zabilježena ({percent} %). <span class="cta-grey">Dodirni sive pinove da to promijeniš.</span>',
     statsLocalMama: '<b>{tables}</b> stolova za previjanje u {area}, kod <b>{known}</b> je prostorija zabilježena ({percent} %). <span class="cta-grey">Dodirni narančaste pinove da to promijeniš.</span>',
     statsGlobal: "Diljem svijeta, gdje je prostorija označena ({total}): <b>{f}</b> samo žensko WC naspram <b>{m}</b> samo muško WC — {ratio}.",
@@ -3782,7 +3782,7 @@ export const STRINGS = {
     popupToilets: "Almenningssalerni",
     popupUnnamed: "Nafnlaus staður",
 
-    statsMissing: 'Tölfræði ekki tiltæk — <code>data/stats.json</code> vantar. <a href="{href}">Aðferð</a>',
+    statsMissing: 'Tölfræði ekki tiltæk. <a href="{href}">Aðferð</a>',
     statsLocal: '<b>{tables}</b> skiptiborð í {area}, hjá <b>{known}</b> er rýmið skráð ({percent} %). <span class="cta-grey">Ýttu á gráu punktana til að breyta því.</span>',
     statsLocalMama: '<b>{tables}</b> skiptiborð í {area}, hjá <b>{known}</b> er rýmið skráð ({percent} %). <span class="cta-grey">Ýttu á appelsínugulu punktana til að breyta því.</span>',
     statsGlobal: "Á heimsvísu, þar sem rýmið er skráð ({total}): <b>{f}</b> aðeins kvennasalerni á móti <b>{m}</b> aðeins karlasalerni — {ratio}.",
@@ -4032,7 +4032,7 @@ export const STRINGS = {
     popupToilets: "Sabiedriskā tualete",
     popupUnnamed: "Vieta bez nosaukuma",
 
-    statsMissing: 'Statistika nav pieejama — trūkst <code>data/stats.json</code>. <a href="{href}">Metodika</a>',
+    statsMissing: 'Statistika nav pieejama. <a href="{href}">Metodika</a>',
     statsLocal: '<b>{tables}</b> pārtinamie galdiņi {area}, <b>{known}</b> gadījumos telpa ir atzīmēta ({percent} %). <span class="cta-grey">Uzspied uz pelēkajām atzīmēm, lai to mainītu.</span>',
     statsLocalMama: '<b>{tables}</b> pārtinamie galdiņi {area}, <b>{known}</b> gadījumos telpa ir atzīmēta ({percent} %). <span class="cta-grey">Uzspied uz oranžajām atzīmēm, lai to mainītu.</span>',
     statsGlobal: "Visā pasaulē, kur telpa ir atzīmēta ({total}): <b>{f}</b> tikai sieviešu telpā pret <b>{m}</b> tikai vīriešu telpā — {ratio}.",
@@ -4282,7 +4282,7 @@ export const STRINGS = {
     popupToilets: "Viešas tualetas",
     popupUnnamed: "Vieta be pavadinimo",
 
-    statsMissing: 'Statistika nepasiekiama — trūksta failo <code>data/stats.json</code>. <a href="{href}">Metodai</a>',
+    statsMissing: 'Statistika nepasiekiama. <a href="{href}">Metodai</a>',
     statsLocal: '<b>{tables}</b> pervystymo stalai {area}, <b>{known}</b> iš jų patalpa pažymėta ({percent} %). <span class="cta-grey">Bakstelėk pilkus smeigtukus ir tai pakeisk.</span>',
     statsLocalMama: '<b>{tables}</b> pervystymo stalai {area}, <b>{known}</b> iš jų patalpa pažymėta ({percent} %). <span class="cta-grey">Bakstelėk oranžinius smeigtukus ir tai pakeisk.</span>',
     statsGlobal: "Visame pasaulyje, kur patalpa pažymėta ({total}): <b>{f}</b> tik moterų tualete prieš <b>{m}</b> tik vyrų tualete — {ratio}.",
@@ -4532,7 +4532,7 @@ export const STRINGS = {
     popupToilets: "Nyilvános mosdó",
     popupUnnamed: "Névtelen hely",
 
-    statsMissing: 'Statisztika nem elérhető — hiányzik a <code>data/stats.json</code>. <a href="{href}">Módszertan</a>',
+    statsMissing: 'Statisztika nem elérhető. <a href="{href}">Módszertan</a>',
     statsLocal: '<b>{tables}</b> pelenkázóasztal {area}, ebből <b>{known}</b> esetében rögzítve a helyiség ({percent} %). <span class="cta-grey">Koppints a szürke jelölőkre, hogy ezt megváltoztasd.</span>',
     statsLocalMama: '<b>{tables}</b> pelenkázóasztal {area}, ebből <b>{known}</b> esetében rögzítve a helyiség ({percent} %). <span class="cta-grey">Koppints a narancssárga jelölőkre, hogy ezt megváltoztasd.</span>',
     statsGlobal: "Világszerte, ahol ismert a helyiség ({total}): <b>{f}</b> csak női mosdó, míg <b>{m}</b> csak férfi mosdó — {ratio}.",
@@ -4782,7 +4782,7 @@ export const STRINGS = {
     popupToilets: "Offentlig toalett",
     popupUnnamed: "Navnløst sted",
 
-    statsMissing: 'Statistikk utilgjengelig — <code>data/stats.json</code> mangler. <a href="{href}">Metode</a>',
+    statsMissing: 'Statistikk utilgjengelig. <a href="{href}">Metode</a>',
     statsLocal: '<b>{tables}</b> stellebord i {area}, for <b>{known}</b> er rommet registrert ({percent} %). <span class="cta-grey">Trykk på de grå punktene for å endre.</span>',
     statsLocalMama: '<b>{tables}</b> stellebord i {area}, for <b>{known}</b> er rommet registrert ({percent} %). <span class="cta-grey">Trykk på de oransje punktene for å endre.</span>',
     statsGlobal: "På verdensbasis, hvor rommet er registrert ({total}): <b>{f}</b> bare dametoalett mot <b>{m}</b> bare herretoalett — {ratio}.",
@@ -5032,7 +5032,7 @@ export const STRINGS = {
     popupToilets: "Casas de banho públicas",
     popupUnnamed: "Local sem nome",
 
-    statsMissing: 'Estatísticas indisponíveis — falta o <code>data/stats.json</code>. <a href="{href}">Métodos</a>',
+    statsMissing: 'Estatísticas indisponíveis. <a href="{href}">Métodos</a>',
     statsLocal: '<b>{tables}</b> fraldários em {area}, <b>{known}</b> com a sala registada ({percent} %). <span class="cta-grey">Toca nos pins cinzentos para mudar isso.</span>',
     statsLocalMama: '<b>{tables}</b> fraldários em {area}, <b>{known}</b> com a sala registada ({percent} %). <span class="cta-grey">Toca nos pins laranja para mudar isso.</span>',
     statsGlobal: "Em todo o mundo, onde a sala está registada ({total}): <b>{f}</b> só casa de banho feminina vs <b>{m}</b> só casa de banho masculina — {ratio}.",
@@ -5282,7 +5282,7 @@ export const STRINGS = {
     popupToilets: "Toaletă publică",
     popupUnnamed: "Loc fără nume",
 
-    statsMissing: 'Statistici indisponibile — lipsește <code>data/stats.json</code>. <a href="{href}">Metode</a>',
+    statsMissing: 'Statistici indisponibile. <a href="{href}">Metode</a>',
     statsLocal: '<b>{tables}</b> mese de înfășat în {area}, la <b>{known}</b> încăperea este înregistrată ({percent} %). <span class="cta-grey">Atinge marcajele gri ca să schimbi asta.</span>',
     statsLocalMama: '<b>{tables}</b> mese de înfășat în {area}, la <b>{known}</b> încăperea este înregistrată ({percent} %). <span class="cta-grey">Atinge marcajele portocalii ca să schimbi asta.</span>',
     statsGlobal: "La nivel mondial, acolo unde este înregistrată încăperea ({total}): <b>{f}</b> doar toaleta femeilor, față de <b>{m}</b> doar toaleta bărbaților — {ratio}.",
@@ -5532,7 +5532,7 @@ export const STRINGS = {
     popupToilets: "Tualete publike",
     popupUnnamed: "Vend pa emër",
 
-    statsMissing: 'Statistikat nuk janë të disponueshme — mungon <code>data/stats.json</code>. <a href="{href}">Metodologjia</a>',
+    statsMissing: 'Statistikat nuk janë të disponueshme. <a href="{href}">Metodologjia</a>',
     statsLocal: '<b>{tables}</b> tavolina ndërrimi në {area}, për <b>{known}</b> dhoma është regjistruar ({percent} %). <span class="cta-grey">Prek shenjuesit gri për ta ndryshuar këtë.</span>',
     statsLocalMama: '<b>{tables}</b> tavolina ndërrimi në {area}, për <b>{known}</b> dhoma është regjistruar ({percent} %). <span class="cta-grey">Prek shenjuesit portokalli për ta ndryshuar këtë.</span>',
     statsGlobal: "Në mbarë botën, aty ku dhoma është shënuar ({total}): <b>{f}</b> vetëm tualeti i grave kundrejt <b>{m}</b> vetëm tualeti i burrave — {ratio}.",
@@ -5782,7 +5782,7 @@ export const STRINGS = {
     popupToilets: "Verejné WC",
     popupUnnamed: "Miesto bez názvu",
 
-    statsMissing: 'Štatistika nie je k dispozícii — chýba <code>data/stats.json</code>. <a href="{href}">Metódy</a>',
+    statsMissing: 'Štatistika nie je k dispozícii. <a href="{href}">Metódy</a>',
     statsLocal: '<b>{tables}</b> prebaľovacích pultov v {area}, pri <b>{known}</b> je známa miestnosť ({percent} %). <span class="cta-grey">Ťukni na sivé špendlíky a zmeň to.</span>',
     statsLocalMama: '<b>{tables}</b> prebaľovacích pultov v {area}, pri <b>{known}</b> je známa miestnosť ({percent} %). <span class="cta-grey">Ťukni na oranžové špendlíky a zmeň to.</span>',
     statsGlobal: "Celosvetovo tam, kde je miestnosť zaznamenaná ({total}): <b>{f}</b> len dámske WC vs. <b>{m}</b> len pánske WC — {ratio}.",
@@ -6032,7 +6032,7 @@ export const STRINGS = {
     popupToilets: "Javno stranišče",
     popupUnnamed: "Neimenovan kraj",
 
-    statsMissing: 'Statistika ni na voljo — manjka <code>data/stats.json</code>. <a href="{href}">Metode</a>',
+    statsMissing: 'Statistika ni na voljo. <a href="{href}">Metode</a>',
     statsLocal: '<b>{tables}</b> previjalnih miz v {area}, pri <b>{known}</b> je prostor zabeležen ({percent} %). <span class="cta-grey">Tapni sive bucke in popravi to.</span>',
     statsLocalMama: '<b>{tables}</b> previjalnih miz v {area}, pri <b>{known}</b> je prostor zabeležen ({percent} %). <span class="cta-grey">Tapni oranžne bucke in popravi to.</span>',
     statsGlobal: "Po svetu, kjer je prostor označen ({total}): <b>{f}</b> samo v ženskem stranišču, <b>{m}</b> samo v moškem stranišču — {ratio}.",
@@ -6282,7 +6282,7 @@ export const STRINGS = {
     popupToilets: "Julkinen WC",
     popupUnnamed: "Nimetön paikka",
 
-    statsMissing: 'Tilastot eivät ole saatavilla — <code>data/stats.json</code> puuttuu. <a href="{href}">Menetelmät</a>',
+    statsMissing: 'Tilastot eivät ole saatavilla. <a href="{href}">Menetelmät</a>',
     statsLocal: '<b>{tables}</b> hoitopöytää {area}, joista <b>{known}</b> tila kirjattu ({percent} %). <span class="cta-grey">Korjaa se napauttamalla harmaita nastoja.</span>',
     statsLocalMama: '<b>{tables}</b> hoitopöytää {area}, joista <b>{known}</b> tila kirjattu ({percent} %). <span class="cta-grey">Korjaa se napauttamalla oransseja nastoja.</span>',
     statsGlobal: "Maailmanlaajuisesti, missä tila on merkitty ({total}): <b>{f}</b> vain naisten WC vastaan <b>{m}</b> vain miesten WC — {ratio}.",
@@ -6532,7 +6532,7 @@ export const STRINGS = {
     popupToilets: "Δημόσιες τουαλέτες",
     popupUnnamed: "Μέρος χωρίς όνομα",
 
-    statsMissing: 'Στατιστικά μη διαθέσιμα — λείπει το <code>data/stats.json</code>. <a href="{href}">Μέθοδος</a>',
+    statsMissing: 'Στατιστικά μη διαθέσιμα. <a href="{href}">Μέθοδος</a>',
     statsLocal: '<b>{tables}</b> αλλαξιέρες σε {area}, για <b>{known}</b> ο χώρος έχει καταγραφεί ({percent} %). <span class="cta-grey">Πάτησε τις γκρι καρφίτσες για να το αλλάξεις.</span>',
     statsLocalMama: '<b>{tables}</b> αλλαξιέρες σε {area}, για <b>{known}</b> ο χώρος έχει καταγραφεί ({percent} %). <span class="cta-grey">Πάτησε τις πορτοκαλί καρφίτσες για να το αλλάξεις.</span>',
     statsGlobal: "Παγκοσμίως, όπου ο χώρος είναι καταγεγραμμένος ({total}): <b>{f}</b> μόνο γυναικεία τουαλέτα έναντι <b>{m}</b> μόνο ανδρική τουαλέτα — {ratio}.",
@@ -6782,7 +6782,7 @@ export const STRINGS = {
     popupToilets: "Грамадскі туалет",
     popupUnnamed: "Месца без назвы",
 
-    statsMissing: 'Статыстыка недаступная — <code>data/stats.json</code> адсутнічае. <a href="{href}">Метады</a>',
+    statsMissing: 'Статыстыка недаступная. <a href="{href}">Метады</a>',
     statsLocal: '<b>{tables}</b> сталоў для спавівання ў {area}, для <b>{known}</b> памяшканне пазначана ({percent} %). <span class="cta-grey">Націсні на шэрыя шпількі, каб гэта змяніць.</span>',
     statsLocalMama: '<b>{tables}</b> сталоў для спавівання ў {area}, для <b>{known}</b> памяшканне пазначана ({percent} %). <span class="cta-grey">Націсні на аранжавыя шпількі, каб гэта змяніць.</span>',
     statsGlobal: "Ва ўсім свеце, там, дзе памяшканне пазначана ({total}): <b>{f}</b> толькі жаночы туалет супраць <b>{m}</b> толькі мужчынскі туалет — {ratio}.",
@@ -7032,7 +7032,7 @@ export const STRINGS = {
     popupToilets: "Обществена тоалетна",
     popupUnnamed: "Място без име",
 
-    statsMissing: 'Статистиката не е налична — липсва <code>data/stats.json</code>. <a href="{href}">Методи</a>',
+    statsMissing: 'Статистиката не е налична. <a href="{href}">Методи</a>',
     statsLocal: '<b>{tables}</b> маси за повиване в {area}, при <b>{known}</b> стаята е отбелязана ({percent} %). <span class="cta-grey">Докосни сивите маркери, за да го оправиш.</span>',
     statsLocalMama: '<b>{tables}</b> маси за повиване в {area}, при <b>{known}</b> стаята е отбелязана ({percent} %). <span class="cta-grey">Докосни оранжевите маркери, за да го оправиш.</span>',
     statsGlobal: "В световен мащаб, там където е отбелязана стаята ({total}): <b>{f}</b> само в дамска тоалетна срещу <b>{m}</b> само в мъжка тоалетна — {ratio}.",
@@ -7282,7 +7282,7 @@ export const STRINGS = {
     popupToilets: "Јавни тоалети",
     popupUnnamed: "Место без име",
 
-    statsMissing: 'Статистиката не е достапна — <code>data/stats.json</code> недостасува. <a href="{href}">Методи</a>',
+    statsMissing: 'Статистиката не е достапна. <a href="{href}">Методи</a>',
     statsLocal: '<b>{tables}</b> маси за пеленање во {area}, за <b>{known}</b> просторијата е забележана ({percent} %). <span class="cta-grey">Допри ги сивите точки за да го промениш тоа.</span>',
     statsLocalMama: '<b>{tables}</b> маси за пеленање во {area}, за <b>{known}</b> просторијата е забележана ({percent} %). <span class="cta-grey">Допри ги портокаловите точки за да го промениш тоа.</span>',
     statsGlobal: "Ширум светот, каде просторијата е означена ({total}): <b>{f}</b> само женски тоалет наспроти <b>{m}</b> само машки тоалет — {ratio}.",
@@ -7532,7 +7532,7 @@ export const STRINGS = {
     popupToilets: "Јавни тоалет",
     popupUnnamed: "Неименовано место",
 
-    statsMissing: 'Статистика недоступна — недостаје <code>data/stats.json</code>. <a href="{href}">Методе</a>',
+    statsMissing: 'Статистика недоступна. <a href="{href}">Методе</a>',
     statsLocal: '<b>{tables}</b> столова за превијање у {area}, код <b>{known}</b> је просторија забележена ({percent} %). <span class="cta-grey">Додирни сиве пинове да то промениш.</span>',
     statsLocalMama: '<b>{tables}</b> столова за превијање у {area}, код <b>{known}</b> је просторија забележена ({percent} %). <span class="cta-grey">Додирни наранџасте пинове да то промениш.</span>',
     statsGlobal: "Широм света, тамо где је просторија означена ({total}): <b>{f}</b> само женски тоалет наспрам <b>{m}</b> само мушки тоалет — {ratio}.",
@@ -7782,7 +7782,7 @@ export const STRINGS = {
     popupToilets: "Громадський туалет",
     popupUnnamed: "Місце без назви",
 
-    statsMissing: 'Статистика недоступна — бракує <code>data/stats.json</code>. <a href="{href}">Методи</a>',
+    statsMissing: 'Статистика недоступна. <a href="{href}">Методи</a>',
     statsLocal: '<b>{tables}</b> пеленальних столиків у {area}, для <b>{known}</b> приміщення зафіксоване ({percent} %). <span class="cta-grey">Торкнися сірих позначок, щоб це змінити.</span>',
     statsLocalMama: '<b>{tables}</b> пеленальних столиків у {area}, для <b>{known}</b> приміщення зафіксоване ({percent} %). <span class="cta-grey">Торкнися оранжевих позначок, щоб це змінити.</span>',
     statsGlobal: "У всьому світі, де приміщення позначено ({total}): <b>{f}</b> лише жіночий туалет проти <b>{m}</b> лише чоловічий туалет — {ratio}.",
@@ -8036,7 +8036,7 @@ export const STRINGS = {
     popupToilets: "公衆トイレ",
     popupUnnamed: "名前のない場所",
 
-    statsMissing: '統計を取得できません — <code>data/stats.json</code> がありません。<a href="{href}">方法</a>',
+    statsMissing: '統計を取得できません。<a href="{href}">方法</a>',
     statsLocal: '{area}のおむつ交換台<b>{tables}</b>台、うち<b>{known}</b>台は部屋が記録済み（{percent}%）。<span class="cta-grey">灰色のピンをタップして直してください。</span>',
     statsLocalMama: '{area}のおむつ交換台<b>{tables}</b>台、うち<b>{known}</b>台は部屋が記録済み（{percent}%）。<span class="cta-grey">オレンジ色のピンをタップして直してください。</span>',
     statsGlobal: "世界全体で部屋がタグ付けされたもの（{total}）: 女性トイレのみ<b>{f}</b>台、男性トイレのみ<b>{m}</b>台 — {ratio}。",

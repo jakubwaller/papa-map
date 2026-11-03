@@ -14,9 +14,9 @@ import { loadFeatures, loadPlaces, placeFeatures, splitPlaces, filterFeatures, c
          mergeFeatureCollection, isDeltaFresh, foldOpen, roomAnsweredHere, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app111";
+         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app112";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app111";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app112";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
@@ -25,7 +25,7 @@ import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, rev
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
          isWheelchairChoice, wheelchairPatch,
          DESCRIPTION_CHOICE, DESCRIPTION_MAX, descriptionPatch,
-         writeTags } from "./osm.js?v=app111";
+         writeTags } from "./osm.js?v=app112";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -33,7 +33,7 @@ import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app111";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app112";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, locateNative, interceptLinks,
@@ -43,28 +43,28 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, l
          cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app111";
+         reviewTracker } from "./native.js?v=app112";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app111";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app112";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app111";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app112";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app111";
+import { isOpenNow } from "./opening-hours.js?v=app112";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
          isVenue, isSearchVenue, VENUE_MIN_ZOOM, venueAnswer, venueFromIntent,
-         venueQuestions } from "./venues.js?v=app111";
-// The bundled shell's pin (`?v=app111`), what the intro key records.
+         venueQuestions } from "./venues.js?v=app112";
+// The bundled shell's pin (`?v=app112`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -3906,6 +3906,7 @@ function applyDataset(fc, places, stats, areas) {
   areaIndex = Array.isArray(areas) ? areas : null;
   updateRegionsLink();
   renderMergedDataset();
+  if (meDialog.open) renderMeDialog();   // opened while the data was still loading
 }
 
 // The app's background refresh, watched once boot has already drawn: waits
@@ -4957,6 +4958,9 @@ function meAreaNumbers() {
 }
 
 function renderMeSentence() {
+  // Opened before the dataset has landed (right after a reload): no stats yet
+  // is not a missing stats.json. applyDataset re-renders the open dialog.
+  if (!dataReady) { meSentenceEl.innerHTML = `<span>${esc(t("dataLoading"))}</span>`; return; }
   const { area, percent, tables, known } = meAreaNumbers();
   const greyCount = lastFix ? greyNearby(allFeatures, lastFix.lat, lastFix.lon).length : 0;
   const parts = sentenceParts({ area, percent, tables, known, greyCount, hasFix: !!lastFix, mama: mode === "mama" });

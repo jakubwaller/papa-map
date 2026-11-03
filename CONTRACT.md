@@ -7,6 +7,11 @@
 > counted the key-locked tables: Germany read 6,645 in the dialog and 6,500 on its page.
 > v39's "every loaded feature" now means every loaded `key: null` feature; the chip
 > filters still do not move it.
+> In the same release, two frontend-only fixes: the nearest button without a position
+> measures from the last chosen search row, else the map centre (`toastNearestFrom`,
+> `nearestMapCentre`, all 32 languages), and the dialog opened before the dataset has
+> landed shows `dataLoading` and re-renders at the end of `applyDataset`; `statsMissing`
+> no longer names `data/stats.json`. Shell pin `v=app111` becomes `v=app112`.
 
 > **v115 amendment (3 Nov 2026, where exactly the table is): one new property on the tables.**
 > Every table feature carries **`changing_table_description`**: `changing_table:description`
