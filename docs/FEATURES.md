@@ -363,7 +363,8 @@ It measures from the place last chosen in the search box instead, or from the
 middle of the map when the box holds no chosen row, opens that table the same
 way and says so in the toast ("No location, so from Hamburg Hauptbahnhof — …",
 `toastNearestFrom`, `nearestMapCentre`). Typing in the box or clearing it
-forgets the chosen place. No dot is drawn and no fix is noted, because there
+forgets the chosen place, and it counts only while it is still on screen: a
+reader who has since panned to Munich gets Munich's centre, not Hamburg. No dot is drawn and no fix is noted, because there
 is none.
 
 On the locate button, a refused permission gets its own toast (`geoFailKey`, `web/datasource.js`). A

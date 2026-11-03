@@ -1988,9 +1988,13 @@ nearestBtn.addEventListener("click", (e) => {
   if (dataMissing()) { toast(t("dataFailed")); retryDataset(); return; }
   // No fix (refused, timed out, no API): rather than a dead end, the nearest
   // table to the place last searched for, else to the middle of the map.
+  // The pick counts only while it is still on screen: a reader who has since
+  // panned to Munich means Munich, not the Hamburg they searched for.
   const fallback = () => {
-    const c = searchPicked ?? mapCentre();
-    showNearest(c.lat, c.lon, searchPicked?.name ?? t("nearestMapCentre"));
+    const pick = searchPicked && map.getBounds().contains([searchPicked.lon, searchPicked.lat])
+      ? searchPicked : null;
+    const c = pick ?? mapCentre();
+    showNearest(c.lat, c.lon, pick?.name ?? t("nearestMapCentre"));
   };
   if (!hasGeo()) { fallback(); return; }
   locateFrom(e.currentTarget).then(
@@ -3906,7 +3910,9 @@ function applyDataset(fc, places, stats, areas) {
   areaIndex = Array.isArray(areas) ? areas : null;
   updateRegionsLink();
   renderMergedDataset();
-  if (meDialog.open) renderMeDialog();   // opened while the data was still loading
+  // Only a dialog drawn in the loading state: any other re-render would pull
+  // the markup out from under a focused button on every background refresh.
+  if (meRenderedLoading) { meRenderedLoading = false; if (meDialog.open) renderMeDialog(); }
 }
 
 // The app's background refresh, watched once boot has already drawn: waits
@@ -4629,6 +4635,7 @@ routeDialog.addEventListener("click", (e) => { if (e.target === routeDialog) rou
 const meBtn = document.getElementById("me");
 const meDialog = document.getElementById("me-dialog");
 const meSentenceEl = document.getElementById("me-sentence");
+let meRenderedLoading = false;   // renderMeSentence drew "loading"; applyDataset redraws once
 const meStatsEl = document.getElementById("me-stats");
 const meSavedListEl = document.getElementById("me-saved-list");
 
@@ -4960,7 +4967,11 @@ function meAreaNumbers() {
 function renderMeSentence() {
   // Opened before the dataset has landed (right after a reload): no stats yet
   // is not a missing stats.json. applyDataset re-renders the open dialog.
-  if (!dataReady) { meSentenceEl.innerHTML = `<span>${esc(t("dataLoading"))}</span>`; return; }
+  if (!dataReady) {
+    meSentenceEl.innerHTML = `<span>${esc(t("dataLoading"))}</span>`;
+    meRenderedLoading = true;
+    return;
+  }
   const { area, percent, tables, known } = meAreaNumbers();
   const greyCount = lastFix ? greyNearby(allFeatures, lastFix.lat, lastFix.lon).length : 0;
   const parts = sentenceParts({ area, percent, tables, known, greyCount, hasFix: !!lastFix, mama: mode === "mama" });
