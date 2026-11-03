@@ -361,9 +361,11 @@ test("changing_table_description is read verbatim, and a reader's own answer sta
     features: [feat(9.9, 53.5, { status: "unknown", ...props })] })[0];
   const desc = "barrierefreies WC im 2. OG, nicht am Eingang";
   assert.equal(load({ changing_table_description: desc }).changing_table_description, desc);
-  // pre-v115 data, junk and a blank value all read as "nobody said" — the popup asks there
-  for (const v of [undefined, null, 3, "", "   "])
+  // pre-v115 data, junk and an empty value read as "nobody said" — the popup asks there
+  for (const v of [undefined, null, 3, ""])
     assert.equal(load({ changing_table_description: v }).changing_table_description, null, String(v));
+  // a blank-but-present tag is somebody's: kept, so it is not asked (the write would be refused as taken)
+  assert.equal(load({ changing_table_description: "   " }).changing_table_description, "   ");
   const url = "https://www.openstreetmap.org/node/1";
   const base = { type: "FeatureCollection", features: [feat(9.9, 53.5, { status: "unknown", osm_url: url })] };
   const own = applyAnswerOverrides(base, { type: "FeatureCollection", features: [] },

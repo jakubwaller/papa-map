@@ -69,9 +69,10 @@ export function loadFeatures(fc) {
       wheelchair_description: typeof p.wheelchair_description === "string"
         ? p.wheelchair_description : null,
       // Where exactly the table is (v115), verbatim. The popup asks for it
-      // only where this is null; an empty string is no answer either.
+      // only where this is null. A blank-but-present value stays a string: the
+      // write would be refused as taken, so it must not be asked (the row skips it).
       changing_table_description: typeof p.changing_table_description === "string"
-        && p.changing_table_description.trim() ? p.changing_table_description : null,
+        && p.changing_table_description !== "" ? p.changing_table_description : null,
       // The table's own answer (v102, `changing_table:wheelchair`), the same
       // three values or null. The popup asks where null; never a chip rule.
       table_wheelchair: WHEELCHAIR_STATES.includes(p.table_wheelchair) ? p.table_wheelchair : null,

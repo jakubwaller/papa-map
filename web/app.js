@@ -843,8 +843,13 @@ function showPopupHTML(html) {
   const elsewhere = active && active !== document.body && !popup.getElement()?.contains(active);
   const prev = popup.options.focusAfterOpen;
   if (elsewhere) popup.options.focusAfterOpen = false;
+  // A half-typed description (v115) is not in the markup: carry it over.
+  const draft = popup.getElement()?.querySelector("input.ask-ct-input");
+  const typing = draft && document.activeElement === draft;
   try { popup.setHTML(html); }
   finally { popup.options.focusAfterOpen = prev; }
+  const field = draft?.value && popup.getElement()?.querySelector("input.ask-ct-input");
+  if (field) { field.value = draft.value; if (typing) field.focus({ preventScroll: true }); }
   popupHtmlShown = html;
   // Fallback for a MapLibre that moved focus anyway.
   if (elsewhere && active.isConnected && document.activeElement !== active) active.focus({ preventScroll: true });
@@ -986,7 +991,7 @@ function popupHTML(f) {
     rows.push(`<div class="row">${parts.join(" · ")}</div>`);
   }
   // Where exactly (v115), a mapper's words: verbatim, escaped, labelled.
-  if (f.changing_table_description)
+  if (f.changing_table_description?.trim())
     rows.push(`<div class="row ct-desc">${esc(t("popupTableWhere"))}: ${esc(f.changing_table_description)}</div>`);
   if (f.play) rows.push(`<div class="row play">${esc(t("popupPlay"))}</div>`);
   rows.push(...highchairRows(f));
