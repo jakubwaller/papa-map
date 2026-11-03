@@ -844,7 +844,10 @@ def test_rendered_pages_carry_the_span_and_the_script_that_hides_it():
 
 
 def test_every_footer_gets_one_contact_link_in_its_own_language():
-    for lang, t in pages_l10n.L.items():
+    from pipeline import leaderboard_strings
+    tables = [*pages_l10n.L.items(), *leaderboard_strings.L.items()]
+    assert len(tables) > len(pages_l10n.L)
+    for lang, t in tables:
         out = pages.footer_html(t["footer"], lang)
         assert out.count("mailto:papamap@jakubwaller.eu") == 1, lang
         assert f">{pages.CONTACT_WORD[lang]}</a>" in out, lang
