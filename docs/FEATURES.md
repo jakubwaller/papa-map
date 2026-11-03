@@ -1045,7 +1045,13 @@ midnight) and the sun events are all read in that zone.
 The parser understands `24/7`; day ranges and lists (`Mo-Fr`, `Mo,We`, with or
 without a space after the comma), including wrap-around ranges (`Fr-Mo`);
 several `,`-separated time spans in one rule (a lunch break); spans that
-cross midnight (`22:00-02:00`); and the `off`/`closed` modifiers. `PH` and
+cross midnight (`22:00-02:00`); the `open`, `off` and `closed` modifiers;
+and `unknown` (`Mo-Fr 09:00-16:00 unknown "mostly when someone is in"`),
+whose minutes answer `"unknown"` — no badge — instead of open. An `unknown`
+rule replaces, adds and is overridden exactly as an open rule would, and
+whichever rule names a minute last decides its state, so
+`Mo-Fr 09:00-16:00 unknown, Mo 09:00-12:30 open` is open Monday morning,
+unknown the rest of the weekday daytime, and closed otherwise. `PH` and
 `SH` (public/school holiday) rules are recognised and skipped outright —
 there is no calendar to check them against, so "PH off" neither opens nor
 closes anything here, rather than guessing at a holiday. Listed alongside
@@ -1127,7 +1133,9 @@ that needs one is `"unknown"`.
 
 A `||` fallback chain tries its alternatives in order, purely on whether
 each one is open *right now*: the first alternative that resolves to open
-decides the answer outright. One that resolves to closed (it parses and
+decides the answer outright, and so does one whose `unknown` rule covers the
+instant (`Mo,Fr 09:00-12:30 || Mo-Fr 09:00-16:00 unknown` is unknown on a
+Monday at 14:00 and closed at 19:00). One that resolves to closed (it parses and
 evaluates fine, it just isn't open at this instant) doesn't end the search —
 the next alternative is tried
 (`Mo-Fr 08:00-12:00 || 24/7` is open outside Mo-Fr's hours too, via the
