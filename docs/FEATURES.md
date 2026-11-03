@@ -356,7 +356,18 @@ own scaling gave the Berlin–Munich hop 7 s; a flat 1.2 s, tried for a day in
 October 2026, was fast but dizzying from 500 km. `fitBounds` flies the same
 way, so the search result's fit goes through the same rule.
 
-A refused permission gets its own toast (`geoFailKey`, `web/datasource.js`). A
+Without a position — permission refused, no fix in 10 s, or no geolocation at
+all — the button does not stop at an error (feedback, Nov 2026: a reader who
+had just searched "Hamburg Hauptbahnhof" got only "couldn't get your location").
+It measures from the place last chosen in the search box instead, or from the
+middle of the map when the box holds no chosen row, opens that table the same
+way and says so in the toast ("No location, so from Hamburg Hauptbahnhof — …",
+`toastNearestFrom`, `nearestMapCentre`). Typing in the box or clearing it
+forgets the chosen place, and it counts only while it is still on screen: a
+reader who has since panned to Munich gets Munich's centre, not Hamburg. No dot is drawn and no fix is noted, because there
+is none.
+
+On the locate button, a refused permission gets its own toast (`geoFailKey`, `web/datasource.js`). A
 browser remembers a dismissed prompt and never asks again, and a page cannot
 re-prompt, so the words are the fix: on the page the toast says to allow the
 location in the browser's or the phone's settings (a code-1 refusal also comes
@@ -1241,12 +1252,18 @@ label would be naming an area the number never actually counted. The
 percentage itself is counted live over every table the pipeline put in
 whichever area that turns out to be — every loaded feature, never the
 chip-filtered subset a reader happens to be looking at — never a second
-dataset of its own. Only when `pickArea` finds nothing at all (open sea,
+dataset of its own. Key-locked tables are left out, as they are left off the
+area pages (v116): until Nov 2026 they were counted, and Germany read 6,645
+tables in the dialog against 6,500 on its own page. Only when `pickArea` finds nothing at all (open sea,
 zoomed out past any area's reach) does the sentence fall back to the site's
 own whole-sweep numbers, the same ones the stats strip renders
 (`localAnswered`, `web/datasource.js` — one place "how many tables are
 answered" comes from `stats.json`'s `local` block, so the strip and that
-one fallback sentence cannot drift apart either). The sentence reads the
+one fallback sentence cannot drift apart either). Opened before the dataset
+has landed — tapped right after a reload — the sentence says the tables are
+still loading and fills in once they arrive; until Nov 2026 it said the stats
+file was missing, and stayed that way. "Stats unavailable" is kept for a load
+that has actually failed, and no longer names the file. The sentence reads the
 same in both readings since CONTRACT v60: the share with a recorded room is
 the same task whoever is looking, and the Mama reading's old "wahrscheinlich
 … für dich nutzbar" had put that very percentage under a claim it never

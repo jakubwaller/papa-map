@@ -233,6 +233,7 @@ const HAMBURG_FEATURES = [
   ...Array.from({ length: 90 }, () => ({ area: "Hamburg", status: "unknown" })),
   { area: "Bayern", status: "accessible" },   // a different chunk: must not be counted
   { area: null, status: "unknown" },          // no sweep area at all: must not be counted
+  { area: "Hamburg", status: "accessible", key: "yes" },   // key-locked: not on the area page either
 ];
 
 test("areaAnswered: every loaded feature in the area, never the chip-filtered subset", () => {

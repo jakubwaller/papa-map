@@ -12,8 +12,8 @@
 // The ?v= pin matches index.html's / app.js's — bump together, or a cached
 // half-pair serves for up to an hour (web/app.js's own header, web/sw.test.js
 // now checks every shell module's imports for this, not just app.js's).
-import { CREATED_BY } from "./osm.js?v=app111";
-import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app111";
+import { CREATED_BY } from "./osm.js?v=app112";
+import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v=app112";
 
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
@@ -34,13 +34,14 @@ export function answeredPercent(local) {
 // keeps that exact row, never picks a second time) — `areaKeys` is its
 // areaKeysFor() set (web/datasource.js). Counted over every LOADED feature,
 // never the chip-filtered subset: a reader who switched off "female only"
-// must not see the score move (CONTRACT.md v39).
+// must not see the score move (CONTRACT.md v39). Key-locked tables (`f.key`)
+// are left out, as pipeline/run.py leaves them out of the area pages (v116).
 export function areaAnswered(features, areaKeys) {
   const keys = areaKeys instanceof Set ? areaKeys : new Set(areaKeys ?? []);
   let tables = 0, known = 0, unknown = 0;
   if (keys.size)
     for (const f of features ?? []) {
-      if (!f.area || !keys.has(f.area)) continue;
+      if (f.key || !f.area || !keys.has(f.area)) continue;
       tables++;
       if (f.status === "accessible" || f.status === "female_only") known++;
       else if (f.status === "unknown") unknown++;
