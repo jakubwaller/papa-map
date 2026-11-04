@@ -3551,9 +3551,10 @@ function fitTagline() {
   const h = document.querySelector("header");
   const t = h.querySelector(".tagline"), b = h.querySelector(".brandmark");
   h.classList.remove("no-tagline");
-  if (phoneMQ.matches) return;   // the phone rules already hide it
-  // Not in full on the brand's row: pushed down itself, or it pushed the nav down.
+  // The phone rules already hide it; the store app moved the nav out of the header (bootNative).
   const nav = h.querySelector(".header-actions");
+  if (phoneMQ.matches || isNative() || !nav) return;
+  // Not in full on the brand's row: pushed down itself, or it pushed the nav down.
   const off = (e) => Math.abs(e.getBoundingClientRect().top - b.getBoundingClientRect().top) > 12;
   if (off(t) || off(nav) || t.scrollWidth > t.clientWidth) h.classList.add("no-tagline");
 }
