@@ -269,13 +269,14 @@ ICON = (
 STYLE = """\
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
     }
+    .dot { box-shadow: 0 0 0 1.5px #ffffff; } /* the map's white pin stroke: grey on this background is 1.7:1 */
   }
   body {
     margin: 0 auto; max-width: 46rem; padding: 1.5rem 1rem 4rem;
