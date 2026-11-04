@@ -14,9 +14,9 @@ import { loadFeatures, loadPlaces, placeFeatures, splitPlaces, filterFeatures, c
          mergeFeatureCollection, isDeltaFresh, foldOpen, roomAnsweredHere, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app113";
+         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app114";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app113";
+         canonicalUrl, langUrl, isCrawler, VENUE_THANKS, VENUE_AFTER } from "./i18n.js?v=app114";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
@@ -25,7 +25,7 @@ import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, rev
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
          isWheelchairChoice, wheelchairPatch,
          DESCRIPTION_CHOICE, DESCRIPTION_MAX, descriptionPatch,
-         writeTags } from "./osm.js?v=app113";
+         writeTags } from "./osm.js?v=app114";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
@@ -33,7 +33,7 @@ import { answeredPercent, areaAnswered, areaPercent, siteAnswered, sitePercent, 
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app113";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app114";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, locateNative, interceptLinks,
@@ -43,28 +43,28 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, l
          cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app113";
+         reviewTracker } from "./native.js?v=app114";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app113";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app114";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app113";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app114";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app113";
+import { isOpenNow } from "./opening-hours.js?v=app114";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
          isVenue, isSearchVenue, VENUE_MIN_ZOOM, venueAnswer, venueFromIntent,
-         venueQuestions } from "./venues.js?v=app113";
-// The bundled shell's pin (`?v=app113`), what the intro key records.
+         venueQuestions } from "./venues.js?v=app114";
+// The bundled shell's pin (`?v=app114`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -3186,6 +3186,9 @@ function renderVenueSkeleton() {
 }
 
 function showVenueStep(step) {
+  addDialog.classList.remove("saved");
+  addDialog.classList.toggle("asking", step === "ask");
+  document.getElementById("venue-after").hidden = true;
   venuePick.hidden = step !== "pick";
   venueAskEl.hidden = step !== "ask";
   // The dialog is the scroller (v94): a row picked deep in the list would
@@ -3293,12 +3296,29 @@ function setVenueNote(key, cls = "", vars = null) {
   el.className = `venue-note ${cls}`;
   el.textContent = key ? t(key, vars) : "";
   el.hidden = !key;
+  // The saved state: only the way on stays, the questions and the MapComplete
+  // cards go (style.css, #add-dialog.saved). Left by showVenueStep.
+  const saved = key === "venueSaved" || key === "venueSavedNone";
+  addDialog.classList.toggle("saved", saved);
+  const after = VENUE_AFTER[lang] ?? VENUE_AFTER.en;
+  document.getElementById("venue-another").textContent = after.another;
+  document.getElementById("venue-finish").textContent = after.done;
+  document.getElementById("venue-after").hidden = !saved;
+  // null in the store app: its copy of the page has the line cut out (app/shell.mjs).
+  const thanks = document.getElementById("venue-thanks");
+  if (!thanks) return;
+  const v = VENUE_THANKS[lang] ?? VENUE_THANKS.en;
+  thanks.firstElementChild.textContent = v.text;
+  thanks.lastElementChild.textContent = v.link;
+  thanks.hidden = !saved;
 }
 
 document.getElementById("venue-back").addEventListener("click", () => {
   venuePicked = null;
   showVenueStep("pick");
 });
+document.getElementById("venue-another").addEventListener("click", () => document.getElementById("venue-back").click());
+document.getElementById("venue-finish").addEventListener("click", () => addDialog.close());
 
 document.getElementById("venue-q").addEventListener("click", (e) => {
   const btn = e.target.closest?.("button.ask-btn");
@@ -3509,6 +3529,44 @@ function fitLangSelect() {
 }
 fitLangSelect();
 
+// On a phone the picker shows the language's short code ("DE"), which is what
+// leaves room for Kontakt in the nav's one row; aria-label and title keep the
+// full name. Opening it (focus) swaps the full names back so the list is
+// readable, and blur puts the code back.
+const phoneMQ = window.matchMedia("(max-width: 640px)");
+function shortLang(on) {
+  for (const opt of langSelect.options)
+    opt.textContent = on ? opt.value.toUpperCase() : STRINGS[opt.value]?.langName ?? opt.value;
+  fitLangSelect();
+}
+const syncLangLabels = () => shortLang(phoneMQ.matches && document.activeElement !== langSelect);
+phoneMQ.addEventListener("change", syncLangLabels);
+langSelect.addEventListener("focus", () => shortLang(false));
+langSelect.addEventListener("blur", syncLangLabels);
+syncLangLabels();
+
+// The tagline is shown in full or not at all: hidden when it has been pushed
+// onto a row of its own (it is the <h1>, so hidden visually, never removed).
+function fitTagline() {
+  const h = document.querySelector("header");
+  const t = h.querySelector(".tagline"), b = h.querySelector(".brandmark");
+  h.classList.remove("no-tagline");
+  if (phoneMQ.matches) return;   // the phone rules already hide it
+  // Not in full on the brand's row: pushed down itself, or it pushed the nav down.
+  const nav = h.querySelector(".header-actions");
+  const off = (e) => Math.abs(e.getBoundingClientRect().top - b.getBoundingClientRect().top) > 12;
+  if (off(t) || off(nav) || t.scrollWidth > t.clientWidth) h.classList.add("no-tagline");
+}
+window.addEventListener("resize", fitTagline);
+// The brand grows when the swept-area subtitle arrives, the nav when a label changes.
+if (window.ResizeObserver) {
+  const ro = new ResizeObserver(fitTagline);
+  ro.observe(document.querySelector("header .brandmark"));
+  ro.observe(document.querySelector("header .header-actions"));
+}
+document.fonts?.ready.then(fitTagline);
+fitTagline();
+
 // ---- Papa/Mama toggle: repaint, never re-fetch ----
 // Two buttons rather than a select: there are exactly two states and there
 // always will be, which is the case a segmented control is for. The pins are
@@ -3595,7 +3653,7 @@ langSelect.addEventListener("change", () => {
     history.replaceState(null, "", url);
   }
   closePopupSilently();   // same reason as applyMode: not the reader's own close
-  applyI18n();
+  applyI18n(); fitTagline();
   renderStats(lastStats);
   renderChips();
   refreshPins();

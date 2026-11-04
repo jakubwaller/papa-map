@@ -12,11 +12,10 @@ test("the app's shell has no donate link, and loses nothing else", () => {
   // is left reads as if the coffee link had never been in the line.
   assert.doesNotMatch(out, /class="donate"/);
   assert.doesNotMatch(out, /class="contact"/);
-  assert.match(out, />Status<\/a> · <a href="https:\/\/jakubwaller\.eu"/);
   const preloads = page.match(/[ \t]*<link rel="preload" href="data\/[^"]*"[^>]*>\n/g) ?? [];
   assert.equal(page.length - out.length,
-               page.match(/<span class="donate">[\s\S]*?<\/span>/)[0].length
-               + page.match(/\s*<span class="contact">[\s\S]*?<\/span>/)[0].length
+               page.match(/<(span|p) [^>]*class="donate[ "][\s\S]*?<\/\1>/g).join("").length
+               + page.match(/\s*<span class="contact">[\s\S]*?<\/span>/g).join("").length
                + preloads.reduce((n, p) => n + p.length, 0)
                - ", maximum-scale=1".length);
 });
@@ -60,8 +59,8 @@ test("a second link elsewhere on the page is caught", () => {
   assert.throws(() => appShell(page + '<a href="https://ko-fi.com/x">x</a>'), /left after the cut/);
 });
 
-test("a second donate span elsewhere on the page is caught", () => {
-  assert.throws(() => appShell(page + '<span class="donate">x</span>'), /second donate span/);
+test("a donate element the cut cannot match is caught", () => {
+  assert.throws(() => appShell(page + '<div class="donate">x</div>'), /second donate span/);
 });
 
 test("the page's own files are found, pins cut, pages and absolute URLs left out", () => {

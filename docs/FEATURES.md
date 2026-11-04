@@ -1607,7 +1607,7 @@ paths answered, which is what its tests read.
 One thing the app never shows is the Ko-fi link: Apple wants a tip for the developer to go
 through in-app purchase, and the developer account is declared a non-trader because the app has
 no purchase and no donate button. On the app's own page the link is not there at all —
-`app/shell.mjs` cuts the whole `<span class="donate">` out of the bundled `index.html`,
+`app/shell.mjs` cuts every `donate` element (the footer span, the header coffee, the add-a-place dialog's thank-you line) out of the bundled `index.html`,
 separator included, and the build fails if it cannot find it or leaves a Ko-fi URL behind. But
 the app also opens the website's pages — a country page, the leaderboard, the methods, and the
 map itself when a reader taps "back to the map" — and those are the website's, link and all,
@@ -1617,11 +1617,10 @@ the head of each of those pages, reads the flag, remembers it in `sessionStorage
 of that in-app browsing session and puts `.in-app` on `<html>` before the first paint, under
 which the CSS hides the donate span; once the session remembers, the script takes the flag out
 of the address again, so a link shared out of the in-app browser does not hide the line for
-whoever opens it. The footer also carries a Kontakt link (`mailto:` the site's own address, the
+whoever opens it. The header nav (moved up from the footer, Nov 2026) carries a Kontakt link (`mailto:` the site's own address, the
 word in the page's language: `contact` in `web/i18n.js` on the map, `CONTACT_WORD` in
 `pipeline/pages.py` for generated pages, plain text on the static pages), so readers write
-there and not to the owner's personal address; the app cuts it from the map footer
-(`app/shell.mjs`) because the me dialog already has the feedback link.
+there and not to the owner's personal address; the app cuts it (`app/shell.mjs`) because the me dialog already has the feedback link.
 Every generated footer gets that span at render time
 (`wrap_donate` in `pipeline/pages.py`, one rule over ~50 hand-written footers, raising rather
 than shipping the link). A reader on the open web sees exactly what they saw before, and with

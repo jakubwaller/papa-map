@@ -1,5 +1,19 @@
 # papa-map — build contract (v0)
 
+> **v118 amendment (4 Nov 2026, Kontakt and coffee in the header, a slimmer add-a-place dialog): no data shape change.**
+> Frontend only. Kontakt moves from the footer into the header nav (readers missed it and mailed the owner's
+> private address); on a phone the language picker shows its short code (`shortLang`, `app.js`) to make room,
+> and the tagline is hidden, visually only, where it no longer fits the brand's row (`fitTagline`). "☕ Kaffee"
+> joins the header from 900 px. The footer is one line (Impressum, Datenschutz, coffee, and "Made with ♥ in
+> Hamburg by Jakub Waller" from 560 px); Status moves to the Impressum. The add-a-place dialog loses its long
+> intro and the two hint paragraphs: `dlgToiletHint` and `dlgVenueHint` are removed from all 32 languages, and
+> `dlgIntro`, `dlgElsewhere`, `dlgToilet`, `dlgVenue` are shortened. The two MapComplete links are compact
+> buttons (`.add-links`, one line each, stacked when both do not fit a row); they and the intro are hidden on the
+> question step. The saved state shows only the place, the saved note, a thank-you with the Ko-fi link
+> (`#venue-thanks`, class `donate`, so web only: cut from the store app's copy by `app/shell.mjs`, which now
+> cuts every `donate` element, `<span>` or `<p>`) and "Add another place" / "Done". New exports `VENUE_THANKS` and
+> `VENUE_AFTER` in `web/i18n.js`, 32 languages each. Shell pin `v=app113` becomes `v=app114`.
+
 > **v117 amendment (4 Nov 2026, the stats strip counts what the map draws): no data shape change.**
 > The strip's `{tables}`, `{known}` and `{percent}` (`statsLocal`, `statsLocalMama`) and
 > My PapaMap's whole-sweep fallback are counted over the loaded features once the tables are
