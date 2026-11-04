@@ -2212,7 +2212,8 @@ function pickSearchRow(row) {
       ?? [(b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2];
     searchPicked = { name: row.name, lat, lon };
     // fitBounds where the result knows its own extent — a city then fills the
-    // screen and is not guessed at from a zoom table. Capped, or a house whose
+    // screen and is not guessed at from a zoom table. The box is centred on the
+    // result's point (photonTarget), so the fit is too. Capped, or a house whose
     // extent is a few metres across would land at the maximum zoom there is.
     if (row.target.bounds)
       flyToBounds(row.target.bounds, { maxZoom: SEARCH_FIT_MAX_ZOOM, padding: searchFitPadding() });

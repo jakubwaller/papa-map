@@ -178,10 +178,34 @@ test("photonRow: the name, then the next two levels that are not already in it",
   assert.deepEqual(photonRow(null), { name: "", context: "" });
 });
 
-test("photonTarget: an extent fits, everything else flies to a zoom by level", () => {
+const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} ≉ ${b}`);
+// The box is centred on the point and as wide as the extent's nearer edge allows.
+const assertBoxAround = (target, [lon, lat], dx, dy) => {
+  assert.deepEqual(target.center, [lon, lat]);
+  const [[w, s], [e, n]] = target.bounds;
+  near(w, lon - dx); near(e, lon + dx); near(s, lat - dy); near(n, lat + dy);
+};
+
+test("photonTarget: an extent sizes the view, the point centres it", () => {
   // Photon's extent is [west, north, east, south]; a bounds is [[w,s],[e,n]].
-  assert.deepEqual(photonTarget(LIVE.features[0]),
-    { bounds: [[9.9915642, 53.5499029], [9.9931776, 53.5509132]] });
+  // The town hall's point is nearer its east and south edges.
+  assertBoxAround(photonTarget(LIVE.features[0]), [9.9925658, 53.5503287],
+    9.9931776 - 9.9925658, 53.5503287 - 53.5499029);
+  // Hamburg as photon.komoot.io returned it on 4 Nov 2026 (?q=Hamburg): the
+  // extent reaches Neuwerk at 8.10°E, so its middle is 9.21°E, ~50 km west of
+  // the city. The view stays on the city and leaves the island out.
+  const hamburg = photonTarget({ properties: { type: "city", extent: [8.1044993, 54.02765, 10.3252805, 53.3951118] },
+    geometry: { type: "Point", coordinates: [10.0013165, 53.5501721] } });
+  assertBoxAround(hamburg, [10.0013165, 53.5501721], 10.3252805 - 10.0013165, 53.5501721 - 53.3951118);
+  assert.ok(hamburg.bounds[0][0] > 9.6, "Neuwerk is out of the box");
+  // A point on or outside its own extent says nothing about size: the zoom by level.
+  assert.deepEqual(photonTarget({ properties: { type: "city", extent: [0, 1, 1, 0] },
+    geometry: { type: "Point", coordinates: [1, 0.5] } }), { center: [1, 0.5], zoom: 12 });
+  // An extent with no point still fits.
+  assert.deepEqual(photonTarget({ properties: { extent: [0, 1, 1, 0] } }), { bounds: [[0, 0], [1, 1]] });
+});
+
+test("photonTarget: everything without an extent flies to a zoom by level", () => {
   assert.deepEqual(photonTarget(LIVE.features[2]),
     { center: [9.9940526, 53.550371], zoom: 17 });
   const at = (type) => photonTarget({ properties: { type }, geometry: { type: "Point", coordinates: [0, 0] } }).zoom;
@@ -195,11 +219,9 @@ test("photonTarget: an extent fits, everything else flies to a zoom by level", (
 test("photonResults: the live answer parses, and the doubled town hall is one row", () => {
   const rows = photonResults(LIVE);
   assert.equal(rows.length, 2);
-  assert.deepEqual(rows[0], {
-    name: "Rathaus",
-    context: "Rathausmarkt 1, Hamburg",
-    target: { bounds: [[9.9915642, 53.5499029], [9.9931776, 53.5509132]] },
-  });
+  assert.equal(rows[0].name, "Rathaus");
+  assert.equal(rows[0].context, "Rathausmarkt 1, Hamburg");
+  assert.deepEqual(rows[0].target, photonTarget(LIVE.features[0]));
   assert.equal(rows[1].target.zoom, 17);
 });
 

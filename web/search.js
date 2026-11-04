@@ -165,15 +165,25 @@ export const PHOTON_ZOOM_DEFAULT = 12;
 
 export function photonTarget(feature) {
   const p = feature?.properties ?? {};
+  const c = feature?.geometry?.coordinates;
+  const pt = Array.isArray(c) && Number.isFinite(c[0]) && Number.isFinite(c[1]) ? [c[0], c[1]] : null;
   // Photon's extent is [west, north, east, south] — not GeoJSON's bbox order.
   // Verified against the live API (Hamburg Rathaus, 21 Sep 2026): the second
   // number is the larger latitude.
   const e = p.extent;
-  if (Array.isArray(e) && e.length === 4 && e.every((n) => Number.isFinite(n)))
-    return { bounds: [[e[0], e[3]], [e[2], e[1]]] };
-  const c = feature?.geometry?.coordinates;
-  if (!Array.isArray(c) || !Number.isFinite(c[0]) || !Number.isFinite(c[1])) return null;
-  return { center: [c[0], c[1]], zoom: PHOTON_ZOOM[p.type] ?? PHOTON_ZOOM_DEFAULT };
+  if (Array.isArray(e) && e.length === 4 && e.every((n) => Number.isFinite(n))) {
+    if (!pt) return { bounds: [[e[0], e[3]], [e[2], e[1]]] };
+    // The extent spans every part of the object, outlying ones included:
+    // Hamburg's reaches Neuwerk in the North Sea, so its middle sits ~50 km
+    // west of the city (walkthrough, Nov 2026), and France's spans the globe.
+    // The point is where the place itself is, so the view centres there and
+    // reaches, on each axis, as far as the extent's nearer edge.
+    const dx = Math.min(pt[0] - e[0], e[2] - pt[0]), dy = Math.min(e[1] - pt[1], pt[1] - e[3]);
+    if (dx > 0 && dy > 0)
+      return { center: pt, bounds: [[pt[0] - dx, pt[1] - dy], [pt[0] + dx, pt[1] + dy]] };
+  }
+  if (!pt) return null;
+  return { center: pt, zoom: PHOTON_ZOOM[p.type] ?? PHOTON_ZOOM_DEFAULT };
 }
 
 // The whole answer, turned into rows the dropdown can render, or [] for
