@@ -12,10 +12,10 @@
 // cannot filter on `changing_table`, which is why venueRows drops what the
 // map already has a pin for, and why writeTags' own re-read (web/osm.js)
 // stays the last word on whether the place is still unanswered.
-import { haversineKm } from "./datasource.js?v=app112";
-import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app112";
+import { haversineKm } from "./datasource.js?v=app113";
+import { PHOTON_ENDPOINT, photonLang, photonRow } from "./search.js?v=app113";
 import { isPlayChoice, playPatch, isHighchairChoice, highchairPatch, tablePatch,
-         isHighchairVenue } from "./osm.js?v=app112";
+         isHighchairVenue } from "./osm.js?v=app113";
 
 // The MapComplete theme's dad_venue layer, as tag lists: the same places the
 // theme offers for the same question. theme/papamap.theme.json is the source,
