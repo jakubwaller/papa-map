@@ -1257,9 +1257,11 @@ area pages (v116): until Nov 2026 they were counted, and Germany read 6,645
 tables in the dialog against 6,500 on its own page. Only when `pickArea` finds nothing at all (open sea,
 zoomed out past any area's reach) does the sentence fall back to the site's
 own whole-sweep numbers, the same ones the stats strip renders
-(`localAnswered`, `web/datasource.js` — one place "how many tables are
-answered" comes from `stats.json`'s `local` block, so the strip and that
-one fallback sentence cannot drift apart either). Opened before the dataset
+(`siteNumbers`, `web/app.js`: every loaded unlocked table, the nightly base
+plus the live delta, which is also what the count line counts; until Nov 2026
+the strip read `stats.json`'s nightly totals and fell four tables behind the
+count line within a day. `stats.json`'s `local` block is still the reading
+until the tables have loaded). Opened before the dataset
 has landed — tapped right after a reload — the sentence says the tables are
 still loading and fills in once they arrive; until Nov 2026 it said the stats
 file was missing, and stayed that way. "Stats unavailable" is kept for a load

@@ -73,6 +73,10 @@
   table { border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; width: 100%; }
   th, td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: right; }
   th:first-child, td:first-child { text-align: left; }
+  /* On a phone the table scrolls inside its own box rather than pushing the
+     whole page sideways ("Irgendein Geschlechter-Tag" did at 360px). */
+  th { hyphens: auto; }
+  @media (max-width: 30rem) { table { display: block; overflow-x: auto; } }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
   .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }

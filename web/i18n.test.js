@@ -45,6 +45,13 @@ test("no string tells the reader to run the pipeline", () => {
       assert.ok(!/pipeline|пайплайн|パイプライン|keyrsluferl/i.test(String(v)), `${lang}.${k}`);
 });
 
+test("a fix that is unavailable or timed out does not blame the permission", () => {
+  // Codes 2 and 3 (geoFailKey → toastGeoFail) happen with the permission granted.
+  assert.doesNotMatch(STRINGS.en.toastGeoFail, /permission/i);
+  assert.doesNotMatch(STRINGS.de.toastGeoFail, /Berechtigung/i);
+  for (const lang of LANGS) assert.ok(STRINGS[lang].toastGeoFail.length > 60, `${lang} names a next step`);
+});
+
 test("every template carries the same tokens in every language", () => {
   for (const key of Object.keys(STRINGS[DEFAULT_LANG])) {
     for (const lang of LANGS) {

@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CREATED_BY } from "./osm.js";
-import { haversineKm } from "./datasource.js";
+import { haversineKm, pinFeatures } from "./datasource.js";
 import { STRINGS, LANGS } from "./i18n.js";
 import {
-  answeredPercent, areaAnswered, areaPercent,
+  answeredPercent, areaAnswered, areaPercent, siteAnswered, sitePercent,
   buildFeatureGrid, answerArea, answersInArea, totalAnswers,
   sentenceParts, yoursParts, greyNearby, circleBounds,
   MAPCOMPLETE_THEME, MAPCOMPLETE_THEME_URL, isOwnChangeset, pinNumber, introKind, INTRO_FEATURES, WHATS_NEW, changesetAnswer, extractAnswers,
@@ -242,6 +242,15 @@ test("areaAnswered: every loaded feature in the area, never the chip-filtered su
   assert.equal(areaPercent(HAMBURG_FEATURES, new Set(["Hamburg"])), 31);
   assert.deepEqual(areaAnswered(HAMBURG_FEATURES, new Set()), { tables: 0, unknown: 0, known: 0 });
   assert.equal(areaPercent([], new Set(["Hamburg"])), null);
+});
+
+test("siteAnswered: the whole sweep is every loaded unlocked table, the count line's own set", () => {
+  // Every area and none, the key-locked one left out as pinFeatures leaves it off the map:
+  // a table the delta added since the nightly build counts here the moment it is drawn.
+  assert.deepEqual(siteAnswered(HAMBURG_FEATURES), { tables: 133, unknown: 91, known: 42 });
+  assert.equal(siteAnswered(HAMBURG_FEATURES).tables, pinFeatures(HAMBURG_FEATURES).length);
+  assert.equal(sitePercent(HAMBURG_FEATURES), 32);
+  assert.equal(sitePercent([]), null);
 });
 
 test("areaAnswered: a country row's several chunk keys all count", () => {

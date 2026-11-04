@@ -33,6 +33,12 @@ const groupSep = (loc) => {
 const decimalSep = (loc) => new Intl.NumberFormat(loc).formatToParts(1234567.8)
   .find((p) => p.type === "decimal").value;
 
+test("on a phone the table scrolls in its own box, never the page", () => {
+  // 24 of 32 pages scrolled sideways at 360px before this (walkthrough, Nov 2026).
+  for (const f of PAGES)
+    assert.match(read(f), /@media \(max-width: 30rem\) \{ table \{ display: block; overflow-x: auto; \} \}/, f);
+});
+
 test("every methods page declares a LOCALE", () => {
   assert.ok(PAGES.length >= 31, `found only ${PAGES.length} methods pages`);
   for (const f of PAGES) assert.ok(localeOf(read(f)), `${f} has no var LOCALE`);

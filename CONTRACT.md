@@ -1,5 +1,23 @@
 # papa-map — build contract (v0)
 
+> **v117 amendment (4 Nov 2026, the stats strip counts what the map draws): no data shape change.**
+> The strip's `{tables}`, `{known}` and `{percent}` (`statsLocal`, `statsLocalMama`) and
+> My PapaMap's whole-sweep fallback are counted over the loaded features once the tables are
+> in (`siteAnswered`/`sitePercent`, `web/me.js`: every `key: null` feature, the count line's
+> own set), and re-rendered after every merge (`applyFeatureSets`). Until now they read
+> `stats.json`'s nightly `local` block while the count line counted the nightly base plus
+> the live delta, so the two disagreed by every table added since the build (27,365 vs
+> 27,369 on 4 Nov 2026; base and `stats.json` themselves agree exactly, so it was never
+> cache skew). `localAnswered(stats.local)` stays the reading before the tables load.
+> In the same release, frontend-only fixes from the Nov 2026 walkthrough: a fix that is
+> unavailable or timed out no longer blames the permission (`toastGeoFail`, all 32
+> languages); a search result is framed around its point, each side of the box reaching
+> at most 1.5 times as far as the opposite one, and a box over 90° wide (France's extent
+> spans the globe) gives way to the zoom by level (`photonTarget`); the chip bar scrolls sideways under a mouse wheel; Escape closes the top
+> layer, as the app's back key does (`closeTopmost`); on a phone the area link shows the
+> place without the "(English)" hint and the methods table scrolls in its own box. Shell
+> pin `v=app112` becomes `v=app113`.
+
 > **v116 amendment (3 Nov 2026, My PapaMap counts what the area pages count): no data shape change.**
 > `areaAnswered` (`web/me.js`) skips every feature with `key` set, the same features
 > `pipeline/run.py` keeps off the area pages and the leaderboard (v5 as amended), so the

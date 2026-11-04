@@ -178,10 +178,50 @@ test("photonRow: the name, then the next two levels that are not already in it",
   assert.deepEqual(photonRow(null), { name: "", context: "" });
 });
 
-test("photonTarget: an extent fits, everything else flies to a zoom by level", () => {
+// A bounds [[w, s], [e, n]] holds a [lon, lat].
+const holds = ([[w, s], [e, n]], [lon, lat]) => w <= lon && lon <= e && s <= lat && lat <= n;
+
+test("photonTarget: an extent sizes the view around the point", () => {
   // Photon's extent is [west, north, east, south]; a bounds is [[w,s],[e,n]].
-  assert.deepEqual(photonTarget(LIVE.features[0]),
-    { bounds: [[9.9915642, 53.5499029], [9.9931776, 53.5509132]] });
+  const hall = photonTarget(LIVE.features[0]);
+  assert.deepEqual(hall.center, [9.9925658, 53.5503287]);
+  const outline = [[9.9915642, 53.5499029], [9.9931776, 53.5509132]];
+  assert.ok(holds(hall.bounds, hall.center), "the box holds the point");
+  assert.ok(holds(outline, hall.bounds[0]) && holds(outline, hall.bounds[1]), "and stays inside the extent");
+  // Hamburg as photon.komoot.io returned it on 4 Nov 2026 (?q=Hamburg): the
+  // extent reaches Neuwerk at 8.10°E, so its middle is 9.21°E, ~50 km west of
+  // the city. The view takes in the whole city, Rissen to Wohldorf-Ohlstedt,
+  // and leaves the island out.
+  const hamburg = photonTarget({ properties: { type: "city", extent: [8.1044993, 54.02765, 10.3252805, 53.3951118] },
+    geometry: { type: "Point", coordinates: [10.0013165, 53.5501721] } });
+  assert.deepEqual(hamburg.center, [10.0013165, 53.5501721]);
+  assert.ok(holds(hamburg.bounds, [9.7301155, 53.5847]), "Rissen is in");
+  assert.ok(holds(hamburg.bounds, [10.1306, 53.7394378]), "Wohldorf-Ohlstedt is in");
+  assert.ok(!holds(hamburg.bounds, [8.5181118, 53.9124807]), "Neuwerk is out");
+  // The Netherlands (?q=Netherlands, 4 Nov 2026): the extent reaches Aruba at
+  // 70°W and the point sits 1.6° from the east edge, but Zeeland lies 2.3° west.
+  const nl = photonTarget({ properties: { type: "country", extent: [-70.2695876, 53.748815, 7.2274985, 11.777] },
+    geometry: { type: "Point", coordinates: [5.6343227, 52.2434979] } });
+  assert.ok(holds(nl.bounds, [3.3707939, 51.3685463]), "Cadzand is in");
+  assert.ok(!holds(nl.bounds, [-68.27, 12.15]), "Bonaire is out");
+  // A point on or outside its own extent says nothing about size: the zoom by level.
+  assert.deepEqual(photonTarget({ properties: { type: "city", extent: [0, 1, 1, 0] },
+    geometry: { type: "Point", coordinates: [1, 0.5] } }), { center: [1, 0.5], zoom: 12 });
+  // An extent with no point still fits.
+  assert.deepEqual(photonTarget({ properties: { extent: [0, 1, 1, 0] } }), { bounds: [[0, 0], [1, 1]] });
+});
+
+test("photonTarget: an extent spanning the globe flies to the zoom by level", () => {
+  // France (?q=France and ?q=Frankreich, 4 Nov 2026) reaches Wallis and Futuna
+  // and New Caledonia, either side of the antimeridian; any box around the
+  // point is the whole world.
+  assert.deepEqual(photonTarget({ properties: { type: "country", extent: [-178.3873749, 51.3055721, 172.3057152, -50.2187169] },
+    geometry: { type: "Point", coordinates: [1.8883335, 46.603354] } }), { center: [1.8883335, 46.603354], zoom: 5 });
+  assert.deepEqual(photonTarget({ properties: { type: "country", extent: [-180, 71.5889534, 180, -14.7608358] },
+    geometry: { type: "Point", coordinates: [-100.445882, 39.7837304] } }), { center: [-100.445882, 39.7837304], zoom: 5 });
+});
+
+test("photonTarget: everything without an extent flies to a zoom by level", () => {
   assert.deepEqual(photonTarget(LIVE.features[2]),
     { center: [9.9940526, 53.550371], zoom: 17 });
   const at = (type) => photonTarget({ properties: { type }, geometry: { type: "Point", coordinates: [0, 0] } }).zoom;
@@ -195,11 +235,9 @@ test("photonTarget: an extent fits, everything else flies to a zoom by level", (
 test("photonResults: the live answer parses, and the doubled town hall is one row", () => {
   const rows = photonResults(LIVE);
   assert.equal(rows.length, 2);
-  assert.deepEqual(rows[0], {
-    name: "Rathaus",
-    context: "Rathausmarkt 1, Hamburg",
-    target: { bounds: [[9.9915642, 53.5499029], [9.9931776, 53.5509132]] },
-  });
+  assert.equal(rows[0].name, "Rathaus");
+  assert.equal(rows[0].context, "Rathausmarkt 1, Hamburg");
+  assert.deepEqual(rows[0].target, photonTarget(LIVE.features[0]));
   assert.equal(rows[1].target.zoom, 17);
 });
 

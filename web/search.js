@@ -9,7 +9,7 @@
 // the world, from a geocoder — because a parent planning a trip wants to look
 // at Lisbon before they are standing in it, and this map has no street index
 // of its own.
-import { haversineKm } from "./datasource.js?v=app112";
+import { haversineKm } from "./datasource.js?v=app113";
 
 // ---- The geocoder ----
 // Photon (komoot), not Nominatim. Nominatim's usage policy forbids
@@ -165,15 +165,31 @@ export const PHOTON_ZOOM_DEFAULT = 12;
 
 export function photonTarget(feature) {
   const p = feature?.properties ?? {};
+  const c = feature?.geometry?.coordinates;
+  const pt = Array.isArray(c) && Number.isFinite(c[0]) && Number.isFinite(c[1]) ? [c[0], c[1]] : null;
   // Photon's extent is [west, north, east, south] — not GeoJSON's bbox order.
   // Verified against the live API (Hamburg Rathaus, 21 Sep 2026): the second
   // number is the larger latitude.
   const e = p.extent;
-  if (Array.isArray(e) && e.length === 4 && e.every((n) => Number.isFinite(n)))
-    return { bounds: [[e[0], e[3]], [e[2], e[1]]] };
-  const c = feature?.geometry?.coordinates;
-  if (!Array.isArray(c) || !Number.isFinite(c[0]) || !Number.isFinite(c[1])) return null;
-  return { center: [c[0], c[1]], zoom: PHOTON_ZOOM[p.type] ?? PHOTON_ZOOM_DEFAULT };
+  if (Array.isArray(e) && e.length === 4 && e.every((n) => Number.isFinite(n))) {
+    if (!pt) return { bounds: [[e[0], e[3]], [e[2], e[1]]] };
+    // The extent spans every part of the object, outlying ones included:
+    // Hamburg's reaches Neuwerk in the North Sea, so its middle sits ~50 km
+    // west of the city (walkthrough, Nov 2026). The point is where the place
+    // itself is, so the view is built around it: each side reaches to the
+    // extent's edge, but no further than 1.5 times the opposite side does.
+    // That keeps Neuwerk out, and Zeeland (1.4 times further west of the
+    // Netherlands' point than its east edge is east) in.
+    const w = pt[0] - e[0], east = e[2] - pt[0], n = e[1] - pt[1], s = pt[1] - e[3];
+    const reach = (a, b) => Math.min(a, 1.5 * b);
+    // France's extent spans the globe (Wallis and Futuna to New Caledonia):
+    // a box over 90° wide shows a continent, not the place, so zoom by level.
+    if (w > 0 && east > 0 && n > 0 && s > 0 && reach(w, east) + reach(east, w) <= 90)
+      return { center: pt, bounds: [[pt[0] - reach(w, east), pt[1] - reach(s, n)],
+                                    [pt[0] + reach(east, w), pt[1] + reach(n, s)]] };
+  }
+  if (!pt) return null;
+  return { center: pt, zoom: PHOTON_ZOOM[p.type] ?? PHOTON_ZOOM_DEFAULT };
 }
 
 // The whole answer, turned into rows the dropdown can render, or [] for

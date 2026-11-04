@@ -14,9 +14,9 @@ import { loadFeatures, loadPlaces, placeFeatures, splitPlaces, filterFeatures, c
          mergeFeatureCollection, isDeltaFresh, foldOpen, roomAnsweredHere, applyAnswerOverrides, mergeAnswerOverride,
          deltaFingerprint, isDeltaOlder, resolvePopupObj,
          geoFailKey, pruneAnswerOverrides, resolveDataUrl, selectAddedPlace, addWatchSince, flightLength, flightMs,
-         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app112";
+         zoneForFeature, nearestFeature, parseSavedView, WHEELCHAIR_STATES } from "./datasource.js?v=app113";
 import { STRINGS, LANGS, DEFAULT_LANG, NUMBER_LOCALE, pickLang, fmt,
-         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app112";
+         canonicalUrl, langUrl, isCrawler } from "./i18n.js?v=app113";
 import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, revoke, getToken, getUser,
          getUserId, setLogin, clearLogin, takeIntent, keepRoundTripAcrossRestarts, dropStaleRoundTrip, preferReturn,
          roomChoices, roomChoicesMore, roomPatch, tablePatch,
@@ -25,15 +25,15 @@ import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, rev
          HIGHCHAIR_CHOICES, isHighchairChoice, isHighchairVenue, highchairPatch,
          isWheelchairChoice, wheelchairPatch,
          DESCRIPTION_CHOICE, DESCRIPTION_MAX, descriptionPatch,
-         writeTags } from "./osm.js?v=app112";
+         writeTags } from "./osm.js?v=app113";
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
-import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, greyNearby, circleBounds,
+import { answeredPercent, areaAnswered, areaPercent, siteAnswered, sitePercent, sentenceParts, yoursParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
-         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app112";
+         INTRO_KEY, introKind, INTRO_FEATURES } from "./me.js?v=app113";
 // The store app's seam (app/). On the website isNative() is false and every
 // branch below that asks it takes the path the page always took.
 import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, locateNative, interceptLinks,
@@ -43,28 +43,28 @@ import { isNative, platform, AUTH_REDIRECT, loadDatasetNative, loadJSONNative, l
          cityRowState, latestOnly, lateDownload,
          formatMB, citiesToMount, checkLocationPermissionNative, locateNativeCoarse,
          onBrowserFinished, onBackButton, SITE,
-         reviewTracker } from "./native.js?v=app112";
+         reviewTracker } from "./native.js?v=app113";
 // The selected-place marker's own drawing module (CONTRACT.md v44): pure
 // string builders, no DOM of their own — the one maplibregl.Marker that
 // shows the result is this file's, next to the popup it belongs beside.
-import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app112";
+import { signPinKind, signPinInk, signPinSvg, SIGN_PIN_ASPECT } from "./sign-pin.js?v=app113";
 // The search field's own pure half (CONTRACT.md v46): what matches, what URL
 // the geocoder is asked and how its answer becomes a row. The field, the
 // dropdown and the keyboard are below, next to the map they move.
 import { matchLocal, photonUrl, photonResults, LOCAL_MIN_CHARS, PHOTON_MIN_CHARS,
-         PHOTON_DEBOUNCE_MS } from "./search.js?v=app112";
+         PHOTON_DEBOUNCE_MS } from "./search.js?v=app113";
 // opening_hours -> open-right-now, evaluated on the place's own clock (its
 // IANA zone from the data, CONTRACT v80; the viewer's clock when the data
 // names none). Pure and deliberately
 // narrow: anything it can't parse confidently comes back "unknown" and the
 // popup shows nothing extra rather than a claim that might be wrong.
-import { isOpenNow } from "./opening-hours.js?v=app112";
+import { isOpenNow } from "./opening-hours.js?v=app113";
 // The add dialog's place list (CONTRACT.md v62): Photon's places around the
 // map centre, as rows, minus what the map already has a pin for.
 import { venueReverseUrl, venueSearchUrl, venueRows, venueDistance, venueCentreKey,
          isVenue, isSearchVenue, VENUE_MIN_ZOOM, venueAnswer, venueFromIntent,
-         venueQuestions } from "./venues.js?v=app112";
-// The bundled shell's pin (`?v=app112`), what the intro key records.
+         venueQuestions } from "./venues.js?v=app113";
+// The bundled shell's pin (`?v=app113`), what the intro key records.
 const SHELL_PIN = new URL(import.meta.url).searchParams.get("v");
 
 // ---- Language: German default, thirty-two languages, picked not cycled. A shared
@@ -272,8 +272,10 @@ function updateRegionsLink() {
   const label = link ? link.label + (english ? " (English)" : "") : t("regions");
   // A phone shows only the place behind a pin (style.css): the whole label
   // cannot fit beside the other links at 375px. Screen readers keep the label.
+  // The "(English)" hint stays in the label only: at 360px it cut the place
+  // itself off in 28 of 32 languages ("📍 Allemag…", walkthrough Nov 2026).
   const place = link && areaPlace(currentArea, lang, regionName);
-  const short = place ? place + (english ? " (English)" : "") : "";
+  const short = place || "";
   el.href = link ? link.href : t("regionsHref");
   if (el.textContent === label + short) return;
   const full = document.createElement("span");
@@ -1529,6 +1531,14 @@ document.addEventListener("scroll", (e) => {
   if (e.target instanceof Element && e.target.classList.contains("popup")) updatePopupFade();
 }, true);
 filterBar.addEventListener("scroll", updateBarFade, { passive: true });
+// A mouse wheel only turns up and down, and this row has nowhere to go that
+// way: at 1280px its last chips sat off screen for anyone without a trackpad.
+// Turned sideways here; a trackpad's own sideways swipe is left alone.
+filterBar.addEventListener("wheel", (e) => {
+  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || filterBar.scrollWidth <= filterBar.clientWidth) return;
+  filterBar.scrollLeft += e.deltaY * (e.deltaMode === 1 ? 16 : 1);   // Firefox counts lines
+  e.preventDefault();
+}, { passive: false });
 window.addEventListener("resize", updateBarFade);
 // A turned phone has a different band; the open card takes the new cap where
 // it stands, unpanned, as every other resize leaves the map.
@@ -1701,7 +1711,7 @@ function renderStats(stats) {
   // `global` may be null: the pipeline's cold-start degrade when taginfo is
   // down and no previous stats.json exists. Local stats still render.
   const l = stats.local, g = stats.global;
-  const { tables } = localAnswered(l);
+  const { tables, known, percent } = siteNumbers(l);
   // The "as of" stamp, now the strip's own last item rather than a suffix on
   // the retired honesty sentence — also what dates the social-card screenshot.
   const updatedPart = stats.generated_at
@@ -1724,14 +1734,23 @@ function renderStats(stats) {
   // always use, sounding doubtful. The share with a recorded room is the same
   // task whoever is looking; only the pins' colour word differs.
   const areaInSentence = areaLabel(stats, true);
-  const { known } = localAnswered(l);
   const localSentence = t(mode === "mama" ? "statsLocalMama" : "statsLocal", {
     tables: num(tables), area: esc(areaInSentence || "—"), known: num(known),
-    percent: num(answeredPercent(l) ?? 0) });
+    percent: num(percent ?? 0) });
   statsEl.innerHTML =
     `<span class="stat">${localSentence}</span>` +
     globalPart +
     updatedPart;
+}
+
+// The whole sweep's tables and answers: counted over the loaded features (the
+// nightly base plus the live delta, the set the count line counts) once they
+// are in, stats.json's nightly block until then. Read from stats.json alone,
+// the strip fell behind the count line by every table added since the build.
+function siteNumbers(l) {
+  return allFeatures.length
+    ? { ...siteAnswered(allFeatures), percent: sitePercent(allFeatures) }
+    : { ...localAnswered(l), percent: answeredPercent(l) };
 }
 
 // ---- Zoom controls ----
@@ -1839,11 +1858,11 @@ function toast(msg, { ms = 4000, onTap = null } = {}) {
   toastTimer = setTimeout(hide, ms);
 }
 
-// A refusal is told apart from "no fix": it stays until the reader changes a
-// setting, so it gets the longer read.
+// A refusal is told apart from "no fix" (unavailable, timed out): each names
+// what to do next, so each gets the longer read.
 function geoFailed(err) {
   const key = geoFailKey(err, isNative());
-  toast(t(key), { ms: key === "toastGeoFail" || key === "toastNoGeo" ? 4000 : 7000 });
+  toast(t(key), { ms: key === "toastNoGeo" ? 4000 : 7000 });
 }
 
 // One position, as a promise: the browser's API on the page, the
@@ -2212,7 +2231,8 @@ function pickSearchRow(row) {
       ?? [(b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2];
     searchPicked = { name: row.name, lat, lon };
     // fitBounds where the result knows its own extent — a city then fills the
-    // screen and is not guessed at from a zoom table. Capped, or a house whose
+    // screen and is not guessed at from a zoom table. The box is built around the
+    // result's point (photonTarget), so the fit is too. Capped, or a house whose
     // extent is a few metres across would land at the maximum zoom there is.
     if (row.target.bounds)
       flyToBounds(row.target.bounds, { maxZoom: SEARCH_FIT_MAX_ZOOM, padding: searchFitPadding() });
@@ -2479,6 +2499,13 @@ function closeTopmost() {
   if (!roomCardEl.hidden) { document.getElementById("room-card-close").click(); return true; }
   return false;
 }
+// Escape is the keyboard's back key. A modal dialog and the search field
+// answer it themselves; a text field keeps it, so a half-typed description
+// in the card is not thrown away with the card.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || e.defaultPrevented || e.target.matches?.("input, textarea, select")) return;
+  if (!document.querySelector("dialog[open]")) closeTopmost();
+});
 
 // The header logo in the store app. It used to be a link to "./", which
 // interceptLinks() opened as papamap.de in the in-app browser: a full website
@@ -3836,6 +3863,7 @@ function applyFeatureSets(fc, places) {
   for (const p of allPlaces) if (p.osm_url) placesByOsmUrl.set(p.osm_url, p);
   renderChips();
   refreshPins();
+  renderStats(lastStats);   // the strip counts these same features (siteNumbers)
   positionZoomCtrl();   // topbar height depends on the rendered strip, and on whether the count line shows
   if (isNative()) shareTables();   // the widget and the shortcut search this same data
   if (popupObj) {
@@ -4942,7 +4970,7 @@ async function refreshMyAnswers() {
 // dialog can never name a place the header link itself doesn't show. Only
 // when pickArea has found nothing at all (open sea, zoomed out past any
 // area's reach) does this fall back to the site's own whole-sweep numbers,
-// the same ones the stats strip renders (localAnswered/answeredPercent).
+// the same ones the stats strip renders (siteNumbers).
 function meAreaNumbers() {
   if (currentArea) {
     // The number counted has to match exactly the area the printed label
@@ -4960,8 +4988,8 @@ function meAreaNumbers() {
   }
   const l = lastStats?.local;
   if (!l) return { area: null, percent: null, tables: 0, known: 0, keys: null };
-  const { tables, known } = localAnswered(l);
-  return { area: areaLabel(lastStats), percent: answeredPercent(l), tables, known, keys: null };
+  const { tables, known, percent } = siteNumbers(l);
+  return { area: areaLabel(lastStats), percent, tables, known, keys: null };
 }
 
 function renderMeSentence() {
