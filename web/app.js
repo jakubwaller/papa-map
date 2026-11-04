@@ -3558,7 +3558,6 @@ langSelect.addEventListener("focus", () => {
 });
 const unlockLang = () => { langSelect.style.width = ""; fitLangSelect(); };
 langSelect.addEventListener("blur", () => { unlockLang(); syncLangLabels(); });
-langSelect.addEventListener("change", unlockLang);
 syncLangLabels();
 
 // The tagline is shown in full or not at all: hidden when it has been pushed
