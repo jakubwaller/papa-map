@@ -1174,7 +1174,7 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
      dialog, where it wraps. min-width: 0 on the row too, or it grows to its
      full text and Android Chrome zooms the whole page out to fit it. */
   header .header-actions {
-    order: 3; flex: 1 0 100%; justify-content: flex-start; gap: 6px 12px;
+    order: 3; flex: 1 0 100%; justify-content: flex-start; gap: 6px 10px;
     flex-wrap: nowrap; white-space: nowrap; min-width: 0;
   }
   header #regions-link { min-width: 0; overflow: hidden; text-overflow: ellipsis; }

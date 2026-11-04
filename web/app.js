@@ -272,8 +272,10 @@ function updateRegionsLink() {
   const label = link ? link.label + (english ? " (English)" : "") : t("regions");
   // A phone shows only the place behind a pin (style.css): the whole label
   // cannot fit beside the other links at 375px. Screen readers keep the label.
+  // The "(English)" hint stays in the label only: at 360px it cut the place
+  // itself off in 28 of 32 languages ("📍 Allemag…", walkthrough Nov 2026).
   const place = link && areaPlace(currentArea, lang, regionName);
-  const short = place ? place + (english ? " (English)" : "") : "";
+  const short = place || "";
   el.href = link ? link.href : t("regionsHref");
   if (el.textContent === label + short) return;
   const full = document.createElement("span");
