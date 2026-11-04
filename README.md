@@ -5,7 +5,7 @@
 A map of baby changing tables in 49 countries, colored by whether a dad can get to them.
 
 - **green** — in a men's, unisex, accessible or separate room
-- **red** — in the women's room only
+- **orange** — in the women's room only
 - **grey** — the table is mapped, but nobody has recorded which room
 
 The grey pins are the point. Each one links to the same object on MapComplete, or can be
@@ -25,7 +25,7 @@ Live at [papamap.de](https://papamap.de).
 
 ## What else is on the map
 
-- A `Papa` / `Mama` switch. Same data, read from the other side: red becomes green for a mother.
+- A `Papa` / `Mama` switch. Same data, read from the other side: orange becomes green for a mother.
 - A "nearest usable table" button. Works in the browser, sends your position nowhere.
 - Play corners and places to play, as blue rings. A café with a ball pit is worth a visit anyway.
 - A high-chair filter, and a yes/no question about it on cafés and restaurants where OSM does not know yet.
