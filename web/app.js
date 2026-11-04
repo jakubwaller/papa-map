@@ -209,6 +209,8 @@ function applyI18n() {
   // choice, or a Czech browser): the control has to agree with the page.
   const sel = document.getElementById("lang-select");
   if (sel && sel.value !== lang) sel.value = lang;
+  // The phone shows "DE"; a screen reader should hear the language's name.
+  if (sel) { const l = `${t("ariaLang")}: ${STRINGS[lang]?.langName ?? lang}`; sel.setAttribute("aria-label", l); sel.title = l; }
   // A card left standing through a language change would otherwise go stale
   // in the old one (CONTRACT.md v38); a no-op when none is up.
   renderRoomCardText();
@@ -3544,7 +3546,7 @@ function shortLang(on) {
     opt.textContent = on ? opt.value.toUpperCase() : STRINGS[opt.value]?.langName ?? opt.value;
   fitLangSelect();
 }
-const syncLangLabels = () => shortLang(phoneMQ.matches && document.activeElement !== langSelect);
+const syncLangLabels = () => shortLang(!isNative() && phoneMQ.matches && document.activeElement !== langSelect);
 phoneMQ.addEventListener("change", syncLangLabels);
 langSelect.addEventListener("focus", () => shortLang(false));
 langSelect.addEventListener("blur", syncLangLabels);
