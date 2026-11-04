@@ -11,8 +11,9 @@
 > cache skew). `localAnswered(stats.local)` stays the reading before the tables load.
 > In the same release, frontend-only fixes from the Nov 2026 walkthrough: a fix that is
 > unavailable or timed out no longer blames the permission (`toastGeoFail`, all 32
-> languages); a search result centres on its point, sized by its extent's nearer edges
-> (`photonTarget`); the chip bar scrolls sideways under a mouse wheel; Escape closes the top
+> languages); a search result is framed around its point, each side of the box reaching
+> at most 1.5 times as far as the opposite one, and a box over 90° wide (France's extent
+> spans the globe) gives way to the zoom by level (`photonTarget`); the chip bar scrolls sideways under a mouse wheel; Escape closes the top
 > layer, as the app's back key does (`closeTopmost`); on a phone the area link shows the
 > place without the "(English)" hint and the methods table scrolls in its own box. Shell
 > pin `v=app112` becomes `v=app113`.

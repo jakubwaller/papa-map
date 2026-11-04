@@ -175,12 +175,18 @@ export function photonTarget(feature) {
     if (!pt) return { bounds: [[e[0], e[3]], [e[2], e[1]]] };
     // The extent spans every part of the object, outlying ones included:
     // Hamburg's reaches Neuwerk in the North Sea, so its middle sits ~50 km
-    // west of the city (walkthrough, Nov 2026), and France's spans the globe.
-    // The point is where the place itself is, so the view centres there and
-    // reaches, on each axis, as far as the extent's nearer edge.
-    const dx = Math.min(pt[0] - e[0], e[2] - pt[0]), dy = Math.min(e[1] - pt[1], pt[1] - e[3]);
-    if (dx > 0 && dy > 0)
-      return { center: pt, bounds: [[pt[0] - dx, pt[1] - dy], [pt[0] + dx, pt[1] + dy]] };
+    // west of the city (walkthrough, Nov 2026). The point is where the place
+    // itself is, so the view is built around it: each side reaches to the
+    // extent's edge, but no further than 1.5 times the opposite side does.
+    // That keeps Neuwerk out, and Zeeland (1.4 times further west of the
+    // Netherlands' point than its east edge is east) in.
+    const w = pt[0] - e[0], east = e[2] - pt[0], n = e[1] - pt[1], s = pt[1] - e[3];
+    const reach = (a, b) => Math.min(a, 1.5 * b);
+    // France's extent spans the globe (Wallis and Futuna to New Caledonia):
+    // a box over 90° wide shows a continent, not the place, so zoom by level.
+    if (w > 0 && east > 0 && n > 0 && s > 0 && reach(w, east) + reach(east, w) <= 90)
+      return { center: pt, bounds: [[pt[0] - reach(w, east), pt[1] - reach(s, n)],
+                                    [pt[0] + reach(east, w), pt[1] + reach(n, s)]] };
   }
   if (!pt) return null;
   return { center: pt, zoom: PHOTON_ZOOM[p.type] ?? PHOTON_ZOOM_DEFAULT };
