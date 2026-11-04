@@ -3523,7 +3523,10 @@ langSelect.value = lang;
 // and on a 375px phone that one width wrapped the German and English nav to
 // a second row while the Czech one fit. style.css sizes it to the shown name
 // with field-sizing; browsers without it get the same by measurement.
+// Set while the picker is focused on a phone; fitLangSelect must not undo it.
+let langLock = false;
 function fitLangSelect() {
+  if (langLock) return;
   if (typeof CSS !== "undefined" && CSS.supports?.("field-sizing", "content")) return;
   const cs = getComputedStyle(langSelect);
   const ctx = document.createElement("canvas").getContext("2d");
@@ -3554,9 +3557,9 @@ phoneMQ.addEventListener("change", syncLangLabels);
 langSelect.addEventListener("focus", () => {
   const w = langSelect.offsetWidth, short = !isNative() && phoneMQ.matches;
   shortLang(false);
-  if (short) langSelect.style.width = `${w}px`;
+  if (short) { langSelect.style.width = `${w}px`; langLock = true; }
 });
-const unlockLang = () => { langSelect.style.width = ""; fitLangSelect(); };
+const unlockLang = () => { langLock = false; langSelect.style.width = ""; fitLangSelect(); };
 langSelect.addEventListener("blur", () => { unlockLang(); syncLangLabels(); });
 syncLangLabels();
 
