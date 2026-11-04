@@ -3551,7 +3551,8 @@ langSelect.addEventListener("blur", syncLangLabels);
 syncLangLabels();
 
 // The tagline is shown in full or not at all: hidden when it has been pushed
-// onto a row of its own (it is the <h1>, so hidden visually, never removed).
+// onto a row of its own, or when hiding it lifts the nav onto the brand's row
+// (it is the <h1>, so hidden visually, never removed).
 function fitTagline() {
   const h = document.querySelector("header");
   const t = h.querySelector(".tagline"), b = h.querySelector(".brandmark");
@@ -3561,7 +3562,12 @@ function fitTagline() {
   if (phoneMQ.matches || isNative() || !nav) return;
   // Not in full on the brand's row: pushed down itself, or it pushed the nav down.
   const off = (e) => Math.abs(e.getBoundingClientRect().top - b.getBoundingClientRect().top) > 12;
-  if (off(t) || off(nav) || t.scrollWidth > t.clientWidth) h.classList.add("no-tagline");
+  if (off(t) || t.scrollWidth > t.clientWidth) { h.classList.add("no-tagline"); return; }
+  // Only worth hiding if that brings the nav up onto the brand's row.
+  if (off(nav)) {
+    h.classList.add("no-tagline");
+    if (off(nav)) h.classList.remove("no-tagline");
+  }
 }
 window.addEventListener("resize", fitTagline);
 // The brand grows when the swept-area subtitle arrives, the nav when a label changes.
