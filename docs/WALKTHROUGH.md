@@ -29,7 +29,10 @@ walk re-reports the same intentional behaviour every time.
 - Status chips and the Papa/Mama switch.
 - My PapaMap dialog; the footer link to the area page; area pages and their country list.
 - Leaderboard, methods page, language switch, share a pin.
-- Offline after a first load; save a city for offline use.
+- Offline after a first load.
+
+Store app only, skip on a web walk: saving a city for offline use (the button stays hidden
+on the website), the first-launch intro and what's new, home-screen widgets and shortcuts.
 
 ## By design — do not report
 
