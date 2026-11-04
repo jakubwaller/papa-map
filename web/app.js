@@ -3548,8 +3548,15 @@ function shortLang(on) {
 }
 const syncLangLabels = () => shortLang(!isNative() && phoneMQ.matches && document.activeElement !== langSelect);
 phoneMQ.addEventListener("change", syncLangLabels);
-langSelect.addEventListener("focus", () => shortLang(false));
-langSelect.addEventListener("blur", syncLangLabels);
+// The width is held while the full names are in, or the nav overflows at 320px.
+langSelect.addEventListener("focus", () => {
+  const w = langSelect.offsetWidth, short = !isNative() && phoneMQ.matches;
+  shortLang(false);
+  if (short) langSelect.style.width = `${w}px`;
+});
+const unlockLang = () => { langSelect.style.width = ""; fitLangSelect(); };
+langSelect.addEventListener("blur", () => { unlockLang(); syncLangLabels(); });
+langSelect.addEventListener("change", unlockLang);
 syncLangLabels();
 
 // The tagline is shown in full or not at all: hidden when it has been pushed
