@@ -2488,6 +2488,13 @@ function closeTopmost() {
   if (!roomCardEl.hidden) { document.getElementById("room-card-close").click(); return true; }
   return false;
 }
+// Escape is the keyboard's back key. A modal dialog and the search field
+// answer it themselves; a text field keeps it, so a half-typed description
+// in the card is not thrown away with the card.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || e.defaultPrevented || e.target.matches?.("input, textarea, select")) return;
+  if (!document.querySelector("dialog[open]")) closeTopmost();
+});
 
 // The header logo in the store app. It used to be a link to "./", which
 // interceptLinks() opened as papamap.de in the in-app browser: a full website
