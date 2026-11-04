@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
+    --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
+      --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -163,7 +163,7 @@ spații și scrisă cu litere mici, apoi fiecare parte este comparată în într
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> sau <code>outdoor</code>.
       Un tată poate ajunge la ea.</li>
-  <li><span class="dot r"></span><strong>Portocaliu:</strong> altfel, dacă una dintre părți este
+  <li><span class="dot r"></span><strong>Roșu:</strong> altfel, dacă una dintre părți este
       <code>female_toilet</code>. Masa există, dar doar în toaleta femeilor.</li>
   <li><span class="dot u"></span><strong>Gri:</strong> orice altceva. Fără etichetă de locație, sau
       doar text liber. Nimeni nu a înregistrat încăperea.</li>
@@ -178,7 +178,7 @@ ea o poate folosi, iar și la o masă fără încăpere înregistrată, majorita
 barei de filtre, schimbă doar felul în care se citesc aceleași trei răspunsuri, niciodată
 răspunsurile în sine.</p>
 <ul>
-  <li><strong>Tata</strong> (implicit): verde, portocaliu și gri, ca mai sus.</li>
+  <li><strong>Tata</strong> (implicit): verde, roșu și gri, ca mai sus.</li>
   <li><strong>Mama</strong>: verde înseamnă acum ambele — încăperea deschisă accesibil
       <em>și</em> toaleta femeilor. Portocaliu înseamnă „încăpere necunoscută”, adică de
       obicei utilizabilă. Roșu apare doar pentru o masă înregistrată exclusiv în toaleta
@@ -208,7 +208,7 @@ mai sus. Versiunile mai vechi ale aplicației le pot arăta încă verzi, până
 <p>Inelul este o insignă, nu o a patra culoare. Un loc fără aceste etichete nu are „nicio zonă de joacă”: în OSM pur și simplu nu scrie nimic despre asta, iar acest lucru e valabil pentru aproape toate locurile. De aceea aici nu există gri.</p>
 <p>Tocmai de aceea întreabă fereastra: la fiecare marcaj despre care OSM nu spune nimic în privința unei zone de joacă, indiferent de culoare, apare un rând (sub încăperi, când marcajul întreabă și încăperea): <em>Zonă de joacă pentru copii?</em>, cu trei răspunsuri. <em>în interior</em> scrie <code>kids_area:indoor=yes</code> împreună cu <code>kids_area=yes</code>, <em>doar afară</em> scrie <code>kids_area=yes</code> împreună cu <code>kids_area:indoor=no</code>, <em>niciuna</em> scrie <code>kids_area=no</code> — cu propriul tău cont OSM, într-un changeset separat, exact etichetele pe care le scrie MapComplete pentru aceeași întrebare. Întrebarea privește orice spațiu de joacă, nu doar pe cel din interior: în OSM, <code>kids_area=no</code> înseamnă „aici copiii nu au unde să se joace”, așa că o brutărie cu loc de joacă în grădină primește <em>doar afară</em>, nu un „nu” fals. Inelul apare (sau nu) după câteva minute. Cine a răspuns deja nu mai e întrebat: un <code>kids_area</code> <em>sau</em> <code>kids_area:indoor</code> înregistrat, oricare ar fi valoarea, scoate întrebarea. La un <code>leisure=playground</code> fără <code>indoor=yes</code> întrebarea nu apare deloc: locul <em>este</em> un loc de joacă, doar că în aer liber. Nu apare nici la o toaletă publică (<code>amenity=toilets</code>): un colț de joacă ține de o cafenea sau de un magazin, nu de o toaletă.</p>
 <p>Regula se potrivește pe mult mai multe locuri decât există marcaje. Doar <span data-stat="play_tables">111</span> dintre ele au un marcaj. La alte <span data-stat="play_places">701</span> nimeni nu a răspuns la prima întrebare: există aici o masă de înfășat? Harta nu le poate colora, așa că primesc un inel albastru gol și un filtru al lor, <em>Doar zonă de joacă</em>, activat implicit. Cine merge oricum acolo cu un copil știe răspunsul. Un clic pe inel deschide MapComplete exact la această întrebare.</p>
-<p>Un inel <em>punctat</em> înseamnă: zonă de joacă da, masă de înfășat nu (<code>changing_table=no</code>). Nu e un marcaj și nici portocaliu, pentru că portocaliu ar spune că există o masă, doar că nu pentru tată. Aici nu există niciuna, pentru nimeni. Locul e totuși pe hartă, pentru că cu un copil mergi bucuros acolo și fără masă.</p>
+<p>Un inel <em>punctat</em> înseamnă: zonă de joacă da, masă de înfășat nu (<code>changing_table=no</code>). Nu e un marcaj și nici roșu, pentru că roșu ar spune că există o masă, doar că nu pentru tată. Aici nu există niciuna, pentru nimeni. Locul e totuși pe hartă, pentru că cu un copil mergi bucuros acolo și fără masă.</p>
 
 <p>Inelele mov marchează locurile în care este înregistrat un scaun înalt pentru copii (<code>highchair=yes</code> sau un număr), dar nicio masă de înfășat, chiar și fără zonă de joacă. Au propriul chip, <em>Doar scaun înalt</em>.</p>
 

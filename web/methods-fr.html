@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
+    --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
+      --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -162,7 +162,7 @@ espaces, mise en minuscules, et chaque partie est comparée en entier. Jamais co
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> ou <code>outdoor</code>.
       Un papa peut y accéder.</li>
-  <li><span class="dot r"></span><strong>Orange :</strong> sinon, si une des parties est
+  <li><span class="dot r"></span><strong>Rouge :</strong> sinon, si une des parties est
       <code>female_toilet</code>. La table existe, mais seulement dans les WC femmes.</li>
   <li><span class="dot u"></span><strong>Gris :</strong> tout le reste. Pas de tag de localisation,
       ou seulement du texte libre. Personne n'a renseigné la pièce.</li>
@@ -177,7 +177,7 @@ une pièce où elle peut entrer aussi. Le sélecteur <em>Papa / Maman</em>, à g
 filtres, ne change donc que la façon de lire ces trois mêmes réponses, jamais les réponses
 elles-mêmes.</p>
 <ul>
-  <li><strong>Papa</strong> (par défaut) : vert, orange et gris comme décrit plus haut.</li>
+  <li><strong>Papa</strong> (par défaut) : vert, rouge et gris comme décrit plus haut.</li>
   <li><strong>Maman</strong> : Vert veut désormais dire les deux à la fois — la pièce librement
       accessible <em>et</em> les WC femmes. Orange signifie « pièce inconnue », donc
       généralement utilisable. Le rouge n'apparaît que pour une table recensée uniquement dans
@@ -209,7 +209,7 @@ d'être mises à jour.</p>
 <p>L'anneau est un badge, pas une quatrième couleur. Un lieu sans ces tags n'a pas « pas de coin jeux » : OSM n'en dit simplement rien, et c'est vrai de presque tous les lieux. Il n'y a donc pas de gris ici.</p>
 <p>C'est justement pour ça que le popup pose la question. Sur chaque marqueur pour lequel OSM ne dit rien d'un coin jeux, quelle que soit sa couleur, une ligne apparaît (sous les pièces, quand le marqueur demande aussi la pièce) : <em>Coin jeux pour enfants ?</em>, avec trois réponses. <em>à l'intérieur</em> écrit <code>kids_area:indoor=yes</code> avec <code>kids_area=yes</code>, <em>dehors seulement</em> écrit <code>kids_area=yes</code> avec <code>kids_area:indoor=no</code>, <em>aucun</em> écrit <code>kids_area=no</code> — sous ton propre compte OSM, dans un changeset à part, exactement les tags que MapComplete écrit pour la même question. La question porte sur un coin jeux en général, pas seulement à l'intérieur : <code>kids_area=no</code> veut dire dans OSM « les enfants ne peuvent jouer nulle part ici », donc une boulangerie avec une aire de jeux dans le jardin reçoit <em>dehors seulement</em> plutôt qu'un faux non. L'anneau apparaît (ou reste absent) quelques minutes plus tard. Personne n'est interrogé deux fois : un <code>kids_area</code> <em>ou</em> <code>kids_area:indoor</code> déjà renseigné, quelle que soit la valeur, retire la question. Sur un <code>leisure=playground</code> sans <code>indoor=yes</code>, elle n'est jamais posée : le lieu <em>est</em> déjà un endroit où jouer, mais dehors. Elle n'est pas posée non plus sur des toilettes publiques (<code>amenity=toilets</code>) : un coin jeux appartient à un café ou à une boutique, pas à des WC.</p>
 <p>La règle s'applique à bien plus de lieux que la carte n'a de marqueurs. Seuls <span data-stat="play_tables">111</span> d'entre eux ont un marqueur. Pour <span data-stat="play_places">701</span> autres, personne n'a répondu à la première question : y a-t-il une table à langer ici ? La carte ne peut pas les colorer, ils reçoivent donc un anneau bleu vide et une puce à eux, <em>Coin jeux uniquement</em>, activée par défaut. Qui y va de toute façon avec un enfant connaît la réponse. Un clic sur l'anneau ouvre MapComplete exactement sur cette question.</p>
-<p>Un anneau <em>en pointillé</em> signifie : coin jeux oui, table à langer non (<code>changing_table=no</code>). Ce n'est pas un marqueur et il n'est pas orange non plus, car orange voudrait dire qu'il y a une table, mais pas pour papa. Ici il n'y en a pas, pour personne. Le lieu reste sur la carte, parce qu'avec un enfant on y va volontiers même sans table.</p>
+<p>Un anneau <em>en pointillé</em> signifie : coin jeux oui, table à langer non (<code>changing_table=no</code>). Ce n'est pas un marqueur et il n'est pas rouge non plus, car rouge voudrait dire qu'il y a une table, mais pas pour papa. Ici il n'y en a pas, pour personne. Le lieu reste sur la carte, parce qu'avec un enfant on y va volontiers même sans table.</p>
 
 <p>Les anneaux violets marquent les lieux où une chaise haute est renseignée (<code>highchair=yes</code> ou un nombre) mais aucune table à langer, même sans coin jeux. Ils ont leur propre puce, <em>Chaise haute uniquement</em>.</p>
 

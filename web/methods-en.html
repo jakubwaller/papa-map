@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
+    --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
+      --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -161,7 +161,7 @@ and each part is compared whole, never as a substring, because <code>female_toil
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> or <code>outdoor</code>.
       A dad can get there.</li>
-  <li><span class="dot r"></span><strong>Orange:</strong> otherwise, if one of the parts is
+  <li><span class="dot r"></span><strong>Red:</strong> otherwise, if one of the parts is
       <code>female_toilet</code>. The table exists, but only in the women's room.</li>
   <li><span class="dot u"></span><strong>Grey:</strong> everything else. No location tag, or only
       free text. Nobody has written down the room yet.</li>
@@ -175,7 +175,7 @@ with no recorded room is, in most cases, in a room she can enter too. The <em>Da
 on the left of the chip row therefore only changes how the same three answers are read, never the
 answers themselves.</p>
 <ul>
-  <li><strong>Dad</strong> (default): green, orange and grey as described above.</li>
+  <li><strong>Dad</strong> (default): green, red and grey as described above.</li>
   <li><strong>Mum</strong>: green now means both — the openly accessible room <em>and</em> the
       women's room. Orange stands for &ldquo;room unknown&rdquo;, so usually usable. Red
       appears only for a table recorded in the men's room alone.</li>
@@ -230,7 +230,7 @@ a changing table here? The map can't colour those, so they get an empty blue rin
 chip, <em>Play area only</em>, on by default. If you go there with your kid anyway, you know the
 answer. Clicking a ring opens MapComplete on exactly that question.</p>
 <p>A <em>dashed</em> ring means: play area yes, changing table no
-(<code>changing_table=no</code>). Not a pin and not orange either, because orange would say there is a
+(<code>changing_table=no</code>). Not a pin and not red either, because red would say there is a
 table, just not for dad. Here there is none, for anyone. The place is on the map anyway, because
 with a kid you'd happily go there without one.</p>
 

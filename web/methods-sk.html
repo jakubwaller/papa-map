@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
+    --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
+      --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -163,7 +163,7 @@ medzier, prevedie na malé písmená a každá časť sa porovnáva celá. Nikdy
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> alebo <code>outdoor</code>.
       Otec sa k nemu dostane.</li>
-  <li><span class="dot r"></span><strong>Oranžová:</strong> inak, ak je jedna z častí
+  <li><span class="dot r"></span><strong>Červená:</strong> inak, ak je jedna z častí
       <code>female_toilet</code>. Pult existuje, ale len na dámskom WC.</li>
   <li><span class="dot u"></span><strong>Sivá:</strong> všetko ostatné. Žiadny location tag, alebo
       len voľný text. Nikto nezaznamenal miestnosť.</li>
@@ -177,7 +177,7 @@ miestnosti stojí väčšina z nich v miestnosti, do ktorej sa dostane. Prepína
 vľavo v lište filtrov preto mení len to, ako sa tie isté tri odpovede čítajú, nikdy odpovede
 samotné.</p>
 <ul>
-  <li><strong>Otec</strong> (predvolené): zelená, oranžová a sivá ako vyššie.</li>
+  <li><strong>Otec</strong> (predvolené): zelená, červená a sivá ako vyššie.</li>
   <li><strong>Mama</strong>: Zelená teraz znamená oboje — voľne prístupná miestnosť <em>a</em>
       dámske WC. Oranžová znamená &bdquo;Neznáma miestnosť&ldquo;, teda väčšinou
       použiteľná. Červená zostáva len pre pult zaznamenaný výlučne na pánskom WC.</li>
@@ -205,7 +205,7 @@ vyššie. Staršie verzie aplikácie ich môžu stále zobrazovať zelené, kým
 <p>Krúžok je odznak, nie štvrtá farba. Miesto bez týchto tagov nemá „žiadny detský kútik“, OSM o tom jednoducho nič nehovorí, a to platí pre takmer všetky miesta. Preto tu nie je žiadna sivá.</p>
 <p>Práve preto sa pýta okno: Pri každom špendlíku, o ktorom OSM o detskom kútiku nič nehovorí, bez ohľadu na farbu, je jeden riadok (pod miestnosťami, ak sa špendlík pýta aj na miestnosť): <em>Detský kútik?</em> s tromi odpoveďami. <em>vnútri</em> zapíše <code>kids_area:indoor=yes</code> spolu s <code>kids_area=yes</code>, <em>len vonku</em> zapíše <code>kids_area=yes</code> spolu s <code>kids_area:indoor=no</code>, <em>žiadny</em> zapíše <code>kids_area=no</code> — pod tvojím vlastným účtom v OSM, v samostatnom changesete, presne tie tagy, ktoré pre rovnakú otázku zapisuje MapComplete. Otázka sa týka akejkoľvek možnosti hrať sa, nielen vnútri: <code>kids_area=no</code> znamená v OSM „deti sa tu nemajú kde hrať“, a pekáreň s ihriskom v záhrade preto dostane <em>len vonku</em> namiesto falošnej nuly. Krúžok sa objaví (alebo nie) o pár minút neskôr. Kto už odpovedal, toho sa to znova nepýta: zadaný <code>kids_area</code> <em>alebo</em> <code>kids_area:indoor</code>, nech má akúkoľvek hodnotu, otázku odstráni. Na <code>leisure=playground</code> bez <code>indoor=yes</code> sa nepýta vôbec: miesto <em>je</em> miestom na hranie, len vonku. Nepýta sa ani pri verejnom WC (<code>amenity=toilets</code>): detský kútik patrí ku kaviarni alebo obchodu, nie k WC.</p>
 <p>Pravidlu vyhovuje oveľa viac miest, než koľko je špendlíkov. Len <span data-stat="play_tables">111</span> z nich má špendlík. Pri ďalších <span data-stat="play_places">701</span> nikto neodpovedal na prvú otázku: je tu prebaľovací pult? Tie mapa nevie zafarbiť, preto dostanú prázdny modrý krúžok a vlastný čip, <em>Len detský kútik</em>, ktorý je predvolene zapnutý. Kto tam aj tak chodí s dieťaťom, odpoveď pozná. Klepnutie na krúžok otvorí MapComplete priamo pri tejto otázke.</p>
-<p><em>Čiarkovaný</em> krúžok znamená: detský kútik áno, prebaľovací pult nie (<code>changing_table=no</code>). To nie je špendlík ani oranžová, lebo oranžová by hovorila, že pult existuje, len nie pre otca. Tu žiadny nie je, pre nikoho. Miesto je na mape napriek tomu, lebo s dieťaťom sa tam rado ide aj bez pultu.</p>
+<p><em>Čiarkovaný</em> krúžok znamená: detský kútik áno, prebaľovací pult nie (<code>changing_table=no</code>). To nie je špendlík ani červená, lebo červená by hovorila, že pult existuje, len nie pre otca. Tu žiadny nie je, pre nikoho. Miesto je na mape napriek tomu, lebo s dieťaťom sa tam rado ide aj bez pultu.</p>
 
 <p>Fialové krúžky označujú miesta, kde je zaznamenaná detská stolička (<code>highchair=yes</code> alebo číslo), ale žiadny prebaľovací pult, aj bez detského kútika. Majú vlastný čip, <em>Len detská stolička</em>.</p>
 

@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
+    --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
+      --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -161,7 +161,7 @@ zamieniana na małe litery, a każda część jest porównywana w całości. Nig
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> albo <code>outdoor</code>.
       Tata dotrze do przewijaka.</li>
-  <li><span class="dot r"></span><strong>Pomarańczowy:</strong> w przeciwnym razie, jeśli któraś z części
+  <li><span class="dot r"></span><strong>Czerwony:</strong> w przeciwnym razie, jeśli któraś z części
       to <code>female_toilet</code>. Przewijak jest, ale tylko w damskiej toalecie.</li>
   <li><span class="dot u"></span><strong>Szary:</strong> cała reszta. Brak tagu z lokalizacją albo
       tylko dowolny tekst. Nikt nie zapisał pomieszczenia.</li>
@@ -175,7 +175,7 @@ przewijaku bez zapisanego pomieszczenia większość stoi w pomieszczeniu, do kt
 Przełącznik <em>Tata / Mama</em> po lewej w pasku filtrów zmienia więc tylko sposób odczytu tych
 samych trzech odpowiedzi, nigdy same odpowiedzi.</p>
 <ul>
-  <li><strong>Tata</strong> (domyślnie): zielony, pomarańczowy i szary, jak opisano wyżej.</li>
+  <li><strong>Tata</strong> (domyślnie): zielony, czerwony i szary, jak opisano wyżej.</li>
   <li><strong>Mama</strong>: zielony znaczy teraz obie rzeczy — ogólnodostępne pomieszczenie
       <em>i</em> damskie WC. Pomarańczowy oznacza &bdquo;Nie wiadomo gdzie&rdquo;, czyli
       najczęściej możliwe do użycia. Czerwony pojawia się tylko dla przewijaka zapisanego
@@ -205,7 +205,7 @@ pokazywać je jako zielone, dopóki nie zostaną zaktualizowane.</p>
 <p>Obwódka to odznaka, nie czwarty kolor. Miejsce bez tych tagów nie ma „braku kącika zabaw“, OSM po prostu nic o tym nie mówi, a tak jest prawie w każdym miejscu. Dlatego nie ma tu szarego.</p>
 <p>Właśnie dlatego pyta okienko: przy każdej pinezce, o której OSM nic nie mówi w sprawie kącika zabaw, niezależnie od koloru, jest jeden wiersz (pod pomieszczeniami, jeśli pinezka pyta też o pomieszczenie): <em>Kącik zabaw dla dzieci?</em> z trzema odpowiedziami. <em>w środku</em> zapisuje <code>kids_area:indoor=yes</code> razem z <code>kids_area=yes</code>, <em>tylko na zewnątrz</em> zapisuje <code>kids_area=yes</code> razem z <code>kids_area:indoor=no</code>, <em>brak</em> zapisuje <code>kids_area=no</code> — na twoim własnym koncie OSM, w osobnym changesecie, dokładnie te tagi, które MapComplete zapisuje przy tym samym pytaniu. Pytanie dotyczy w ogóle miejsca do zabawy, nie tylko wewnątrz: <code>kids_area=no</code> znaczy w OSM „dzieci nie mają tu gdzie się bawić“, więc piekarnia z placem zabaw w ogrodzie dostaje <em>tylko na zewnątrz</em> zamiast fałszywego zera. Obwódka pojawia się (albo nie) kilka minut później. Kto już odpowiedział, nie jest pytany ponownie: zapisany <code>kids_area</code> <em>lub</em> <code>kids_area:indoor</code>, jakakolwiek wartość, usuwa pytanie. Przy <code>leisure=playground</code> bez <code>indoor=yes</code> pytanie w ogóle się nie pojawia: to miejsce <em>jest</em> miejscem do zabawy, tylko na zewnątrz. Nie pojawia się też przy toalecie publicznej (<code>amenity=toilets</code>): kącik zabaw należy do kawiarni albo sklepu, nie do toalety.</p>
 <p>Reguła pasuje do znacznie większej liczby miejsc, niż jest pinezek. Tylko <span data-stat="play_tables">111</span> z nich ma pinezkę. Przy kolejnych <span data-stat="play_places">701</span> nikt nie odpowiedział na pierwsze pytanie: czy jest tu przewijak? Tych mapa nie może pokolorować, więc dostają pustą niebieską obwódkę i własny chip, <em>Tylko kącik zabaw</em>, domyślnie włączony. Kto i tak idzie tam z dzieckiem, zna odpowiedź. Kliknięcie obwódki otwiera MapComplete dokładnie przy tym pytaniu.</p>
-<p><em>Przerywana</em> obwódka znaczy: kącik zabaw tak, przewijak nie (<code>changing_table=no</code>). To nie pinezka i też nie pomarańcz, bo pomarańcz znaczyłby, że przewijak jest, tylko nie dla taty. Tu nie ma żadnego, dla nikogo. Miejsce i tak jest na mapie, bo z dzieckiem chętnie się tam idzie także bez przewijaka.</p>
+<p><em>Przerywana</em> obwódka znaczy: kącik zabaw tak, przewijak nie (<code>changing_table=no</code>). To nie pinezka i też nie czerwień, bo czerwień znaczyłaby, że przewijak jest, tylko nie dla taty. Tu nie ma żadnego, dla nikogo. Miejsce i tak jest na mapie, bo z dzieckiem chętnie się tam idzie także bez przewijaka.</p>
 
 <p>Fioletowe kółka oznaczają miejsca, w których zapisano krzesełko do karmienia (<code>highchair=yes</code> lub liczbę), ale nie ma zapisanego przewijaka, także bez kącika zabaw. Mają własny chip, <em>Tylko krzesełko do karmienia</em>.</p>
 

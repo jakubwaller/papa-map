@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
+    --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
+      --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -162,7 +162,7 @@ små bokstaver, og hver verdi sammenlignes som en helhet. Aldri som en delstreng
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> eller <code>outdoor</code>.
       En pappa kan bruke stellebordet til å skifte på barnet.</li>
-  <li><span class="dot r"></span><strong>Oransje:</strong> ellers, hvis en verdi er
+  <li><span class="dot r"></span><strong>Rød:</strong> ellers, hvis en verdi er
       <code>female_toilet</code>. Bordet finnes, men bare på dametoalettet.</li>
   <li><span class="dot u"></span><strong>Grå:</strong> alt annet. Ingen location-tag, eller bare
       fritekst. Ingen har kategorisert rommet.</li>
@@ -176,7 +176,7 @@ ved et bord uten registrert rom står de fleste i et rom hun kan gå inn i. Bryt
 Mamma</em> til venstre i filterlisten endrer derfor bare hvordan de samme tre svarene leses,
 aldri svarene selv.</p>
 <ul>
-  <li><strong>Pappa</strong> (standard): grønn, oransje og grå som beskrevet over.</li>
+  <li><strong>Pappa</strong> (standard): grønn, rød og grå som beskrevet over.</li>
   <li><strong>Mamma</strong>: grønn betyr nå begge deler — det åpent tilgjengelige rommet
       <em>og</em> dametoalettet. Oransje står for «uspesifiserte rom», altså vanligvis
       brukbart. Rødt vises bare for et bord som er registrert bare på herretoalettet.</li>
@@ -205,7 +205,7 @@ vise dem grønne, inntil de er oppdatert.</p>
 <p>Ringen er et merke, ikke en fjerde farge. Et sted uten disse taggene har ikke «intet lekeområde», OSM sier bare ingenting om det, og det gjelder nesten alle steder. Derfor er det ikke noe grått her.</p>
 <p>Nettopp derfor spør popupen: Ved hvert punkt der OSM ikke sier noe om et lekeområde, uansett farge, står det en linje (under rommene, hvis punktet også spør om rommet): <em>Lekeområde for barn?</em> med tre svar. <em>innendørs</em> skriver <code>kids_area:indoor=yes</code> sammen med <code>kids_area=yes</code>, <em>bare utendørs</em> skriver <code>kids_area=yes</code> sammen med <code>kids_area:indoor=no</code>, <em>ingen</em> skriver <code>kids_area=no</code> — under din egen OSM-konto, i et eget changeset, nøyaktig de taggene MapComplete skriver for det samme spørsmålet. Spørsmålet gjelder lekemuligheter i det hele tatt, ikke bare inne: <code>kids_area=no</code> betyr i OSM «her kan barn ikke leke noe sted», og et bakeri med lekeplass i hagen får derfor <em>bare utendørs</em> i stedet for et falskt nei. Ringen kommer (eller uteblir) noen minutter senere. Den som allerede har svart, blir ikke spurt på nytt: En registrert <code>kids_area</code> <em>eller</em> <code>kids_area:indoor</code>, uansett verdi, fjerner spørsmålet. På en <code>leisure=playground</code> uten <code>indoor=yes</code> stilles det ikke i det hele tatt: Stedet <em>er</em> et sted å leke, bare ute. Det stilles heller ikke ved et offentlig toalett (<code>amenity=toilets</code>): Et lekeområde hører til en kafé eller en butikk, ikke til et toalett.</p>
 <p>Regelen passer på mange flere steder enn det finnes punkter. Bare <span data-stat="play_tables">111</span> av dem har et punkt. Ved <span data-stat="play_places">701</span> til har ingen besvart det første spørsmålet: Finnes det et stellebord her? De kan ikke kartet farge, så de får en tom blå ring og en egen chip, <em>Bare lekeområde</em>, som er på som standard. Den som uansett drar dit med et barn, kjenner svaret. Et klikk på ringen åpner MapComplete akkurat ved dette spørsmålet.</p>
-<p>En <em>stiplet</em> ring betyr: lekeområde ja, stellebord nei (<code>changing_table=no</code>). Det er ikke et punkt og heller ikke oransje, for oransje ville si at det finnes et bord, bare ikke for pappa. Her finnes det ingen, for ingen. Stedet står likevel på kartet, for med et barn drar man gjerne dit også uten bord.</p>
+<p>En <em>stiplet</em> ring betyr: lekeområde ja, stellebord nei (<code>changing_table=no</code>). Det er ikke et punkt og heller ikke rødt, for rødt ville si at det finnes et bord, bare ikke for pappa. Her finnes det ingen, for ingen. Stedet står likevel på kartet, for med et barn drar man gjerne dit også uten bord.</p>
 
 <p>Lilla ringer markerer steder der en barnestol er registrert (<code>highchair=yes</code> eller et tall), men intet stellebord, også uten lekeområde. De har sin egen chip, <em>Bare barnestol</em>.</p>
 

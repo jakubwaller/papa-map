@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
+    --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
+      --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -163,7 +163,7 @@ passa a minúscules i cada part es compara sencera. Mai com a subcadena, perquè
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> o <code>outdoor</code>.
       Un pare hi pot arribar.</li>
-  <li><span class="dot r"></span><strong>Taronja:</strong> si no, quan una de les parts és
+  <li><span class="dot r"></span><strong>Vermell:</strong> si no, quan una de les parts és
       <code>female_toilet</code>. El canviador existeix, però només al lavabo de dones.</li>
   <li><span class="dot u"></span><strong>Gris:</strong> tota la resta. Sense etiqueta de
       localització, o només text lliure. Ningú no ha registrat la sala.</li>
@@ -177,7 +177,7 @@ el pot utilitzar, i també en un canviador sense sala registrada la majoria és 
 entrar. El commutador <em>Pare / Mare</em>, a l'esquerra de la barra de filtres, per això només
 canvia la manera com es llegeixen les mateixes tres respostes, mai les respostes en si.</p>
 <ul>
-  <li><strong>Pare</strong> (per defecte): verd, taronja i gris, tal com s'ha descrit més
+  <li><strong>Pare</strong> (per defecte): verd, vermell i gris, tal com s'ha descrit més
       amunt.</li>
   <li><strong>Mare</strong>: el verd ara vol dir totes dues coses — la sala d'accés obert
       <em>i</em> el lavabo de dones. El taronja vol dir &ldquo;Sala desconeguda&rdquo;, és a
@@ -209,7 +209,7 @@ s'actualitzin.</p>
 <p>L'anell és una insígnia, no un quart color. Un lloc sense aquestes etiquetes no té «cap racó de jocs»: a OSM simplement no en diu res, i això val per a gairebé tots els llocs. Per això aquí no hi ha gris.</p>
 <p>Per això el popup ho pregunta: a cada pin en què OSM no diu res d'un racó de jocs, sigui del color que sigui, hi ha una línia (sota les sales, si el pin també en pregunta la sala): <em>Racó de jocs per a infants?</em>, amb tres respostes. <em>a dins</em> escriu <code>kids_area:indoor=yes</code> juntament amb <code>kids_area=yes</code>, <em>només a fora</em> escriu <code>kids_area=yes</code> juntament amb <code>kids_area:indoor=no</code>, <em>cap</em> escriu <code>kids_area=no</code> — amb el teu propi compte d'OSM, en un changeset a part, exactament les etiquetes que MapComplete escriu per a la mateixa pregunta. La pregunta és sobre qualsevol espai de joc, no només a dins: a OSM <code>kids_area=no</code> vol dir «aquí els infants no poden jugar enlloc», i per això una fleca amb un parc infantil al jardí rep <em>només a fora</em> en lloc d'un zero fals. L'anell apareix (o no) uns minuts després. Qui ja ha respost no torna a rebre la pregunta: un <code>kids_area</code> <em>o</em> <code>kids_area:indoor</code> registrat, sigui quin sigui el valor, fa desaparèixer la pregunta. En un <code>leisure=playground</code> sense <code>indoor=yes</code> no es pregunta mai: el lloc <em>és</em> un espai de joc, només que a fora. Tampoc es pregunta en uns lavabos públics (<code>amenity=toilets</code>): un racó de joc és d'una cafeteria o d'una botiga, no d'un lavabo.</p>
 <p>La regla s'aplica a molts més llocs dels que tenen pin. Només <span data-stat="play_tables">111</span> d'aquests en tenen. En <span data-stat="play_places">701</span> més, ningú no ha respost la primera pregunta: hi ha un canviador? El mapa no els pot acolorir, així que reben un anell blau buit i un filtre propi, <em>Només racó de jocs</em>, activat per defecte. Qui hi va igualment amb un infant en sap la resposta. Un clic a l'anell obre MapComplete just en aquesta pregunta.</p>
-<p>Un anell <em>discontinu</em> vol dir: racó de jocs sí, canviador no (<code>changing_table=no</code>). No és un pin i tampoc és taronja, perquè el taronja diria que hi ha un canviador, només que no per al pare. Aquí no n'hi ha cap, per a ningú. El lloc és al mapa igualment, perquè amb un infant s'hi va de gust encara que no hi hagi canviador.</p>
+<p>Un anell <em>discontinu</em> vol dir: racó de jocs sí, canviador no (<code>changing_table=no</code>). No és un pin i tampoc és vermell, perquè el vermell diria que hi ha un canviador, només que no per al pare. Aquí no n'hi ha cap, per a ningú. El lloc és al mapa igualment, perquè amb un infant s'hi va de gust encara que no hi hagi canviador.</p>
 
 <p>Els anells liles marquen llocs on hi ha una trona registrada (<code>highchair=yes</code> o un nombre) però cap canviador, fins i tot sense racó de jocs. Tenen el seu propi xip, <em>Només trona</em>.</p>
 

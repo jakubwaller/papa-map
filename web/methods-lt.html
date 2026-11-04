@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
+    --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
+      --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -163,7 +163,7 @@ mažosiomis raidėmis ir lyginama kaip visas žodis. Niekada kaip fragmentas, ne
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> arba <code>outdoor</code>.
       Tėtis gali ten patekti.</li>
-  <li><span class="dot r"></span><strong>Oranžinė:</strong> priešingu atveju, jei vienas iš žodžių
+  <li><span class="dot r"></span><strong>Raudona:</strong> priešingu atveju, jei vienas iš žodžių
       yra <code>female_toilet</code>. Stalas yra, bet tik moterų tualete.</li>
   <li><span class="dot u"></span><strong>Pilka:</strong> visa kita. Nėra vietos žymos, arba yra
       tik laisvas tekstas. Niekas nepažymėjo patalpos.</li>
@@ -177,7 +177,7 @@ nurodytos patalpos dauguma stovi patalpoje, į kurią ji gali įeiti. Todėl jun
 Mama</em> kairėje žymų juostoje pakeičia tik tai, kaip skaitomi tie patys trys atsakymai, o ne
 atsakymus pačius.</p>
 <ul>
-  <li><strong>Tėtis</strong> (pagal nutylėjimą): žalia, oranžinė ir pilka, kaip aprašyta
+  <li><strong>Tėtis</strong> (pagal nutylėjimą): žalia, raudona ir pilka, kaip aprašyta
       aukščiau.</li>
   <li><strong>Mama</strong>: žalia dabar reiškia abu — atvirą patalpą <em>ir</em> moterų tualetą.
       Oranžinė reiškia „patalpa nežinoma“, taigi dažniausiai vis tiek galima naudotis. Raudona
@@ -207,7 +207,7 @@ rodyti žalius, kol nebus atnaujintos.</p>
 <p>Žiedas yra ženklelis, o ne ketvirta spalva. Vieta be šių žymų neturi „jokio žaidimų kampelio“, OSM apie tai tiesiog nieko nesako, ir tai tinka beveik visoms vietoms. Todėl čia nėra pilkos.</p>
 <p>Būtent todėl iškylantis langas klausia: prie kiekvieno smeigtuko, apie kurį OSM nieko nesako apie žaidimų kampelį, nesvarbu, kokios jis spalvos, yra viena eilutė (po patalpomis, jei smeigtukas klausia ir apie patalpą): <em>Žaidimų kampelis vaikams?</em> su trimis atsakymais. <em>viduje</em> įrašo <code>kids_area:indoor=yes</code> kartu su <code>kids_area=yes</code>, <em>tik lauke</em> įrašo <code>kids_area=yes</code> kartu su <code>kids_area:indoor=no</code>, <em>nėra</em> įrašo <code>kids_area=no</code> — po tavo paties OSM paskyra, atskirame changeset'e, būtent tas žymas, kurias MapComplete įrašo to paties klausimo atveju. Klausimas apie bet kokią žaidimo galimybę, ne tik viduje: <code>kids_area=no</code> OSM reiškia „vaikai čia niekur negali žaisti“, todėl kepyklėlė su žaidimų aikštele sode gauna <em>tik lauke</em>, o ne klaidingą nulį. Žiedas atsiranda (arba ne) po kelių minučių. Kas jau atsakė, to nebeklausiama: įrašytas <code>kids_area</code> <em>arba</em> <code>kids_area:indoor</code>, kad ir kokia reikšmė, klausimą pašalina. Prie <code>leisure=playground</code> be <code>indoor=yes</code> jis nekeliamas visai: vieta <em>yra</em> žaidimų vieta, tik lauke. Jis nekeliamas ir prie viešojo tualeto (<code>amenity=toilets</code>): žaidimų kampelis priklauso kavinei ar parduotuvei, ne tualetui.</p>
 <p>Taisyklė tinka daug daugiau vietų, nei yra smeigtukų. Tik <span data-stat="play_tables">111</span> iš jų turi smeigtuką. Dar prie <span data-stat="play_places">701</span> niekas neatsakė į pirmąjį klausimą: ar čia yra pervystymo stalas? Jų žemėlapis nuspalvinti negali, todėl jie gauna tuščią mėlyną žiedą ir savo žymę, <em>Tik žaidimų kampelis</em>, pagal numatytuosius nustatymus įjungtą. Kas vis tiek ten eina su vaiku, atsakymą žino. Spustelėjus žiedą, MapComplete atsidaro būtent ties šiuo klausimu.</p>
-<p><em>Punktyrinis</em> žiedas reiškia: žaidimų kampelis taip, pervystymo stalo ne (<code>changing_table=no</code>). Tai ne smeigtukas ir ne oranžinė, nes oranžinė reikštų, kad stalas yra, tik ne tėčiui. Čia jo nėra, niekam. Vieta vis tiek yra žemėlapyje, nes su vaiku ten mielai einama ir be stalo.</p>
+<p><em>Punktyrinis</em> žiedas reiškia: žaidimų kampelis taip, pervystymo stalo ne (<code>changing_table=no</code>). Tai ne smeigtukas ir ne raudona, nes raudona reikštų, kad stalas yra, tik ne tėčiui. Čia jo nėra, niekam. Vieta vis tiek yra žemėlapyje, nes su vaiku ten mielai einama ir be stalo.</p>
 
 <p>Violetiniai žiedai žymi vietas, kuriose pažymėta maitinimo kėdutė (<code>highchair=yes</code> arba skaičius), bet nėra pervystymo stalo, net ir be žaidimų kampelio. Jie turi savo žymę, <em>Tik maitinimo kėdutė</em>.</p>
 

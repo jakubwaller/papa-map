@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
+    --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
+      --green: #009e73; --red: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -160,7 +160,7 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
   <li><span class="dot g"></span><strong>緑:</strong> 部分のひとつが <code>male_toilet</code>、
       <code>unisex_toilet</code>、<code>dedicated_room</code>、<code>room</code>、<code>wheelchair_toilet</code>、
       <code>sales_area</code> または <code>outdoor</code>。パパがたどり着けます。</li>
-  <li><span class="dot r"></span><strong>オレンジ:</strong> それ以外で、部分のひとつが <code>female_toilet</code>。
+  <li><span class="dot r"></span><strong>赤:</strong> それ以外で、部分のひとつが <code>female_toilet</code>。
       交換台はあるけれど、女性トイレにしかありません。</li>
   <li><span class="dot u"></span><strong>灰色:</strong> その他すべて。場所のタグがない、または自由記述だけ。
       まだ誰も部屋を書き留めていません。</li>
@@ -178,7 +178,7 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
 入れる部屋にあります。チップ欄の左にある<em>パパ / ママ</em>切り替えは、だからこの3つの答えの読み方だけを
 変えます。答え自体は変わりません。</p>
 <ul>
-  <li><strong>パパ</strong>（初期設定）: 上で説明した緑・オレンジ・灰色のとおりです。</li>
+  <li><strong>パパ</strong>（初期設定）: 上で説明した緑・赤・灰色のとおりです。</li>
   <li><strong>ママ</strong>: 緑は今、両方を意味します — 誰でも入れる部屋<em>と</em>女性トイレです。
       オレンジは「部屋が不明」、つまりたいてい使えるという意味です。赤は男性トイレのみと記録された
       交換台にだけ表示されます。</li>
@@ -222,7 +222,7 @@ Women</em></a>（邦題『存在しない女たち』）を読んだことから
 か所では、最初の質問 — ここにおむつ交換台はある？ — にまだ誰も答えていません。地図はそれらに色を付けられないので、
 空の青い輪と専用のチップ<em>遊び場のみ</em>（初期状態ではオン）が付きます。どうせ子どもと一緒に行くなら、答えを
 知っているはずです。輪をクリックすると、MapCompleteがまさにその質問を開きます。</p>
-<p><em>破線</em>の輪は、遊び場はあるがおむつ交換台はない（<code>changing_table=no</code>）という意味です。これはピンではなく、オレンジでもありません。オレンジは「交換台はあるが、パパは使えない」という意味だからです。ここには誰のための交換台もありません。それでも地図に載せているのは、子ども連れなら交換台がなくても行きたい場所だからです。</p>
+<p><em>破線</em>の輪は、遊び場はあるがおむつ交換台はない（<code>changing_table=no</code>）という意味です。これはピンではなく、赤でもありません。赤は「交換台はあるが、パパは使えない」という意味だからです。ここには誰のための交換台もありません。それでも地図に載せているのは、子ども連れなら交換台がなくても行きたい場所だからです。</p>
 
 <p>紫の輪は、ベビーチェアが記録されている（<code>highchair=yes</code>または数値）がおむつ交換台の記録がない場所を示します。遊び場がなくても同じです。専用のチップ「ベビーチェアのみ」があります。</p>
 
