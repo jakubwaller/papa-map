@@ -27,6 +27,8 @@ const DATA_PRELOAD = /[ \t]*<link rel="preload" href="data\/[^"]*"[^>]*>\n?/g;
 const VIEWPORT = /(<meta name="viewport" content="width=device-width, initial-scale=1)(, viewport-fit=cover")/;
 
 export function appShell(html) {
+  // Module-level /g regexes keep lastIndex after a throw.
+  CONTACT.lastIndex = DONATE.lastIndex = DATA_PRELOAD.lastIndex = 0;
   // A changed footer must fail the build, not ship the link quietly.
   const cut = DONATE.exec(html);
   if (!cut) throw new Error("index.html: no donate span found to remove");
