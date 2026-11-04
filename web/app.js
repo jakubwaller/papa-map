@@ -3296,8 +3296,8 @@ function setVenueNote(key, cls = "", vars = null) {
   el.className = `venue-note ${cls}`;
   el.textContent = key ? t(key, vars) : "";
   el.hidden = !key;
-  // The saved state: only the way on stays, the questions and the MapComplete
-  // cards go (style.css, #add-dialog.saved). Left by showVenueStep.
+  // The saved state: the place, any question still open, the way on; the
+  // MapComplete cards go (style.css, #add-dialog.saved). Left by showVenueStep.
   const saved = key === "venueSaved" || key === "venueSavedNone";
   addDialog.classList.toggle("saved", saved);
   const after = VENUE_AFTER[lang] ?? VENUE_AFTER.en;

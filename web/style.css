@@ -943,8 +943,8 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 @media (min-width: 900px) { html:not(.in-app) .hdr-kofi { display: inline; } }
 #add-dialog .venue-thanks { margin: 8px 0 0; font-size: 12.5px; }
 #add-dialog .venue-thanks a { white-space: nowrap; }
-/* The saved state: title, place, note, thanks and two buttons; nothing else. */
-#add-dialog.saved :is(.dlg-intro, #venue-back, #venue-q, .venue-elsewhere, .add-links, .dialog-foot) { display: none; }
+/* The saved state: title, place, the questions still open (each is answered on its own), note, thanks and two buttons. */
+#add-dialog.saved :is(.dlg-intro, #venue-back, .venue-elsewhere, .add-links, .dialog-foot) { display: none; }
 /* The question step: "not in the list" makes no sense once a place is picked. */
 #add-dialog.asking :is(.dlg-intro, .venue-elsewhere, .add-links) { display: none; }
 #venue-after { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }

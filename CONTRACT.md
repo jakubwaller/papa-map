@@ -9,7 +9,7 @@
 > intro and the two hint paragraphs: `dlgToiletHint` and `dlgVenueHint` are removed from all 32 languages, and
 > `dlgIntro`, `dlgElsewhere`, `dlgToilet`, `dlgVenue` are shortened. The two MapComplete links are compact
 > buttons (`.add-links`, one line each, stacked when both do not fit a row); they and the intro are hidden on the
-> question step. The saved state shows only the place, the saved note, a thank-you with the Ko-fi link
+> question step. The saved state shows the place, the questions still unanswered (each is its own write, v112), the saved note, a thank-you with the Ko-fi link
 > (`#venue-thanks`, class `donate`, so web only: cut from the store app's copy by `app/shell.mjs`, which now
 > cuts every `donate` element, `<span>` or `<p>`) and "Add another place" / "Done". New exports `VENUE_THANKS` and
 > `VENUE_AFTER` in `web/i18n.js`, 32 languages each. Shell pin `v=app113` becomes `v=app114`.
