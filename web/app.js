@@ -1529,6 +1529,14 @@ document.addEventListener("scroll", (e) => {
   if (e.target instanceof Element && e.target.classList.contains("popup")) updatePopupFade();
 }, true);
 filterBar.addEventListener("scroll", updateBarFade, { passive: true });
+// A mouse wheel only turns up and down, and this row has nowhere to go that
+// way: at 1280px its last chips sat off screen for anyone without a trackpad.
+// Turned sideways here; a trackpad's own sideways swipe is left alone.
+filterBar.addEventListener("wheel", (e) => {
+  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || filterBar.scrollWidth <= filterBar.clientWidth) return;
+  filterBar.scrollLeft += e.deltaY * (e.deltaMode === 1 ? 16 : 1);   // Firefox counts lines
+  e.preventDefault();
+}, { passive: false });
 window.addEventListener("resize", updateBarFade);
 // A turned phone has a different band; the open card takes the new cap where
 // it stands, unpanned, as every other resize leaves the map.
