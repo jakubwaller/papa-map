@@ -308,7 +308,7 @@ export const STRINGS = {
     statsUpdated: "Stand {date}.",
 
     toastNoGeo: "Standortbestimmung ist in diesem Browser nicht verfügbar.",
-    toastGeoFail: "Standort nicht gefunden — Browser-Berechtigung prüfen.",
+    toastGeoFail: "Standort nicht gefunden. Prüfen, ob die Ortung am Gerät an ist, dann noch einmal tippen — oder nach einem Ort suchen.",
     toastGeoDenied: "Standort für papamap.de ist blockiert. In den Einstellungen des Browsers oder des Telefons erlauben, dann noch einmal tippen.",
     toastGeoDeniedApp: "Standort für PapaMap ist aus. In den Einstellungen des Telefons einschalten, dann noch einmal tippen.",
     toastGeoOffApp: "Standort ist auf dem Telefon ausgeschaltet. In den Einstellungen einschalten, dann noch einmal tippen.",
@@ -567,7 +567,7 @@ export const STRINGS = {
     statsUpdated: "Updated {date}.",
 
     toastNoGeo: "Geolocation is not available in this browser.",
-    toastGeoFail: "Couldn't get your location — check the browser's permission.",
+    toastGeoFail: "Couldn't find your location. Check that location is on for this device, then tap again — or search for a place.",
     toastGeoDenied: "Location is blocked for papamap.de. Allow it in the browser's or the phone's settings, then tap again.",
     toastGeoDeniedApp: "Location is off for PapaMap. Turn it on in the phone's settings, then tap again.",
     toastGeoOffApp: "Location is off on this phone. Turn it on in the settings, then tap again.",
@@ -822,7 +822,7 @@ export const STRINGS = {
     statsUpdated: "Opdateret {date}.",
 
     toastNoGeo: "Placering er ikke tilgængelig i denne browser.",
-    toastGeoFail: "Kunne ikke finde din placering — tjek browserens tilladelse.",
+    toastGeoFail: "Kunne ikke finde din placering. Tjek, at placering er slået til på enheden, og tryk igen — eller søg efter et sted.",
     toastGeoDenied: "Placering er blokeret for papamap.de. Tillad den i browserens eller telefonens indstillinger, og tryk igen.",
     toastGeoDeniedApp: "Placering er slået fra for PapaMap. Slå den til i telefonens indstillinger, og tryk igen.",
     toastGeoOffApp: "Placering er slået fra på telefonen. Slå den til i indstillingerne, og tryk igen.",
@@ -1075,7 +1075,7 @@ export const STRINGS = {
     statsUpdated: "Bijgewerkt {date}.",
 
     toastNoGeo: "Locatiebepaling is niet beschikbaar in deze browser.",
-    toastGeoFail: "Locatie niet gevonden — controleer de toestemming in de browser.",
+    toastGeoFail: "Locatie niet gevonden. Controleer of locatie aanstaat op je apparaat en tik opnieuw — of zoek een plaats.",
     toastGeoDenied: "Locatie is geblokkeerd voor papamap.de. Sta haar toe in de instellingen van de browser of je telefoon en tik opnieuw.",
     toastGeoDeniedApp: "Locatie staat uit voor PapaMap. Zet haar aan in de instellingen van je telefoon en tik opnieuw.",
     toastGeoOffApp: "Locatie staat uit op je telefoon. Zet haar aan in de instellingen en tik opnieuw.",
@@ -1326,7 +1326,7 @@ export const STRINGS = {
     statsUpdated: "Mis à jour le {date}.",
 
     toastNoGeo: "La géolocalisation n'est pas disponible dans ce navigateur.",
-    toastGeoFail: "Position introuvable — vérifie l'autorisation du navigateur.",
+    toastGeoFail: "Position introuvable. Vérifie que la localisation est activée sur l'appareil, puis touche à nouveau — ou recherche un lieu.",
     toastGeoDenied: "La position est bloquée pour papamap.de. Autorise-la dans les réglages du navigateur ou du téléphone, puis touche à nouveau.",
     toastGeoDeniedApp: "La position est désactivée pour PapaMap. Active-la dans les réglages du téléphone, puis touche à nouveau.",
     toastGeoOffApp: "La position est désactivée sur le téléphone. Active-la dans les réglages, puis touche à nouveau.",
@@ -1577,7 +1577,7 @@ export const STRINGS = {
     statsUpdated: "Aggiornato il {date}.",
 
     toastNoGeo: "La geolocalizzazione non è disponibile in questo browser.",
-    toastGeoFail: "Non riesco a trovare la tua posizione — controlla i permessi del browser.",
+    toastGeoFail: "Non riesco a trovare la tua posizione. Controlla che la localizzazione sia attiva sul dispositivo, poi tocca di nuovo — oppure cerca un luogo.",
     toastGeoDenied: "La posizione è bloccata per papamap.de. Consentila nelle impostazioni del browser o del telefono, poi tocca di nuovo.",
     toastGeoDeniedApp: "La posizione è disattivata per PapaMap. Attivala nelle impostazioni del telefono, poi tocca di nuovo.",
     toastGeoOffApp: "La posizione è disattivata sul telefono. Attivala nelle impostazioni, poi tocca di nuovo.",
@@ -1828,7 +1828,7 @@ export const STRINGS = {
     statsUpdated: "Aktualizováno {date}.",
 
     toastNoGeo: "Určování polohy není v tomto prohlížeči k dispozici.",
-    toastGeoFail: "Polohu se nepodařilo zjistit — zkontroluj oprávnění prohlížeče.",
+    toastGeoFail: "Polohu se nepodařilo zjistit. Zkontroluj, že je v zařízení zapnutá poloha, a klepni znovu — nebo vyhledej místo.",
     toastGeoDenied: "Poloha je pro papamap.de zablokovaná. Povol ji v nastavení prohlížeče nebo telefonu a klepni znovu.",
     toastGeoDeniedApp: "Poloha pro PapaMap je vypnutá. Zapni ji v nastavení telefonu a klepni znovu.",
     toastGeoOffApp: "Poloha je v telefonu vypnutá. Zapni ji v nastavení a klepni znovu.",
@@ -2079,7 +2079,7 @@ export const STRINGS = {
     statsUpdated: "Dane z {date}.",
 
     toastNoGeo: "Geolokalizacja nie jest dostępna w tej przeglądarce.",
-    toastGeoFail: "Nie udało się ustalić lokalizacji — sprawdź uprawnienia przeglądarki.",
+    toastGeoFail: "Nie udało się ustalić lokalizacji. Sprawdź, czy lokalizacja jest włączona w urządzeniu, potem dotknij ponownie — albo wyszukaj miejsce.",
     toastGeoDenied: "Lokalizacja jest zablokowana dla papamap.de. Zezwól na nią w ustawieniach przeglądarki lub telefonu, potem dotknij ponownie.",
     toastGeoDeniedApp: "Lokalizacja jest wyłączona dla PapaMap. Włącz ją w ustawieniach telefonu, potem dotknij ponownie.",
     toastGeoOffApp: "Lokalizacja jest wyłączona w telefonie. Włącz ją w ustawieniach, potem dotknij ponownie.",
@@ -2330,7 +2330,7 @@ export const STRINGS = {
     statsUpdated: "Uppdaterad {date}.",
 
     toastNoGeo: "Positionering är inte tillgänglig i den här webbläsaren.",
-    toastGeoFail: "Hittade inte din position — kontrollera webbläsarens behörighet.",
+    toastGeoFail: "Hittade inte din position. Kontrollera att platstjänster är på i enheten och tryck igen — eller sök efter en plats.",
     toastGeoDenied: "Positionen är blockerad för papamap.de. Tillåt den i webbläsarens eller telefonens inställningar och tryck igen.",
     toastGeoDeniedApp: "Positionen är avstängd för PapaMap. Slå på den i telefonens inställningar och tryck igen.",
     toastGeoOffApp: "Positionen är avstängd i telefonen. Slå på den i inställningarna och tryck igen.",
@@ -2580,7 +2580,7 @@ export const STRINGS = {
     statsUpdated: "Ažurirano {date}.",
 
     toastNoGeo: "Geolokacija nije dostupna u ovom pregledniku.",
-    toastGeoFail: "Nije moguće utvrditi tvoju lokaciju — provjeri dozvole preglednika.",
+    toastGeoFail: "Nije moguće utvrditi tvoju lokaciju. Provjeri da je lokacija uključena na uređaju, pa dodirni ponovno — ili potraži mjesto.",
     toastGeoDenied: "Lokacija je blokirana za papamap.de. Dopusti je u postavkama preglednika ili telefona, pa dodirni ponovno.",
     toastGeoDeniedApp: "Lokacija je isključena za PapaMap. Uključi je u postavkama telefona, pa dodirni ponovno.",
     toastGeoOffApp: "Lokacija je isključena na telefonu. Uključi je u postavkama, pa dodirni ponovno.",
@@ -2830,7 +2830,7 @@ export const STRINGS = {
     statsUpdated: "Actualitzat el {date}.",
 
     toastNoGeo: "La geolocalització no està disponible en aquest navegador.",
-    toastGeoFail: "No s'ha pogut trobar la teva ubicació — comprova els permisos del navegador.",
+    toastGeoFail: "No s'ha pogut trobar la teva ubicació. Comprova que la ubicació estigui activada al dispositiu i torna a tocar — o cerca un lloc.",
     toastGeoDenied: "La ubicació està bloquejada per a papamap.de. Permet-la a la configuració del navegador o del telèfon i torna a tocar.",
     toastGeoDeniedApp: "La ubicació està desactivada per a PapaMap. Activa-la a la configuració del telèfon i torna a tocar.",
     toastGeoOffApp: "La ubicació està desactivada al telèfon. Activa-la a la configuració i torna a tocar.",
@@ -3080,7 +3080,7 @@ export const STRINGS = {
     statsUpdated: "Uuendatud {date}.",
 
     toastNoGeo: "Asukoha määramine ei ole selles brauseris saadaval.",
-    toastGeoFail: "Asukohta ei õnnestunud leida — kontrolli brauseri luba.",
+    toastGeoFail: "Asukohta ei õnnestunud leida. Kontrolli, et asukoht on seadmes sisse lülitatud, ja puuduta uuesti — või otsi kohta.",
     toastGeoDenied: "Asukoht on papamap.de jaoks blokeeritud. Luba see brauseri või telefoni sätetes ja puuduta uuesti.",
     toastGeoDeniedApp: "Asukoht on PapaMapi jaoks välja lülitatud. Lülita see telefoni seadetes sisse ja puuduta uuesti.",
     toastGeoOffApp: "Asukoht on telefonis välja lülitatud. Lülita see seadetes sisse ja puuduta uuesti.",
@@ -3330,7 +3330,7 @@ export const STRINGS = {
     statsUpdated: "Actualizado el {date}.",
 
     toastNoGeo: "La geolocalización no está disponible en este navegador.",
-    toastGeoFail: "No se ha podido encontrar tu ubicación — comprueba el permiso del navegador.",
+    toastGeoFail: "No se ha podido encontrar tu ubicación. Comprueba que la ubicación esté activada en el dispositivo y vuelve a tocar — o busca un lugar.",
     toastGeoDenied: "La ubicación está bloqueada para papamap.de. Permítela en los ajustes del navegador o del teléfono y vuelve a tocar.",
     toastGeoDeniedApp: "La ubicación está desactivada para PapaMap. Actívala en los ajustes del teléfono y vuelve a tocar.",
     toastGeoOffApp: "La ubicación está desactivada en el teléfono. Actívala en los ajustes y vuelve a tocar.",
@@ -3580,7 +3580,7 @@ export const STRINGS = {
     statsUpdated: "Ažurirano {date}.",
 
     toastNoGeo: "Određivanje lokacije nije dostupno u ovom pregledniku.",
-    toastGeoFail: "Nije moguće dohvatiti tvoju lokaciju — provjeri dopuštenje u pregledniku.",
+    toastGeoFail: "Nije moguće dohvatiti tvoju lokaciju. Provjeri je li lokacija uključena na uređaju, pa dodirni ponovo — ili potraži mjesto.",
     toastGeoDenied: "Lokacija je blokirana za papamap.de. Dozvoli je u postavkama preglednika ili telefona, pa dodirni ponovo.",
     toastGeoDeniedApp: "Lokacija je isključena za PapaMap. Uključi je u postavkama telefona, pa dodirni ponovo.",
     toastGeoOffApp: "Lokacija je isključena na telefonu. Uključi je u postavkama, pa dodirni ponovo.",
@@ -3830,7 +3830,7 @@ export const STRINGS = {
     statsUpdated: "Uppfært {date}.",
 
     toastNoGeo: "Staðsetning er ekki tiltæk í þessum vafra.",
-    toastGeoFail: "Tókst ekki að finna staðsetningu þína — athugaðu heimildir vafrans.",
+    toastGeoFail: "Tókst ekki að finna staðsetningu þína. Athugaðu að kveikt sé á staðsetningu í tækinu og ýttu aftur — eða leitaðu að stað.",
     toastGeoDenied: "Staðsetning er læst fyrir papamap.de. Leyfðu hana í stillingum vafrans eða símans og ýttu aftur.",
     toastGeoDeniedApp: "Staðsetning er slökkt fyrir PapaMap. Kveiktu á henni í stillingum símans og ýttu aftur.",
     toastGeoOffApp: "Staðsetning er slökkt í símanum. Kveiktu á henni í stillingunum og ýttu aftur.",
@@ -4080,7 +4080,7 @@ export const STRINGS = {
     statsUpdated: "Atjaunots {date}.",
 
     toastNoGeo: "Šajā pārlūkprogrammā ģeolokācija nav pieejama.",
-    toastGeoFail: "Neizdevās noteikt tavu atrašanās vietu — pārbaudi pārlūkprogrammas atļauju.",
+    toastGeoFail: "Neizdevās noteikt tavu atrašanās vietu. Pārbaudi, vai ierīcē ir ieslēgta atrašanās vieta, un pieskaries vēlreiz — vai meklē vietu.",
     toastGeoDenied: "Atrašanās vieta papamap.de ir bloķēta. Atļauj to pārlūkprogrammas vai tālruņa iestatījumos un pieskaries vēlreiz.",
     toastGeoDeniedApp: "Atrašanās vieta PapaMap ir izslēgta. Ieslēdz to tālruņa iestatījumos un pieskaries vēlreiz.",
     toastGeoOffApp: "Atrašanās vieta tālrunī ir izslēgta. Ieslēdz to iestatījumos un pieskaries vēlreiz.",
@@ -4330,7 +4330,7 @@ export const STRINGS = {
     statsUpdated: "Atnaujinta {date}.",
 
     toastNoGeo: "Vietos nustatymas šioje naršyklėje nepasiekiamas.",
-    toastGeoFail: "Nepavyko nustatyti tavo vietos — patikrink naršyklės leidimą.",
+    toastGeoFail: "Nepavyko nustatyti tavo vietos. Patikrink, ar įrenginyje įjungta vietos nustatymo funkcija, ir paliesk dar kartą — arba ieškok vietos.",
     toastGeoDenied: "Vieta papamap.de užblokuota. Leisk ją naršyklės arba telefono nustatymuose ir paliesk dar kartą.",
     toastGeoDeniedApp: "Vieta PapaMap išjungta. Įjunk ją telefono nustatymuose ir paliesk dar kartą.",
     toastGeoOffApp: "Vieta telefone išjungta. Įjunk ją nustatymuose ir paliesk dar kartą.",
@@ -4580,7 +4580,7 @@ export const STRINGS = {
     statsUpdated: "Frissítve: {date}.",
 
     toastNoGeo: "A helymeghatározás nem elérhető ebben a böngészőben.",
-    toastGeoFail: "Nem sikerült megállapítani a helyzeted — ellenőrizd a böngésző engedélyét.",
+    toastGeoFail: "Nem sikerült megállapítani a helyzeted. Ellenőrizd, hogy be van-e kapcsolva a helymeghatározás az eszközön, majd koppints újra — vagy keress egy helyet.",
     toastGeoDenied: "A helymeghatározás le van tiltva a papamap.de számára. Engedélyezd a böngésző vagy a telefon beállításaiban, majd koppints újra.",
     toastGeoDeniedApp: "A helymeghatározás ki van kapcsolva a PapaMap számára. Kapcsold be a telefon beállításaiban, majd koppints újra.",
     toastGeoOffApp: "A helymeghatározás ki van kapcsolva a telefonon. Kapcsold be a beállításokban, majd koppints újra.",
@@ -4830,7 +4830,7 @@ export const STRINGS = {
     statsUpdated: "Oppdatert {date}.",
 
     toastNoGeo: "Posisjonering er ikke tilgjengelig i denne nettleseren.",
-    toastGeoFail: "Fant ikke posisjonen din — sjekk nettleserens tillatelse.",
+    toastGeoFail: "Fant ikke posisjonen din. Sjekk at posisjon er slått på på enheten, og trykk igjen — eller søk etter et sted.",
     toastGeoDenied: "Posisjon er blokkert for papamap.de. Tillat den i innstillingene til nettleseren eller telefonen, og trykk igjen.",
     toastGeoDeniedApp: "Posisjon er slått av for PapaMap. Slå den på i telefonens innstillinger, og trykk igjen.",
     toastGeoOffApp: "Posisjon er slått av på telefonen. Slå den på i innstillingene, og trykk igjen.",
@@ -5080,7 +5080,7 @@ export const STRINGS = {
     statsUpdated: "Atualizado a {date}.",
 
     toastNoGeo: "A geolocalização não está disponível neste navegador.",
-    toastGeoFail: "Não foi possível obter a tua localização — verifica a autorização do navegador.",
+    toastGeoFail: "Não foi possível obter a tua localização. Verifica se a localização está ativada no dispositivo e toca novamente — ou procura um local.",
     toastGeoDenied: "A localização está bloqueada para papamap.de. Permite-a nas definições do navegador ou do telemóvel e toca novamente.",
     toastGeoDeniedApp: "A localização está desativada para o PapaMap. Ativa-a nas definições do telemóvel e toca novamente.",
     toastGeoOffApp: "A localização está desativada no telemóvel. Ativa-a nas definições e toca novamente.",
@@ -5330,7 +5330,7 @@ export const STRINGS = {
     statsUpdated: "Actualizat la {date}.",
 
     toastNoGeo: "Geolocalizarea nu este disponibilă în acest browser.",
-    toastGeoFail: "Nu am putut afla locația ta — verifică permisiunea browserului.",
+    toastGeoFail: "Nu am putut afla locația ta. Verifică dacă locația este activată pe dispozitiv, apoi atinge din nou — sau caută un loc.",
     toastGeoDenied: "Locația este blocată pentru papamap.de. Permite-o în setările browserului sau ale telefonului, apoi atinge din nou.",
     toastGeoDeniedApp: "Locația este dezactivată pentru PapaMap. Activeaz-o în setările telefonului, apoi atinge din nou.",
     toastGeoOffApp: "Locația este dezactivată pe telefon. Activeaz-o în setări, apoi atinge din nou.",
@@ -5580,7 +5580,7 @@ export const STRINGS = {
     statsUpdated: "Përditësuar më {date}.",
 
     toastNoGeo: "Gjeolokalizimi nuk është i disponueshëm në këtë shfletues.",
-    toastGeoFail: "Nuk u gjet vendndodhja jote — kontrollo lejen e shfletuesit.",
+    toastGeoFail: "Nuk u gjet vendndodhja jote. Kontrollo që vendndodhja të jetë e ndezur në pajisje, pastaj prek përsëri — ose kërko një vend.",
     toastGeoDenied: "Vendndodhja është e bllokuar për papamap.de. Lejoje te cilësimet e shfletuesit ose të telefonit, pastaj prek përsëri.",
     toastGeoDeniedApp: "Vendndodhja është e fikur për PapaMap. Ndize te cilësimet e telefonit, pastaj prek përsëri.",
     toastGeoOffApp: "Vendndodhja është e fikur në telefon. Ndize te cilësimet, pastaj prek përsëri.",
@@ -5830,7 +5830,7 @@ export const STRINGS = {
     statsUpdated: "Aktualizované {date}.",
 
     toastNoGeo: "Určovanie polohy nie je v tomto prehliadači k dispozícii.",
-    toastGeoFail: "Polohu sa nepodarilo zistiť — skontroluj povolenie prehliadača.",
+    toastGeoFail: "Polohu sa nepodarilo zistiť. Skontroluj, či je v zariadení zapnutá poloha, a klepni znova — alebo vyhľadaj miesto.",
     toastGeoDenied: "Poloha je pre papamap.de zablokovaná. Povoľ ju v nastaveniach prehliadača alebo telefónu a klepni znova.",
     toastGeoDeniedApp: "Poloha pre PapaMap je vypnutá. Zapni ju v nastaveniach telefónu a klepni znova.",
     toastGeoOffApp: "Poloha je v telefóne vypnutá. Zapni ju v nastaveniach a klepni znova.",
@@ -6080,7 +6080,7 @@ export const STRINGS = {
     statsUpdated: "Posodobljeno {date}.",
 
     toastNoGeo: "Geolokacija v tem brskalniku ni na voljo.",
-    toastGeoFail: "Lokacije ni bilo mogoče ugotoviti — preveri dovoljenje brskalnika.",
+    toastGeoFail: "Lokacije ni bilo mogoče ugotoviti. Preveri, ali je lokacija v napravi vklopljena, nato se znova dotakni — ali poišči kraj.",
     toastGeoDenied: "Lokacija je za papamap.de blokirana. Dovoli jo v nastavitvah brskalnika ali telefona, nato se znova dotakni.",
     toastGeoDeniedApp: "Lokacija je za PapaMap izklopljena. Vklopi jo v nastavitvah telefona, nato se znova dotakni.",
     toastGeoOffApp: "Lokacija je v telefonu izklopljena. Vklopi jo v nastavitvah, nato se znova dotakni.",
@@ -6330,7 +6330,7 @@ export const STRINGS = {
     statsUpdated: "Päivitetty {date}.",
 
     toastNoGeo: "Sijainninmääritys ei ole käytettävissä tässä selaimessa.",
-    toastGeoFail: "Sijaintia ei löytynyt — tarkista selaimen käyttöoikeus.",
+    toastGeoFail: "Sijaintia ei löytynyt. Tarkista, että sijainti on päällä laitteessa, ja napauta uudelleen — tai hae paikkaa.",
     toastGeoDenied: "Sijainti on estetty papamap.de:lle. Salli se selaimen tai puhelimen asetuksissa ja napauta uudelleen.",
     toastGeoDeniedApp: "Sijainti on pois päältä PapaMapille. Laita se päälle puhelimen asetuksista ja napauta uudelleen.",
     toastGeoOffApp: "Sijainti on pois päältä puhelimessa. Laita se päälle asetuksista ja napauta uudelleen.",
@@ -6580,7 +6580,7 @@ export const STRINGS = {
     statsUpdated: "Ενημερώθηκε στις {date}.",
 
     toastNoGeo: "Ο εντοπισμός τοποθεσίας δεν είναι διαθέσιμος σε αυτό το πρόγραμμα περιήγησης.",
-    toastGeoFail: "Δεν ήταν δυνατός ο εντοπισμός της τοποθεσίας σου — έλεγξε τα δικαιώματα του προγράμματος περιήγησης.",
+    toastGeoFail: "Δεν ήταν δυνατός ο εντοπισμός της τοποθεσίας σου. Έλεγξε ότι η τοποθεσία είναι ενεργή στη συσκευή και πάτα ξανά — ή αναζήτησε ένα μέρος.",
     toastGeoDenied: "Η τοποθεσία είναι αποκλεισμένη για το papamap.de. Επίτρεψέ την στις ρυθμίσεις του προγράμματος περιήγησης ή του τηλεφώνου και πάτα ξανά.",
     toastGeoDeniedApp: "Η τοποθεσία είναι απενεργοποιημένη για το PapaMap. Ενεργοποίησέ την στις ρυθμίσεις του τηλεφώνου και πάτα ξανά.",
     toastGeoOffApp: "Η τοποθεσία είναι απενεργοποιημένη στο τηλέφωνο. Ενεργοποίησέ την στις ρυθμίσεις και πάτα ξανά.",
@@ -6830,7 +6830,7 @@ export const STRINGS = {
     statsUpdated: "Абноўлена {date}.",
 
     toastNoGeo: "Вызначэнне месцазнаходжання недаступнае ў гэтым браўзеры.",
-    toastGeoFail: "Не ўдалося вызначыць тваё месцазнаходжанне — правер дазвол браўзера.",
+    toastGeoFail: "Не ўдалося вызначыць тваё месцазнаходжанне. Правер, ці ўключана геалакацыя на прыладзе, і націсні яшчэ раз — або знайдзі месца праз пошук.",
     toastGeoDenied: "Месцазнаходжанне заблакіравана для papamap.de. Дазволь яго ў наладах браўзера або тэлефона і націсні яшчэ раз.",
     toastGeoDeniedApp: "Месцазнаходжанне для PapaMap выключана. Уключы яго ў наладах тэлефона і націсні яшчэ раз.",
     toastGeoOffApp: "Месцазнаходжанне ў тэлефоне выключана. Уключы яго ў наладах і націсні яшчэ раз.",
@@ -7080,7 +7080,7 @@ export const STRINGS = {
     statsUpdated: "Обновено на {date}.",
 
     toastNoGeo: "Определянето на местоположение не е достъпно в този браузър.",
-    toastGeoFail: "Местоположението не бе намерено — провери разрешенията на браузъра.",
+    toastGeoFail: "Местоположението не бе намерено. Провери дали местоположението е включено на устройството и докосни отново — или потърси място.",
     toastGeoDenied: "Местоположението е блокирано за papamap.de. Разреши го в настройките на браузъра или на телефона и докосни отново.",
     toastGeoDeniedApp: "Местоположението е изключено за PapaMap. Включи го в настройките на телефона и докосни отново.",
     toastGeoOffApp: "Местоположението е изключено на телефона. Включи го в настройките и докосни отново.",
@@ -7330,7 +7330,7 @@ export const STRINGS = {
     statsUpdated: "Ажурирано {date}.",
 
     toastNoGeo: "Геолокацијата не е достапна во овој прелистувач.",
-    toastGeoFail: "Не успеавме да ја одредиме твојата локација — провери ја дозволата на прелистувачот.",
+    toastGeoFail: "Не успеавме да ја одредиме твојата локација. Провери дали локацијата е вклучена на уредот и допри повторно — или побарај место.",
     toastGeoDenied: "Локацијата е блокирана за papamap.de. Дозволи ја во поставките на прелистувачот или телефонот и допри повторно.",
     toastGeoDeniedApp: "Локацијата е исклучена за PapaMap. Вклучи ја во поставките на телефонот и допри повторно.",
     toastGeoOffApp: "Локацијата е исклучена на телефонот. Вклучи ја во поставките и допри повторно.",
@@ -7580,7 +7580,7 @@ export const STRINGS = {
     statsUpdated: "Ажурирано {date}.",
 
     toastNoGeo: "Одређивање локације није доступно у овом прегледачу.",
-    toastGeoFail: "Није могуће утврдити твоју локацију — провери дозволу прегледача.",
+    toastGeoFail: "Није могуће утврдити твоју локацију. Провери да ли је локација укључена на уређају, па додирни поново — или потражи место.",
     toastGeoDenied: "Локација је блокирана за papamap.de. Дозволи је у подешавањима прегледача или телефона, па додирни поново.",
     toastGeoDeniedApp: "Локација је искључена за PapaMap. Укључи је у подешавањима телефона, па додирни поново.",
     toastGeoOffApp: "Локација је искључена на телефону. Укључи је у подешавањима, па додирни поново.",
@@ -7830,7 +7830,7 @@ export const STRINGS = {
     statsUpdated: "Оновлено {date}.",
 
     toastNoGeo: "Визначення місцезнаходження недоступне в цьому браузері.",
-    toastGeoFail: "Не вдалося визначити місцезнаходження — перевір дозвіл браузера.",
+    toastGeoFail: "Не вдалося визначити місцезнаходження. Перевір, чи увімкнено геолокацію на пристрої, і торкнися ще раз — або знайди місце через пошук.",
     toastGeoDenied: "Місцезнаходження заблоковано для papamap.de. Дозволь його в налаштуваннях браузера або телефона й торкнися ще раз.",
     toastGeoDeniedApp: "Місцезнаходження для PapaMap вимкнено. Увімкни його в налаштуваннях телефона й торкнися ще раз.",
     toastGeoOffApp: "Місцезнаходження на телефоні вимкнено. Увімкни його в налаштуваннях і торкнися ще раз.",
@@ -8084,7 +8084,7 @@ export const STRINGS = {
     statsUpdated: "{date}更新。",
 
     toastNoGeo: "このブラウザでは位置情報を利用できません。",
-    toastGeoFail: "現在地を取得できませんでした — ブラウザの位置情報の許可を確認してください。",
+    toastGeoFail: "現在地を取得できませんでした。端末の位置情報がオンになっているか確認して、もう一度タップしてください。または場所を検索してください。",
     toastGeoDenied: "papamap.de の位置情報がブロックされています。ブラウザまたはスマートフォンの設定で許可してから、もう一度タップしてください。",
     toastGeoDeniedApp: "PapaMap の位置情報がオフです。スマートフォンの設定でオンにしてから、もう一度タップしてください。",
     toastGeoOffApp: "スマートフォンの位置情報サービスがオフです。設定でオンにしてから、もう一度タップしてください。",

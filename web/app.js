@@ -1839,11 +1839,11 @@ function toast(msg, { ms = 4000, onTap = null } = {}) {
   toastTimer = setTimeout(hide, ms);
 }
 
-// A refusal is told apart from "no fix": it stays until the reader changes a
-// setting, so it gets the longer read.
+// A refusal is told apart from "no fix" (unavailable, timed out): each names
+// what to do next, so each gets the longer read.
 function geoFailed(err) {
   const key = geoFailKey(err, isNative());
-  toast(t(key), { ms: key === "toastGeoFail" || key === "toastNoGeo" ? 4000 : 7000 });
+  toast(t(key), { ms: key === "toastNoGeo" ? 4000 : 7000 });
 }
 
 // One position, as a promise: the browser's API on the page, the
