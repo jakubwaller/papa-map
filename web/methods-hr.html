@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -162,7 +162,7 @@ mala slova, a svaki se dio uspoređuje u cijelosti. Nikad kao podniz, jer <code>
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> ili <code>outdoor</code>.
       Tata do njega može doći.</li>
-  <li><span class="dot r"></span><strong>Crveno:</strong> inače, ako je jedan od dijelova
+  <li><span class="dot r"></span><strong>Narančasto:</strong> inače, ako je jedan od dijelova
       <code>female_toilet</code>. Stol postoji, ali samo u ženskom WC-u.</li>
   <li><span class="dot u"></span><strong>Sivo:</strong> sve ostalo. Nema oznake prostorije, ili
       samo slobodan tekst. Nitko nije zabilježio prostoriju.</li>
@@ -176,7 +176,7 @@ zabilježene prostorije većina njih stoji u prostoriji u koju ona može ući. P
 <em>Tata / Mama</em> lijevo u traci filtara zato mijenja samo to kako se čitaju iste tri boje,
 nikad same odgovore.</p>
 <ul>
-  <li><strong>Tata</strong> (zadano): zeleno, crveno i sivo, kao gore.</li>
+  <li><strong>Tata</strong> (zadano): zeleno, narančasto i sivo, kao gore.</li>
   <li><strong>Mama</strong>: Zeleno sada znači oboje &mdash; slobodno pristupnu prostoriju
       <em>i</em> žensko WC. Narančasto znači »Nepoznata prostorija«, dakle obično
       upotrebljivo. Crveno se pojavljuje samo za stol zabilježen isključivo u muškom WC-u.</li>
@@ -205,7 +205,7 @@ prikazuju zeleno, dok se ne ažuriraju.</p>
 <p>Kružić je značka, a ne četvrta boja. Mjesto bez ovih tagova nema „nikakav dječji kutak“, OSM o tome jednostavno ništa ne kaže, a to vrijedi za gotovo sva mjesta. Zato ovdje nema sive.</p>
 <p>Upravo zato popup pita: kod svakog pina o kojem OSM ne kaže ništa o dječjem kutku, bez obzira na boju, stoji jedan redak (ispod prostorija, ako pin pita i za prostoriju): <em>Dječji kutak?</em> s tri odgovora. <em>unutra</em> upisuje <code>kids_area:indoor=yes</code> zajedno s <code>kids_area=yes</code>, <em>samo vani</em> upisuje <code>kids_area=yes</code> zajedno s <code>kids_area:indoor=no</code>, <em>nema</em> upisuje <code>kids_area=no</code> — pod tvojim vlastitim OSM računom, u zasebnom changesetu, točno one tagove koje MapComplete upisuje za isto pitanje. Pitanje se odnosi na bilo kakvu mogućnost igre, ne samo unutra: <code>kids_area=no</code> u OSM-u znači „djeca se ovdje nigdje ne mogu igrati“, pa pekara s igralištem u vrtu zato dobiva <em>samo vani</em> umjesto lažne nule. Kružić se pojavi (ili ne) nekoliko minuta kasnije. Tko je već odgovorio, ne pita se ponovno: zabilježen <code>kids_area</code> <em>ili</em> <code>kids_area:indoor</code>, bez obzira na vrijednost, uklanja pitanje. Na <code>leisure=playground</code> bez <code>indoor=yes</code> pitanje se uopće ne postavlja: mjesto <em>jest</em> mjesto za igru, samo vani. Ne postavlja se ni kod javnog WC-a (<code>amenity=toilets</code>): kutak za igru pripada kafiću ili trgovini, ne WC-u.</p>
 <p>Pravilo vrijedi za mnogo više mjesta nego što ima pinova. Samo <span data-stat="play_tables">111</span> njih ima pin. Kod još <span data-stat="play_places">701</span> nitko nije odgovorio na prvo pitanje: ima li ovdje stol za previjanje? Njih karta ne može obojiti, pa dobivaju prazan plavi kružić i vlastiti čip, <em>Samo dječji kutak</em>, koji je prema zadanim postavkama uključen. Tko ionako ide tamo s djetetom, zna odgovor. Klik na kružić otvara MapComplete točno kod tog pitanja.</p>
-<p><em>Isprekidani</em> kružić znači: dječji kutak da, stol za previjanje ne (<code>changing_table=no</code>). To nije pin, a nije ni crveno, jer bi crveno značilo da stol postoji, samo ne za tatu. Ovdje ga nema, ni za koga. Mjesto je ipak na karti, jer se s djetetom rado ide tamo i bez stola.</p>
+<p><em>Isprekidani</em> kružić znači: dječji kutak da, stol za previjanje ne (<code>changing_table=no</code>). To nije pin, a nije ni narančasto, jer bi narančasto značilo da stol postoji, samo ne za tatu. Ovdje ga nema, ni za koga. Mjesto je ipak na karti, jer se s djetetom rado ide tamo i bez stola.</p>
 
 <p>Ljubičasti krugovi označavaju mjesta na kojima je zabilježena hranilica (<code>highchair=yes</code> ili broj), ali nema stola za previjanje, čak i bez dječjeg kutka. Imaju vlastiti čip, <em>Samo hranilica</em>.</p>
 

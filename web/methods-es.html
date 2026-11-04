@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -162,7 +162,7 @@ espacios, se pasa a minúsculas y cada parte se compara entera. Nunca como subca
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> u <code>outdoor</code>.
       Un papá llega.</li>
-  <li><span class="dot r"></span><strong>Rojo:</strong> si no, cuando una de las partes es
+  <li><span class="dot r"></span><strong>Naranja:</strong> si no, cuando una de las partes es
       <code>female_toilet</code>. El cambiador existe, pero solo en el baño de mujeres.</li>
   <li><span class="dot u"></span><strong>Gris:</strong> todo lo demás. Sin etiqueta de sala, o solo
       texto libre. Nadie ha registrado la sala.</li>
@@ -176,7 +176,7 @@ el baño de mujeres, y también la mayoría de los cambiadores sin sala registra
 la que puede entrar. El interruptor <em>Papá / Mamá</em>, a la izquierda en la barra de chips,
 cambia por eso solo cómo se leen esas mismas tres respuestas, nunca las respuestas en sí.</p>
 <ul>
-  <li><strong>Papá</strong> (por defecto): verde, rojo y gris, como se describe arriba.</li>
+  <li><strong>Papá</strong> (por defecto): verde, naranja y gris, como se describe arriba.</li>
   <li><strong>Mamá</strong>: Verde significa ahora ambas cosas &mdash; la sala de acceso libre
       <em>y</em> el baño de mujeres. Naranja significa &ldquo;Sala desconocida&rdquo;, es decir,
       casi siempre utilizable. El rojo solo aparece para un cambiador registrado únicamente en el
@@ -206,7 +206,7 @@ más antiguas de la app aún pueden mostrarlos en verde hasta que se actualicen.
 <p>El anillo es una insignia, no un cuarto color. Un lugar sin estas etiquetas no «carece de zona de juegos»: en OSM simplemente no se dice nada, y eso vale para casi todos los lugares. Por eso aquí no hay gris.</p>
 <p>Por eso mismo pregunta el popup: en cada pin sobre el que OSM no dice nada de una zona de juegos, sea del color que sea, hay una línea (bajo las salas, si el pin también pregunta por la sala): <em>¿Zona de juegos para niños?</em>, con tres respuestas. <em>interior</em> escribe <code>kids_area:indoor=yes</code> junto con <code>kids_area=yes</code>, <em>solo exterior</em> escribe <code>kids_area=yes</code> junto con <code>kids_area:indoor=no</code>, <em>ninguna</em> escribe <code>kids_area=no</code> — con tu propia cuenta de OSM, en un changeset aparte, exactamente las etiquetas que MapComplete escribe para la misma pregunta. La pregunta es por cualquier espacio de juego, no solo el interior: en OSM <code>kids_area=no</code> significa «aquí los niños no pueden jugar en ningún sitio», así que una panadería con un parque infantil en el jardín recibe <em>solo exterior</em> en lugar de un falso no. El anillo aparece (o no) unos minutos después. A quien ya ha respondido no se le vuelve a preguntar: un <code>kids_area</code> <em>o</em> <code>kids_area:indoor</code> registrado, sea cual sea el valor, quita la pregunta. En un <code>leisure=playground</code> sin <code>indoor=yes</code> no se pregunta nunca: el lugar <em>es</em> un sitio donde jugar, solo que fuera. Tampoco se pregunta en unos aseos públicos (<code>amenity=toilets</code>): un rincón de juegos es de una cafetería o una tienda, no de un aseo.</p>
 <p>La regla se cumple en muchos más lugares de los que tienen pin. Solo <span data-stat="play_tables">111</span> de ellos tienen uno. En otros <span data-stat="play_places">701</span> nadie ha respondido la primera pregunta: ¿hay aquí un cambiador? El mapa no puede colorearlos, así que reciben un anillo azul vacío y un filtro propio, <em>Solo zona de juegos</em>, activado por defecto. Quien va allí de todos modos con un niño sabe la respuesta. Un clic en el anillo abre MapComplete justo en esa pregunta.</p>
-<p>Un anillo <em>discontinuo</em> significa: zona de juegos sí, cambiador no (<code>changing_table=no</code>). No es un pin y tampoco es rojo, porque el rojo diría que hay un cambiador, solo que no para el papá. Aquí no hay ninguno, para nadie. El lugar está en el mapa de todos modos, porque con un niño se va a gusto aunque no haya cambiador.</p>
+<p>Un anillo <em>discontinuo</em> significa: zona de juegos sí, cambiador no (<code>changing_table=no</code>). No es un pin y tampoco es naranja, porque el naranja diría que hay un cambiador, solo que no para el papá. Aquí no hay ninguno, para nadie. El lugar está en el mapa de todos modos, porque con un niño se va a gusto aunque no haya cambiador.</p>
 
 <p>Los anillos morados marcan lugares donde hay una trona registrada (<code>highchair=yes</code> o un número) pero ningún cambiador, incluso sin zona de juegos. Tienen su propio chip, <em>Solo trona</em>.</p>
 

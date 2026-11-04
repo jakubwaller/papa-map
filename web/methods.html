@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -162,7 +162,7 @@ kleingeschrieben, und jeder Teil wird als Ganzes verglichen, nie als Teilstring,
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> oder <code>outdoor</code>.
       Ein Papa kommt ran.</li>
-  <li><span class="dot r"></span><strong>Rot:</strong> sonst, wenn einer der Teile
+  <li><span class="dot r"></span><strong>Orange:</strong> sonst, wenn einer der Teile
       <code>female_toilet</code> ist. Den Tisch gibt es, aber nur im Damen-WC.</li>
   <li><span class="dot u"></span><strong>Grau:</strong> alles andere. Kein Location-Tag oder nur
       Freitext. Den Raum hat noch niemand eingetragen.</li>
@@ -176,7 +176,7 @@ bei einem Tisch ohne erfassten Raum steht die Mehrheit in einem Raum, den sie be
 Schalter <em>Papa / Mama</em> links in der Chip-Leiste ändert deshalb nur, wie dieselben drei
 Antworten gelesen werden, nie die Antworten selbst.</p>
 <ul>
-  <li><strong>Papa</strong> (Standard): grün, rot und grau wie oben beschrieben.</li>
+  <li><strong>Papa</strong> (Standard): grün, orange und grau wie oben beschrieben.</li>
   <li><strong>Mama</strong>: Grün heißt jetzt beides — der offen zugängliche Raum <em>und</em> das
       Damen-WC. Orange steht für &bdquo;Raum unbekannt&ldquo;, also meistens nutzbar. Rot bleibt
       nur für einen Tisch, der allein im Herren-WC eingetragen ist.</li>
@@ -232,7 +232,7 @@ also bekommen sie einen leeren blauen Ring und einen eigenen Chip, <em>Nur Spiel
 standardmäßig an ist. Wer mit Kind sowieso dort hingeht, kennt die Antwort. Ein Klick auf den
 Ring öffnet MapComplete genau bei dieser Frage.</p>
 <p>Ein <em>gestrichelter</em> Ring heißt: Spielecke ja, Wickeltisch nein
-(<code>changing_table=no</code>). Das ist kein Pin und auch nicht rot, denn Rot hieße, dass es
+(<code>changing_table=no</code>). Das ist kein Pin und auch nicht orange, denn Orange hieße, dass es
 einen Tisch gibt, nur nicht für Papa. Hier gibt es keinen, für niemanden. Auf der Karte ist der
 Ort trotzdem, weil man mit Kind auch ohne Tisch gern hingeht.</p>
 

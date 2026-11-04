@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -162,7 +162,7 @@ spazi, messo in minuscolo, e ogni parte viene confrontata per intero. Mai come s
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> o <code>outdoor</code>.
       Un papà ci arriva.</li>
-  <li><span class="dot r"></span><strong>Rosso:</strong> altrimenti, se una delle parti è
+  <li><span class="dot r"></span><strong>Arancione:</strong> altrimenti, se una delle parti è
       <code>female_toilet</code>. Il fasciatoio c'è, ma solo nel bagno donne.</li>
   <li><span class="dot u"></span><strong>Grigio:</strong> tutto il resto. Nessun tag di posizione,
       o solo testo libero. Nessuno ha registrato la stanza.</li>
@@ -177,7 +177,7 @@ parte dei casi, in una stanza in cui può comunque entrare. Il selettore <em>Pap
 sinistra nella fila dei chip, cambia quindi solo il modo in cui si leggono le stesse tre risposte,
 mai le risposte stesse.</p>
 <ul>
-  <li><strong>Papà</strong> (di default): verde, rosso e grigio come descritto sopra.</li>
+  <li><strong>Papà</strong> (di default): verde, arancione e grigio come descritto sopra.</li>
   <li><strong>Mamma</strong>: Verde ora significa entrambe le cose — la stanza liberamente
       accessibile <em>e</em> il bagno donne. Arancione sta per &laquo;stanza sconosciuta&raquo;, quindi di solito utilizzabile. Il rosso compare solo per un fasciatoio
       registrato esclusivamente nel bagno uomini.</li>
@@ -206,7 +206,7 @@ vecchie dell'app potrebbero ancora mostrarli verdi, finché non vengono aggiorna
 <p>L'anello è un distintivo, non un quarto colore. Un luogo senza questi tag non «non ha un angolo giochi»: in OSM semplicemente non se ne dice nulla, e questo vale per quasi tutti i luoghi. Per questo qui non c'è il grigio.</p>
 <p>Proprio per questo il popup lo chiede: su ogni pin per cui OSM non dice nulla su un angolo giochi, di qualunque colore, c'è una riga (sotto le stanze, se il pin chiede anche la stanza): <em>Angolo giochi per bambini?</em>, con tre risposte. <em>al chiuso</em> scrive <code>kids_area:indoor=yes</code> insieme a <code>kids_area=yes</code>, <em>solo all'aperto</em> scrive <code>kids_area=yes</code> insieme a <code>kids_area:indoor=no</code>, <em>nessuno</em> scrive <code>kids_area=no</code> — con il tuo account OSM, in un changeset a parte, esattamente i tag che MapComplete scrive per la stessa domanda. La domanda riguarda un'area gioco in generale, non solo al chiuso: in OSM <code>kids_area=no</code> significa «qui i bambini non possono giocare da nessuna parte», e così una panetteria con un giardino giochi riceve <em>solo all'aperto</em> invece di un falso no. L'anello compare (o resta assente) pochi minuti dopo. A chi ha già risposto la domanda non viene fatta di nuovo: un <code>kids_area</code> <em>o</em> <code>kids_area:indoor</code> già registrato, qualunque sia il valore, toglie la domanda. Su un <code>leisure=playground</code> senza <code>indoor=yes</code> non viene mai posta: il luogo <em>è</em> già un posto dove giocare, solo all'aperto. Non viene posta nemmeno su un bagno pubblico (<code>amenity=toilets</code>): un angolo giochi appartiene a un bar o a un negozio, non a un WC.</p>
 <p>La regola vale per molti più luoghi di quanti abbiano un pin. Solo <span data-stat="play_tables">111</span> di questi ne hanno uno. Per altri <span data-stat="play_places">701</span> nessuno ha risposto alla prima domanda: c'è un fasciatoio qui? La mappa non può colorarli, quindi ricevono un anello blu vuoto e un filtro tutto loro, <em>Solo angolo giochi</em>, attivo di default. Chi ci va comunque con un bambino sa la risposta. Un clic sull'anello apre MapComplete proprio su questa domanda.</p>
-<p>Un anello <em>tratteggiato</em> significa: angolo giochi sì, fasciatoio no (<code>changing_table=no</code>). Non è un pin e nemmeno rosso, perché il rosso direbbe che un fasciatoio c'è, solo non per il papà. Qui non ce n'è nessuno, per nessuno. Il luogo è comunque sulla mappa, perché con un bambino ci si va volentieri anche senza fasciatoio.</p>
+<p>Un anello <em>tratteggiato</em> significa: angolo giochi sì, fasciatoio no (<code>changing_table=no</code>). Non è un pin e nemmeno arancione, perché il arancione direbbe che un fasciatoio c'è, solo non per il papà. Qui non ce n'è nessuno, per nessuno. Il luogo è comunque sulla mappa, perché con un bambino ci si va volentieri anche senza fasciatoio.</p>
 
 <p>Gli anelli viola segnano i luoghi in cui è registrato un seggiolone (<code>highchair=yes</code> o un numero) ma nessun fasciatoio, anche senza angolo giochi. Hanno un chip tutto loro, <em>Solo seggiolone</em>.</p>
 

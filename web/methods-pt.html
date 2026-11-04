@@ -48,13 +48,13 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #1c1c1c; --muted: #5a5a5a; --line: #d8d8d8;
-    --green: #1a7f37; --red: #c0392b; --grey: #6e6e6e; --accent: #0b5fa5;
+    --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #0b5fa5;
     --play: #0b6ea8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1b1b1d; --fg: #e8e8e8; --muted: #a5a5a5; --line: #3a3a3d;
-      --green: #4cc26b; --red: #e06553; --grey: #9a9a9a; --accent: #6ab0e8;
+      --green: #009e73; --orange: #d55e00; --grey: #3d4247; --accent: #6ab0e8;
       --play: #6ab0e8;
     }
   }
@@ -74,7 +74,7 @@
   th:first-child, td:first-child { text-align: left; }
   .muted { color: var(--muted); font-size: 0.9rem; }
   .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.35em; vertical-align: baseline; }
-  .g { background: var(--green); } .r { background: var(--red); } .u { background: var(--grey); }
+  .g { background: var(--green); } .r { background: var(--orange); } .u { background: var(--grey); }
   .ring { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; border: 0.19em solid var(--play); margin-right: 0.35em; vertical-align: baseline; }
   li { margin: 0.3rem 0; }
   .back { font-size: 0.9rem; }
@@ -165,7 +165,7 @@ porque <code>female_toilet</code> contém
       <code>male_toilet</code>, <code>unisex_toilet</code>, <code>dedicated_room</code>,
       <code>room</code>, <code>wheelchair_toilet</code>, <code>sales_area</code> ou <code>outdoor</code>.
       Um pai consegue lá chegar.</li>
-  <li><span class="dot r"></span><strong>Vermelho:</strong> caso contrário, se uma das partes for
+  <li><span class="dot r"></span><strong>Laranja:</strong> caso contrário, se uma das partes for
       <code>female_toilet</code>. O fraldário existe, mas só na casa de banho feminina.</li>
   <li><span class="dot u"></span><strong>Cinzento:</strong> tudo o resto. Sem tag de localização,
       ou só texto livre. Ninguém registou a sala.</li>
@@ -179,7 +179,7 @@ feminina ela pode usar, e também num fraldário sem sala registada, a maioria e
 onde ela pode entrar. Por isso o seletor <em>Pai / Mãe</em>, à esquerda na barra de chips, muda
 apenas a forma de ler as mesmas três respostas, nunca as respostas em si.</p>
 <ul>
-  <li><strong>Pai</strong> (por defeito): verde, vermelho e cinzento, como descrito acima.</li>
+  <li><strong>Pai</strong> (por defeito): verde, laranja e cinzento, como descrito acima.</li>
   <li><strong>Mãe</strong>: o verde passa a significar as duas coisas — a sala abertamente
       acessível <em>e</em> a casa de banho feminina. O laranja significa «sala desconhecida»,
       ou seja, normalmente utilizável. O vermelho só aparece para um fraldário registado
@@ -209,7 +209,7 @@ mais antigas da app podem ainda mostrá-los a verde, até serem atualizadas.</p>
 <p>O anel é um distintivo, não uma quarta cor. Um local sem estas tags não «não tem cantinho de brincar»: o OSM simplesmente não diz nada, e isto vale para quase todos os locais. Por isso aqui não há cinzento.</p>
 <p>É precisamente por isso que o popup pergunta: em cada pin sobre o qual o OSM não diz nada acerca de um cantinho de brincar, seja de que cor for, aparece uma linha (por baixo das salas, quando o pin também pergunta pela sala): <em>Cantinho de brincar?</em>, com três respostas. <em>interior</em> escreve <code>kids_area:indoor=yes</code> juntamente com <code>kids_area=yes</code>, <em>só no exterior</em> escreve <code>kids_area=yes</code> juntamente com <code>kids_area:indoor=no</code>, <em>nenhum</em> escreve <code>kids_area=no</code> — com a tua própria conta OSM, num changeset à parte, exatamente as tags que o MapComplete escreve para a mesma pergunta. A pergunta é sobre um espaço de brincar em geral, não só no interior: no OSM, <code>kids_area=no</code> significa «aqui as crianças não podem brincar em lado nenhum», pelo que uma padaria com um parque infantil no jardim recebe <em>só no exterior</em> em vez de um falso não. O anel aparece (ou fica de fora) uns minutos depois. Quem já respondeu não volta a ser perguntado: um <code>kids_area</code> <em>ou</em> <code>kids_area:indoor</code> registado, seja qual for o valor, tira a pergunta. Num <code>leisure=playground</code> sem <code>indoor=yes</code> ela nunca é feita: o local <em>é</em> um sítio para brincar, só que no exterior. Também não é feita numas casas de banho públicas (<code>amenity=toilets</code>): um espaço de brincar pertence a um café ou a uma loja, não a uma casa de banho.</p>
 <p>A regra aplica-se a muitos mais locais do que aqueles que têm pin. Só <span data-stat="play_tables">111</span> deles têm um. Noutros <span data-stat="play_places">701</span> ninguém respondeu à primeira pergunta: há aqui um fraldário? O mapa não os consegue colorir, por isso recebem um anel azul vazio e um filtro só seu, <em>Só cantinho de brincar</em>, ativado por predefinição. Quem lá vai de qualquer maneira com uma criança sabe a resposta. Um clique no anel abre o MapComplete exatamente nessa pergunta.</p>
-<p>Um anel <em>tracejado</em> significa: cantinho de brincar sim, fraldário não (<code>changing_table=no</code>). Não é um pin e também não é vermelho, porque o vermelho diria que há um fraldário, só que não para o pai. Aqui não há nenhum, para ninguém. O local está no mapa na mesma, porque com uma criança vai-se de bom grado mesmo sem fraldário.</p>
+<p>Um anel <em>tracejado</em> significa: cantinho de brincar sim, fraldário não (<code>changing_table=no</code>). Não é um pin e também não é laranja, porque o laranja diria que há um fraldário, só que não para o pai. Aqui não há nenhum, para ninguém. O local está no mapa na mesma, porque com uma criança vai-se de bom grado mesmo sem fraldário.</p>
 
 <p>Os anéis roxos marcam locais onde há uma cadeira de papa registada (<code>highchair=yes</code> ou um número) mas nenhum fraldário, mesmo sem cantinho de brincar. Têm o seu próprio chip, <em>Só cadeira de papa</em>.</p>
 
