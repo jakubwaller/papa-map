@@ -29,7 +29,7 @@ import { LIVE, endpoints, startLogin, finishLogin, userInfo, ensureUserInfo, rev
 // "Mein PapaMap" (CONTRACT.md v39): pure logic only, the same split
 // datasource.js keeps — the dialog's DOM and the changesets fetch are below,
 // next to the offline dialog's own wiring.
-import { answeredPercent, areaAnswered, areaPercent, sentenceParts, yoursParts, greyNearby, circleBounds,
+import { answeredPercent, areaAnswered, areaPercent, siteAnswered, sitePercent, sentenceParts, yoursParts, greyNearby, circleBounds,
          isSaved, addSaved, removeSaved,
          extractAnswers, mergeAnswers, newestClosedAt, buildFeatureGrid, answersInArea, totalAnswers,
          changesetsUrl, pageBoundary, advanceBackfillCursor, reopenGap, refreshApplies,
@@ -1711,7 +1711,7 @@ function renderStats(stats) {
   // `global` may be null: the pipeline's cold-start degrade when taginfo is
   // down and no previous stats.json exists. Local stats still render.
   const l = stats.local, g = stats.global;
-  const { tables } = localAnswered(l);
+  const { tables, known, percent } = siteNumbers(l);
   // The "as of" stamp, now the strip's own last item rather than a suffix on
   // the retired honesty sentence — also what dates the social-card screenshot.
   const updatedPart = stats.generated_at
@@ -1734,14 +1734,23 @@ function renderStats(stats) {
   // always use, sounding doubtful. The share with a recorded room is the same
   // task whoever is looking; only the pins' colour word differs.
   const areaInSentence = areaLabel(stats, true);
-  const { known } = localAnswered(l);
   const localSentence = t(mode === "mama" ? "statsLocalMama" : "statsLocal", {
     tables: num(tables), area: esc(areaInSentence || "—"), known: num(known),
-    percent: num(answeredPercent(l) ?? 0) });
+    percent: num(percent ?? 0) });
   statsEl.innerHTML =
     `<span class="stat">${localSentence}</span>` +
     globalPart +
     updatedPart;
+}
+
+// The whole sweep's tables and answers: counted over the loaded features (the
+// nightly base plus the live delta, the set the count line counts) once they
+// are in, stats.json's nightly block until then. Read from stats.json alone,
+// the strip fell behind the count line by every table added since the build.
+function siteNumbers(l) {
+  return allFeatures.length
+    ? { ...siteAnswered(allFeatures), percent: sitePercent(allFeatures) }
+    : { ...localAnswered(l), percent: answeredPercent(l) };
 }
 
 // ---- Zoom controls ----
@@ -3854,6 +3863,7 @@ function applyFeatureSets(fc, places) {
   for (const p of allPlaces) if (p.osm_url) placesByOsmUrl.set(p.osm_url, p);
   renderChips();
   refreshPins();
+  renderStats(lastStats);   // the strip counts these same features (siteNumbers)
   positionZoomCtrl();   // topbar height depends on the rendered strip, and on whether the count line shows
   if (isNative()) shareTables();   // the widget and the shortcut search this same data
   if (popupObj) {
@@ -4960,7 +4970,7 @@ async function refreshMyAnswers() {
 // dialog can never name a place the header link itself doesn't show. Only
 // when pickArea has found nothing at all (open sea, zoomed out past any
 // area's reach) does this fall back to the site's own whole-sweep numbers,
-// the same ones the stats strip renders (localAnswered/answeredPercent).
+// the same ones the stats strip renders (siteNumbers).
 function meAreaNumbers() {
   if (currentArea) {
     // The number counted has to match exactly the area the printed label
@@ -4978,8 +4988,8 @@ function meAreaNumbers() {
   }
   const l = lastStats?.local;
   if (!l) return { area: null, percent: null, tables: 0, known: 0, keys: null };
-  const { tables, known } = localAnswered(l);
-  return { area: areaLabel(lastStats), percent: answeredPercent(l), tables, known, keys: null };
+  const { tables, known, percent } = siteNumbers(l);
+  return { area: areaLabel(lastStats), percent, tables, known, keys: null };
 }
 
 function renderMeSentence() {

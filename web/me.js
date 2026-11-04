@@ -18,11 +18,10 @@ import { localAnswered, haversineKm, PAPAMAP_THEME_URL } from "./datasource.js?v
 // ---- The game sentence's percentage ----
 const pctOf = (tables, known) => (tables > 0 ? Math.round((known / tables) * 100) : null);
 
-// The whole-site fallback only (pickArea found no area — open sea, zoomed to
-// the world): localAnswered (web/datasource.js) is the one place "how many
-// tables are answered" is computed from stats.json's `local` block;
-// statsLocal (the stats strip, web/app.js) and this percentage both call it,
-// so the two can never read the counts two different ways.
+// The whole-site numbers before the tables have loaded: localAnswered
+// (web/datasource.js) reads stats.json's `local` block; statsLocal (the stats
+// strip, web/app.js) and this percentage both call it. Once the tables are in,
+// both count them instead (siteAnswered, below).
 export function answeredPercent(local) {
   if (!local) return null;
   const { tables, known } = localAnswered(local);
@@ -36,21 +35,35 @@ export function answeredPercent(local) {
 // never the chip-filtered subset: a reader who switched off "female only"
 // must not see the score move (CONTRACT.md v39). Key-locked tables (`f.key`)
 // are left out, as pipeline/run.py leaves them out of the area pages (v116).
+function countAnswered(features, inside) {
+  let tables = 0, known = 0, unknown = 0;
+  for (const f of features ?? []) {
+    if (f.key || !inside(f)) continue;
+    tables++;
+    if (f.status === "accessible" || f.status === "female_only") known++;
+    else if (f.status === "unknown") unknown++;
+  }
+  return { tables, unknown, known };
+}
+
 export function areaAnswered(features, areaKeys) {
   const keys = areaKeys instanceof Set ? areaKeys : new Set(areaKeys ?? []);
-  let tables = 0, known = 0, unknown = 0;
-  if (keys.size)
-    for (const f of features ?? []) {
-      if (f.key || !f.area || !keys.has(f.area)) continue;
-      tables++;
-      if (f.status === "accessible" || f.status === "female_only") known++;
-      else if (f.status === "unknown") unknown++;
-    }
-  return { tables, unknown, known };
+  return countAnswered(keys.size ? features : [], (f) => f.area && keys.has(f.area));
 }
 
 export function areaPercent(features, areaKeys) {
   const { tables, known } = areaAnswered(features, areaKeys);
+  return pctOf(tables, known);
+}
+
+// The whole sweep, counted the same way over the same loaded features — the
+// nightly base plus the live delta, which is what the count line counts. The
+// stats strip read stats.json's nightly totals instead and fell behind the
+// count line by every table added since the build (walkthrough, Nov 2026).
+export const siteAnswered = (features) => countAnswered(features, () => true);
+
+export function sitePercent(features) {
+  const { tables, known } = siteAnswered(features);
   return pctOf(tables, known);
 }
 
