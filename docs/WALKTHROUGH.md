@@ -34,7 +34,9 @@ walk re-reports the same intentional behaviour every time.
 ## By design — do not report
 
 - **Status chips all start on, and a tap hides that status.** The chip bar doubles as the map's
-  legend. The play and wheelchair chips start off and narrow the map when switched on.
+  legend. The play-corner, wheelchair and High chair chips start off and narrow the map when
+  switched on. The "Play area only" and "High chair only" ring chips start on, like the status
+  chips, and a tap hides those rings.
 - Grey pin = a table exists but nobody has recorded which room it is in, not "no table".
 - Papa is the default reading; in it a women's-room-only table is orange. Mama is an opt-in.
 - Tables behind a Euro (central) key are not pins, and area pages do not count them; they appear
