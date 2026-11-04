@@ -191,7 +191,7 @@
   <meta name="apple-mobile-web-app-title" content="PapaMap" />
 
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=app113" />
+  <link rel="stylesheet" href="style.css?v=app114" />
 
   <!-- The two big dataset files, asked for while the scripts still download
        and parse: boot() only gets to its fetch() once maplibre-gl.js and the
@@ -209,7 +209,7 @@
        its in-app browser (?app=1), and the donate span in the footer is
        hidden under that class. web/in-app.js says why the app may not show a
        donate link at all. -->
-  <script src="in-app.js?v=app113"></script>
+  <script src="in-app.js?v=app114"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -327,12 +327,19 @@
         <a id="regions-link" href="wickeltische/" data-i18n="regions">Bundesländer</a>
         <a id="board-link" href="wickeltische/rangliste.html" data-i18n="board">Rangliste</a>
         <a id="methods-link" href="methods.html" data-i18n="methods">Methoden</a>
+        <!-- Kontakt moved up from the footer, where readers missed it and mailed
+             the owner's private address. The span is cut from the store app's
+             copy (app/shell.mjs); the Mein PapaMap dialog has the address there. -->
+        <span class="contact"><a href="mailto:papamap@jakubwaller.eu?subject=PapaMap" data-i18n="contact">Kontakt</a></span>
+        <!-- Wide screens only (style.css, .hdr-kofi), like the footer's coffee
+             hidden in the store app (.in-app, app/shell.mjs). -->
+        <span class="donate hdr-kofi"><a href="https://ko-fi.com/jakubwaller" target="_blank" rel="noopener" title="Kaffee spendieren" data-i18n="kofi" data-i18n-desc="ariaKofi">☕ Kaffee</a></span>
         <!-- A picker, not the old DE → EN → DA cycle button: thirty-two languages
              cannot be reached by cycling, and the native control is keyboard-
              and screen-reader-accessible for free. app.js fills the options
              from i18n.js's LANGS, each written in its own language; German is
              inlined so the control is never empty before the module runs. -->
-        <select id="lang-select" class="lang-btn" aria-label="Sprache wählen"
+        <select id="lang-select" class="lang-btn" aria-label="Sprache wählen" title="Sprache wählen"
                 data-i18n-aria="ariaLang">
           <option value="de">Deutsch</option>
         </select>
@@ -380,7 +387,9 @@
        app hides it (.in-app, in-app.js) or cuts it out of its own copy of this
        file (app/shell.mjs), and dropping the <a> alone would leave a dangling
        "·". -->
-  <div id="attribution">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="impressum.html">Impressum</a> <span class="contact">· <a href="mailto:papamap@jakubwaller.eu?subject=PapaMap" data-i18n="contact">Kontakt</a></span> · <a href="datenschutz.html">Datenschutz</a> · <a href="ops.html" title="Build and dataset status">Status</a><span class="donate"> · <a href="https://ko-fi.com/jakubwaller" target="_blank" rel="noopener" title="Kaffee spendieren" data-i18n="kofi" data-i18n-desc="ariaKofi">☕ Kaffee</a></span> · <a href="https://jakubwaller.eu" rel="author">Made with ♥ in Hamburg by Jakub Waller</a></div>
+  <!-- One line on a phone (checked at 375 and 360px): Kontakt lives in the header,
+       the box takes the full width and the separators are a pixel tighter. -->
+  <div id="attribution">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a><span class="donate"> · <a href="https://ko-fi.com/jakubwaller" target="_blank" rel="noopener" title="Kaffee spendieren" data-i18n="kofi" data-i18n-desc="ariaKofi">☕ Kaffee</a></span><span class="made"> · <a href="https://jakubwaller.eu" rel="author">Made with ♥ in Hamburg by Jakub Waller</a></span></div>
 
   <!-- The one tap the map is for, so it is the one control with its name
        written on it: a pill at the foot of the map, not a fourth icon in the
@@ -399,7 +408,7 @@
     <!-- Focus lands on the title, not on the search box below it: a focused
          field opens a phone's keyboard over the very list it is there to show. -->
     <h3 id="add-title" data-i18n="dlgTitle" tabindex="-1" autofocus>Fehlenden Ort hinzufügen</h3>
-    <p class="dlg-intro" data-i18n="dlgIntro">Such den Ort in der Liste und antworte gleich hier: Wickeltisch, Spielecke, Hochstuhl. Jede Antwort geht unter deinem eigenen Login an OpenStreetMap, der Ort erscheint nach wenigen Minuten auf der Karte. PapaMap hat keine eigenen Daten.</p>
+    <p class="dlg-intro" data-i18n="dlgIntro">Ort suchen und gleich hier antworten, mit deinem OpenStreetMap-Login.</p>
     <!-- Step one: places around the map centre with no changing table on
          record, from Photon (app.js, CONTRACT.md v62). -->
     <div id="venue-pick">
@@ -417,16 +426,23 @@
       <div id="venue-context" class="venue-context"></div>
       <div id="venue-q"></div>
       <p id="venue-note" class="venue-note" role="status" hidden></p>
+      <!-- Web only, like every Ko-fi link: .donate is hidden in the in-app browser and cut from the app's copy. -->
+      <p id="venue-thanks" class="donate venue-thanks" hidden><span></span> <a href="https://ko-fi.com/jakubwaller" target="_blank" rel="noopener"></a></p>
+      <!-- The saved state (#add-dialog.saved, app.js setVenueNote): the way on, in place of the questions and the MapComplete cards. -->
+      <div id="venue-after" class="venue-after" hidden>
+        <button id="venue-another" type="button" class="btn primary"></button>
+        <button id="venue-finish" type="button" class="btn"></button>
+      </div>
     </div>
-    <p class="venue-elsewhere" data-i18n="dlgElsewhere">Nicht in der Liste, oder fehlt eine öffentliche Toilette? Dann in MapComplete, dem Editor von OpenStreetMap:</p>
+    <p class="venue-elsewhere" data-i18n="dlgElsewhere">Nicht in der Liste? In MapComplete eintragen:</p>
+    <div class="add-links">
     <a id="add-toilet-link" class="btn" href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json" target="_blank" rel="noopener">
-      <span data-i18n="dlgToilet">Eine öffentliche Toilette fehlt</span>
-      <span class="hint" data-i18n="dlgToiletHint">Öffnet MapComplete am aktuellen Kartenausschnitt — Toilette hinzufügen und die Wickeltisch-Fragen beantworten. Braucht einen kostenlosen OpenStreetMap-Login.</span>
+      <span data-i18n="dlgToilet">Öffentliche Toilette</span>
     </a>
     <a id="add-venue-link" class="btn" href="https://mapcomplete.org/theme.html?userlayout=https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json&z=17" target="_blank" rel="noopener">
-      <span data-i18n="dlgVenue">Ein Café / Laden / Restaurant hat einen Tisch, eine Spielecke oder einen Hochstuhl</span>
-      <span class="hint" data-i18n-html="dlgVenueHint">Öffnet MapComplete am aktuellen Kartenausschnitt — den Ort antippen und die Fragen zu Wickeltisch, Spielecke und Hochstuhl beantworten. Braucht einen kostenlosen OpenStreetMap-Login. Ort nicht dabei? Siehe Methoden.</span>
+      <span data-i18n="dlgVenue">Café, Laden, Restaurant</span>
     </a>
+    </div>
     <p class="dialog-foot" data-i18n-html="dlgFoot"><a href="methods.html#contribute">Editieren, Schritt für Schritt</a></p>
     <button id="add-close" type="button" class="close" aria-label="Schließen" data-i18n-aria="ariaClose">×</button>
   </dialog>
@@ -508,6 +524,6 @@
   <div id="toast" role="status"></div>
 
   <script src="vendor/maplibre-gl.js"></script>
-  <script type="module" src="app.js?v=app113"></script>
+  <script type="module" src="app.js?v=app114"></script>
 </body>
 </html>

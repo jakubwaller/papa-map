@@ -10,8 +10,8 @@
 // the website's own pages hide when the app opens them in its in-app browser
 // (web/in-app.js, issue #124); here there is nothing to hide, because there is
 // nothing left.
-const CONTACT = /\s*<span class="contact">[\s\S]*?<\/span>/;
-const DONATE = /<span class="donate">[\s\S]*?<\/span>/;
+const CONTACT = /\s*<span class="contact">[\s\S]*?<\/span>/g;
+const DONATE = /<(span|p) [^>]*class="donate[ "][\s\S]*?<\/\1>/g;
 
 // The website preloads its dataset files from data/ (index.html's head); the
 // bundle has no data/ — the app fetches the dataset from the site itself
@@ -27,6 +27,8 @@ const DATA_PRELOAD = /[ \t]*<link rel="preload" href="data\/[^"]*"[^>]*>\n?/g;
 const VIEWPORT = /(<meta name="viewport" content="width=device-width, initial-scale=1)(, viewport-fit=cover")/;
 
 export function appShell(html) {
+  // Module-level /g regexes keep lastIndex after a throw.
+  CONTACT.lastIndex = DONATE.lastIndex = DATA_PRELOAD.lastIndex = 0;
   // A changed footer must fail the build, not ship the link quietly.
   const cut = DONATE.exec(html);
   if (!cut) throw new Error("index.html: no donate span found to remove");

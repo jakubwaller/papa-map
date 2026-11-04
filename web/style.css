@@ -142,6 +142,12 @@ header {
   text-decoration: none;
 }
 .header-actions a:hover { text-decoration: underline; }
+/* Never truncated: fitTagline (app.js) hides it, visually only, where it does
+   not fit on the header's row in full. It is the page's <h1>. */
+header.no-tagline .tagline {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
 .area-place { display: none; }
 .area-place svg { vertical-align: -1px; margin-right: 3px; }
 
@@ -711,6 +717,9 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #add-dialog a.btn:hover { border-color: var(--green); }
 #add-dialog a.btn.primary { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
 #add-dialog a.btn.primary:hover, #add-dialog a.btn.primary:active { background: var(--green-press); border-color: var(--green-press); }
+/* Side by side where both labels fit on one line each, stacked full width where not. */
+#add-dialog .add-links { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 9px; }
+#add-dialog .add-links a.btn { flex: 1 1 auto; white-space: nowrap; margin: 0; text-align: center; padding: 10px 8px; display: flex; align-items: center; justify-content: center; }
 #add-dialog a.btn .hint {
   display: block;
   margin-top: 3px;
@@ -908,25 +917,43 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
 #attribution {
   position: absolute;
   bottom: calc(8px + var(--safe-bottom));
-  right: calc(10px + var(--safe-right));
+  right: calc(4px + var(--safe-right));
   z-index: 9;
   font-size: 10px;
+  word-spacing: -1px;
   color: var(--muted);
   background: rgba(255, 255, 255, .8);
   /* Anchored right with no left edge, so a fourth link (Bundesländer) grows
      the box off the left of a 375px phone. Cap it and let it wrap instead. */
-  max-width: calc(100vw - 20px - var(--safe-left) - var(--safe-right));
+  max-width: calc(100vw - 8px - var(--safe-left) - var(--safe-right));
   text-align: right;
-  padding: 2px 8px;
+  padding: 0 4px;
   border-radius: 6px;
 }
-#attribution a { color: var(--muted); text-decoration: none; }
+/* 26px tall tap targets through padding, same 10px type. */
+#attribution a { color: var(--muted); text-decoration: none; display: inline-block; padding: 7px 0; }
 #attribution a:hover { text-decoration: underline; }
 /* This page read inside the store app's in-app browser (web/in-app.js): no
    donate link, and no dangling " · " where it was either — the separator is
    inside the span. The app's own bundled copy of the page has that span cut
    out instead (app/shell.mjs). */
 .in-app .donate { display: none; }
+/* The header coffee: only where the nav has room, never in the app. */
+.hdr-kofi { display: none; }
+@media (min-width: 900px) { html:not(.in-app) .hdr-kofi { display: inline; } }
+#add-dialog .venue-thanks { margin: 8px 0 0; font-size: 12.5px; }
+#add-dialog .venue-thanks a { white-space: nowrap; }
+/* The saved state: title, place, the questions still open (each is answered on its own), note, thanks and two buttons. */
+#add-dialog.saved :is(.dlg-intro, #venue-back, .venue-elsewhere, .add-links, .dialog-foot) { display: none; }
+/* The question step: "not in the list" makes no sense once a place is picked. */
+#add-dialog.asking :is(.dlg-intro, .venue-elsewhere, .add-links) { display: none; }
+#venue-after { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+#venue-after .btn { cursor: pointer; font-family: inherit; background: none; padding: 9px 14px; }
+#venue-after .btn.primary { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
+#venue-after[hidden] { display: none; }
+/* The maker's credit: only where the whole line fits on one row (full line 538px wide in EN, 537 DE, plus 8px of margin). */
+#attribution .made { display: none; }
+@media (min-width: 560px) { #attribution .made { display: inline; } }
 
 /* ---------- Popup ---------- */
 .maplibregl-popup-content {
@@ -1183,9 +1210,13 @@ select.lang-btn option { background: #fff; color: #1c2b26; }
      and the full label goes to screen readers only (below). */
   header #regions-link.has-place .area-place { display: inline; }
   /* 13px, like the add button's 12: with the select sized to its value the
+     2026-11: the picker shows its short code here (app.js, shortLang), which is
+     what makes room for Kontakt.
      German nav needs ~306 of 347px, the English ~333, the Bosnian ~341 —
      the last two only at this size. */
   .header-actions a { font-size: 13px; }
+  /* 360px: 7px instead of 10 is the least that keeps the German area name whole. */
+  @media (max-width: 374px) { header .header-actions { column-gap: 7px; } }
   .add-btn { padding: 6px 11px; font-size: 12px; }
   .app-btn { padding: 6px 11px; font-size: 12px; }
   #stats { padding: 6px 14px 6px calc(14px + var(--safe-left)); gap: 2px 18px; font-size: 12px; }
