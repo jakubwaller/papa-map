@@ -3113,13 +3113,18 @@ document.addEventListener("visibilitychange", () => {
 // layer's minzoom so the untagged cafés are on screen straight away.
 const addDialog = document.getElementById("add-dialog");
 
-document.getElementById("add-place").addEventListener("click", () => {
+// The list and the two links for the map as it is now; also "Add another place"
+// (after a login replay the list was never loaded).
+function openAddPlace() {
   // wrap(): with no maxBounds a pan past the antimeridian leaves lng at 182,
   // which MapComplete reads as somewhere else entirely.
   const c = map.getCenter().wrap(), z = map.getZoom();
   document.getElementById("add-toilet-link").href = mapCompleteAddUrl(c.lng, c.lat, z, lang);
   document.getElementById("add-venue-link").href = mapCompleteVenueUrl(c.lng, c.lat, z, lang);
   openVenuePicker(c, z);
+}
+document.getElementById("add-place").addEventListener("click", () => {
+  openAddPlace();
   addDialog.showModal();
 });
 document.getElementById("add-close").addEventListener("click", () => addDialog.close());
@@ -3317,7 +3322,7 @@ document.getElementById("venue-back").addEventListener("click", () => {
   venuePicked = null;
   showVenueStep("pick");
 });
-document.getElementById("venue-another").addEventListener("click", () => document.getElementById("venue-back").click());
+document.getElementById("venue-another").addEventListener("click", openAddPlace);
 document.getElementById("venue-finish").addEventListener("click", () => addDialog.close());
 
 document.getElementById("venue-q").addEventListener("click", (e) => {
