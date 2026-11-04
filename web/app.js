@@ -3311,6 +3311,8 @@ function setVenueNote(key, cls = "", vars = null) {
   document.getElementById("venue-another").textContent = after.another;
   document.getElementById("venue-finish").textContent = after.done;
   document.getElementById("venue-after").hidden = !saved;
+  // Nothing left to answer: the way on takes the focus the answered button had.
+  if (saved && !venueAskEl.querySelector(Object.values(VENUE_Q_SEL).join(","))) document.getElementById("venue-another").focus();
   // null in the store app: its copy of the page has the line cut out (app/shell.mjs).
   const thanks = document.getElementById("venue-thanks");
   if (!thanks) return;
