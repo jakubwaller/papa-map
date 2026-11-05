@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 import requests
 
-from pipeline import config, leaderboard, osm, run, toilet_counts
+from pipeline import config, leaderboard, osm, run, sweep_cache, toilet_counts
 from pipeline.config import BUNDESLAENDER, sweep_areas, sweep_ql
 from pipeline.run import run_pipeline
 
@@ -203,8 +203,8 @@ def test_run_writes_both_files(tmp_path, load_fixture):
                        "pages": 18 + 2 + len(leaderboard.L)}  # +2: English twins of Germany and Denmark
     # Still two object queries per area, not three: the play half rides along
     # in the changing_table sweep instead of costing its own Overpass slot.
-    assert fake_overpass.areas_seen == ([a for a in SWEEP for _ in (1, 2)]
-                                        + CITY_SWEEP)
+    assert fake_overpass.areas_seen == (CITY_SWEEP
+                                        + [a for a in SWEEP for _ in (1, 2)])
 
     fc = json.loads(geojson.read_text(encoding="utf-8"))
     assert fc["type"] == "FeatureCollection"
@@ -485,8 +485,8 @@ def test_ring_build_files_each_neighbour_under_its_english_name(
         pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"), history_path=str(history_path),
         overpass_fetch=fake_overpass,
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
-    assert fake_overpass.areas_seen == ([a for a in RING_SWEEP for _ in (1, 2)]
-                                        + RING_CITY_SWEEP)
+    assert fake_overpass.areas_seen == (RING_CITY_SWEEP
+                                        + [a for a in RING_SWEEP for _ in (1, 2)])
     payload = json.loads(stats.read_text(encoding="utf-8"))
     assert payload["area_key"] == "countries_9"
     day = json.loads(history_path.read_text(encoding="utf-8"))["days"][0]
@@ -1215,7 +1215,7 @@ def test_a_partial_rerun_neither_queries_foreign_cities_nor_narrows_history(
     fake = _fake_overpass(load_fixture)
     run_pipeline(overpass_fetch=fake, **kw)
     # Only German cities were asked about: Wien and Paris were not swept.
-    assert fake.areas_seen[-len(_city_sweep(("de",))):] == _city_sweep(("de",))
+    assert fake.areas_seen[:len(_city_sweep(("de",)))] == _city_sweep(("de",))
     assert len(fake.areas_seen) == 16 + len(_city_sweep(("de",)))
     assert json.loads((tmp_path / "history.json").read_text(encoding="utf-8")) == full
     assert "history and leaderboard left unchanged" in capsys.readouterr().err
@@ -1528,7 +1528,7 @@ def test_an_answer_older_than_the_limit_is_no_fallback(tmp_path, load_fixture):
 def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, capsys):
     # The deadline only gated the next round, so on 2026-10-16 the first
     # round ran on to 07:14. Now the areas it has not reached by the deadline
-    # are built from their last answers, and the cities wait for tomorrow.
+    # are built from their last answers (the cities go first, see below).
     inner = _fake_overpass(load_fixture)
     first = _run(tmp_path, load_fixture, inner)
     clock = [0.0]
@@ -1542,13 +1542,125 @@ def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, 
     monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
     capsys.readouterr()
     summary = _run(tmp_path, load_fixture, slow, sweep_deadline_s=2.5 * 3600)
-    # At 0, 1 and 2 h; at 3 h the deadline has passed. No high-chair query:
-    # the first run asked them all tonight (the weekly rota).
-    assert len(calls) == 3 and not any('"highchair"' in q for q in calls)
+    # At 0, 1 and 2 h; at 3 h the deadline has passed. The three queries
+    # are city queries (the cities go first), and the areas fall back.
+    assert len(calls) == 3 and all("out ids;" in q for q in calls)
     assert summary["toilets_total"] == first["toilets_total"]
     err = capsys.readouterr().err
     assert err.count("WARN not swept, past the 2.5 h sweep deadline: ") == 1
     assert "WARN: leaderboard skips" in err
+
+
+def test_the_cities_are_swept_before_the_areas_so_the_deadline_cuts_areas(
+        tmp_path, load_fixture, monkeypatch, capsys):
+    # Prod 2026-10-31 on: round 1 overran the deadline inside the areas and no
+    # city was swept for days, because a city (unlike an area) has no saved
+    # answer to fall back on.
+    inner = _fake_overpass(load_fixture)
+    _run(tmp_path, load_fixture, inner)
+    clock = [0.0]
+    seen = []
+
+    def slow(ql, **kwargs):
+        seen.append(ql)
+        clock[0] += 1
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    capsys.readouterr()
+    # Every city query starts in time; the deadline then passes within the areas.
+    _run(tmp_path, load_fixture, slow, sweep_deadline_s=len(CITY_SWEEP) + 2.5)
+    err = capsys.readouterr().err
+    assert "leaderboard skips" not in err
+    assert "WARN not swept, past the" in err  # late areas fell back on their saved answers
+    assert len(seen) == len(CITY_SWEEP) + 3
+
+
+def test_the_oldest_saved_answer_is_swept_first(tmp_path, load_fixture, monkeypatch):
+    # A fallback never refreshes the cache, so a deadline that always cut the
+    # same tail would let those answers all expire together. The area with the
+    # oldest answer goes first even if it comes late in the canonical order.
+    inner = _fake_overpass(load_fixture)
+    _run(tmp_path, load_fixture, inner)
+    oldest = sweep_areas()[10]
+    f = sweep_cache._path(str(tmp_path / "sweeps"), sweep_ql(*oldest))
+    entry = json.loads(f.read_text(encoding="utf-8"))
+    entry["date"] = (NOW.date() - timedelta(days=3)).isoformat()
+    f.write_text(json.dumps(entry, ensure_ascii=False), encoding="utf-8")
+    clock = [0.0]
+    seen = []
+
+    def slow(ql, **kwargs):
+        seen.append(ql)
+        clock[0] += 1
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    _run(tmp_path, load_fixture, slow, sweep_deadline_s=len(CITY_SWEEP) + 0.5)
+    assert f'"{oldest[0]}"' in seen[len(CITY_SWEEP)]
+
+
+def _boundary_fetch(inner, tag):
+    """Answers like `inner`, but names the first object after `tag(area)`, so a
+    test can see which area's copy of a boundary object survived."""
+    def fetch(ql, **kwargs):
+        out = inner(ql, **kwargs)
+        if '"kids_area"' not in ql:
+            return out
+        area = re.search(r'area\["(?:name(?::en)?|ISO3166-2)"="([^"]+)"', ql).group(1)
+        out = copy.deepcopy(out)
+        first = out["elements"][0]
+        first["tags"] = {**first["tags"], "name": tag(area)}
+        return out
+    return fetch
+
+
+def _boundary_feature(tmp_path):
+    feats = json.loads((tmp_path / "ct.geojson").read_text(encoding="utf-8"))["features"]
+    return next(f["properties"] for f in feats if f["properties"]["osm_id"] == 1)
+
+
+def test_a_boundary_object_belongs_to_the_canonical_first_area_whatever_the_sweep_order(
+        tmp_path, load_fixture):
+    inner = _fake_overpass(load_fixture)
+    _run(tmp_path, load_fixture, inner)
+    first, second = sweep_areas()[0], sweep_areas()[1]
+    f = sweep_cache._path(str(tmp_path / "sweeps"), sweep_ql(*second))
+    entry = json.loads(f.read_text(encoding="utf-8"))
+    entry["date"] = (NOW.date() - timedelta(days=3)).isoformat()
+    f.write_text(json.dumps(entry, ensure_ascii=False), encoding="utf-8")
+    seen = []
+    fetch = _boundary_fetch(inner, lambda area: area)
+
+    def spy(ql, **kwargs):
+        seen.append(ql)
+        return fetch(ql, **kwargs)
+
+    _run(tmp_path, load_fixture, spy)
+    # The oldest answer goes first, so `second` really was swept before `first` ...
+    ql_hits = [i for i, q in enumerate(seen) if '"kids_area"' in q]
+    order = [next(n for n in (first[0], second[0]) if f'"{n}"' in seen[i])
+             for i in ql_hits if any(f'"{n}"' in seen[i] for n in (first[0], second[0]))]
+    assert order == [second[0], first[0]]
+    # ... and the canonical first area still owns the object.
+    props = _boundary_feature(tmp_path)
+    assert props["name"] == first[0] and props["area"] == first[0]
+
+
+def test_a_fallback_copy_of_a_boundary_object_never_beats_a_fresh_one(tmp_path, load_fixture):
+    inner = _fake_overpass(load_fixture)
+    first, second = sweep_areas()[0], sweep_areas()[1]
+    _run(tmp_path, load_fixture, _boundary_fetch(inner, lambda area: "stale"))
+    fresh = _boundary_fetch(inner, lambda area: "fresh")
+
+    def down(ql, **kwargs):
+        if f'"{first[0]}"' in ql:
+            raise requests.ConnectionError("dead")
+        return fresh(ql, **kwargs)
+
+    _run(tmp_path, load_fixture, down, sweep_rounds=2)
+    props = _boundary_feature(tmp_path)
+    assert props["name"] == "fresh" and props["area"] == second[0]
 
 
 def test_every_answer_is_kept_not_only_the_recounted_ones(tmp_path, load_fixture):

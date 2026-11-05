@@ -898,6 +898,11 @@ def display_area() -> tuple[str, str | None]:
 # first round run to 07:14, leave no time to retry Missouri, and throw away
 # the other 183 areas. PAPAMAP_SWEEP_ROUNDS stays as an
 # optional hard cap (unset = none) for tests and one-off runs.
+#
+# Within a round the leaderboard cities are swept before the areas: past the
+# deadline an area falls back on its saved answer and a city has none, so the
+# cities go first (the first round had overrun before reaching them, none was
+# swept from 2026-10-31 on).
 SWEEP_DEADLINE_S = float(os.environ.get("PAPAMAP_SWEEP_DEADLINE_S", str(4.5 * 3600)))
 SWEEP_ROUNDS = (int(os.environ["PAPAMAP_SWEEP_ROUNDS"])
                 if os.environ.get("PAPAMAP_SWEEP_ROUNDS") else None)
