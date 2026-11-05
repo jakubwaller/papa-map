@@ -1,5 +1,6 @@
 import copy
 import json
+import shutil
 import re
 import time
 from datetime import datetime, timedelta, timezone
@@ -1467,6 +1468,47 @@ def test_an_area_failing_every_round_falls_back_on_its_last_answer(tmp_path, loa
     stats = json.loads((tmp_path / "stats.json").read_text(encoding="utf-8"))
     assert stats["data_base"] == "2026-07-25T01:00:00Z"
     assert stats["fallback_areas"] == {"Saarland": 1}
+
+
+def test_an_empty_saved_sweep_builds_from_cache_with_its_cached_count(
+        tmp_path, load_fixture, capsys):
+    # 2026-11-05: Andorra and the Northwest Territories have no changing
+    # tables, so their saved sweep is empty; with no query allowed the count
+    # fetch failed and the whole build aborted. Their cached count stands in.
+    inner = _fake_overpass(load_fixture)
+
+    def fetch_at(down=None):
+        def fetch(ql, **kwargs):
+            if down and f'"{down}"' in ql:
+                raise requests.ConnectionError("still dead")
+            if '"Saarland"' in ql and '"kids_area"' in ql:
+                return {"elements": []}
+            return inner(ql, **kwargs)
+        return fetch
+
+    _run_on(tmp_path, load_fixture, fetch_at(), NOW - timedelta(days=1))
+    capsys.readouterr()
+    summary = _run(tmp_path, load_fixture, fetch_at(down="Saarland"),
+                   sweep_rounds=2, counts_period_days=1)
+    assert "WARN Saarland: no answer tonight, using its sweep from 1 d ago" in capsys.readouterr().err
+    assert summary["toilets_total"] > 0
+
+
+def test_an_empty_live_sweep_without_a_count_does_not_fall_back(tmp_path, load_fixture):
+    # The zero-objects check still needs tonight's real count.
+    inner = _fake_overpass(load_fixture)
+
+    def fetch(ql, **kwargs):
+        if '"Saarland"' in ql and '"kids_area"' in ql:
+            return {"elements": []}
+        if '"Saarland"' in ql and '"amenity"="toilets"' in ql:
+            raise requests.ConnectionError("count down")
+        return inner(ql, **kwargs)
+
+    _run_on(tmp_path, load_fixture, inner, NOW - timedelta(days=1))
+    shutil.rmtree(tmp_path / "sweeps")  # counts cache stays: only the live sweep is in play
+    with pytest.raises(RuntimeError, match="Saarland"):
+        _run(tmp_path, load_fixture, fetch, sweep_rounds=1, counts_period_days=1)
 
 
 def test_an_answer_older_than_the_limit_is_no_fallback(tmp_path, load_fixture):
