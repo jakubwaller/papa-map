@@ -1544,7 +1544,7 @@ def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, 
     summary = _run(tmp_path, load_fixture, slow, sweep_deadline_s=2.5 * 3600)
     # At 0, 1 and 2 h; at 3 h the deadline has passed. The three queries
     # are city queries (the cities go first), and the areas fall back.
-    assert len(calls) == 3 and all('"changing_table"' in q for q in calls)
+    assert len(calls) == 3 and all("out ids;" in q for q in calls)
     assert summary["toilets_total"] == first["toilets_total"]
     err = capsys.readouterr().err
     assert err.count("WARN not swept, past the 2.5 h sweep deadline: ") == 1
@@ -1598,6 +1598,69 @@ def test_the_oldest_saved_answer_is_swept_first(tmp_path, load_fixture, monkeypa
     monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
     _run(tmp_path, load_fixture, slow, sweep_deadline_s=len(CITY_SWEEP) + 0.5)
     assert f'"{oldest[0]}"' in seen[len(CITY_SWEEP)]
+
+
+def _boundary_fetch(inner, tag):
+    """Answers like `inner`, but names the first object after `tag(area)`, so a
+    test can see which area's copy of a boundary object survived."""
+    def fetch(ql, **kwargs):
+        out = inner(ql, **kwargs)
+        if '"kids_area"' not in ql:
+            return out
+        area = re.search(r'area\["(?:name(?::en)?|ISO3166-2)"="([^"]+)"', ql).group(1)
+        out = copy.deepcopy(out)
+        first = out["elements"][0]
+        first["tags"] = {**first["tags"], "name": tag(area)}
+        return out
+    return fetch
+
+
+def _boundary_feature(tmp_path):
+    feats = json.loads((tmp_path / "ct.geojson").read_text(encoding="utf-8"))["features"]
+    return next(f["properties"] for f in feats if f["properties"]["osm_id"] == 1)
+
+
+def test_a_boundary_object_belongs_to_the_canonical_first_area_whatever_the_sweep_order(
+        tmp_path, load_fixture):
+    inner = _fake_overpass(load_fixture)
+    _run(tmp_path, load_fixture, inner)
+    first, second = sweep_areas()[0], sweep_areas()[1]
+    f = sweep_cache._path(str(tmp_path / "sweeps"), sweep_ql(*second))
+    entry = json.loads(f.read_text(encoding="utf-8"))
+    entry["date"] = (NOW.date() - timedelta(days=3)).isoformat()
+    f.write_text(json.dumps(entry, ensure_ascii=False), encoding="utf-8")
+    seen = []
+    fetch = _boundary_fetch(inner, lambda area: area)
+
+    def spy(ql, **kwargs):
+        seen.append(ql)
+        return fetch(ql, **kwargs)
+
+    _run(tmp_path, load_fixture, spy)
+    # The oldest answer goes first, so `second` really was swept before `first` ...
+    ql_hits = [i for i, q in enumerate(seen) if '"kids_area"' in q]
+    order = [next(n for n in (first[0], second[0]) if f'"{n}"' in seen[i])
+             for i in ql_hits if any(f'"{n}"' in seen[i] for n in (first[0], second[0]))]
+    assert order == [second[0], first[0]]
+    # ... and the canonical first area still owns the object.
+    props = _boundary_feature(tmp_path)
+    assert props["name"] == first[0] and props["area"] == first[0]
+
+
+def test_a_fallback_copy_of_a_boundary_object_never_beats_a_fresh_one(tmp_path, load_fixture):
+    inner = _fake_overpass(load_fixture)
+    first, second = sweep_areas()[0], sweep_areas()[1]
+    _run(tmp_path, load_fixture, _boundary_fetch(inner, lambda area: "stale"))
+    fresh = _boundary_fetch(inner, lambda area: "fresh")
+
+    def down(ql, **kwargs):
+        if f'"{first[0]}"' in ql:
+            raise requests.ConnectionError("dead")
+        return fresh(ql, **kwargs)
+
+    _run(tmp_path, load_fixture, down, sweep_rounds=2)
+    props = _boundary_feature(tmp_path)
+    assert props["name"] == "fresh" and props["area"] == second[0]
 
 
 def test_every_answer_is_kept_not_only_the_recounted_ones(tmp_path, load_fixture):

@@ -525,7 +525,9 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
               f"{', '.join(d for d, _, _ in remaining_cities)} today "
               f"(city sweep failed after {rnd} rounds)", file=sys.stderr)
     ct_elements, play_elements, hc_elements = [], [], []
-    for area_name, _ in areas:
+    # Freshly swept areas first, fallback ones last (both canonical): a stale
+    # copy of a boundary object must never beat tonight's.
+    for area_name, _ in sorted(areas, key=lambda a: a[0] in fallback_ages):
         if area_name not in parts:
             continue
         ct, play, hc = parts[area_name]
