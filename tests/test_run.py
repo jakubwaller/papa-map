@@ -203,8 +203,8 @@ def test_run_writes_both_files(tmp_path, load_fixture):
                        "pages": 18 + 2 + len(leaderboard.L)}  # +2: English twins of Germany and Denmark
     # Still two object queries per area, not three: the play half rides along
     # in the changing_table sweep instead of costing its own Overpass slot.
-    assert fake_overpass.areas_seen == ([a for a in SWEEP for _ in (1, 2)]
-                                        + CITY_SWEEP)
+    assert fake_overpass.areas_seen == (CITY_SWEEP
+                                        + [a for a in SWEEP for _ in (1, 2)])
 
     fc = json.loads(geojson.read_text(encoding="utf-8"))
     assert fc["type"] == "FeatureCollection"
@@ -485,8 +485,8 @@ def test_ring_build_files_each_neighbour_under_its_english_name(
         pages_dir=str(tmp_path / "pages"), areas_path=str(tmp_path / "areas.json"), history_path=str(history_path),
         overpass_fetch=fake_overpass,
         taginfo_fetch=_fake_taginfo(load_fixture), now=NOW)
-    assert fake_overpass.areas_seen == ([a for a in RING_SWEEP for _ in (1, 2)]
-                                        + RING_CITY_SWEEP)
+    assert fake_overpass.areas_seen == (RING_CITY_SWEEP
+                                        + [a for a in RING_SWEEP for _ in (1, 2)])
     payload = json.loads(stats.read_text(encoding="utf-8"))
     assert payload["area_key"] == "countries_9"
     day = json.loads(history_path.read_text(encoding="utf-8"))["days"][0]
@@ -1215,7 +1215,7 @@ def test_a_partial_rerun_neither_queries_foreign_cities_nor_narrows_history(
     fake = _fake_overpass(load_fixture)
     run_pipeline(overpass_fetch=fake, **kw)
     # Only German cities were asked about: Wien and Paris were not swept.
-    assert fake.areas_seen[-len(_city_sweep(("de",))):] == _city_sweep(("de",))
+    assert fake.areas_seen[:len(_city_sweep(("de",)))] == _city_sweep(("de",))
     assert len(fake.areas_seen) == 16 + len(_city_sweep(("de",)))
     assert json.loads((tmp_path / "history.json").read_text(encoding="utf-8")) == full
     assert "history and leaderboard left unchanged" in capsys.readouterr().err
@@ -1528,7 +1528,7 @@ def test_an_answer_older_than_the_limit_is_no_fallback(tmp_path, load_fixture):
 def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, capsys):
     # The deadline only gated the next round, so on 2026-10-16 the first
     # round ran on to 07:14. Now the areas it has not reached by the deadline
-    # are built from their last answers, and the cities wait for tomorrow.
+    # are built from their last answers (the cities go first, see below).
     inner = _fake_overpass(load_fixture)
     first = _run(tmp_path, load_fixture, inner)
     clock = [0.0]
@@ -1549,6 +1549,31 @@ def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, 
     err = capsys.readouterr().err
     assert err.count("WARN not swept, past the 2.5 h sweep deadline: ") == 1
     assert "WARN: leaderboard skips" in err
+
+
+def test_the_cities_are_swept_before_the_areas_so_the_deadline_cuts_areas(
+        tmp_path, load_fixture, monkeypatch, capsys):
+    # Prod 2026-10-31 on: round 1 overran the deadline inside the areas and no
+    # city was swept for days, because a city (unlike an area) has no saved
+    # answer to fall back on.
+    inner = _fake_overpass(load_fixture)
+    _run(tmp_path, load_fixture, inner)
+    clock = [0.0]
+    seen = []
+
+    def slow(ql, **kwargs):
+        seen.append(ql)
+        clock[0] += 1
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    capsys.readouterr()
+    # Every city query starts in time; the deadline then passes within the areas.
+    _run(tmp_path, load_fixture, slow, sweep_deadline_s=len(CITY_SWEEP) + 2.5)
+    err = capsys.readouterr().err
+    assert "leaderboard skips" not in err
+    assert "WARN not swept, past the" in err  # late areas fell back on their saved answers
+    assert len(seen) == len(CITY_SWEEP) + 3
 
 
 def test_every_answer_is_kept_not_only_the_recounted_ones(tmp_path, load_fixture):

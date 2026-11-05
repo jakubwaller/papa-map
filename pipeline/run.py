@@ -420,6 +420,39 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                 print(f"  every Overpass host is resting — waiting "
                       f"{rest / 60:.0f} min before round {rnd + 1}", file=sys.stderr)
             time.sleep(max(pause, rest))
+        # Cities first: past the deadline an area falls back on its saved
+        # answer (below), a city has none and drops off today's leaderboard.
+        # Round 1 runs right at the deadline, so whatever goes last is the
+        # part that gets cut.
+        failed_cities = []
+        for i, (display, area_name, admin_level) in enumerate(remaining_cities):
+            if time.monotonic() > deadline:
+                failed_cities.extend(remaining_cities[i:])
+                break
+            try:
+                ids = overpass_fetch(changing_table_ids_ql(area_name, admin_level))
+                _note_base(ids)
+                # Every listed city has changing tables in reality, so zero
+                # elements means the area didn't resolve — same stale-mirror
+                # trap as above, and retryable for the same reason.
+                if not ids.get("elements"):
+                    raise RuntimeError(
+                        f"city area {area_name!r} resolved to zero objects "
+                        "on this mirror")
+            except osm.OverpassUnavailable as exc:
+                print(f"  WARN {display} and {len(remaining_cities) - i - 1} more: {exc}",
+                      file=sys.stderr)
+                failed_cities.extend(remaining_cities[i:])
+                break
+            except Exception as exc:
+                print(f"  WARN {display}: {exc}", file=sys.stderr)
+                if not osm.is_transient(exc):
+                    key = ("city", display)
+                    hard_fails[key] = hard_fails.get(key, 0) + 1
+                failed_cities.append((display, area_name, admin_level))
+                continue
+            city_ids[display] = {(el.get("type"), el.get("id"))
+                                 for el in ids["elements"]}
         failed = []
         late = []
         for i, (area_name, admin_level) in enumerate(remaining):
@@ -453,35 +486,6 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         if late:
             print(f"  WARN not swept, past the {budget / 3600:g} h sweep deadline: "
                   f"{', '.join(late)}", file=sys.stderr)
-        failed_cities = []
-        for i, (display, area_name, admin_level) in enumerate(remaining_cities):
-            if time.monotonic() > deadline:
-                failed_cities.extend(remaining_cities[i:])
-                break
-            try:
-                ids = overpass_fetch(changing_table_ids_ql(area_name, admin_level))
-                _note_base(ids)
-                # Every listed city has changing tables in reality, so zero
-                # elements means the area didn't resolve — same stale-mirror
-                # trap as above, and retryable for the same reason.
-                if not ids.get("elements"):
-                    raise RuntimeError(
-                        f"city area {area_name!r} resolved to zero objects "
-                        "on this mirror")
-            except osm.OverpassUnavailable as exc:
-                print(f"  WARN {display} and {len(remaining_cities) - i - 1} more: {exc}",
-                      file=sys.stderr)
-                failed_cities.extend(remaining_cities[i:])
-                break
-            except Exception as exc:
-                print(f"  WARN {display}: {exc}", file=sys.stderr)
-                if not osm.is_transient(exc):
-                    key = ("city", display)
-                    hard_fails[key] = hard_fails.get(key, 0) + 1
-                failed_cities.append((display, area_name, admin_level))
-                continue
-            city_ids[display] = {(el.get("type"), el.get("id"))
-                                 for el in ids["elements"]}
         remaining, remaining_cities = failed, failed_cities
         rnd += 1
     remaining = given_up_areas + remaining

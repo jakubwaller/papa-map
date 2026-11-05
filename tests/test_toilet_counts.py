@@ -47,9 +47,9 @@ def _entry(day, total=3, capacity=1, level="4", name="Bremen"):
 
 def _count_queries(fetch, area):
     """How many times the area sweep saw this area: once is the sweep alone,
-    twice is sweep plus recount. The city ids queries come last and are cut
+    twice is sweep plus recount. The city ids queries come first and are cut
     off — Berlin and Hamburg are Länder *and* leaderboard cities."""
-    return fetch.areas_seen[:len(fetch.areas_seen) - len(CITY_SWEEP)].count(area)
+    return fetch.areas_seen[len(CITY_SWEEP):].count(area)
 
 
 # ---- is_due, the rule itself
@@ -128,7 +128,7 @@ def test_first_build_counts_everything_and_remembers_it(tmp_path, load_fixture):
     fake = _fake_overpass(load_fixture)
     summary = run_pipeline(**_kwargs(tmp_path, load_fixture, overpass_fetch=fake))
     assert summary["toilets_total"] == 51
-    assert fake.areas_seen == [a for a in SWEEP for _ in (1, 2)] + CITY_SWEEP
+    assert fake.areas_seen == CITY_SWEEP + [a for a in SWEEP for _ in (1, 2)]
     cache = json.loads((tmp_path / "toilets_counts.json").read_text(encoding="utf-8"))
     assert set(cache["areas"]) == {name for name, _ in SWEEP}
     assert cache["areas"]["Bremen"] == {"total": 3, "capacity": 1,
@@ -143,7 +143,7 @@ def test_a_same_day_rerun_reuses_every_count(tmp_path, load_fixture):
     second = _fake_overpass(load_fixture)
     b = run_pipeline(**dict(kw, overpass_fetch=second))
     assert a == b  # same numbers on the site, half the Overpass slots
-    assert second.areas_seen == SWEEP + CITY_SWEEP
+    assert second.areas_seen == CITY_SWEEP + SWEEP
 
 
 def test_only_the_areas_whose_night_it_is_are_recounted(tmp_path, load_fixture):
@@ -169,7 +169,7 @@ def test_a_period_old_cache_is_recounted_in_full(tmp_path, load_fixture):
     _seed(tmp_path / "toilets_counts.json", SWEEP, TODAY - timedelta(days=8))
     fake = _fake_overpass(load_fixture)
     run_pipeline(**_kwargs(tmp_path, load_fixture, overpass_fetch=fake))
-    assert fake.areas_seen == [a for a in SWEEP for _ in (1, 2)] + CITY_SWEEP
+    assert fake.areas_seen == CITY_SWEEP + [a for a in SWEEP for _ in (1, 2)]
 
 
 def test_period_one_is_the_old_every_night_behaviour(tmp_path, load_fixture):
@@ -177,7 +177,7 @@ def test_period_one_is_the_old_every_night_behaviour(tmp_path, load_fixture):
     fake = _fake_overpass(load_fixture)
     run_pipeline(**_kwargs(tmp_path, load_fixture, overpass_fetch=fake,
                            counts_period_days=1))
-    assert fake.areas_seen == [a for a in SWEEP for _ in (1, 2)] + CITY_SWEEP
+    assert fake.areas_seen == CITY_SWEEP + [a for a in SWEEP for _ in (1, 2)]
 
 
 def test_an_empty_sweep_recounts_rather_than_trusting_the_cache(tmp_path, load_fixture):
