@@ -140,7 +140,11 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
     counts_fresh: dict[str, tuple[int, int, str, str]] = {}  # recounted tonight
     counts_reused = 0
     counts_fellback = 0  # reused because tonight's recount failed, not by the rota
-    ct_elements, play_elements, hc_elements = [], [], []
+    # Each area's objects, kept apart until the sweep is over and then
+    # assembled in the canonical `areas` order: the sweep order varies by
+    # night (oldest saved answer first, retries), and which copy of a boundary
+    # object wins (dedup_elements, the *_area maps) must not flicker with it.
+    parts: dict[str, tuple[list, list, list]] = {}
     # Toilets arrive as two server-side counts per area, not objects
     # (config.toilets_counts_ql). Keyed by area and *assigned*, never added to
     # a running total, so a retried area overwrites its earlier attempt
@@ -338,9 +342,7 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         # elements its first, half-successful attempt already collected,
         # and the toilet counts are assigned rather than accumulated.
         ct, play = osm.split_sweep(sweep["elements"])
-        ct_elements.extend(ct)
-        play_elements.extend(play)
-        hc_elements.extend(hc)
+        parts[area_name] = (ct, play, hc)
         toilets_by_area[area_name] = toilets_total
         toilets_capacity_by_area[area_name] = capacity_total
         if remember:
@@ -350,12 +352,6 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
             counts_fellback += 1
         elif not recount:
             counts_reused += 1
-        for el in ct:
-            ct_area.setdefault((el.get("type"), el.get("id")), area_name)
-        for el in play:
-            play_area.setdefault((el.get("type"), el.get("id")), area_name)
-        for el in hc:
-            hc_area.setdefault((el.get("type"), el.get("id")), area_name)
         # The suffix ops_page.AREA_LINE expects whenever the published
         # number is not tonight's: the rota's reuse, or a fallback.
         counted = ("" if recount and fallback is None else
@@ -453,6 +449,12 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
                 continue
             city_ids[display] = {(el.get("type"), el.get("id"))
                                  for el in ids["elements"]}
+        # Oldest saved answer first (none = oldest): the deadline cuts the
+        # tail of the round, and a fallback never refreshes the cache, so a
+        # fixed tail would see all its answers expire together. Stable, so a
+        # night where everything is equally fresh keeps the canonical order.
+        remaining = sorted(remaining, key=lambda a: -sweep_cache.age(
+            SWEEP_CACHE_DIR, sweep_ql(*a), today, SWEEP_CACHE_MAX_DAYS))
         failed = []
         late = []
         for i, (area_name, admin_level) in enumerate(remaining):
@@ -522,6 +524,17 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         print(f"  WARN: leaderboard skips "
               f"{', '.join(d for d, _, _ in remaining_cities)} today "
               f"(city sweep failed after {rnd} rounds)", file=sys.stderr)
+    ct_elements, play_elements, hc_elements = [], [], []
+    for area_name, _ in areas:
+        if area_name not in parts:
+            continue
+        ct, play, hc = parts[area_name]
+        ct_elements.extend(ct)
+        play_elements.extend(play)
+        hc_elements.extend(hc)
+        for els, owner in ((ct, ct_area), (play, play_area), (hc, hc_area)):
+            for el in els:
+                owner.setdefault((el.get("type"), el.get("id")), area_name)
     # An object on (or area-assigned across) a Länder boundary shows up in two
     # sweeps — count and plot it once.
     ct_data = {"elements": osm.dedup_elements(ct_elements)}

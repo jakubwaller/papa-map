@@ -14,6 +14,7 @@ answers nobody should download. Deleting it only removes the fallback.
 from __future__ import annotations
 
 import json
+import re
 import time
 from datetime import date
 from pathlib import Path
@@ -45,6 +46,20 @@ def load(cache_dir: str, ql: str, today: date, max_days: int) -> tuple[dict, int
     if age is None or not 0 <= age <= max_days or not isinstance(answer, dict):
         return None
     return answer, age
+
+
+def age(cache_dir: str, ql: str, today: date, max_days: int) -> float:
+    """Age in days of the saved answer, inf when there is none. Reads only the
+    stored date (the first bytes: save() writes it before the ~140 KB answer)
+    instead of parsing the answer as load() does, once per area per round."""
+    try:
+        with open(_path(cache_dir, ql), "rb") as f:
+            head = f.read(64).decode("utf-8", "replace")
+    except OSError:
+        return float("inf")
+    m = re.match(r'\{"date": "([^"]+)"', head)
+    a = age_days({"date": m.group(1)}, today) if m else None
+    return a if a is not None and 0 <= a <= max_days else float("inf")
 
 
 def prune(cache_dir: str, max_days: int, now: float | None = None) -> None:

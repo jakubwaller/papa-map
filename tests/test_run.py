@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 import requests
 
-from pipeline import config, leaderboard, osm, run, toilet_counts
+from pipeline import config, leaderboard, osm, run, sweep_cache, toilet_counts
 from pipeline.config import BUNDESLAENDER, sweep_areas, sweep_ql
 from pipeline.run import run_pipeline
 
@@ -1542,9 +1542,9 @@ def test_no_query_starts_past_the_deadline(tmp_path, load_fixture, monkeypatch, 
     monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
     capsys.readouterr()
     summary = _run(tmp_path, load_fixture, slow, sweep_deadline_s=2.5 * 3600)
-    # At 0, 1 and 2 h; at 3 h the deadline has passed. No high-chair query:
-    # the first run asked them all tonight (the weekly rota).
-    assert len(calls) == 3 and not any('"highchair"' in q for q in calls)
+    # At 0, 1 and 2 h; at 3 h the deadline has passed. The three queries
+    # are city queries (the cities go first), and the areas fall back.
+    assert len(calls) == 3 and all('"changing_table"' in q for q in calls)
     assert summary["toilets_total"] == first["toilets_total"]
     err = capsys.readouterr().err
     assert err.count("WARN not swept, past the 2.5 h sweep deadline: ") == 1
@@ -1574,6 +1574,30 @@ def test_the_cities_are_swept_before_the_areas_so_the_deadline_cuts_areas(
     assert "leaderboard skips" not in err
     assert "WARN not swept, past the" in err  # late areas fell back on their saved answers
     assert len(seen) == len(CITY_SWEEP) + 3
+
+
+def test_the_oldest_saved_answer_is_swept_first(tmp_path, load_fixture, monkeypatch):
+    # A fallback never refreshes the cache, so a deadline that always cut the
+    # same tail would let those answers all expire together. The area with the
+    # oldest answer goes first even if it comes late in the canonical order.
+    inner = _fake_overpass(load_fixture)
+    _run(tmp_path, load_fixture, inner)
+    oldest = sweep_areas()[10]
+    f = sweep_cache._path(str(tmp_path / "sweeps"), sweep_ql(*oldest))
+    entry = json.loads(f.read_text(encoding="utf-8"))
+    entry["date"] = (NOW.date() - timedelta(days=3)).isoformat()
+    f.write_text(json.dumps(entry, ensure_ascii=False), encoding="utf-8")
+    clock = [0.0]
+    seen = []
+
+    def slow(ql, **kwargs):
+        seen.append(ql)
+        clock[0] += 1
+        return inner(ql, **kwargs)
+
+    monkeypatch.setattr(run.time, "monotonic", lambda: clock[0])
+    _run(tmp_path, load_fixture, slow, sweep_deadline_s=len(CITY_SWEEP) + 0.5)
+    assert f'"{oldest[0]}"' in seen[len(CITY_SWEEP)]
 
 
 def test_every_answer_is_kept_not_only_the_recounted_ones(tmp_path, load_fixture):
