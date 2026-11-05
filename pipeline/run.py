@@ -211,11 +211,13 @@ def run_pipeline(geojson_path=None, stats_path=None, areas=None,
         if recount:
             # Only a NON-empty sweep may fall back: it proves the area
             # resolved on that mirror, so the count is a statistic
-            # tonight, not evidence. An empty sweep needs the real
-            # count for the zero-objects check below.
+            # tonight, not evidence. An empty sweep fetched tonight needs
+            # the real count for the zero-objects check below. A `saved`
+            # one already passed that check on its own night, so it may
+            # fall back too (Andorra, the Northwest Territories).
             usable = (_usable_count(counts_cache.get(area_name), admin_level,
                                     count_key, today, counts_period)
-                      if sweep.get("elements") else None)
+                      if sweep.get("elements") or saved is not None else None)
             # The fallback takes only an entry at most four periods
             # old (the cache's own bound), and past that a failing
             # count fails the area again. Say so in the log, where
