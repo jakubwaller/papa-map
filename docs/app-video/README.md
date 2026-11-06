@@ -94,6 +94,23 @@ not go through (no green pin, or the app's "could not save" line), and
     --place node/31032271 --answer dedicated --here 53.5507,10.0075 \
     --room-first --texts ./texts-both.json
   ```
+- `--scene highchair --place <type>/<id>` records a ~15 s clip instead of
+  the tour: the city view, a tap on the high-chair chip, then a hard cut to
+  that table pin and its popup. The pin is served as it is live, so pick one
+  with `highchair=yes`, no chain, and no other pin within about 150 m. The
+  captions come only from `--texts`, as `hc1` (city), `hc2` (after the tap)
+  and `hc3` (the place):
+
+  ```
+  {"hc1": {"headline": "Hamburg: find a *high chair*", "subline": "Tap the high chair: only places with one stay."},
+   "hc2": {"headline": "Purple: *high chair only*", "subline": "A high chair, but no changing table on record."},
+   "hc3": {"headline": "A café with *both*", "subline": "Changing room and high chair, both in OpenStreetMap."}}
+  ```
+
+  ```
+  node record-app-video.mjs ./out --profile social --lang en --scene highchair \
+    --place node/6043548524 --here 53.5600,9.9900 --texts ./texts-hc-en.json
+  ```
 - The widget, Siri and Control Centre cannot be recorded this way (they are
   native, not in the shell): those shots are phone recordings, as the
   screenshot recipe's `phone/` images are.

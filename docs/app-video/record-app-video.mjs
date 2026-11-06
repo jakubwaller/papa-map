@@ -10,6 +10,7 @@
 //                              [--served-dir <dir>] [--debug] [base-url]
 //                              [--place <type>/<id> --answer <room>] [--here <lat,lon>]
 //                              [--room-first] [--texts <json>] [--headed]
+//                              [--scene highchair --place <type>/<id>]
 //
 // --place replays a real answer: the named OSM element is served grey
 // (status unknown, no room), and the room step taps that pin and answers
@@ -21,6 +22,11 @@
 // --room-first puts the room step before the nearest-table step, so the
 // place just answered can be the nearest table. --texts merges a
 // {"02": {"subline": "..."}} JSON over the language's captions.
+// --scene highchair records a short clip instead of the tour: the city view,
+// a tap on the high-chair chip, then a hard cut to the --place pin (a table
+// pin with a high chair, shown as it is live) and its popup. Its three
+// captions come from --texts as "hc1" (city), "hc2" (after the tap) and
+// "hc3" (the place).
 //
 // Output: <out-dir>/<profile>-<lang>.webm (Playwright's raw recording),
 // <out-dir>/<profile>-<lang>.json (segment timeline, seconds from video
@@ -34,12 +40,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const USAGE = "usage: node record-app-video.mjs <out-dir> [--profile store|social|loop] [--lang de|en] [--served-dir <dir>] [--place <type>/<id>] [--answer <room>] [--here <lat,lon>] [--room-first] [--texts <json>] [--headed] [--debug] [base-url]";
+const USAGE = "usage: node record-app-video.mjs <out-dir> [--profile store|social|loop] [--lang de|en] [--served-dir <dir>] [--place <type>/<id>] [--answer <room>] [--here <lat,lon>] [--room-first] [--texts <json>] [--scene highchair] [--headed] [--debug] [base-url]";
 const die = (msg) => { console.error(`${msg}\n${USAGE}`); process.exit(2); };
 
 // Value flags take the next token, boolean flags do not, so a positional may
 // stand anywhere (`--debug ./out` is out-dir ./out). `--flag=value` works too.
-const VALUE_FLAGS = ["--profile", "--lang", "--served-dir", "--place", "--answer", "--here", "--texts"];
+const VALUE_FLAGS = ["--profile", "--lang", "--served-dir", "--place", "--answer", "--here", "--texts", "--scene"];
 const BOOL_FLAGS = ["--debug", "--room-first", "--headed"];
 const opts = {};
 const positional = [];
@@ -68,6 +74,8 @@ const BASE_URL = (positional[1] || "http://127.0.0.1:8099").replace(/\/+$/, "");
 const DEBUG = opts["--debug"] === true;
 const ROOM_FIRST = opts["--room-first"] === true;
 const ANSWER = opts["--answer"] ?? "both";
+const SCENE = opts["--scene"] ?? null;
+if (SCENE && SCENE !== "highchair") die(`unknown scene ${SCENE} (highchair)`);
 // --place node/31032271 → { type: "node", id: 31032271 }, matched against the
 // dataset's osm_type/osm_id; lngLat is read off the served file (regreyed).
 let PLACE = null;
@@ -82,6 +90,7 @@ if (opts["--here"]) {
   if (!m) die(`--here wants <lat>,<lon>, got ${opts["--here"]}`);
   READER = { latitude: Number(m[1]), longitude: Number(m[2]) };
 }
+if (SCENE && !PLACE) die("--scene highchair needs --place <type>/<id>, a table pin with a high chair");
 
 // Apple's app-preview size for the large iPhones is 886×1920 (App Store
 // Connect, app preview specifications, read 2026-10-08): the app at 443×960
@@ -123,7 +132,11 @@ if (opts["--texts"]) {
 const CAPTION = {
   map: TEXTS["01"], nearest: TEXTS["02"], room: TEXTS["03"],
   add: TEXTS["05"], offline: TEXTS["07"], me: TEXTS["08"],
+  hcMap: TEXTS.hc1, hcRings: TEXTS.hc2, hcPlace: TEXTS.hc3,
 };
+if (SCENE && !["hc1", "hc2", "hc3"].every((k) => typeof TEXTS[k]?.headline === "string" && typeof TEXTS[k]?.subline === "string")) {
+  die("--scene highchair needs --texts with hc1, hc2 and hc3, each a headline and a subline");
+}
 
 // ---- the composer: a same-origin page with a caption band and the app in an iframe ----
 // Written into the served folder at run time (app/www is a build output and
@@ -226,10 +239,11 @@ function regreyed(name, body) {
   if (name === "changing_tables.geojson") {
     const f = data.features.find(isMine);
     if (!f) return body;
+    PLACE.lngLat = f.geometry.coordinates;
+    if (SCENE) return body;   // the high-chair scene shows the place as it is live
     f.properties.status = "unknown";
     f.properties.location_raw = null;
-    PLACE.lngLat = f.geometry.coordinates;
-  } else {
+  } else if (!SCENE) {
     for (const k of Object.keys(data.tables ?? {})) if (Array.isArray(data.tables[k])) data.tables[k] = data.tables[k].filter((f) => !isMine(f));
   }
   return Buffer.from(JSON.stringify(data));
@@ -321,6 +335,7 @@ async function openedPinLngLat(frame) {
 // `d` is the pin's distance from the map's centre in the frame's CSS pixels.
 // The centre is the map's own (project(getCenter())), not the viewport's: with
 // a caption band the app frame is shorter than the viewport.
+// A null status takes pins of any status.
 async function clickablePins(frame, status) {
   return frame.evaluate((status) => {
     const map = window._papamap;
@@ -328,7 +343,7 @@ async function clickablePins(frame, status) {
     const feats = map.queryRenderedFeatures(undefined, { layers: ["tables"] });
     const out = [];
     for (const f of feats) {
-      if (f.properties?.status !== status) continue;
+      if (status != null && f.properties?.status !== status) continue;
       const p = map.project(f.geometry.coordinates);
       const el = document.elementFromPoint(p.x, p.y);
       // Keep the pin inside the middle of the screen, away from the chips
@@ -466,13 +481,14 @@ async function main() {
     await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 13 }), CENTER);
     await settle(frame, 800);
 
+    // Within 5 m of the --place element.
+    const near = (ll) => !!ll && Math.hypot((ll[0] - PLACE.lngLat[0]) * Math.cos(PLACE.lngLat[1] * Math.PI / 180), ll[1] - PLACE.lngLat[1]) * 111320 < 5;
+
     // -- the room answer, shared by both tours --
     const roomStep = async () => {
       await caption("room");
       let opened = false;
       let tapped = null;
-      // Within 5 m of the --place element.
-      const near = (ll) => !!ll && Math.hypot((ll[0] - PLACE.lngLat[0]) * Math.cos(PLACE.lngLat[1] * Math.PI / 180), ll[1] - PLACE.lngLat[1]) * 111320 < 5;
       if (PLACE) {
         // The named element, served grey: ease in on it and tap its pin.
         // Pins 10 m apart overlap at zoom 16, so when a neighbour's popup
@@ -557,7 +573,39 @@ async function main() {
       mark("room-end");
     };
 
-    if (profile.tour === "room") {
+    if (SCENE) {
+      // Head, cut at "start": the place's tiles, then the city view with the
+      // high-chair chip scrolled into the strip, as a reader's swipe leaves it.
+      await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 15 }), PLACE.lngLat);
+      await settle(frame, 800);
+      await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 12 }), CENTER);
+      await frame.evaluate(() => document.querySelector(".chip.hc").scrollIntoView({ inline: "center", block: "nearest" }));
+      await settle(frame, 800);
+      await caption("hcMap");
+      await sleep(600);
+      mark("start");
+      await sleep(2400);
+      await tapEl(".chip.hc");
+      await frame.waitForSelector(".chip.hc.on", { timeout: 5000 });
+      mark("hc-chip");
+      await sleep(1400);
+      await caption("hcRings");
+      await sleep(3400);
+      // A hard cut to the place, not a flight: the recorder's ~17 fps judders.
+      await caption("hcPlace");
+      await frame.evaluate((c) => window._papamap.jumpTo({ center: c, zoom: 15 }), PLACE.lngLat);
+      mark("hc-place");
+      await settle(frame, 1200);
+      const pt = (await clickablePins(frame, null)).find((p) => near(p.lngLat));
+      if (!pt) throw new Error(`--place ${PLACE.type}/${PLACE.id}: its pin is not on screen with the high-chair chip on`);
+      await tap(pt.x, pt.y);
+      await frame.waitForSelector(".maplibregl-popup .popup", { timeout: 4000 });
+      await sleep(600);   // the sign marker lands on the opened pin a moment after the popup
+      if (!near(await openedPinLngLat(frame))) throw new Error(`--place ${PLACE.type}/${PLACE.id}: the open popup belongs to another pin`);
+      if (!await frame.locator(".maplibregl-popup .row.hc:not(.no)").count()) throw new Error(`--place ${PLACE.type}/${PLACE.id}: its popup shows no high chair`);
+      if (DEBUG) console.log("  [popup] " + (await frame.locator(".maplibregl-popup .popup").innerText().catch(() => "(gone)")).replace(/\s+/g, " ").slice(0, 400));
+      await sleep(5400);
+    } else if (profile.tour === "room") {
       mark("start");
       await sleep(900);
       await roomStep();
