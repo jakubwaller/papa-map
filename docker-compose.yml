@@ -70,6 +70,12 @@ services:
     # and every query from this container died with "Network is unreachable"
     # although nothing was wrong with the queries.
     network_mode: host
+    # A batch job yields to the live services: 256 CPU shares against the
+    # default 1024 (a weight, so it only counts while the CPU is contended),
+    # and first in line for the OOM killer when RAM runs out. Same for tiles
+    # and ops.
+    cpu_shares: 256
+    oom_score_adj: 800
 
   # The live-updates follower (pipeline/delta.py): a long-running loop, not a
   # cron — started with the stack (`docker compose up -d delta`) and kept
@@ -96,6 +102,10 @@ services:
     volumes:
       - ./web-data:/out
     network_mode: host
+    # Long-running but not user-facing: between the batch jobs and the
+    # default the live services keep.
+    cpu_shares: 512
+    oom_score_adj: 500
 
   # The weekly city basemaps for the store app: `docker compose run --build
   # --rm tiles`, Sundays at 12:00 (docs/DEPLOY.md). Same image as the build
@@ -110,6 +120,8 @@ services:
     volumes:
       - ./web-data:/out
     network_mode: host
+    cpu_shares: 256      # batch priority, see pipeline
+    oom_score_adj: 800
 
   # The daily ops check: `docker compose run --build --rm ops` right after
   # the nightly build, on its cron line (docs/DEPLOY.md). The same image as the build, so the host needs no
@@ -176,6 +188,8 @@ services:
       - ../pi-monitoring/fleet-ops/out:/logs/fleet-ops:ro
     # Like pipeline: outbound only (OSMCha, Cloudflare, SMTP), and IPv6.
     network_mode: host
+    cpu_shares: 256      # batch priority, see pipeline
+    oom_score_adj: 800
 
 networks:
   web_proxy:

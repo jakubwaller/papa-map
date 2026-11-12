@@ -264,6 +264,30 @@ def load_base_dataset(geojson_path: str = GEOJSON_PATH,
             "highchair_places": _load_feature_collection(highchair_geojson_path)}
 
 
+# load_base_dataset's last result, with the files it was read from. The
+# nightly build replaces them once a day; the tick runs every minute, and
+# re-parsing them on every tick was the follower's steady CPU cost.
+_base_cache: dict = {}
+
+
+def _file_key(path: str) -> tuple:
+    try:
+        st = os.stat(path)
+    except OSError:
+        return (path, None, None)
+    return (path, st.st_mtime_ns, st.st_size)
+
+
+def load_base_dataset_cached(*paths: str) -> dict:
+    """load_base_dataset(*paths), parsed again only when a file's (path,
+    mtime, size) changes. The result is shared between ticks: never mutate it."""
+    key = tuple(_file_key(p) for p in paths)   # before the read: a file replaced mid-read reloads next tick
+    if _base_cache.get("key") != key:
+        _base_cache.clear()   # free the old copy before parsing the new one: RAM is the VPS's limit
+        _base_cache.update(data=load_base_dataset(*paths), key=key)
+    return _base_cache["data"]
+
+
 # The two kinds of place: event kind, the key shared by the base dataset, the
 # accumulator and delta.json, and export.build_play_features' `highchair`.
 # High-chair places (v110) have a key of their own, which a shell from before
@@ -924,7 +948,10 @@ def run_tick(state: dict | None, *, geojson_path: str = GEOJSON_PATH,
         raise RuntimeError("no data base yet — stats.json missing (build has not run)")
     if highchair_geojson_path is None:   # at call time, so a test can point it elsewhere
         highchair_geojson_path = HIGHCHAIR_GEOJSON_PATH
-    base_dataset = load_base_dataset(geojson_path, play_geojson_path, highchair_geojson_path)
+    cached = load_base_dataset_cached(geojson_path, play_geojson_path, highchair_geojson_path)
+    # The carry below patches highchair_places, the only in-place change to the
+    # base: this tick gets its own copy of that dict, the cache stays clean.
+    base_dataset = {**cached, "highchair_places": dict(cached["highchair_places"])}
     area_boxes_by_name = load_area_bboxes(areas_bbox_path)
     if area_boxes_by_name is None:
         # First run before a new nightly build has written the file (a

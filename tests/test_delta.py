@@ -1,5 +1,6 @@
 import gzip
 import json
+import os
 from datetime import datetime, timezone
 
 import pytest
@@ -1515,6 +1516,7 @@ def test_a_place_the_reader_added_stays_after_the_rebase_and_can_still_go(tmp_pa
     assert _hc_upserts(out)[HC_URL]["properties"]["created"] is True
     state, out = _hc_tick(tmp_path, state, B2, {}, 110, "2026-09-24T02:05:00Z", now=LATER)
     assert _hc_upserts(out)[HC_URL]["properties"]["created"] is True   # not in the weekly answer
+    assert HC_URL not in delta._base_cache["data"]["highchair_places"]   # the carry patched a copy
     # Its high chair untagged after the rebase: carried, so known, so removed.
     osc = {111: _osc(_node("modify", 77, 2, "2026-09-24T02:10:00Z", 53.5, 10.0,
                            {"amenity": "restaurant"}))}
@@ -1533,3 +1535,33 @@ def test_the_carry_goes_at_a_gap_and_after_eight_days(tmp_path, capsys):
     carry = {HC_URL: {"t": "2026-09-23T10:01:00Z", "feature": None}}
     assert delta.prune_carry(carry, datetime(2026, 10, 1, 10, 0, tzinfo=timezone.utc)) == carry
     assert delta.prune_carry(carry, datetime(2026, 10, 1, 10, 2, tzinfo=timezone.utc)) == {}
+
+
+def test_the_base_dataset_is_parsed_again_only_when_a_file_changes(tmp_path, monkeypatch):
+    paths = [tmp_path / n for n in ("t.geojson", "p.geojson", "h.geojson")]
+    for p in paths:
+        _write_fc(p, [])
+    args = [str(p) for p in paths]
+    parses = []
+    real = delta.load_base_dataset
+    monkeypatch.setattr(delta, "load_base_dataset", lambda *a: parses.append(a) or real(*a))
+    monkeypatch.setattr(delta, "_base_cache", {})
+
+    first = delta.load_base_dataset_cached(*args)
+    assert delta.load_base_dataset_cached(*args) is first and len(parses) == 1   # a hit
+    # A new size (the nightly build's new file) parses again.
+    _write_fc(paths[0], [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [9.9, 53.5]},
+                          "properties": {"osm_url": "https://www.openstreetmap.org/node/1"}}])
+    assert list(delta.load_base_dataset_cached(*args)["tables"]) == ["https://www.openstreetmap.org/node/1"]
+    assert len(parses) == 2
+    # The same size with a new mtime parses again.
+    st = paths[1].stat()
+    os.utime(paths[1], ns=(st.st_atime_ns, st.st_mtime_ns + 1_000_000_000))
+    delta.load_base_dataset_cached(*args)
+    assert len(parses) == 3
+    # Another path with the same size and mtime is another dataset, not a hit.
+    other = tmp_path / "other.geojson"
+    other.write_bytes(paths[0].read_bytes())
+    os.utime(other, ns=(paths[0].stat().st_atime_ns, paths[0].stat().st_mtime_ns))
+    delta.load_base_dataset_cached(str(other), *args[1:])
+    assert len(parses) == 4
