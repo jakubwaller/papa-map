@@ -62,10 +62,6 @@ def test_feature_properties_match_data_contract(load_fixture):
         "table_wheelchair": None, "highchair": None, "key": None,
         "fee": "yes", "opening_hours": "24/7",
         "osm_url": "https://www.openstreetmap.org/node/1",
-        "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
-                            "https://raw.githubusercontent.com/jakubwaller/papa-map/"
-                            "main/theme/papamap.theme.json"
-                            "&z=18&lat=53.5528&lon=10.0065#node/1"),
         "area": None,
     }
     assert feats[2]["name"] is None
@@ -220,10 +216,6 @@ def test_play_features_are_their_own_dataset(load_fixture):
         "highchair": None,
         "opening_hours": "Mo-Fr 09:00-18:00",
         "osm_url": "https://www.openstreetmap.org/node/9001",
-        "mapcomplete_url": ("https://mapcomplete.org/theme.html?userlayout="
-                            "https://raw.githubusercontent.com/jakubwaller/papa-map/"
-                            "main/theme/papamap.theme.json"
-                            "&z=18&lat=53.5545&lon=9.9925#node/9001"),
         "area": None,
     }
     for f in feats:
@@ -283,20 +275,11 @@ def test_play_feature_without_coordinates_is_dropped(load_fixture):
     assert 9005 not in ids
 
 
-def test_mapcomplete_url_always_uses_own_theme(load_fixture):
-    # theme=papamap in the changeset is what makes website edits countable,
-    # so toilets get the userlayout theme too — never the official one
-    feats = {f["properties"]["osm_id"]: f["properties"]
-             for f in build_features(load_fixture("overpass_changing_tables.json"))}
-    theme = ("https://mapcomplete.org/theme.html?userlayout="
-             "https://raw.githubusercontent.com/jakubwaller/papa-map/"
-             "main/theme/papamap.theme.json")
-    assert feats[3]["mapcomplete_url"] == (  # cafe
-        f"{theme}&z=18&lat=53.5637&lon=9.9633#way/3")
-    assert feats[7]["mapcomplete_url"] == (  # restaurant
-        f"{theme}&z=18&lat=53.561&lon=9.956#node/7")
-    assert feats[8]["mapcomplete_url"] == (  # toilets
-        f"{theme}&z=18&lat=53.558&lon=10.001#relation/8")
+def test_no_feature_carries_mapcomplete_url(load_fixture):
+    # dropped in v119: clients derive the deep link from osm_url + coordinates
+    feats = build_features(load_fixture("overpass_changing_tables.json"))
+    feats += build_play_features(load_fixture("overpass_play_places.json"))
+    assert feats and all("mapcomplete_url" not in f["properties"] for f in feats)
 
 
 def test_element_without_coordinates_is_dropped():

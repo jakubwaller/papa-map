@@ -20,20 +20,6 @@ PAPAMAP_THEME_URL = ("https://raw.githubusercontent.com/jakubwaller/papa-map/"
 THEME_LIVE_SINCE = "2026-08-13"
 
 
-def _mapcomplete_url(osm_type, osm_id, lat, lon):
-    """Deep link into MapComplete, landing next to the feature with the object
-    preselected via the #<type>/<id> fragment (format per MapComplete's
-    Docs/URL_Parameters.md). Always our own theme via userlayout — its
-    dad_toilet layer covers amenity=toilets too, and edits made through it
-    carry PAPAMAP_THEME_URL in the changeset's `theme` tag (the URL, not the
-    id "papamap": that is what MapComplete writes for a userlayout theme), so
-    website contributions stay countable (the official toilets theme would
-    tag them theme=toilets, indistinguishable from any other MapComplete
-    user)."""
-    return (f"https://mapcomplete.org/theme.html?userlayout={PAPAMAP_THEME_URL}"
-            f"&z=18&lat={lat}&lon={lon}#{osm_type}/{osm_id}")
-
-
 def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]:
     """GeoJSON features for changing_table=yes/limited objects with usable
     coordinates. `no` and junk values are dropped here (stats still see them).
@@ -104,7 +90,6 @@ def build_features(ct_data: dict, area_by_key: dict | None = None) -> list[dict]
                 "fee": tags.get("changing_table:fee") or tags.get("fee"),
                 "opening_hours": tags.get("opening_hours"),
                 "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
-                "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),
                 "area": area,
             },
         })
@@ -193,7 +178,6 @@ def build_play_features(play_data: dict, ct_data: dict | None = None,
                 "highchair": highchair_state(tags),
                 "opening_hours": tags.get("opening_hours"),
                 "osm_url": f"https://www.openstreetmap.org/{osm_type}/{osm_id}",
-                "mapcomplete_url": _mapcomplete_url(osm_type, osm_id, lat, lon),
                 "area": area,
             },
         })

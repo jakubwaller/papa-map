@@ -85,15 +85,11 @@ measured on 19 Aug 2026 as an empty reply at 60.14 s for the country whole.
   keeps failing is noticed before the cache drops it and the area fails the
   build again.
 
-Every table and place still carries `mapcomplete_url`, its deep link into
-MapComplete, but the property is **deprecated since CONTRACT v80**: it is
-nothing but the theme URL, `z=18`, the coordinates and `#<type>/<id>`, about a
-quarter of the dataset's gzip, and the frontend now rebuilds it from `osm_url`
-and the coordinates (`mapCompleteObjectUrl` in `web/datasource.js`) whenever it
-is absent. The store apps bundle the web shell and read the dataset from
-papamap.de, so the pipeline keeps emitting it until every app build that reads
-it (versions before the release that bundles v80) has aged out; a later
-amendment drops it.
+The pipeline no longer emits `mapcomplete_url` (dropped in CONTRACT v119; it was
+deprecated in v80): the deep link into MapComplete is nothing but the theme URL,
+`z=18`, the coordinates and `#<type>/<id>`, a quarter of the dataset's gzip, so
+the frontend builds it from `osm_url` and the coordinates (`mapCompleteObjectUrl`
+in `web/datasource.js`).
 
 ## Area pages
 
