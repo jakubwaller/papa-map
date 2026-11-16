@@ -1,5 +1,16 @@
 # papa-map — build contract (v0)
 
+> **v119 amendment (16 Nov 2026, the pipeline stops emitting `mapcomplete_url`; the "v82" step of the v80 deprecation): one property removed.**
+> Tables and play places no longer carry `mapcomplete_url` (`export.build_features` / `build_play_features`;
+> `export._mapcomplete_url` is deleted). Clients derive the deep link from `osm_url` and the coordinates
+> (`mapCompleteObjectUrl`, `web/datasource.js`, since v80); the frontend keeps its `p.mapcomplete_url ??` fallback
+> unchanged, so a cached older dataset still works. Why now: the property was ~29% of the raw
+> `changing_tables.geojson` (18.5 to 13.1 MB) and ~24% of its gzip, and the gate v80 set is met: App Store Connect
+> shows 0 sessions in the last 30 days (16 Oct to 14 Nov) on iOS builds older than 1.3.1 (2 on 1.3.2, the rest on
+> 1.3.3+), and Android production started at 1.3.1. A build that still reads the property only loses its
+> "answer on MapComplete" button (it guards with `if (mcUrl)`), no crash. The schema lines below that mention
+> `mapcomplete_url` are history, superseded by this amendment. No frontend behaviour change, no shell pin bump.
+
 > **v118 amendment (4 Nov 2026, Kontakt and coffee in the header, a slimmer add-a-place dialog): no data shape change.**
 > Frontend only. Kontakt moves from the footer into the header nav (readers missed it and mailed the owner's
 > private address); on a phone the language picker shows its short code (`shortLang`, `app.js`) to make room,
@@ -2939,7 +2950,7 @@
 > tag at all**. `changing_table=no` is excluded on purpose: someone answered,
 > and the answer was no. Feature `properties`: `osm_type`, `osm_id`, `name`,
 > `kind` (the first of `leisure`/`amenity`/`shop`/`tourism`/`healthcare` the
-> object carries), `opening_hours`, `osm_url`, `mapcomplete_url`. **No
+> object carries), `opening_hours`, `osm_url` (`mapcomplete_url` too until v119). **No
 > `status`, no `changing_table`** — nobody has answered the first question, so
 > there is nothing to colour them by, and a fourth status value would have
 > broken the leaderboard, the Bundesland pages and the stats, all of which
@@ -3054,7 +3065,7 @@
 > the official toilets theme. Reason: MapComplete stamps changesets with a
 > `theme` tag, so edits made through the site become countable (the official
 > theme would tag them `theme=toilets`, indistinguishable from any other
-> MapComplete user). The v0 `mapcomplete_url` rule below is superseded.
+> MapComplete user). The v0 `mapcomplete_url` rule below is superseded (and the property itself is gone since v119).
 > Because the theme is now load-bearing for every pin and only exists in this
 > repo, `python -m pipeline.theme_check` (weekly CI + on theme changes)
 > validates it against MapComplete's published schema and checks the raw URL
@@ -3142,7 +3153,7 @@ Overpass `out center`). Feature `properties`:
   "fee": "string or null",
   "opening_hours": "string or null",
   "osm_url": "https://www.openstreetmap.org/<type>/<id>",
-  "mapcomplete_url": "string or null"
+  "mapcomplete_url": "string or null — no longer emitted since v119 (deprecated v80)"
 }
 ```
 
@@ -3163,7 +3174,7 @@ of places with a play area and no changing-table answer — or, since v27, the a
   "highchair": "true|false|null|\"unreadable\" — as on the tables (v65)",
   "opening_hours": "string or null",
   "osm_url": "https://www.openstreetmap.org/<type>/<id>",
-  "mapcomplete_url": "string or null"
+  "mapcomplete_url": "string or null — no longer emitted since v119 (deprecated v80)"
 }
 ```
 
@@ -3226,7 +3237,7 @@ Split location on `;`, trim, lowercase → tokens. EXACT token matching (never s
 - `python -m pipeline.run` = one idempotent build writing both JSON files. Any single upstream
   failure (taginfo down) degrades gracefully (keep last stats.json, log WARN) — never a half-
   written file (write temp + atomic rename).
-- `mapcomplete_url`: for `amenity=toilets` objects:
+- `mapcomplete_url` (superseded: v4 changed the URL, v119 dropped the property): for `amenity=toilets` objects:
   `https://mapcomplete.org/toilets?z=18&lat=<lat>&lon=<lon>#<osm_type>/<osm_id>` (verify the
   fragment format against MapComplete docs/source if feasible; if unverifiable, still emit — the
   lat/lon params alone land the user next to the feature). Other amenities: null.

@@ -377,13 +377,13 @@ export function mapCompleteVenueUrl(lon, lat, zoom, lang) {
   return mapCompleteViewUrl(lon, lat, zoom, 17, lang);
 }
 
-// The deep link onto one object, the pipeline's mapcomplete_url
-// (pipeline/export.py::_mapcomplete_url) rebuilt from osm_url and the
+// The deep link onto one object, the former pipeline mapcomplete_url
+// (dropped in CONTRACT v119) derived from osm_url and the
 // coordinates, string for string: the theme, z=18, the coordinates as the
 // dataset carries them, and #<type>/<id> to preselect the object. (A whole
 // degree prints as 9 where Python wrote 9.0; MapComplete reads both.) The data
-// still carries the property; since v80 it is deprecated, and this is what
-// stands in where it is absent. Null without a parsable osm_url or a
+// no longer carries the property (v119), so this is what supplies it; an older
+// dataset that still does is kept as is. Null without a parsable osm_url or a
 // coordinate.
 export function mapCompleteObjectUrl(osmUrl, lat, lon) {
   const ref = osmRef(osmUrl);

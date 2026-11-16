@@ -94,7 +94,7 @@ test("loadPlaces flattens the prospects and skips undrawable ones", () => {
   // right object after the geometry-less feature was dropped.
   assert.equal(places[1].idx, 1);
   assert.equal(places[1].name, null);
-  // No mapcomplete_url in the data: derived from osm_url (v80).
+  // The data never carries mapcomplete_url since v119: derivation from osm_url is the only source.
   assert.equal(places[1].mapcomplete_url, mapCompleteObjectUrl(
     "https://www.openstreetmap.org/way/9002", 53.58, 10.02));
 });
@@ -2121,7 +2121,8 @@ test("flightMs: the floor, the cap, and the jump line", () => {
 
 // ---- v80: mapcomplete_url derived on the client, the place's time zone -----
 
-// Copied from pipeline/export.py::_mapcomplete_url("node", 4242, 53.5511, 9.9937).
+// Pinned here: this is the string the pipeline emitted before CONTRACT v119. A change to the
+// theme URL or format in mapCompleteObjectUrl must be deliberate and update this pin.
 const PY_MAPCOMPLETE_URL = "https://mapcomplete.org/theme.html?userlayout="
   + "https://raw.githubusercontent.com/jakubwaller/papa-map/main/theme/papamap.theme.json"
   + "&z=18&lat=53.5511&lon=9.9937#node/4242";
