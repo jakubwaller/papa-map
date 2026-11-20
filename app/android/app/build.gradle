@@ -10,7 +10,7 @@ android {
         // The workflow's run number, as on iOS (github.run_number is shared by
         // both jobs of a run, and only ever grows); 1 for a local build.
         versionCode((System.getenv("VERSION_CODE") ?: "1") as int)
-        versionName "1.6"
+        versionName "1.6.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -57,6 +57,7 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation "com.google.android.play:review:$playReviewVersion"
+    implementation "com.google.android.play:age-signals:$ageSignalsVersion"
     implementation project(':capacitor-android')
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
