@@ -39,8 +39,10 @@ On Android, `MainActivity` asks Play for an age signal at every launch (Play Age
 `com.google.android.play:age-signals`), because California's AB 1043 and Brazil's Digital ECA
 require an app to ask. The answer is ignored on purpose: PapaMap has no accounts and nothing
 age-gated. It asks only where Play reports mandatory sharing, the one case with no prompt;
-there is no JavaScript side and nothing is stored or sent. iOS does not ask yet: Apple's
-Declared Age Range needs a new entitlement.
+there is no JavaScript side and nothing is stored or sent. On iOS 26.4 and later,
+`MainViewController` asks Apple's Declared Age Range the same way, only where Apple reports
+that sharing is required (`declaredAgeRangeRequired`); unlike Play, Apple shows its sheet there
+too. It needs the `com.apple.developer.declared-age-range` entitlement.
 
 `web/native.js` is the whole seam. On the website every one of its exports is inert.
 
