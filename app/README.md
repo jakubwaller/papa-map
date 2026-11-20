@@ -35,6 +35,13 @@ close after the reader's third answer or third day of opening pins, and again at
 Google Play In-App Review (`com.google.android.play:review`) on Android, where the sheet only
 appears in a copy installed from Google Play.
 
+On Android, `MainActivity` asks Play for an age signal at every launch (Play Age Signals,
+`com.google.android.play:age-signals`), because California's AB 1043 and Brazil's Digital ECA
+require an app to ask. The answer is ignored on purpose: PapaMap has no accounts and nothing
+age-gated. It asks only where Play reports mandatory sharing, the one case with no prompt;
+there is no JavaScript side and nothing is stored or sent. iOS does not ask yet: Apple's
+Declared Age Range needs a new entitlement.
+
 `web/native.js` is the whole seam. On the website every one of its exports is inert.
 
 ## Layout
