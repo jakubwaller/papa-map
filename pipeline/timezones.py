@@ -36,7 +36,7 @@ COUNTRY_TZ = {
     "ro": "Europe/Bucharest", "bg": "Europe/Sofia", "rs": "Europe/Belgrade",
     "ba": "Europe/Sarajevo", "me": "Europe/Podgorica", "al": "Europe/Tirane",
     "mk": "Europe/Skopje", "xk": "Europe/Belgrade", "md": "Europe/Chisinau",
-    "ua": "Europe/Kiev", "by": "Europe/Minsk",
+    "ua": "Europe/Kyiv", "by": "Europe/Minsk",
     "au": "Australia/Sydney", "nz": "Pacific/Auckland",
     "us": "America/New_York", "ca": "America/Toronto", "jp": "Asia/Tokyo",
 }
